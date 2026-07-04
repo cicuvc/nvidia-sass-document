@@ -20,22 +20,22 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [x] **SHF** (idx 10) — Funnel shift (concatenate two regs, shift)
 - [ ] **IDP** (idx 33) — Integer dot product (4-element)
 - [ ] **IDE** (idx 34) — Integer dot expand
-- [ ] **IMNMX** (idx 37) — Integer min/max (32-bit only; re-introduced at indices 284–285 for sm_104 with 32/64-bit split)
+- [x] **IMNMX** (idx 37) — Integer min/max (32-bit only; re-introduced at indices 284–285 for sm_104 with 32/64-bit split)
 - [ ] **POPC** (idx 38) — Population count (count set bits)
 - [ ] **FLO** (idx 39) — Find leading one (bit scan)
 - [ ] **BREV** (idx 53) — Bit reverse
 
 ## FP32 Arithmetic
-- [ ] **FFMA** (idx 11) — FP32 fused multiply-add
-- [ ] **FADD** (idx 12) — FP32 add
-- [ ] **FMUL** (idx 13) — FP32 multiply
-- [ ] **FMNMX** (idx 14) — FP32 min/max (base encoding cat. 510; re-introduced at index 220 for sm_90 with extended operand modes)
+- [x] **FFMA** (idx 11) — FP32 fused multiply-add
+- [x] **FADD** (idx 12) — FP32 add
+- [x] **FMUL** (idx 13) — FP32 multiply
+- [x] **FMNMX** (idx 14) — FP32 min/max (base encoding cat. 510; re-introduced at index 220 for sm_90 with extended operand modes)
 - [ ] **FSWZADD** (idx 15) — FP32 swizzle add (cross-lane partial reduction)
-- [ ] **FSET** (idx 16) — FP32 compare and set result register
+- [x] **FSET** (idx 16) — FP32 compare and set result register
 - [ ] **FSEL** (idx 17) — FP32 select (conditional move)
-- [ ] **FSETP** (idx 18) — FP32 compare and set predicate
+- [x] **FSETP** (idx 18) — FP32 compare and set predicate
 - [ ] **FCHK** (idx 40) — FP check for NaN/Inf/denorm
-- [ ] **MUFU** (idx 42) — Multi-function unit: RCP, RSQ, SIN, COS, EX2, LG2, RCP64H, RSQ64H
+- [x] **MUFU** (idx 42) — Multi-function unit: RCP, RSQ, SIN, COS, EX2, LG2, RCP64H, RSQ64H
 
 ## FP64 Arithmetic
 - [ ] **DFMA** (idx 122) — FP64 fused multiply-add
