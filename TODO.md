@@ -162,7 +162,7 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [ ] **USEL** (idx 147) — Uniform select
 - [ ] **USGXT** (idx 148) — Uniform sign-extend
 - [ ] **UFLO** (idx 149) — Uniform find leading one
-- [ ] **UIADD3** (idx 150) — Uniform three-input integer add
+- [x] **UIADD3** (idx 150) — Uniform three-input integer add
 - [x] **UIMAD** (idx 151) — Uniform integer multiply-add
 - [ ] **UMOV** (idx 152) — Uniform move
 - [ ] **UPRMT** (idx 153) — Uniform byte permute
