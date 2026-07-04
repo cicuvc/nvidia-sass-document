@@ -17,7 +17,7 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [ ] **ISETP** (idx 7) — Integer compare and set predicate (32-bit; re-introduced at index 288 for sm_104 with 64-bit support)
 - [ ] **IABS** (idx 8) — Integer absolute value
 - [x] **LEA** (idx 9) — Load effective address (shift-add)
-- [ ] **SHF** (idx 10) — Funnel shift (concatenate two regs, shift)
+- [x] **SHF** (idx 10) — Funnel shift (concatenate two regs, shift)
 - [ ] **IDP** (idx 33) — Integer dot product (4-element)
 - [ ] **IDE** (idx 34) — Integer dot expand
 - [ ] **IMNMX** (idx 37) — Integer min/max (32-bit only; re-introduced at indices 284–285 for sm_104 with 32/64-bit split)
