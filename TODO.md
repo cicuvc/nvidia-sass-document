@@ -16,7 +16,7 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [x] **LOP3** (idx 6) — Three-input logic operation (arbitrary LUT)
 - [ ] **ISETP** (idx 7) — Integer compare and set predicate (32-bit; re-introduced at index 288 for sm_104 with 64-bit support)
 - [ ] **IABS** (idx 8) — Integer absolute value
-- [ ] **LEA** (idx 9) — Load effective address (shift-add)
+- [x] **LEA** (idx 9) — Load effective address (shift-add)
 - [ ] **SHF** (idx 10) — Funnel shift (concatenate two regs, shift)
 - [ ] **IDP** (idx 33) — Integer dot product (4-element)
 - [ ] **IDE** (idx 34) — Integer dot expand
