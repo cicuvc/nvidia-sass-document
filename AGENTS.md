@@ -65,5 +65,14 @@ The `ENCODING` RHS references `FORMAT` slot names. Verified RHS forms:
 
 The `*_SIZE`/`*Range` predicates tie the two files together: instruction `PREDICATES` set sizes, latency `CONNECTOR CONDITIONS` convert them to register spans used to index the latency tables.
 
+## PTX→SASS quick reference (`~/cs/project/documented-ptx/`)
+NVIDIA PTX ISA 9.3 documentation converted to markdown, plus empirical PTX→SASS mapping files. Use these when documenting an instruction to map user-visible PTX constructs to the SASS encodings studied here.
+
+- `ptx2sass-int-mad.md` — `mad`/`mul`/`mad.cc`/`madc` → IMAD/IMAD.WIDE/IMAD.HI/IMAD.X/UIMAD (verified sm_90, CUDA 13.1).
+- `instructions/` — per-PTX-instruction reference files (216 files).
+- `09.7.*.md` — per-instruction-family PTX spec chapters.
+
+Workflow: when documenting a SASS instruction, first check this dir for a PTX mapping file. If none exists for that instruction family, create one by writing a small CUDA kernel → `nvcc -arch=sm_90 -O3 -cubin` → `cuobjdump -arch sm_90 -sass` → cross-reference with `tools/query_sm90.py opcode <hex>`.
+
 ## Reference (unreliable, use with care)
 `~/cs/project/crucible-notes` — AI-generated RE notes on NVIDIA/other toolchains; explicitly "best-guess, not authoritative." The `ptxas/extracted/*.json` files are the most relevant cross-check (e.g. `opcode_pipeline_map.json`, `per_sm_latency_tables.json`, `encoding_*`, `opcode_master.json`). Treat these two txt dumps as the source of truth over the notes when they conflict.

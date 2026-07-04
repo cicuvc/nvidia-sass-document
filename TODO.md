@@ -8,8 +8,8 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 
 
 ## Integer Arithmetic
-- [ ] **IMAD** (idx 1) — Integer multiply-add (32-bit)
-- [ ] **IMAD_WIDE** (idx 2) — Integer multiply-add, 32x32->64 result  `-> IMAD`
+- [x] **IMAD** (idx 1) — Integer multiply-add (32-bit)
+- [x] **IMAD_WIDE** (idx 2) — Integer multiply-add, 32x32->64 result  `-> IMAD`
 - [ ] **IADD3** (idx 3) — Three-input integer add with carry
 - [ ] **BMSK** (idx 4) — Generate bitmask from position and width
 - [ ] **SGXT** (idx 5) — Sign-extend from specified bit position
@@ -163,7 +163,7 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [ ] **USGXT** (idx 148) — Uniform sign-extend
 - [ ] **UFLO** (idx 149) — Uniform find leading one
 - [ ] **UIADD3** (idx 150) — Uniform three-input integer add
-- [ ] **UIMAD** (idx 151) — Uniform integer multiply-add
+- [x] **UIMAD** (idx 151) — Uniform integer multiply-add
 - [ ] **UMOV** (idx 152) — Uniform move
 - [ ] **UPRMT** (idx 153) — Uniform byte permute
 - [ ] **VOTEU** (idx 154) — Uniform vote
