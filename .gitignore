@@ -1,0 +1,10 @@
+# Generated / regenerable DB (rebuild with: python3 tools/parse_sm90.py)
+sm90.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor / OS
+*.swp
+.DS_Store
