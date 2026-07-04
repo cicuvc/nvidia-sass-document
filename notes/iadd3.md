@@ -12,16 +12,36 @@ IADD3 performs `Rd = Ra + (±)Sb + (±)Rc` (three-input add/subtract) on 32-bit 
 All variants share the mnemonic `IADD3`; the extended (X) form adds carry-chain predicates.
 Related: `IADD` (two-input add alias), `IADD32I` (pipe-only alias), `UIADD3` (uniform variant).
 
-| Mode   | ASM format | Operands | Carry preds |
+| Mode   | ASM format | Operands | Carry output |
 |--------|-----------|:---:|:---:|
-| **Plain** | `IADD3 Rd, Pu, Pv, [-]Ra, [-]Rb, [-]Rc` | 3-source with per-src negate | — |
-| **X**      | `IADD3.X Rd, Pu, Pv, [~]Ra, [~]Rb, [~]Rc, [!]Pp, [!]Pq` | 3-source with per-src invert | `Pp,Pq` |
+| **Plain** | `IADD3 Rd, Pu, Pv, [-]Ra, [-]Rb, [-]Rc` | 3-source with per-src negate | `Pu,Pv` (2-bit) |
+| **X**      | `IADD3.X Rd, Pu, Pv, [~]Ra, [~]Rb, [~]Rc, [!]Pp, [!]Pq` | 3-source with per-src invert | `Pp,Pq` (X-mode) |
 
 - **Plain**: `Rd = (±Ra) + (±Rb) + (±Rc)`. Ra and Rb cannot be simultaneously
   negated (`Ra@negate → ¬Rb@negate` and vice versa). Rc negate is independent.
 - **X**: extended-precision carry chain. Uses `[~]` (bitwise NOT/ones-complement)
   instead of `[-]` (two's complement negate). Pp and Pq capture carry bits.
   Ra and Rb cannot both be inverted (`Ra@invert → ¬Rb@invert`).
+
+### Pu and Pv: 2-bit carry output (verified)
+
+**Pu and Pv are carry outputs, not generic predicate inputs.** Three 32-bit unsigned
+values can sum to a 34-bit result; the two carry bits are captured into these
+predicate registers. The `Predicate("PT")` typing with default `PT=7` follows the
+same convention as `IMAD.HI`'s `Pu` carry output: when set to PT (7), the carry
+is **discarded** (analogous to writing a register result to RZ). When set to a
+non-default predicate (e.g. P0, P1), the carries are captured for downstream use.
+
+```
+IADD3 R7,  P0, P1,  R7, UR4, R6     ; P0 = carry₁ from (Ra+Rb)
+                                     ; P1 = carry₂ from ((Ra+Rb)+Rc)
+IADD3.X R9, RZ, RZ, RZ, P0, P1      ; R9 = P0 + P1 = combined 2-bit carry
+```
+
+The compiler emits this pattern explicitly when 3-way carry extraction is needed
+(e.g. accumulating `(unsigned long long)x + y + z`). In typical two-operand
+usage (e.g. `a + b + RZ`) at most one carry bit is produced; Pu captures it
+and Pv is left at PT (discarded, omitted from disassembly).
 
 ### Uniform variant: UIADD3
 
@@ -60,8 +80,8 @@ Shown for `iadd3_noimm__RRR_RRR`; the `imm` form differs only in Sb encoding.
 | **[91],[11:0]**     | **13**| **`opcode`**     | **Opcode** | |
 | [90]                | 1     | `input_reg_sz_32_dist` | `*1` (plain) / `Pp@not` (X) | |
 | [89:87]             | 3     | `Pnz`            | `*7` (plain) / `Pp` (X) | X: carry-out pred |
-| [86:84]             | 3     | `cop`            | `Pv` | **3rd predicate input** |
-| [83:81]             | 3     | `Pu`             | `Pu` | **2nd predicate input** |
+| [86:84]             | 3     | `cop`            | `Pv` | **carry₂ output** (plain) / `Pv` input (X) |
+| [83:81]             | 3     | `Pu`             | `Pu` | **carry₁ output** (plain) / `Pu` input (X) |
 | [80]                | 1     | `UPq_not`        | `*1` (plain) / `Pq@not` (X) | |
 | [79:77]             | 3     | `UPq`            | `*7` (plain) / `Pq` (X) | X: 2nd carry-out pred |
 | **[75]**            | **1** | `sz`             | `Rc@negate` (plain) / `Rc@invert` (X) | |
@@ -92,7 +112,8 @@ Shown for `iadd3_noimm__RRR_RRR`; the `imm` form differs only in Sb encoding.
 | Pipe | `fmalighter_pipe` | `int_pipe` |
 | Operation | `(Ra×Rb)+Rc` | `Ra+Rb+Rc` |
 | Width modes | LO/WIDE/HI | 32-bit only |
-| Predicate inputs | 1 (Pg) | **3** (Pg, Pu, Pv) |
+| Predicate ports | 1 input (Pg) + 1 output (Pu, WIDE/HI only) | **2 carry outputs** (Pu, Pv) in plain mode
+| Guard pred | Pg | Pg |
 | X-mode inversion | `[~]` on Rc only | `[~]` on **all three** sources |
 | IMUL pseudo | Yes (Ra=RZ → IMUL) | No (Rc=RZ → IADD) |
 | Immediate slot | 32-bit (in Rb or Rc slot) | 32-bit (in Sb slot only) |
@@ -158,10 +179,39 @@ All operand forms and X-mode verified via `nvcc -arch=sm_90 -O3` →
 ### Negate encoding
 `IADD3 R5, R0, R4, -R5` vs plain: only bit [75] differs (Rc_neg=1).
 
-### Pu/Pv predicate inputs
-In all observed cases, `Pu=7, Pv=7` (PT = predicate-true). The disassembler
-omits them since they're the default. These are compiler-inserted for
-uniform-branch-optimization when the add feeds a conditional.
+### Pu/Pv: 2-bit carry output — empirically verified
+
+The theory that Pu and Pv are carry outputs (not general predicate inputs) is
+**confirmed** by kernels that force 3-way carries. Given three 32-bit unsigned
+values, the sum can reach ~34 bits; the compiler emits explicit non-default
+predicates when the carries are needed downstream.
+
+**3-way addition with carry extraction** (`x + y + z` as `u64`):
+```
+IADD3 R13, P0, P1, R13, UR4, R12    ; Rd = R13+UR4+R12
+                                     ; P0 = (R13+UR4) >> 32        (carry₁)
+                                     ; P1 = ((R13+UR4)+R12) >> 32  (carry₂)
+IADD3.X R11, RZ, RZ, RZ, P0, P1     ; R11 = RZ⊕RZ⊕RZ + P0 + P1
+                                     ;     = combined 2-bit carry
+LOP3.LUT R9, R11, 0x1, RZ, 0xc0, !PT ; extract low bit of carry
+```
+
+**96-bit extended-precision add** (A[2:0] + B[2:0]):
+```
+IADD3 R7, P0, P1, R7, R10, R5       ; bits[31:0]  + carry into P0,P1
+IADD3.X R0, RZ, RZ, RZ, P0, P1      ; carry propagation to R0
+IADD3 R5, R0, UR4, R11              ; bits[63:32] = R0 + UR4 + R11
+```
+
+In both cases, `P0` and `P1` appear **explicitly** (not default PT=7) because
+the compiler needs the carry bits for subsequent operations.
+
+**Default behaviour** (2-operand add, most common):
+```
+IADD3 R5, R5, R4, RZ                 ; Pu=PT(7), Pv=PT(7) → carries discarded
+```
+The disassembler omits `PT, PT` since they're default. This is the form seen in
+the vast majority of kernel code (address calcs, simple arithmetic).
 
 ### 64-bit add via UIADD3.X
 The compiler lifts GPR-based 64-bit addition to the uniform path:
@@ -196,14 +246,5 @@ IADD3 R5, R0, R4, -R5       ; R5 = R0 + R4 - R5 (PTX sub.s32)
 
 ## Open questions
 
-1. **Pu/Pv non-default values** — the spec defines `Pu` and `Pv` as `Predicate("PT")`
-   type, but all observed cases use PT (value 7). Non-default values would be used
-   for uniform-branch optimization (latency hiding via predicate control). Need a
-   kernel with divergent control flow to trigger.
-
-2. **GPR-level IADD3.X** — empirically confirmed only for `UIADD3.X`. The GPR-level
-   `iadd3_x_noimm__RRR_RRR` class exists in the spec but was not triggered by the
-   test kernels (compiler prefers uniform-path for carry chains on sm_90).
-
-3. **IADD alias** — `IADD` appears in the OPERATION SETS alongside `IADD3`;
-   likely an assembler alias mapping to IADD3 with Rc=RZ.
+1. **IADD alias** — `IADD` appears in the OPERATION SETS alongside `IADD3`;
+   likely an assembler alias mapping to IADD3 with Rc=RZ. No separate CLASS.
