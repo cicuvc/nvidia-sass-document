@@ -44,12 +44,12 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [ ] **DSETP** (idx 125) — FP64 compare and set predicate
 
 ## FP16 Packed Arithmetic
-- [ ] **HADD2** (idx 126) — Packed FP16x2 add
-- [ ] **HADD2_F32** (idx 127) — Packed FP16x2 add with FP32 accumulator  `-> HADD2`
-- [ ] **HFMA2** (idx 128) — Packed FP16x2 fused multiply-add
-- [ ] **HMUL2** (idx 129) — Packed FP16x2 multiply
-- [ ] **HSET2** (idx 130) — Packed FP16x2 compare and set
-- [ ] **HSETP2** (idx 131) — Packed FP16x2 compare and set predicate
+- [x] **HADD2** (idx 126) — Packed FP16x2 add
+- [x] **HADD2_F32** (idx 127) — Packed FP16x2 add with FP32 accumulator  `-> HADD2`
+- [x] **HFMA2** (idx 128) — Packed FP16x2 fused multiply-add
+- [x] **HMUL2** (idx 129) — Packed FP16x2 multiply
+- [x] **HSET2** (idx 130) — Packed FP16x2 compare and set
+- [x] **HSETP2** (idx 131) — Packed FP16x2 compare and set predicate
 
 ## Type Conversion
 - [ ] **I2I** (idx 35) — Integer to integer conversion (width/sign change)
@@ -191,7 +191,7 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [ ] **CLMAD** (idx 179) — Carry-less multiply-add (GF(2) arithmetic)
 - [ ] **DMMA** (idx 180) — FP64 matrix multiply-accumulate (Ampere; encoding category 434; re-introduced at index 215 for Hopper with different TC path)
 - [ ] **HMMA_SP_1688** (idx 181) — FP16 sparse MMA, 16x8x8  `-> HMMA`
-- [ ] **HFMA2_MMA** (idx 182) — FP16 FMA2, MMA variant  `-> HFMA2`
+- [x] **HFMA2_MMA** (idx 182) — FP16 FMA2, MMA variant  `-> HFMA2`
 - [ ] **HMNMX2** (idx 183) — Packed FP16x2 min/max
 - [ ] **IMMA_88** (idx 184) — Integer MMA, 8x8 shape  `-> IMMA`
 - [ ] **IMMA_SP_88** (idx 185) — Integer sparse MMA, 8x8  `-> IMMA`

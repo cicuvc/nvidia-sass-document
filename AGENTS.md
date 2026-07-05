@@ -20,8 +20,109 @@ Parser gotchas already handled (don't reintroduce): sub-section keywords and eve
 Goal: write a per-instruction reference doc for every **compute** SASS instruction. Split across sessions.
 - `TODO.md` — the master checklist (**207 instructions**), grouped by category, one checkbox per entry. Derived from `ref_memo.txt` (the curated sm_70..sm_90 opcode roster). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded (see its "Excluded" section). `-> MNEM` tags map ref_memo names to the canonical sm_90 mnemonic (shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated). `LDCU` is unresolved (likely an LDC variant).
 - `notes/*.md` — enum/topic research already resolved (`ldc_admode`, `iswz`, `cbu_state`, `memory_model`). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions. Follow this style for new findings.
-- When documenting an instruction: drive from `sm90.json` via `query_sm90.py` (`mnem`/`class -v`/`layout`), cross-check pipe/latency, and empirically confirm operand rendering with `cuobjdump -arch sm_90 -sass` on `/usr/local/cuda/lib64/libcublas*.so*` when the form is common (rare/driver-internal forms won't appear). Tick the box in `TODO.md` when done.
+- Tick the box in `TODO.md` when done.
 - `sm90.json` is gitignored/regenerable; `ref_memo.txt` uses a ROT13 column that is not the mnemonic (mnemonic is the 3rd column).
+
+### Per-instruction documentation steps (the repeatable recipe)
+
+Follow this flow for every new instruction. Each step feeds the next; skip a step = miss a detail.
+
+**Step 1 — Spec lookup (`query_sm90.py`)**
+```bash
+query_sm90.py mnem <NAME>        # variant count, opcodes, format preview, pipe
+query_sm90.py pipe <NAME>        # pipe membership (maps to latency section)
+query_sm90.py class <name> -v    # full CLASS block: FORMAT, slots, PROPERTIES, PREDICATES, CONDITIONS, ENCODING
+query_sm90.py layout <class>     # 128-bit field map (table + ASCII visual)
+```
+From the CLASS output, read:
+- `FORMAT` — slot names & their types (Register, Predicate, UniformRegister, F32Imm, etc.)
+- `ENCODING` — exact bit positions; note gaps, `*<n>` fills, TABLE-based fields (opex)
+- `PROPERTIES` — INSTRUCTION_TYPE, IDEST_SIZE, ISRC_A/B/C/E_SIZE (0 = absent operand)
+- `PREDICATES` — operand sizes that feed latency connector math
+- `CONDITIONS` — register-range constraints and illegal-encoding guards
+
+**Step 2 — Enum cross-check**
+```bash
+query_sm90.py enum <TypeName>    # modifier value maps: FCMP, MUFU_OP, REDUX_SZ, Round1, ...
+```
+Map each format modifier to its numeric encoding. Note any `INVALID*` values that trigger `ILLEGAL_INSTR_ENCODING_ERROR`.
+
+**Step 3 — Disassembly hunting (cuobjdump)**
+```bash
+# Check cublas for real-world usage (fast grep; timeout if needed)
+cuobjdump -arch sm_90 -sass /usr/local/cuda/lib64/libcublas.so | grep -A1 "<MNEMONIC>" | head -20
+
+# Check both hex lines — sm_90 is 128-bit: lo64 (first /*...*/) + hi64 (second /*...*/)
+# Decode one by hand to confirm opcode bits [91]∥[11:0] match the spec
+```
+Collect a few representative encodings: plain form, negated operand, all modifier combos visible.
+
+**Step 4 — Write a test kernel (`tests/<mnem>_test.cu`)**
+
+Cover every observable variant + modifier:
+- Plain form (C++ or PTX inline asm)
+- Negate/absolute on each source operand
+- Each rounding mode (.RM, .RP, .RZ, .RN default)
+- Saturation (.SAT)
+- Flush mode (.FMZ/.FTZ if applicable)
+- Immediate operand (trigger RIR/RRI variant)
+- Uniform register variant (trigger RUR/RRU by loading params into uniform regs via `ULDC` — ptxas on sm_90 often does this automatically for kernel parameters)
+
+For instructions the compiler won't emit from C/C++ (e.g. legacy IMNMX on sm_90), try:
+- `nvcc -arch=sm_75` (older arch may emit different mnemonic)
+- PTX inline asm with the exact PTX mnemonic
+- If neither works, document the compiler's chosen mnemonic (e.g. VIMNMX vs IMNMX) and note it as a relationship
+
+**Step 5 — Compile & disassemble**
+```bash
+nvcc -arch=sm_90 -O3 -cubin -o tests/<mnem>_test.cubin tests/<mnem>_test.cu
+cuobjdump -arch sm_90 -sass tests/<mnem>_test.cubin
+```
+Verify: every case generated the expected SASS mnemonic. If some cases lowered to different instructions (e.g. `-a*b` → FFMA instead of FMUL, or compiler split into UISETP+USEL), record the pattern in the note.
+
+**Step 6 — Write a decoder (`tools/decode_<mnem>.py`)**
+
+Minimal Python script that:
+- Extracts fields from lo64+hi64 via bit positions from ENCODING
+- Reconstructs the full SASS assembly as cuobjdump would print it
+- Validates against the test vectors from Steps 3 & 5
+- Prints match/mismatch for each test vector
+
+Spec essentials:
+- 128-bit instruction = hi64 (bits [127:64]) + lo64 (bits [63:0])
+- Opcode is 13-bit: `{bit[91], bits[11:0]}`
+- Bit positions in `BITS_<width>_<hi>_<lo>` are MSB:LSB, so extract MSB-first
+- Registers: 8-bit for normal (R0–R255, where 0xFF=RZ), 6-bit for uniform (UR0–UR63)
+- Predicates: 3-bit (P0–P6, 7=PT), plus a 1-bit `.not` at the adjacent position
+- Immediate floats: 32-bit IEEE754 at [63:32], big-endian (use `struct.unpack('>f', struct.pack('>I', val))`)
+
+**Step 7 — Write the note (`notes/<mnem>.md`)**
+
+Structure (follow existing notes for consistency):
+```
+# MNEMONIC — One-line description
+**Opcode mnemonic:** ...  |  **Pipe:** ...  |  **INSTRUCTION_TYPE:** ...
+## Semantics
+## Variant overview (table with opcodes)
+## Modifiers (table with field positions)
+## Bit layout (128-bit map)
+## Cross-comparison (vs related instructions, if applicable)
+## Latency (from sm_90_latencies.txt)
+## Verified encodings (table with Lo64/Hi64 → Disassembly)
+### PTX→SASS mapping
+## Open questions
+```
+
+**Step 8 — Tick TODO**
+```markdown
+- [x] **MNEMONIC** (idx N) — description
+```
+
+Key conventions for notes:
+- Record both spec-derived facts AND empirical observations
+- If the compiler does something unexpected (lowers to different instruction, prefers uniform regs, skips a variant), document it
+- When an instruction exists in spec but ptxas doesn't emit it (e.g. IMNMX on sm_90), document the relationship and the arch that does emit it
+- Latency tables: map the instruction's pipe to the correct row in TABLE_TRUE/TABLE_OUTPUT/TABLE_ANTI
 
 ## Critical gotchas
 - The header says `ARCHITECTURE "Volta"` and `WORD_SIZE 64`, but this is the **sm_90** file and each SASS instruction is **16 bytes / 128 bits** (`FUNIT uC` -> `ENCODING WIDTH 128`; bit positions in `BITS_*`/`FUNIT` masks run [127:0], MSB-left). Trust the 128-bit width, not `WORD_SIZE`.
