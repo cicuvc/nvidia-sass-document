@@ -108,12 +108,12 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [x] **BRX** (idx 68) — Branch indirect (register target)
 - [x] **JMP** (idx 69) — Jump (absolute)
 - [x] **JMX** (idx 70) — Jump indirect  _(+ JMXU uniform variant; see notes/jmx.md)_
-- [ ] **CALL** (idx 71) — Function call
-- [ ] **RET** (idx 72) — Return from function
+- [x] **CALL** (idx 71) — Function call
+- [x] **RET** (idx 72) — Return from function
 - [x] **BSSY** (idx 73) — Push convergence point onto branch sync stack
 - [x] **BREAK** (idx 74) — Break out of convergence region
-- [ ] **EXIT** (idx 77) — Thread exit
-- [ ] **KILL** (idx 76) — Kill thread (discard fragment)
+- [x] **EXIT** (idx 77) — Thread exit
+- [x] **KILL** (idx 76) — Kill thread (discard fragment)
 - [ ] **BPT** (idx 75) — Breakpoint trap (debugger)
 - [ ] **RTT** (idx 78) — Return to trap handler
 - [x] **BSYNC** (idx 79) — Branch sync (pop convergence stack, reconverge)
@@ -124,13 +124,13 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [ ] **BMOV** (idx 56) — Barrier move
 - [ ] **B2R** (idx 58) — Barrier register to GPR
 - [ ] **R2B** (idx 59) — GPR to barrier register
-- [ ] **BAR** (idx 61) — Named barrier synchronization
-- [ ] **BAR_INDEXED** (idx 62) — Barrier, indexed variant  `-> BAR`
+- [x] **BAR** (idx 61) — Named barrier synchronization
+- [x] **BAR_INDEXED** (idx 62) — Barrier, indexed variant  `-> BAR`
 - [x] **DEPBAR** (idx 66) — Dependency barrier (wait for scoreboard)
 - [ ] **MATCH** (idx 80) — Warp match (find lanes with same value)
 - [ ] **SHFL** (idx 119) — Warp shuffle (cross-lane data exchange)
-- [ ] **WARPSYNC** (idx 120) — Warp-wide synchronization barrier
-- [ ] **NANOSLEEP** (idx 81) — Thread sleep for specified nanoseconds
+- [x] **WARPSYNC** (idx 120) — Warp-wide synchronization barrier
+- [x] **NANOSLEEP** (idx 81) — Thread sleep for specified nanoseconds
 - [ ] **NANOTRAP** (idx 82) — Nano trap (lightweight trap)
 
 ## System and Miscellaneous
@@ -142,7 +142,7 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [ ] **SETCTAID** (idx 63) — Set CTA (thread block) ID
 - [ ] **SETLMEMBASE** (idx 64) — Set local memory base address
 - [ ] **GETLMEMBASE** (idx 65) — Get local memory base address
-- [ ] **YIELD** (idx 121) — Yield execution (internal, scheduler hint)
+- [x] **YIELD** (idx 121) — Yield execution (internal, scheduler hint)
 
 ## Tensor Core (Base)
 - [ ] **HMMA_16** (idx 132) — FP16 matrix multiply-accumulate, 16-wide  `-> HMMA`
@@ -216,8 +216,8 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 
 ## Collective and Election
 - [ ] **DMMA** (idx 215) — FP64 matrix multiply-accumulate (Hopper re-introduction; encoding category 515 vs 434 for index 180; uses warpgroup-aware tensor core path, shared dispatch with CVTA at case 0xD6/0xD7 in sub_6575D0)
-- [ ] **ELECT** (idx 216) — Elect a leader lane in warp
-- [ ] **ENDCOLLECTIVE** (idx 217) — End collective operation scope
+- [x] **ELECT** (idx 216) — Elect a leader lane in warp
+- [x] **ENDCOLLECTIVE** (idx 217) — End collective operation scope
 
 ## Fences
 - [ ] **FENCE_G** (idx 218) — Fence, global scope  `-> FENCE`
