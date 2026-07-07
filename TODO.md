@@ -134,7 +134,7 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [ ] **NANOTRAP** (idx 82) — Nano trap (lightweight trap)
 
 ## System and Miscellaneous
-- [ ] **ERRBAR** (idx 0) — Error barrier (internal pseudo-instruction)
+- [x] **ERRBAR** (idx 0) — Error barrier (GPU-scope; emitted with GPU/SYS fences)
 - [ ] **NOP** (idx 25) — No-operation
 - [ ] **PMTRIG** (idx 29) — Performance monitor trigger
 - [ ] **CSMTEST** (idx 30) — CSM (compute shader model) test
@@ -212,7 +212,7 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [x] **CGABAR_GET** (idx 209) — CGA barrier get (query state)  `-> UCGABAR_GET`
 - [x] **CGABAR_SET** (idx 210) — CGA barrier set  `-> UCGABAR_SET`
 - [ ] **CGABAR_WAIT** (idx 211) — CGA barrier wait  `-> UCGABAR_WAIT`
-- [ ] **CGAERRBAR** (idx 212) — CGA error barrier
+- [x] **CGAERRBAR** (idx 212) — CGA error barrier
 
 ## Collective and Election
 - [ ] **DMMA** (idx 215) — FP64 matrix multiply-accumulate (Hopper re-introduction; encoding category 515 vs 434 for index 180; uses warpgroup-aware tensor core path, shared dispatch with CVTA at case 0xD6/0xD7 in sub_6575D0)
