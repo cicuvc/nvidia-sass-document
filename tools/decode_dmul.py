@@ -1,62 +1,63 @@
 #!/usr/bin/env python3
-"""DMUL decoder — FP64 multiply, 5 variants (RUR_RU observed)."""
-from typing import Optional
+"""Decoder for DMUL (FP64 multiply) on sm_90 — fma64lite_pipe.
+128-bit instruction = hi64 (bits[127:64]) + lo64 (bits[63:0]).
+Validated against real cuobjdump captures (sm_90, CUDA 13.1).
 
-RND = {0: "RN", 1: "RM", 2: "RP", 3: "RZ"}
+CONFIRMS the CLASS spec: rnd is a simple 2-bit field at [79:78] (in Hi64).
+(An earlier note wrongly claimed rounding was "managed via opex/scoreboard rather
+than a simple 2-bit field" — that was a Lo64-only measurement artifact; the rounding
+bits live in Hi64.)
 
-def extract(lo, hi, bits):
-    val = 0
-    for bit in bits:
-        bv = ((hi >> (bit - 64)) if bit >= 64 else (lo >> bit)) & 1
-        val = (val << 1) | bv
-    return val
+  DMUL[.rnd] Rd, [-][|]Ra[|], [-][|]Rb[|]   ; Rd = Ra * Rb (FP64)
+"""
+import sys, struct
 
-def get_opcode(lo, hi):
-    return extract(lo, hi, [91] + list(range(11, -1, -1)))
+def bits(w, hi, lo):
+    return (w >> lo) & ((1 << (hi - lo + 1)) - 1)
 
-OPCODES = {0x228, 0x428, 0x628, 0x828, 0xa28, 0xc28, 0xe28, 0x1628, 0x1a28, 0x1c28, 0x1e28}
+FORM = {0x228: "R", 0x828: "I", 0xa28: "C", 0x1a28: "Cx", 0x1c28: "U"}
+ROUND = {0: "", 1: ".RM", 2: ".RP", 3: ".RZ"}
 
-def reg_s(r, neg, abs_):
-    n = f"R{r}" if r != 0xff else "RZ"
-    if neg: return f"-{n}"
-    if abs_: return f"|{n}|"
-    return n
+def reg(n): return "RZ" if n == 0xff else f"R{n}"
+def na(neg, ab, s): return ("-" if neg else "") + (f"|{s}|" if ab else s)
 
-def decode_dmul(lo, hi):
-    opc = get_opcode(lo, hi)
-    if opc not in OPCODES: return None
+def fp64_imm(hi32):
+    d = struct.unpack('>d', struct.pack('>Q', hi32 << 32))[0]
+    return f"{d:g}"
 
-    pg = extract(lo, hi, [14,13,12]); pg_not = extract(lo, hi, [15])
-    rd = extract(lo, hi, [23,22,21,20,19,18,17,16])
-    ra = extract(lo, hi, [31,30,29,28,27,26,25,24])
-
-    is_rur = (opc in (0xc28, 0x1c28))
-    if is_rur:
-        urb = extract(lo, hi, [37,36,35,34,33,32])
-        rb_s = f"UR{urb}"
+def decode(lo64, hi64):
+    w = (hi64 << 64) | lo64
+    opcode = (bits(w, 91, 91) << 12) | bits(w, 11, 0)
+    assert opcode in FORM, f"bad opcode {opcode:#x}"
+    Pg = bits(w, 14, 12); Pg_not = bits(w, 15, 15)
+    rnd = bits(w, 79, 78)                       # <-- spec position, in Hi64
+    ra_neg = bits(w, 72, 72); ra_abs = bits(w, 73, 73)
+    rb_neg = bits(w, 63, 63); rb_abs = bits(w, 62, 62)
+    Rd = bits(w, 23, 16); Ra = bits(w, 31, 24)
+    g = "" if (Pg == 7 and not Pg_not) else f"@{'!' if Pg_not else ''}P{Pg} "
+    a = na(ra_neg, ra_abs, reg(Ra))
+    f = FORM[opcode]
+    if f == "R":   b = na(rb_neg, rb_abs, reg(bits(w, 39, 32)))
+    elif f == "U": b = f"UR{bits(w,37,32)}"
+    elif f == "I": b = fp64_imm(bits(w, 63, 32))
     else:
-        rb = extract(lo, hi, [39,38,37,36,35,34,33,32])
-        rb_s = reg_s(rb, 0, 0)
+        bank = bits(w, 58, 54); off = bits(w, 53, 40) << 2
+        b = f"c[{bank:#x}][{off:#x}]"
+    return f"{g}DMUL{ROUND[rnd]} {reg(Rd)}, {a}, {b} ;"
 
-    rnd = extract(lo, hi, [79,78])
-
-    parts = []; mnem = "DMUL"
-    if pg != 7: parts.append(f"@{'!' if pg_not else ''}P{pg}")
-    if rnd != 0: mnem += f".{RND[rnd]}"
-    parts.append(mnem)
-    parts.append(f"{reg_s(rd,0,0)},"); parts.append(reg_s(ra,0,0)+","); parts.append(rb_s)
-    return " ".join(parts)
+VEC = [
+    (0x0000000402067228, 0x008fce0000000000, "DMUL R6, R2, R4 ;"),
+    (0x0000000402067228, 0x008fce0000004000, "DMUL.RM R6, R2, R4 ;"),
+    (0x0000000402067228, 0x008fce0000008000, "DMUL.RP R6, R2, R4 ;"),
+    (0x0000000402067228, 0x008fce000000c000, "DMUL.RZ R6, R2, R4 ;"),
+    (0x4004000002047828, 0x004fce0000000000, "DMUL R4, R2, 2.5 ;"),
+]
 
 if __name__ == "__main__":
-    tests = [
-        (0x000000040a027c28, 0x004fea0000000a00, "DMUL R2, R10, UR4"),
-        (0x000000040a067c28, 0x000ea20000000a00, "DMUL.RM R6, R10, UR4"),
-        (0x000000040a087c28, 0x000ee20000000a00, "DMUL.RP R8, R10, UR4"),
-        (0x000000040a0a7c28, 0x000f220000000a00, "DMUL.RZ R10, R10, UR4"),
-    ]
-    ok = 0
-    for lo, hi, exp in tests:
-        r = decode_dmul(lo, hi); s = "OK" if r == exp else "MISMATCH"
-        if r == exp: ok += 1
-        print(f"{r:45s} [{s}]" + (f"  expected: {exp}" if s != "OK" else ""))
-    print(f"\n{ok}/{len(tests)} PASS")
+    ok = True
+    for lo, hi, exp in VEC:
+        got = decode(lo, hi); m = "OK " if got == exp else "XX "
+        if got != exp: ok = False
+        print(f"{m}{got:24s} | exp {exp}")
+    print("ALL PASS" if ok else "MISMATCH")
+    sys.exit(0 if ok else 1)

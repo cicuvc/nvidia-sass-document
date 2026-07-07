@@ -77,20 +77,27 @@ For the `RUR_RUR` variant, Rb is replaced by a 6-bit uniform register at
   [91],[11:0] 13b  opcode     (0x1c2b for RUR_RUR)
 ```
 
-**Note:** Empirical encodings from ptxas show an alternate encoding (bits[11:0]=0xc2b,
-bit[91]=0) that uses a different field layout — the rounding and negate bits
-do not match the spec positions above. The spec encoding is documented for
-reference; the actual ptxas-generated encoding uses positions that differ
-from the formal CLASS definition. See "Open questions" below.
+**Note (correction):** the CLASS spec encoding above is **correct** — verified empirically.
+An earlier version of this note claimed the ptxas encoding put the rounding/negate bits in
+positions differing from the spec. That was a **mistake**: it recorded only Lo64, but `rnd`
+([79:78]) and the negate/abs bits ([75:72]) live in **Hi64**. With Hi64 captured, the spec
+positions match exactly (see "Verified encodings").
 
-## Verified encodings
+## Verified encodings (sm_90, CUDA 13.1 — full lo64 + hi64)
 
-| Disassembly | Lo64 | PTX |
-|-------------|------|-----|
-| `DFMA R2, R10, UR4, R12` | `0x000000040a027c2b` | `fma.rn.f64` |
-| `DFMA.RM R6, R10, UR4, R12` | `0x000000040a067c2b` | `fma.rm.f64` |
-| `DFMA.RP R8, R10, UR4, R12` | `0x000000040a087c2b` | `fma.rp.f64` |
-| `DFMA.RZ R10, R10, UR4, R12` | `0x000000040a0a7c2b` | `fma.rz.f64` |
+RRR form (`tests/dfma_test.cu`), `Rd`=R8, `Ra`=R2, `Rb`=R4, `Rc`=R6:
+
+| Disassembly | Lo64 | Hi64 | rnd/neg bits (Hi64) |
+|-------------|------|------|---------------------|
+| `DFMA R8, R2, R4, R6` | `0x000000040208722b` | `0x008fce0000000006` | rnd=0 (RN) |
+| `DFMA.RM R8, R2, R4, R6` | `0x000000040208722b` | `0x008fce0000004006` | rnd=1 → bit[14] |
+| `DFMA.RP R8, R2, R4, R6` | `0x000000040208722b` | `0x008fce0000008006` | rnd=2 → bit[15] |
+| `DFMA.RZ R8, R2, R4, R6` | `0x000000040208722b` | `0x008fce000000c006` | rnd=3 → bits[15:14] |
+| `DFMA R8, -R2, R4, -R6` | `0x000000040208722b` | `0x008fce0000000906` | Ra@neg[72]+Rc@neg[75] |
+
+The four rounding modes share an identical Lo64 (only Hi64 `rnd`[79:78]=Hi64 bits[15:14]
+changes) — which is exactly why a Lo64-only capture appeared to "lose" the rounding field.
+Decoder: `tools/decode_dfma.py` (confirms spec positions).
 
 ### PTX to SASS mapping
 
@@ -103,11 +110,10 @@ from the formal CLASS definition. See "Open questions" below.
 
 ## Open questions
 
-- **Encoding mismatch:** The observed ptxas encoding (lo bits[11:0]=0xc2b,
-  bit[91]=0) matches the spec's RUR_RUR lo-bits but not the hi-bits. The
-  rounding and negate modifiers use positions different from the CLASS
-  ENCODING section. This may indicate a newer variant not captured in the
-  spec dump, or a ptxas optimization that uses a different encoding variant.
-- **FP64 operand negation:** PTX `fma.f64` does not support operand negation
-  in inline asm, unlike F32 `fma.rn.f32` which does. This may be a PTX
-  limitation — the hardware supports negation via the negate/absolute bits.
+- **FP64 operand negation:** PTX `fma.f64` does not expose operand negation directly in inline
+  asm (`__fma_rn(-a,b,-c)` folds the negation into the DFMA `-Ra`/`-Rc` bits [72]/[75], as
+  verified above), unlike some F32 paths. This is a PTX-frontend convenience, not a hardware
+  limitation — the DFMA negate/abs bits are always available.
+
+*(Resolved: the earlier "encoding mismatch" open question was a Lo64-only measurement error;
+the CLASS spec rounding/negate positions are correct — see the Note above.)*

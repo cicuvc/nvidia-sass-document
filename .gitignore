@@ -1,6 +1,9 @@
 # Generated / regenerable DB (rebuild with: python3 tools/parse_sm90.py)
 sm90.json
 
+# Compiled test binaries (regenerable: nvcc -cubin)
+*.cubin
+
 # Python
 __pycache__/
 *.pyc

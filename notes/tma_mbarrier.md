@@ -150,5 +150,5 @@ transfer size, unlike the group/instruction counters of cp.async and wgmma.
 - The non-parity `mbarrier.try_wait` / `mbarrier.test_wait` blocking forms (with
   suspend/timeout) — whether they emit a different `SYNCS` sub-op than the
   `PHASECHK...TRYWAIT` spin.
-- `UTMASTG`/`UTMAREDG`/`UBLKCP` control-code shapes (store/reduce/bulk-copy) vs
-  `UTMALDG`.
+- `UTMASTG`/`UTMAREDG` control-code shapes (store/reduce) vs `UTMALDG`.
+  (`UBLKCP` — the non-tensor `cp.async.bulk` — is now documented in `notes/ublkcp.md`.)

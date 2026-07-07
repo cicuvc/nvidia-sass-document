@@ -38,10 +38,10 @@ Tags: `-> MNEM` = ref_memo entry maps to this canonical sm_90 SASS mnemonic (sha
 - [x] **MUFU** (idx 42) — Multi-function unit: RCP, RSQ, SIN, COS, EX2, LG2, RCP64H, RSQ64H
 
 ## FP64 Arithmetic
-- [ ] **DFMA** (idx 122) — FP64 fused multiply-add
-- [ ] **DADD** (idx 123) — FP64 add
-- [ ] **DMUL** (idx 124) — FP64 multiply
-- [ ] **DSETP** (idx 125) — FP64 compare and set predicate
+- [X] **DFMA** (idx 122) — FP64 fused multiply-add
+- [x] **DADD** (idx 123) — FP64 add
+- [x] **DMUL** (idx 124) — FP64 multiply
+- [X] **DSETP** (idx 125) — FP64 compare and set predicate
 
 ## FP16 Packed Arithmetic
 - [x] **HADD2** (idx 126) — Packed FP16x2 add
