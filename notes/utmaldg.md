@@ -118,6 +118,6 @@ Framing: preceded by `mbarrier.init`/`arrive.expect_tx` (`SYNCS.EXCH.64` /
 - Where the tile **coordinate registers** live: `URb` names the destination smem,
   but the coordinates ride in the multi-register block sized by `ISRC_B_SIZE`
   (96 + dim payload). Exact packing of coords vs im2col offsets not bit-decoded here.
-- `req_bit_set` meaning (scoreboard wait mask) — same open item as UBLKCP.
+
 - Whether the `_desc` (memdesc=1) form is ever emitted from stock PTX, and what
   `desc[URe]` carries (cache/L2 policy descriptor).

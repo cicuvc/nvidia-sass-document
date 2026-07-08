@@ -99,7 +99,5 @@ Appears after every store-direction bulk/TMA op group: `UTMASTG` (tensor store),
 and `multimem.cp.async.bulk` (all lower their commit to this op).
 
 ## Open questions
-- Whether ptxas ever emits UTMACMDFLUSH under a non-PT predicate or with a
-  non-default `req_bit_set` (all observed cases are bare).
 - Exact width of the implicit TMA group counter behind the fixed commit scoreboard
   (shared open item with `notes/depbar.md`).

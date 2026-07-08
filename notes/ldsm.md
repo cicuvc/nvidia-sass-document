@@ -72,6 +72,19 @@ LDSM is **restricted to Compute Shaders (CS)**:
 - M816 → requires sz = `.U4TO8` or `.S4TO8`
 - M832 → requires sz = `.U2TO4` or `.S2TO4`
 
+### Matrix layout — fragment mapping to HMMA/IMMA
+
+Each mode defines the matrix dimensions and element type loaded from shared memory into one thread's registers. The layout follows the PTX `ldmatrix` fragment specification (see PTX ISA Figures 104–106):
+
+| Mode | Matrix (rows×cols) | Element (memory→register) | Thread data (x4) | Consumer |
+|------|-------------------|---------------------------|-------------------|----------|
+| M88  | 8×8                | 16-bit → 16-bit           | 8×8 = 512b = 4 regs | HMMA (fp16/bf16 A/B) |
+| MT88 | 8×8 (transposed)   | 16-bit → 16-bit           | same as M88, column-major input | HMMA (transposed A/B) |
+| M816 | 8×16               | 4-bit → 8-bit (upcast)    | 8×16 = 1024b = 4 regs | IMMA (sub-byte quantized A) |
+| M832 | 8×32               | 2-bit → 4-bit (upcast)    | 8×32 = 1024b = 4 regs | IMMA (binary/2-bit quantized A) |
+
+The loaded data lands in registers in the exact fragment layout expected by HMMA (`Ra` operand) or IMMA (`Ra`/`Rb` operands) — each thread holds one row of the matrix tile in consecutive registers. The PTX `ldmatrix` spec provides the per-thread register-to-element mapping figures. On sm_90 only M88/MT88 are reachable via PTX (`.m8n8.b16`); M816/M832 are forward-compatibility encodings for Blackwell+. See `ptx2sass-ldmatrix-stmatrix.md` and the PTX `ldmatrix` documentation for details.
+
 ### Number of registers (`num`) — bits [73:72], enum `LDSM_NUM`
 
 | Value | Mnemonic | Registers loaded | Alignment |
@@ -180,10 +193,5 @@ architectures which expose `.m16n16` and `.m8n16` shapes.
 
 - **Element-size conversion semantics**: How exactly does `.U4TO8` map 4-bit
   values to 8-bit register lanes? Needs microbenchmark verification.
-- **Matrix layout details**: The memory layout implied by M88/MT88/M816/M832
-  modes — are these standard row-major/column-major matrices with the given
-  dimensions, or something specific to tensor-core data ordering?
-- **Relationship to HMMA/IMMA**: What is the exact data-layout contract between
-  LDSM-loaded registers and HMMA/IMMA input operands?
 - **pseudo_ops ALTERNATE CLASS**: The two `ldsm_pseudo_ops_*` variants have the
   same opcodes but with a `PSEUDO_OP` discriminator. What triggers these?

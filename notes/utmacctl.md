@@ -112,4 +112,4 @@ now confirmed with the exact 0x19b9 encoding and the `.PF`/`.IVALL` siblings.
 - The `.acquire` scope (`.cta/.cluster/.gpu/.sys`) does **not** change the SASS
   (`UTMACCTL.IV` identical for gpu/cta/sys) — scope has no instruction-level
   field; ordering is enforced by the preceding `DEPBAR`.
-- `req_bit_set` semantics (shared open item with the rest of the TMA family).
+

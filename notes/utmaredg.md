@@ -108,5 +108,5 @@ and→AND, or→OR, xor→XOR` (direct 0–7 mapping).
 ## Open questions
 - Element type / precision of the reduction (f16/bf16/f32/s32/u32) — likely carried
   in the tensor-map descriptor, not the instruction (no type field observed).
-- `req_bit_set` semantics (same open item as UBLKCP/UTMALDG/UTMASTG).
+
 - Whether `_desc` (memdesc=1) reduction form is emitted from stock PTX.

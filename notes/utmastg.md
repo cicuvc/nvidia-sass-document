@@ -108,5 +108,5 @@ Decoder `tools/decode_utmastg.py`: **6/6 PASS**. `dim` is Hi64 bits [81:79]
 
 ## Open questions
 - Exact coord/descriptor packing inside `URb` (base 64-bit vs UTMALDG's 96-bit).
-- `req_bit_set` semantics (same open item as UBLKCP/UTMALDG).
+
 - Whether the `_desc` (memdesc=1) store form is emitted from stock PTX.

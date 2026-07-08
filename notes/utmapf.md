@@ -108,4 +108,4 @@ does not force single-thread election for prefetch).
   another operand; not triggered by the basic `.tile`/`.im2col` kernels here.
 - `.tile::gather4` / `.im2col::w` / `.im2col::w::128` load modes — additional
   `load_mode` values that may map to more modifier bits.
-- `req_bit_set` semantics (shared open item across the TMA family).
+

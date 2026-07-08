@@ -41,6 +41,8 @@ HGMMA has **6 encoding variants** (3 addressing modes × dense/sparse):
 | `hgmma_URa_Rb_Rc_` | `0x15f0` | SMEM via URa descriptor | GPR Rb | B in registers |
 | `hgmma_URa_Rc_` | `0x19f0` | SMEM via URa descriptor | SMEM via URa descriptor | Both in SMEM, no reg B |
 
+On Hopper, the common idiom is both matrices in shared memory (`URa_Rc_`) — A/B tiles are staged asynchronously via TMA (`UTMALDG`) or `LDSM`, never loaded into registers directly. The register-source variants (`Ra_URb_Rc_`, `URa_Rb_Rc_`) exist for **chained GEMM**: compute `A×B` with both operands in SMEM → result lands in registers as `Rd`/`Rc`, then chain with matrix `C` still in SMEM via the register-source variant without reloading the intermediate result. Keeping A/B in registers without this chain pattern would require `LDMATRIX`, consuming 2× RF bandwidth with no benefit over the SMEM path.
+
 Sparse variants share the same opcodes, distinguished by `sp`/`spformat` slots.
 
 ### Syntax
@@ -160,6 +162,10 @@ It encodes:
 The 4 uniform registers (aligned to 4) pointed to by URa/URb hold the full
 descriptor. The tensor core hardware reads the matrix data directly from
 shared memory using this descriptor — no explicit LDSM loads needed.
+
+The descriptor format (base address, stride, layout flags, element size) is
+documented in the PTX ISA reference under `wgmma.mma_async` — see the PTX
+documentation for the exact bit layout of the 4-register descriptor.
 
 ## Bit layout (128-bit)
 
@@ -391,13 +397,7 @@ into the 64-bit register pair spanning 4 uniform registers (aligned).
 
 ## Open questions
 
-- **URa_Rc_ (both-in-SMEM) usage**: When does ptxas choose to keep both A
-  and B in shared memory rather than loading one into registers? Likely
-  for very large tiles (N ≥ 128) where register pressure is high.
 - **GMMA scoreboard mechanism**: How exactly does `gsb0` interact with
   `wgmma.commit_group`/`wgmma.wait_group` at the hardware level? The
   scoreboard tracking is warpgroup-wide and decoupled from the per-warp
   scoreboard.
-- **Shared memory descriptor format**: The exact bit layout of the
-  `GMMA:gdesc[UR]` 4-register descriptor — base address, stride, layout
-  flags — needs empirical determination from cuobjdump analysis.

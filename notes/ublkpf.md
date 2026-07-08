@@ -91,4 +91,4 @@ Decoder `tools/decode_ublkpf.py`: **2/2 PASS**. In the desc form, `memdesc` [76]
 ## Open questions
 - `desc[URe]` layout — carries the L2 cache-eviction policy (from
   `createpolicy`/`cache_policy`); exact descriptor bitfield not decoded here.
-- `req_bit_set` semantics (shared open item across the TMA/bulk family).
+

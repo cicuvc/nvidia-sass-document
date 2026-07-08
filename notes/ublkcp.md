@@ -149,8 +149,6 @@ the bare `.global.shared::cta.bulk_group` form assembles, so the `cp_mask`/
 `byteMask` partial-copy variants could not be probed.
 
 ## Open questions
-- Exact meaning of `req_bit_set` (=0x1 seen on the multicast case, 0x2 on the plain
-  load) — appears to be the scoreboard-wait mask, not fully decoded.
 - `sp2` (LTC64B/128B/256B) L2 sector cache-hint: which PTX `.L2::cache_hint` /
   policy operand emits it (not triggered by the basic kernels here).
 - `SEQUENCED` (`.SEQ`) ordering form and its interaction with the `STRONG.<sco>`

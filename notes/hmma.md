@@ -77,7 +77,8 @@ Dense `SIZE_1688_16816_1684`:
 | 0 | `1688` | 16×8×8 | Default |
 | 1 | `16816` | 16×8×16 | Not TF32 |
 | 2 | `1684` | 16×8×4 | TF32 only |
-| 3 | INVALID3 | — | Illegal encoding |
+
+On Turing (sm_75), only 1684 and 1688 existed for fp16 HMMA. Starting from Ampere (sm_80), max K doubled → fp16/bf16 get 1688 and 16816; the 1684 encoding was retained as a TF32-only half-K option. Since TF32 elements are 4 bytes each (E8M10, same storage as fp32), K=4 gives roughly the same per-thread data throughput as K=8 for fp16, providing finer granularity when the full K=8 matrix is unnecessary.
 
 Sparse `SIZE_1688_16816_16832`:
 
@@ -224,8 +225,3 @@ compiler infers it from operand lifetimes.
 - **IndexedRF usage**: When does ptxas choose indexed register file
   addressing over standard register file? Possibly for uniform-register-resident
   accumulators or warp-uniform matrices.
-- **BF16 vs E8M7 encoding**: BF16 and E8M7 share the same srcfmt encoding
-  value (1). How does the hardware distinguish them, or are they treated
-  identically? (BF16 = E8M7 format is the same 1-8-7 bit layout.)
-- **`.1684` vs `.1688` TF32**: The `.1684` size for TF32 is unusual (K=4
-  instead of K=8). Why does TF32 alone get a half-K variant?
