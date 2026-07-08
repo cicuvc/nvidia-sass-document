@@ -30,6 +30,8 @@ Same skeleton as `BSYNC`/`BREAK` **minus the `barReg` field**. Standard scheduli
 word occupies the usual hi-bits (`req_bit_set`, `src_rel_sb`/`dst_wr_sb`=7, `pm_pred`,
 `opex`).
 
+`Pp` on YIELD must be PT — a non-PT predicate operand is an illegal encoding.
+
 ## Rendering
 `YIELD` (bare), `@P0 YIELD` (guarded), `YIELD P3` / `YIELD !PT` (predicate operand, space,
 no comma).
@@ -89,4 +91,3 @@ interleaved, can complete, and release — breaking the pre-Volta warp-internal 
 - The exact scheduler policy (how strongly/for how long YIELD deprioritizes the warp, and
   its interaction with the control-word `stall`/`usched_info` bits) is not exposed by the
   spec — only that YIELD is the explicit yield op on the CBU pipe.
-- Non-PT `Pp` on YIELD is not observed in emitted code; its per-lane effect is unverified.

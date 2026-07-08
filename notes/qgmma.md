@@ -19,6 +19,9 @@ Warpgroup-level async tensor core operation for 8-bit floating point types (e4m3
 ## Semantics
 Standard FP matrix multiply-accumulate with 8-bit floating point inputs (e4m3 = 4-bit exponent + 3-bit mantissa, e5m2 = 5-bit exponent + 2-bit mantissa). Same structure as HGMMA but for FP8 types. K=32 dense / K=64 sparse.
 
+### Accumulator precision
+When `.F32` destination format is used, the internal Kulisch accumulator only has **14 mantissa bits** — well short of true FP32's 23-bit mantissa. The `.F32` output format refers to the **storage width** (32-bit registers), not the arithmetic precision. For full FP32 accumulation, use HGMMA with f16/BF16 inputs instead.
+
 ## Modifiers
 | Modifier | Dense | Sparse |
 |---|---|---|
