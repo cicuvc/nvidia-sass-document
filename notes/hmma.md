@@ -175,6 +175,40 @@ HMMA implements PTX `mma.sync.aligned` for fp16/bf16/tf32/e6m9 types.
 `.reuse` is a ptxas scheduling optimization, not a PTX-level qualifier — the
 compiler infers it from operand lifetimes.
 
+## Bit layout (hmma_x8_ 0x23c, dense RRR, 128-bit)
+
+| bits | field | width | source | notes |
+|------|-------|-------|--------|-------|
+| [124:122],[109:105] | opex | 8 | `TABLES_opex_5(batch_t,usched_info,reuse_src_a,reuse_src_b)` | scheduling + reuse hints |
+| [121:116] | req_bit_set | 6 | — | scoreboard wait mask |
+| [115:113] | src_rel_sb | 3 | `VarLatOperandEnc(src_rel_sb)` | read scoreboard |
+| [112:110] | dst_wr_sb | 3 | `VarLatOperandEnc(dst_wr_sb)` | write scoreboard |
+| [103:102] | pm_pred | 2 | — | perfmon predicate |
+| [91],[11:0] | opcode | 13 | 0x23c | |
+| [90:87] | op | 4 | `TABLES_Pnz_0(UPp@not,UPp)` | uniform predicate |
+| [83:82] | srcfmt | 2 | SRCFMT | F16=0,BF16=1,TF32=2,E6M9=3 |
+| [81] | loc | 1 | `*0` | |
+| [78],[75] | size | 2 | SIZE_1688_16816_1684 | dense K: 1688/16816/1684 |
+| [76] | dstfmt | 1 | FloatNo64 | F16=0,F32=1 |
+| [72] | Ra@negate | 1 | Ra@negate | `-Ra` |
+| [71:64] | Rc | 8 | Register | accumulator C |
+| [63] | Rb@negate | 1 | Rb@negate | `-Rb` |
+| [39:32] | Rb | 8 | Register | B matrix |
+| [31:24] | Ra | 8 | Register | A matrix |
+| [23:16] | Rd | 8 | Register | accumulator D |
+| [15] | Pg_not | 1 | Pg@not | predicate negate |
+| [14:12] | Pg | 3 | Predicate | guard predicate |
+
+### Sparse variant differences
+- [81] `spformat` (TID=0, REGOFFSET=1) replaces `loc = *0`
+- [50] `reuse_src_e`
+- [49:44] `Re` (metadata register) or `*7`
+- [43:42] `id` (2-bit immediate 0/1)
+
+### IndexedRF variant differences (0x1e79)
+- `Rd`/`Rc` fields replaced by `URd`/`URc` indexing the uniform register file
+- Bit [91]=1 distinguishes from dense register-file variant
+
 ## Cross-comparison
 
 | Property | HMMA | IMMA |

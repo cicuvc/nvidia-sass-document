@@ -31,6 +31,31 @@ Rounding mode: RN (round-to-nearest).
 | merge | — | PACK_ABONLY, MERGE_CONLY |
 | rnd | — | RN (round-to-nearest) |
 
+## Bit layout (URURUR 0x12ba, 128-bit)
+
+| bits | field | width | source | notes |
+|------|-------|-------|--------|-------|
+| [124:122],[109:105] | opex | 8 | `TABLES_opex_1(batch_t,usched_info)` | scheduling |
+| [121:116] | req_bit_set | 6 | — | scoreboard wait mask |
+| [115:113] | src_rel_sb | 3 | `*7` | fixed |
+| [112:110] | dst_wr_sb | 3 | `*7` | fixed |
+| [103:102] | pm_pred | 2 | — | perfmon predicate |
+| [91],[11:0] | opcode | 13 | 0x12ba | |
+| [85:84],[76:75] | dfmt.sfmt | 4 | F2Ffmts2 | F16.F32 / BF16.F32, etc. |
+| [81:79] | rndMode | 3 | RNDMODE | RN (only value) |
+| [78] | mode | 1 | `*merge` | PACK_ABONLY / MERGE_CONLY |
+| [69:64] | Ra_URc | 6 | UniformRegister | = `*63` (unused in PACK_AB mode) |
+| [37:32] | Ra_URb | 6 | UniformRegister | second source |
+| [29:24] | Sa | 6 | UniformRegister | first source (URa) |
+| [21:16] | URd | 6 | UniformRegister | destination |
+| [15] | Pg_not | 1 | UPg@not | predicate negate |
+| [14:12] | UPg | 3 | UniformPredicate | uniform guard (UPT=7 hidden) |
+
+### Merge_C variant differences
+- [78] `*merge` = MERGE_CONLY
+- `Ra_URc` at [69:64] holds the C merge register (not `*63`)
+- URIUR variant replaces URb with 32-bit immediate at [63:32]; URURI variant adds an immediate at [63:32]
+
 ## Cross-comparison
 
 | Property | F2F | F2FP | UF2FP |

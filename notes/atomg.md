@@ -61,6 +61,31 @@ old = atomicAdd(p, 1);    // → ATOMG (needs Rd)
      atomicAdd(p, 1);     // → REDG  (fire-and-forget)
 ```
 
+## Bit layout (basic int 0x3a8, RaNonRZ, 128-bit)
+
+| bits | field | source |
+|------|-------|--------|
+| [124:122],[109:105] | opex | `TABLES_opex_0(batch_t,usched_info)` |
+| [121:116] | req_bit_set | scoreboard wait mask |
+| [115:113] | src_rel_sb | `VarLatOperandEnc(src_rel_sb)` |
+| [112:110] | dst_wr_sb | `VarLatOperandEnc(dst_wr_sb)` |
+| [103:102] | pm_pred | perfmon predicate |
+| [91]∥[11:0] | opcode | varies by group |
+| [90:87] | op | OP_ADD_MIN_MAX_INC_DEC_AND_OR_XOR_EXCH_SAFEADD / ATOMICFPOPS / CAS |
+| [86:84] | cop | COP (`.E`/`.EN`) |
+| [83:81] | Pu | write predicate |
+| [80:77] | mem | sem/sco/private (via `TABLES_mem_0`) |
+| [75:73] | sz | data size (ATOMICINTSIZES / ATOMCASSZ) |
+| [72] | e | 1=64-bit address (`Ra.64`) |
+| [63:40] | Ra_offset | 24-bit signed offset |
+| [39:32] | Rb | source operand |
+| [31:24] | Ra | address register |
+| [23:16] | Rd | destination (old value) |
+| [15] | Pg_not | predicate negate |
+| [14:12] | Pg | guard predicate |
+
+Same layout as ATOM, differing only in opcode values and the presence of `TABLES_mem_0` for sem/sco/private. CAS adds `Rc` at [71:64]; uniform variants replace `Ra_offset` with `URc` at [69:64] and `Ra` is RZ.
+
 ## Verified encodings
 
 | Lo64 | Disassembly |

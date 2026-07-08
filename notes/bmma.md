@@ -20,7 +20,7 @@ accumulation counts the number of set bits (POPC = population count) instead
 of arithmetic sum.
 
 All 32 threads participate; each thread holds register fragments of the
-matrices. The warpgroup-level counterpart is BGMMA (`notes/bgmma_qgmma.md`).
+matrices. The warpgroup-level counterpart is BGMMA (`notes/bgmma.md`).
 
 ## Variants
 

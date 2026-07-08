@@ -55,6 +55,30 @@ value). Not all combinations may be valid simultaneously.
 
 Register read reuse hint on Ra, Rb, Rc. Incompatible with DRAIN tokens.
 
+## Bit layout (RRR 0x22b, 128-bit)
+
+| bits | field | width | source | notes |
+|------|-------|-------|--------|-------|
+| [124:122],[109:105] | opex | 8 | `TABLES_opex_4(batch_t,usched_info,reuse_src_a,reuse_src_b,reuse_src_c)` | scheduling + reuse hints |
+| [121:116] | req_bit_set | 6 | — | scoreboard wait mask |
+| [115:113] | src_rel_sb | 3 | `VarLatOperandEnc(src_rel_sb)` | read scoreboard |
+| [112:110] | dst_wr_sb | 3 | `VarLatOperandEnc(dst_wr_sb)` | write scoreboard |
+| [103:102] | pm_pred | 2 | — | perfmon predicate |
+| [91],[11:0] | opcode | 13 | 0x22b | RRR form |
+| [79:78] | rnd | 2 | Round1 | RN=0(hidden),RM=1,RP=2,RZ=3 |
+| [75] | Rc@negate | 1 | Rc@negate | `-Rc` |
+| [74] | Rc@absolute | 1 | Rc@absolute | `\|Rc\|` |
+| [73] | Ra@absolute | 1 | Ra@absolute | `\|Ra\|` |
+| [72] | Ra@negate | 1 | Ra@negate | `-Ra` |
+| [71:64] | Rc | 8 | Register | FP64 addend B pair |
+| [63] | Rb@negate | 1 | Rb@negate | `-Rb` |
+| [62] | Rb@absolute | 1 | Rb@absolute | `\|Rb\|` |
+| [39:32] | Rb | 8 | Register | FP64 addend B pair |
+| [31:24] | Ra | 8 | Register | FP64 addend A pair |
+| [23:16] | Rd | 8 | Register | result pair |
+| [15] | Pg_not | 1 | Pg@not | predicate negate |
+| [14:12] | Pg | 3 | Predicate | guard predicate |
+
 ## RUR variant encoding (spec)
 
 For the `RUR_RUR` variant, Rb is replaced by a 6-bit uniform register at

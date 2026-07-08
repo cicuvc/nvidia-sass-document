@@ -35,7 +35,7 @@ Single CLASS `cs2r_` / opcode 0x805, parameterized by `sz` (QInteger 32/64).
 | [124:122]∥[109:105] | `opex` | scheduling | |
 
 64-bit mode requires `Rd`/`SRa` even-aligned. `IDEST/ISRC_A = 32 + (sz==64)*32`. See
-`s2r_s2ur.md` for the full SpecialRegister index map (`SR_CLOCKLO`=80, `SR_CLOCKHI`=81,
+`s2r.md` for the full SpecialRegister index map (`SR_CLOCKLO`=80, `SR_CLOCKHI`=81,
 `SR_GLOBALTIMERLO`=82, `SR_GLOBALTIMERHI`=83, `SRZ`=255, …).
 
 ## Cross-comparison

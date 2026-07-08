@@ -52,6 +52,53 @@ into a GPR (`.WATCH` = watch/monitor mode).
 `SYNCS.LD.64 URd,[URa]` — uniform load. Fields: `URd`[21:16], `URa`[29:24], `URb`[37:32],
 `off`[63:40].
 
+## Bit layout (128-bit)
+
+### SYNCS.ARRIVE.TRANS64 (0x19a7)
+
+| bits | field | width | source | notes |
+|------|-------|-------|--------|-------|
+| [124:122],[109:105] | opex | 8 | `TABLES_opex_0(batch_t,usched_info)` | scheduling |
+| [121:116] | req_bit_set | 6 | — | scoreboard wait mask |
+| [115:113] | src_rel_sb | 3 | `VarLatOperandEnc(rd)` | read scoreboard |
+| [112:110] | dst_wr_sb | 3 | `VarLatOperandEnc(wr)` / `*7` (RZ) | write scoreboard |
+| [103:102] | pm_pred | 2 | — | perfmon predicate |
+| [91],[11:0] | opcode | 13 | 0x19a7 | |
+| [89:87] | Pu | 3 | Predicate | PHASECHK dest predicate |
+| [86:84] | paramtype | 3 | PARAMTYPE | A1TR=0,A1T0=1,A0T1=2,A0TR=3,A0TX=4,ART0=5 |
+| [83:81] | Pu | 3 | Predicate | ARRIVE dest pred / PHASECHK |
+| [80:77] | mem | 4 | `TABLES_mem_0(sem,sco,private)` | memory ordering |
+| [74:73] | retval | 2 | — | OLDSTATE=0,TMASK=1,RED=2 |
+| [72] | wait | 1 | — | ONCE=0, `.TRYWAIT`=1 (PHASECHK) |
+| [69:64] | URc | 6 | UniformRegister | uniform base register |
+| [63:40] | Ra_offset | 24 | SImm(24) | signed offset |
+| [39:32] | Rb | 8 | Register | count value / token |
+| [31:24] | Ra | 8 | Register | address register (RZ=URc-only) |
+| [23:16] | Rd | 8 | Register | token destination (ARRIVE only) |
+| [15] | Pg_not | 1 | Pg@not | predicate negate |
+| [14:12] | Pg | 3 | Predicate | guard predicate |
+
+### Shared uniform atomics (...b2, 128-bit)
+
+| bits | field | width | source | notes |
+|------|-------|-------|--------|-------|
+| [69:64] | URc | 6 | UniformRegister | uniform base (or absent) |
+| [63:40] | Ra_offset | 24 | SImm(24) | signed offset |
+| [37:32] | URb | 6 | UniformRegister | source / exchange value |
+| [29:24] | URa | 6 | UniformRegister | address register |
+| [21:16] | URd | 6 | UniformRegister | result register (EXCH/LD) |
+| [14:12] | UPg | 3 | UniformPredicate | uniform guard predicate |
+
+CAS variant adds `URc` at [69:64] for the compare value.
+
+### Cache-control (...b1, 128-bit)
+
+| bits | field | width | source | notes |
+|------|-------|-------|--------|-------|
+| [29:24] | URa | 6 | UniformRegister | address register |
+| [63:40] | Ra_offset | 24 | SImm(24) | signed offset |
+| [23:16] | Rd | 8 | Register | (syncs_ld_ only) |
+
 ## Latency
 `mio_pipe`, `OP_SYNCS` set. `INST_TYPE_DECOUPLED_RD_WR_SCBD` / `VQ_SYNCS_UNORDERED_WR`:
 - the token/loaded-`URd` result is **write-scoreboard tracked** (consumers wait on the SB,

@@ -62,6 +62,31 @@ incompatible with DRAIN/WAITn tokens (enforced by CONDITION).
 | `_URb` (uniform) | `0x1c26` | One source from uniform register |
 | `_CXb` (constant+uniform) | `0x1a26` | Constant bank + uniform register |
 
+## Bit layout (4A R 0x226, 128-bit)
+
+| bits | field | width | source | notes |
+|------|-------|-------|--------|-------|
+| [124:122],[109:105] | opex | 8 | `TABLES_opex_4(batch_t,usched_info,reuse_src_a,reuse_src_b,reuse_src_c)` | scheduling + reuse |
+| [121:116] | req_bit_set | 6 | — | scoreboard wait mask |
+| [115:113] | src_rel_sb | 3 | `*7` | fixed |
+| [112:110] | dst_wr_sb | 3 | `*7` | fixed |
+| [103:102] | pm_pred | 2 | — | perfmon predicate |
+| [91],[11:0] | opcode | 13 | 0x226 | |
+| [77:76] | insert | 2 | `*mode` | 0=4A,1=2A.LO,3=2A.HI |
+| [75] | Rc@negate | 1 | Rc@negate | `-Rc` |
+| [74] | SrcBFmt | 1 | — | U8=0,S8=1 |
+| [73] | SrcAFmt | 1 | — | 4A: U8=0,S8=1; 2A: U16=0,S16=1 |
+| [71:64] | Rc | 8 | Register | accumulate value |
+| [39:32] | Rb | 8 | Register | B dot-product source |
+| [31:24] | Ra | 8 | Register | A dot-product source |
+| [23:16] | Rd | 8 | Register | destination |
+| [15] | Pg_not | 1 | Pg@not | predicate negate |
+| [14:12] | Pg | 3 | Predicate | guard predicate |
+
+### 2A variant differences
+- [77:76] `*mode` = MODE_2ALO_2AHI
+- Same opcode, mode distinguishes 4A vs 2A
+
 ## Verified encodings
 
 | Lo64 | Disassembly |

@@ -8,6 +8,16 @@ Reverse-engineering repo built around two nvdisasm-dumped ISA description files 
 
 Both are grep-first: never `Read` them whole. Use `grep -n` to locate a section, then read a bounded window.
 
+### Current state
+- **197/207** compute instructions documented (notes + decoder + test kernel). Only `F2FP` and `RTT` remain unchecked.
+- **168 notes** (`notes/`) — 143 per-instruction + 25 cross-cutting / infrastructure notes (pipes, scoreboards, memory model, CBU state, tensor-core microarch, etc.).
+- **96 decoders** (`tools/decode_*.py`) — one per documented instruction, each validated against real cuobjdump vectors.
+- **103 test kernels** (`tests/*.cu`) — CUDA C / PTX inline-asm kernels that exercise encodings and compile → cuobjdump verification.
+- **100 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, shared libs).
+
+### Phase 2: Refinement (current effort)
+Initial doc-writing pass is complete. Next: **tighten the notes** — make descriptions precise and consistent, resolve open questions, consolidate related instructions, and improve cross-references. Guidelines below.
+
 ## Tooling (`tools/`)
 A stdlib-only extractor turns the spec into a queryable JSON DB — prefer it over ad-hoc `grep`/manual parsing for structured lookups.
 - `python3 tools/parse_sm90.py` — parses both `.txt` files -> `sm90.json` (~21 MB, gitignore-worthy/regenerable). Has a built-in validation gate; a clean run prints `validation OK` with counts: **1589 variants** (1168 `CLASS` + 421 `ALTERNATE CLASS`), **238 mnemonics**, 414 enums, 84 tables, 2309 FUNIT fields, 277 pipe entries.
@@ -18,10 +28,24 @@ Parser gotchas already handled (don't reintroduce): sub-section keywords and eve
 
 ## Documentation workflow (current effort)
 Goal: write a per-instruction reference doc for every **compute** SASS instruction. Split across sessions.
-- `TODO.md` — the master checklist (**207 instructions**), grouped by category, one checkbox per entry. Derived from `ref_memo.txt` (the curated sm_70..sm_90 opcode roster). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded (see its "Excluded" section). `-> MNEM` tags map ref_memo names to the canonical sm_90 mnemonic (shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated). `LDCU` is unresolved (likely an LDC variant).
-- `notes/*.md` — enum/topic research already resolved (`ldc_admode`, `iswz`, `cbu_state`, `memory_model`). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions. Follow this style for new findings.
+- `TODO.md` — the master checklist (**197/207 instructions** done), grouped into 10 categories: **Integer/Vector**, **FP32**, **FP16**, **FP64**, **Convert**, **Uniform**, **Memory**, **Tensor**, **Control Flow**, **Misc**. Derived from `ref_memo.txt` (the curated sm_70..sm_90 opcode roster). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded (see its "Excluded" section). `-> MNEM` tags map ref_memo names to the canonical sm_90 mnemonic (shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated). `LDCU` is unresolved (likely an LDC variant).
+- `notes/*.md` — per-instruction reference docs (143) + cross-cutting topic notes (~25: `scoreboards.md`, `memory_model.md`, `cbu_state.md`, `iswz.md`, `hmma_pipeline.md`, `div.md`, `fp64_control.md`, `tma_mbarrier.md`, `tensorcore_microarch_speculation.md`, etc.). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions. Follow this style for new findings.
 - Tick the box in `TODO.md` when done.
 - `sm90.json` is gitignored/regenerable; `ref_memo.txt` uses a ROT13 column that is not the mnemonic (mnemonic is the 3rd column).
+
+### Phase 2 — Refinement workflow
+With the first doc pass complete, focus shifts to **note quality and consistency**:
+1. **Cross-check descriptions** against `notes/` sibling instructions — e.g. VIMNMX vs IMNMX, VSADD vs VABSDIFF, all MMA variants consistent in terminology.
+2. **Resolve open questions** — many notes have `## Open questions` sections; answer or prune stale ones.
+3. **Consolidate** related instructions (e.g. HADD2/HADD2_F32 into one note, DADD/DADD_F64, IMAD/IMAD_WIDE/IMAD_HI/IMAD_X).
+4. **Verify encodings** — run decoder round-trips against real cuobjdump vectors (decoder scripts should all pass).
+5. **Improve cross-references** — link between notes (e.g. SHF → PRMT, I2FP → I2F, RED → ATOMS).
+
+Key conventions for notes:
+- Record both spec-derived facts AND empirical observations
+- If the compiler does something unexpected (lowers to different instruction, prefers uniform regs, skips a variant), document it
+- When an instruction exists in spec but ptxas doesn't emit it (e.g. IMNMX on sm_90), document the relationship and the arch that does emit it
+- Latency tables: map the instruction's pipe to the correct row in TABLE_TRUE/TABLE_OUTPUT/TABLE_ANTI
 
 ### Per-instruction documentation steps (the repeatable recipe)
 

@@ -41,6 +41,7 @@ All `int_pipe` instructions, vector integer ops, bit/logic/predicate ops, warp v
 - [X] **VABSDIFF4** (idx 32) — Vector absolute difference, 4-way (packed 4×8-bit `|Ra − Rb|`)
 - [x] **GATHER** (idx 173) — Register sub-element gather (sparse-MMA metadata unpack)
 - [x] **SCATTER** (idx 157) — Register sub-element permute (sparse-MMA metadata pack)
+- [x] **CLMAD** (idx 179) — Carry-less multiply-add in GF(2) (polynomial arithmetic; `.LO`/`.HI` 64-bit halves; CRC/crypto — GPU analog of x86 PCLMULQDQ)
 
 ## FP32
 FP32 arithmetic via `fmalighter_pipe`; min/max on `int_pipe`; transcendental on `mio_pipe`.
@@ -72,7 +73,6 @@ Double-precision arithmetic on `fma64lite_pipe`.
 - [x] **DADD** (idx 123) — FP64 add
 - [x] **DMUL** (idx 124) — FP64 multiply
 - [X] **DSETP** (idx 125) — FP64 compare and set predicate
-- [x] **CLMAD** (idx 179) — Carry-less multiply-add in GF(2) (polynomial arithmetic; `.LO`/`.HI` 64-bit halves; CRC/crypto — GPU analog of x86 PCLMULQDQ)
 
 ## Convert
 Format conversion on `int_pipe` (modern I2FP/F2IP/I2I) and `mio_pipe` (legacy I2F/F2I/F2F/MUFU).
