@@ -29,7 +29,7 @@ Parser gotchas already handled (don't reintroduce): sub-section keywords and eve
 ## Documentation workflow (current effort)
 Goal: write a per-instruction reference doc for every **compute** SASS instruction. Split across sessions.
 - `TODO.md` — the master checklist (**197/207 instructions** done), grouped into 10 categories: **Integer/Vector**, **FP32**, **FP16**, **FP64**, **Convert**, **Uniform**, **Memory**, **Tensor**, **Control Flow**, **Misc**. Derived from `ref_memo.txt` (the curated sm_70..sm_90 opcode roster). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded (see its "Excluded" section). `-> MNEM` tags map ref_memo names to the canonical sm_90 mnemonic (shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated). `LDCU` is unresolved (likely an LDC variant).
-- `notes/instr/*.md` — per-instruction reference docs (164). `notes/arch/*.md` — cross-cutting topic notes (14: `scoreboards`, `memory_model`, `cbu_state`, `iswz`, `hmma_pipeline`, `div`, `fp64_control`, `tma_mbarrier`, `tensorcore_microarch_speculation`, `wgmma`, `control_codes`, `usched_latency`, `ldc_admode`, `tcgen05_vs_wgmma`). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions.
+- `notes/sm90/instr/*.md` — per-instruction reference docs (164). `notes/sm90/arch/*.md` — cross-cutting topic notes (14: `scoreboards`, `memory_model`, `cbu_state`, `iswz`, `hmma_pipeline`, `div`, `fp64_control`, `tma_mbarrier`, `tensorcore_microarch_speculation`, `wgmma`, `control_codes`, `usched_latency`, `ldc_admode`, `tcgen05_vs_wgmma`, `encoding_classification`). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions.
 - Tick the box in `TODO.md` when done.
 - `sm90.json` is gitignored/regenerable; `ref_memo.txt` uses a ROT13 column that is not the mnemonic (mnemonic is the 3rd column).
 
@@ -120,7 +120,7 @@ Spec essentials:
 - Predicates: 3-bit (P0–P6, 7=PT), plus a 1-bit `.not` at the adjacent position
 - Immediate floats: 32-bit IEEE754 at [63:32], big-endian (use `struct.unpack('>f', struct.pack('>I', val))`)
 
-**Step 7 — Write the note (`notes/instr/<mnem>.md`)**
+**Step 7 — Write the note (`notes/sm90/instr/<mnem>.md`)**
 
 Structure (follow existing notes for consistency):
 ```
