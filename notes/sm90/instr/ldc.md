@@ -11,6 +11,11 @@ Loads data from the constant memory bank space `c[bank][offset]` into a destinat
 register `Rd`. The constant memory is a read-only, cache-optimized (uniform-access)
 memory space used for kernel parameters and `__constant__` variables.
 
+> Bank roles (see `../arch/cubin_elf.md`): **bank 0** = per-launch preset region +
+> kernel params (`.nv.constant0`); **bank 3** = user `__constant__` bytes
+> (`.nv.constant3`); **bank 4** = relocated 64-bit addresses of globals/extern
+> functions/string literals (`.nv.constant4`).
+
 - **Plain (non-bindless):** `Rd = c[bank][Ra + offset]`
 - **Bindless (uniform):** `Rd = c[URa][Rb + offset]` — bank resolved from a
   uniform register pair (64-bit bindless handle `CX`)
