@@ -121,3 +121,6 @@ Per-kernel (`.nv.info._Z…`): `EIATTR_CUDA_API_VERSION`, `EIATTR_KPARAM_INFO`
 - `LDC`/`ULDC` addressing modes and bank selection: `../instr/ldc.md`, `../instr/uldc.md`.
 - Global-memory descriptor (`c[0x0][0x208]`, distinct from the bank-4 address table):
   `memory_model.md`.
+- `EIATTR_MERCURY_ISA_VERSION` here is just a version tag; the actual Mercury/capmerc
+  **capsule sections** appear only in `sm_100+` cubins — see
+  `../../sm100/arch/mercury_capmerc.md`.
