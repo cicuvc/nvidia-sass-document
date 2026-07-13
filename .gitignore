@@ -5,6 +5,17 @@ sm100.json
 # Compiled test binaries (regenerable: nvcc -cubin)
 *.cubin
 
+# Compiled test executables (no extension, regenerable: nvcc -o)
+tests/errbar_fault_patch/patcher
+tests/errbar_fault_patch/vmm_patcher
+tests/errbar_fault_patch/vmm_walk
+tests/errbar_fault_patch/dsmem_walk
+tests/errbar_fault_patch/dsmem_probe
+tests/errbar_fault_patch/dsmem_fence
+tests/errbar_fault_patch/cluster_prop
+tests/errbar_fault_patch/cluster_prop2
+tests/errbar_fault_patch/sidechan
+
 # Python
 __pycache__/
 *.pyc
