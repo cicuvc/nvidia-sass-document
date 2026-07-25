@@ -7,48 +7,186 @@
 
 ## Semantics
 
-Loads data from global device memory into destination register `Rd`. On sm_90,
-global memory accesses are **memory-descriptor-based**: a uniform register pair
-`URb` holds a 64-bit memory descriptor (base address + access attributes), and
-the load address is formed as `desc[URb][Ra + offset]`.
+Loads data from global device memory into destination register `Rd`. On sm_80+,
+global memory accesses use a **64-bit policy descriptor** model: `desc[UR4]`
+consumes the UR4:UR5 pair as a 64-bit L2 cache eviction policy word. UR4 provides
+the low 32 bits (base policy, default = 0 = no special policy). UR5 provides the
+high 32 bits encoding cache priority, fraction/window, and other L2 hints set up
+by `createpolicy`.
 
-- **Memdesc (desc form):** `Rd = *global(URb, Ra + offset)` — URb holds the
-  memory descriptor, Ra is a 64-bit register pair offset.
-- **Uniform:** `Rd = *global(Ra + URb + offset)` — URb is a uniform index into
-  the address.
+- **Memdesc (desc form):** `Rd = *global(Ra + offset)` with cache policy from
+  `UR4:UR5`. Ra is a 64-bit register pair providing the byte address (typically
+  loaded from the kernel parameter at `c[0x0][0x380]` via `LDC.64`).
+- **Uniform:** `Rd = *global(Ra + URb + offset)` — URb provides a uniform
+  address offset.
 - **Plain:** `Rd = *global(Ra + offset)` — base register only, no uniform component.
 
-### Memory descriptor ∈ 64-bit pointer
+### 64-bit cache policy descriptor (empirically confirmed, sm_120)
 
-The `desc[URb]` descriptor is **not** a complex bitfield like WGMMA/TMA
-descriptors. It is a **64-bit global-memory base address** loaded from constant
-memory via `ULDC.64`:
+`desc[UR4]` uses the UR4:UR5 uniform register pair as a **64-bit policy word**,
+not a table index. The compiler always loads the pair via `LDCU.64 UR4, c[0x0][off]`.
+
+- **UR4 (low 32 bits):** typically 0 (default/no special policy). All tested
+  values produce the same behavior — the hardware appears to use a fixed base
+  policy when no explicit cache hint is needed.
+- **UR5 (high 32 bits):** encodes L2 cache eviction policy — priority bits,
+  fraction nibble (for fractional mode) or window bits (for range mode). Set
+  by `createpolicy` PTX and lowered via UMOV+USHF+ULOP3 on sm_120, or direct
+  UMOV literal on sm_80.
+- **UR5 field validation:** any byte in UR5 set to all-1s (0xFF) causes a
+  hardware fault — the hardware validates each byte-aligned field within the
+  policy word.
+
+**Evidence against "table index" interpretation and for "policy descriptor":**
+
+1. **UR5 matters, UR4 doesn't (within valid range):** Setting UR5 to different
+   values changes cache policy behavior (e.g. `createpolicy.fractional` produces
+   specific UR5 bit patterns). UR4 is always 0 in compiler output.
+2. **UR5 byte-0xFF causes faults:** The hardware validates UR5 byte fields;
+   0xFFFF0000, 0xFF000000, 0x00FF0000 etc. all fault. 0xDEADBEEF works fine.
+   This is cache-policy field validation, not a table lookup.
+3. **`ULDC.64` loads 64 bits, not 6:** The compiler loads both UR4 and UR5 as a
+   pair, and both are consumed. The "6-bit index" theory only considered UR4.
+4. **No descriptor table exists:** All UR4 values (0, 1, 4, 8, 16, 0x100,
+   0xFFFFFFFF) produce identical behavior — they all encode "default policy".
+   There is no table with different base addresses at different indices.
+
+The compiler idiom:
+```
+LDCU.64 UR4, c[0x0][0x358]     # load default policy (0) into UR4:UR5
+LDC.64  R2, c[0x0][0x380]      # load byte address (kernel param)
+LDG.E   R3, desc[UR4][R2.64]   # load with cache policy from UR4:UR5
+```
+
+On sm_89 the compiler emitted an explicit `IMAD.WIDE` to add base+offset. On
+sm_90+ this is folded into the AGU — the descriptor provides translation
+parameters and the register(s) provide the byte address.
+
+### 64-bit descriptor word (UR4:UR5) and cache policy — sm_120
+
+`desc[UR4]` actually uses the UR4:UR5 pair as a **64-bit descriptor word**, not just UR4
+alone. The compiler always loads the pair via `LDCU.64 UR4, c[0x0][offset]` (64-bit load).
+The lower 32 bits (UR4) provide the base descriptor index (typically 0 for default global
+memory). The upper 32 bits (UR5) encode **cache eviction policy** and other attributes in
+a byte-packed format.
+
+**Evidence:**
+- `LDCU.64 UR4, c[0x0][0x358]` loads 64 bits into UR4:UR5; STG/LDG only names `desc[UR4]`
+  but UR5 is implicitly consumed.
+- Any byte in UR5 set to `0xFF` (all 8 bits) causes an execution fault — the hardware
+  validates specific byte-aligned fields within the 64-bit descriptor.
+- `0xDEADBEEF` in UR5 works fine (no byte = 0xFF); `0xFFFF0000` faults.
+
+**Cache policy encoding (fractional, from `createpolicy` PTX → SASS):**
+
+The PTXAS lowering pattern for `createpolicy.fractional.L2::<policy>.b64` is:
+```
+UMOV UR4, F_val                       # fraction * 16 (e.g. 0xf0 for 1.0)
+USHF.R.U32 UR4, UR4, 0x4             # → low nibble = fraction value
+UMOV UR5, P_val                       # priority encoding
+ULOP3.LUT UR5, UR5, 0xf, UR4, 0xf8   # combine priority + fraction
+USHF.L.U32 UR5, UR5, 0x14            # << 20: shift to UR5[31:12]
+UMOV UR4, URZ                         # UR4 = 0 (base descriptor)
+```
+
+Final UR5 value layout (bits [31:0]):
+```
+[31:24]  priority byte (shifted from ULOP3 bits [11:4])
+[23:20]  fraction nibble = fraction × 16 - 1
+[19:0]   zero
+```
+
+**Priority byte [31:24] bit assignments:**
+
+| Bit | Value | Meaning |
+|-----|-------|---------|
+| 4   | 0x10  | `evict_unchanged` (retain current priority) |
+| 5   | 0x20  | `evict_first` |
+| 6   | 0x40  | `evict_last` |
+| 8   | —     | always set (base/L2 flag?) |
+
+Observed combinations (P_val → final priority byte):
+
+| PTX priority | P_val | Priority byte |
+|-------------|-------|---------------|
+| `L2::evict_last` | 0x140 | 0x14 |
+| `L2::evict_first`, `L2::evict_first.L2::evict_unchanged` | 0x120 | 0x12 |
+| `L2::evict_unchanged.L2::evict_first` | 0x110 | 0x11 |
+
+**Fraction nibble [23:20]:**
+
+| Fraction | F_val | F_val >> 4 | Final nibble |
+|----------|-------|-----------|-------------|
+| 1.0  | 0xf0 | 0x0f | 0xF |
+| 0.75 | 0xb0 | 0x0b | 0xB |
+| 0.5  | 0x70 | 0x07 | 0x7 |
+| 0.25 | 0x30 | 0x03 | 0x3 |
+
+Encoding: `nibble = fraction × 16 - 1` (so 1.0 → 15 = 0xF).
+
+**Range-based policy** — more complex PTXAS lowering with USHF.R.U64 address
+arithmetic. The total_size determines the shift chain via `UF2I.U32.CEIL.NTZ`:
 
 ```
-ULDC.64 UR4, c[0x0][0x208]     # load kernel-param pointer value into UR4 pair
-LDG.E R3, desc[UR4][R2.64]     # UR4 = base addr, R2:R3 = per-thread offset
+UF2I.U32.CEIL.NTZ UR4, log2(total)   # e.g. 12 for 4096, 14 for 16384
+UIADD3 UR4, UR4, -7                  # → log2(total) - 7
+UVIMNMX.S32 UR10, UR4, 0xc           # UR10 = max(log2(total)-7, 12)
+USHF.L  UR4, 1, UR10                 # UR4 = 1 << UR10
+UIADD3  UR4, UR4, primary_size - 1   # → (1<<UR10) + primary - 1
+USHF.R.U64 (address >> UR10)         # align address to UR10-bit granule
+# … further address math, adding/subtracting shifted address, then UIMNMX 0x7F
 ```
 
-**sm_89 → sm_90 structural evolution:**
+The final UR5 has window bits packed via ULOP3 chain at bits [12:5] after total
+shift of 20:
+
+| primary / total | ratio | UR5 LOW | window bits [12:5] | decoded |
+|-----------------|-------|---------|--------------------|---------|
+| 512 / 2048 | 1/4 | 0x20 | 1 | `total/128` — or adapter-chosen granularity |
+| 1024 / 4096 | 1/4 | 0x20 | 1 | (same window for all total < 16384) |
+| 2048 / 8192 | 1/4 | 0x20 | 1 | |
+| 4096 / 16384 | 1/4 | 0x40 | 2 | total/4096? (16384/4096=4, but 2) |
+| 8192 / 32768 | 1/4 | 0x60 | 3 | |
+| 1024 / 8192 | 1/8 | 0x20 | 1 | ratio does NOT affect window |
+| 512 / 4096 | 1/8 | 0x20 | 1 | |
+
+The window field depends only on **total size**, not the ratio. Apparent
+mapping: `window = min(total / 8192, 3) * 32 + 32` (clamps to 0x20 for
+total ≤ 8192, 0x40 for 16384, 0x60 for 32768). The hardware likely uses
+this as `total / 128` capped and quantized.
+
+**Priority byte for range mode:**
+
+| Priority | Priority byte | vs fractional |
+|----------|--------------|---------------|
+| evict_last | 0x1c | 0x14 (fractional used 0x14) |
+| evict_first | 0x1a | 0x12 |
+| evict_last + evict_first | 0x1d | — |
+
+Range mode priority bytes are fractional+8 (0x14+0x08=0x1c, 0x12+0x08=0x1a).
+Bit 3 set in the priority byte appears to be a "range mode" flag.
+
+**CVT mode** (`createpolicy.cvt.L2.b64 policy, access-property`):
+
+Converts an access property handle (obtained from CUDA Driver API e.g.
+`cudaStreamSetAttribute` / `CUaccessPolicyWindow`) into a cache policy.
+Produces a **non-zero UR4** value — both halves of the 64-bit pair are populated,
+unlike fractional and range which only use UR5. Observed via stream-level policy:
+
 ```
-sm_89:  ULDC.64 UR4, c[0x0][0x118]     # load pointer
-        IMAD.WIDE R2, R4, R5, c[...]    # compute addr = pointer + offset
-        LDG.E R3, [R2.64]               # load from synthesized address
-
-sm_90:  ULDC.64 UR4, c[0x0][0x208]     # load pointer
-        LDG.E R3, desc[UR4][R2.64]      # hardware fuses base + offset in AGU
+Default stream:   c[0x0][0x358] = 0x00000000_00000000  (no policy)
+Stream with L2:   c[0x0][0x358] = 0x05800087_f2cc0400  (persisting + streaming)
 ```
 
-On sm_89 the compiler emitted an explicit `IMAD.WIDE` to add base+offset before
-the load. On sm_90 this addition is folded into the LDG hardware — the
-descriptor provides the base, the register(s) provide the offset, and the AGU
-(Address Generation Unit) produces the final physical address. The `desc`
-syntax in cuobjdump strictly means **"base address handle"**, not a structured
-descriptor with sub-fields.
+The driver places the stream's access policy window directly at c[0x0][0x358];
+the `LDCU.64 UR4, c[0x0][0x358]` idiom in compiler SASS picks up this default
+policy for the entire kernel. Explicit `createpolicy` params use a different
+cbank offset (kernel parameter slot).
 
-The 64-bit value itself is just a global-memory virtual address — the same
-pointer value the kernel received as a parameter. Hardware uses it for
-virtual→physical translation, bounds checking, and access-control enforcement.
+**Impact on STG/LDG:** When `.L2::cache_hint` is used with a `cache_policy` operand,
+the policy value occupies UR5 (upper 32 bits) while UR4 = 0 (default descriptor).
+The full 64-bit `desc[UR4:UR5]` value is passed to the AGU hardware, which
+interprets UR5 as cache-control metadata.
 
 ## Variant overview
 

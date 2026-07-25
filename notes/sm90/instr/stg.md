@@ -7,35 +7,33 @@
 
 ## Semantics
 
-Stores source register `Rb` into global device memory. On sm_90, all global
-memory accesses are memory-descriptor-based: a uniform register pair `URc`
-holds a 64-bit memory descriptor, and the store address is formed as
-`desc[URc][Ra + offset]`.
+Stores source register `Rb` into global device memory. Same 64-bit policy
+descriptor model as LDG: `desc[URc]` consumes the URc:UR(c+1) uniform register
+pair as an L2 cache policy word. URc=0 is the default (no special policy).
 
-- **Memdesc:** `*global(URc, Ra + offset) = Rb`
+- **Memdesc:** `*global(Ra + offset) = Rb` with cache policy from URc:UR(c+1)
 - **Plain:** `*global(Ra + offset) = Rb`
 
-### Memory descriptor ∈ 64-bit pointer
+### 64-bit cache policy descriptor — see `ldg.md`
 
-Same as LDG — the `desc[URc]` descriptor is a **64-bit global-memory base
-address** loaded from constant memory via `ULDC.64`. It is not a complex
-structured descriptor (unlike WGMMA/TMA). Hardware uses it for
-virtual→physical translation and the AGU fuses the base (from URc) with the
-offset (from Ra) to produce the final physical address.
+`desc[UR4]` uses UR4:UR5 as a 64-bit L2 eviction policy word (introduced at
+sm_80, same time as `createpolicy`). UR4 = 0 is the default (no special
+policy). UR5 encodes priority + fraction/window fields. See `ldg.md`
+§ "64-bit cache policy descriptor" for full encoding details.
 
-```
-sm_89:  IMAD.WIDE R4, R4, R5, c[0x0][0x160]  # compute addr = pointer + offset
-        STG.E [R4.64], R3                      # store to synthesized address
+- **`desc[URZ]` works:** `STG.E desc[URZ]` → UR5=URZ=0 (no policy), same as default.
+- **R2.64 is the byte address:** `STG.E desc[URZ][R2.64+off]` shifts stores by
+  exactly `off` bytes.
+- **hi64[71:64] encodes which UR register** provides the low 32 bits of the
+  policy word; the adjacent register provides the upper 32 bits.
 
-sm_90:  ULDC.64 UR4, c[0x0][0x210]            # load pointer
-        STG.E desc[UR4][R4.64], R3             # hardware fuses base + offset
-```
+On sm_89 the compiler emitted an explicit `IMAD.WIDE` to add base+offset. On
+sm_90+ this is folded into the AGU — the descriptor provides translation
+parameters and the register(s) provide the byte address.
 
-STG is the store counterpart to LDG (load from global). Like LDG, it has 6
-encoding variants across 2 opcodes (`0x386` / `0x1986`). Unlike LDG, STG
-omits the read-specific modifiers: no Pu (carry predicate), no Pnz (NZ
-predicate), no SP2 (prefetch). The scoreboard is read-only (no destination
-register to track) with hardwired `dst_wr_sb=7`.
+STG is the store counterpart to LDG. Like LDG, it has 6 encoding variants
+across 2 opcodes (`0x386` / `0x1986`). Unlike LDG, STG omits the read-specific
+modifiers. The scoreboard is read-only with hardwired `dst_wr_sb=7`.
 
 ## STG vs LDG — encoding differences
 
@@ -47,7 +45,7 @@ register to track) with hardwired `dst_wr_sb=7`.
 | Pu (write pred) | @ [83:81] | — (absent, bits unused) |
 | Pnz (NZ pred) | @ [67:64] | — (absent) |
 | SP2 (prefetch) | @ [69:68] | — (absent) |
-| UR desc register | URb @ [37:32] | URc @ [69:64] |
+| UR desc register | URb @ hi64[7:2] | URc @ hi64[7:0] |
 | mem table | `TABLES_mem_1` | `TABLES_mem_0` |
 | Scoreboard | RD+WR decoupled | RD-only decoupled |
 | VQ | `VQ_AGU_UNORDERED_WR` | `VQ_AGU` |
