@@ -198,6 +198,7 @@ class CubinBuilder:
         self._regcount = 4
         self._exit_offsets: list[int] = []
         self._params: list[tuple[int, int, int]] = []
+        self._pragma_attrs: dict[str, str] = {}
 
     def set_code(self, instructions: list[tuple[int, int]],
                  kernel_name: str = "my_kernel") -> None:
@@ -209,6 +210,9 @@ class CubinBuilder:
 
     def set_regcount(self, count: int) -> None:
         self._regcount = count
+
+    def set_pragma(self, key: str, value: str) -> None:
+        self._pragma_attrs[key] = value
 
     def set_exit_offset(self, offset: int | list[int]) -> None:
         if isinstance(offset, int):
@@ -234,6 +238,13 @@ class CubinBuilder:
             if r < 255:
                 max_reg = max(max_reg, r)
         return max(8, ((max_reg + 7) // 8) * 8) if max_reg else 8
+
+    @staticmethod
+    def _compute_mbarrier_offsets(instructions: list[tuple[int, int]]) -> list[int]:
+        """Scan for SYNCS.EXCH (0x5b2) and SYNCS.PHASECHK (0x5a7) at [11:0]."""
+        targets = {0x5b2, 0x5a7}
+        return [i * 16 for i, (lo, hi) in enumerate(instructions)
+                if (lo & 0xFFF) in targets]
 
     @staticmethod
     def _compute_num_barriers(instructions: list[tuple[int, int]]) -> int:
@@ -335,6 +346,15 @@ class CubinBuilder:
             num_bar = self._compute_num_barriers(self._instructions)
             if num_bar:
                 buf += eiattr_bval(0x4c, num_bar)
+        # MBARRIER_INSTR_OFFSETS — SYNCS.EXCH / SYNCS.PHASECHK offsets
+        if self._instructions:
+            mbar_offs = self._compute_mbarrier_offsets(self._instructions)
+            if mbar_offs:
+                off_buf = struct.pack(f"<{'I' * len(mbar_offs)}", *mbar_offs)
+                buf += struct.pack("<BBH", 4, 0x39, len(off_buf)) + off_buf
+                # NUM_MBARRIERS — 0xffff if unknown (no CFG), override via #pragma
+                num_mbar = int(self._pragma_attrs.get("NUM_MBARRIERS", 0xffff))
+                buf += eiattr_hval(0x38, num_mbar)
         total_ps = sum(sz for _, _, sz in self._params)
         buf += eiattr_hval(0x19, total_ps)  # CBANK_PARAM_SIZE
         buf += eiattr_param_cbank(7, 0x380, total_ps)  # PARAM_CBANK
