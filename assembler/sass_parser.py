@@ -144,7 +144,9 @@ class Parser:
         if self.peek() and self.peek().type in ("PRED", "UPRED"):
             t = self.pop()
             val = 7 if t.text.upper() == "PT" else int(t.text[1:])
-            pred = val if val != 7 else None  # PT = unpredicated
+            # PT with no negation = unpredicated (store as None for encoding defaults).
+            # @!PT is a legitimate encoding (Pg=7, Pg_not=1, "never execute").
+            pred = val if (pred_not or val != 7) else None
 
         mn = self.expect("IDENT")
         mnemonic = mn.text
