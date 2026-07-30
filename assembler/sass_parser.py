@@ -134,6 +134,7 @@ class Parser:
         return ParsedInstruction(mnemonic="_label_", label=t.text, operands=[])
 
     def _parse_instruction(self) -> ParsedInstruction:
+        operands: list[Operand] = []
         # optional predicate prefix: @[!]Px
         if self.skip("EXCLAM"):
             pass
@@ -161,16 +162,17 @@ class Parser:
             else:
                 raise SyntaxError(f"expected modifier after '.', got {tok}")
 
-        operands: list[Operand] = []
-        if self.peek() and self.peek().type != "SEMICOLON" and self.peek().type != "NEWLINE":
+        if self.peek() and self.peek().type not in ("SEMICOLON", "NEWLINE"):
             operands = self._parse_operands()
 
-        sched = Sched.default()
-        if self.peek() and self.peek().type == "SEMICOLON":
-            self.pop()  # SEMICOLON
-            if self.peek() and self.peek().type == "LBRACKET":
-                bracket = self._parse_bracket()
-                sched = Sched.parse(bracket)
+        if not (self.peek() and self.peek().type == "SEMICOLON"):
+            raise SyntaxError("missing ';' and scheduling bracket [wr:rd:{req}:stall:yield]")
+        self.pop()  # SEMICOLON
+        if not (self.peek() and self.peek().type == "LBRACKET"):
+            raise SyntaxError(
+                "scheduling bracket required: [wr_sb:rd_sb:{req_bits}:stall:yield]")
+        bracket = self._parse_bracket()
+        sched = Sched.parse(bracket)
 
         return ParsedInstruction(mnemonic=mnemonic, modifiers=modifiers, operands=operands, sched=sched)
 
