@@ -103,6 +103,34 @@ Per-kernel (`.nv.info._Z…`): `EIATTR_CUDA_API_VERSION`, `EIATTR_KPARAM_INFO`
 `EIATTR_SYSCALL_OFFSETS` (call sites), `EIATTR_EXIT_INSTR_OFFSETS`,
 `EIATTR_CRS_STACK_SIZE` (call/return reconvergence stack), `EIATTR_SPARSE_MMA_MASK`,
 `EIATTR_SW_WAR`, `EIATTR_MERCURY_ISA_VERSION`.
+
+### Mbarrier attributes (`tests/variadic_mbarrier.cu`)
+
+When mbarriers appear in the kernel, two attributes are emitted:
+
+| Attribute | Type | Value | Condition |
+|-----------|------|-------|-----------|
+| `EIATTR_MBARRIER_INSTR_OFFSETS` (0x39) | SVAL | byte offsets of all `SYNCS.EXCH` / `SYNCS.PHASECHK` instructions | Always present when mbarriers are used. |
+| `EIATTR_NUM_MBARRIERS` (0x38) | HVAL | **`0xffff`** — fallback when the exact count is not statically determinable | Always present with `MBARRIER_INSTR_OFFSETS`. |
+
+**`0xffff` is the compiler-chosen fallback** when the number of mbarriers
+cannot be determined at compile time.  This occurs when mbarrier init/fence
+appears inside a loop with a runtime-variable trip count (e.g. a PTX
+`mbarrier.init` in a `for` loop whose bound is a kernel parameter).  The
+driver then allocates the maximum possible number of mbarriers.
+
+Confirmed empirically: compiling `tests/variadic_mbarrier.cu` (which
+contains `mbarrier.init.shared.b64` inside `for(int i=0; i<n; i++)`)
+with `nvcc -arch=sm_120` produces:
+
+```
+EIATTR_MBARRIER_INSTR_OFFSETS  → [0x100]  (SVAL)
+EIATTR_NUM_MBARRIERS           → 0xffff   (HVAL)
+```
+
+When the count IS statically known (e.g. a fixed number of `mbarrier.init`
+calls outside any loop), nvcc emits an exact count.  A hand-assembler can
+override via `#pragma NUM_MBARRIERS(N)`.
 `.nv.compat` (`EICOMPAT_*`): `ISA_CLASS`, `MERCURY_ISA_MAJOR_MINOR_VERSION` (1.1),
 `INST_TENSORMAP_V1`, `CAN_FASTPATH_FINALIZE`, `CUDA_ACCELERATOR_TARGET`.
 
