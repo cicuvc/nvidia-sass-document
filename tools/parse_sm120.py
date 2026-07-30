@@ -71,16 +71,67 @@ def parse_enums(lines, start, end):
     def_re = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s+("?.*)$')
     pair_re = re.compile(r'"([^"]*)"\s*(?:=\s*(-?(?:0[bx])?[0-9A-Fa-f_]+))?')
     blob = "\n".join(lines[start:end])
-    # split on ';' but keep it simple: statements are ';'-terminated
     for stmt in blob.split(";"):
         stmt = stmt.strip()
-        if not stmt or '"' not in stmt:
+        if not stmt:
             continue
         m = def_re.match(stmt.replace("\n", " "))
         if not m:
             continue
         name, body = m.group(1), m.group(2)
         vals = {}
+
+        # Special handling for SpecialRegister / SR(0..255) range enums
+        # that mix quoted and unquoted names with sequential value assignment.
+        if name == "SpecialRegister" or body.startswith("SR("):
+            idx = 0
+            saw_first = False
+            for tok in re.finditer(
+                    r'[A-Za-z_][A-Za-z0-9_.]*(?:\((\d+)\.\.(\d+)\)\s*=\s*\((\d+)\.\.(\d+)\))?'
+                    r'(?:\s*=\s*(-?(?:0[bx])?[0-9A-Fa-f_]+))?'
+                    r'|"[A-Za-z_][A-Za-z0-9_.]*"(?:\s*=\s*(-?(?:0[bx])?[0-9A-Fa-f_]+))?',
+                    body):
+                raw = tok.group().strip()
+                if not raw:
+                    continue
+                # Skip the SR(0..255)=(0..255) range header
+                if not saw_first and raw.startswith("SR("):
+                    saw_first = True
+                    continue
+                saw_first = True
+                # Handle (0..3)=(24..27) range expansion
+                range_match = re.match(r'(.+)\((\d+)\.\.(\d+)\)\s*=\s*\((\d+)\.\.(\d+)\)', raw)
+                if range_match:
+                    base_name, rlo, rhi, vlo, vhi = (
+                        range_match.group(1), int(range_match.group(2)),
+                        int(range_match.group(3)), int(range_match.group(4)),
+                        int(range_match.group(5)))
+                    step = (vhi - vlo) // (rhi - rlo) if rhi != rlo else 1
+                    for ri in range(rlo, rhi + 1):
+                        name_i = f"{base_name}{ri}"
+                        val_i = vlo + (ri - rlo) * step
+                        vals[name_i] = val_i
+                        if ri == rhi:
+                            idx = val_i + 1
+                    continue
+
+                eq = raw.find("=")
+                if eq >= 0:
+                    key = raw[:eq].strip().strip('"')
+                    val = int(raw[eq+1:].strip(), 0)
+                    idx = val + 1
+                else:
+                    key = raw.strip().strip('"')
+                    val = idx
+                    idx += 1
+                vals[key] = val
+            if vals:
+                enums[name] = vals
+            continue
+
+        # Standard enum: only quoted name-value pairs
+        if '"' not in stmt:
+            continue
         for pm in pair_re.finditer(body):
             mnem, val = pm.group(1), pm.group(2)
             if val is None:

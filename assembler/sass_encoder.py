@@ -6,14 +6,6 @@ from .sass_matcher import MatchResult
 
 MASK64 = (1 << 64) - 1
 
-# Fallback for common special registers (parser only partially resolved the enum)
-SPECIAL_REG_FALLBACK = {
-    "SR_LANEID": 0, "SR_CLOCK": 1, "SR_CLOCKLO": 1,
-    "SR_TID.X": 32, "SR_TID.Y": 33, "SR_TID.Z": 34,
-    "SR_CTAID.X": 37, "SR_CTAID.Y": 38, "SR_CTAID.Z": 39,
-    "SR_NTID": 40,
-}
-
 
 class EncodeError(Exception):
     pass
@@ -77,14 +69,7 @@ class SassEncoder:
         name = field["name"]
 
         if rk == "slot":
-            val = sm.get(rhs)
-            # SpecialRegister fallback for unresolved enum values
-            if val == 0 or val is None:
-                for sr_name, sr_val in SPECIAL_REG_FALLBACK.items():
-                    for sm_key, sm_val in sm.items():
-                        if isinstance(sm_val, str) and sm_val.upper() == sr_name:
-                            return sr_val
-            return val
+            return sm.get(rhs)
 
         if rk == "slot_attr":
             return self._resolve_slot_attr(rhs, sm)
