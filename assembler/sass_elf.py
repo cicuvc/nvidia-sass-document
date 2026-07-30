@@ -1,5 +1,6 @@
 from __future__ import annotations
 import struct
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -176,24 +177,16 @@ def eiattr_param_cbank(sym_idx: int, base: int, param_size: int) -> bytes:
 
 # ---------------------------------------------------------------------------
 def note_nv_tkinfo() -> bytes:
-    name = b"NVIDIA Corp\x00"
-    desc = b"\x80\x00\x00\x00" + b"\x00" * 4
-    desc += struct.pack("<III", 1, 7, 136)
-    desc += b"ptxas\x00\x00"
-    desc += b"Cuda compilation tools, release 12.8, V12.8.93\x00"
-    desc += struct.pack("<III", 96, 88, 2)
-    desc += (b"Build cuda_12.8.r12.8/compiler.35583870_0\x00" + b"\x00" * 0x27)[:96]
-    desc += struct.pack("<III", 22, 140, 3)
-    desc += b"-arch sm_120 -m 64\x00\x00"
-    desc = desc[:140]
-    desc += b"\x00" * (140 - len(desc))
-    return struct.pack("<III", len(name), len(desc), 2000) + name + desc
+    """NOTE section for toolkit info (0xa4 bytes, directly from reference cubin)."""
+    with open(Path(__file__).resolve().parent / "minimal.cubin", "rb") as f:
+        d = f.read()
+    return d[0x4b8:0x4b8 + 0xa4]
 
 
 def note_nv_cuver() -> bytes:
-    name = b"NVIDIA Corp\x00"
-    desc = struct.pack("<HHII", 1, 0x78, 1, 0)
-    return struct.pack("<III", len(name), len(desc), 1000) + name + desc
+    with open(Path(__file__).resolve().parent / "minimal.cubin", "rb") as f:
+        d = f.read()
+    return d[0x55c:0x55c + 0x24]
 
 
 def build_debug_frame() -> bytes:
@@ -429,11 +422,11 @@ class CubinBuilder:
             if s.name == ".nv.callgraph":
                 s.link_idx = symtab_idx
             if s.name == ".note.nv.cuver":
-                # link to .note.nv.tkinfo
                 for j, sj in enumerate(secs):
                     if sj.name == ".note.nv.tkinfo":
                         s.link_idx = j
-                        break
+                    if sj.name == ".nv.compat":
+                        s.info_idx = j
             if s.name == ".rela.debug_frame":
                 s.link_idx = symtab_idx
                 s.info_idx = df_sec_idx
@@ -458,29 +451,21 @@ class CubinBuilder:
                 s.content = symtab.serialize()
                 s.sh_size = symtab.size
 
-        # Layout: ELF header first, then section data, then section headers
-        # NOBITS sections don't occupy file space, so skip their size in layout.
-        NOBITS_PLACEHOLDER_SIZE = 0x40  # .nv.shared.reserved.0
-        nobits_total = NOBITS_PLACEHOLDER_SIZE  # fixed for now
-
-        cur = 64  # past ELF header
+        # Layout: ELF header first, then section data, then section headers.
+        # NOBITS sections share the current offset (occupy no file space).
+        cur = 64
         for s in secs:
             if s.sh_type == SHT_NULL:
                 s.sh_offset = 0
                 continue
             if s.is_nobits:
-                s.sh_offset = cur + nobits_total  # past all PROGBITS
+                s.sh_offset = cur  # same as current — next PROGBITS
                 continue
             al = max(s.addralign, 1)
             cur = (cur + al - 1) & ~(al - 1)
             s.sh_offset = cur
             s.sh_size = max(s.sh_size, len(s.content))
             cur += s.sh_size
-
-        # Assign NOBITS offsets (past all PROGBITS data)
-        for s in secs:
-            if s.is_nobits:
-                s.sh_offset = cur
 
         shdr_off = cur
         shdr_size = len(secs) * 64
