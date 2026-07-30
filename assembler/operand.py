@@ -18,6 +18,7 @@ class OperandKind(enum.Enum):
     MEM_ADDR = "MEM_ADDR"
     LABEL = "LABEL"
     PARAM_REF = "PARAM_REF"
+    PR = "PR"
 
 
 @dataclass

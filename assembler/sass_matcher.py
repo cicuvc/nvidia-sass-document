@@ -21,6 +21,7 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.MEM_DESC:  {"DESC"},
     OperandKind.MEM_ADDR:  {"Register", "NonZeroRegister", "UniformRegister"},
     OperandKind.LABEL:     {"RSImm", "SImm", "UImm", "BD"},
+    OperandKind.PR:        {"PR"},
 }
 
 SCHED_TYPES = {"REQ", "BITSET", "WR", "RD", "USCHED_INFO", "BATCH_T", "PM_PRED", "REUSE", "PREDICATE"}
@@ -465,21 +466,20 @@ class SassMatcher:
             if isinstance(v, int):
                 return v & 0xFFFFFFFF
             return None
-        if st == "SpecialRegister":
-            if isinstance(v, str):
-                # Try enum lookup first; fallback to hardcoded values
-                enum_vals = self.db["enums"].get("SpecialRegister", {})
-                for name, val in enum_vals.items():
-                    if name.upper() == v.upper() and isinstance(val, int):
-                        return val
-                # Common fallback values from ISA spec
-                fallback = {
-                    "SR_LANEID": 0, "SR_CLOCK": 1, "SR_CLOCKLO": 1,
-                    "SR_TID.X": 33, "SR_TID.Y": 34, "SR_TID.Z": 35,
-                    "SR_CTAID.X": 37, "SR_CTAID.Y": 38, "SR_CTAID.Z": 39,
-                }
-                return fallback.get(v.upper(), 0)
+        if st == "PR":
             return 0
+        if st == "SpecialRegister":
+            v_str = v if isinstance(v, str) else ""
+            enum_vals = self.db["enums"].get("SpecialRegister", {})
+            for name, val in enum_vals.items():
+                if name.upper() == v_str.upper() and isinstance(val, int):
+                    return val
+            fallback = {
+                "SR_LANEID": 0, "SR_CLOCK": 1, "SR_CLOCKLO": 1,
+                "SR_TID.X": 33, "SR_TID.Y": 34, "SR_TID.Z": 35,
+                "SR_CTAID.X": 37, "SR_CTAID.Y": 38, "SR_CTAID.Z": 39,
+            }
+            return fallback.get(v_str.upper(), 0)
         return None
 
     def _all_defaults(self, group: list[dict]) -> bool:

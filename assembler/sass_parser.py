@@ -269,6 +269,11 @@ class Parser:
         if t.type == "IDENT" and t.text == "c":
             return self._parse_const_bank()
 
+        # PR (predicate register file access)
+        if t.type == "IDENT" and t.text == "PR":
+            self.pop()
+            return Operand(OperandKind.PR, 0)
+
         # param reference: #param(name)
         if t.type == "PARAM_DIRECTIVE":
             return self._parse_param_ref()
