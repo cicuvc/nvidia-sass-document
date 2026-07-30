@@ -235,6 +235,18 @@ class CubinBuilder:
                 max_reg = max(max_reg, r)
         return max(8, ((max_reg + 7) // 8) * 8) if max_reg else 8
 
+    @staticmethod
+    def _compute_num_barriers(instructions: list[tuple[int, int]]) -> int:
+        """Scan for BAR.SYNC (opcode 0xb1d), extract max named barrier + 1."""
+        max_bar = -1
+        bar_opcode = 0xb1d
+        for lo, hi in instructions:
+            if (lo & 0xFFF) == bar_opcode:
+                n = (lo >> 54) & 0xF  # Sb at [57:54]
+                if n > max_bar:
+                    max_bar = n
+        return max_bar + 1 if max_bar >= 0 else 0
+
     @property
     def kernel_name(self) -> str:
         return self._kernel_name
@@ -318,6 +330,11 @@ class CubinBuilder:
             exit_buf = struct.pack(f"<{'I' * len(self._exit_offsets)}",
                                    *self._exit_offsets)
             buf += struct.pack("<BBH", 4, 0x1c, len(exit_buf)) + exit_buf
+        # NUM_BARRIERS — named barriers used by BAR.SYNC
+        if self._instructions:
+            num_bar = self._compute_num_barriers(self._instructions)
+            if num_bar:
+                buf += eiattr_bval(0x4c, num_bar)
         total_ps = sum(sz for _, _, sz in self._params)
         buf += eiattr_hval(0x19, total_ps)  # CBANK_PARAM_SIZE
         buf += eiattr_param_cbank(7, 0x380, total_ps)  # PARAM_CBANK
