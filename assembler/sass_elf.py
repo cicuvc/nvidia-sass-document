@@ -458,43 +458,54 @@ class CubinBuilder:
                 s.content = symtab.serialize()
                 s.sh_size = symtab.size
 
-        # Layout: headers right after ELF header, then section data
-        shdr_size = len(secs) * 64
-        data_off = 64 + shdr_size
+        # Layout: ELF header first, then section data, then section headers
+        # NOBITS sections don't occupy file space, so skip their size in layout.
+        NOBITS_PLACEHOLDER_SIZE = 0x40  # .nv.shared.reserved.0
+        nobits_total = NOBITS_PLACEHOLDER_SIZE  # fixed for now
 
-        cur = data_off
+        cur = 64  # past ELF header
         for s in secs:
             if s.sh_type == SHT_NULL:
                 s.sh_offset = 0
+                continue
+            if s.is_nobits:
+                s.sh_offset = cur + nobits_total  # past all PROGBITS
                 continue
             al = max(s.addralign, 1)
             cur = (cur + al - 1) & ~(al - 1)
             s.sh_offset = cur
             s.sh_size = max(s.sh_size, len(s.content))
             cur += s.sh_size
-        # NOBITS sections get offset of cur (past all PROGBITS)
+
+        # Assign NOBITS offsets (past all PROGBITS data)
         for s in secs:
             if s.is_nobits:
                 s.sh_offset = cur
 
+        shdr_off = cur
+        shdr_size = len(secs) * 64
+
         ehdr = struct.pack("<16sHHIQQQIHHHHHH",
                            b"\x7fELF\x02\x01\x01\x41\x08\x00\x00\x00\x00\x00\x00\x00\x00",
-                           2, 190, 1, 0, 0, 64,
+                           2, 190, 1, 0, 0, shdr_off,
                            0x06007802, 64, 0, 0, 64,
                            len(secs), shstrtab_idx,
                            )
 
-        # Assemble
+        # Assemble: ELF header + section data + section headers
         buf = bytearray(ehdr)
-        for s in secs:
-            buf += s.serialize_header()
+        # Write section data
         for s in secs:
             d = s.data()
             if d:
+                # Pad to alignment
                 al = max(s.addralign, 1)
                 pad = (al - (len(buf) % al)) % al
                 if pad:
                     buf.extend(b"\x00" * pad)
                 buf.extend(d)
+        # Write section headers at the end
+        for s in secs:
+            buf += s.serialize_header()
 
         return bytes(buf)
