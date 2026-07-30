@@ -110,7 +110,7 @@ class SassEncoder:
         if m:
             slot_name, attr = m.group(1), m.group(2)
             if attr == "not":
-                return 0
+                return sm.get(f"{slot_name}_not", 0)
             if attr == "negate":
                 return sm.get(f"{slot_name}_negated", 0)
             if attr == "absolute":

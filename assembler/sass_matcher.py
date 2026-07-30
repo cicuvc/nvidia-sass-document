@@ -86,6 +86,12 @@ class SassMatcher:
         if not self._match_operand_groups(op_groups, inst.operands, slot_map):
             return None
 
+        # Set guard predicate from instruction prefix @[!]Px
+        if inst.pred is not None:
+            slot_map["Pg"] = inst.pred
+        if inst.pred_not:
+            slot_map["Pg_not"] = 1
+
         # Figure out which modifier slots were consumed by operand matching
         consumed_mods = set()
         for grp in op_groups:

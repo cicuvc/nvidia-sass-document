@@ -135,11 +135,16 @@ class Parser:
 
     def _parse_instruction(self) -> ParsedInstruction:
         operands: list[Operand] = []
+        pred = None
+        pred_not = False
         # optional predicate prefix: @[!]Px
-        if self.skip("EXCLAM"):
-            pass
+        if self.peek() and self.peek().type == "EXCLAM":
+            self.pop()
+            pred_not = True
         if self.peek() and self.peek().type in ("PRED", "UPRED"):
-            self.pop()  # skip predicate for now
+            t = self.pop()
+            val = 7 if t.text.upper() == "PT" else int(t.text[1:])
+            pred = val if val != 7 else None  # PT = unpredicated
 
         mn = self.expect("IDENT")
         mnemonic = mn.text
@@ -174,7 +179,7 @@ class Parser:
         bracket = self._parse_bracket()
         sched = Sched.parse(bracket)
 
-        return ParsedInstruction(mnemonic=mnemonic, modifiers=modifiers, operands=operands, sched=sched)
+        return ParsedInstruction(mnemonic=mnemonic, modifiers=modifiers, operands=operands, sched=sched, pred=pred, pred_not=pred_not)
 
     def _parse_operands(self) -> list[Operand]:
         ops: list[Operand] = []
