@@ -285,9 +285,18 @@ class CubinBuilder:
 
         # 7: .nv.info (device-wide)
         # Auto-compute regcount from instructions — latest register used
-        computed = self._compute_regcount(self._instructions)
-        if computed > self._regcount:
-            self._regcount = computed
+        if self._instructions:
+            computed = self._compute_regcount(self._instructions)
+            if computed > self._regcount:
+                self._regcount = computed
+            # Auto-compute EXIT offset — last non-NOP instruction
+            if self._exit_offset == 0:
+                nop_lo, nop_hi = 0x0000000000007918, 0x000fc00000000000
+                for i in range(len(self._instructions) - 1, -1, -1):
+                    lo, hi = self._instructions[i]
+                    if lo != nop_lo or hi != nop_hi:
+                        self._exit_offset = i * 16
+                        break
         nv_info = eiattr_regcount(6, self._regcount)
         # FRAME_SIZE, MIN/MAX_STACK_SIZE use 8-byte payloads (func_sym + value)
         nv_info += struct.pack("<BBHII", 4, 0x11, 8, 6, 0)  # FRAME_SIZE
