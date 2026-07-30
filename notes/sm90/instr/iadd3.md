@@ -244,6 +244,55 @@ IADD3 R5, R0, R4, -R5       ; R5 = R0 + R4 - R5 (PTX sub.s32)
 
 ---
 
+## SM120 empirical verification
+
+**Environment:** RTX 5090 (SM 12.0, Blackwell), CUDA 12.8.  
+**Method:** hand-assembled SASS → `cuModuleLoadData` → `cuLaunchKernel` → read back.
+
+### Verified results
+
+| Test | Inputs | Expected | Got |
+|------|--------|----------|-----|
+| 3-reg add | `R1=5, R2=3, R3=1` | `Rd=9` | ✅ 9 |
+| 2-op (Rc=RZ) | `R1=5, R2=3` | `Rd=8` | ✅ 8 |
+| Negated Rc | `R1=7, -R2=10` | `Rd=-3 = 0xFFFFFFFD` | ✅ |
+| 3-way carry (mid) | `R0=R1=R2=0x80000000` | `Rd=0x80000000, Pu+Pv=1` | ✅ |
+| 3-way carry (max) | `R0=R1=R2=0xFFFFFFFF` | `Rd=0xFFFFFFFD, Pu+Pv=2` | ✅ |
+| IADD3.X chain | `0xFFFFFFFF+1 → carry` | `R_carry=1` | ✅ 1 |
+| Carry + ext 2 | `carry=2, IADD3 +2` | `total=4` | ✅ 4 |
+
+### Carry semantics (confirmed)
+
+`IADD3 Rd, Pu, Pv, Ra, Rb, Rc`:
+
+```
+s1   = Ra + Rb                    (33-bit, Pu = carry₁ = bit 32 of s1)
+Rd   = (s1 + Rc) & 0xFFFFFFFF    (32-bit result)
+Pv   = ((s1 + Rc) >> 32) & 1     (carry₂ = overflow of total sum)
+```
+
+`Pu` captures the overflow of the first pair (`Ra+Rb`); `Pv` captures the
+overflow of the three-way total.  Combined carry `Pu+Pv` ∈ {0,1,2}.
+
+IADD3.X form: `Rd = Ra + Sb + Rc + Pu_in + Pv_in`, with new carries in Pp, Pq.
+This enables arbitrary-length carry chains:
+
+```
+IADD3  Rd, P0, P1, R0, R1, R2    ; carry out → P0,P1
+IADD3.X Rd, PT, PT, R3, R4, RZ, P0, P1  ; carry in from P0,P1
+```
+
+### Scheduling caveats (SM120)
+
+- `stall=15,yield=0` (usched=31) is **invalid** for IADD3 (`TABLES_opex_7`
+  has no matching row).  Use `yield=1` (WAITn_END_GROUP) for long stalls.
+- IADD3 has `dst_wr_sb=*7`, `src_rel_sb=*7` — **no scoreboard write/release**.
+  Dependent `MOV32I` (also SB-less) → IADD3 requires `?WAIT5_END_GROUP`
+  (yield=1), or source from an SB-writing instruction (LDC, S2R).
+- `LDC.64 Rd` requires `Rd` **even**; odd destinations → illegal instruction.
+
+---
+
 ## Open questions
 
 1. **IADD alias** — `IADD` appears in the OPERATION SETS alongside `IADD3`;
