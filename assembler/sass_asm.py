@@ -186,18 +186,10 @@ def main() -> int:
         print(f"\nWrote {len(encoded)} raw instructions ({len(raw)} bytes) to {args.dump_text}")
 
     if args.output:
-        exit_offset = 0
-        for i in range(len(encoded) - 1, -1, -1):
-            lo, hi = encoded[i]
-            if lo != 0x0000000000007918 or hi != 0x000fc00000000000:
-                exit_offset = i * 16
-                break
-
         try:
             cb = CubinBuilder()
             kn = kernel.name if kernel else args.kernel_name
             cb.set_code(encoded, kernel_name=kn)
-            cb.set_exit_offset(exit_offset)
             regcount = 8
             if kernel:
                 regcount = int(kernel.attributes.get("MAXREG_COUNT", 8))

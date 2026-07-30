@@ -196,7 +196,7 @@ class CubinBuilder:
         self._instructions: list[tuple[int, int]] = []
         self._kernel_name = "my_kernel"
         self._regcount = 4
-        self._exit_offset = 0
+        self._exit_offsets: list[int] = []
         self._params: list[tuple[int, int, int]] = []
 
     def set_code(self, instructions: list[tuple[int, int]],
@@ -210,13 +210,17 @@ class CubinBuilder:
     def set_regcount(self, count: int) -> None:
         self._regcount = count
 
-    def set_exit_offset(self, offset: int) -> None:
-        self._exit_offset = offset
+    def set_exit_offset(self, offset: int | list[int]) -> None:
+        if isinstance(offset, int):
+            self._exit_offsets = [offset]
+        else:
+            self._exit_offsets = list(offset)
 
     def set_sass(self, instructions: list[tuple[int, int]],
-                 exit_offset: int = 0) -> None:
+                 exit_offset: int | list[int] | None = None) -> None:
         self._instructions = instructions
-        self._exit_offset = exit_offset
+        if exit_offset is not None:
+            self.set_exit_offset(exit_offset)
 
     @staticmethod
     def _compute_regcount(instructions: list[tuple[int, int]]) -> int:
@@ -289,14 +293,12 @@ class CubinBuilder:
             computed = self._compute_regcount(self._instructions)
             if computed > self._regcount:
                 self._regcount = computed
-            # Auto-compute EXIT offset — last non-NOP instruction
-            if self._exit_offset == 0:
-                nop_lo, nop_hi = 0x0000000000007918, 0x000fc00000000000
-                for i in range(len(self._instructions) - 1, -1, -1):
-                    lo, hi = self._instructions[i]
-                    if lo != nop_lo or hi != nop_hi:
-                        self._exit_offset = i * 16
-                        break
+            # Auto-compute EXIT offsets — all EXIT instructions
+            if not self._exit_offsets:
+                exit_opcode = 0x94d  # EXIT opcode at bits [11:0]
+                for i, (lo, hi) in enumerate(self._instructions):
+                    if (lo & 0xFFF) == exit_opcode:
+                        self._exit_offsets.append(i * 16)
         nv_info = eiattr_regcount(6, self._regcount)
         # FRAME_SIZE, MIN/MAX_STACK_SIZE use 8-byte payloads (func_sym + value)
         nv_info += struct.pack("<BBHII", 4, 0x11, 8, 6, 0)  # FRAME_SIZE
@@ -311,7 +313,11 @@ class CubinBuilder:
         buf += eiattr_hval(0x50, 0)    # SPARSE_MMA_MASK
         buf += eiattr_hval(0x1b, 0xff)  # MAXREG_COUNT
         buf += eiattr_bval(0x4a, 0)    # VRC_CTA_INIT_COUNT
-        buf += eiattr_sval(0x1c, self._exit_offset)  # EXIT_INSTR_OFFSETS
+        # EXIT_INSTR_OFFSETS — one or more 4-byte offsets
+        if self._exit_offsets:
+            exit_buf = struct.pack(f"<{'I' * len(self._exit_offsets)}",
+                                   *self._exit_offsets)
+            buf += struct.pack("<BBH", 4, 0x1c, len(exit_buf)) + exit_buf
         total_ps = sum(sz for _, _, sz in self._params)
         buf += eiattr_hval(0x19, total_ps)  # CBANK_PARAM_SIZE
         buf += eiattr_param_cbank(7, 0x380, total_ps)  # PARAM_CBANK
