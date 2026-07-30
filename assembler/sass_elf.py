@@ -218,6 +218,19 @@ class CubinBuilder:
         self._instructions = instructions
         self._exit_offset = exit_offset
 
+    @staticmethod
+    def _compute_regcount(instructions: list[tuple[int, int]]) -> int:
+        max_reg = 0
+        for lo, hi in instructions:
+            for pos in (16, 24, 32):
+                r = (lo >> pos) & 0xFF
+                if r < 255:
+                    max_reg = max(max_reg, r)
+            r = hi & 0xFF
+            if r < 255:
+                max_reg = max(max_reg, r)
+        return max(8, ((max_reg + 7) // 8) * 8) if max_reg else 8
+
     @property
     def kernel_name(self) -> str:
         return self._kernel_name
@@ -271,6 +284,10 @@ class CubinBuilder:
             flags=SHF_INFO_LINK | SHF_CUDA_RETAIN)
 
         # 7: .nv.info (device-wide)
+        # Auto-compute regcount from instructions — latest register used
+        computed = self._compute_regcount(self._instructions)
+        if computed > self._regcount:
+            self._regcount = computed
         nv_info = eiattr_regcount(6, self._regcount)
         # FRAME_SIZE, MIN/MAX_STACK_SIZE use 8-byte payloads (func_sym + value)
         nv_info += struct.pack("<BBHII", 4, 0x11, 8, 6, 0)  # FRAME_SIZE
