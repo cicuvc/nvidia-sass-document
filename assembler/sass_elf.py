@@ -189,23 +189,6 @@ def note_nv_cuver() -> bytes:
     return d[0x55c:0x55c + 0x24]
 
 
-def build_debug_frame() -> bytes:
-    return bytes([
-        0x24, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
-        0x7c, 0x04, 0x00, 0x03, 0xff, 0xff, 0xff, 0xff,
-        0x0c, 0x81, 0x80, 0x80, 0x0f, 0xff, 0xff, 0xff,
-        0x80, 0x81, 0x08, 0x00, 0x28, 0x80, 0x81, 0xff,
-        0x08, 0x00, 0x28, 0x80, 0x80, 0x81, 0x08, 0x00,
-        0x2c, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x04,
-        0x00, 0x00, 0x00, 0x00, 0x04, 0x04, 0x00, 0x00,
-        0x00, 0x0c, 0x81, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x80, 0x80, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00,
-    ])
-
 
 # ---------------------------------------------------------------------------
 class CubinBuilder:
@@ -278,10 +261,7 @@ class CubinBuilder:
         # 3: .symtab
         sec(".symtab", SHT_SYMTAB, align=8, entsize=24)
 
-        # 4: .debug_frame
-        sec(".debug_frame", SHT_PROGBITS, content=build_debug_frame(), align=1)
-
-        # 5: .note.nv.tkinfo
+        # 4: .note.nv.tkinfo
         sec(".note.nv.tkinfo", SHT_NOTE, content=note_nv_tkinfo(),
             flags=SHF_CUDA_LINK_ONCE)
 
@@ -326,12 +306,7 @@ class CubinBuilder:
         cg = struct.pack("<8i", 0, -1, 0, -2, 0, -3, 0, -4)
         sec(".nv.callgraph", SHT_CUDA_CALLGRAPH, content=cg, entsize=8)
 
-        # 11: .rela.debug_frame
-        rela = struct.pack("<QQQ", 0x44, (6 << 32) | 2, 0)
-        sec(".rela.debug_frame", SHT_RELA, content=rela,
-            flags=SHF_INFO_LINK, align=8, entsize=24)
-
-        # 12: .text.<mangled>
+        # 11: .text.<mangled>
         raw = b"".join(struct.pack("<QQ", lo & MASK64, hi & MASK64)
                        for lo, hi in self._instructions)
         min_text = 256
@@ -370,8 +345,6 @@ class CubinBuilder:
                              value=0x40, size=4, other=VIS_HIDDEN)
         sym_rsma = symtab.add(strtab.add("__nv_reservedSMEM_offset_0_alias"),
                               STB_GLOBAL, STT_NOTYPE, 0, value=0x40)
-        sym_df = symtab.add(strtab.add(".debug_frame"),
-                            STB_LOCAL, STT_SECTION, 0)
         sym_cg = symtab.add(strtab.add(".nv.callgraph"),
                             STB_LOCAL, STT_SECTION, 0)
         sym_func = symtab.add(strtab.add(mn), STB_GLOBAL, STT_FUNC, 0,
@@ -382,7 +355,6 @@ class CubinBuilder:
         # Fix shndx
         text_sec_name = f".text.{mn}"
         shmem_sec_name = ".nv.shared.reserved.0"
-        df_sec_name = ".debug_frame"
         cg_sec_name = ".nv.callgraph"
         c0_sec_name = f".nv.constant0.{mn}"
 
@@ -391,8 +363,6 @@ class CubinBuilder:
                 text_sec_idx = i
             if s.name == shmem_sec_name:
                 shmem_sec_idx = i
-            if s.name == df_sec_name:
-                df_sec_idx = i
             if s.name == cg_sec_name:
                 cg_sec_idx = i
             if s.name == c0_sec_name:
@@ -401,7 +371,6 @@ class CubinBuilder:
         symtab.entries[sym_text].st_shndx = text_sec_idx
         symtab.entries[sym_rsm].st_shndx = shmem_sec_idx
         symtab.entries[sym_rsma].st_shndx = shmem_sec_idx
-        symtab.entries[sym_df].st_shndx = df_sec_idx
         symtab.entries[sym_cg].st_shndx = cg_sec_idx
         symtab.entries[sym_func].st_shndx = text_sec_idx
         symtab.entries[sym_c0].st_shndx = c0_sec_idx
@@ -427,9 +396,6 @@ class CubinBuilder:
                         s.link_idx = j
                     if sj.name == ".nv.compat":
                         s.info_idx = j
-            if s.name == ".rela.debug_frame":
-                s.link_idx = symtab_idx
-                s.info_idx = df_sec_idx
             if s.name == text_sec_name:
                 s.link_idx = symtab_idx
                 s.info_idx = sym_func
