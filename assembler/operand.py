@@ -121,10 +121,15 @@ class Sched:
     req_bits: set[int] = field(default_factory=set)
     stall: int = 1
     yield_val: int = 0
+    batch_t: int = 0
 
     @property
     def usched_info(self) -> int:
         return self.stall + 16 if self.yield_val == 0 else self.stall
+
+    @property
+    def opex(self) -> int:
+        return (self.batch_t << 5) | (self.usched_info & 0x1F)
 
     @staticmethod
     def default() -> Sched:
@@ -134,15 +139,18 @@ class Sched:
     def parse(text: str) -> Sched:
         s = text.strip().strip("[]")
         parts = [p.strip() for p in s.split(":")]
-        if len(parts) != 5:
-            raise ValueError(f"scheduling bracket needs 5 fields, got {len(parts)}: {text}")
+        if len(parts) not in (5, 6):
+            raise ValueError(
+                f"scheduling bracket needs 5 or 6 fields, got {len(parts)}: {text}")
         wr_sb = int(parts[0], 0)
         rd_sb = int(parts[1], 0)
         raw = parts[2].strip("{}")
         req_bits = set(int(x.strip(), 0) for x in raw.split(",") if x.strip()) if raw else set()
         stall = int(parts[3], 0)
         yield_val = int(parts[4], 0)
-        return Sched(wr_sb=wr_sb, rd_sb=rd_sb, req_bits=req_bits, stall=stall, yield_val=yield_val)
+        batch_t = int(parts[5], 0) if len(parts) >= 6 else 0
+        return Sched(wr_sb=wr_sb, rd_sb=rd_sb, req_bits=req_bits,
+                     stall=stall, yield_val=yield_val, batch_t=batch_t)
 
 
 @dataclass

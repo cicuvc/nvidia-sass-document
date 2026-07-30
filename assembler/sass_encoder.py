@@ -30,10 +30,16 @@ class SassEncoder:
 
     # ------------------------------------------------------------------
     def _apply_sched(self, sm: dict, sched: Sched) -> None:
-        """Set scheduling-related slots from the Sched object."""
         sm["usched_info"] = sched.usched_info
-        sm["batch_t"] = 0
-        # Encode req_bits as bitmask at [121:116]
+        sm["batch_t"] = sched.batch_t
+        # Decode batch_t bits [2:0] into reuse flags for TABLES_opex_N
+        # bit 0 → reuse_src_a, bit 1 → reuse_src_b, bit 2 → reuse_src_c
+        if "reuse_src_a" in sm:
+            sm["reuse_src_a"] = (sched.batch_t >> 0) & 1
+        if "reuse_src_b" in sm:
+            sm["reuse_src_b"] = (sched.batch_t >> 1) & 1
+        if "reuse_src_c" in sm:
+            sm["reuse_src_c"] = (sched.batch_t >> 2) & 1
         mask = 0
         for b in sched.req_bits:
             mask |= 1 << b
