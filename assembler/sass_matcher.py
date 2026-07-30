@@ -195,12 +195,11 @@ class SassMatcher:
             if s["type"] in COMPOSITE_TYPES:
                 in_composite = True
                 operand_slots.append(s)
-            elif in_composite and s["modifier"]:
-                operand_slots.append(s)  # sub-operand modifier in composite
+            elif in_composite:
+                operand_slots.append(s)  # everything inside composite group
             elif not s["modifier"]:
                 operand_slots.append(s)
-                in_composite = False
-            # else: modifier slot outside composite → skip
+            # else: modifier outside composite → skip
 
         cleaned = ""
         if raw_fmt:

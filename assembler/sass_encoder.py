@@ -113,19 +113,96 @@ class SassEncoder:
 
     # ------------------------------------------------------------------
     def _resolve_slot_attr(self, rhs: str, sm: dict) -> int:
-        """Handle slot_attr like Pg@not, Sb@negate, Sb@absolute."""
-        match = re.match(r"(\w+)@(\w+)", rhs)
-        if not match:
+        """Handle slot_attr like Pg@not, Sb@negate, or Sb convertFloatType(...)."""
+        # Simple case: slot@attr
+        m = re.match(r"(\w+)@(\w+)$", rhs)
+        if m:
+            slot_name, attr = m.group(1), m.group(2)
+            if attr == "not":
+                return 0
+            if attr == "negate":
+                return sm.get(f"{slot_name}_negated", 0)
+            if attr == "absolute":
+                return sm.get(f"{slot_name}_abs", 0)
             return 0
-        slot_name, attr = match.group(1), match.group(2)
-        val = sm.get(slot_name, 0)
-        if attr == "not":
-            return 0  # parser doesn't handle @[!]Px prefix
-        if attr == "negate":
-            return sm.get(f"{slot_name}_negated", 0)
-        if attr == "absolute":
-            return sm.get(f"{slot_name}_abs", 0)
+
+        # Complex case: slot convertFloatType(condition, fmt_true, fmt_false)
+        m = re.match(r"(\w+)\s+(\w+)\((.*)\)$", rhs)
+        if m:
+            slot_name, fn_name, args_str = m.group(1), m.group(2), m.group(3)
+            if fn_name == "convertFloatType":
+                return self._eval_convert_float(slot_name, args_str, sm)
+
         return 0
+
+    def _eval_convert_float(self, slot_name: str, args: str,
+                            sm: dict) -> int:
+        """Evaluate convertFloatType(modifier_check, fmt_true, fmt_false).
+
+        Args: 'modifier == `ENUM_TYPE@VALUE, fmt_true, fmt_false'
+        Returns 16-bit FP16 or BF16 value.
+        """
+        import struct
+
+        val = sm.get(slot_name, 0)
+        if isinstance(val, float):
+            f32 = val
+        else:
+            # Already a 32-bit integer representing the float bits
+            f32 = struct.unpack(">f", struct.pack(">I", val & 0xFFFFFFFF))[0]
+
+        # Parse condition: modifier_name == `ENUM_TYPE@VALUE
+        cond_match = re.match(
+            r"(\w+)\s*==\s*`(\w+)@(\w+)", args)
+        if not cond_match:
+            return self._float_to_fp16(f32)  # default to FP16
+
+        mod_name = cond_match.group(1)
+        enum_type = cond_match.group(2)
+        enum_value = cond_match.group(3)
+
+        # Lookup enum value
+        enum_vals = self.db["enums"].get(enum_type, {})
+        target_val = enum_vals.get(enum_value)
+        if target_val is None:
+            return self._float_to_fp16(f32)
+
+        # nvcc evidence: when ofmt != BF16_V2, constants use BF16 format.
+        # The convertFloatType condition checks for BF16_V2, but the default
+        # (when false) is BF16 for most HFMA2 variants.
+        mod_val = sm.get(mod_name)
+        if mod_val == target_val:
+            return self._float_to_fp16(f32)
+        else:
+            return self._float_to_bf16(f32)
+
+    @staticmethod
+    def _float_to_fp16(f: float) -> int:
+        import struct
+        try:
+            return struct.unpack(">H", struct.pack(">e", f))[0]
+        except struct.error:
+            # Manual conversion if >e not available
+            bits = struct.unpack(">I", struct.pack(">f", f))[0]
+            sign = (bits >> 31) & 1
+            exp = (bits >> 23) & 0xFF
+            mant = bits & 0x7FFFFF
+            if exp == 0xFF:
+                return (sign << 15) | 0x7C00 | (1 if mant else 0)
+            if exp == 0:
+                return sign << 15
+            new_exp = exp - 127 + 15
+            if new_exp >= 31:
+                return (sign << 15) | 0x7C00
+            if new_exp <= 0:
+                return sign << 15
+            return (sign << 15) | (new_exp << 10) | (mant >> 13)
+
+    @staticmethod
+    def _float_to_bf16(f: float) -> int:
+        import struct
+        bits = struct.unpack(">I", struct.pack(">f", f))[0]
+        return bits >> 16
 
     # ------------------------------------------------------------------
     # Table functions
