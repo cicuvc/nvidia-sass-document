@@ -44,7 +44,7 @@ def sim_ushf(lo, hi):
     rd = bits(lo, 21, 16)
     ra = bits(lo, 29, 24)
     dir_bit = bits(hi, 76 - 64, 76 - 64)  # 0=left, 1=right
-    cw = bits(hi, 75 - 64, 75 - 64)  # 0=clamp, 1=wrap
+    cw = bits(hi, 75 - 64, 75 - 64)  # 0=C, 1=W
     fmt = bits(hi, 74 - 64, 73 - 64)  # 2=S32, 3=U32, 0=S64, 1=U64
     hilo = bits(hi, 80 - 64, 80 - 64)  # 0=LO, 1=HI
 
@@ -68,12 +68,23 @@ def sim_ushf(lo, hi):
     else:
         return
 
+    # Funnel = {Rc, Ra}: Rc is the high 32 bits, Ra the low 32 bits
+    # (verified on SM120; see notes/sm90/instr/shf.md).
+    concat = ((val_c & 0xFFFFFFFF) << 32) | (val_a & 0xFFFFFFFF)
+    # amount: C mode -> 0..63 (64-formats) or clamped at 32 (32-formats);
+    #         W mode -> amount & 0x1f
+    if cw == 1:
+        shift_n &= 0x1F
+    elif fmt in (0, 1):  # S64/U64
+        shift_n &= 0x3F
+    else:                # S32/U32 clamp at 32
+        shift_n = min(shift_n, 32)
     if dir_bit == 0:  # left
-        concat = ((val_a & 0xFFFFFFFF) << 32) | (val_c & 0xFFFFFFFF)
-        shifted = concat << shift_n
-    else:  # right
-        concat = ((val_a & 0xFFFFFFFF) << 32) | (val_c & 0xFFFFFFFF)
+        shifted = (concat << shift_n) & 0xFFFFFFFFFFFFFFFF
+    else:  # right (arithmetic for S32/S64)
         shifted = concat >> shift_n
+        if fmt in (0, 2) and (concat >> 63) & 1 and shift_n:
+            shifted |= (((1 << shift_n) - 1) << (64 - shift_n))
 
     if hilo == 0:
         result = shifted & 0xFFFFFFFF
