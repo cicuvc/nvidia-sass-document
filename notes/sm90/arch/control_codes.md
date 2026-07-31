@@ -282,3 +282,28 @@ read-modify-write reuse all execute silently — the cache never raises
 contract is enforced by identity matching + write invalidation, so the only
 way to corrupt data is the dest==source case (which the compiler must not
 emit). ptxas never emits that pattern.
+
+### Timing characterization — the stale value survives stall-only delay
+
+`test_reuse.py` sweeps the producer's stall `s1` (transN eff_stall) with no
+intervening instruction, so the consumer issues at `pos2 = s1`; the no-reuse
+control isolates the reuse effect (FFMA→FFMA writeback latency = 4):
+
+| s1 | reuse | ctrl | interpretation |
+|---:|:---:|:---:|---|
+| 1–3 | stale | stale | RAW: consumer reads pre-write R10 (write not committed) |
+| 4–5 | fresh | fresh | write committed, cache **not yet armed** |
+| 6–11 | **stale** | fresh | **cache armed ~2 cyc AFTER writeback; serves the STALE source value** |
+
+So a delay made purely of stall counts (no intervening instruction) does
+**not** clear the stale value once the cache is armed (s1 ≥ 6) — the reuse
+hint is a program-order contract honored regardless of the issue gap. The
+s1∈{4,5} band shows the cache is populated later than the writeback, leaving a
+2-cycle window where the write "wins". This is also the strongest direct
+evidence the reuse cache exists: at s1 ≥ 6 the write has long committed, yet
+only the reuse consumer reads the old value.
+
+**Eviction:** *any* intervening instruction — MOV, IADD3, even a FFMA or an
+IADD3 that itself reads the reused register in a different slot — evicts the
+cache; the consumer then reads fresh. The cache serves exactly one program-
+order successor.

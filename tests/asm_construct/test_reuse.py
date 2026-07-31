@@ -100,6 +100,45 @@ add("hazard-RMW-ctrl",
      "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 13.0,
     "control without reuse -> fresh (5*2+3)")
 
+# ---- timing characterization: no intervening instr, delay = stall count --
+# Producer FFMA R10 = R10*R11+R12 (1->5), reuse_a on R10, eff_stall = s1
+# (transN).  Consumer FFMA R4 = R10*R11+R12 issues at pos2 = s1.  FFMA->FFMA
+# writeback latency = 4, so ctrl reads fresh for s1>=4.  Observed (SM120):
+#   s1<=3 : both stale  (consumer reads pre-write R10: RAW hazard)
+#   s1 4-5: both fresh
+#   s1>=6 : REUSE stale (cache serves pre-FFMA R10) vs ctrl fresh
+# => the reuse cache is armed ~2 cycles AFTER the writeback (t~6), so a
+#    program-order next instruction issued >=6 cycles later still reads the
+#    STALE source value.
+add("timing-s1=1",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:1:0:1]",
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 5.0,
+    "RAW window (write not committed at pos2=1)")
+add("timing-s1=4",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:4:0:1]",
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 13.0,
+    "fresh band: write committed, cache not yet armed")
+add("timing-s1=6",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:6:0:1]",
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 5.0,
+    "STALE: cache armed, serves pre-FFMA R10")
+add("timing-s1=11",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:11:0:1]",
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 5.0,
+    "STALE persists across the largest stall delay")
+
+# ---- eviction: ANY intervening instruction resets the cache --------------
+add("evict-MOV",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:8:0:1]",
+     "MOV R20, R13;[7:7:{}:8:1]",
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 13.0,
+    "one MOV between -> fresh (cache evicted)")
+add("evict-IADD3-readR10",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:8:0:1]",
+     "IADD3 R20, R10, R13, RZ;[7:7:{}:8:1]",
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 13.0,
+    "intervening IADD3 that READS R10 -> still fresh")
+
 lines = ["#fn reuse_test(out<256>) {",
          "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
          "    LDC.64 R6, #param(out);[0:7:{}:1:0]",
@@ -138,4 +177,11 @@ print("  reuse cache is identity-matched + write-invalidated; conventions")
 print("  violations never fault (no ILLEGAL_INSTRUCTION).")
 print("  HAZARD: reuse on a source register that is also the instruction's")
 print("  destination serves the STALE pre-instruction value to the next")
-print("  instruction (window = exactly 1 instruction).")
+print("  instruction.")
+print("  Timing (no intervening instr, consumer at issue pos2=s1):")
+print("    s1<=3 both stale (RAW: write not committed, FFMA latency 4);")
+print("    s1 4-5 both fresh (cache not yet armed); s1>=6 REUSE stale only")
+print("    (cache armed ~2 cyc after writeback) -> delay via stall does NOT")
+print("    clear the stale value.")
+print("  ANY intervening instruction (MOV/IADD3/FFMA, even reading the")
+print("  reused register) evicts the cache -> fresh.")
