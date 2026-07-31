@@ -153,6 +153,33 @@ add("ctrl-fresh-band",
      "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 13.0,
     "ctrl (no reuse) also fresh at pos2=4 -> write committed, cache not armed")
 
+# ---- old value persists: reuse does NOT replace the latch ----------------
+# P1 (RMW, reuse R10) arms the slot-A latch with R10=1.0.  A second reuse
+# producer P2 (any slot, any register) does NOT replace it; only a plain
+# (non-reuse) slot-A read does.  So if the latch already holds an old value,
+# the consumer reads it (STALE) - there is no RF fallback in that case.
+add("oldval-reuse-otherslot",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:8:0:1]",
+     "FFMA R20, R13, R11, R12;[7:7:{}:8:0:4]",   # P2 reuse on slot C
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 5.0,
+    "STALE: P2 reuse on a different slot leaves the slot-A latch intact")
+add("oldval-reuse-A-diffreg",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:8:0:1]",
+     "FFMA R20, R13, R11, R12;[7:7:{}:8:0:1]",   # P2 reuse on slot A, R13
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 5.0,
+    "STALE: even a same-slot reuse with a DIFFERENT register keeps P1's entry")
+add("oldval-plain-replaces",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:8:0:1]",
+     "FFMA R20, R13, R11, R12;[7:7:{}:8:1]",    # P2 plain slot-A read of R13
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 13.0,
+    "FRESH: a plain (non-reuse) slot-A read REPLACES P1's entry")
+add("oldval-R13-consumer",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:8:0:1]",
+     "FFMA R20, R13, R11, R12;[7:7:{}:8:0:1]",   # P2 reuse R13 (slot A)
+     "FFMA R4, R13, R11, R12;[7:7:{}:8:1]"], "R4", 11.0,
+    "FRESH: P2's reuse of R13 is NOT latched (single entry holds R10); a "
+    "consumer of R13 reads RF (4*2+3=11)")
+
 lines = ["#fn reuse_test(out<256>) {",
          "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
          "    LDC.64 R6, #param(out);[0:7:{}:1:0]",

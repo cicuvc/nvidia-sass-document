@@ -362,3 +362,30 @@ after a reuse FFMA faults `ILLEGAL_INSTRUCTION` in hand-built ELFs (same
 flakiness class as sm120_findings.md §10), so the boundary is pinned by the
 stall-controlled issue-gap model (`pos2 = s1`) instead — which is itself a
 cycle-accurate measurement.
+
+### Latch persistence — what happens when the cache already holds an old value
+
+The per-slot reuse entry is a single-entry latch. Empirically (SM120,
+`test_reuse.py` `oldval-*` cases, all deterministic):
+
+| producer P1 (RMW reuse R10 → latch {R10, 1.0}) | then P2 | consumer C reads R10 |
+|---|---|---|
+| — | **P2 reuse** (any slot, any register) | **STALE (reads P1's 1.0)** |
+| — | **P2 plain** (non-reuse slot-A read of R13) | fresh (latch replaced, → RF) |
+
+So:
+- **A reuse instruction does NOT replace/clear an existing latch entry** —
+  neither on the same slot (even with a *different* register) nor on another
+  slot. The first reuse producer's value stays latched.
+- **Only a plain (non-reuse) read of a slot overwrites that slot's entry.**
+- Therefore the "fresh band → RF fallback" only happens when the latch is
+  *empty* (the arming fill has not landed, or it was consumed/replaced). If
+  the latch already holds an old value, the consumer reads it (STALE) — there
+  is no RF fallback in that case.
+- A second reuse producer's own operand is *not* latched while the entry is
+  occupied (single entry, first-wins): `oldval-R13-consumer` shows a consumer
+  of the second producer's register reads RF (fresh).
+
+This refines the eviction rule: "any intervening instruction evicts" is really
+"any intervening **plain** slot read replaces the entry"; reuse-marked
+intervening instructions leave it in place.
