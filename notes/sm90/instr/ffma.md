@@ -127,4 +127,66 @@ Key observations from compiler output:
 - `.reuse` flag not yet tested (requires paired consumer instructions)
 - Const-bank variants (RRC, RRCx, RCR, RCxR) not yet verified with test kernel
 - `FFMA32I` (pipe-only alias) relationship to FFMA not fully explored
-- No PTX `fma.fmz.f32` — what PTX pattern triggers `.FMZ` suffix?
+
+## Resolved (SM120 bit-level verification, 2026-08)
+
+`tests/asm_construct/test_ffma.py` + `fma_ref.py` (big-integer exact-sum FMA)
+verified the full rounding model against real hardware; **160/160 cases OK**
+(120 random vectors × RN/RM/RP/RZ/FTZ + 40 structured). Cross-validated
+against an independent Fraction-based rounder (20k vectors/mode).
+
+### Rounding modes — bit-level (`stride` [79:78] = RN:0 RM:1 RP:2 RZ:3)
+
+The exact sum `Ra*Rb+Rc` (48-bit product, exact add) is rounded **once** to
+the binary32 grid, matching IEEE 754-2019 §4.3.3 exactly:
+
+| case | exact sum (ULP units) | RN | RM | RP | RZ |
+|------|-----------------------|----|----|----|----|
+| tie-even | 1.5 (tie) | up **to even** | down | up | down |
+| subhalf | 1.25 | down | down | up | down |
+| abvhalf | 1.75 | up | down | up | down |
+
+- **Ties** resolve to the *even* mantissa (RN); a `tie-even` upper candidate
+  stays down (0x3f800003) when the lower one is already even.
+- **Overflow** (`|sum| ≥ 2^128`): RN/RP → ±inf; RM/RZ → clamp to ±max-finite
+  (0x7f7fffff / 0xff7fffff). The exact `maxfinite + 1 ULP = 2^128` edge
+  rounds to inf under RN, max-finite under RM/RZ.
+- **Zero-sum sign** (§5.4.2): exact cancellation `a*b == -c` → +0, except
+  **-0 under RM**; `+0 + -0` → +0 (RN/RZ/RP), -0 (RM). Verified bit-exact.
+- **Underflow** below the denormal grid (e.g. `2^-149 * 2^-149`) → +0 even
+  without FTZ (round-to-nearest of 2^-298).
+
+### Fusion is real (single rounding)
+
+The 48-bit exact product participates in the final round. `a=b=2^23+1`,
+`c=2^22` (half-ULP): exact sum = `2^46 + 2.5 ULP + 1` → RN rounds **up**
+(0x56800003). A separate FMUL then FADD rounds the product first
+(`2^46+2^24`), then the +c lands exactly on the tie → stays at
+0x56800002. **1 ULP apart** — direct proof FFMA is not FMUL+FADD.
+(64 such vectors found; see `test_ffma.py` `fusion`/`fusion2`.)
+
+### Denormals + flush modifiers (`fmz` bits [80],[76]: nofmz:0 FMZ:1 FTZ:2)
+
+- **Plain FFMA preserves denormal inputs AND denormal results** on SM120
+  (e.g. `2^-149` propagates; `2^-63 * 2^-86 = 2^-149` stays denormal).
+- **`.FTZ` flushes** denormal inputs (multiplier + addend) and the denormal
+  result to sign-preserving zero.
+- **`.FMZ` is behaviourally identical to `.FTZ` on FFMA** (SM120): it flushes
+  the denormal multiplier inputs, the denormal addend (discriminator:
+  `2^-63*2^-63 + 3*2^-149` → plain 0x00800003, FTZ/FMZ 0x00800000), and the
+  denormal output. `.FMZ` has no PTX equivalent and appears only in SASS.
+
+### NaN canonicalization
+
+All NaN-producing FFMA inputs (payload/sign NaN, `inf*0`, `inf + -inf`)
+produce the canonical **0x7fffffff** (positive, all-ones mantissa) on SM120 —
+not 0x7fc00000. PTX ISA says single-precision NaN is unspecified; empirically
+it is always 0x7fffffff for FFMA.
+
+### Assembler note
+
+The SASS `.RZ` rounding modifier required a parser fix (the lexer reads `RZ`
+as a register token, so `.RZ` failed; `sass_parser.py` now accepts a `REG`
+token text "RZ" as a mnemonic modifier). `FFMA.RZ`, `FFMA.RZ.FTZ`, and the
+`0fXXXXXXXX` F32-imm RRI form all assemble correctly.
+
