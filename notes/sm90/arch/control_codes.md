@@ -251,3 +251,34 @@ An external (unverified) writeup was checked against these two source dumps:
 - Runtime effect of `BATCH_START/BATCH_START_TILE/BATCH_END` — never emitted by
   ptxas in surveyed libraries, so semantics remain inferred from the names only.
 - Why `batch_t=3` is encodable (via `opex_0`) yet has no enum name.
+
+## Runtime semantics of the operand reuse cache (SM120, 2026-08)
+
+`tests/asm_construct/test_reuse.py` drives the reuse bits
+(`[7:7:{stall}:0:{reuse}`, usched must be `transN` 17..27, yield=0) and
+observes results on the RTX 5090. 14/14 cases pass. The 3-bit field is set
+per FFMA via the 6th bracket element (reuse_a=1, reuse_b=2, reuse_c=4).
+cuobjdump round-trips it as `FFMA R3, R10.reuse, R11, R12 ?trans8`.
+
+| Scenario | Result | Meaning |
+|----------|--------|---------|
+| reuse producer, next instr same reg same slot | correct | cache serves the value |
+| next instr DIFFERENT reg in the slot | **fresh** | identity-matched fallback to RF |
+| register written between producer/consumer | **fresh** | the write invalidates the cache |
+| consumer 2 instructions later (no write) | fresh | cache holds for exactly 1 instr |
+| reused reg read in a different slot | fresh | cache is per-slot |
+| **reuse on a source that is ALSO the dest (read-modify-write)** | **STALE** | the next instruction reads the pre-instruction value |
+
+**Hazard (H1):** `.reuse` on a register that the same instruction writes as
+its destination silently serves the OLD value to the immediately following
+instruction. Example: `FFMA R10, R10.reuse, R11, R12` (R10=1 → 5), then
+`FFMA R4, R10, R11, R12` gives **5.0** (uses cached pre-FFMA R10=1.0) instead
+of 13.0. Confirmed on slots A, B, and C; the stale window is exactly one
+instruction (an intervening instruction yields the fresh value).
+
+**No fault on any convention violation:** different-register, cross-slot, and
+read-modify-write reuse all execute silently — the cache never raises
+`ILLEGAL_INSTRUCTION`. The "same register in the same operand position"
+contract is enforced by identity matching + write invalidation, so the only
+way to corrupt data is the dest==source case (which the compiler must not
+emit). ptxas never emits that pattern.

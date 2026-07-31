@@ -204,3 +204,25 @@ c[0x0][0x400]  = gmem_out pointer (regular param)
 - Why `#pragma unroll 0` is ignored on SM120 PTXAS
 - SM120 constant bank 0 preset region layout (differs from SM90)
 - `MOV64I` vs `LDC.64` provenance requirement for STG addresses
+
+## 10. Registers R14–R16 are reserved by the launch path (hand-built ELF)
+
+Empirically (RTX 5090, CUDA 12.8, our hand-built ELF + `cuLaunchKernel`):
+**any instruction touching GPR R14, R15, or R16 faults with
+`CUDA_ERROR_ILLEGAL_INSTRUCTION` (715)** — as source, as dest, MOV32I, MOV,
+FFMA, IADD3, any immediate value. R0–R13 and R17+ are all fine.
+
+Bisect: cubins for `MOV32I R13, 0x40800000` (works) vs `MOV32I R14, 0x40800000`
+(faults) differ in **exactly one byte** (the Rd field 0x0d→0x0e). The SASS and
+all ELF attributes (REGCOUNT 16, KPARAM_INFO, FRAME_SIZE 0, …) are identical.
+
+Notable: the same cubin **passes under `compute-sanitizer memcheck`** (correct
+result, 0 errors) — only the plain launch faults, so this is a launch-path /
+hardware edge case, not a static-encoding defect. cublas sm_120 SASS does use
+R14–R16 (`LDC R14, c[0x0][0x360]`, `LDC R16`, `HFMA2 R15`) — but those kernels
+carry the full ptxas ABI metadata, so the restriction appears specific to how
+the driver launches kernels missing some (unidentified) attribute.
+
+Workaround for hand-built test kernels: avoid R14–R16 (use R17+).
+Open: which ELF attribute/license lets ptxas binaries use R14–R16 freely, and
+what the driver does with those registers at launch on sm_120.
