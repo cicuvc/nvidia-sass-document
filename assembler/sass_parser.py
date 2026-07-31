@@ -159,6 +159,9 @@ class Parser:
             tok = self.peek()
             if tok and tok.type == "IDENT":
                 modifiers.append(self.pop().text)
+            elif tok and tok.type == "REG" and tok.text.upper() == "RZ":
+                # ".RZ" rounding modifier — RZ is lexed as a REG token
+                modifiers.append(self.pop().text)
             elif tok and tok.type == "NUMBER":
                 num = self.pop().text
                 if self.peek() and self.peek().type == "IDENT":
