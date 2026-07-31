@@ -306,7 +306,38 @@ only the reuse consumer reads the old value.
 **Eviction:** *any* intervening instruction — MOV, IADD3, even a FFMA or an
 IADD3 that itself reads the reused register in a different slot — evicts the
 cache; the consumer then reads fresh. The cache serves exactly one program-
-order successor.
+order successor. (A load is the one exception that could survive: its
+*address* goes through the LSU path, not the ALU operand collector — see the
+cublas survey below.)
+
+### Does ptxas conform? (cublas / cublasLt survey)
+
+`tools/analyze_reuse.py` scans cuobjdump SASS (all `.reuse` operands, decoded
+from the `.reuse` text marker) and checks the hazard + consumption rules:
+
+| corpus | reuse operands | RMW (reused reg == dest) | next-instr same slot + same reg |
+|--------|---------------:|--------------------------:|--------------------------------:|
+| libcublas sm_90    | 302,667 | **0** | 62.8% |
+| libcublasLt sm_90  | 337,000 | **0** | 57.2% |
+| libcublas sm_120   | 228,935 | **0** | 64.1% |
+
+- **RMW hazard: ZERO across ~870k reuse operands.** ptxas never reuses a
+  register that the same instruction also writes — the dest==source stale-
+  data hazard found above is fully respected by the compiler.
+- **~60% of reuse is consumed by the immediately-next instruction in the same
+  operand slot** (position index) — the exact contract of the cache.
+- **~40% is looser.** Distance-to-consumer for the same-slot read: d=1 60.8%,
+  d=2 17.6%, d=3 7.4%, d=4+ ~10%, never-re-read 3.1% (sm_90). Of the d=2
+  cases, the intervening instruction is an ALU/FMA op 44% of the time (which
+  evicts the cache → the reuse is *wasted but harmless*, served by the silent
+  fallback) and a load/mem op 41% (load addresses bypass the ALU operand
+  collector, so the cache plausibly survives to the d=2 consumer). The chain
+  `LEA R23.reuse … / LDG … / LEA R23.reuse …` repeated across loads confirms
+  ptxas deliberately re-arms the same register across memory ops.
+
+So ptxas is *strict about the hazard* (never emits it) and *mostly tight about
+the consumption pattern* (~60% d=1), with the remainder relying on the
+identity-matched silent fallback that keeps every miss correct.
 
 ### Mechanism of the fresh band — late cache fill (not writeback forwarding)
 
