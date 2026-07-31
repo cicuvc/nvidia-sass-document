@@ -61,23 +61,28 @@ Rc:     1    0    1    0    1    0    1    0
 
 ---
 
-## Pu: predicate output accumulator
+## Pu: predicate output
 
 Like IADD3, LOP3 has `Pu` as a predicate output slot typed `Predicate("PT")`.
-But unlike IADD3 (carry), LOP3's `Pu` accumulates the LUT result into a predicate
-for downstream conditional use. The `/LOP_POP` modifier controls the accumulation:
+The `/LOP_POP` modifier selects how the LUT result feeds `Pu`:
 
 | LOP_POP | Value | Operation |
 |---------|:---:|-----------|
-| `POR`   | 0 | **OR-accumulate**: `Pu_new = Pu_old \| LUT_result` |
-| `PAND`  | 1 | **AND-accumulate**: `Pu_new = Pu_old & LUT_result` |
+| `POR`   | 0 | `Pu = (Rd != 0) OR Pp` |
+| `PAND`  | 1 | `Pu = (Rd != 0) AND Pp` |
+
+where `Rd` is the 32-bit LUT result and `Pp` is the input predicate (`PT`→1,
+`!PT`→0). **`Pu` is a pure output of `(Rd != 0)` and `Pp` — the previous
+`Pu` value is NOT accumulated** (verified on SM120; this contradicts the
+"accumulator" wording in the original draft). Chained accumulation is achieved
+by feeding one LOP3's `Pu` into the next one's `Pp` input across instructions.
 
 The `!PT` at the end of the disassembly is `Pp` (not `Pu`): when non-default,
-`Pp` captures the LUT result as a one-bit predicate output. The `@not` modifier
-inverts the output (`!PT` = predicate-true inverted = always write 0 → discard).
+`Pp` captures... see note below. The `@not` modifier inverts the `Pp` input
+(`!PT` = predicate-true inverted = always 0 input → discard).
 
 In typical register-to-register usage, `Pu` defaults to PT (discard) and the
-data result goes to `Rd`. The `Pp` output similarly defaults to `!PT` (discard).
+data result goes to `Rd`. The `Pp` input similarly defaults to `!PT` (input 0).
 
 ---
 

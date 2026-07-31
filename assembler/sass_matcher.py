@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from .operand import Operand, OperandKind, ParsedInstruction, Sched
+from .sass_cond import ConditionEvaluator
 
 # --- Slot type → OperandKind compatibility ---
 TYPE_COMPAT: dict[OperandKind, set[str]] = {
@@ -42,6 +43,7 @@ class MatchResult:
     slot_map: dict[str, Any] = field(default_factory=dict)
     score: int = 0
     warnings: list[str] = field(default_factory=list)
+    condition_error: Optional[str] = None
 
 
 class SassMatcher:
@@ -50,6 +52,7 @@ class SassMatcher:
         self._by_mnemonic: dict[str, list[dict]] = defaultdict(list)
         for v in db["variants"]:
             self._by_mnemonic.setdefault(v["mnemonic"], []).append(v)
+        self._cond_errors: list[str] = []
 
     # ------------------------------------------------------------------
     def match(self, inst: ParsedInstruction) -> MatchResult:
@@ -57,6 +60,7 @@ class SassMatcher:
         if not candidates:
             raise MatchError(f"no variants for mnemonic {inst.mnemonic!r}")
 
+        self._cond_errors = []
         scored: list[MatchResult] = []
         for v in candidates:
             r = self._try_match(v, inst)
@@ -64,11 +68,12 @@ class SassMatcher:
                 scored.append(r)
 
         if not scored:
-            raise MatchError(
-                f"no matching variant for {inst.mnemonic} "
-                f"(operands={[o.kind.name for o in inst.operands]}, "
-                f"modifiers={inst.modifiers})"
-            )
+            msg = (f"no matching variant for {inst.mnemonic} "
+                   f"(operands={[o.kind.name for o in inst.operands]}, "
+                   f"modifiers={inst.modifiers})")
+            if self._cond_errors:
+                msg += f"; conditions rejected: {'; '.join(self._cond_errors[:3])}"
+            raise MatchError(msg)
 
         scored.sort(key=lambda r: (-r.score, r.variant["is_alternate"]))
         return scored[0]
@@ -105,16 +110,19 @@ class SassMatcher:
             return None
         slot_map.update(mod_map)
 
-        # 4. Check CONDITIONS
-        if not self._check_conditions(variant, slot_map):
-            return None
-
-        # 5. Fill encoding defaults for remaining fields
+        # 4. Fill encoding defaults so condition predicates can resolve
+        #    star-pinned slots (*7, *255, *hilo, ...) and format defaults.
         self._fill_encoding_defaults(variant, slot_map)
+
+        # 5. Check CONDITIONS — reject if any hard condition predicate is FALSE.
+        cond_err = self._check_conditions(variant, slot_map)
+        if cond_err is not None:
+            if cond_err not in self._cond_errors:
+                self._cond_errors.append(cond_err)
+            return None
 
         score = self._compute_score(variant, inst)
         return MatchResult(variant=variant, slot_map=slot_map, score=score)
-
     # ------------------------------------------------------------------
     # Operand grouping — no comma parsing needed
     # ------------------------------------------------------------------
@@ -570,23 +578,42 @@ class SassMatcher:
     # ------------------------------------------------------------------
     # Conditions
     # ------------------------------------------------------------------
-    def _check_conditions(self, variant: dict, slot_map: dict) -> bool:
-        # Identify which slot names are register-typed
-        reg_slot_names = set()
-        for s in variant["format"]["slots"]:
-            if s["type"] in ("Register", "NonZeroRegister", "ZeroRegister", "UniformRegister"):
-                reg_slot_names.add(s["name"])
+    # Hard errors: a FALSE predicate means the encoding is illegal.
+    # ILLEGAL_INSTR_ENCODING_SASS_ONLY_ERROR is also checked here (it mostly
+    # disambiguates RZ-vs-nonRZ variants); only TABLES_opex legality is
+    # deferred to the encoder (depends on the real scheduling word).
+    _HARD_COND_ERRORS = {
+        "OOR_REG_ERROR",
+        "ILLEGAL_INSTR_ENCODING_ERROR",
+        "ILLEGAL_INSTR_ENCODING_SASS_ONLY_ERROR",
+        "MISALIGNED_REG_ERROR",
+        "INVALID_CONST_ADDR_ERROR",
+        "ILLEGAL_INSTR_PARAM_ERROR",
+        "UNPREDICTABLE_BEHAVIOR_WARNING",
+    }
 
+    def _check_conditions(self, variant: dict, slot_map: dict) -> Optional[str]:
+        """Evaluate the variant's CONDITIONS against the slot_map.
+
+        Returns None if every hard condition holds, else a message describing
+        the first failing condition. ``TABLES_opex_*`` predicates are deferred
+        to the encoder (they depend on the real scheduling word, which is not
+        applied until encode time).
+        """
+        evaluator = ConditionEvaluator(self.db, slot_map)
         for c in variant.get("conditions", []):
             err = c["error"]
-            if err == "OOR_REG_ERROR":
-                for name, val in slot_map.items():
-                    if name in reg_slot_names and isinstance(val, int) and val > 255:
-                        return False
-            if err == "ILLEGAL_INSTR_ENCODING_SASS_ONLY_ERROR":
-                # Table functions not yet supported — skip this check
-                pass
-        return True
+            pred = c["predicate"]
+            # opex legality depends on the real usched/batch_t — checked in
+            # SassEncoder after _apply_sched.
+            if "TABLES_opex" in pred:
+                continue
+            if err not in self._HARD_COND_ERRORS:
+                continue
+            if not evaluator.evaluate(pred):
+                msg = c.get("message", err)
+                return f"{err}: {msg}" if msg else err
+        return None
 
     # ------------------------------------------------------------------
     # Encoding defaults
@@ -609,7 +636,11 @@ class SassMatcher:
                 except ValueError:
                     slot_map[name] = 0
             elif rk == "star_slot":
-                slot_map[name] = self._find_slot_default(variant, rhs[1:])
+                star = rhs[1:] if rhs.startswith("*") else rhs
+                try:
+                    slot_map[name] = int(star, 0)
+                except ValueError:
+                    slot_map[name] = self._find_slot_default(variant, star)
             elif rk == "slot" and name not in slot_map:
                 slot_map[name] = self._find_slot_default(variant, name)
 

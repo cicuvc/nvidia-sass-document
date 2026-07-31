@@ -8,7 +8,12 @@ Integer comparison producing regular predicate outputs: compares two registers (
 
 Two forms:
 - **Simple:** `Pu = (Ra icmp Rb)` — single comparison, one predicate output
-- **Full:** `{Pu, Pv} = bop( (Ra icmp Rb), Pp )` — combined with prior predicate via boolean AND/OR/XOR, two predicate outputs
+- **Full:** `Pu = (Ra icmp Rb) BOP Pp` and `Pv = ~(Ra icmp Rb) BOP Pp` — the
+  second output **Pv combines the *complement* of the comparison** with the
+  input predicate, NOT the raw comparison. Verified on SM120 across 18
+  (bop, pp, raw) combinations (see `tests/asm_construct/test_isetp.py`).
+  Since the 3-bit icmp codes are arranged as complements (LT/GE, EQ/NE,
+  LE/GT, F/T are `7 - x` pairs), `~cmp` is the adjacent comparator.
 
 The EXONLY (`ex`) modifier adds an optional third predicate slot (UPp equivalent for extended predication).
 

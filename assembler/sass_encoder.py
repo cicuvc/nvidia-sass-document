@@ -49,6 +49,15 @@ class SassEncoder:
         # Override scheduling slots from the Sched object
         self._apply_sched(sm, sched or Sched.default())
 
+        # Authoritative condition check with the real scheduling word applied.
+        # The matcher deferred TABLES_opex legality to here.
+        failures = self._check_conditions(variant, sm)
+        if failures:
+            err, msg = failures[0]
+            raise EncodeError(
+                f"{err}: {msg}" if msg else f"{err}"
+            )
+
         for field in variant.get("encoding", []):
             value = self._resolve(field, sm, variant)
             if value is None:
@@ -59,6 +68,13 @@ class SassEncoder:
             lo, hi = self._set_bits(lo, hi, field["targets"], field["width"], value)
 
         return lo & MASK64, hi & MASK64
+
+    # ------------------------------------------------------------------
+    def _check_conditions(self, variant: dict, sm: dict) -> list[tuple[str, str]]:
+        """Return [(error_type, message), ...] for every FALSE condition
+        (all error types, including TABLES_opex legality)."""
+        from .sass_cond import ConditionEvaluator
+        return ConditionEvaluator(self.db, sm).check_variant(variant)
 
     # ------------------------------------------------------------------
     # Field resolution
@@ -217,6 +233,8 @@ class SassEncoder:
         for a in args:
             if a in sm:
                 resolved.append(str(sm[a]))
+            elif re.match(r"^\w+@\w+$", a):
+                resolved.append(str(self._resolve_slot_attr(a, sm)))
             else:
                 resolved.append(a)
 

@@ -12,6 +12,11 @@ adjacent instruction pairs). Tooling: `tools/parse_latencies.py` +
   = stall count}**. `eff_stall = usched & 0xF`; `group = usched >> 4`.
   `0`=DRAIN(yield), `1..15`=`WnEG` (bit4=0, "end group"), `17..27`=`Wn`/transN
   (bit4=1, "transition, no group-end"). Value 16 is unused.
+- **Semantics of the stall count (model A, confirmed): it is the *post-issue*
+  gap — the minimum cycles after the current instruction issues before the
+  next instruction of the same warp can issue** (`pos_{i+1} = pos_i + eff_stall_i`).
+  It is *not* a pre-issue wait on the current instruction. See "Stall
+  semantics (model A)" below for the decisive experiment.
 - The **stall count is the issue-to-issue gap ptxas computes from the
   `TABLE_TRUE/OUTPUT/ANTI` latency matrices.** For a fixed-latency producer whose
   immediate successor has a true (RAW) dependency, `eff_stall` equals the
@@ -21,6 +26,41 @@ adjacent instruction pairs). Tooling: `tools/parse_latencies.py` +
   common "MSB=yield" lore:** `bit4=1` (transN) means *the next instruction is
   independent → keep issuing this warp*; `bit4=0` (`WnEG`/DRAIN) is used when a
   dependency stall / group boundary occurs → the scheduler may switch warps.
+
+## Stall semantics (model A) — the decisive asymmetric experiment
+
+The stall count is a **post-issue** property: instruction `i` with `eff_stall=N`
+issues, and the warp cannot issue `i+1` until `N` cycles later. It is *not* a
+pre-issue wait on `i` itself. The two models give identical cumulative gaps on
+uniform chains (e.g. the HMMA accumulate chain, where every instruction has the
+same stall), so they are indistinguishable from static SASS alone — a
+*non-uniform* experiment is needed.
+
+Decisive test (`ISETP; P2R; STG.E`, where `P2R` writes `Rd` and `STG` reads it
+as store data; poison `Rd` and check the stored value):
+
+| P2R's stall | ISETP's stall | stored value |
+|:---:|:---:|:---:|
+| 1 | 8 | STALE (reads previous `Rd`) |
+| 8 | 1 | **FRESH** |
+
+Both have the same total gap (9), but only the P2R's own stall fixes the stale
+read. Under a pre-issue (model B) interpretation the P2R's issue time is
+`prev + stall_P2R` in *both* rows (ISETP's stall would be irrelevant either way),
+predicting stale in both; under model A the P2R's stall delays the *following*
+STG, giving the `Rd` write time to become visible — exactly the observed
+asymmetry. So **model A holds**: a stall on instruction `i` creates the gap to
+`i+1`.
+
+Corollaries (all verified):
+- **P2R→STG.E register-write visibility** needs only a short gap in isolation
+  (stall 1), but 3–4 cycles when a preceding STG (memory op) shifts the later
+  store's data-register read earlier. See `notes/sm90/instr/p2r.md`.
+- **A dead instruction can carry stall**: the `@!UPT UIADD3 URZ,…` HMMA
+  stall-extenders work precisely because the stall extends the gap *after* the
+  dead filler — pointless under model B. This is corroborating evidence.
+- **yield (bit4) selects the end-group behaviour, not the gap length**: varying
+  `bit4` never moved a measured stall boundary.
 
 ## How the latency file encodes dependency cycles
 `TABLE_<DEP>(<RES>)` blocks are producer×consumer matrices:

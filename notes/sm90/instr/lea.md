@@ -123,6 +123,30 @@ Shares the FXU latency matrix with IADD3/LOP3.
 
 ## Empirical confirmation (sm_90, CUDA 13.1)
 
+### Verified semantics (SM120, tests/asm_construct/test_lea.py)
+
+- **LO**: `Rd = low32((Ra << N) + Rb)` — verified for N=0,1,4,31 and both
+  operand negates. Negates encode `-Ra` (bit [72]) / `-Rb` (bit [63]); both
+  simultaneously is an illegal encoding.
+- **LO Pu (carry)**: fires on the carry-out of the **low-32 addition**
+  `(Ra<<N)[31:0] + Rb` — e.g. `0xFFFFFFFF + 1` → Pu=1. The bits shifted out of
+  `Ra` (e.g. `0x80000000 << 1` → bit 32) do **not** set Pu (Pu=0). So the
+  note's "overflow from the 64-bit intermediate" is imprecise.
+- **HI (SM120)**: `Rd = ((Ra << N) >> 32) + Rb + (Rc << N)` (32-bit wrapping
+  add), verified on 27 value sets. **This contradicts the sm_90
+  `high32((Ra<<N)+Rb+Rc)` formula above** — on SM120 the Rc operand is shifted
+  by N and the three terms are summed as a 32-bit value, with the shifted-out
+  high bits of Ra added in. This is an arch difference (sm_90 vs sm_120) to
+  re-verify.
+- **X forms (LEA.HI.X / LEA.HI.X.SX32) DO execute on SM120** — no-invert and
+  single-invert (`~Ra` alone or `~Rb` alone) run; the result adds the carry-in
+  predicate `Pp` to the HI formula. **Both `~Ra` and `~Rb` together is an
+  illegal encoding** (spec `CONDITIONS`: `Ra@invert→¬Rb@invert`,
+  `Rb@invert→¬Ra@invert`, mirroring the negate-exclusivity of the non-X form) —
+  an earlier test that set both was misread as "X unsupported". The `~Ra`
+  contribution (invert of the shifted value) interacts with `Pp`; exact formula
+  not fully pinned.
+
 ### Basic LEA (compiler-generated)
 
 The `lea_3src` test (`(a[idx]*16) + b[idx] + c[idx]`) produced:

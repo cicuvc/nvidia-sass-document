@@ -45,6 +45,44 @@ Verified: `P2R R3, PR, R0, 0x7f` packs P0–P6 (mask 0x7f) into byte 0 of R3, ot
 ## Latency (from sm_90_latencies.txt)
 `int_pipe`, fixed-latency `COUPLED_MATH`. `OP_P2R` appears in `NON_MATH_PRED_READERS`/predicate-connector groups (reads the whole PR file). Pins scoreboard (0x7).
 
+## Scheduling: P2R → STG.E register-write visibility (SM120 empirical)
+
+`P2R Rd` writes a GPR; a following `STG.E … , Rd` (or any GPR reader) must not
+read `Rd` before the write lands. Verified on SM120 (poison-register method:
+pre-load `Rd` with `0xAA`, store after P2R, and check the stored value):
+
+| scenario | min stall on P2R (gap to next instr) |
+|----------|:---:|
+| isolated `P2R; STG.E` pair | **1** (fresh immediately) |
+| P2R→STG after a preceding STG (store burst) | **3** (different dest reg) – **4** (same dest reg reused) |
+
+- **yield (bit4) has no effect** on the boundary — `transN` (yield=0) and
+  `WnEG` (yield=1) both need the same min stall.
+- **SILENT-CONDITION-VIOLATION lesson**: the earlier P2R stall sweep used
+  `[7:7:{1}:stall:yield]` values that are *not* valid opex combinations.
+  `TABLES_opex_8` accepts only usched ∈ {0..15, 17..27}; so `stall=12/yield=0`
+  (usched=28), `stall=15/yield=0` (usched=31) and `stall=20/yield=0`
+  (usched=36) violate `DEFINED TABLES_opex_8(...)`. The GPU **silently
+  tolerated** usched=31 and 36 (producing *correct* results — originally read
+  as "stall≥4 works") and only misbehaved at usched=28 (stale read, which we
+  mis-attributed to a "usched=28 boundary anomaly"). The assembler's condition
+  check (added later) now rejects all three at assembly time. The *valid*
+  boundary (usched 17..27) is stall ≥ 4 / ≥ 3 exactly as documented above.
+- The staleness is the **register write→read visibility**, NOT a stale
+  predicate-file read: the predicate read is always fresh (even `ISETP.F;
+  ISETP.T; P2R` at stall=1). The trigger is a *preceding memory op* (STG): a
+  later STG in a store burst reads its data register earlier relative to the
+  P2R writeback (~4 cyc), so the gap must be ≥3.
+- Compared with `TABLE_TRUE(GPR)` `FXU_OPS → MIO_SLOW_OPS` = **8**: the table is
+  a conservative upper bound; the effective FXU-write-to-STG-read visibility is
+  ~3–4 cycles (matching the FXU writeback latency `w≈4.5` in
+  `usched_latency.md`'s least-squares fit). MIO consumers are usually bound by
+  `mio_pipe` issue occupancy, not the RAW edge.
+- The `.reuse`/`.URb` forms and long P2R chains in hand-written SASS should use
+  `P2R … [7:7:{…}:8:0]` (stall 8, yield 0) to be safe — this is what the
+  SM120 assembler test kernels (`tests/asm_construct/test_isetp.py`,
+  `test_lop3.py`) use.
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
