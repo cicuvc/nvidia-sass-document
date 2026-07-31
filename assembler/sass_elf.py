@@ -247,7 +247,14 @@ class CubinBuilder:
             r = hi & 0xFF
             if r < 255:
                 max_reg = max(max_reg, r)
-        return max(8, ((max_reg + 7) // 8) * 8) if max_reg else 8
+        # regcount must cover max_reg PLUS a 2-register headroom: the GPU
+        # reserves the top 2 registers of each 8-register allocation window
+        # (usable = [0, regcount-2); see notes/sm90/arch/sm120_findings.md
+        # 10).  Also round max_reg+1 UP to a multiple of 8 even when max_reg
+        # sits exactly on a window boundary (24, 32, ...) — otherwise that
+        # register falls outside the declared window and the kernel faults
+        # CUDA_ERROR_ILLEGAL_INSTRUCTION.
+        return max(8, ((max_reg + 10) // 8) * 8) if max_reg else 8
 
     @staticmethod
     def _compute_mbarrier_offsets(instructions: list[tuple[int, int]]) -> list[int]:

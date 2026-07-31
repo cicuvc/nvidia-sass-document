@@ -205,24 +205,31 @@ c[0x0][0x400]  = gmem_out pointer (regular param)
 - SM120 constant bank 0 preset region layout (differs from SM90)
 - `MOV64I` vs `LDC.64` provenance requirement for STG addresses
 
-## 10. Registers R14–R16 are reserved by the launch path (hand-built ELF)
+## 10. ILLEGAL_INSTRUCTION on high registers = regcount undercount (resolved)
 
-Empirically (RTX 5090, CUDA 12.8, our hand-built ELF + `cuLaunchKernel`):
-**any instruction touching GPR R14, R15, or R16 faults with
-`CUDA_ERROR_ILLEGAL_INSTRUCTION` (715)** — as source, as dest, MOV32I, MOV,
-FFMA, IADD3, any immediate value. R0–R13 and R17+ are all fine.
+**Old theory (WRONG):** R14–R16 were thought to be "reserved by the launch
+path" because `MOV R14, RZ` etc. faulted with `CUDA_ERROR_ILLEGAL_INSTRUCTION`
+while R0–R13/R17+ worked.
 
-Bisect: cubins for `MOV32I R13, 0x40800000` (works) vs `MOV32I R14, 0x40800000`
-(faults) differ in **exactly one byte** (the Rd field 0x0d→0x0e). The SASS and
-all ELF attributes (REGCOUNT 16, KPARAM_INFO, FRAME_SIZE 0, …) are identical.
+**Actual cause — the EIATTR_REGCOUNT undercount.** The GPU reserves the
+**top 2 registers of each 8-register allocation window**: a kernel declaring
+`regcount = N` may only use registers `[0, N-2)`. The assembler computed
+`regcount = roundup8(max_reg + 1)` with a floor at multiples of 8, which
+undercounted at window boundaries:
 
-Notable: the same cubin **passes under `compute-sanitizer memcheck`** (correct
-result, 0 errors) — only the plain launch faults, so this is a launch-path /
-hardware edge case, not a static-encoding defect. cublas sm_120 SASS does use
-R14–R16 (`LDC R14, c[0x0][0x360]`, `LDC R16`, `HFMA2 R15`) — but those kernels
-carry the full ptxas ABI metadata, so the restriction appears specific to how
-the driver launches kernels missing some (unidentified) attribute.
+| max_reg | old regcount | usable [0,N-2) | register usable? |
+|--------:|-------------:|---------------:|:----------------:|
+| 16 (R16) | 16 | [0,14) | **no** (R14–16 fault) |
+| 22 (R22) | 24 | [0,22) | **no** (R22–23 fault) |
+| 24 (R24) | 24 | [0,22) | **no** (also the roundup bug) |
+| 30 (R30) | 32 | [0,30) | **no** (R30–31 fault) |
+| 38 (R38) | 40 | [0,38) | **no** (R38–39 fault) |
 
-Workaround for hand-built test kernels: avoid R14–R16 (use R17+).
-Open: which ELF attribute/license lets ptxas binaries use R14–R16 freely, and
-what the driver does with those registers at launch on sm_120.
+Fixed formula in `assembler/sass_elf.py::_compute_regcount`:
+`regcount = max(8, ((max_reg + 10) // 8) * 8)`  (= `ceil((max_reg+3)/8)*8`,
+the +3 = one register count + two reserved). After the fix **every register
+0..255 is usable**; the same cubin that faulted before runs correctly, and
+`compute-sanitizer` (which adjusts the launch config) had masked the bug.
+
+ptxas's own allocation naturally leaves this headroom (a regcount-40 kernel
+uses at most R37, never R38/39), which is why real cublas SASS never trips it.
