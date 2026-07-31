@@ -23,15 +23,22 @@ class SassEncoder:
     # ------------------------------------------------------------------
     def _apply_sched(self, sm: dict, sched: Sched) -> None:
         sm["usched_info"] = sched.usched_info
-        sm["batch_t"] = sched.batch_t
-        # Decode batch_t bits [2:0] into reuse flags for TABLES_opex_N
-        # bit 0 → reuse_src_a, bit 1 → reuse_src_b, bit 2 → reuse_src_c
-        if "reuse_src_a" in sm:
-            sm["reuse_src_a"] = (sched.batch_t >> 0) & 1
-        if "reuse_src_b" in sm:
-            sm["reuse_src_b"] = (sched.batch_t >> 1) & 1
-        if "reuse_src_c" in sm:
-            sm["reuse_src_c"] = (sched.batch_t >> 2) & 1
+        # The 6th bracket element is a 3-bit field overloaded as
+        # batch_t (classes without reusable sources) OR the reuse bitfield
+        # {reuse_a=bit0, reuse_b=bit1, reuse_c=bit2} (classes with reusable
+        # register sources).  In the reuse context batch_t is conceptually 0.
+        has_reuse = any(k in sm for k in
+                        ("reuse_src_a", "reuse_src_b", "reuse_src_c", "reuse_src_d"))
+        if has_reuse:
+            sm["batch_t"] = 0
+            if "reuse_src_a" in sm:
+                sm["reuse_src_a"] = (sched.batch_t >> 0) & 1
+            if "reuse_src_b" in sm:
+                sm["reuse_src_b"] = (sched.batch_t >> 1) & 1
+            if "reuse_src_c" in sm:
+                sm["reuse_src_c"] = (sched.batch_t >> 2) & 1
+        else:
+            sm["batch_t"] = sched.batch_t
         mask = 0
         for b in sched.req_bits:
             mask |= 1 << b
@@ -230,7 +237,9 @@ class SassEncoder:
         args = [a.strip() for a in args_str.split(",")]
 
         resolved = []
+        names = []
         for a in args:
+            names.append(a)
             if a in sm:
                 resolved.append(str(sm[a]))
             elif re.match(r"^\w+@\w+$", a):
@@ -239,21 +248,37 @@ class SassEncoder:
                 resolved.append(a)
 
         if table_name.startswith("TABLES_opex_"):
-            return self._opex(resolved)
+            return self._opex(names, resolved)
         if table_name.startswith("TABLES_mem_"):
             return self._lookup_table(table_name, resolved)
 
         # Generic table lookup
         return self._lookup_table(table_name, resolved)
 
-    def _opex(self, args: list[str]) -> int:
-        """TABLES_opex_N(batch_t, usched_info)."""
+    def _opex(self, names: list[str], args: list[str]) -> int:
+        """TABLES_opex_N(batch_t, usched_info[, reuse_src_*...]).
+
+        Reuse flags pack into the SAME [124:122] bits that carry batch_t when
+        there is no reuse: reuse_src_a -> opex[5] (+32, bit 122), b -> opex[6]
+        (+64, bit 123), c -> opex[7] (+128, bit 124).  In the reuse context
+        batch_t is always 0.  With no reuse: opex = (batch_t << 5) | usched.
+        """
         try:
             batch_t = int(args[0])
             usched = int(args[1])
         except (ValueError, IndexError):
             return 0
-        # opex = (batch_t << 5) | usched_info
+        bit = {"reuse_src_a": 5, "reuse_src_b": 6, "reuse_src_c": 7,
+               "reuse_src_d": 8}
+        reuse = 0
+        for n, a in zip(names[2:], args[2:]):
+            if n in bit:
+                try:
+                    reuse |= int(a) << bit[n]
+                except (ValueError, IndexError):
+                    pass
+        if reuse:
+            return (usched & 0x1F) | reuse
         return (batch_t << 5) | (usched & 0x1F)
 
     def _lookup_table(self, table_name: str, args: list[str]) -> int:

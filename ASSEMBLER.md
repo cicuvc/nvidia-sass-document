@@ -127,7 +127,7 @@ cubin = assemble("NOP;[...]\nEXIT;[...]", kernel_name="my_kernel")
 | `req_list` | [121:116] | bitmask | Wait mask. `{0,3}` = wait for SB0 and SB3. |
 | `stall` | [109:105]* | 0–31 | Raw stall value. |
 | `yield` | opex[4] | 0–1 | 0 = transN (yield=0), 1 = WAITn_END_GROUP (yield=1). |
-| `batch_t` | [124:122] | 0–7 | Optional 6th field. Batch ID / reuse mask (default 0). |
+| `batch_t` | [124:122] | 0–7 | Optional 6th field. On classes with reusable register sources it is the **reuse mask** (`reuse_a`=1, `reuse_b`=2, `reuse_c`=4) and `batch_t` is forced to 0; otherwise it is a batch marker. Default 0. |
 
 `*` — usched_info is encoded as opex[4:0]; opex = (batch_t << 5) | usched_info.
 
