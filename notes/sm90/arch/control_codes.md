@@ -307,3 +307,27 @@ only the reuse consumer reads the old value.
 IADD3 that itself reads the reused register in a different slot — evicts the
 cache; the consumer then reads fresh. The cache serves exactly one program-
 order successor.
+
+### Mechanism of the fresh band — late cache fill (not writeback forwarding)
+
+The s1∈{4,5} band is a **cache MISS → RF read**, not a forward beating the
+cache:
+
+1. **The float pipe has no writeback forwarding** — `usched_latency.md`:
+   `FFMA→FFMA` minG == L_table == 4, overlap 0 (only the integer datapath
+   bypasses). So at pos2∈{4,5} the fresh value cannot arrive via a forward
+   path; it is the RF read of the committed write (writeback at t=4).
+2. A **cross-pipe IADD3 consumer** (int pipe) shows the same fresh band at
+   its own RAW boundary (pos2=5, FMAI→FXU latency 5) and the same cache
+   staleness at pos2≥6 — the miss window is pipe-independent.
+3. The cache is populated ~2 cycles *after* the writeback with the producer's
+   **source** operand (never updated by the write), so:
+   - pos2 ≤ 3: consumer reads pre-write R10 (RAW hazard) — stale for reuse *and* ctrl
+   - pos2 ∈ [4,6): write committed (RF fresh), cache not yet armed (miss) — fresh
+   - pos2 ≥ 6: cache armed with the stale source — stale for reuse, fresh for ctrl
+
+A GPU-clock (CS2R SR_CLOCKLO) measurement was attempted but a second CS2R
+after a reuse FFMA faults `ILLEGAL_INSTRUCTION` in hand-built ELFs (same
+flakiness class as sm120_findings.md §10), so the boundary is pinned by the
+stall-controlled issue-gap model (`pos2 = s1`) instead — which is itself a
+cycle-accurate measurement.

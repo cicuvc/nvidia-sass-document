@@ -139,6 +139,20 @@ add("evict-IADD3-readR10",
      "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 13.0,
     "intervening IADD3 that READS R10 -> still fresh")
 
+# ---- mechanism of the fresh band (pos2 in {4,5}) -------------------------
+# The no-reuse control also reads FRESH at s1=4,5 (write committed at t=4,
+# FFMA->FFMA writeback latency = 4).  The reuse cache therefore cannot be
+# serving the stale source value yet at pos2=4,5: the cache is populated
+# ~2 cycles AFTER the writeback (t~6).  The float pipe has NO forwarding
+# (usched_latency.md: FFMA->FFMA minG == L_table == 4, overlap 0), so the
+# fresh value at pos2=4,5 is a plain RF read (cache MISS), not a writeback
+# forward.  A cross-pipe IADD3 consumer shows the same fresh band at its own
+# RAW boundary, confirming the cache-miss window is pipe-independent.
+add("ctrl-fresh-band",
+    ["FFMA R10, R10, R11, R12;[7:7:{}:4:1]",
+     "FFMA R4, R10, R11, R12;[7:7:{}:8:1]"], "R4", 13.0,
+    "ctrl (no reuse) also fresh at pos2=4 -> write committed, cache not armed")
+
 lines = ["#fn reuse_test(out<256>) {",
          "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
          "    LDC.64 R6, #param(out);[0:7:{}:1:0]",
@@ -183,5 +197,9 @@ print("    s1<=3 both stale (RAW: write not committed, FFMA latency 4);")
 print("    s1 4-5 both fresh (cache not yet armed); s1>=6 REUSE stale only")
 print("    (cache armed ~2 cyc after writeback) -> delay via stall does NOT")
 print("    clear the stale value.")
+print("  Mechanism: the fresh band is a CACHE MISS -> RF read (write is")
+print("  committed at t=4 but the cache is not populated until t~6). The")
+print("  float pipe has no writeback forwarding (usched_latency.md: FFMA->")
+print("  FFMA overlap 0), so it is NOT a forward that wins over the cache.")
 print("  ANY intervening instruction (MOV/IADD3/FFMA, even reading the")
 print("  reused register) evicts the cache -> fresh.")
