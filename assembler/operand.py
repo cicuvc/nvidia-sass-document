@@ -65,6 +65,8 @@ class Operand:
     width: int = 32
     negated: bool = False
     absolute: bool = False
+    invert: bool = False
+    lnot: bool = False
     offset: int = 0
     bank: int = 0
     addr_reg: int = 0

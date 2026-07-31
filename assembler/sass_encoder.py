@@ -92,6 +92,11 @@ class SassEncoder:
 
         if rk == "star_slot":
             slot_name = rhs[1:] if rhs.startswith("*") else rhs
+            # If the slot name looks like a number, treat it as a literal
+            try:
+                return int(slot_name, 0)
+            except ValueError:
+                pass
             return sm.get(slot_name, 0)
 
         if rk == "table_fn":
@@ -115,6 +120,8 @@ class SassEncoder:
                 return sm.get(f"{slot_name}_negated", 0)
             if attr == "absolute":
                 return sm.get(f"{slot_name}_abs", 0)
+            if attr == "invert":
+                return sm.get(f"{slot_name}_invert", 0)
             return 0
 
         # Complex case: slot convertFloatType(condition, fmt_true, fmt_false)

@@ -229,8 +229,14 @@ class CubinBuilder:
     @staticmethod
     def _compute_regcount(instructions: list[tuple[int, int]]) -> int:
         max_reg = 0
+        # Opcodes that carry a 32-bit immediate in bits [63:32], which
+        # overlaps the [39:32] scan position and must not be read as a
+        # register: MOV32I/MOV (0x802) and MOV.64 (0x402).
+        imm_lo32_opcodes = {0x802, 0x402}
         for lo, hi in instructions:
-            for pos in (16, 24, 32):
+            op = lo & 0xFFF
+            positions = (16, 24) if op in imm_lo32_opcodes else (16, 24, 32)
+            for pos in positions:
                 r = (lo >> pos) & 0xFF
                 if r < 255:
                     max_reg = max(max_reg, r)
@@ -310,6 +316,27 @@ class CubinBuilder:
         sec(".note.nv.cuver", SHT_NOTE, content=note_nv_cuver(),
             flags=SHF_INFO_LINK | SHF_CUDA_RETAIN)
 
+        # Build symbols early so the EIATTR sections below can reference the
+        # correct function / constant0 symbol indices (symbols are fixed-order:
+        # NULL(0), .text(1), reservedSmem(2), alias(3), callgraph(4),
+        # function(5), constant0(6)). The hardcoded 6/7 that mirrored a ptxas
+        # cubin's ordering was wrong for this layout and silently detached the
+        # device REGCOUNT EIATTR from the kernel (defaulting the driver to a
+        # small register file, which faults on R14+).
+        sym_text = symtab.add(strtab.add(f".text.{mn}"),
+                              STB_LOCAL, STT_SECTION, 0)
+        sym_rsm = symtab.add(strtab.add(".nv.reservedSmem.offset0"),
+                             STB_LOCAL, STT_OBJECT, 0,
+                             value=0x40, size=4, other=VIS_HIDDEN)
+        sym_rsma = symtab.add(strtab.add("__nv_reservedSMEM_offset_0_alias"),
+                              STB_GLOBAL, STT_NOTYPE, 0, value=0x40)
+        sym_cg = symtab.add(strtab.add(".nv.callgraph"),
+                            STB_LOCAL, STT_SECTION, 0)
+        sym_func = symtab.add(strtab.add(mn), STB_GLOBAL, STT_FUNC, 0,
+                              size=len(self._instructions) * 16)
+        sym_c0 = symtab.add(strtab.add(f".nv.constant0.{mn}"),
+                            STB_LOCAL, STT_SECTION, 0)
+
         # 7: .nv.info (device-wide)
         # Auto-compute regcount from instructions — latest register used
         if self._instructions:
@@ -322,11 +349,11 @@ class CubinBuilder:
                 for i, (lo, hi) in enumerate(self._instructions):
                     if (lo & 0xFFF) == exit_opcode:
                         self._exit_offsets.append(i * 16)
-        nv_info = eiattr_regcount(6, self._regcount)
+        nv_info = eiattr_regcount(sym_func, self._regcount)
         # FRAME_SIZE, MIN/MAX_STACK_SIZE use 8-byte payloads (func_sym + value)
-        nv_info += struct.pack("<BBHII", 4, 0x11, 8, 6, 0)  # FRAME_SIZE
-        nv_info += struct.pack("<BBHII", 4, 0x12, 8, 6, 0)  # MIN_STACK_SIZE
-        nv_info += struct.pack("<BBHII", 4, 0x23, 8, 6, 0)  # MAX_STACK_SIZE
+        nv_info += struct.pack("<BBHII", 4, 0x11, 8, sym_func, 0)  # FRAME_SIZE
+        nv_info += struct.pack("<BBHII", 4, 0x12, 8, sym_func, 0)  # MIN_STACK_SIZE
+        nv_info += struct.pack("<BBHII", 4, 0x23, 8, sym_func, 0)  # MAX_STACK_SIZE
         sec(".nv.info", SHT_CUDA_INFO, content=nv_info)
 
         # 8: .nv.info.<mangled> (per-kernel)
@@ -357,7 +384,7 @@ class CubinBuilder:
                 buf += eiattr_hval(0x38, num_mbar)
         total_ps = sum(sz for _, _, sz in self._params)
         buf += eiattr_hval(0x19, total_ps)  # CBANK_PARAM_SIZE
-        buf += eiattr_param_cbank(7, 0x380, total_ps)  # PARAM_CBANK
+        buf += eiattr_param_cbank(sym_c0, 0x380, total_ps)  # PARAM_CBANK
         buf += eiattr_sval(0x36, 0)  # SW_WAR
         sec(f".nv.info.{mn}", SHT_CUDA_INFO, content=buf,
             flags=SHF_INFO_LINK)
@@ -405,21 +432,6 @@ class CubinBuilder:
         for s in secs:
             strtab.add(s.name)
         strtab.add(mn)
-
-        # Build symbols
-        sym_text = symtab.add(strtab.add(f".text.{mn}"),
-                              STB_LOCAL, STT_SECTION, 0)
-        sym_rsm = symtab.add(strtab.add(".nv.reservedSmem.offset0"),
-                             STB_LOCAL, STT_OBJECT, 0,
-                             value=0x40, size=4, other=VIS_HIDDEN)
-        sym_rsma = symtab.add(strtab.add("__nv_reservedSMEM_offset_0_alias"),
-                              STB_GLOBAL, STT_NOTYPE, 0, value=0x40)
-        sym_cg = symtab.add(strtab.add(".nv.callgraph"),
-                            STB_LOCAL, STT_SECTION, 0)
-        sym_func = symtab.add(strtab.add(mn), STB_GLOBAL, STT_FUNC, 0,
-                              size=len(self._instructions) * 16)
-        sym_c0 = symtab.add(strtab.add(f".nv.constant0.{mn}"),
-                            STB_LOCAL, STT_SECTION, 0)
 
         # Fix shndx
         text_sec_name = f".text.{mn}"

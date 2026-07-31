@@ -20,6 +20,7 @@ TOKENS = [
     ("DOT", r"\."),
     ("PLUS", r"\+"),
     ("MINUS", r"-"),
+    ("TILDE", r"~"),
     ("LBRACKET", r"\["),
     ("RBRACKET", r"\]"),
     ("LBRACE", r"\{"),
@@ -200,6 +201,16 @@ class Parser:
         # check for negated/absolute prefix
         negated = False
         absolute = False
+        if self.peek() and self.peek().type == "TILDE":
+            self.pop()
+            op = self._parse_operand_inner()
+            op.invert = True
+            return op
+        if self.peek() and self.peek().type == "EXCLAM":
+            self.pop()
+            op = self._parse_operand_inner()
+            op.lnot = True
+            return op
         if self.peek() and self.peek().type == "MINUS":
             self.pop()
             negated = True

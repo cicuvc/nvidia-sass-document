@@ -388,11 +388,15 @@ class SassMatcher:
         if val is None:
             return False
         slot_map[slot["name"]] = val
-        # Store negate/absolute flags for slot_attr resolution
+        # Store negate/absolute/invert/lnot flags for slot_attr resolution
         if op.negated:
             slot_map[f"{slot['name']}_negated"] = 1
         if op.absolute:
             slot_map[f"{slot['name']}_abs"] = 1
+        if op.invert:
+            slot_map[f"{slot['name']}_invert"] = 1
+        if op.lnot:
+            slot_map[f"{slot['name']}_not"] = 1
         return True
 
     # ------------------------------------------------------------------
