@@ -227,3 +227,35 @@ inputs; RCP64H/RSQ64H are ~1e-6 FP64 helpers.**
 
 Note `TANH` passes denormals through **unchanged** (returns the denormal
 itself, e.g. 0x1 → 0x1, 0x7fffff → 0x7fffff) — it does not flush them.
+
+## Latency (SM120 empirical, 2026-08)
+
+Measured with a **dependent scoreboard chain**: each MUFU sets `wr=SB1`, the
+next MUFU `req={1}` waits for that writeback; `CS2R SR_CLOCKLO/HI` (64-bit
+cycle counter) read around the chain, `latency = Δt / N`.
+`tests/asm_construct/test_mufu_latency.py`.
+
+**Result: every MUFU op measures 18.02 cycles** (±0.02, stable across N and
+repeats) — a single shared SFU/MUFU writeback latency:
+
+| op | RCP | RSQ | SQRT | EX2 | LG2 | TANH | COS | SIN | RCP64H | RSQ64H |
+|----|-----|-----|------|-----|-----|------|-----|-----|--------|--------|
+| cyc | 18.02 | 18.02 | 18.02 | 18.02 | 18.02 | 18.02 | 18.02 | 18.02 | 18.02 | 18.02 |
+
+**Harness calibration** (same chain): IADD3 / FFMA / MOV ≈ 5.44 cyc — the
+harness cleanly separates the ~5-cycle ALU ops from the ~18-cycle SFU op, so
+the 18.0 is genuine, not a measurement floor.
+
+**Interpretation**: the spec's `VarLatOperandEnc` ("variable latency, depends
+on op/operand") does not produce per-op *writeback* differences on the tested
+hardware — all 10 ops dispatch through the same MUFU/SFU unit with one
+writeback depth (~18 cyc).  The "variable" part likely refers to the *issue /
+pipe occupancy* behavior (e.g. throughput of independent ops ≈ 8 cyc/op on
+this core) rather than the data-dependency writeback latency.  Cross-pipe:
+a MUFU result consumed by a coupled FFMA (MUFU→FFMA dependency) measures
+≈ 23 cyc/iteration.
+
+Note: this is the SM120 measurement; the sm_90 latency tables (mio_pipe /
+MIO_SLOW_OPS) would predict the GPR-release latency (MIO→MIO = 2 in
+TABLE_TRUE), which is a *different* number than the SFU execution+writeback
+latency measured here — the scoreboard `req` wait exposes the latter.
