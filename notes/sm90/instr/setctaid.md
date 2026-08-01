@@ -6,7 +6,9 @@
 > SETCTAID writes the CTA block-index hardware state that `S2R SR_CTAID.{X,Y,Z}`
 > reads: after `SETCTAID.X R20`, `S2R SR_CTAID.X` returns the injected value
 > (0x55) instead of the real blockIdx (verified with grid=(2,1,1) where the
-> real X is 0/1).  Same for `.Y` / `.Z`.  nvcc/ptxas do not emit it — it is a
+> real X is 0/1).  Same for `.Y` / `.Z`.  **SETCTAID does NOT change the SM the
+> CTA runs on** — `SR_VIRTUALSMID` readback is identical before/after even when
+> injecting an invalid SM id (0xFFFF).  nvcc/ptxas do not emit it — it is a
 > driver/ABI setup instruction (VQ_ADU, shared with SETLMEMBASE/AL2P).
 
 ## Semantics (speculation)

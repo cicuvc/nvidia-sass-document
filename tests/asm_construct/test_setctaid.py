@@ -88,3 +88,46 @@ check("SETCTAID.X idempotent", r[0], 0x55)
 print(f"\n=== SETCTAID semantics: {'ALL OK' if ok else 'FAILED'} ===")
 print("SETCTAID.X/Y/Z writes the CTA block-index state read by S2R SR_CTAID;")
 print("ALL packs X=R20 (low32), Y=R21[15:0], Z=R21[31:16].")
+
+
+# --- SETCTAID does NOT move the CTA to a different SM -----------------------
+# Inject an invalid-SMID value (0xFFFF); if SETCTAID migrated the CTA, the
+# SR_VIRTUALSMID readback would change.  It stays constant.
+def build_sm(set_inst):
+    lines = ["#fn k(buf<1024>) {",
+             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
+             "    IADD3 R4, R2, R2, RZ;[7:7:{0}:5:1]",
+             "    IADD3 R4, R4, R4, RZ;[7:7:{}:5:1]",
+             "    IADD3 R16, R6, R4, RZ;[7:7:{}:5:1]",
+             "    IADD3 R17, R7, RZ, RZ;[7:7:{}:5:1]",
+             "    MOV32I R20, 0x0000FFFF;[7:7:{}:5:1]",
+             "    S2R R8, SR_VIRTUALSMID;[0:7:{}:5:1]",
+             "    IADD3 R8, R8, RZ, RZ;[7:7:{0}:5:1]",
+             f"    {set_inst};[7:7:{{}}:5:1]",
+             "    S2R R10, SR_VIRTUALSMID;[0:7:{}:5:1]",
+             "    IADD3 R10, R10, RZ, RZ;[7:7:{0}:5:1]",
+             "    STG.E desc[UR4][R16.64+0x0], R8;[0:1:{0}:1:0]",
+             "    STG.E desc[UR4][R16.64+0x4], R10;[0:1:{0}:1:0]",
+             "    EXIT;[7:7:{}:5:0]",
+             "}"]
+    return assemble("\n".join(lines))
+
+def run_sm(set_inst):
+    cubin = build_sm(set_inst)
+    mod = CudaModule(cubin)
+    d = mod.devmem_alloc(1024)
+    mod.device_write(d, struct.pack("<64I", *[0] * 64))
+    mod.launch("k", grid=(1,), block=(32,), args=[d])
+    mod.synchronize()
+    b, a = struct.unpack("<2I", mod.device_read(d + 0x0, 8))
+    mod.devmem_free(d)
+    return b, a
+
+for inst in ("SETCTAID.X R20", "SETCTAID.Y R20", "SETCTAID.Z R20", "SETCTAID.ALL R20"):
+    b, a = run_sm(inst)
+    check(f"SM unchanged after {inst} (smid {b}=={a})", b == a, True)
+
+print("\n(SETCTAID injects 0xFFFF — an invalid SM id — SMID readback is unchanged,")
+print(" confirming SETCTAID rewrites blockIdx state, not physical SM placement.)")
