@@ -122,3 +122,28 @@ across a nested `BSSY B1`: `@!P0 BREAK B1 ; @!P0 BRA outer_sync`.
 - `Sa` is a 30-bit field scaled by 4 (±4 GiB / instruction-granular reach). Targets are
   always 16-byte aligned in practice; whether a non-16B-aligned `Sa` is legal (vs. just
   unused low bits) is unverified.
+
+## Resolved: the target PC is NOT stored as hardware state (SM120, 2026-08)
+
+Empirically the `Sa` target is **functionally inert on Volta+ ITS** — it is a
+vestigial field from the pre-Volta SIMT reconvergence *stack*, not live state:
+
+1. **B0 holds only the participating-lane mask** (`BMOV R4, B0` reads
+   0xFFFFFFFF / subset mask; no "high 32 bits" exist — see `cbu_state.md`).
+   There is no readable reconvergence PC anywhere in the CBU state.
+2. **`BSYNC` does not branch to the stored target.** With `BSSY B0, join` where
+   `join` is several instructions past `BSYNC`, the fall-through lanes execute
+   those instructions (they do not jump). `BSYNC` is a fall-through marker that
+   pops the barrier entry.
+3. **A deliberately wrong target (an infinite `BRA` loop) does not change
+   behavior** in if-skip, if/else, or nested-divergence kernels — the hardware
+   never consumes the field for reconvergence.
+4. `ATEXIT_PC` (the only PC-typed CBU slot) is 0 both at baseline and after
+   BSSY; `TRAP_RETURN_PC.LO` reads the *live* PC (kernel base + instruction
+   offset), not the BSSY target.
+
+**Conclusion:** on the SIMT-stack-free Volta+ architecture, divergence is
+tracked entirely by per-thread PCs (ITS) + the barrier mask in `Bi`. The
+reconvergence point is wherever the code converges (the join after `BSYNC`);
+`ptxas` fills `Sa` with that address purely as an encoding-side annotation, and
+the hardware ignores it. See `cbu_state.md` ("SIMT-stack-free").
