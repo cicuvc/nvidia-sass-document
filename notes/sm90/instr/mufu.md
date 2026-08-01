@@ -291,3 +291,9 @@ deep SFU pipeline).  This matches the classic MUFU/SFU design (high
 throughput, long fixed latency) and explains why the spec marks it
 variable-latency/decoupled — the scheduler must not assume results are ready
 early.
+
+**Contrast — FFMA (fmalighter_pipe)**: the same harness measures FFMA at the
+NOP baseline with **zero** marginal throughput cost (see `ffma.md`), because
+the FMA pipe accepts far more than 1 op/cycle and a single warp's issue rate
+saturates it.  MUFU's +2.01-cyc marginal cost is the *only* one of the two
+pipes that shows a throughput penalty at single-warp issue.

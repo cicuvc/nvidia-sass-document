@@ -95,6 +95,21 @@ FFMA belongs to `FMAI_OPS` (= `fmalighter_pipe`, excl. IMAD). FFMA itself is in
 
 Occupancy: `FMAI_Occupancy [2]`.
 
+### Empirical latency & throughput (SM120, 2026-08)
+
+Same harness as the MUFU measurements (`test_mufu_latency.py` /
+`test_mufu_throughput.py`; `tests/asm_construct/test_ffma_throughput.py`):
+
+- **Dependent-chain latency**: FFMA ≈ 5.44 cyc (writeback via scoreboard
+  wait), consistent with TABLE_TRUE's 4–8.
+- **Independent-chain throughput**: FFMA / FMUL / FADD / neg / imm variants
+  all measure **6.18 cyc/op — identical to the NOP baseline** (delta ≈ 0).
+  The ~6.2-cyc baseline is the single-warp instruction-issue floor; FFMA
+  rides it with **zero marginal cost**.  This contrasts with MUFU, which
+  adds **+2.01 cyc/op** over the same baseline (the mio/SFU pipe is the
+  throughput bottleneck; the fmalighter/FMA pipe is not — it accepts far
+  more than 1 op/cycle, so a single warp's issue rate saturates it).
+
 ## Verified encodings (cuobjdump, sm_90)
 
 All 12 test vectors decoded correctly against cuobjdump disassembly.
