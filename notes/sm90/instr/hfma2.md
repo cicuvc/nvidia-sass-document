@@ -1,8 +1,32 @@
 # HFMA2 / HFMA2.MMA — Packed FP16x2 Fused Multiply-Add
 
 **Opcode mnemonic:** `HFMA2` / `HFMA2.MMA`
-**Pipe:** `fp16_pipe` (= `FP16_OPS`) / `fma64lite_pipe` (= `HFMA2MMA_OP`)
+**Pipe:** `fp16_pipe` (= `FP16_OPS`) / `fma64lite_pipe` (= `HFMA2MMA_OP`) **on sm_90**
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
+
+> **HFMA2 vs HFMA2.MMA — the difference (verified sm_90 + sm_120, 2026-08):**
+>
+> | Aspect | HFMA2 | HFMA2.MMA |
+> |--------|-------|-----------|
+> | sm_90 opcode (RRR) | `0x231` | `0x235` (bit[2] set) |
+> | sm_120 opcode (RRR) | `0x231` | `0x231` (ALTERNATE CLASS, same bits) |
+> | Pipe (sm_90) | `fp16_pipe` | `fma64lite_pipe` |
+> | Pipe (sm_120) | `fp16_pipe` | `fp16_pipe` (same unit) |
+> | ISWZ lane swizzles | free (iswzA/B/C) | **forced `H1_H0`** (ignored) |
+> | OFMT enum | `OFMT` (F16/F32/E8M7/E6M9) | `OFMT_F16_V2_BF16_V2` (F16/BF16 only) |
+> | FMZ enum | `FMZ` (nofmz/FMZ/FTZ/OOB) | `FMZ_hfma2` (no OOB) |
+> | opex table (sm_120) | `TABLES_opex_5` | `TABLES_opex_7` |
+> | latency (sm_90 TABLE_TRUE) | 5–8 | 10–11 |
+> | latency (sm_120, measured) | 5.89 cyc | 5.88 cyc (identical — same encoding) |
+>
+> **Semantics are identical** (`Rd.lane = Ra.lane*Rb.lane + Rc.lane`); the
+> `.MMA` suffix is a scheduling/pipe and ISWZ-encoding variant, not a math
+> difference.  On sm_90 ptxas emits `.MMA` for all `fma.f16x2`/`add.f16x2`
+> (higher-latency `fma64lite_pipe`, tensor-adjacent co-issue); on sm_120
+> ptxas emits plain `HFMA2` and the `.MMA` form is an ALTERNATE CLASS with
+> identical bits (only the `/MMAONLY` syntax marker differs, iswz forced to
+> `H1_H0`, `TABLES_opex_7`).  Verified on GPU: both give identical results,
+> `.MMA` ignores an `.H0_H0` swizzle that plain `HFMA2` honors.
 
 ---
 
@@ -18,9 +42,10 @@ and `FMZ_hfma2` (no `OOB` value). No `.F32` output format unlike HADD2.
 Compiler universally emits HFMA2.MMA for all `fma.f16x2` and `add.f16x2` PTX
 operations on sm_90.
 
-**RELU variant:** Same opcodes, but `satrelu = RELU (2)` and adds a 4th predicate
+**RELU variant:** Same opcodes, but `satrelu = RELU (2)` adds a 4th predicate
 operand (`@Pp`) controlling per-lane ReLU activation. The ReLU is applied to the
-result of the FMA: `Rd = relu(Ra * Rb + Rc)`.
+result of the FMA: `Rd = relu(Ra * Rb + Rc)`. (Verified on sm_120:
+`2*3−10 → 0`, `2*3+1 → 7`.)
 
 ## Variant overview
 
