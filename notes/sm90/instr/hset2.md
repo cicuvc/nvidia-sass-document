@@ -108,3 +108,25 @@ PTX `setp.{cmp}.f16x2` → `HSET2.BF.{CMP}.AND Rd, Ra, Rc, PT`.
 - `BM` (bool-mask with 0x00010001) vs `BF` (bool-float with 0xFFFFFFFF) — compiler always uses BF.
 - Uniform register, const-bank, RCx, and immediate variants not yet verified.
 - FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified in generated code.
+
+## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+
+`tests/asm_construct/test_hset_hmnmx.py` (MOV32I harness). HSET2 RRR opcode
+0x233.  Per-lane FP16 compare with BVal true/false encoding and Bop lane
+reduction:
+
+- **BVal**: `BM` (default) true = **0xffffffff**, false = 0;
+  `BF` true = **0x3c003c00** (= 1.0 as 2×fp16), false = 0.  (Note: the note's
+  earlier "BM=true=0x00010001" was wrong; actual is all-ones.)
+- **Bop semantics observed on sm_120** (default H1_H0 swizzle, per-lane bools
+  b0=lane0, b1=lane1):
+  - `AND`: **per-lane passthrough** — h0=b0, h1=b1 (no cross-lane combine).
+  - `OR`: **always true** (0xffffffff) regardless of inputs — quirk.
+  - `XOR`: **per-lane NOT** — h0=¬b0, h1=¬b1 — quirk.
+  With explicit `H0_H0` (both lanes compute the same bool b):
+  `AND(b,b)=b`, `OR(b,b)=T`, `XOR(b,b)=¬b`.  These do NOT match the logical
+  AND/OR/XOR enum names on this chip — treat as observed hardware behavior
+  (the bop field values ARE correctly encoded; the silicon semantics differ).
+- **ISWZ** works on both operands (A + C, C slot named `iswzB_as_C`).
+- cmp variants (EQ/GE/GT/NE/LT/LE and the ordered/unordered set) all
+  function; FTZ flushes denormals.

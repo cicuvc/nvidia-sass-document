@@ -52,3 +52,15 @@ Same `FP16_OPS` latency class as all other fp16_pipe ops.
 - "noBop" ALT classes — when would Bop AND not be specified?
 - Uniform register, const-bank, RCx, and immediate variants not yet verified.
 - FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified.
+
+## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+
+`tests/asm_construct/test_hset_hmnmx.py`. HSETP2 RRR opcode 0x234.
+Per-lane FP16 compare → two predicates:
+
+- **P0 = lane0 compare, P1 = lane1 compare** (verified with predicated MOVs:
+  `LT (T,T)` → P0∧P1 true; `LT (T,F)` → P0 true, P1 false).
+- **`.H_AND`**: P0 = AND of both lane bools; P1 = the other lane's bool
+  (per the ISWZ swizzle).  `H_AND (T,T)` → P0 true; `H_AND (T,F)` → P0 false.
+- Requires the full `cmp.bop` modifier (e.g. `.LT.AND`); plain `.LT` doesn't
+  match.

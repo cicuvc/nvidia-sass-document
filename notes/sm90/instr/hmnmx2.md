@@ -79,3 +79,18 @@ Fixed variants add a fixed-bound register field; Pred variants use `Pp` as predi
 ## Latency
 
 `fp16_pipe`, `INST_TYPE_COUPLED_MATH`. Coupled scoreboard.
+
+## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+
+`tests/asm_construct/test_hset_hmnmx.py`. HMNMX2 RRR opcode 0x240.
+Per-lane FP16 min/max with the same PT/!PT min-vs-max select as FMNMX:
+
+- **min** (`PT`) / **max** (`!PT`): `(2,5)` vs `(3,7)` → min `(2,5)`, max
+  `(3,7)`; mixed lanes verified.
+- **`.XORSIGN`**: selects min/max by *signed value*, then the result =
+  `|selected|` with `sign = sign(a) XOR sign(b)`.  Verified:
+  `min(5,−3)→−3`, `min(−5,−3)→+5` (|sel|=5, xor=+), `max(5,−3)→−5`,
+  `max(−5,3)→−3`.
+- **`.NAN`** propagates NaN (NaN input → NaN output); default (nonan)
+  treats NaN as the "other" operand (`min(NaN,2)→2`).
+- ISWZ swizzles on both operands; negate/abs on Ra/Rb.
