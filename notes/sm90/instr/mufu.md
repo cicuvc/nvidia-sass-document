@@ -259,3 +259,35 @@ Note: this is the SM120 measurement; the sm_90 latency tables (mio_pipe /
 MIO_SLOW_OPS) would predict the GPR-release latency (MIO→MIO = 2 in
 TABLE_TRUE), which is a *different* number than the SFU execution+writeback
 latency measured here — the scoreboard `req` wait exposes the latter.
+
+## Throughput (SM120 empirical, 2026-08)
+
+Measured with a chain of **independent** MUFU ops: all read the same source
+R10, write **different** destination registers (R40..R78, reuse distance 20
+> latency 18 → no dependency stalls), `CS2R SR_CLOCKLO/HI` around the chain.
+`tests/asm_construct/test_mufu_throughput.py`.
+
+| metric | value |
+|--------|-------|
+| NOP / MOV / IADD3 baseline | 6.18 cyc/op (single-warp issue overhead) |
+| MUFU raw | 8.19 cyc/op |
+| **MUFU marginal cost** (delta vs any baseline) | **+2.01 cyc/op** |
+
+Every MUFU op (RCP/RSQ/SQRT/EX2/LG2/TANH/COS/SIN) shows the identical
++2.01-cyc/op delta over the ~6.2-cyc issue baseline.  The 6.18 baseline is
+the SM's per-instruction issue overhead for a *single* warp (a lone warp
+cannot fill the scheduler); the MUFU unit's own throughput time is the
+consistent +2.0 cycles.
+
+Combined picture on sm_120:
+- **Latency** (dependent scoreboard chain): 18.0 cyc — one shared SFU depth.
+- **Throughput** (independent chain): baseline + 2.0 cyc/op — the MUFU pipe
+  accepts ~1 op per 2 cycles once the issue rate is saturated; the ~6.2-cyc
+  baseline is a single-warp issue artifact, not a MUFU limit.
+
+So MUFU is a throughput-friendly SFU: it *issues* ~1 op / 2 cycles (the pipe
+can be kept fed), but a *dependent* result takes ~18 cycles to appear (the
+deep SFU pipeline).  This matches the classic MUFU/SFU design (high
+throughput, long fixed latency) and explains why the spec marks it
+variable-latency/decoupled — the scheduler must not assume results are ready
+early.
