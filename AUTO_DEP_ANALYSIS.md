@@ -88,6 +88,43 @@ the parser + ELF branch encoding is the first task.
   conservative over-approximation: flag *potential* missing `req`/`wr`/`rd`
   on straight-line kernels first, then extend path-sensitively.
 
+## 5b. Predication and ITS warp-splitting (per-thread scoreboards)
+
+Volta+ ITS (independent thread scheduling) makes the scoreboard counters
+**per-thread**, and the scheduler may **split the warp**: a consumer can
+issue on the threads whose `req` SBs are all zero while other threads still
+wait.  Example:
+
+```
+MOV32I R2, 0x12345678        ; R2 = default value
+@P1    S2R R2, SR_TID.X      ; SB0 set ONLY on threads where P1 holds
+< ... uses of R2 ... >       ; must req={0} before reading R2
+```
+
+For threads with P1=false, SB0 stays 0 and R2 holds the MOV32I value — they
+may issue the consumer immediately (ITS split).  For P1=true, SB0 is set
+until the S2R writes back; they must wait.  The *same* SASS is correct for
+both, precisely because the wait is per-thread.
+
+Checker implications:
+
+- **Predicated SB effects are MAY-effects, not MUST-effects.**  A
+  predicated variable-latency producer "may set SB" → the consumer's `req`
+  is still *required* (the threads that executed the producer need it).
+  The checker must never drop a `req` because a producer was predicated.
+  This is a must-analysis on req-presence (conservative union over the
+  predication).
+- **Predication introduces a hidden control split** before a real CFG even
+  exists: `@P1` forks the thread set, and each arm has its own SB state.
+  For straight-line analysis, treat a predicated `wr`/`rd`/`req` as applying
+  to a "may" subset, and require the `req` whenever the SB may be set.
+- **Divergent re-targeting is the hazard**: if an unrelated instruction
+  later `wr`s the same SB that the predicated producer set on a *subset* of
+  threads, the per-thread counters can diverge and the ITS split exposes a
+  consumer to a stale/never-waited value on some threads.  The checker must
+  conservatively forbid (or flag) SB re-targeting before the prior may-set
+  use is req-waited on every path/thread set.
+
 ## 6. Suggested first slice (not yet designed in detail)
 
 1. Add labels + `BRA`/`BRX` to parser and encoder (branch offset math).
