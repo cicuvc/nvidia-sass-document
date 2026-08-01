@@ -42,3 +42,24 @@ INSTRUCTION_TYPE: `INST_TYPE_DECOUPLED_RD_SCBD`, VIRTUAL_QUEUE: `$VQ_ADU`.
 ## Open questions
 - Real cuobjdump text form unconfirmed.
 - Shares `SETCTAID`'s `VQ_ADU` queue — possibly used during kernel prologue.
+
+## Resolved: verified (SM120, 2026-08)
+
+`tests/asm_construct/test_lmembase.py` (MOV32I builds the 64-bit pair, then
+`SETLMEMBASE` → `GETLMEMBASE` round-trip):
+
+- `SETLMEMBASE R10` then `GETLMEMBASE R8` returns **exactly** the same 64-bit
+  value (verified for a device-buffer address and the default local base).
+  The two instructions face the SAME 64-bit address value.
+- Default `GETLMEMBASE` (no SET) returns the per-thread default local window
+  base (e.g. `0x3fffcd800000`), a valid address (STG-able).
+- `SETLMEMBASE` to an invalid address (e.g. `0x1111...`) faults with
+  `CUDA_ERROR_ILLEGAL_ADDRESS` (700) — the driver validates the window.
+
+**STL/LDL limitation**: "SETLMEMBASE then STL" could not be exercised — `STL
+[RZ+off]` (and the register-base form) fault 700 in a hand-built cubin.
+STL/LDL are legacy instructions that rely on a driver-established local-window
+context (the `R1` stack pointer / window) that a hand-built ELF does not
+provide; modern ptxas never emits them (local spill uses generic LDG/STG via
+the `c[0x0][0x28]` stack pointer).  SETLMEMBASE/GETLMEMBASE themselves are
+fully functional.

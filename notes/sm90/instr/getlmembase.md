@@ -42,3 +42,11 @@ INSTRUCTION_TYPE: `INST_TYPE_DECOUPLED_RD_WR_SCBD`, VIRTUAL_QUEUE: `$VQ_UNORDERE
 ## Open questions
 - **Unconfirmed** cuobjdump text form (bare `GETLMEMBASE Rd` assumed) and whether the 64-bit pair prints with a `.64` suffix.
 - Whether any current path (trap handler, driver context save/restore) still issues it.
+
+## Resolved: verified (SM120, 2026-08)
+
+`tests/asm_construct/test_lmembase.py`.  `GETLMEMBASE` reads back exactly the
+value previously written by `SETLMEMBASE` (round-trip verified with a
+device-buffer address and the default base).  Without a prior SET it returns
+the per-thread default local window base (a valid, high address such as
+`0x3fffcd800000`).  See `setlmembase.md` for the STL/LDL note.
