@@ -70,3 +70,30 @@ Decoder + round-trip/NP-enum test: `tools/decode_fswzadd.py`.
   how the 4 sign-pairs map to Ra vs Rc terms) is inferred — needs a capture to pin down.
 - `NDV` meaning (likely "no default value"/denormal handling) unconfirmed.
 - Which toolchain/graphics path emits it on sm_90 (not seen in the compute libraries scanned).
+
+## Resolved (SM120 + SM75 empirical, 2026-08)
+
+Reverse-engineered by **binary-patching a ptxas cubin** (compile a normal kernel
+with an FFMA placeholder, patch opcode 0x223→0x822 and [39:32]=npCtrl, keep
+[71:64]=Rc; run the patched cubin via the driver). This sidesteps the
+hand-built-ELF limits (S2R/LDG unavailable) while keeping a working launch.
+
+**Finding: in a compute (CUDA) launch, FSWZADD computes `Rd = Ra` — a pure
+pass-through — on both sm_75 (RTX 2080 Ti) and sm_120 (RTX 5090).** Across
+every tested configuration the result is exactly Ra:
+
+- **Rc ignored**: per-lane Rc=10..17, uniform Rc, Rc=NaN, Rc=Inf — none
+  propagate; Rd stays Ra.
+- **npCtrl ignored**: all 16 base-4 digits and 0x00..0xff patterns give Ra.
+- **ndv (DIV) ignored**: `nondv` and `DV` both give Ra.
+- Ra=0 → 0; Ra=5 → 5; Ra=1..8 (per lane) → 1..8. Rd == Ra exactly.
+- The [71:64] field is the sm120 encoding name `Ra_URc` (spec sm90 names it
+  `Rc`); both map to the 3rd operand at [71:64]. Setting it to a GPR or
+  (via UMOV) a uniform register makes no difference.
+
+Interpretation: the quad-swizzle network behind FSWZADD is evidently not
+reachable from a CUDA compute launch (no observable cross-lane or Rc
+contribution). The instruction degrades to `Rd = Ra` outside the graphics
+pixel-quad context. The swizzle-add semantics in the section above remain
+the *intended* design (and are consistent with the npCtrl/`Ra_URc` field
+layout), but are NOT observable on the tested hardware from compute.

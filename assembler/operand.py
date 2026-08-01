@@ -19,6 +19,7 @@ class OperandKind(enum.Enum):
     LABEL = "LABEL"
     PARAM_REF = "PARAM_REF"
     PR = "PR"
+    NP = "NP"
 
 
 @dataclass
@@ -102,6 +103,11 @@ class Operand:
     @staticmethod
     def imm_f32(value: float) -> Operand:
         return Operand(OperandKind.IMM_F32, value)
+
+    @staticmethod
+    def np(value: int) -> Operand:
+        """FSWZADD swizzle pattern (NP enum 0-255, rendered as P/N/Z pairs)."""
+        return Operand(OperandKind.NP, value)
 
     @staticmethod
     def const_bank(bank: int, offset: int) -> Operand:

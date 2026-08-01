@@ -306,6 +306,13 @@ class Parser:
         # special register: SR_NAME[.SUB]
         if t.type == "IDENT":
             ident = self.pop().text
+            # FSWZADD swizzle pattern: 8-char P/N/Z string (e.g. NPPNNPPN)
+            if re.fullmatch(r"[PNZ]{8}", ident):
+                pairs = {"PP": 0, "PN": 1, "NP": 2, "ZP": 3}
+                val = 0
+                for i in range(0, 8, 2):
+                    val = val * 4 + pairs[ident[i:i + 2]]
+                return Operand.np(val)
             if self.peek() and self.peek().type == "DOT":
                 self.pop()
                 sub = self.expect("IDENT", "NUMBER").text

@@ -23,6 +23,7 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.MEM_ADDR:  {"Register", "NonZeroRegister", "UniformRegister"},
     OperandKind.LABEL:     {"RSImm", "SImm", "UImm", "BD"},
     OperandKind.PR:        {"PR"},
+    OperandKind.NP:        {"NP"},
 }
 
 SCHED_TYPES = {"REQ", "BITSET", "WR", "RD", "USCHED_INFO", "BATCH_T", "PM_PRED", "REUSE", "PREDICATE"}
@@ -486,6 +487,8 @@ class SassMatcher:
             return None
         if st == "PR":
             return 0
+        if st == "NP":
+            return v if isinstance(v, int) else None
         if st == "SpecialRegister":
             v_str = v if isinstance(v, str) else ""
             enum_vals = self.db["enums"].get("SpecialRegister", {})
