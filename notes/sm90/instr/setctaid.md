@@ -2,13 +2,12 @@
 
 **Opcode mnemonic:** `SETCTAID` = `0b1100011111` = **0x31f** (13-bit slot) | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`, `VIRTUAL_QUEUE=$VQ_ADU` | compute-only (`SHADER_TYPE==CS`) | since **sm_70** (crucible opcode idx 63)
 
-> **Status: NOT empirically verified.** nvcc/ptxas (CUDA 13.1) do not emit `SETCTAID` from
-> user CUDA C/C++ or inline PTX, and it is absent from the available libraries. It is a
-> **driver/ABI setup instruction** — grouped in the `VQ_ADU` virtual queue with `SETLMEMBASE`
-> and `AL2P`, i.e. per-CTA hardware-state / address setup ops that the runtime/trap-handler
-> issues, not application code. Crucible confirms it exists (sm_70+) but adds no encoding
-> detail. Field layout below is spec-derived; example encodings are round-trip constructions,
-> not silicon captures.
+> **Status: VERIFIED on SM120 (2026-08).** `tests/asm_construct/test_setctaid.py`.
+> SETCTAID writes the CTA block-index hardware state that `S2R SR_CTAID.{X,Y,Z}`
+> reads: after `SETCTAID.X R20`, `S2R SR_CTAID.X` returns the injected value
+> (0x55) instead of the real blockIdx (verified with grid=(2,1,1) where the
+> real X is 0/1).  Same for `.Y` / `.Z`.  nvcc/ptxas do not emit it — it is a
+> driver/ABI setup instruction (VQ_ADU, shared with SETLMEMBASE/AL2P).
 
 ## Semantics (speculation)
 Writes the executing CTA's **block-index** hardware state (`blockIdx`, the value normally read
@@ -74,8 +73,10 @@ reading `SR_CTAID` afterward observe the updated value only through the pipeline
 `tools/decode_setctaid.py`.
 
 ## Open questions
-- **Unconfirmed** whether cuobjdump prints the default `ALL` as a bare `SETCTAID` (assumed) or
-  as `SETCTAID.ALL`, and whether the 64-bit `ALL` operand prints as a register pair `Rn` or
-  `Rn.64` etc. — no real disassembly captured.
-- Exact packing of the 64-bit `ALL` operand (X/Y/Z bit fields within the pair).
+- ~~Unconfirmed~~ whether cuobjdump prints the default `ALL` as a bare `SETCTAID` or
+  as `SETCTAID.ALL`, and the `ALL` operand pair syntax — **resolved**: the assembler
+  prints bare `SETCTAID` for the default; the 64-bit `ALL` operand is a register pair.
+- ~~Exact packing of the 64-bit `ALL` operand~~ — **resolved on SM120**:
+  `X = R20` (low 32 bits), `Y = R21[15:0]`, `Z = R21[31:16]`.
+  Verified: `R20:R21 = 0x55 / 0x02030004` → `X=0x55, Y=0x4, Z=0x203`.
 - Which runtime/driver path actually emits it (cooperative launch? CDP? trap handler?).
