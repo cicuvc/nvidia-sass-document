@@ -16,6 +16,9 @@ No source A operand (`ISRC_A_SIZE = 0`).
 Uses **variable-latency scoreboard** (`VarLatOperandEnc` — latency depends on
 the specific operation and operand value).
 
+> **COS/SIN take the argument in turns (2π units), not radians** — see
+> "Resolved" below.  A compiler must pre-scale by `1/2π`.
+
 ## Variant overview — 5 base + 5 fp16 = 10 variants
 
 ### Base variants (FP32 operations)
@@ -159,3 +162,68 @@ FADD/FMUL on sm_90).
 - fp16 variants (`mufu_fp16__*`) not yet tested
 - What operations trigger the F64Imm variant (RIR)?
 - Variable latency mechanism — how does `VarLatOperandEnc` work exactly?
+
+## Resolved: semantics + quantitative error (SM120, clean hand-built ELF, 2026-08)
+
+Probed with a clean kernel (`S2R` lane-id → per-lane `LDG` → `MUFU.op` →
+`STG`), sweeping thousands of random normal-range FP32 inputs plus specials,
+compared against double-precision references.  `tests/asm_construct/test_mufu.py`.
+
+### Exact semantics
+
+| Op | Function | Notes |
+|----|----------|-------|
+| RCP  | `1/x` | correctly rounded for normal inputs (max 1 ulp) |
+| RSQ  | `1/√x` | correctly rounded (1–2 ulp) |
+| SQRT | `√x`   | correctly rounded (1 ulp) |
+| EX2  | `2^x`  | ~1 ulp mean, worst ~31 ulp at large |x| |
+| LG2  | `log2(x)` | ~0.65 ulp mean; worst ~87 ulp near x=1 |
+| TANH | `tanh(x)` | mean 5.6 ulp; worst ~117 ulp near x=±1 |
+| COS  | **`cos(2π·x)`** | argument in **turns, not radians**! |
+| SIN  | **`sin(2π·x)`** | argument in **turns, not radians**! |
+| RCP64H | `hi32(1/x)` | reads hi 32 bits of a double → hi 32 bits of result |
+| RSQ64H | `hi32(1/√x)` | same convention |
+
+### COS/SIN turn convention (major finding)
+
+`MUFU.COS(x)` computes `cos(2π·x)`, `MUFU.SIN(x)` computes `sin(2π·x)` —
+the operand is in **half-turns / cycles**, not radians.  Verified:
+`COS(0.5) = cos(π) = −1`, `COS(1.0) = cos(2π) = 1`, `SIN(0.25) = sin(π/2) = 1`.
+This is why a compiler must scale a radian argument by `1/2π` (or fold the
+scale into its range reduction) before issuing MUFU.COS/SIN.  The hardware
+does exact range reduction: absolute error stays ~1e-7 even for |x| up to 32
+turns.  (PTX `cos.approx`/`sin.approx` hide this by requiring the source to
+be pre-reduced.)
+
+### Quantitative error (random normal-range FP32, vs double reference)
+
+Relative error percentiles:
+
+| Op | p50 | p99 | max |
+|----|-----|-----|-----|
+| RCP  | 2.7e-08 | 9.1e-08 | 1.2e-07 |
+| RSQ  | 2.6e-08 | 9.2e-08 | 1.3e-07 |
+| SQRT | 2.3e-08 | 8.6e-08 | 1.1e-07 |
+| EX2  | 1.5e-08 | 4.6e-07 | 2.7e-06 |
+| LG2  | 4.1e-08 | 3.3e-07 | 3.6e-06 |
+| TANH | 1.5e-08 | 6.7e-06 | 9.5e-06 |
+
+COS/SIN (absolute error, output ∈ [−1,1]): p50 ≈ 6–9e-08, max ≈ 3.6e-07.
+RCP64H/RSQ64H: p50 ≈ 2e-07, max ≈ 1e-06 (approximations, not correctly
+rounded — they are Newton-Raphson seeds for full FP64 div/sqrt).
+
+So: **RCP/RSQ/SQRT are correctly rounded; EX2/LG2/TANH are ~1e-6–1e-5
+relative (the "approx" ops); COS/SIN are exact-range-reduced but need turn
+inputs; RCP64H/RSQ64H are ~1e-6 FP64 helpers.**
+
+### Special values (verified)
+
+| Input | RCP | RSQ | SQRT | EX2 | LG2 | TANH | COS/SIN |
+|-------|-----|-----|------|-----|-----|------|---------|
+| ±0   | ±inf | ±inf | ±0 | 1 | −inf | ±0 | cos=1/sin=±0 |
+| denormal | inf | inf | 0 | 1 | −inf | **passthrough (bit-exact)** | 1/±0 |
+| ±inf | ±0 | ±0/NaN | inf | inf/−0 | inf/NaN | ±1 | NaN |
+| NaN  | NaN | NaN | NaN | NaN | NaN | NaN | NaN |
+
+Note `TANH` passes denormals through **unchanged** (returns the denormal
+itself, e.g. 0x1 → 0x1, 0x7fffff → 0x7fffff) — it does not flush them.
