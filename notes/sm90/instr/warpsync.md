@@ -132,3 +132,27 @@ Two speculations were tested and **corrected by experiment**:
 - Runtime meaning of `.EXCLUSIVE` (never emitted) and of the COLLECTIVE `target` beyond
   "region successor".
 - Non-PT `Pp` on WARPSYNC is unobserved.
+
+## Resolved: COLLECTIVE mode empirically (SM120, 2026-08)
+
+`tests/asm_construct/test_warpsync_collective.py` constructs the full
+`BSSY/BSYNC`-wrapped collective idiom and reads `MCOLLECTIVE`:
+
+```
+    BSSY  B1, LOOP
+    WARPSYNC.COLLECTIVE Rmask, TGT   ; opens the region
+    NOP / body
+    ENDCOLLECTIVE                    ; closes it
+TGT: BSYNC B1
+LOOP: ...
+```
+
+1. **`Rmask` must be a superset of the lanes executing `WARPSYNC.COLLECTIVE`.**
+   An executing lane outside the mask raises `ILLEGAL_INSTRUCTION` (715):
+   all-32 active → mask 0xFFFFFFFF ok / 0xFFFF faults; survivors tid>=16 →
+   mask 0xFFFF0000 and 0xFFFFFFFF ok / 0xFFFF faults.
+2. **`MCOLLECTIVE` (CBU_STATE 32) = `Rmask & active-lanes` DURING the region.**
+   With Rmask=0xFFFFFFFF and only tid>=16 active it reads **0xFFFF0000** (the
+   mask is clamped to the active set, not the declared value); with all 32
+   active it reads 0xFFFFFFFF.
+3. **`ENDCOLLECTIVE` clears `MCOLLECTIVE`** (reads 0x0 after the region).

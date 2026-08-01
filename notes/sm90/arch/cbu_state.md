@@ -121,3 +121,11 @@ Interpretation:
 - The BSSY reconvergence *target* is carried by the BSSY instruction's own Sa
   field (PC-relative); the *return* PC bookkeeping surfaces here as
   TRAP_RETURN_PC/TRAP_RETURN_MASK during the divergent region.
+
+## Resolved: MCOLLECTIVE = collective-region participation mask (SM120, 2026-08)
+
+`MCOLLECTIVE` (CBU_STATE 32) is live **only inside a `WARPSYNC.COLLECTIVE
+Rmask, TGT` … `ENDCOLLECTIVE` region**: it reads `Rmask & active-lanes` while
+the region is open and 0x0 after `ENDCOLLECTIVE`. `WARPSYNC.COLLECTIVE`
+requires `Rmask ⊇` the lanes executing it (else ILLEGAL_INSTRUCTION 715). See
+`warpsync.md` / `endcollective.md` and `test_warpsync_collective.py`.

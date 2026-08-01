@@ -76,3 +76,13 @@ multi-GPU/system-scope warp-aggregation code. See `warpsync.md` for the full ana
 - Whether ENDCOLLECTIVE has any HW effect beyond clearing the `MCOLLECTIVE` declaration
   (e.g. re-widening the executable mask) is not spec-stated; the empty (`NOP`) region body
   suggests it is a pure marker.
+
+## Resolved: empirically verified (SM120, 2026-08)
+
+Constructed the full idiom on silicon (`test_warpsync_collective.py`):
+`ENDCOLLECTIVE` closes the region opened by `WARPSYNC.COLLECTIVE Rmask, TGT`
+and **clears `MCOLLECTIVE` to 0x0** (it reads 0xFFFFFFFF / `Rmask & active`
+inside the region, 0 after). The region is always BSSY/BSYNC-wrapped; the
+WARPSYNC target points at the instruction after `ENDCOLLECTIVE` (the BSYNC).
+A lane executing `WARPSYNC.COLLECTIVE` that is not covered by `Rmask` raises
+`ILLEGAL_INSTRUCTION` (715).
