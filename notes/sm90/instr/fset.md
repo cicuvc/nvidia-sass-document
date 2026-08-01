@@ -152,3 +152,15 @@ FSET is on `int_pipe`; TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2 (F
 - `_simple` variant (no Bop, no Pp) not observed — ptxas always emits full variant
 - F=0 (always false) and T=15 (always true) comparison types not yet triggered
 - FTZ on FSET: does it exist in hardware or is it always lowered to FSETP?
+
+## Resolved (SM120 bit-level verification, 2026-08)
+
+`tests/asm_construct/test_fmnmx_fset.py` — all FSET cases OK.
+
+- **Output format CORRECTION**: FSET writes **1.0f (0x3f800000)** for TRUE
+  and 0 for FALSE — not 0x00000000/0xFFFFFFFF as previously noted.
+- The full form requires the `.BF` (BFONLY) prefix plus both FCMP and Bop:
+  `FSET.BF.LT.AND Rd, Ra, Rb, Pp`. There is no `.BF`-less form.
+- FCMP/Bop semantics identical to FSETP (ordered/U comparisons, NaN handling).
+- ptxas does not emit FSET in cuBLAS (it uses FSETP); the register form is a
+  latent encoding verified on hardware.

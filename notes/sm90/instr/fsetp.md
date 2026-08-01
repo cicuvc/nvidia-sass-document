@@ -121,3 +121,18 @@ Same as FSET: TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2 (int_pipe/F
 - Bop=OR and Bop=XOR not yet verified
 - `_simple` variant (no Bop) not yet observed
 - Relationship with ISETP (integer setp) — same opcode pattern?
+
+## Resolved (SM120 bit-level verification, 2026-08)
+
+`tests/asm_construct/test_fmnmx_fset.py` — all 16 FCMP × operand pairs OK.
+
+- **FCMP semantics** (PTX setp-compatible): the 6 ordered ops (LT..GE) are
+  FALSE when either operand is NaN; the 6 `*U` ops are TRUE on NaN
+  (unordered); `NUM` = ordered (neither NaN), `NAN` = unordered (either NaN),
+  `F`/`T` constant.
+- **CORRECTION: `Pv = (¬cmp) BOP Pp`, not `¬Pu`.** The two outputs are the
+  Bop applied to the comparison and its negation:
+  `Pu = (Ra CMP Rb) BOP Pp`, `Pv = (¬(Ra CMP Rb)) BOP Pp`. The note's earlier
+  `Pv = ¬Pu` matches AND (and XOR, coincidentally) but is WRONG for OR:
+  `FSETP.LT.OR P0, P1, 1, 2, PT` gives P0=1, P1=1.
+- `.FTZ` flushes denormal inputs.

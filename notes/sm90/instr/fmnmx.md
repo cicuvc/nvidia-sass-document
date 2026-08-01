@@ -148,3 +148,19 @@ This implements `clamp(R0, 0, 255)` → ReLU then saturation.
 - `.XORSIGN` modifier not yet tested — needs PTX `max.xorsign.abs.f32`
 - Const-bank variants (RCR, RCxR) not yet verified
 - 3-input `max.f32 d, a, b, c` — does this map to `_pred` or get lowered differently?
+
+## Resolved (SM120 bit-level verification, 2026-08)
+
+`tests/asm_construct/test_fmnmx_fset.py` — all FMNMX cases OK.
+
+- **Sense**: 4th operand predicate `PT` = MIN, `!PT` = MAX (ptxas emits
+  `FMNMX Rd, Ra, |Rb|, !PT` for abs-max).
+- **NaN (default `nonan`)**: IEEE-754-2008 **minNum/maxNum** — a NaN operand
+  is ignored and the other value returned (`min(NaN,1)=1`); both NaN → NaN.
+- **`.NAN`**: IEEE-754-2019 minimum/maximum — NaN propagates (result is
+  canonical 0x7fffffff when either operand is NaN).
+- **±0**: `min(+0,-0) = -0`, `max(+0,-0) = +0`.
+- **`.XORSIGN`**: the result magnitude is the min/max value but the sign bit
+  is forced to `sign(Ra) XOR sign(Rb)` (`min(-1,-2).XORSIGN = +2`,
+  `max(1,-2).XORSIGN = -1`).
+- **`.FTZ`**: flushes denormal inputs (and a denormal result).
