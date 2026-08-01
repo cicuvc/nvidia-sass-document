@@ -2,6 +2,12 @@
 
 **Opcode mnemonic:** FCHK  |  **Pipe:** `mio_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
 
+> **Status: semantics verified on SM120 with a clean hand-built ELF (2026-08).**
+> FCHK.DIVIDE is a fast-divide safety pre-check: `Pu = 1` when the
+> `MUFU.RCP`+Newton path can't be correctly rounded (see "Verified fire
+> conditions").  Encoding verified against the CLASS spec and a real ptxas
+> vector; decoder round-trip in `tools/decode_fchk.py`.
+
 ## Semantics
 
 Checks whether the fast Newton-Raphson reciprocal-based division path (the
@@ -93,8 +99,49 @@ mantissas, all specials, sign/negate/abs invariance, and the 2D
 
 ### PTX→SASS mapping
 
-ptxas emits `FCHK P0, Ra, Rb` in the FP32 division sequence:
-`MUFU.RCP` (1/b approx) → `FCHK` → 3×FFMA Newton refinement → `@!P0 BRA`
-skips the slow path (a CALL'd fixup that re-extracts exponents, handles
-NaN/Inf/0/denormal, overflow/underflow, and the sign merge).  See
-`notes/sm90/arch/div.md`.
+ptxas emits `FCHK P0, Ra, Rb` in the FP32 division sequence (sm_90, verified
+against cuobjdump):
+
+```
+MUFU.RCP R0, R7            ; ~1/b
+FCHK  P0, R6, R7           ; safety check (Ra=dividend, Rb=divisor)
+FFMA  R3, R0, -R7, 1       ; \ 5× Newton refinement (not 3×):
+FFMA  R3, R0, R3, R0       ; |  rcp' = rcp + rcp·(1 − b·rcp)
+FFMA  R5, R3, R6, RZ       ; |  q ≈ a·rcp'
+FFMA  R0, R5, -R7, R6      ; |  residual a − q·b
+FFMA  R5, R3, R0, R5       ; /  q += rcp'·residual
+@!P0  BRA  fast_done       ; P0==0 → skip slow path
+      MOV  R4, 0xd0        ; arg for the fixup
+      CALL.REL.NOINC 0x130 ; software slow path (reloads a,b from cbank)
+```
+
+**Slow path (`0x130`) re-derives the exponent of both operands from the
+fast-path result** (`SHF.R.U32.HI` + `LOP3.LUT …0xff` extract the biased
+exponent, `VIADD −1`), and:
+
+- `ISETP.GT.U32 0xfd` — if either exponent field > 0xfd (huge/Inf class),
+  normalizes via the generic path (BRA 0x370).
+- `FSETP.GTU |R2|, +INF` — if either operand is Inf (incl. NaN payloads),
+  jumps to the Inf/NaN handler (0x750).
+- `LOP3 0xc8 (R7&0x7fffffff, R6)` — if signs don't match a normal divide
+  (BRA 0x730) handle −0/denormal/underflow; otherwise
+  `FSETP.NEU |R2|, +INF` re-check for the final Inf case.
+- Ends with the sign merge (`LOP3 …0xc8` xor of the two sign bits) and
+  round-to-nearest result.
+
+The slow path is the *fully general* divide (handles the cases FCHK
+rejected); the fast path is the RCP-based Newton sequence trusted only for
+the verified window.  See `notes/sm90/arch/div.md`.
+
+## Verified encodings (SM120)
+
+| Lo64 | Hi64 | Disassembly |
+|------|------|-------------|
+| `0x0000000706007302` | `0x0000000000000000` | `FCHK P0, R6, R7` |
+| `0x0000000706007302` | `0x0000000000020000` | `FCHK P1, R6, R7` |
+| `0x0000000706007302` | `0x0000000000000200` | `FCHK P0, \|R6\|, R7` |
+| `0x0000000706007302` | `0x0000000000000100` | `FCHK P0, -R6, R7` |
+| `0x8000000706007302` | `0x0000000000000000` | `FCHK P0, R6, -R7` |
+| `0x0000000706007302` | `0x000ea20000000000` | `FCHK P0, R6, R7` (ptxas real vector) |
+
+Decoder round-trip + the real ptxas vector: `tools/decode_fchk.py`.
