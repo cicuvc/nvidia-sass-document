@@ -157,3 +157,17 @@ PTX `cvt.rn.f16x2.f32` + `add` → `HADD2.F32` (widening half to float).
   variants not yet verified
 - Whether HADD2 could be hand-encoded and executed (hardware validates encoding)
 - Why ptxas prefers HFMA2.MMA over HADD2 (pipe assignment? throughput?)
+
+## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+
+`tests/asm_construct/test_hadd2_hmul2.py` (same MOV32I harness as HFMA2).
+HADD2 RRR opcode 0x230, `Rd = Ra + Rc` per packed halfword lane:
+
+- per-lane add verified: `(2,5)+(3,7) = (5,12)`
+- negate / absolute on Ra: `-2+3, -5+7 = (1,2)`, `|-2|+3, 5+7 = (5,12)`
+- ISWZ works on both operands: `Ra.H0_H0 → (2+3, 2+7)=(5,9)`,
+  `Rc.H0_H0 → (2+3, 5+3)=(5,8)` (note HADD2's C-operand swizzle slot is
+  named `iswzB_as_C`, handled by the assembler)
+- `.FTZ` flushes denormal inputs; nofmz preserves
+- **`.SAT` shows the same sm_120 quirk as HFMA2**: `65500+100 → 1.0`
+  (nosat gives inf), i.e. saturates positive overflow to 1.0, not max-finite.

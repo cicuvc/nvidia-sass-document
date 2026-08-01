@@ -133,3 +133,16 @@ PTX `mul.f16x2 d, a, b` → `HMUL2 Rd, Ra, Rb` (not lowered to HFMA2.MMA).
 - No MMA variant exists — why does the compiler choose HFMA2.MMA for add but
   HMUL2 for multiply? (Likely because add-as-FMA uses Rc as accumulator
   whereas standalone multiply has no natural FMA form)
+
+## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+
+`tests/asm_construct/test_hadd2_hmul2.py`. HMUL2 RRR opcode 0x232,
+`Rd = Ra * Rb` per packed halfword lane:
+
+- per-lane multiply verified: `(2,5)*(3,7) = (6,35)`
+- negate / absolute on Rb: `2*(-3), 5*(-7) = (-6,-35)`
+- ISWZ works: `Ra.H1_H1 → (5*3, 5*7)=(15,35)`, `Rb.H0_H0 → (2*3, 5*3)=(6,15)`
+- nofmz preserves denormal results (`denorm 0x1 × 2 = 0x2`, still denormal);
+  `.FTZ` flushes to 0
+- **`.SAT` shows the same sm_120 quirk**: `65500×100 → 1.0` (nosat gives
+  inf), not max-finite.

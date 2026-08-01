@@ -413,12 +413,15 @@ class SassMatcher:
             slot_map[f"{slot['name']}_not"] = 1
         # HFMA2/HADD2 lane swizzle: an operand .H0_H0/.H1_H1/.F32/.H0_NH1
         # maps to the matching iswz<X> modifier slot (Ra->iswzA, Rb->iswzB,
-        # Rc->iswzC; note iswzC is also typed ISWZA).
+        # Rc->iswzC; note iswzC is also typed ISWZA; HADD2 names its C-operand
+        # swizzle slot iswzB_as_C instead of iswzC).
         if op.iswz is not None:
             base = slot["name"].upper().rstrip("0123456789")
             key = {"RA": "iswzA", "RB": "iswzB", "RC": "iswzC"}.get(base)
             if key:
                 slot_map[key] = op.iswz
+                if key == "iswzC":
+                    slot_map["iswzB_as_C"] = op.iswz
         return True
 
     # ------------------------------------------------------------------
