@@ -266,3 +266,20 @@ STG.E  desc[UR4][R6.64], R22;[0:1:{0}:1:0]
 ```
 Without the descriptor wait the LDG reads a garbage cache-policy and faults
 700. (STG already carried `req={0}`, which is why stores always worked.)
+
+## 12. BSSY target PC is inert — SIMT-stack-free reconvergence (resolved)
+
+Hand-built divergence kernels (if-skip / if-else / nested) run correctly with a
+**deliberately wrong `BSSY` target** (an infinite `BRA` loop), and `BSYNC` is a
+**fall-through marker** (lanes execute instructions past it; it does not branch
+to the stored target). `BMOV R4, B0` reads only the participating-lane mask
+(0xFFFFFFFF full warp / subset mask); there is no hidden high-32 "reconvergence
+PC" in the B registers, and `ATEXIT_PC` stays 0 after BSSY while
+`TRAP_RETURN_PC.LO` reads the *live* PC.
+
+Conclusion: Volta+ (sm_90/sm_120) is SIMT-stack-free — divergence is tracked by
+per-thread PCs (ITS) + the barrier mask in `Bi`; reconvergence happens because
+both lane groups reach the join PC naturally (parked lanes via their own
+predicated branch, fall-through lanes by executing the join in-line). The BSSY
+`Sa` target is an encoding-side annotation that the hardware ignores. See
+`cbu_state.md`, `bssy.md`, `bsync.md`.
