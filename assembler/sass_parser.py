@@ -85,6 +85,9 @@ class Parser:
     def peek(self) -> Token | None:
         return self.tokens[self.pos] if self.pos < len(self.tokens) else None
 
+    def peek2(self) -> Token | None:
+        return self.tokens[self.pos + 1] if self.pos + 1 < len(self.tokens) else None
+
     def pop(self) -> Token:
         t = self.tokens[self.pos]
         self.pos += 1
@@ -267,12 +270,18 @@ class Parser:
         if t.type == "REG":
             self.pop()
             width = self._parse_width_suffix()
-            return Operand.reg(t.text, width=width)
+            iswz = self._parse_iswz_suffix()
+            op = Operand.reg(t.text, width=width)
+            op.iswz = iswz
+            return op
 
         if t.type == "UREG":
             self.pop()
             width = self._parse_width_suffix()
-            return Operand.ureg(t.text, width=width)
+            iswz = self._parse_iswz_suffix()
+            op = Operand.ureg(t.text, width=width)
+            op.iswz = iswz
+            return op
 
         if t.type == "PRED":
             self.pop()
@@ -323,10 +332,31 @@ class Parser:
 
     def _parse_width_suffix(self) -> int:
         if self.peek() and self.peek().type == "DOT":
-            self.pop()
-            w = self.expect("IDENT", "NUMBER", "HEX")
-            return int(w.text) if w.text.isdigit() else 32
+            # only consume .N or .64-style numeric widths; leave .H0_H0 etc.
+            nxt = self.peek2()
+            if nxt and nxt.type == "NUMBER":
+                self.pop()
+                self.pop()
+                return int(nxt.text)
+            if nxt and nxt.type == "IDENT" and nxt.text.isdigit():
+                self.pop()
+                self.pop()
+                return int(nxt.text)
         return 32
+
+    _ISWZ_MAP = {"H1_H0": 0, "F32": 1, "H0_H0": 2, "H1_H1": 3, "H0_NH1": 4}
+
+    def _parse_iswz_suffix(self) -> int | None:
+        """Optional .H0_H0 / .H1_H1 / .F32 / .H0_NH1 lane-swizzle suffix
+        (HFMA2/HADD2 ISWZ* operand modifiers).  Returns the enum value or None."""
+        if self.peek() and self.peek().type == "DOT":
+            self.pop()
+            t = self.expect("IDENT")
+            val = self._ISWZ_MAP.get(t.text)
+            if val is None:
+                raise SyntaxError(f"unknown ISWZ suffix .{t.text}")
+            return val
+        return None
 
     def _parse_mem_desc(self) -> Operand:
         self.pop()  # desc

@@ -71,6 +71,7 @@ class Operand:
     offset: int = 0
     bank: int = 0
     addr_reg: int = 0
+    iswz: int | None = None      # HFMA2/HADD2 lane swizzle (ISWZ* enum value)
 
     @staticmethod
     def reg(name: str, width: int = 32) -> Operand:

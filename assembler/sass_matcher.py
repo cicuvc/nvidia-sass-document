@@ -109,7 +109,12 @@ class SassMatcher:
         mod_map = self._match_modifiers(slots, inst.modifiers, consumed_mods)
         if mod_map is None:
             return None
-        slot_map.update(mod_map)
+        for k, v in mod_map.items():
+            # iswz* values come from operand .H0_H0/.H1_H1 suffixes when present;
+            # don't let the modifier default (0) clobber an operand-derived value.
+            if k.startswith("iswz") and k in slot_map and slot_map[k] != 0:
+                continue
+            slot_map[k] = v
 
         # 4. Fill encoding defaults so condition predicates can resolve
         #    star-pinned slots (*7, *255, *hilo, ...) and format defaults.
@@ -406,6 +411,14 @@ class SassMatcher:
             slot_map[f"{slot['name']}_invert"] = 1
         if op.lnot:
             slot_map[f"{slot['name']}_not"] = 1
+        # HFMA2/HADD2 lane swizzle: an operand .H0_H0/.H1_H1/.F32/.H0_NH1
+        # maps to the matching iswz<X> modifier slot (Ra->iswzA, Rb->iswzB,
+        # Rc->iswzC; note iswzC is also typed ISWZA).
+        if op.iswz is not None:
+            base = slot["name"].upper().rstrip("0123456789")
+            key = {"RA": "iswzA", "RB": "iswzB", "RC": "iswzC"}.get(base)
+            if key:
+                slot_map[key] = op.iswz
         return True
 
     # ------------------------------------------------------------------

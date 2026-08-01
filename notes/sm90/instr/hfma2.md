@@ -208,3 +208,31 @@ activation (`max(0,·)`).  Treat `.SAT` on HFMA2 as unreliable on this chip;
 compilers that need true saturation use a different sequence.  (Cross-check:
 the sm_90 latency tables and this chip's behavior may differ — this is a
 Blackwell (sm_120) observation.)
+
+## Resolved: ISWZ lane swizzles verified (SM120, 2026-08)
+
+`tests/asm_construct/test_hfma2_iswz.py` (8 GPU checks, native assembler
+syntax).  Assembler gained `.H0_H0` / `.H1_H1` / `.F32` / `.H0_NH1` operand
+suffix parsing → iswzA/B/C slots (previously ignored).
+
+Distinct-lane inputs `a=(2,5) b=(3,7) c=(1,4)`, baseline `(7, 39)`:
+
+| Swizzle | Meaning (verified) | Observed |
+|---------|--------------------|----------|
+| `H1_H0` (default) | lane0←H0, lane1←H1 (identity) | `(7, 39)` |
+| `.H0_H0` on Ra | **both** lanes use Ra.H0 | `(2·3+1, 2·7+4) = (7, 18)` |
+| `.H1_H1` on Ra | **both** lanes use Ra.H1 | `(5·3+1, 5·7+4) = (16, 39)` |
+| `.H0_H0` on Rb | both lanes use Rb.H0 | `(2·3+1, 5·3+4) = (7, 19)` |
+| `.H1_H1` on Rb | both lanes use Rb.H1 | `(2·7+1, 5·7+4) = (15, 39)` |
+| `.H0_H0` on Rc | both lanes use Rc.H0 | `(2·3+1, 5·7+1) = (7, 36)` |
+| `.H1_H1` on Rc | both lanes use Rc.H1 | `(2·3+4, 5·7+4) = (10, 39)` |
+
+So the ISWZ semantics are: `H0_H0`/`H1_H1` **broadcast** the named halfword to
+both output lanes; `H1_H0` (default) passes lanes through unchanged.  All
+three operands (A/B/C) take the same modifier independently, and combining
+them (e.g. `Ra.H0_H0, Rb.H1_H1, Rc.H0_H0 → 2·7+1 = 15` both lanes) works.
+
+Illegal modes confirmed: `iswzB=F32`, `H0_NH1`, `INVALID5/6/7` fault with
+`CUDA_ERROR_ILLEGAL_INSTRUCTION` (the matcher rejects `.F32` at assemble
+time via CONDITIONS; `H0_NH1` assembles but faults at runtime) — matching
+the spec CONDITIONS that forbid these on HFMA2.
