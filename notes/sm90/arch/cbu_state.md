@@ -87,3 +87,37 @@ participating thread mask** of the BSSY-established divergence point — not an
 address. The reconvergence target is carried by the BSSY instruction's own
 PC-relative `Sa` field; the return PC is implied by the hardware sync stack and
 is not exposed by the 32-bit `BMOV` read.
+
+## Resolved: CBU_STATE slots empirically (SM120, 2026-08)
+
+`tests/asm_construct/test_cbu_state.py` reads every CBU_STATE slot via `BMOV`
+(one slot per kernel; back-to-back BMOVs race in hand-built cubin). A warp-
+state slot materializes on the *executing* lanes; other lanes read 0, so each
+capture shows `[0, value]`.
+
+| slot | baseline | after @P0 EXIT (tid<16) | inside divergence (tid>=16 skipped) |
+|------|----------|--------------------------|---------------------------------------|
+| MACTIVE | 0xFFFFFFFF | 0xFFFF0000 (survivors) | 0xFFFF (body lanes) |
+| MEXITED | 0x0 | 0xFFFF (exited lanes) | 0x0 |
+| MKILL / MCOLLECTIVE | 0x0 | 0x0 | 0x0 |
+| MATEXIT | 0xFFFFFFFF | 0xFFFFFFFF | 0xFFFFFFFF |
+| THREAD_STATE_ENUM.0 | 0xFFFFFFFF | 0xFFFF0000 | 0xFFFFFFFF |
+| THREAD_STATE_ENUM.1..4 | 0x0 | 0x0 | 0x0 |
+| TRAP_RETURN_PC.LO | 0x0 | 0x0 | **current PC** |
+| TRAP_RETURN_PC.HI | 0x0 | 0x0 | 0x0 |
+| TRAP_RETURN_MASK | 0x0 | 0x0 | 0xFFFF0000 (parked lanes) |
+| OPT_STACK / API_CALL_DEPTH / ATEXIT_PC.LO/HI | 0x0 | 0x0 | 0x0 |
+
+Interpretation:
+- **MACTIVE = current execution mask** (which lanes are active NOW); MEXITED =
+  exited-lane mask. Complements after partial EXIT.
+- **TRAP_RETURN_PC.LO = the live current PC** (kernel base + offset of the
+  reading instruction) — verified identical kernel-base 0x071675B0 across four
+  layouts with NOPs inserted before/after the BSSY region.
+- **TRAP_RETURN_MASK records the parked (branch-taken) lanes during divergence**
+  — the BSSY/BSYNC reconvergence machinery reuses the trap-return state.
+- **ATEXIT_PC is NOT set by BSSY** (0x0 baseline and after BSSY) — it is the
+  separate at-exit-handler PC, written only via `BMOV.64 ATEXIT_PC, <src>`.
+- The BSSY reconvergence *target* is carried by the BSSY instruction's own Sa
+  field (PC-relative); the *return* PC bookkeeping surfaces here as
+  TRAP_RETURN_PC/TRAP_RETURN_MASK during the divergent region.
