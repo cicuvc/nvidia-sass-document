@@ -7,11 +7,13 @@ quad-swizzled `Rc` values, applying a per-lane +/−/0 sign pattern (`npCtrl`). 
 instruction primitive behind quad partial reductions and screen-space **derivatives**
 (ddx/ddy) — and the fused shuffle+add butterfly for small FP32 warp reductions.
 
-> **Status: encoding + npCtrl verified against the spec enum; NO real SASS capture and the exact
-> swizzle math is partly inferred.** nvcc did not emit FSWZADD from the compute paths tried
-> (float `cg::reduce` over quads/warps, `__shfl_xor` butterflies) and it is absent from
-> cufft/cublasLt — it is chiefly a graphics/derivative primitive. Encoding is from the CLASS
-> spec; examples are round-trip constructions.
+> **Status: semantics resolved on sm_120 with a clean hand-built ELF (2026-08):
+> `FSWZADD.NDV` = signed lane-local add `s_a·Ra + s_b·Rc` (npCtrl pair signs,
+> lane%4); `FSWZADD` (nondv) = 0.0.  Cross-lane quad swizzle not observable
+> from compute.  Encoding verified against the CLASS spec; the earlier
+> patch-based "Rd=Ra" result was a control-word artifact (see Resolved).**
+> nvcc does not emit FSWZADD from compute paths (it is a graphics/derivative
+> primitive); examples are round-trip constructions plus the clean kernel probe.
 
 ## Semantics (inferred)
 For each lane in a quad, `Rd = Σ_quad ( sign · swizzle(Rc) )  (± Ra)`, where the signs come from
@@ -66,34 +68,44 @@ class as `FFMA`/`FADD`/`FMUL`, i.e. a fast FP32 op with cross-lane quad routing.
 Decoder + round-trip/NP-enum test: `tools/decode_fswzadd.py`.
 
 ## Open questions
-- **No real vector**; the exact per-lane swizzle mapping (which quad lane feeds which output,
-  how the 4 sign-pairs map to Ra vs Rc terms) is inferred — needs a capture to pin down.
-- `NDV` meaning (likely "no default value"/denormal handling) unconfirmed.
+- **Cross-lane quad swizzle unobservable from compute**: even with clean
+  encoding, Rc contributes only lane-locally.  Presumably the graphics
+  pixel-quad network the npCtrl pairs address is not populated in a CUDA
+  launch; needs a graphics-context capture to confirm.
+- `NDV` naming meaning (likely "no default value": without it the quad
+  network supplies a default 0) unconfirmed.
 - Which toolchain/graphics path emits it on sm_90 (not seen in the compute libraries scanned).
 
-## Resolved (SM120 + SM75 empirical, 2026-08)
+## Resolved (SM120 empirical, clean hand-built ELF, 2026-08)
 
-Reverse-engineered by **binary-patching a ptxas cubin** (compile a normal kernel
-with an FFMA placeholder, patch opcode 0x223→0x822 and [39:32]=npCtrl, keep
-[71:64]=Rc; run the patched cubin via the driver). This sidesteps the
-hand-built-ELF limits (S2R/LDG unavailable) while keeping a working launch.
+Re-probed with a **clean hand-built ELF** once the assembler gained S2R/LDG
+support: `S2R` lane-id → per-lane `LDG` of Ra/Rc → `FSWZADD` → `STG` result,
+with correct scoreboards (`LDCU.64 UR4` desc, S2R wr=SB0, LDG wr=SB1/SB2,
+first-use `req`).  All 256 npCtrl patterns and modifier combos tested.
 
-**Finding: in a compute (CUDA) launch, FSWZADD computes `Rd = Ra` — a pure
-pass-through — on both sm_75 (RTX 2080 Ti) and sm_120 (RTX 5090).** Across
-every tested configuration the result is exactly Ra:
+**Finding: the NDV bit is the master switch.**
+- `FSWZADD` (nondv): **Rd = 0.0**, regardless of Ra, Rc, npCtrl, rounding.
+- `FSWZADD.NDV`: **Rd = s_a·Ra + s_b·Rc**, purely **lane-local** (no
+  cross-lane quad contribution reachable from compute).
 
-- **Rc ignored**: per-lane Rc=10..17, uniform Rc, Rc=NaN, Rc=Inf — none
-  propagate; Rd stays Ra.
-- **npCtrl ignored**: all 16 base-4 digits and 0x00..0xff patterns give Ra.
-- **ndv (DIV) ignored**: `nondv` and `DV` both give Ra.
-- Ra=0 → 0; Ra=5 → 5; Ra=1..8 (per lane) → 1..8. Rd == Ra exactly.
-- The [71:64] field is the sm120 encoding name `Ra_URc` (spec sm90 names it
-  `Rc`); both map to the 3rd operand at [71:64]. Setting it to a GPR or
-  (via UMOV) a uniform register makes no difference.
+**npCtrl semantics (NDV):** the 8-char P/N/Z string is 4 base-4 pairs, one
+per quad lane; **lane%4 selects pair k**, and pair "ab" means *a* scales Ra
+(`P`=+1, `N`=−1, `Z`=0) and *b* scales Rc (`P`=+1, `N`=−1).  Verified:
+`PPPPPPPP`=Ra+Rc, `NPPNNPPN`(NP,PN,NP,PN)=[−Ra+Rc, +Ra−Rc, …] per lane,
+`NPNPNPNP`=Rc−Ra, `ZPZPZPZP`=Rc.
 
-Interpretation: the quad-swizzle network behind FSWZADD is evidently not
-reachable from a CUDA compute launch (no observable cross-lane or Rc
-contribution). The instruction degrades to `Rd = Ra` outside the graphics
-pixel-quad context. The swizzle-add semantics in the section above remain
-the *intended* design (and are consistent with the npCtrl/`Ra_URc` field
-layout), but are NOT observable on the tested hardware from compute.
+**Other verified modifiers:** rounding `Round1` at [79:78] behaves (RN/RP
+confirmed on 1e8+1 → 100000000/100000008, ulp=8); `.FTZ` flushes denormals;
+NaN/Inf propagate.
+
+**The earlier patch-based probe was wrong.**  Binary-patching an FFMA
+placeholder (reusing FFMA's hi64 scheduling/control word) reported "Rd = Ra
+pass-through" on sm_75 + sm_120.  The clean encoding shows that result was
+an **artifact of the bogus control word** (the FFMA hi64 carries a different
+opex/operand-bank layout than FSWZADD).  Discard that conclusion; the note's
+original "swizzle network unreachable" hypothesis is superseded by the
+signed lane-local add above.
+
+**Open:** the true quad swizzle (cross-lane Rc routing) is not observable
+from compute even with clean encoding — the graphics pixel-quad network that
+the npCtrl pairs presumably address is not populated in a CUDA launch.
