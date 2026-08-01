@@ -76,6 +76,28 @@ Decoder + round-trip/NP-enum test: `tools/decode_fswzadd.py`.
   network supplies a default 0) unconfirmed.
 - Which toolchain/graphics path emits it on sm_90 (not seen in the compute libraries scanned).
 
+## Attempted: EIATTR_SHADER_TYPE to force a graphics context (2026-08)
+
+To make the quad network reachable from a hand-built ELF, tried tagging the
+kernel with `EIATTR_SHADER_TYPE` (tag `0x49`, guessed from the nvdisasm
+EIATTR string ordering `...SAMPLER_INIT(0x48) → SHADER_TYPE(0x49)`), with
+shader kinds `ST_*` (0=UNKNOWN, 1=VSA, 2=GS, 3=TS, 4=CS, 5=PS, 6=TI,
+7=TRAP, 0x7f=ALL).  Assembler support added (`#pragma SHADER_TYPE(N)` →
+function-scoped 8-byte EIATTR, `func_sym` + value, matching the REGCOUNT
+record shape).
+
+**Result: the CUDA driver rejects the cubin with `CUDA_ERROR_INVALID_IMAGE`
+(200) for EVERY shader type value** — including CS=4 and UNKNOWN=0 — with
+both the function-scoped (8-byte) and a patched module-scoped (4-byte)
+record.  `cuobjdump`/`nvdisasm` happily parse the ELF and the EIATTR (so
+the record is well-formed), but `cuModuleLoadData` won't accept a cubin
+carrying any SHADER_TYPE attribute.  Conclusion: the compute driver hard-
+rejects non-default shader-kind tags in this CUBIN position; graphics
+shader contexts can't be forced this way from a compute-style load.  The
+experiment was abandoned; the assembler keeps the (inert, opt-in)
+`#pragma SHADER_TYPE` support.  Reaching the quad network would need a real
+graphics API path (Vulkan/GL fragment shader) instead of a CUDA launch.
+
 ## Resolved (SM120 empirical, clean hand-built ELF, 2026-08)
 
 Re-probed with a **clean hand-built ELF** once the assembler gained S2R/LDG

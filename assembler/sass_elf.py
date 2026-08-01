@@ -163,6 +163,18 @@ def eiattr_regcount(func_sym: int, count: int) -> bytes:
     return struct.pack("<BBHII", 4, 0x2f, 8, func_sym, count)
 
 
+def eiattr_shader_type(func_sym: int, shader_type: int) -> bytes:
+    """EIATTR_SHADER_TYPE (0x49) — function-scoped shader-kind tag.
+
+    Values follow the CUBIN ST_* enum (ST_UNKNOWN=0, ST_VSA=1, ST_GS=2,
+    ST_TS=3, ST_CS=4, ST_PS=5, ST_TI=6, ST_TRAP=7, ST_ALL=0x7F).  ptxas omits
+    it for compute kernels (driver defaults to CS); emitting a PS/VS tag here
+    asks the driver to set up that shader context (e.g. the graphics quad
+    network that FSWZADD's cross-lane swizzle depends on).
+    """
+    return struct.pack("<BBHII", 4, 0x49, 8, func_sym, shader_type)
+
+
 def eiattr_kparam(ordinal: int, offset: int, size: int) -> bytes:
     sz_code = 0x21 if size >= 8 else 0x11
     flags = (sz_code << 16) | 0xf000
@@ -200,6 +212,7 @@ class CubinBuilder:
         self._instructions: list[tuple[int, int]] = []
         self._kernel_name = "my_kernel"
         self._regcount = 4
+        self._shader_type: int | None = None
         self._exit_offsets: list[int] = []
         self._params: list[tuple[int, int, int]] = []
         self._pragma_attrs: dict[str, str] = {}
@@ -214,6 +227,9 @@ class CubinBuilder:
 
     def set_regcount(self, count: int) -> None:
         self._regcount = count
+
+    def set_shader_type(self, st: int) -> None:
+        self._shader_type = st
 
     def set_pragma(self, key: str, value: str) -> None:
         self._pragma_attrs[key] = value
@@ -361,6 +377,8 @@ class CubinBuilder:
                     if (lo & 0xFFF) == exit_opcode:
                         self._exit_offsets.append(i * 16)
         nv_info = eiattr_regcount(sym_func, self._regcount)
+        if self._shader_type is not None:
+            nv_info += eiattr_shader_type(sym_func, self._shader_type)
         # FRAME_SIZE, MIN/MAX_STACK_SIZE use 8-byte payloads (func_sym + value)
         nv_info += struct.pack("<BBHII", 4, 0x11, 8, sym_func, 0)  # FRAME_SIZE
         nv_info += struct.pack("<BBHII", 4, 0x12, 8, sym_func, 0)  # MIN_STACK_SIZE
