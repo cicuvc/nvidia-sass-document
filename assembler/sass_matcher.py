@@ -22,7 +22,8 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.MEM_DESC:  {"DESC"},
     OperandKind.MEM_ADDR:  {"Register", "NonZeroRegister", "UniformRegister"},
     OperandKind.LABEL:     {"RSImm", "SImm", "UImm", "BD"},
-    OperandKind.BAR:       {"BD"},
+    OperandKind.BAR:       {"BD", "CBU_STATE", "CBU_STATE_NONBAR"},
+    OperandKind.SPECIAL_REG: {"SpecialRegister", "CBU_STATE", "CBU_STATE_NONBAR", "ATEXIT_PCONLY"},
     OperandKind.PR:        {"PR"},
     OperandKind.NP:        {"NP"},
 }
@@ -107,7 +108,11 @@ class SassMatcher:
                     consumed_mods.add(s["name"])
 
         # 3. Match remaining modifiers
-        mod_map = self._match_modifiers(slots, inst.modifiers, consumed_mods)
+        enc_names = set()
+        for f in variant.get("encoding", []):
+            for nm in re.findall(r"\b[A-Za-z_][A-Za-z0-9_.]*\b", f.get("rhs", "")):
+                enc_names.add(nm)
+        mod_map = self._match_modifiers(slots, inst.modifiers, consumed_mods, enc_names)
         if mod_map is None:
             return None
         for k, v in mod_map.items():
@@ -516,6 +521,27 @@ class SassMatcher:
                    and isinstance(val, int):
                     return val
             return 0
+        if st in ("CBU_STATE", "CBU_STATE_NONBAR"):
+            # bar register B0..B15 -> numeric 0..15; named state (MACTIVE,
+            # MEXITED, ATEXIT_PC.LO, ...) -> enum lookup
+            if isinstance(v, int):
+                return v
+            if isinstance(v, str):
+                v_str = v.replace("_", "").upper()
+                for name, val in self.db["enums"].get(st, {}).items():
+                    if name.replace("_", "").upper() == v_str and isinstance(val, int):
+                        return val
+                return None
+            return None
+        if st == "ATEXIT_PCONLY":
+            # fixed-token constraint operand (e.g. `ATEXIT_PC`); not encoded,
+            # so accept any string that names one of the enum's values.
+            if isinstance(v, str):
+                v_str = v.replace("_", "").upper()
+                for name in self.db["enums"].get(st, {}):
+                    if name.replace("_", "").upper() == v_str:
+                        return 0
+            return None
         return None
 
     def _all_defaults(self, group: list[dict]) -> bool:
@@ -530,7 +556,8 @@ class SassMatcher:
     # Modifier matching
     # ------------------------------------------------------------------
     def _match_modifiers(self, slots: list[dict], modifiers: list[str],
-                         consumed: set[str] | None = None) -> Optional[dict]:
+                         consumed: set[str] | None = None,
+                         encoded_slots: set[str] | None = None) -> Optional[dict]:
         consumed = consumed or set()
         mod_slots = [s for s in slots if s["modifier"] and s["name"] not in consumed]
         result: dict[str, Any] = {}
@@ -545,6 +572,18 @@ class SassMatcher:
             if not enum_vals:
                 if default is not None:
                     result[name] = self._parse_default(default, etype)
+                continue
+
+            # Pure-constraint modifier (e.g. sz:ONLY32, whose size is implied by
+            # the opcode, not encoded in any field): consume it if present,
+            # otherwise optional — skip.
+            if default is None and encoded_slots is not None and name not in encoded_slots:
+                for mod in remaining[:]:
+                    if mod.upper() in enum_vals:
+                        result[name] = enum_vals[mod.upper()]
+                        remaining.remove(mod)
+                        matched = True
+                        break
                 continue
 
             matched = False

@@ -68,3 +68,22 @@ lane-state model exactly.
 - Empirical: **0** BMOV instructions in 5.6M lines of cublas sm_90 SASS — these
   state moves only appear in irregular-divergence / barrier-spill / trap code,
   so nvdisasm's exact rendering of the state names is not sampled here.
+
+## Resolved: B-register content empirically (SM120, 2026-08)
+
+`tests/asm_construct/test_breg.py` reads B0/B1 via `BMOV Rd, B0` (single read;
+two back-to-back BMOVs race in a hand-built cubin — the second clobbers the
+first's GPR result, so each probe reads one slot):
+
+- After an **unpredicated full-warp `BSSY B0, target`**, `BMOV R4, B0` returns
+  **0xFFFFFFFF** for every lane — the participating-lane mask (all 32 active).
+- A **predicated `@P0 BSSY`** (only tid<16 push) returns the subset mask
+  **0xFFFF** to the pushed lanes.
+- Before any BSSY, B0 = 0x0; after the matching **BSYNC** (entry popped), B0 = 0x0.
+- An unused B1 = 0x0.
+
+**Conclusion:** the readable 32-bit B-register content is the **active /
+participating thread mask** of the BSSY-established divergence point — not an
+address. The reconvergence target is carried by the BSSY instruction's own
+PC-relative `Sa` field; the return PC is implied by the hardware sync stack and
+is not exposed by the 32-bit `BMOV` read.

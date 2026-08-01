@@ -73,3 +73,11 @@ Decoder + round-trip test: `tools/decode_bmov.py`.
 ## Open questions
 - **No real vectors** — exact nvdisasm text (size suffix `.32`, state-name spelling, at-exit
   imm rendering) is unverified. See `cbu_state.md` for the state-selector reconciliation.
+
+## Resolved: silicon-verified read form (SM120, 2026-08)
+
+`BMOV Rd, B0` now verified on silicon (see `../arch/cbu_state.md` and
+`tests/asm_construct/test_breg.py`): after a full-warp `BSSY B0, target`, B0
+reads back **0xFFFFFFFF** (the participating-lane mask); unset B0 / B0 after
+BSYNC / unused B1 all read 0x0. Two back-to-back BMOV reads race in a
+hand-built cubin (2nd clobbers 1st) — read one slot per probe.

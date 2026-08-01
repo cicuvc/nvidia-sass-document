@@ -74,7 +74,7 @@ class Lexer:
                 continue
             if m.lastgroup == "COMMENT":
                 continue
-            tokens.append(Token(m.lastgroup, m.group()))
+            tokens.append(Token(m.lastgroup, m.group(), m.start()))
         return tokens
 
 
@@ -178,8 +178,14 @@ class Parser:
                 # ".RZ" rounding modifier — RZ is lexed as a REG token
                 modifiers.append(self.pop().text)
             elif tok and tok.type == "NUMBER":
-                num = self.pop().text
-                if self.peek() and self.peek().type == "IDENT":
+                num_tok = self.pop()
+                num = num_tok.text
+                nxt = self.peek()
+                # merge ".2D"-style only when the IDENT is textually adjacent
+                # (no whitespace, tracked via the absolute char offset in
+                # Token.col); ".64 ATEXIT_PC" stays two tokens.
+                if (nxt and nxt.type == "IDENT"
+                        and nxt.col == num_tok.col + len(num_tok.text)):
                     modifiers.append(num + self.pop().text)
                 else:
                     modifiers.append(num)
