@@ -254,6 +254,15 @@ Per-thread SR_TID.X now reads 0..7 correctly. The wait goes on the first
 consumer of the S2R result, not on the eventual store. This unblocks per-lane
 computation (thread-id addressing) in hand-built ELFs.
 
-Open: LDG (also variable-latency) still faults 700 in hand-built ELFs — the
-scoreboard pattern alone did not fix it; may need the address provenance /
-memory-pipeline setup ptxas provides.
+Resolved in `tests/asm_construct/test_ldg.py`: LDG must wait (req) on the
+`LDCU.64 UR4` descriptor (cache-policy) scoreboard before using `desc[UR4]`,
+plus write a result scoreboard (wr) consumed by the first user of the loaded
+register:
+```
+LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]     # wr=0 -> sets SB0 (descriptor)
+LDG.E  R20, desc[UR4][R6.64+0x20];[1:7:{0}:5:1]  # req={0} waits SB0, wr=SB1
+IADD3  R22, R20, RZ, RZ;[7:7:{1}:5:1]        # first use waits SB1
+STG.E  desc[UR4][R6.64], R22;[0:1:{0}:1:0]
+```
+Without the descriptor wait the LDG reads a garbage cache-policy and faults
+700. (STG already carried `req={0}`, which is why stores always worked.)
