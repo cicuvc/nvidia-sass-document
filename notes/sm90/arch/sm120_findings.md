@@ -233,3 +233,27 @@ the +3 = one register count + two reserved). After the fix **every register
 
 ptxas's own allocation naturally leaves this headroom (a regcount-40 kernel
 uses at most R37, never R38/39), which is why real cublas SASS never trips it.
+
+## 11. S2R special-register reads need a write scoreboard (resolved)
+
+Hand-built ELF kernels reading SR_TID.X / SR_LANEID via S2R got **0** and a
+computed store address faulted (700). Root cause: **S2R is variable-latency
+and signals completion through a write scoreboard** — ptxas emits
+`S2R R7, SR_TID.X &wr=0x0` (sets SB0) and the FIRST instruction that reads
+the result waits with `&req={0}` (e.g. the `LOP3 &req={0}` that consumes the
+tid). Without that wait, the S2R result is garbage.
+
+Fix (`tests/asm_construct/test_s2r.py`):
+```
+S2R R2, SR_TID.X;[0:7:{}:5:1]      # wr=0 -> sets SB0
+IADD3 R5, R2, R2, RZ;[7:7:{0}:5:1] # FIRST use of R2 waits req={0}
+...
+STG.E desc[UR4][R20.64], R2;[0:1:{0}:1:0]
+```
+Per-thread SR_TID.X now reads 0..7 correctly. The wait goes on the first
+consumer of the S2R result, not on the eventual store. This unblocks per-lane
+computation (thread-id addressing) in hand-built ELFs.
+
+Open: LDG (also variable-latency) still faults 700 in hand-built ELFs — the
+scoreboard pattern alone did not fix it; may need the address provenance /
+memory-pipeline setup ptxas provides.
