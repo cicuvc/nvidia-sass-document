@@ -1,56 +1,42 @@
 # BPT — Breakpoint / Trap
 
-**Opcode mnemonic:** `BPT`  
-**Pipe:** `cbu_pipe` (constant buffer unit / control pipe)  
-**INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`  
-**VIRTUAL_QUEUE:** `$VQ_CBU`
+**Opcode mnemonic:** `BPT` (0x95c)  **Pipe:** `cbu_pipe`
+**INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`  **VIRTUAL_QUEUE:** `$VQ_CBU`
 
 ## Semantics
 
-Generates a breakpoint, trap, or pipeline pause. The `bpt` modifier selects the
-action, and the 3-bit `Sb` immediate provides a sub-opcode.
+`BPT.TRAP <Sb>` / `BPT.INT <Sb>` — breakpoint / trap / interrupt injection.
+Selector `bpt` at [85]|[76]|[71] (`BPT_TRAP_INT`: TRAP=3, INT=4), trap
+selector `Sb` (UImm 3-bit at [23:16]).  Two scheduling variants
+(`noDRAIN` / `onlyDRAIN`).  No destination; a predicate guard only.
 
-## Format
+## PTX→SASS mapping (verified sm_90 + sm_120)
 
-```
-BPT.{TRAP/INT/PAUSE/DRAIN/PAUSE_QUIET} <3-bit Sb>
-```
+**PTX `trap;` / `__trap()` → `BPT.TRAP 0x1`** (lo=`0x000000040000795c`,
+opcode 0x95c).  This is the real, user-visible trap — unlike NANOTRAP (which
+the runtime swallows), BPT.TRAP causes the kernel launch to fail.
 
-## Modifiers — bits [86:84]
+## Verified behavior (SM120, clean subprocess per case — a real trap poisons
+## the CUDA context with 719 that persists in-process)
 
-| Value | Mnemonic | Enum | Sb constraint |
-|:---:|----------|------|---------------|
-| 2 | `.PAUSE` | BPT_PAUSE_DRAIN_PAUSE_QUIET | Any (0..7) |
-| 3 | `.TRAP` | BPT_TRAP_INT | Sb ∈ {1..7} |
-| 4 | `.INT` | BPT_TRAP_INT | Any (0..7) |
-| 5 | `.DRAIN` | BPT_PAUSE_DRAIN_PAUSE_QUIET | Any (0..7) |
-| 6 | `.PAUSE_QUIET` | BPT_PAUSE_DRAIN_PAUSE_QUIET | Any (0..7) |
+`tests/asm_construct/test_bpt_trap.py`:
 
-## Variants
+| variant | Sb | result |
+|---------|----|--------|
+| `BPT.TRAP` | 1, 3, 7 | **CUDA_ERROR_LAUNCH_FAILED (719)** — trap fires |
+| `BPT.TRAP` | 2, 4, 5, 6 | kernel runs (store OK) — no trap |
+| `BPT.INT`  | 1..7 | kernel runs — interrupt masked in compute |
+| `BPT.TRAP` | 0 | assembler rejects (CONDITION: TRAP illegal for Sb=0) |
 
-2 encoding variants, same opcode `0x95c`:
+ptxas deliberately emits `BPT.TRAP 0x1` — Sb=1 is a trap-firing selector
+(odd values 1/3/7 fire, even values don't).  `BPT.INT` never faults in a
+compute launch.
 
-| Class | bpt source | sb encoding |
-|-------|------------|-------------|
-| `bpt__noDRAIN` | BPT_TRAP_INT (TRAP=3, INT=4) | Sb at [36:34] |
-| `bpt__onlyDRAIN` | BPT_PAUSE_DRAIN_PAUSE_QUIET (PAUSE=2, DRAIN=5, PAUSE_QUIET=6) | Sb at [36:34] |
+## BPT vs NANOTRAP
 
-## Encoding
-
-```
-  [86:84]   3b  bpt mode     (*bpt, from enum)
-  [36:34]   3b  Sb           (sub-opcode, 0..7)
-  [91],[11:0] 13b  opcode    0x95c
-```
-
-## Verified encodings
-
-| Lo64 | Disassembly |
-|------|-------------|
-| `0x000000040000795c` | `BPT.TRAP 0x1` |
-
-### PTX to SASS mapping
-
-| PTX | SASS (sm_90) |
-|-----|-------------|
-| `trap;` | `BPT.TRAP 0x1` |
+| | BPT.TRAP | NANOTRAP |
+|--|----------|----------|
+| Purpose | user-visible trap (PTX `trap`) | driver hardware fault injection |
+| Pipe | cbu_pipe | cbu_pipe |
+| On compute | **launch fails 719** | swallowed, ~10k-cycle cost |
+| Emitted by ptxas | yes (`trap;`) | no (driver/runtime) |
