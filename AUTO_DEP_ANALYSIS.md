@@ -125,6 +125,29 @@ Checker implications:
   conservatively forbid (or flag) SB re-targeting before the prior may-set
   use is req-waited on every path/thread set.
 
+### 5b.1 Empirical test — does the scheduler split the warp? (SM120)
+
+Probe (`@P0 LDG` injected into a ptxas cubin via binary patch; cold 64 MB
+strided loads; 20-iter post-load FADD loop; ncu with root):
+
+| metric | pred (16/32 lanes load) | all (32/32 lanes load) |
+|--------|:--:|:--:|
+| `gpu__time_duration` | 2.46–2.50 µs | 2.50–2.53 µs |
+| `smsp__warp_issue_stalled_long_scoreboard_per_warp_active` | 38.8–40.4 % | 41.8–47.3 % |
+
+The predicated kernel (only half the lanes set the load's SB) stalls on the
+long scoreboard just as much as the uniform-load kernel, and runs in the same
+time.  **The scheduler does NOT split the warp at a divergent scoreboard
+wait — it stalls the whole warp until the req SBs are satisfied.**  (The
+small pred edge, ~2% faster / ~3% less stall, is consistent with half the
+loads being issued, not with thread-level splitting: a true split would
+collapse the long-scoreboard stall toward ~0% and hide the load behind the
+post-load loop.)  Supports the wait-not-split microarchitecture for the
+checker: a predicated variable-latency producer must still be treated as
+setting its SB for the *warp*, and the consumer's `req` is mandatory.
+Caveat: single-warp test; multi-warp latency hiding is the SM scheduler's
+normal mechanism and does not change the per-warp wait behavior.
+
 ## 6. Suggested first slice (not yet designed in detail)
 
 1. Add labels + `BRA`/`BRX` to parser and encoder (branch offset math).
