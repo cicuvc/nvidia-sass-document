@@ -166,3 +166,45 @@ PTX `add.f16x2` → `HFMA2.MMA Rd, Ra, 1, 1, Rc` (via compiler lowering).
 - E8M7_V2/E6M9_V2 output formats: enum-defined but not verified in generated SASS
 - Const-bank (`RC`, `RCR`, `RCxR`, `RRCx`) and uniform (`RRU`, `RUR`) variants
   not yet verified
+
+## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+
+Probed with a clean kernel (`MOV32I` builds packed-fp16 operands, `HFMA2` RRR
+form, `STG` result).  Note: a 3×`LDG` harness kept returning 0 for the 2nd/3rd
+load (a hand-cubin multi-outstanding-load descriptor limitation), so operands
+were injected via `MOV32I` immediates instead — the FMA math itself is
+independent of how operands arrive.  `tests/asm_construct/test_hfma2.py` (16
+checks).
+
+**Per-lane FMA confirmed**: `Rd.lane = Ra.lane * Rb.lane + Rc.lane` with
+independent halfword lanes.  Distinct-lane case `(2,5)*(3,2)+(1,1) = (7,11)`
+verified exactly.
+
+**negate/abs on each source verified**: `-Ra`, `-Rb`, `-Rc`, `|Ra|`, `|Rb|`,
+`-|Ra|` all produce the expected signed FMA (`-2*3+1=-5`, `2*3-1=5`,
+`|-2|*3+1=7`, …).
+
+**.FTZ/.FMZ**: flush denormal inputs (denorm×2+1 → 1.0 regardless).
+
+**.RELU verified**: `max(0, Ra*Rb+Rc)` per lane — `2*3−10 → 0`, `2*3+1 → 7`.
+
+**Overflow**: fp16 FMA computes with fp32 intermediate then rounds —
+`65500*1+1 = 65504` (rounded, NOT inf), while `1000*100+1 = inf` (true
+overflow).
+
+### HFMA2.SAT hardware quirk (sm_120)
+
+**`.SAT` does NOT saturate to the fp16 finite range.**  On sm_120 `HFMA2.SAT`
+returns **1.0 (0x3c00) for any positive FMA result and 0.0 for a negative
+result** — even for non-overflowing inputs (`2*3+1 → 1.0`, not 7).  Confirmed
+by BOTH:
+1. this hand-built RRR encoding (`satrelu[79]|[77] = 0|1`), and
+2. ptxas's own RIR encoding via `__hfma2_sat` in a compiled host program
+   (ground truth: `__hfma2_sat(2,3,1)` printed 1.0 on the GPU).
+
+So the `satrelu=1` (SAT) mode behaves as a broken/atypical clamp on sm_120:
+`result <= 0 → 0`, `result > 0 → 1.0`.  `satrelu=2` (RELU) is the working
+activation (`max(0,·)`).  Treat `.SAT` on HFMA2 as unreliable on this chip;
+compilers that need true saturation use a different sequence.  (Cross-check:
+the sm_90 latency tables and this chip's behavior may differ — this is a
+Blackwell (sm_120) observation.)
