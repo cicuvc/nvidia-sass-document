@@ -127,3 +127,18 @@ Key compiler observations:
 
 - Const-bank variants (`fadd__RRC_RC`, `fadd__RRCx_RCx`) not yet verified
 - `FADD32I` (pipe-only alias) relationship to FADD not explored
+
+## Resolved (SM120 bit-level verification, 2026-08)
+
+`tests/asm_construct/test_fmul_fadd.py` (shared with FMUL) — **268/268 cases
+OK**, model `fma32(a, 1.0, c)` (product a*1 exact, single rounding of a+c).
+
+- **Single rounding** of `Ra + Rc`; RN/RM/RP/RZ per IEEE 754-2019; ties to
+  even.
+- **Zero-sum sign** (IEEE 754-2019 5.4.2): exact cancellation `a == -c` →
+  +0, **-0 under RM**; `+0 + -0` → +0 (RN/RZ/RP), -0 (RM).
+- **`.FTZ`** flushes denormal inputs and the denormal result to
+  sign-preserving zero (FADD has FTZ only — no FMZ field, unlike FMUL/FFMA).
+- **Denormal add of two denormals is exact** (`2^-149 + 2^-149 = 2^-148`),
+  and `2^-63 + 2^-86` is `2^-63 + 1ulp` (addend exactly one ULP).
+- NaN canonicalizes to **0x7fffffff** (incl. `inf + -inf`).

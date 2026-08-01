@@ -126,3 +126,23 @@ Key compiler observations:
 - `.scale` modifier: what PTX construct triggers D2/D4/D8/M2/M4/M8? Not yet tested
 - Const-bank variants (`fmul__RCR_RC`, `fmul__RCxR_RCx`) not yet verified
 - `FMUL32I` (pipe-only alias) relationship to FMUL not explored
+
+## Resolved (SM120 bit-level verification, 2026-08)
+
+`tests/asm_construct/test_fmul_fadd.py` (shared with FADD) — **268/268 cases
+OK**, model `fma32(a, b, +0)` with the exact-zero sign forced to the product
+sign.
+
+- **Single rounding** of the exact 48-bit product; RN/RM/RP/RZ follow IEEE
+  754-2019 4.3.3 exactly (ties to even, etc.).
+- **Zero-sign differs from FMA**: FMUL keeps the *product* sign for a ±0
+  result (`-2*+0 = -0`, `+0*-0 = -0`, `-0*-0 = +0`) in every rounding mode —
+  it does NOT apply the FMA zero-sum rule. The `fma32(a,b,+0)` shortcut must
+  be corrected for this (a plain `+0` addend would give `+0` / `-0(RM)`).
+- **`.scale` (cop [86:84]) is exact power-of-2 scaling** applied to the
+  result: M2/M4/M8 = ×2/×4/×8, D2/D4/D8 = ÷2/÷4/÷8, verified on hardware
+  (`FMUL.D2 1*2 → 1.0`). No rounding introduced; overflow→inf, underflow→
+  denormal/zero. (Likely used for the `__fmul_rn(x, 2^k)` / scaled idioms.)
+- **`.FMZ` == `.FTZ`** (flush denormal inputs + result), matching the FFMA
+  finding.
+- NaN canonicalizes to **0x7fffffff**.
