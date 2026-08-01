@@ -92,7 +92,7 @@ class SassEncoder:
         name = field["name"]
 
         if rk == "slot":
-            return sm.get(rhs)
+            return self._resolve_slot(rhs, sm)
 
         if rk == "slot_attr":
             return self._resolve_slot_attr(rhs, sm)
@@ -129,6 +129,22 @@ class SassEncoder:
             return self._eval_other_fn(rhs, sm, name)
 
         return None
+
+    # ------------------------------------------------------------------
+    def _resolve_slot(self, rhs: str, sm: dict) -> int | None:
+        """Resolve a FORMAT slot to its numeric value, applying any
+        `` SCALE <n>`` suffix on the ENCODING RHS (e.g. ``Sa SCALE 4``).
+
+        ``SCALE`` is a *decode* scale: logical value = field value * scale,
+        so encoding divides the logical (byte) value by the scale.
+        """
+        m = re.match(r"^(.+?)(?:\s+SCALE\s+(\d+))?$", rhs)
+        name = (m.group(1) or rhs).strip()
+        scale = int(m.group(2)) if m and m.group(2) else 1
+        v = sm.get(name)
+        if v is None:
+            return None
+        return v // scale if scale != 1 else v
 
     # ------------------------------------------------------------------
     def _resolve_slot_attr(self, rhs: str, sm: dict) -> int:

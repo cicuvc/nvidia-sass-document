@@ -22,6 +22,7 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.MEM_DESC:  {"DESC"},
     OperandKind.MEM_ADDR:  {"Register", "NonZeroRegister", "UniformRegister"},
     OperandKind.LABEL:     {"RSImm", "SImm", "UImm", "BD"},
+    OperandKind.BAR:       {"BD"},
     OperandKind.PR:        {"PR"},
     OperandKind.NP:        {"NP"},
 }
@@ -503,6 +504,8 @@ class SassMatcher:
             return None
         if st == "PR":
             return 0
+        if st == "BD":
+            return v if isinstance(v, int) else None
         if st == "NP":
             return v if isinstance(v, int) else None
         if st == "SpecialRegister":

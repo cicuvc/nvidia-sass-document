@@ -11,6 +11,8 @@ TOKENS = [
     ("NEWLINE", r"\n|\r\n?"),
     ("SKIP", r"[ \t]+"),
     ("FN_DIRECTIVE", r"#fn\b"),
+    ("DEF_LABEL_DIRECTIVE", r"#def_label\b"),
+    ("LABEL_REF_DIRECTIVE", r"#label\b"),
     ("PARAM_DIRECTIVE", r"#param\b"),
     ("PRAGMA_DIRECTIVE", r"#pragma\b"),
     ("COMMENT", r"#[^\n]*|//[^\n]*"),
@@ -38,6 +40,7 @@ TOKENS = [
     ("UREG", r"UR(?:Z|[0-9]+)\b"),
     ("PRED", r"(?:P[0-6]|PT)\b"),
     ("UPRED", r"(?:UP[0-6]|UPT)\b"),
+    ("BAR", r"(?<!\.)B(?:15|1[0-4]|[0-9])\b"),
     ("IDENT", r"[A-Za-z_][A-Za-z0-9_]*"),
 ]
 
@@ -115,7 +118,9 @@ class Parser:
             if t.type == "NEWLINE":
                 self.pop()
                 continue
-            if t.type == "IDENT" and self._is_label():
+            if t.type == "DEF_LABEL_DIRECTIVE":
+                insts.append(self._parse_def_label())
+            elif t.type == "IDENT" and self._is_label():
                 insts.append(self._parse_label_only())
             else:
                 insts.append(self._parse_instruction())
@@ -123,6 +128,13 @@ class Parser:
             while self.peek() and self.peek().type == "NEWLINE":
                 self.pop()
         return insts
+
+    def _parse_def_label(self) -> ParsedInstruction:
+        self.pop()  # #def_label
+        self.expect("LPAREN")
+        name_t = self.expect("IDENT")
+        self.expect("RPAREN")
+        return ParsedInstruction(mnemonic="_label_", label=name_t.text, operands=[])
 
     def _is_label(self) -> bool:
         # label is IDENT followed by ':'
@@ -304,6 +316,19 @@ class Parser:
             self.pop()
             return Operand(OperandKind.PR, 0)
 
+        # bar register: B0..B15 (BSSY/BSYNC sync-stack id, BAR.SYNC etc.)
+        if t.type == "BAR":
+            self.pop()
+            return Operand(OperandKind.BAR, int(t.text[1:]))
+
+        # label reference: #label(name)
+        if t.type == "LABEL_REF_DIRECTIVE":
+            self.pop()
+            self.expect("LPAREN")
+            name_t = self.expect("IDENT")
+            self.expect("RPAREN")
+            return Operand(OperandKind.LABEL, name_t.text)
+
         # param reference: #param(name)
         if t.type == "PARAM_DIRECTIVE":
             return self._parse_param_ref()
@@ -456,7 +481,9 @@ class Parser:
             if t.type == "PRAGMA_DIRECTIVE":
                 self._parse_pragma(decl)
                 continue
-            if t.type == "IDENT" and self._is_label():
+            if t.type == "DEF_LABEL_DIRECTIVE":
+                decl.instructions.append(self._parse_def_label())
+            elif t.type == "IDENT" and self._is_label():
                 decl.instructions.append(self._parse_label_only())
             else:
                 inst = self._parse_instruction()

@@ -20,6 +20,7 @@ class OperandKind(enum.Enum):
     PARAM_REF = "PARAM_REF"
     PR = "PR"
     NP = "NP"
+    BAR = "BAR"
 
 
 @dataclass

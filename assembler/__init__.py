@@ -53,6 +53,44 @@ def _make_matcher_encoder():
     return _Matcher(db), SassEncoder(db)
 
 
+def _resolve_labels_and_encode(insts, matcher, encoder):
+    """Two-pass encode with PC-relative label resolution.
+
+    Pass 1: each non-label instruction occupies 16 bytes; build the
+    label→byte-offset map.  Pass 2: replace every LABEL operand with the
+    relative byte offset ``target - next_pc`` (branch fields are scaled
+    PC-relative, base = the following instruction), then match + encode.
+    """
+    from .operand import OperandKind
+
+    addrs = []
+    labels = {}
+    addr = 0
+    for inst in insts:
+        if inst.mnemonic == "_label_":
+            labels.setdefault(inst.label, addr)
+            addrs.append(None)
+        else:
+            addrs.append(addr)
+            addr += 16
+
+    encoded = []
+    for inst, ia in zip(insts, addrs):
+        if inst.mnemonic == "_label_":
+            continue
+        for op in inst.operands:
+            if op.kind == OperandKind.LABEL:
+                target = labels.get(op.value)
+                if target is None:
+                    raise ValueError(f"undefined label {op.value!r}")
+                op.kind = OperandKind.IMM_S
+                op.value = target - (ia + 16)
+        r = matcher.match(inst)
+        lo, hi = encoder.encode(r, inst.sched)
+        encoded.append((lo, hi))
+    return encoded
+
+
 # ---------------------------------------------------------------------------
 @dataclass
 class AssembleResult:
@@ -77,13 +115,7 @@ def assemble(source: str, kernel_name: str = "") -> bytes:
     insts = parse_sass(source)
     matcher, encoder = _make_matcher_encoder()
     cb = CubinBuilder()
-    encoded = []
-    for inst in insts:
-        if inst.mnemonic == "_label_":
-            continue
-        r = matcher.match(inst)
-        lo, hi = encoder.encode(r, inst.sched)
-        encoded.append((lo, hi))
+    encoded = _resolve_labels_and_encode(insts, matcher, encoder)
     cb.set_code(encoded, kernel_name=kernel_name)
     cb.set_regcount(8)
     return cb.build()
@@ -94,11 +126,7 @@ def assemble_kernel(source: str) -> AssembleResult:
     k = parse_kernel(source)
     matcher, encoder = _make_matcher_encoder()
     cb = CubinBuilder()
-    encoded = []
-    for inst in k.instructions:
-        r = matcher.match(inst)
-        lo, hi = encoder.encode(r, inst.sched)
-        encoded.append((lo, hi))
+    encoded = _resolve_labels_and_encode(k.instructions, matcher, encoder)
     cb.set_code(encoded, kernel_name=k.name)
     if k.params:
         cb.set_params([(i, p.ordinal, p.size)
@@ -121,5 +149,4 @@ def assemble_flat(source: str) -> list[tuple[int, int]]:
     """Assemble plain SASS (no ``#fn``) → list of ``(lo64, hi64)``."""
     insts = parse_sass(source)
     matcher, encoder = _make_matcher_encoder()
-    return [(encoder.encode(matcher.match(inst), inst.sched))
-            for inst in insts if inst.mnemonic != "_label_"]
+    return _resolve_labels_and_encode(insts, matcher, encoder)
