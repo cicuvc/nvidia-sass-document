@@ -92,3 +92,14 @@ Hand-check const signed off: field `0x3d78` → sx14 = `-648` → `-648*4 = -0xa
   `.DIV`/`.CONV` usage) are unobserved; only the patch-derived rendering is confirmed.
 - `RTV banks` (24–31) and the `depth` (`.INC`/`.DEC`) call-depth semantics for `JMP` are
   spec-defined but unexercised here.
+
+## Resolved: absolute semantics confirmed; labels do NOT work for JMP (SM120)
+
+Empirically confirmed (SM120, `tests/asm_construct/test_jmp.py`): JMP imm
+(`target = Sa*4`, no PC) — a `JMP #label(x)` that the assembler resolves
+PC-relative (as it does for BRA) faults with ILLEGAL_ADDRESS because JMP
+treats the field as a tiny ABSOLUTE address.  Gotcha for the hand assembler:
+**JMP targets must be absolute; the label mechanism (next_pc-relative) is only
+valid for BRA**.  The uniform forms encode with the explicit cond modifier:
+`JMP.DIV UR4, 0x490` / `JMP.CONV UR4, 0x490` (COND_DIV_CONV_jmp: DIV=2,
+CONV=3, no default) and `JMP.U UP0, ...` (UONLY: U=1).
