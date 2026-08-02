@@ -54,3 +54,21 @@ Not emitted by ptxas on sm_90/CUDA 13.1. Ground truth via **cubin-patching + nvd
 ## Open questions
 - Exact runtime target formula (`Ra + off` absolute vs. relative-to-anchor) since `Ra` is a runtime value.
 - Real-world jump-table idiom is unobserved because ptxas never emitted these in the sampled code.
+
+## Resolved: target = next_pc + Ra + off — Ra is a KERNEL-RELATIVE offset (SM120)
+
+Empirically verified (`tests/asm_construct/test_brx.py`): `BRX Ra, off` branches
+to **`next_pc + (sign-extended Ra:R(a+1)) + off*4`** — the register holds a
+**signed byte offset relative to the next instruction**, NOT an absolute target:
+
+```
+BRX R4, #label(x)   with R4 =  0 -> lands on x (assembler fills off=(x-next_pc)/4)
+                      R4 = 0x10 -> lands at x+0x10
+                      R4 = 0x20 -> lands at x+0x20
+```
+A huge/absolute `Ra` (e.g. TRAP_RETURN_PC = an absolute address) makes
+`target = next_pc + huge` → out of range → ILLEGAL_ADDRESS / INVALID_PC,
+confirming Ra is not an absolute target. This is why libcusparse sign-extends
+the 32-bit jump-table entry with `SHF.R.S32.HI R5, RZ, 0x1f, R4` before `BRX
+R4 -0x110`: the table entries are kernel-relative offsets and BRX adds them to
+the next-PC base plus the encoded offset.
