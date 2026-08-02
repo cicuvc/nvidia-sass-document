@@ -155,3 +155,11 @@ and are only READ-able (they read the live PC during divergence as a side
 effect).  Consequence: one cannot set TRAP_RETURN_PC to a valid PC and then
 NANOTRAP to make the trap "return" there; NANOTRAP is swallowed and execution
 continues fall-through.
+
+## Resolved: RTT (0x94f) is the privileged trap-return instruction (SM120, 2026-08)
+
+`RTT` returns to TRAP_RETURN_PC but is privileged — ILLEGAL_INSTRUCTION (715)
+from user code even with TRPC set via BSSY.  Completes the trap-return picture:
+TRPC is write-protected (set by the trap machinery only), RTT runs only inside
+a trap handler, and NANOTRAP's injected trap is handled internally (no
+user-visible return).  See `nanotrap.md`.

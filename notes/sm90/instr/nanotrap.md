@@ -79,3 +79,16 @@ the no-trap control (per-lane stores, `tests/asm_construct/test_trpc_write.py`
 setup).  So TRPC is NOT a NANOTRAP return target; the injected trap is handled
 internally without a TRPC-based return.  (An earlier apparent "jump" was a
 same-address store race between the two divergent paths.)
+
+## Resolved: RTT is the privileged trap-return instruction (SM120, 2026-08)
+
+`RTT` (0x94f, cbu_pipe, BRANCH_TYPE=BRT_RETURN) is the trap-handler RETURN
+instruction — it returns to TRAP_RETURN_PC.  It is **privileged**: executing it
+from ordinary user code (outside a trap-handler context) raises
+ILLEGAL_INSTRUCTION (715), even when TRAP_RETURN_PC is legitimately set via
+BSSY's divergence side effect (`tests/asm_construct/test_rtt.py`).  Its opex
+uses TABLES_opex_2 — only stall=0 is a legal scheduling value
+(`[7:7:{}:5:1]` is rejected as an illegal batch/usched combination;
+`RTT;[7:7:{}:0:1]` encodes to lo=0x000000000000794f).  So the full trap-return
+path (TRPC write, RTT execute) is trap-machinery-only and not invocable from
+user SASS; NANOTRAP's injected trap is handled internally.
