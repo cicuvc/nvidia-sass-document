@@ -89,3 +89,32 @@ Common immediate patterns:
 ## Latency
 
 `int_pipe`, `FXU_OPS` group. Standard integer-pipe latency (1 cycle typical). Coupled scoreboard.
+
+## Resolved: silicon-verified semantics + operand-order correction (SM120)
+
+`tests/asm_construct/test_prmt.py` (34 cases) + `tools/decode_*` round-trip.
+**Critical correction to the spec-derived operand order** — the SASS form is
+`PRMT Rd, Ra, Rb, Rc` with **Rb = SELECTOR and Rc = source B**:
+
+| form | opcode | syntax | roles |
+|------|--------|--------|-------|
+| RRR  | 0x216  | `PRMT Rd, Ra, Rb, Rc` | Ra=srcA, **Rb=selector**, Rc=srcB |
+| RIR  | 0x816  | `PRMT Rd, Ra, imm, Rc` | Ra=srcA, **imm=selector**, Rc=srcB |
+| RRuI | 0x416  | `PRMT Rd, Ra, Rb, imm` | Ra=srcA, **Rb=selector**, imm=srcB |
+
+The selector is the THIRD operand (or imm), source B is the FOURTH.  This
+only surfaced under silicon test — the ptxas RRR emission puts sel in the 4th
+slot, but the hardware reads the 3rd as selector (ptxas arranges its operands
+accordingly).  Wrong order silently permutes the wrong registers.
+
+IDX selector: 16-bit, LSB-first nibbles (c[3:0] -> d.b0 ... c[15:12] -> d.b3).
+nibble 0-7 = copy source byte n; nibble 8-15 = sign-extend byte (n-8): the
+output byte becomes 0xFF if the source byte's bit 7 is set, else 0x00.
+
+Specialized modes (F4E/B4E/RC8/ECL/ECR/RC16): all four outputs use the SAME
+selector c[1:0], picking a fixed 4-row pattern (verified for all 4 rows each).
+
+Hand-assembler gotchas: PRMT is int_pipe COUPLED_MATH — no own scoreboard
+(dst_wr_sb=*7); load all inputs (incl. the selector) with `wr=SB1` and let
+`PRMT req={1}` wait, or MOV32I+NOPs.  The result writeback needs a few
+instructions before an immediate store reads it.
