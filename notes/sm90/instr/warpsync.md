@@ -182,14 +182,17 @@ The hardware bypasses the CBU divergence machinery there, so:
 This matches the real idiom (libcusparse) where the region body is a bare NOP
 and every divergent branch is placed outside the bracket.
 
-## Resolved: EXCLUSIVE mode = decode-legal but indistinguishable from plain (SM120)
+## Resolved: EXCLUSIVE mode is behaviorally identical to plain (SM120, 2026-08)
 
-`WARPSYNC.EXCLUSIVE R<Ra>` (depth=1, `DIV__EXCLUSIVE`) is never emitted by
-ptxas (0 in libcusparse; 0 across sm_75/sm_80/sm_86/sm_90 compilations). On
-sm_120 it behaves identically to plain `WARPSYNC R<Ra>` in every externally
-observable scenario: identical mask-acceptance (executor ⊆ mask else 715),
-identical full-mask blocking (deadlock when mask lanes never arrive), identical
-same-PC convergence requirement (deadlock when the mask lanes hit the sync at
-different PCs), and both accept superset and exact masks. The likely real
-difference is in the CBU-internal reconvergence-PC (RPC) interaction or a
-scheduling hint — not observable via the register/memory/control interface.
+`WARPSYNC.EXCLUSIVE R<Ra>` (depth=1) is decode-legal but **never emitted by
+ptxas** (0 occurrences in libcusparse's 59448 WARPSYNC; 0 across sm_75..sm_90
+compilations of syncwarp patterns). On sm_120 it is behaviorally
+indistinguishable from plain `WARPSYNC R<Ra>` in every observable scenario:
+mask-acceptance rule (executor ⊆ mask, else 715), full-mask blocking (deadlock
+when a mask lane never arrives), same-PC convergence requirement (deadlock
+when mask lanes hit different PCs), and superset-vs-exact mask acceptance.
+The only plausible differences left are not externally observable: the
+`DIV__EXCLUSIVE` name ("div" = divergence) suggests EXCLUSIVE is a pure
+barrier that does NOT participate in divergence/reconvergence (RPC) handling
+— a scheduling/RPC-level nuance. No evidence of an observable semantic
+difference on sm_120.
