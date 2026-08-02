@@ -118,3 +118,22 @@ Hand-assembler gotchas: PRMT is int_pipe COUPLED_MATH — no own scoreboard
 (dst_wr_sb=*7); load all inputs (incl. the selector) with `wr=SB1` and let
 `PRMT req={1}` wait, or MOV32I+NOPs.  The result writeback needs a few
 instructions before an immediate store reads it.
+
+## PRMT -> STG back-to-back: minimum stall = 0
+
+Measured on SM120: `PRMT R10, R0, R4, R1` immediately followed by
+`STG.E ..., R10` (no NOP / no intervening instruction) produces the correct
+result at **every** stall 0..15.  There is no functional minimum — stall=0
+works.  The LSU's data-read stage lands after the int_pipe PRMT writeback, so
+the consumer does not need a scheduler gap.
+
+Caveats that DO matter (separate from the data path):
+- The PRMT stall gates its *inputs* (the `req={1}` waits on the LDC-loaded
+  sources), not the PRMT->STG output gap.
+- The result STG must still see a valid descriptor (UR4) and address (R2):
+  in the minimal kernel (STG with `req={}` as the FIRST store) the descriptor/
+  address loads weren't reliably landed and faulted 700.  Either give them
+  their own scoreboards and `req` them, or let earlier stores (which waited
+  `req={1}`) land them first.
+- Valid stall range for PRMT is 0..15; stall=16 encodes an illegal
+  batch_t/usched_info combo (TABLES_opex_7) — rejected at assemble time.
