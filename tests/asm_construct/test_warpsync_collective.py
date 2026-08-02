@@ -151,5 +151,61 @@ try:
 except subprocess.TimeoutExpired:
     check("mask not covering executing lane -> ILLEGAL_INSTRUCTION", "timeout", "FAULT")
 
+
+
+
+# ---- lockstep-zone: divergent ops inside the region are illegal -------------
+import subprocess as _sp
+_LOCK = r'''
+import sys, struct
+sys.path.insert(0, "__BASE__")
+from assembler import assemble, CudaModule
+mode = sys.argv[1]
+pre = ["    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
+       "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+       "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
+       "    MOV32I R5, 0xFFFFFFFF;[7:7:{}:5:1]",
+       "    ISETP.LT.AND P0, PT, R2, 0x10, PT;[7:7:{0}:13:1]",
+       "    BSSY B1, #label(loop);[7:7:{}:5:1]",
+       "    WARPSYNC.COLLECTIVE R5, #label(sync);[7:7:{}:5:1]"]
+if mode == "predbra":
+    mid = ["    @P0 BRA #label(inside);[7:7:{}:5:1]",
+           "    MOV32I R20, 0x1;[7:7:{}:5:1]",
+           "    #def_label(inside)"]
+elif mode == "predmov":
+    mid = ["    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
+           "    @P0 MOV32I R20, 0x11111111;[7:7:{}:5:1]"]
+elif mode == "bssy":
+    mid = ["    BSSY B2, #label(i);[7:7:{}:5:1]", "    BSYNC B2;[7:7:{}:5:1]",
+           "    #def_label(i)"]
+elif mode == "exit":
+    mid = ["    @P0 EXIT;[7:7:{}:5:0]", "    MOV32I R20, 0x1;[7:7:{}:5:1]"]
+lines = ["#fn k(buf<1024>) {"] + pre + mid + [
+         "    ENDCOLLECTIVE;[7:7:{}:5:1]",
+         "    #def_label(sync)", "    BSYNC B1;[7:7:{}:5:1]",
+         "    #def_label(loop)", "    EXIT;[7:7:{}:5:0]", "}"]
+cubin = assemble("\n".join(lines))
+mod = CudaModule(cubin)
+d = mod.devmem_alloc(1024)
+mod.device_write(d, struct.pack("<256I", *[0]*256))
+try:
+    mod.launch("k", grid=(1,), block=(32,), args=[d]); mod.synchronize()
+    print("OK")
+except RuntimeError as e:
+    print("FAULT", str(e)[:30])
+'''
+BASE = str(Path(__file__).resolve().parents[2])
+def inside_region_ok(mode):
+    r = _sp.run([sys.executable, "-c", _LOCK.replace("__BASE__", BASE), mode],
+                capture_output=True, text=True, timeout=15)
+    return r.stdout.strip().startswith("OK")
+check("predicated BRA inside region -> ILLEGAL (lockstep zone)",
+      "FAULT" if not inside_region_ok("predbra") else "OK", "FAULT")
+check("nested BSSY/BSYNC inside region -> ILLEGAL",
+      "FAULT" if not inside_region_ok("bssy") else "OK", "FAULT")
+check("@P0 EXIT inside region -> ILLEGAL",
+      "FAULT" if not inside_region_ok("exit") else "OK", "FAULT")
+check("predicated MOV inside region -> OK (data predication allowed)",
+      "OK" if inside_region_ok("predmov") else "FAULT", "OK")
 print(f"\n=== WARPSYNC.COLLECTIVE / ENDCOLLECTIVE: {'ALL PASS' if ok else 'FAILURES'} ===")
 sys.exit(0 if ok else 1)

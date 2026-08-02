@@ -156,3 +156,28 @@ LOOP: ...
    mask is clamped to the active set, not the declared value); with all 32
    active it reads 0xFFFFFFFF.
 3. **`ENDCOLLECTIVE` clears `MCOLLECTIVE`** (reads 0x0 after the region).
+
+## Resolved: COLLECTIVE region = lockstep / CBU-bypassed zone (SM120, 2026-08)
+
+Constructing instructions *inside* the `WARPSYNC.COLLECTIVE … ENDCOLLECTIVE`
+region (all 32 lanes, mask 0xFFFFFFFF valid) shows what the hardware forbids:
+
+| inside the region | result |
+|-------------------|--------|
+| `@P0 MOV32I` (data predication) | OK |
+| unconditional `BRA` (uniform) | OK |
+| `@P0 BRA` (predicated, uniform OR divergent) | **715** |
+| `BSSY`/`BSYNC` (even non-divergent) | **715** |
+| `WARPSYNC.ALL` | **715** |
+| `@P0 EXIT` (lane leaves) | **715** |
+
+**Interpretation:** the region is a **lockstep / guaranteed-converged zone**.
+The hardware bypasses the CBU divergence machinery there, so:
+- a *predicated branch* is rejected at decode regardless of the (possibly
+  uniform) predicate value — it is the divergence entry point;
+- the convergence-barrier ops (BSSY/BSYNC/WARPSYNC) are rejected (meaningless /
+  would need CBU state);
+- `EXIT` is rejected (lanes may not leave the collective);
+- unconditional uniform branches and data-predicated ops still execute.
+This matches the real idiom (libcusparse) where the region body is a bare NOP
+and every divergent branch is placed outside the bracket.

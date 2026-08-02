@@ -86,3 +86,10 @@ inside the region, 0 after). The region is always BSSY/BSYNC-wrapped; the
 WARPSYNC target points at the instruction after `ENDCOLLECTIVE` (the BSYNC).
 A lane executing `WARPSYNC.COLLECTIVE` that is not covered by `Rmask` raises
 `ILLEGAL_INSTRUCTION` (715).
+
+## Resolved: region forbids divergence/exit/CBU ops (SM120, 2026-08)
+
+Instructions *inside* the `WARPSYNC.COLLECTIVE … ENDCOLLECTIVE` region are
+restricted to uniform control flow + data predication: a predicated branch
+(even with a uniform predicate), a nested BSSY/BSYNC, a WARPSYNC, or a partial
+`EXIT` all raise ILLEGAL_INSTRUCTION (715). See `warpsync.md` "lockstep zone".
