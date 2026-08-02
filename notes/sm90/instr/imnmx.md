@@ -142,3 +142,24 @@ Same semantics as VIMNMX on sm_90, but without the `.RELU` modifier and
 - What triggers the VIMNMX `_pred` variant (with Pu predicate input)?
 - Does VIMNMX `.RELU` map to PTX `min.relu.s32` or is it only for certain reduction patterns?
 - At what architecture boundary (sm_8x?) did ptxas switch from IMNMX to VIMNMX?
+
+## Resolved: SM120 (Blackwell+) extended form — silicon-verified
+
+`tests/asm_construct/test_imnmx.py` verifies the 6-operand form that Blackwell
+added on top of the sm90 4-operand form:
+```
+IMNMX[.U32|.U64|.S64] Pu, Pv, Rd, Ra, Rb, [!]Pp, [!]Pq     (plain = .S32)
+IMNMX[.S32] Pu, Pv, Rd, Ra, Rb, [!]Pp                       (5-op nopred)
+```
+Semantics (66-case battery, all pass):
+- `comp = (Ra <= Rb)` in the fmt domain, then `comp |= Pq` (Pq=1 forces the
+  compare true = select mode). Pq effective value = Pq xor @not.
+- min (`Pp=PT`): `Rd = comp ? Ra : Rb`; max (`Pp=!PT`): `Rd = comp ? Rb : Ra`.
+- `Pu = "Ra is the result source"` (min: comp; max: !comp).
+- `Pv = (Ra != Rb) OR Pq`.
+- U64/S64 compare 64-bit register pairs; U32/S32 are 32-bit.
+- RIR (imm Rb) and RUR (uniform Rb) forms verified; `.reuse` on Ra/Rb.
+
+Hand-assembler gotchas: the 64-bit source pairs must NOT use R6/R7 (they hold
+the store address) — the register-reuse clobbered the address and faulted with
+700/717 until moved to R10/R11/R12/R13.

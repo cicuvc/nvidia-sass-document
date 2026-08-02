@@ -62,3 +62,18 @@ Decoder: `tools/decode_iabs.py`. Test: `tests/iabs_test.cu`.
 
 ## Open questions
 - None significant; the non-RRR operand forms are unverified in text form (ptxas prefers RRR).
+
+## Resolved: RUR form silicon-verified (SM120)
+
+`tests/asm_construct/test_iabs.py` now verifies all three source forms
+(RRR / RsIR imm32 / RUR uniform), 11 cases. RUR: `IABS Rd, URb` with the value
+in a uniform register loaded by `LDCU`.
+
+Hand-assembler gotchas (both were silent 715 faults):
+1. Do NOT load the uniform source into UR5 — `LDCU.64 UR4, ...` loads the
+   **64-bit cache descriptor into UR4:UR5**, so UR5 is the descriptor high
+   half; overwriting it corrupts every `desc[UR4]` access → invalid-address
+   715. Use a different uniform register (UR3).
+2. `LDCU` is variable-latency (DECOUPLED_RD_WR_SCBD): the consuming `IABS`
+   must wait on the LDCU's write scoreboard (`req={2}` when the LDCU used
+   `wr=2`), otherwise the read races ahead and returns stale data.
