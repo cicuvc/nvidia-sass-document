@@ -526,7 +526,14 @@ class Parser:
         if t is None:
             raise SyntaxError("unexpected EOF in memory address")
         base = self._parse_operand_inner()
-        # base already consumed its .width suffix; don't call _parse_width_suffix again
+        # optional uniform-register index: [RZ + URb + off] (LDS/STS uniform)
+        addr_ureg = None
+        if self.peek() and self.peek().type == "PLUS":
+            nxt = self.peek2()
+            if nxt and nxt.type == "UREG":
+                self.pop()
+                self.pop()
+                addr_ureg = 255 if nxt.text.upper() == "URZ" else int(nxt.text[2:])
         offset = 0
         if self.peek() and self.peek().type in ("PLUS", "MINUS"):
             sign = 1 if self.pop().type == "PLUS" else -1
@@ -536,6 +543,7 @@ class Parser:
         op = Operand.mem_addr(base, offset=offset)
         op.width = base.width
         op.regs = base.regs
+        op.addr_ureg = addr_ureg
         return op
 
     def parse_kernel(self) -> KernelDecl:

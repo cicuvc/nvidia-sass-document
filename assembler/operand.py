@@ -74,6 +74,7 @@ class Operand:
     offset: int = 0
     bank: int = 0
     addr_reg: int = 0
+    addr_ureg: int | None = None   # LDS/STS uniform variant: [RZ + URb + off]
     iswz: int | None = None      # HFMA2/HADD2 lane swizzle (ISWZ* enum value)
     regs: list[int] | None = None  # explicit multi-reg list {Ra,Rb}/{Ra,Rb,Rc,Rd};
                                    # value == regs[0], width == len(regs)*32

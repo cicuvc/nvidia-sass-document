@@ -132,6 +132,8 @@ def assemble_kernel(source: str) -> AssembleResult:
         cb.set_params([(i, p.ordinal, p.size)
                        for i, p in enumerate(k.params)])
     cb.set_regcount(int(k.attributes.get("MAXREG_COUNT", 8)))
+    if "SHARED" in k.attributes:
+        cb.set_shared_mem(int(k.attributes["SHARED"]))
     if "SHADER_TYPE" in k.attributes:
         cb.set_shader_type(int(k.attributes["SHADER_TYPE"]))
     for attr_name, attr_val in k.attributes.items():

@@ -184,3 +184,26 @@ All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
 - **Graphics shader restriction**: The `$ST_CS` constraint suggests separate LDS
   encodings or entirely different shared-memory instructions exist for graphics
   pipelines (VS/GS/TS/PS).
+
+## Resolved: silicon-verified semantics + shared-memory window (SM120)
+
+`tests/asm_construct/test_lds_sts.py` verifies:
+- STS/LDS 32-bit roundtrip at byte offsets 0..0x3FFC (dynamic 16KB shared);
+  multi-lane `shared[tid]=tid`; register and immediate addressing.
+- Narrow loads: LDS.U8/S8/U16/S16 sign/zero-extension from any byte/half
+  offset (0x81 -> U8 0x81 / S8 0xffffff81; byte 3 0x84 -> S8 0xffffff84).
+- STS.64/LDS.64 register-pair roundtrip.  Widths need even/quad-aligned
+  registers (MISALIGNED_REG_ERROR otherwise).
+
+Hand-assembler gotchas:
+- **Shared memory window**: the SM120 driver maps only ~1KB per CTA for a
+  kernel with no declared shared; LDS/STS beyond it fault 700.  The reliable
+  way to get a bigger window in hand-built cubins is to pass the size as the
+  dynamic `shared_mem` launch parameter (verified up to 16KB).  A static
+  `.nv.shared.<kernel>` NOBITS section (`#pragma SHARED(n)`) is now emitted
+  (matching nvcc's flags=0x43/align=4) and cuobjdump reports the smem, but
+  the driver does not yet allocate from it — the exact association mechanism
+  (nvcc's section has sh_info pointing at the merc info + a local STT_OBJECT
+  symbol) is unresolved.
+- LDS/STS address brackets `[Ra + URb + off]` (uniform variant, STRIDE
+  .X1/.X4/.X8/.X16) are parsed as one operand group now.

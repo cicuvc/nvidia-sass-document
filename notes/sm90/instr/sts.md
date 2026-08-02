@@ -186,3 +186,13 @@ The `1<<24` per-rank delta confirms the DSMEM slicing. See `s2ur.md`
 - **`sts_uniform_` (URc variant)**: What triggers the uniform register form?
 - **Why URc at [69:64] vs LDS's URb at [37:32]?** The bit position difference
   is notable — possibly reflects a different micro-architectural pipeline slot.
+
+## Resolved: silicon-verified (SM120)
+
+`tests/asm_construct/test_lds_sts.py` confirms STS shares the LDS addressing/
+window semantics (see lds.md): 32-bit/64-bit stores, narrow stores
+(U8/S8/U16/S16), immediate and register offsets, uniform `[RZ+URb+off]`.
+STS is DECOUPLED_RD_SCBD (no result scoreboard — there is no destination
+register); the stored data register must be scoreboard-ready like any input.
+Shared-window allocation note in lds.md applies (dynamic shared_mem at
+launch; static section not yet consumed by the driver).

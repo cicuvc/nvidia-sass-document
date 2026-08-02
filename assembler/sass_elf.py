@@ -216,6 +216,7 @@ class CubinBuilder:
         self._exit_offsets: list[int] = []
         self._params: list[tuple[int, int, int]] = []
         self._pragma_attrs: dict[str, str] = {}
+        self._shared_mem = 0
 
     def set_code(self, instructions: list[tuple[int, int]],
                  kernel_name: str = "my_kernel") -> None:
@@ -230,6 +231,11 @@ class CubinBuilder:
 
     def set_shader_type(self, st: int) -> None:
         self._shader_type = st
+
+    def set_shared_mem(self, size: int) -> None:
+        """Static shared-memory size (bytes) → .nv.shared.<kernel> NOBITS
+        section so the driver allocates the CTA shared window."""
+        self._shared_mem = size
 
     def set_pragma(self, key: str, value: str) -> None:
         self._pragma_attrs[key] = value
@@ -363,6 +369,10 @@ class CubinBuilder:
                               size=len(self._instructions) * 16)
         sym_c0 = symtab.add(strtab.add(f".nv.constant0.{mn}"),
                             STB_LOCAL, STT_SECTION, 0)
+        sym_shared = None
+        if self._shared_mem:
+            sym_shared = symtab.add(strtab.add(f".nv.shared.{mn}"),
+                                    STB_LOCAL, STT_OBJECT, 0)
 
         # 7: .nv.info (device-wide)
         # Auto-compute regcount from instructions — latest register used
@@ -446,6 +456,14 @@ class CubinBuilder:
         sec(".nv.shared.reserved.0", SHT_NOBITS, content=b"\x00" * 0x40,
             flags=SHF_WRITE | SHF_ALLOC, align=1, nobits=True)
 
+        # 13b: .nv.shared.<kernel> — static shared memory the kernel uses
+        # (LDS/STS window).  The driver allocates this many bytes per CTA.
+        # flags = SHF_WRITE|SHF_ALLOC|SHF_INFO_LINK (0x43), matching nvcc —
+        # the SHF_INFO_LINK bit is what marks it as the real shared image.
+        if self._shared_mem:
+            sec(f".nv.shared.{mn}", SHT_NOBITS, content=b"\x00" * self._shared_mem,
+                flags=SHF_WRITE | SHF_ALLOC | SHF_INFO_LINK, align=4, nobits=True)
+
         # 14: .nv.constant0._Z<name>
         c0_size = 0x380 + total_ps
         sec(f".nv.constant0.{mn}", SHT_PROGBITS, content=b"\x00" * c0_size,
@@ -467,6 +485,7 @@ class CubinBuilder:
         shmem_sec_name = ".nv.shared.reserved.0"
         cg_sec_name = ".nv.callgraph"
         c0_sec_name = f".nv.constant0.{mn}"
+        shared_sec_name = f".nv.shared.{mn}" if self._shared_mem else None
 
         for i, s in enumerate(secs):
             if s.name == text_sec_name:
@@ -477,6 +496,8 @@ class CubinBuilder:
                 cg_sec_idx = i
             if s.name == c0_sec_name:
                 c0_sec_idx = i
+            if shared_sec_name and s.name == shared_sec_name:
+                shared_sec_idx = i
 
         symtab.entries[sym_text].st_shndx = text_sec_idx
         symtab.entries[sym_rsm].st_shndx = shmem_sec_idx
@@ -484,6 +505,14 @@ class CubinBuilder:
         symtab.entries[sym_cg].st_shndx = cg_sec_idx
         symtab.entries[sym_func].st_shndx = text_sec_idx
         symtab.entries[sym_c0].st_shndx = c0_sec_idx
+        if sym_shared is not None:
+            symtab.entries[sym_shared].st_shndx = shared_sec_idx
+            # mirror nvcc: the .nv.shared.<kernel> section's sh_info links to
+            # the per-kernel .nv.info section (so the driver associates the
+            # shared allocation with this function).
+            nvinfo_krn_idx = next(i for i, s in enumerate(secs)
+                                  if s.name == f".nv.info.{mn}")
+            secs[shared_sec_idx].info_idx = nvinfo_krn_idx
 
         # Fix link/info
         symtab_idx = next(i for i, s in enumerate(secs) if s.name == ".symtab")

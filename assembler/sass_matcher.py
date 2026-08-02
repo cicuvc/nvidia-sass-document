@@ -297,11 +297,15 @@ class SassMatcher:
             comma_positions = []
 
         if not comma_positions:
+            depths = self._slot_bracket_depths(raw_fmt)
             groups: list[list[dict]] = []
             for s in operand_slots:
                 if s["type"] in COMPOSITE_TYPES:
                     groups.append([s])
-                elif groups and groups[-1][0]["type"] in COMPOSITE_TYPES:
+                elif groups and (groups[-1][0]["type"] in COMPOSITE_TYPES
+                                 or (depths.get(groups[-1][0]["name"], 0) > 0
+                                     and depths.get(groups[-1][0]["name"], 0)
+                                     == depths.get(s["name"], 0))):
                     groups[-1].append(s)
                 else:
                     groups.append([s])
@@ -309,6 +313,7 @@ class SassMatcher:
 
         segments = self._split_into_segments(cleaned, comma_positions)
         group_slot_names = self._assign_slots_to_segments(segments, slots)
+        depths = self._slot_bracket_depths(raw_fmt)
 
         groups = []
         for names in group_slot_names:
@@ -317,13 +322,32 @@ class SassMatcher:
             for s in grp:
                 if s["type"] in COMPOSITE_TYPES:
                     merged.append([s])
-                elif merged and merged[-1][0]["type"] in COMPOSITE_TYPES:
+                elif merged and (merged[-1][0]["type"] in COMPOSITE_TYPES
+                                 or (depths.get(merged[-1][0]["name"], 0) > 0
+                                     and depths.get(merged[-1][0]["name"], 0)
+                                     == depths.get(s["name"], 0))):
                     merged[-1].append(s)
                 else:
                     merged.append([s])
             groups.extend(merged)
 
         return groups
+
+    def _slot_bracket_depths(self, raw_fmt: str) -> dict[str, int]:
+        """Slot name -> bracket nesting depth in the FORMAT (0 = not inside
+        any [...]; >=1 = inside a bracket).  Used to merge LDS/STS address
+        slots [Ra + Ra_offset] into one operand group."""
+        depths: dict[str, int] = {}
+        depth = 0
+        for m in re.finditer(r":([A-Za-z_][A-Za-z0-9_]*)", raw_fmt or ""):
+            d = 0
+            for ch in raw_fmt[:m.start()]:
+                if ch == "[":
+                    d += 1
+                elif ch == "]":
+                    d -= 1
+            depths[m.group(1)] = max(d, 0)
+        return depths
 
     def _split_into_segments(self, cleaned: str, commas: list[int]) -> list[str]:
         """Split cleaned format string at comma positions into segments."""
@@ -545,7 +569,7 @@ class SassMatcher:
             if st in ("Register", "NonZeroRegister", "ZeroRegister"):
                 slot_map[s["name"]] = op.value
             elif st == "UniformRegister":
-                slot_map[s["name"]] = op.value
+                slot_map[s["name"]] = op.addr_ureg if op.addr_ureg is not None else op.value
             elif st in ("SImm", "UImm") and "offset" in s["name"].lower():
                 slot_map[s["name"]] = op.offset
             elif st == "ONLY64":
