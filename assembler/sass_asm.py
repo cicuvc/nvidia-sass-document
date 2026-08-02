@@ -20,14 +20,14 @@ from .operand import OperandKind, KernelDecl
 def fmt_operand(op) -> str:
     kind = op.kind
     if kind == OperandKind.REG:
+        if op.regs:
+            return "{" + ", ".join("RZ" if r == 255 else f"R{r}" for r in op.regs) + "}"
         s = f"R{op.value}" if op.value != 255 else "RZ"
-        if op.width > 32:
-            s += f".{op.width}"
         return s
     if kind == OperandKind.UREG:
+        if op.regs:
+            return "{" + ", ".join("URZ" if r == 255 else f"UR{r}" for r in op.regs) + "}"
         s = f"UR{op.value}" if op.value != 255 else "URZ"
-        if op.width > 32:
-            s += f".{op.width}"
         return s
     if kind == OperandKind.PRED:
         return f"P{op.value}" if op.value != 7 else "PT"
@@ -46,9 +46,14 @@ def fmt_operand(op) -> str:
     if kind == OperandKind.CONST_BANK:
         return f"c[0x{op.offset:x}]"  # simplified
     if kind == OperandKind.MEM_DESC:
-        return f"desc[RZ]"
+        if op.regs:
+            return "desc[{" + ", ".join("URZ" if r == 255 else f"UR{r}" for r in op.regs) + "}]"
+        return f"desc[UR{op.value}]" if op.value != 255 else "desc[URZ]"
     if kind == OperandKind.MEM_ADDR:
         off = f"+0x{op.offset:x}" if op.offset >= 0 else f"-0x{-op.offset:x}"
+        if op.regs:
+            base = "{" + ", ".join(f"R{r}" for r in op.regs) + "}"
+            return f"[{base}{off}]"
         return f"[R{op.value}.64{off}]"
     return f"<?{kind.name}>"
 

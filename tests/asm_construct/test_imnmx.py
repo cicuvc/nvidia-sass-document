@@ -101,8 +101,8 @@ for a, b in [(0xFFFFFFFF, 0x100000000),
 # Build the kernel
 # ---------------------------------------------------------------------------
 lines = ["#fn imnmx_test(out<768>) {",
-         "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(out);[0:7:{}:1:0]",
+         "    LDCU.64 {UR4,UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]",
          "    ISETP.T P5, RZ, RZ;[7:7:{}:5:1]   // P5 = 1",
          "    ISETP.F P4, RZ, RZ;[7:7:{}:5:1]"]  # P4 = 0
 
@@ -111,7 +111,7 @@ case_stores = []  # per-case tuple of store offsets
 
 
 def stg(off, reg):
-    lines.append(f"    STG.E desc[UR4][R6.64+0x{off:X}], {reg};[0:1:{{0}}:1:0]")
+    lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{off:X}], {reg};[0:1:{{0}}:1:0]")
 
 
 off = 0
@@ -145,7 +145,7 @@ for kind, fmt, a, b, sense, pq, label in cases:
         lines.append(f"    MOV32I R11, 0x{hi_a:08X};[7:7:{{}}:5:1]")
         lines.append(f"    MOV32I R12, 0x{lo_b:08X};[7:7:{{}}:5:1]")
         lines.append(f"    MOV32I R13, 0x{hi_b:08X};[7:7:{{}}:5:1]")
-        lines.append(f"    IMNMX{suf} P2, P3, R2, R10, R12, {s}, P4;[7:7:{{}}:8:1]")
+        lines.append(f"    IMNMX{suf} P2, P3, {{R2,R3}}, {{R10,R11}}, {{R12,R13}}, {s}, P4;[7:7:{{}}:8:1]")
         stg(off, "R2"); store_off.append((off, 4)); off += 4
         stg(off, "R3"); store_off.append((off, 4)); off += 4
         cur = [off - 8, off - 4]
@@ -166,7 +166,7 @@ enc = assemble_flat(
     "IMNMX.S32 P0, P1, R2, R0, R1, PT, P4;[7:7:{}:8:1]\n"
     "IMNMX.U32 P0, P1, R2, R0, 0x7, PT, P4;[7:7:{}:8:1]\n"
     "IMNMX.S32 P0, P1, R2, R0, UR5, PT, P4;[7:7:{}:8:1]\n"
-    "IMNMX.U64 P0, P1, R2, R4, R6, PT, P4;[7:7:{}:8:1]\n")
+    "IMNMX.U64 P0, P1, {R2,R3}, {R4,R5}, {R6,R7}, PT, P4;[7:7:{}:8:1]\n")
 for (name, exp_op), (lo, hi) in zip(
         (("RRR", 0x217), ("RIR", 0x817), ("RUR", 0x1c17), ("RRR64", 0x217)), enc):
     op = ((hi >> 27) & 1) << 12 | (lo & 0xFFF)

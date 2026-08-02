@@ -40,8 +40,8 @@ def check(name, got, want):
 
 # ---- MCOLLECTIVE inside the region = Rmask & active ------------------------
 def mcollective_inside(mask, exit_lanes, block=32):
-    pre = ["    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-           "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+    pre = ["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+           "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
            "    S2R R2, SR_TID.X;[0:7:{}:5:1]"]
     if exit_lanes:
         pre += ["    ISETP.LT.AND P0, PT, R2, 0x10, PT;[7:7:{0}:13:1]",
@@ -52,7 +52,7 @@ def mcollective_inside(mask, exit_lanes, block=32):
              "    WARPSYNC.COLLECTIVE R5, #label(sync);[7:7:{}:5:1]",
              "    BMOV R4, MCOLLECTIVE;[0:7:{}:5:1]",
              "    NOP;[7:7:{}:5:1]", "    NOP;[7:7:{}:5:1]",
-             "    STG.E desc[UR4][R6.64+0x0], R4;[0:1:{0,1}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R4;[0:1:{0,1}:1:0]",
              "    ENDCOLLECTIVE;[7:7:{}:5:1]",
              "    #def_label(sync)",
              "    BSYNC B1;[7:7:{}:5:1]",
@@ -85,8 +85,8 @@ check("MCOLLECTIVE inside (mask=0xFFFF0000 exact) = 0xFFFF0000",
 # ---- MCOLLECTIVE after ENDCOLLECTIVE = 0 ----------------------------------
 def mcollective_after():
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
              "    MOV32I R5, 0xFFFFFFFF;[7:7:{}:5:1]",
              "    BSSY B1, #label(loop);[7:7:{}:5:1]",
              "    WARPSYNC.COLLECTIVE R5, #label(sync);[7:7:{}:5:1]",
@@ -96,7 +96,7 @@ def mcollective_after():
              "    #def_label(loop)",
              "    BMOV R4, MCOLLECTIVE;[0:7:{}:5:1]",
              "    NOP;[7:7:{}:5:1]", "    NOP;[7:7:{}:5:1]",
-             "    STG.E desc[UR4][R6.64+0x0], R4;[0:1:{0,1}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R4;[0:1:{0,1}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))
@@ -118,8 +118,8 @@ import sys, struct
 sys.path.insert(0, "__BASE__")
 from assembler import assemble, CudaModule
 lines = ["#fn k(buf<1024>) {",
-         "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R5, 0x0000FFFF;[7:7:{}:5:1]",
          "    BSSY B1, #label(loop);[7:7:{}:5:1]",
          "    WARPSYNC.COLLECTIVE R5, #label(sync);[7:7:{}:5:1]",
@@ -161,8 +161,8 @@ import sys, struct
 sys.path.insert(0, "__BASE__")
 from assembler import assemble, CudaModule
 mode = sys.argv[1]
-pre = ["    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-       "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+pre = ["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+       "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
        "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
        "    MOV32I R5, 0xFFFFFFFF;[7:7:{}:5:1]",
        "    ISETP.LT.AND P0, PT, R2, 0x10, PT;[7:7:{0}:13:1]",

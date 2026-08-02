@@ -6,9 +6,9 @@ Quick start:
     # Assemble a kernel declaration → cubin bytes
     cubin = assemble('''
         #fn fill(data<8>) {
-            LDC.64 R0, #param(data);
+            LDC.64 {R0,R1}, #param(data);
             MOV32I R1, 0x3f800000;
-            STG.E desc[URZ][R0.64], R1;
+            STG.E desc[{URZ,URZ}][{R0,R1}], R1;
             EXIT;
         }
     ''')

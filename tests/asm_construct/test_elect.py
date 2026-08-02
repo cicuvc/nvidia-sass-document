@@ -54,8 +54,8 @@ def elect(cands, block=32):
                  "    ISETP.EQ.AND P1, PT, R3, 0x1, PT;[7:7:{0}:13:1]",
                  "    ELECT P0, UR8, P1;[7:7:{}:5:1]"]
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]"] + inner + [
              "    NOP;[7:7:{}:5:1]"] * 8 + [
@@ -65,8 +65,8 @@ def elect(cands, block=32):
              "    IADD3 R3, R3, R3, RZ;[7:7:{0}:5:1]",
              "    IADD3 R8, R6, R3, RZ;[7:7:{0,1}:5:1]",
              "    IADD3 R9, R7, RZ, RZ;[7:7:{1}:5:1]",
-             "    STG.E desc[UR4][R8.64+0x0], R20;[0:1:{0,1}:1:0]",
-             "    STG.E desc[UR4][R8.64+0x80], R4;[7:1:{}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R8,R9}+0x0], R20;[0:1:{0,1}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R8,R9}+0x80], R4;[7:1:{}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))

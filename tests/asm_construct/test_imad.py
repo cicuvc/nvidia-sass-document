@@ -9,78 +9,78 @@ import ctypes
 
 cubin = assemble('''
 #fn imad_test(out<48>) {
-    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]
-    LDC.64 R6, #param(out);[0:7:{}:1:0]
+    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]
+    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 
     // === 1: LO RRR — 5*10+100 = 150 ===
     MOV32I R0, 0x00000005;[7:7:{}:5:1]
     MOV32I R1, 0x0000000A;[7:7:{}:5:1]
     MOV32I R2, 0x00000064;[7:7:{}:5:1]
     IMAD R3, R0, R1, R2;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}], R3;[7:1:{0}:1:0]
 
     // === 2: LO negate Rc — 5*10 + (-100) = -50 (0xFFFFFFCE) ===
     IMAD R3, R0, R1, -R2;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x4], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R3;[7:1:{0}:1:0]
 
     // === 3: LO overflow — 0x80000000*2+1 = 1 (low32) ===
     MOV32I R2, 0x80000000;[7:7:{}:5:1]
     MOV32I R4, 0x00000002;[7:7:{}:5:1]
     MOV32I R5, 0x00000001;[7:7:{}:5:1]
     IMAD R3, R2, R4, R5;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x8], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R3;[7:1:{0}:1:0]
 
     // === 4: LO S32 — (-5)*10+100 = 50 ===
     MOV32I R2, 0xFFFFFFFB;[7:7:{}:5:1]
     MOV32I R5, 0x00000064;[7:7:{}:5:1]
     IMAD.S32 R3, R2, R1, R5;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0xC], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R3;[7:1:{0}:1:0]
 
     // === 5: LO immediate Sb (RsIR) — 5*0xA+100 = 150 ===
     MOV32I R0, 0x00000005;[7:7:{}:5:1]
     MOV32I R2, 0x00000064;[7:7:{}:5:1]
     IMAD R3, R0, 0xA, R2;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x10], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x10], R3;[7:1:{0}:1:0]
 
     // === 6: LO immediate Rc (RRsI) — 5*10+200 = 250 ===
     MOV32I R0, 0x00000005;[7:7:{}:5:1]
     MOV32I R1, 0x0000000A;[7:7:{}:5:1]
     IMAD R3, R0, R1, 200;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x14], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x14], R3;[7:1:{0}:1:0]
 
     // === 7: WIDE.U32 — 0x12345678 * 0x9ABCDEF0 ===
     MOV32I R0, 0x12345678;[7:7:{}:5:1]
     MOV32I R1, 0x9ABCDEF0;[7:7:{}:5:1]
-    IMAD.WIDE.U32 R4, R0, R1, RZ;[7:7:{2}:5:1]
-    STG.E desc[UR4][R6.64+0x18], R4;[7:1:{0}:1:0]
+    IMAD.WIDE.U32 {R4,R5}, R0, R1, {RZ,RZ};[7:7:{2}:5:1]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x18], R4;[7:1:{0}:1:0]
 
     // === 8: WIDE signed (S32) — 0x80000000 * 2 ===
     MOV32I R0, 0x80000000;[7:7:{}:5:1]
     MOV32I R1, 0x00000002;[7:7:{}:5:1]
-    IMAD.WIDE R4, R0, R1, RZ;[7:7:{2}:5:1]
-    STG.E desc[UR4][R6.64+0x1C], R4;[7:1:{0}:1:0]
+    IMAD.WIDE {R4,R5}, R0, R1, {RZ,RZ};[7:7:{2}:5:1]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x1C], R4;[7:1:{0}:1:0]
 
     // === 9: WIDE.U32 with Rc=1 — product + 1 ===
     MOV32I R0, 0x12345678;[7:7:{}:5:1]
     MOV32I R1, 0x9ABCDEF0;[7:7:{}:5:1]
     MOV32I R2, 0x00000001;[7:7:{}:5:1]
     MOV32I R3, 0x00000000;[7:7:{}:5:1]
-    IMAD.WIDE.U32 R4, R0, R1, R2;[7:7:{2}:5:1]
-    STG.E desc[UR4][R6.64+0x20], R4;[7:1:{0}:1:0]
+    IMAD.WIDE.U32 {R4,R5}, R0, R1, {R2,R3};[7:7:{2}:5:1]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x20], R4;[7:1:{0}:1:0]
 
     // === 10: HI signed — high32 of s32(0x80000000)*2 ===
     MOV32I R0, 0x80000000;[7:7:{}:5:1]
     MOV32I R1, 0x00000002;[7:7:{}:5:1]
     MOV32I R2, 0x00000000;[7:7:{}:5:1]
     MOV32I R3, 0x00000000;[7:7:{}:5:1]
-    IMAD.HI R4, P0, R0, R1, R2;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x24], R4;[7:1:{0}:1:0]
+    IMAD.HI R4, P0, R0, R1, {R2,R3};[7:7:{}:5:1]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x24], R4;[7:1:{0}:1:0]
 
     // === 11: LO Rc=RZ — 5*10+0 = 50 ===
     MOV32I R0, 0x00000005;[7:7:{}:5:1]
     MOV32I R1, 0x0000000A;[7:7:{}:5:1]
     IMAD R3, R0, R1, RZ;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x28], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x28], R3;[7:1:{0}:1:0]
 
     EXIT;[7:7:{}:5:0]
 }
@@ -132,7 +132,7 @@ print(f"    got {r}, expected {e}  {'OK' if r==e else 'FAIL'}")
 # [7] WIDE.U32
 r = vals[6]; e = 0x242D2080; ok &= r==e
 full7 = (0x12345678 * 0x9ABCDEF0) & 0xFFFFFFFFFFFFFFFF
-print(f"[7] WIDE.U32:     IMAD.WIDE.U32 R4, R0(0x12345678), R1(0x9ABCDEF0), RZ")
+print(f"[7] WIDE.U32:     IMAD.WIDE.U32 {{R4,R5}}, R0(0x12345678), R1(0x9ABCDEF0), RZ")
 print(f"    lo=0x{r:08x}, expected full=0x{full7:016x}  {'OK' if full7 & 0xFFFFFFFF == r else 'FAIL'}")
 
 # [8] WIDE signed
@@ -141,7 +141,7 @@ a8 = ctypes.c_int32(0x80000000).value
 full8 = (a8 * 2) & 0xFFFFFFFFFFFFFFFF
 r8_full = ctypes.c_int32(vals[7]).value | (0 if True else 0)  # just check low
 ok &= r_lo == (full8 & 0xFFFFFFFF)
-print(f"[8] WIDE S32:     IMAD.WIDE R4, R0(0x80000000), R1(2), RZ")
+print(f"[8] WIDE S32:     IMAD.WIDE {{R4,R5}}, R0(0x80000000), R1(2), RZ")
 print(f"    lo=0x{r_lo:08x}, expected lo=0x{full8 & 0xFFFFFFFF:08x}")
 print(f"    (signed: {a8}*2 = {a8*2} = 0x{full8:016x})  {'OK' if r_lo == (full8 & 0xFFFFFFFF) else 'FAIL'}")
 
@@ -149,7 +149,7 @@ print(f"    (signed: {a8}*2 = {a8*2} = 0x{full8:016x})  {'OK' if r_lo == (full8 
 r_lo = vals[8]
 full9 = (0x12345678 * 0x9ABCDEF0 + 1) & 0xFFFFFFFFFFFFFFFF
 ok &= r_lo == (full9 & 0xFFFFFFFF)
-print(f"[9] WIDE.U32+1:   IMAD.WIDE.U32 R4, R0, R1, R2(1)")
+print(f"[9] WIDE.U32+1:   IMAD.WIDE.U32 {{R4,R5}}, R0, R1, R2(1)")
 print(f"    lo=0x{r_lo:08x}, expected lo=0x{full9 & 0xFFFFFFFF:08x}  {'OK' if r_lo == (full9 & 0xFFFFFFFF) else 'FAIL'}")
 
 # [10] HI signed

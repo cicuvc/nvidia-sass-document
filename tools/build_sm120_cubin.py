@@ -151,10 +151,10 @@ CTL_BRA    = 0x000fc0000383ffff   # unconditional branch (trap)
 # Control word in hi64; opcode and operands in lo64.
 
 I_LDC_R1_37c     = 0x0000df00ff017b82  # LDC R1, c[0x0][0x37c] — global mem descriptor
-I_LDC64_R2_380   = 0x0000e000ff027b82  # LDC.64 R2, c[0x0][0x380]
+I_LDC64_R2_380   = 0x0000e000ff027b82  # LDC.64 {R2,R3}, c[0x0][0x380]
 I_S2R_R5_TIDX    = 0x0000000000057919  # S2R R5, SR_TID.X
-I_LDCU_UR4_358   = 0x00006b00ff0477ac  # LDCU.64 UR4, c[0x0][0x358]
-I_STG_UR4_R2_R5  = 0x0000000502007986  # STG.E desc[UR4][R2.64], R5
+I_LDCU_UR4_358   = 0x00006b00ff0477ac  # LDCU.64 {UR4,UR5}, c[0x0][0x358]
+I_STG_UR4_R2_R5  = 0x0000000502007986  # STG.E desc[{UR4,UR5}][{R2,R3}], R5
 I_EXIT           = 0x000000000000794d  # EXIT
 I_NOP            = 0x0000000000007918  # NOP
 I_BRA_0x60       = 0xfffffffc00fc7947  # BRA 0x60 (trap loop)

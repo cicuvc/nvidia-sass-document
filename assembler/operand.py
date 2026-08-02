@@ -73,6 +73,8 @@ class Operand:
     bank: int = 0
     addr_reg: int = 0
     iswz: int | None = None      # HFMA2/HADD2 lane swizzle (ISWZ* enum value)
+    regs: list[int] | None = None  # explicit multi-reg list {Ra,Rb}/{Ra,Rb,Rc,Rd};
+                                   # value == regs[0], width == len(regs)*32
 
     @staticmethod
     def reg(name: str, width: int = 32) -> Operand:
@@ -83,6 +85,17 @@ class Operand:
     def ureg(name: str, width: int = 32) -> Operand:
         v = 255 if name.upper() == "URZ" else int(name[2:])
         return Operand(OperandKind.UREG, v, width=width)
+
+    @staticmethod
+    def reg_group(regs: list[int], uniform: bool = False) -> Operand:
+        """Explicit multi-register operand {Ra,Rb} / {Ra,Rb,Rc,Rd}.
+
+        ``value`` = first register (drives the encoded base slot), ``width`` =
+        len(regs)*32 (64/128).  The caller must ensure the list is same-class,
+        consecutive and in-range; this helper just derives the derived fields.
+        """
+        kind = OperandKind.UREG if uniform else OperandKind.REG
+        return Operand(kind, regs[0], width=len(regs) * 32, regs=list(regs))
 
     @staticmethod
     def pred(name: str) -> Operand:

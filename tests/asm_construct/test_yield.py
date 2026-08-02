@@ -23,22 +23,22 @@ from assembler import assemble, CudaModule
 
 def spin_kernel(spin_body: str):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    ISETP.EQ.AND P0, PT, R2, 0x0, PT;[7:7:{0}:13:1]",   # P0 = tid==0
              "    @P0 BRA #label(producer);[7:7:{}:5:1]",
              "    #def_label(spin)",
-             "    LDG.E R12, desc[UR4][R6.64+0x0];[2:7:{0,1}:5:1]",   # load flag
+             "    LDG.E R12, desc[{UR4,UR5}][{R6,R7}+0x0];[2:7:{0,1}:5:1]",   # load flag
              f"    {spin_body};[7:7:{{}}:5:1]",
              "    ISETP.EQ.AND P1, PT, R12, 0x0, PT;[7:7:{2}:13:1]",  # P1 = flag==0
              "    @P1 BRA #label(spin);[7:7:{}:5:1]",
              "    MOV32I R20, 0xDEADBEEF;[7:7:{}:5:1]",
-             "    STG.E desc[UR4][R6.64+0x4], R20;[0:1:{0,1}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R20;[0:1:{0,1}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "    #def_label(producer)",
              "    MOV32I R10, 0x1;[7:7:{}:5:1]",
-             "    STG.E desc[UR4][R6.64+0x0], R10;[0:1:{0,1}:1:0]",   # set flag
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R10;[0:1:{0,1}:1:0]",   # set flag
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     return assemble("\n".join(lines))

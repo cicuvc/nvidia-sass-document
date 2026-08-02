@@ -21,16 +21,16 @@ from assembler import assemble, CudaModule
 
 def build_kernel(movs, inst, extra_stores=None):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]"]
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]"]
     for reg, val in movs.items():
         lines.append(f"    MOV32I R{reg}, 0x{val:08x};[7:7:{{}}:5:1]")
     lines += [f"    {inst};[7:7:{{}}:5:1]"]
     if extra_stores:
         for off, reg in extra_stores:
-            lines.append(f"    STG.E desc[UR4][R6.64+0x{off:x}], R{reg};[0:1:{{0}}:1:0]")
+            lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{off:x}], R{reg};[0:1:{{0}}:1:0]")
     else:
-        lines.append("    STG.E desc[UR4][R6.64+0x0], R22;[0:1:{0}:1:0]")
+        lines.append("    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R22;[0:1:{0}:1:0]")
     lines.append("    EXIT;[7:7:{}:5:0]")
     lines.append("}")
     return assemble("\n".join(lines))
@@ -113,8 +113,8 @@ check("GT.AND (2>2 F,5>5 F) -> 0", o, 0x00000000)
 def run_pred(movs, inst):
     # P0/P1 -> conditional MOV -> store two regs
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]"]
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]"]
     for reg, val in movs.items():
         lines.append(f"    MOV32I R{reg}, 0x{val:08x};[7:7:{{}}:5:1]")
     lines += [f"    {inst};[7:7:{{}}:5:1]",
@@ -122,8 +122,8 @@ def run_pred(movs, inst):
               "    MOV32I R22, 0x22222222;[7:7:{}:5:1]",
               "    @P0 MOV32I R20, 0xdeadbeef;[7:7:{}:5:1]",
               "    @P1 MOV32I R22, 0xcafebabe;[7:7:{}:5:1]",
-              "    STG.E desc[UR4][R6.64+0x0], R20;[0:1:{0}:1:0]",
-              "    STG.E desc[UR4][R6.64+0x4], R22;[0:1:{0}:1:0]",
+              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R20;[0:1:{0}:1:0]",
+              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R22;[0:1:{0}:1:0]",
               "    EXIT;[7:7:{}:5:0]",
               "}"]
     cubin = assemble("\n".join(lines))

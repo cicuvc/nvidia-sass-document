@@ -53,10 +53,10 @@ def capture(slot, mode, block=32):
                 "    @!P0 BRA #label(join);[7:7:{}:5:1]"]
         tail = ["    BSYNC B0;[7:7:{}:5:1]", "    #def_label(join)"]
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]"] + pre + [
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]"] + pre + [
              f"    BMOV R4, {slot};[0:7:{{}}:5:1]"] + ["    IADD3 R10, R10, RZ, RZ;[7:7:{}:5:1]"] * 8 + [
-             "    STG.E desc[UR4][R6.64+0x0], R4;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R4;[0:1:{0}:1:0]",
              ] + tail + ["    EXIT;[7:7:{}:5:0]", "}"]
     cubin = assemble("\n".join(lines))
     mod = CudaModule(cubin)

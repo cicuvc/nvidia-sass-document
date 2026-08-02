@@ -41,13 +41,13 @@ import sys, struct
 sys.path.insert(0, "__BASE__")
 from assembler import assemble, CudaModule
 lines = ["#fn k(buf<1024>) {",
-         "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    JMP #label(x);[7:7:{}:5:1]",        # relative-resolved, but JMP is absolute
          "    MOV32I R20, 0x11111111;[7:7:{}:5:1]",
          "    #def_label(x)",
-         "    STG.E desc[UR4][R6.64+0x0], R20;[0:1:{0,1}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R20;[0:1:{0,1}:1:0]",
          "    EXIT;[7:7:{}:5:0]",
          "}"]
 cubin = assemble("\n".join(lines))

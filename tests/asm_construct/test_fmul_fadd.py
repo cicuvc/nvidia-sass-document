@@ -154,8 +154,8 @@ for i in range(20):
 # Build kernel (stable multi-case structure)
 # ---------------------------------------------------------------------------
 lines = ["#fn fm_test(out<1024>) {",
-         "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(out);[0:7:{}:1:0]"]
+         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]"]
 def rrr(kind, a, b, mod):
     m = mod if not mod or mod.startswith(".") else "." + mod
     if kind == "MUL":
@@ -168,7 +168,7 @@ for i, (kind, label, a, b, mod, exp) in enumerate(cases):
     lines += ["    MOV32I R11, 0x%08X;[7:7:{}:5:1]" % b]
     lines.append("    " + rrr(kind, a, b, mod))
     lines.append("    MOV R20, RZ;[7:7:{}:15:1]")
-    lines.append(f"    STG.E desc[UR4][R6.64+0x{i*4:X}], R4;[0:1:{{0}}:1:0]")
+    lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{i*4:X}], R4;[0:1:{{0}}:1:0]")
 lines += ["    EXIT;[7:7:{}:5:0]",
           "}"]
 

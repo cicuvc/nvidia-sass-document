@@ -165,8 +165,8 @@ FCMP = [("FSP", *c) for c in fc_cases]
 
 # Each FSETP case: ISETP to set P2, FSETP to P0/P1, P2R P0 and P1 out.
 lines = ["#fn fmx_test(out<1024>) {",
-         "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(out);[0:7:{}:1:0]"]
+         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]"]
 out = 0
 
 def emit_fmnmx(label, a, b, mods, is_max, exp):
@@ -176,7 +176,7 @@ def emit_fmnmx(label, a, b, mods, is_max, exp):
     pmod = "!PT" if is_max else "PT"
     lines.append(f"    FMNMX{mods} R4, R10, R11, {pmod};[7:7:{{}}:8:1]")
     lines.append("    MOV R20, RZ;[7:7:{}:15:1]")
-    lines.append(f"    STG.E desc[UR4][R6.64+0x{out*4:X}], R4;[0:1:{{0}}:1:0]")
+    lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{out*4:X}], R4;[0:1:{{0}}:1:0]")
     out += 1
 
 def emit_fsetp(label, a, b, op, bop, pp):
@@ -189,8 +189,8 @@ def emit_fsetp(label, a, b, op, bop, pp):
     lines.append("    P2R R4, PR, RZ, 0x1;[7:7:{}:8:1]")
     lines.append("    P2R R5, PR, RZ, 0x2;[7:7:{}:8:1]")
     lines.append("    MOV R20, RZ;[7:7:{}:15:1]")
-    lines.append(f"    STG.E desc[UR4][R6.64+0x{out*4:X}], R4;[0:1:{{0}}:1:0]")
-    lines.append(f"    STG.E desc[UR4][R6.64+0x{(out+1)*4:X}], R5;[0:1:{{0}}:1:0]")
+    lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{out*4:X}], R4;[0:1:{{0}}:1:0]")
+    lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{(out+1)*4:X}], R5;[0:1:{{0}}:1:0]")
     out += 2
 
 for c in FMNMX:
@@ -200,7 +200,7 @@ for label, a, b, op, bop, pp, exp in fs_cases:
     lines.append("    MOV32I R11, 0x%08X;[7:7:{}:5:1]" % b)
     lines.append(f"    FSET.BF.{op}.{bop} R4, R10, R11, {pp};[7:7:{{}}:8:1]")
     lines.append("    MOV R20, RZ;[7:7:{}:15:1]")
-    lines.append(f"    STG.E desc[UR4][R6.64+0x{out*4:X}], R4;[0:1:{{0}}:1:0]")
+    lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{out*4:X}], R4;[0:1:{{0}}:1:0]")
     out += 1
 for c in FCMP:
     emit_fsetp(*c[1:])

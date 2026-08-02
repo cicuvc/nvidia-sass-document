@@ -52,20 +52,20 @@ F = lambda b: struct.unpack("<f", struct.pack("<I", b))[0]
 def run(nps, Ra, Rc, mods="", nlanes=8):
     """Per-lane LDG Ra/Rc, FSWZADD, STG result at buf+lane*4+0x100."""
     lines = ["#fn fswz(buf<4096>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    IADD3 R4, R2, R2, RZ;[7:7:{0}:5:1]",
              "    IADD3 R4, R4, R4, RZ;[7:7:{}:5:1]",
              "    IADD3 R16, R6, R4, RZ;[7:7:{}:5:1]",
              "    IADD3 R17, R7, RZ, RZ;[7:7:{}:5:1]",
-             "    LDG.E R10, desc[UR4][R16.64];[1:7:{0}:5:1]",        # Ra, wr=SB1
+             "    LDG.E R10, desc[{UR4,UR5}][{R16,R17}];[1:7:{0}:5:1]",        # Ra, wr=SB1
              "    IADD3 R18, R10, RZ, RZ;[7:7:{1}:5:1]",
-             "    LDG.E R11, desc[UR4][R16.64+0x80];[2:7:{0}:5:1]",   # Rc, wr=SB2
+             "    LDG.E R11, desc[{UR4,UR5}][{R16,R17}+0x80];[2:7:{0}:5:1]",   # Rc, wr=SB2
              "    IADD3 R19, R11, RZ, RZ;[7:7:{2}:5:1]",
             f"    FSWZADD{mods} R22, R10, R11, {nps};[7:7:{{}}:5:1]",
              "    IADD3 R23, R22, RZ, RZ;[7:7:{}:5:1]",
-             "    STG.E desc[UR4][R16.64+0x100], R23;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R16,R17}+0x100], R23;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))

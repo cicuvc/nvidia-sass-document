@@ -51,68 +51,68 @@ def run(kernel_lines, block=32, buf=1024):
 # ---- 1. JMX absolute via LEPC ----------------------------------------------
 # ULEPC? No — per-thread LEPC R4 at 0x20. JMX R4,0x50 -> R4+0x50 = MOV R22,
 # skipping the MOV R21 (0x60).
-v = run(["    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+v = run(["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",
-         "    LEPC R4;[7:7:{}:5:1]",                    # 0x20
+         "    LEPC {R4,R5};[7:7:{}:5:1]",                    # 0x20
          "    MOV32I R5, 0x0;[7:7:{}:5:1]",             # 0x30
          "    MOV32I R20, 0x11111111;[7:7:{}:5:1]",     # 0x40
-         "    JMX R4, 0x50;[7:7:{}:5:1]",               # 0x50 -> R4+0x50 = 0x70
+         "    JMX {R4,R5}, 0x50;[7:7:{}:5:1]",               # 0x50 -> R4+0x50 = 0x70
          "    MOV32I R21, 0x22222222;[7:7:{}:5:1]",     # 0x60 (skipped)
          "    MOV32I R22, 0x33333333;[7:7:{}:5:1]",     # 0x70 target
-         "    STG.E desc[UR4][R6.64+0x0], R20;[0:1:{0,1}:1:0]",
-         "    STG.E desc[UR4][R6.64+0x4], R21;[7:1:{}:1:0]",
-         "    STG.E desc[UR4][R6.64+0x8], R22;[7:1:{}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R20;[0:1:{0,1}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R21;[7:1:{}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R22;[7:1:{}:1:0]",
          "    EXIT;[7:7:{}:5:0]"])
 check("JMX R4(LEPC-PC)+0x50 lands at 0x70 (skips MOV R21)",
       (v[0], v[1], v[2]), (0x11111111, 0xBBBBBBBB, 0x33333333))
 
 # ---- 2. JMXU absolute via ULEPC --------------------------------------------
-v = run(["    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+v = run(["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",
-         "    ULEPC UR4;[7:7:{}:5:1]",                  # 0x20
+         "    ULEPC {UR4,UR5};[7:7:{}:5:1]",                  # 0x20
          "    MOV32I R20, 0x11111111;[7:7:{}:5:1]",     # 0x30
          "    JMXU UR4, 0x40;[7:7:{}:5:1]",             # 0x40 -> UR5+0x40 = 0x60
          "    MOV32I R21, 0x22222222;[7:7:{}:5:1]",     # 0x50 (skipped)
          "    MOV32I R22, 0x33333333;[7:7:{}:5:1]",     # 0x60 target
-         "    STG.E desc[UR4][R6.64+0x0], R20;[0:1:{0,1}:1:0]",
-         "    STG.E desc[UR4][R6.64+0x4], R21;[7:1:{}:1:0]",
-         "    STG.E desc[UR4][R6.64+0x8], R22;[7:1:{}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R20;[0:1:{0,1}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R21;[7:1:{}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R22;[7:1:{}:1:0]",
          "    EXIT;[7:7:{}:5:0]"])
 check("JMXU UR4(ULEPC-PC)+0x40 lands at 0x60 (skips MOV R21)",
       (v[0], v[1], v[2]), (0x11111111, 0xBBBBBBBB, 0x33333333))
 
 # ---- 3. BRX relative (R4=0 + label) ----------------------------------------
-v = run(["    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+v = run(["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",
          "    MOV32I R4, 0x0;[7:7:{}:5:1]",
          "    MOV32I R5, 0x0;[7:7:{}:5:1]",
-         "    BRX R4, #label(x);[7:7:{}:5:1]",
+         "    BRX {R4,R5}, #label(x);[7:7:{}:5:1]",
          "    MOV32I R20, 0x11111111;[7:7:{}:5:1]",
          "    MOV32I R21, 0x22222222;[7:7:{}:5:1]",
          "    #def_label(x)",
-         "    STG.E desc[UR4][R6.64+0x0], R20;[0:1:{0,1}:1:0]",
-         "    STG.E desc[UR4][R6.64+0x4], R21;[0:1:{0,1}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R20;[0:1:{0,1}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R21;[0:1:{0,1}:1:0]",
          "    EXIT;[7:7:{}:5:0]"])
 check("BRX R4=0 + label lands on x (relative)",
       (v[0], v[1]), (0xAAAAAAAA, 0xBBBBBBBB))
 
 # ---- 4. BRXU relative (UR=0 + label) ---------------------------------------
-v = run(["    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+v = run(["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",
          "    BRXU UR4, #label(x);[7:7:{}:5:1]",   # UR5 unset = 0 -> relative
          "    MOV32I R20, 0x11111111;[7:7:{}:5:1]",
          "    MOV32I R21, 0x22222222;[7:7:{}:5:1]",
          "    #def_label(x)",
-         "    STG.E desc[UR4][R6.64+0x0], R20;[0:1:{0,1}:1:0]",
-         "    STG.E desc[UR4][R6.64+0x4], R21;[0:1:{0,1}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R20;[0:1:{0,1}:1:0]",
+         "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R21;[0:1:{0,1}:1:0]",
          "    EXIT;[7:7:{}:5:0]"])
 check("BRXU UR4=0 + label lands on x (relative)",
       (v[0], v[1]), (0xAAAAAAAA, 0xBBBBBBBB))

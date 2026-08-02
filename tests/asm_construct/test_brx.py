@@ -37,18 +37,18 @@ def check(name, got, want):
 
 def run(r4, block=32):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[1:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
              "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
              "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",
              f"    MOV32I R4, 0x{r4:x};[7:7:{{}}:5:1]",
              "    MOV32I R5, 0x0;[7:7:{}:5:1]",
-             "    BRX R4, #label(x);[7:7:{}:5:1]",   # target = next_pc + R4 + (x-next_pc)
+             "    BRX {R4,R5}, #label(x);[7:7:{}:5:1]",   # target = next_pc + R4 + (x-next_pc)
              "    MOV32I R20, 0x11111111;[7:7:{}:5:1]",
              "    MOV32I R21, 0x22222222;[7:7:{}:5:1]",
              "    #def_label(x)",
-             "    STG.E desc[UR4][R6.64+0x0], R20;[0:1:{0,1}:1:0]",
-             "    STG.E desc[UR4][R6.64+0x4], R21;[0:1:{0,1}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R20;[0:1:{0,1}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R21;[0:1:{0,1}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))

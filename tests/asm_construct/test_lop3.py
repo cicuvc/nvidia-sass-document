@@ -31,8 +31,8 @@ def lut32(lut, a, b, c):
 
 cubin = assemble('''
 #fn lop3_test(out<64>) {
-    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]
-    LDC.64 R6, #param(out);[0:7:{}:1:0]
+    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]
+    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 
     // === LUT truth-table: A=0x0F, B=0x33, C=0x55 ===
     MOV32I R0, 0x0000000F;[7:7:{}:5:1]
@@ -40,45 +40,45 @@ cubin = assemble('''
     MOV32I R2, 0x00000055;[7:7:{}:5:1]
 
     LOP3.LUT R3, R0, R1, R2, 0x80, !PT;[7:7:{}:5:1]   // A&B&C
-    STG.E desc[UR4][R6.64], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}], R3;[7:1:{0}:1:0]
     LOP3.LUT R3, R0, R1, R2, 0xFE, !PT;[7:7:{}:5:1]   // A|B|C
-    STG.E desc[UR4][R6.64+0x4], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R3;[7:1:{0}:1:0]
     LOP3.LUT R3, R0, R1, R2, 0x96, !PT;[7:7:{}:5:1]   // A^B^C
-    STG.E desc[UR4][R6.64+0x8], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R3;[7:1:{0}:1:0]
     LOP3.LUT R3, R0, R1, R2, 0xE8, !PT;[7:7:{}:5:1]   // A | (B & ~C)
-    STG.E desc[UR4][R6.64+0xC], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R3;[7:1:{0}:1:0]
     LOP3.LUT R3, R0, R1, R2, 0xCA, !PT;[7:7:{}:5:1]   // (A&B)|(C&~(A&B)) majority
-    STG.E desc[UR4][R6.64+0x10], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x10], R3;[7:1:{0}:1:0]
 
     // 2-input with C=RZ
     LOP3.LUT R3, R0, R1, RZ, 0xC0, !PT;[7:7:{}:5:1]   // A&B
-    STG.E desc[UR4][R6.64+0x14], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x14], R3;[7:1:{0}:1:0]
     LOP3.LUT R3, R0, R1, RZ, 0x0C, !PT;[7:7:{}:5:1]   // A & ~B
-    STG.E desc[UR4][R6.64+0x18], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x18], R3;[7:1:{0}:1:0]
     LOP3.LUT R3, RZ, R1, RZ, 0x33, !PT;[7:7:{}:5:1]   // ~B
-    STG.E desc[UR4][R6.64+0x1C], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x1C], R3;[7:1:{0}:1:0]
     LOP3.LUT R3, R0, RZ, RZ, 0x55, !PT;[7:7:{}:5:1]   // ~A
-    STG.E desc[UR4][R6.64+0x20], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x20], R3;[7:1:{0}:1:0]
 
     // mux: (A & m) | (B & ~m) with m=C
     LOP3.LUT R3, R0, R1, R2, 0xB8, !PT;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x24], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x24], R3;[7:1:{0}:1:0]
 
     // === Named ops ===
     LOP3.AND R3, R0, R1, R2, !PT;[7:7:{}:5:1]         // A&B&C
-    STG.E desc[UR4][R6.64+0x28], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x28], R3;[7:1:{0}:1:0]
     LOP3.OR  R3, R0, R1, R2, !PT;[7:7:{}:5:1]         // A|B|C
-    STG.E desc[UR4][R6.64+0x2C], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x2C], R3;[7:1:{0}:1:0]
     LOP3.XOR R3, R0, R1, R2, !PT;[7:7:{}:5:1]         // A^B^C
-    STG.E desc[UR4][R6.64+0x30], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x30], R3;[7:1:{0}:1:0]
     LOP3.PASS_B R3, R0, R1, R2, !PT;[7:7:{}:5:1]      // B
-    STG.E desc[UR4][R6.64+0x34], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x34], R3;[7:1:{0}:1:0]
 
     // === Immediate operand (RuIR): A | 0xFF ===
     MOV32I R0, 0x0000000F;[7:7:{}:5:1]
     MOV32I R2, 0x00000000;[7:7:{}:5:1]
     LOP3.LUT R3, R0, 0xFF, R2, 0xFE, !PT;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x38], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x38], R3;[7:1:{0}:1:0]
 
     // === Uniform register operand (RUR) — covered in test_ulop3.py ===
 
@@ -91,18 +91,18 @@ cubin = assemble('''
     // POR, Pp=!PT(0): Pu = 1 OR 0 = 1
     LOP3.LUT.POR P1, R3, R0, R1, R2, 0x80, !PT;[7:7:{}:5:1]
     P2R R4, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x40], R4;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x40], R4;[7:1:{0}:1:0]
 
     // PAND, Pp=!PT(0): Pu = 1 AND 0 = 0
     LOP3.LUT.PAND P1, R3, R0, R1, R2, 0x80, !PT;[7:7:{}:5:1]
     P2R R4, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x44], R4;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x44], R4;[7:1:{0}:1:0]
 
     // PAND, Pp=P0(1): Pu = 1 AND 1 = 1
     ISETP.T P0, RZ, RZ;[7:7:{}:5:1]
     LOP3.LUT.PAND P1, R3, R0, R1, R2, 0x80, P0;[7:7:{}:5:1]
     P2R R4, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x48], R4;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x48], R4;[7:1:{0}:1:0]
 
     // PAND, Pp=P0(1) with zero result: A=0x0F,B=0x30,C=0x00 -> Rd = 0
     MOV32I R1, 0x00000030;[7:7:{}:5:1]
@@ -110,7 +110,7 @@ cubin = assemble('''
     ISETP.T P0, RZ, RZ;[7:7:{}:5:1]
     LOP3.LUT.PAND P1, R3, R0, R1, R2, 0x80, P0;[7:7:{}:5:1]
     P2R R4, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x4C], R4;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4C], R4;[7:1:{0}:1:0]
 
     EXIT;[7:7:{}:5:0]
 }

@@ -127,8 +127,8 @@ for _, _, lo, hi, d, fmt, hilo, k, cw, exp in cases:
 # Build the kernel: same case list drives the SASS text and the expectations.
 # ---------------------------------------------------------------------------
 lines = ["#fn shf_test(out<256>) {",
-         "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-         "    LDC.64 R6, #param(out);[0:7:{}:1:0]",
+         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
          "    MOV32I R0, 0x89ABCDEF;[7:7:{}:5:1]   // Ra: low half",
          "    MOV32I R1, 0x01234567;[7:7:{}:5:1]   // Rc: high half",
          "    MOV32I R2, 0x12345678;[7:7:{}:5:1]   // low half (signed tests)",
@@ -136,7 +136,7 @@ lines = ["#fn shf_test(out<256>) {",
          "    MOV32I R10, 0x00000025;[7:7:{}:5:1]  // shift amount 37 (RRR/RRuI)"]
 for i, c in enumerate(cases):
     lines.append(f"    {c[1]};[7:7:{{}}:8:1]")
-    lines.append(f"    STG.E desc[UR4][R6.64+0x{i*4:X}], R4;[0:1:{{0}}:1:0]")
+    lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{i*4:X}], R4;[0:1:{{0}}:1:0]")
 lines += ["    EXIT;[7:7:{}:5:0]",
           "}"]
 

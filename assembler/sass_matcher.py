@@ -47,6 +47,7 @@ class MatchResult:
     score: int = 0
     warnings: list[str] = field(default_factory=list)
     condition_error: Optional[str] = None
+    op_sizes: list[Optional[int]] = field(default_factory=list)
 
 
 class SassMatcher:
@@ -91,7 +92,8 @@ class SassMatcher:
 
         # 2. Match operands to groups (flexible — optional slots can be omitted)
         slot_map: dict[str, Any] = {}
-        if not self._match_operand_groups(op_groups, inst.operands, slot_map):
+        used_groups = self._match_operand_groups(op_groups, inst.operands, slot_map)
+        if used_groups is None:
             return None
 
         # Set guard predicate from instruction prefix @[!]Px
@@ -126,6 +128,35 @@ class SassMatcher:
         #    star-pinned slots (*7, *255, *hilo, ...) and format defaults.
         self._fill_encoding_defaults(variant, slot_map)
 
+        # 4b. Validate explicit register groups ({Ra,Rb}) against the matched
+        #     variant's per-operand size predicates (IDEST/ISRC_*_SIZE).
+        #     Catches e.g. MOV {R0,R1}, R2 (32-bit variant) or LDCU.64 {UR4}
+        #     (single-reg group) — a group that doesn't match the operand's
+        #     real size would silently reuse/overwrite a register.
+        op_sizes: list[Optional[int]] = []
+        for grp, op in zip(used_groups, inst.operands):
+            want = self._operand_expected_size(grp, variant, slot_map)
+            op_sizes.append(want)
+            if want is None or op.kind not in (OperandKind.REG, OperandKind.UREG):
+                continue
+            if op.regs is not None:
+                got = len(op.regs) * 32
+                if got != want:
+                    self._cond_errors.append(
+                        f"{inst.mnemonic}: {op.kind.name} group {op.regs} is "
+                        f"{got}-bit but the matched variant expects a "
+                        f"{want}-bit operand (check the .64/.128/size "
+                        f"modifier)")
+                    return None
+            elif want > 32:
+                rv = int(op.value)
+                self._cond_errors.append(
+                    f"{inst.mnemonic}: operand {op.value} is a single "
+                    f"{op.kind.name.lower()} register but this variant "
+                    f"expects a {want}-bit operand — list every register "
+                    f"explicitly, e.g. {{R{rv},R{rv + 1}}}")
+                return None
+
         # 5. Check CONDITIONS — reject if any hard condition predicate is FALSE.
         cond_err = self._check_conditions(variant, slot_map)
         if cond_err is not None:
@@ -134,7 +165,33 @@ class SassMatcher:
             return None
 
         score = self._compute_score(variant, inst)
-        return MatchResult(variant=variant, slot_map=slot_map, score=score)
+        return MatchResult(variant=variant, slot_map=slot_map, score=score,
+                           op_sizes=op_sizes)
+
+    # ------------------------------------------------------------------
+    def _operand_expected_size(self, group: list[dict], variant: dict,
+                               slot_map: dict) -> Optional[int]:
+        """Expected bit-size of an operand group from the variant's size
+        predicates (IDEST_SIZE / ISRC_A/B/C/E_SIZE).  None = not a plain
+        register operand (composite/modifier) or unresolvable — no check."""
+        preds = variant.get("predicates", {})
+        if not preds:
+            return None
+        key = None
+        for s in group:
+            if s["modifier"]:
+                continue
+            name = s["name"]
+            if name in ("Ra",):        key = "ISRC_A_SIZE"
+            elif name in ("Rb",):      key = "ISRC_B_SIZE"
+            elif name in ("Rc",):      key = "ISRC_C_SIZE"
+            elif name in ("Re",):      key = "ISRC_E_SIZE"
+            elif name.startswith("Rd") or name.startswith("URd"):
+                key = "IDEST_SIZE"
+            break  # primary (first non-modifier) slot decides
+        if key is None or key not in preds:
+            return None
+        return ConditionEvaluator(self.db, slot_map).eval_int(preds[key])
     # ------------------------------------------------------------------
     # Operand grouping — no comma parsing needed
     # ------------------------------------------------------------------
@@ -300,49 +357,54 @@ class SassMatcher:
     # ------------------------------------------------------------------
     def _match_operand_groups(self, groups: list[list[dict]],
                               operands: list[Operand],
-                              slot_map: dict) -> bool:
+                              slot_map: dict) -> Optional[list[list[dict]]]:
         """Match parsed operands to groups.  Optional groups (with defaults)
-        can be skipped to make the count align."""
+        can be skipped to make the count align.  Returns the group used for
+        each operand, or None on failure."""
         if len(groups) == len(operands):
             return self._match_positional(groups, operands, slot_map)
 
         if len(groups) < len(operands):
-            return False  # more operands than slots — impossible
+            return None  # more operands than slots — impossible
 
         # groups > operands: try skipping optional groups
         return self._match_with_skips(groups, operands, 0, 0, slot_map)
 
     def _match_positional(self, groups: list[list[dict]],
                           operands: list[Operand],
-                          slot_map: dict) -> bool:
+                          slot_map: dict) -> Optional[list[list[dict]]]:
+        used: list[list[dict]] = []
         for grp, op in zip(groups, operands):
             if not self._match_group(grp, op, slot_map):
-                return False
-        return True
+                return None
+            used.append(grp)
+        return used
 
     def _match_with_skips(self, groups: list[list[dict]],
                           operands: list[Operand],
                           gi: int, oi: int,
-                          slot_map: dict) -> bool:
+                          slot_map: dict) -> Optional[list[list[dict]]]:
         """Backtracking: match groups[gi:] to operands[oi:], skipping
-        optional groups (those where every slot has a default)."""
+        optional groups (those where every slot has a default).
+        Returns the used-group list or None."""
         if oi == len(operands):
             # All operands consumed — remaining groups must all be optional
             for g in groups[gi:]:
                 if not self._all_defaults(g):
-                    return False
+                    return None
                 self._fill_group_defaults(g, slot_map)
-            return True
+            return []
         if gi == len(groups):
-            return False  # operands left but no groups
+            return None  # operands left but no groups
 
         grp = groups[gi]
         op = operands[oi]
 
         # Try direct match
         if self._match_group(grp, op, slot_map):
-            if self._match_with_skips(groups, operands, gi + 1, oi + 1, slot_map):
-                return True
+            rest = self._match_with_skips(groups, operands, gi + 1, oi + 1, slot_map)
+            if rest is not None:
+                return [grp] + rest
             # Backtrack: undo slot_map entries from this group
             # (We can't easily undo, so we use a copy-based approach instead.
             #  For simplicity, we accept the first successful path.)
@@ -351,13 +413,14 @@ class SassMatcher:
         # Try skipping this group (if optional)
         if self._all_defaults(grp):
             self._fill_group_defaults(grp, slot_map)
-            if self._match_with_skips(groups, operands, gi + 1, oi, slot_map):
-                return True
+            rest = self._match_with_skips(groups, operands, gi + 1, oi, slot_map)
+            if rest is not None:
+                return rest
             # Undo defaults on backtrack
             for s in grp:
                 slot_map.pop(s["name"], None)
 
-        return False
+        return None
 
     # ------------------------------------------------------------------
     def _match_group(self, group: list[dict], op: Operand, slot_map: dict) -> bool:

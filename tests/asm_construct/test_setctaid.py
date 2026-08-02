@@ -23,8 +23,8 @@ from assembler import assemble, CudaModule
 
 def build(set_inst, read_reg):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    IADD3 R4, R2, R2, RZ;[7:7:{0}:5:1]",
              "    IADD3 R4, R4, R4, RZ;[7:7:{}:5:1]",
@@ -35,7 +35,7 @@ def build(set_inst, read_reg):
              f"    {set_inst};[7:7:{{}}:5:1]",
              f"    S2R R22, {read_reg};[0:7:{{}}:5:1]",
              "    IADD3 R23, R22, RZ, RZ;[7:7:{0}:5:1]",
-             "    STG.E desc[UR4][R16.64+0x0], R23;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R16,R17}+0x0], R23;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     return assemble("\n".join(lines))
@@ -74,11 +74,11 @@ check("SETCTAID.Z -> S2R SR_CTAID.Z (0x55, grid Z=0/1)", r, [0x55] * 4)
 
 # .ALL: 64-bit pair packing R20:R21 = X|(Y&0xffff)<<16... : X=R20, Y=R21&0xffff, Z=R21>>16
 # R20=0x55 (as set above), R21=0x02030004 -> X=0x55, Y=0x4, Z=0x203
-r = run("SETCTAID.ALL R20", "SR_CTAID.X", (1, 1, 1))
+r = run("SETCTAID.ALL {R20,R21}", "SR_CTAID.X", (1, 1, 1))
 check("SETCTAID.ALL -> X = R20 (0x55)", r[0], 0x55)
-r = run("SETCTAID.ALL R20", "SR_CTAID.Y", (1, 1, 1))
+r = run("SETCTAID.ALL {R20,R21}", "SR_CTAID.Y", (1, 1, 1))
 check("SETCTAID.ALL -> Y = R21&0xffff (0x4)", r[0], 0x4)
-r = run("SETCTAID.ALL R20", "SR_CTAID.Z", (1, 1, 1))
+r = run("SETCTAID.ALL {R20,R21}", "SR_CTAID.Z", (1, 1, 1))
 check("SETCTAID.ALL -> Z = R21>>16 (0x203)", r[0], 0x203)
 
 # negative / different values
@@ -95,8 +95,8 @@ print("ALL packs X=R20 (low32), Y=R21[15:0], Z=R21[31:16].")
 # SR_VIRTUALSMID readback would change.  It stays constant.
 def build_sm(set_inst):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    IADD3 R4, R2, R2, RZ;[7:7:{0}:5:1]",
              "    IADD3 R4, R4, R4, RZ;[7:7:{}:5:1]",
@@ -108,8 +108,8 @@ def build_sm(set_inst):
              f"    {set_inst};[7:7:{{}}:5:1]",
              "    S2R R10, SR_VIRTUALSMID;[0:7:{}:5:1]",
              "    IADD3 R10, R10, RZ, RZ;[7:7:{0}:5:1]",
-             "    STG.E desc[UR4][R16.64+0x0], R8;[0:1:{0}:1:0]",
-             "    STG.E desc[UR4][R16.64+0x4], R10;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R16,R17}+0x0], R8;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R16,R17}+0x4], R10;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     return assemble("\n".join(lines))
@@ -125,7 +125,7 @@ def run_sm(set_inst):
     mod.devmem_free(d)
     return b, a
 
-for inst in ("SETCTAID.X R20", "SETCTAID.Y R20", "SETCTAID.Z R20", "SETCTAID.ALL R20"):
+for inst in ("SETCTAID.X R20", "SETCTAID.Y R20", "SETCTAID.Z R20", "SETCTAID.ALL {R20,R21}"):
     b, a = run_sm(inst)
     check(f"SM unchanged after {inst} (smid {b}=={a})", b == a, True)
 

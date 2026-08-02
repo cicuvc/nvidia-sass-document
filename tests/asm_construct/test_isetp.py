@@ -27,8 +27,8 @@ import struct
 
 cubin = assemble('''
 #fn isetp_test(out<64>) {
-    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]
-    LDC.64 R6, #param(out);[0:7:{}:1:0]
+    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]
+    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 
     // === Simple form: all 8 icmp ops, Ra=5, Rb=5 ===
     MOV32I R0, 0x00000005;[7:7:{}:5:1]
@@ -36,35 +36,35 @@ cubin = assemble('''
 
     ISETP.F   P0, R0, R1;[7:7:{}:5:1]   // always 0
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}], R2;[7:1:{0}:1:0]
 
     ISETP.LT  P0, R0, R1;[7:7:{}:5:1]   // 5<5 = 0
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x4], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R2;[7:1:{0}:1:0]
 
     ISETP.EQ  P0, R0, R1;[7:7:{}:5:1]   // 5==5 = 1
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x8], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R2;[7:1:{0}:1:0]
 
     ISETP.LE  P0, R0, R1;[7:7:{}:5:1]   // 5<=5 = 1
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0xC], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R2;[7:1:{0}:1:0]
 
     ISETP.GT  P0, R0, R1;[7:7:{}:5:1]   // 5>5 = 0
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x10], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x10], R2;[7:1:{0}:1:0]
 
     ISETP.NE  P0, R0, R1;[7:7:{}:5:1]   // 5!=5 = 0
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x14], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x14], R2;[7:1:{0}:1:0]
 
     ISETP.GE  P0, R0, R1;[7:7:{}:5:1]   // 5>=5 = 1
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x18], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x18], R2;[7:1:{0}:1:0]
 
     ISETP.T   P0, R0, R1;[7:7:{}:5:1]   // always 1
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x1C], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x1C], R2;[7:1:{0}:1:0]
 
     // === Signed vs unsigned: Ra=-1 (0xFFFFFFFF), Rb=5 ===
     MOV32I R0, 0xFFFFFFFF;[7:7:{}:5:1]
@@ -72,19 +72,19 @@ cubin = assemble('''
 
     ISETP.LT.S32 P0, R0, R1;[7:7:{}:5:1]   // -1 < 5 = 1
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x20], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x20], R2;[7:1:{0}:1:0]
 
     ISETP.LT.U32 P0, R0, R1;[7:7:{}:5:1]   // 0xFFFFFFFF < 5 = 0
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x24], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x24], R2;[7:1:{0}:1:0]
 
     // === Immediate form: Ra=5, Rb=5 (imm); Pu=EQ&PT=1, Pv=~EQ&PT=0 ===
     MOV32I R0, 0x00000005;[7:7:{}:5:1]
     ISETP.EQ.U32.AND P0, P1, R0, 5, PT;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x28], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x2C], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x28], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x2C], R3;[7:1:{0}:1:0]
 
     // === Full form bop matrix: Ra=5, Rb=5 (raw EQ=1) ===
     MOV32I R0, 0x00000005;[7:7:{}:5:1]
@@ -95,48 +95,48 @@ cubin = assemble('''
     ISETP.EQ.AND P2, P3, R0, R1, P0;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x30], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x34], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x30], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x34], R3;[7:1:{0}:1:0]
 
     // AND, Pp=0  -> Pu = 1&0 = 0,  Pv = ~1&0 = 0
     ISETP.F P0, RZ, RZ;[7:7:{}:5:1]
     ISETP.EQ.AND P2, P3, R0, R1, P0;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x38], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x3C], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x38], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x3C], R3;[7:1:{0}:1:0]
 
     // OR, Pp=1  -> Pu = 1|1 = 1,  Pv = ~1|1 = 1
     ISETP.T P0, RZ, RZ;[7:7:{}:5:1]
     ISETP.EQ.OR P2, P3, R0, R1, P0;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x40], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x44], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x40], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x44], R3;[7:1:{0}:1:0]
 
     // OR, Pp=0  -> Pu = 1|0 = 1,  Pv = ~1|0 = 0
     ISETP.F P0, RZ, RZ;[7:7:{}:5:1]
     ISETP.EQ.OR P2, P3, R0, R1, P0;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x48], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x4C], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x48], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4C], R3;[7:1:{0}:1:0]
 
     // XOR, Pp=1 -> Pu = 1^1 = 0,  Pv = ~1^1 = 1
     ISETP.T P0, RZ, RZ;[7:7:{}:5:1]
     ISETP.EQ.XOR P2, P3, R0, R1, P0;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x50], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x54], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x50], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x54], R3;[7:1:{0}:1:0]
 
     // XOR, Pp=0 -> Pu = 1^0 = 1,  Pv = ~1^0 = 0
     ISETP.F P0, RZ, RZ;[7:7:{}:5:1]
     ISETP.EQ.XOR P2, P3, R0, R1, P0;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x58], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x5C], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x58], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x5C], R3;[7:1:{0}:1:0]
 
     // === Full form with raw=0: Ra=5, Rb=6 (EQ false) ===
     MOV32I R1, 0x00000006;[7:7:{}:5:1]
@@ -146,15 +146,15 @@ cubin = assemble('''
     ISETP.EQ.XOR P2, P3, R0, R1, P0;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x60], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x64], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x60], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x64], R3;[7:1:{0}:1:0]
 
     // AND, Pp=1 -> Pu = 0&1 = 0,  Pv = ~0&1 = 1
     ISETP.EQ.AND P2, P3, R0, R1, P0;[7:7:{}:5:1]
     P2R R2, PR, RZ, 0x7f;[7:7:{1}:8:0]
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:8:0]
-    STG.E desc[UR4][R6.64+0x68], R2;[7:1:{0}:1:0]
-    STG.E desc[UR4][R6.64+0x6C], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x68], R2;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x6C], R3;[7:1:{0}:1:0]
 
     EXIT;[7:7:{}:5:0]
 }

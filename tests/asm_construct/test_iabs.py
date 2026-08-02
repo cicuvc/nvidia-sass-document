@@ -19,45 +19,45 @@ import struct
 
 cubin = assemble('''
 #fn iabs_test(out<64>, n<4>) {
-    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]
-    LDC.64 R6, #param(out);[0:7:{}:1:0]
+    LDCU.64 {UR4,UR5}, c[0x0][0x358];[0:7:{}:1:0]
+    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]
     LDCU UR3, #param(n);[2:7:{}:1:0]     // n = -3; NOT UR5 — UR4:UR5 is the
                                          // 64-bit cache descriptor high half
 
     // === RRR: register source ===
     MOV32I R0, 0x00000000;[7:7:{}:5:1]   // 0
     IABS R3, R0;[7:7:{}:8:1]
-    STG.E desc[UR4][R6.64+0x0], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R3;[0:1:{0}:1:0]
     MOV32I R0, 0x00000001;[7:7:{}:5:1]   // 1
     IABS R3, R0;[7:7:{}:8:1]
-    STG.E desc[UR4][R6.64+0x4], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R3;[0:1:{0}:1:0]
     MOV32I R0, 0xFFFFFFFF;[7:7:{}:5:1]   // -1
     IABS R3, R0;[7:7:{}:8:1]
-    STG.E desc[UR4][R6.64+0x8], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R3;[0:1:{0}:1:0]
     MOV32I R0, 0x7FFFFFFF;[7:7:{}:5:1]   // INT_MAX
     IABS R3, R0;[7:7:{}:8:1]
-    STG.E desc[UR4][R6.64+0xC], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R3;[0:1:{0}:1:0]
     MOV32I R0, 0x80000000;[7:7:{}:5:1]   // INT_MIN -> wraps to itself
     IABS R3, R0;[7:7:{}:8:1]
-    STG.E desc[UR4][R6.64+0x10], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x10], R3;[0:1:{0}:1:0]
     MOV32I R0, 0x80000001;[7:7:{}:5:1]   // INT_MIN+1
     IABS R3, R0;[7:7:{}:8:1]
-    STG.E desc[UR4][R6.64+0x14], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x14], R3;[0:1:{0}:1:0]
     MOV32I R0, 0xDEADBEEF;[7:7:{}:5:1]   // negative
     IABS R3, R0;[7:7:{}:8:1]
-    STG.E desc[UR4][R6.64+0x18], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x18], R3;[0:1:{0}:1:0]
 
     // === RsIR: signed immediate source ===
     IABS R3, 0xFFFFFF00;[7:7:{}:8:1]     // -0x100
-    STG.E desc[UR4][R6.64+0x1C], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x1C], R3;[0:1:{0}:1:0]
     IABS R3, 0x80000000;[7:7:{}:8:1]     // INT_MIN imm -> wraps
-    STG.E desc[UR4][R6.64+0x20], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x20], R3;[0:1:{0}:1:0]
     IABS R3, 0x00000005;[7:7:{}:8:1]
-    STG.E desc[UR4][R6.64+0x24], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x24], R3;[0:1:{0}:1:0]
 
     // === RUR: uniform register source (n = -3) ===
     IABS R3, UR3;[7:7:{2}:8:1]           // req={2} = wait LDCU UR3 (var-latency)
-    STG.E desc[UR4][R6.64+0x28], R3;[0:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x28], R3;[0:1:{0}:1:0]
 
     EXIT;[7:7:{}:5:0]
 }

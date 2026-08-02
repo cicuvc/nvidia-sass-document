@@ -44,8 +44,8 @@ def run(body, block=32):
     """body: list of SASS lines inside the kernel; stores R20/R21/R22 per lane
     at buf[4*tid], buf[4*tid+128], buf[4*tid+256]."""
     lines = ["#fn k(buf<2048>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    MOV32I R20, 0xAAAAAAAA;[7:7:{0}:5:1]",
              "    MOV32I R21, 0xBBBBBBBB;[7:7:{0}:5:1]",
@@ -56,9 +56,9 @@ def run(body, block=32):
              "    IADD3 R3, R3, R3, RZ;[7:7:{0}:5:1]",
              "    IADD3 R4, R6, R3, RZ;[7:7:{0}:5:1]",
              "    IADD3 R5, R7, RZ, RZ;[7:7:{0}:5:1]",
-             "    STG.E desc[UR4][R4.64+0x0], R20;[0:1:{0}:1:0]",
-             "    STG.E desc[UR4][R4.64+0x80], R21;[0:1:{0}:1:0]",
-             "    STG.E desc[UR4][R4.64+0x100], R22;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R4,R5}+0x0], R20;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R4,R5}+0x80], R21;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R4,R5}+0x100], R22;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))

@@ -30,12 +30,12 @@ from assembler import assemble, CudaModule
 
 def build_kernel(op, src64=False):
     if src64:
-        src = "    LDG.E R10, desc[UR4][R16.64+0x80];[1:7:{0}:5:1]"
+        src = "    LDG.E R10, desc[{UR4,UR5}][{R16,R17}+0x80];[1:7:{0}:5:1]"
     else:
-        src = "    LDG.E R10, desc[UR4][R16.64];[1:7:{0}:5:1]"
+        src = "    LDG.E R10, desc[{UR4,UR5}][{R16,R17}];[1:7:{0}:5:1]"
     lines = ["#fn mufu(buf<16384>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    IADD3 R4, R2, R2, RZ;[7:7:{0}:5:1]",
              "    IADD3 R4, R4, R4, RZ;[7:7:{}:5:1]",
@@ -45,7 +45,7 @@ def build_kernel(op, src64=False):
              "    IADD3 R18, R10, RZ, RZ;[7:7:{1}:5:1]",
             f"    MUFU.{op} R20, R10;[1:7:{{0}}:5:1]",
              "    IADD3 R22, R20, RZ, RZ;[7:7:{1}:5:1]",
-             "    STG.E desc[UR4][R16.64+0x1000], R22;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R16,R17}+0x1000], R22;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     return assemble("\n".join(lines))

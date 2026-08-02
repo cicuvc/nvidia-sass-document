@@ -32,15 +32,15 @@ CASES = [
     # 64-bit dest pair must be even-aligned (2x:2x+1)
     ("IMAD.WIDE R3, R0, R1, RZ;[7:7:{}:5:1]",
      "MISALIGNED_REG_ERROR", "IMAD.WIDE odd Rd (64-bit pair)"),
-    ("LDG.E.64 R3, desc[UR4][R6.64];[7:7:{}:5:1]",
+    ("LDG.E.64 R3, desc[{UR4,UR5}][{R6,R7}];[7:7:{}:5:1]",
      "MISALIGNED_REG_ERROR", "LDG.E.64 odd Rd (64-bit pair)"),
     # 64-bit source operand pair
     ("IMAD.WIDE R2, R0, R1, R3;[7:7:{}:5:1]",
      "MISALIGNED_REG_ERROR", "IMAD.WIDE odd Rc (64-bit addend pair)"),
     # 128-bit dest quad must be 4-aligned (4x:4x+3)
-    ("LDG.E.128 R2, desc[UR4][R6.64];[7:7:{}:5:1]",
+    ("LDG.E.128 R2, desc[{UR4,UR5}][{R6,R7}];[7:7:{}:5:1]",
      "MISALIGNED_REG_ERROR", "LDG.E.128 Rd=2 (needs 4-alignment)"),
-    ("LDG.E.128 R3, desc[UR4][R6.64];[7:7:{}:5:1]",
+    ("LDG.E.128 R3, desc[{UR4,UR5}][{R6,R7}];[7:7:{}:5:1]",
      "MISALIGNED_REG_ERROR", "LDG.E.128 Rd=3 (odd, needs 4-alignment)"),
 ]
 

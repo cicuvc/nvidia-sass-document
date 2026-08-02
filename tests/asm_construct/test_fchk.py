@@ -44,21 +44,21 @@ DEN = 1                 # smallest denormal
 
 def run(pairs):
     lines = ["#fn k(buf<4096>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    IADD3 R4, R2, R2, RZ;[7:7:{0}:5:1]",
              "    IADD3 R4, R4, R4, RZ;[7:7:{}:5:1]",
              "    IADD3 R16, R6, R4, RZ;[7:7:{}:5:1]",
              "    IADD3 R17, R7, RZ, RZ;[7:7:{}:5:1]",
-             "    LDG.E R10, desc[UR4][R16.64];[1:7:{0}:5:1]",        # Ra, wr=SB1
+             "    LDG.E R10, desc[{UR4,UR5}][{R16,R17}];[1:7:{0}:5:1]",        # Ra, wr=SB1
              "    IADD3 R18, R10, RZ, RZ;[7:7:{1}:5:1]",
-             "    LDG.E R11, desc[UR4][R16.64+0x100];[2:7:{0}:5:1]",  # Rb, wr=SB2
+             "    LDG.E R11, desc[{UR4,UR5}][{R16,R17}+0x100];[2:7:{0}:5:1]",  # Rb, wr=SB2
              "    IADD3 R19, R11, RZ, RZ;[7:7:{2}:5:1]",
              "    MOV R3, 1;[7:7:{}:5:1]",
              "    FCHK P0, R10, R11;[1:7:{0}:5:1]",                   # wr=SB1
              "    SEL R22, R3, RZ, P0;[7:7:{1}:5:1]",                 # wait SB1
-             "    STG.E desc[UR4][R16.64+0x200], R22;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R16,R17}+0x200], R22;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))
@@ -130,21 +130,21 @@ check("-1/2 safe", run([(fb(0) | 0x80000000, fb(1))])[0], 0)
 # 9. negate/absolute modifiers don't change the decision (magnitude-based)
 def run_mods(pairs, ra_form="R10", rb_form="R11"):
     lines = ["#fn k(buf<4096>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    IADD3 R4, R2, R2, RZ;[7:7:{0}:5:1]",
              "    IADD3 R4, R4, R4, RZ;[7:7:{}:5:1]",
              "    IADD3 R16, R6, R4, RZ;[7:7:{}:5:1]",
              "    IADD3 R17, R7, RZ, RZ;[7:7:{}:5:1]",
-             "    LDG.E R10, desc[UR4][R16.64];[1:7:{0}:5:1]",
+             "    LDG.E R10, desc[{UR4,UR5}][{R16,R17}];[1:7:{0}:5:1]",
              "    IADD3 R18, R10, RZ, RZ;[7:7:{1}:5:1]",
-             "    LDG.E R11, desc[UR4][R16.64+0x100];[2:7:{0}:5:1]",
+             "    LDG.E R11, desc[{UR4,UR5}][{R16,R17}+0x100];[2:7:{0}:5:1]",
              "    IADD3 R19, R11, RZ, RZ;[7:7:{2}:5:1]",
              "    MOV R3, 1;[7:7:{}:5:1]",
             f"    FCHK P0, {ra_form}, {rb_form};[1:7:{{0}}:5:1]",
              "    SEL R22, R3, RZ, P0;[7:7:{1}:5:1]",
-             "    STG.E desc[UR4][R16.64+0x200], R22;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R16,R17}+0x200], R22;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))

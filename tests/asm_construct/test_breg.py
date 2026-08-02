@@ -37,8 +37,8 @@ def check(name, got, want):
 
 def run(inner, block=32, stall=13):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              f"    ISETP.LT.AND P0, PT, R2, 0x10, PT;[7:7:{{0}}:{stall}:1]",
              ] + inner + [
@@ -46,7 +46,7 @@ def run(inner, block=32, stall=13):
              "    IADD3 R3, R3, R3, RZ;[7:7:{0}:5:1]",
              "    IADD3 R8, R6, R3, RZ;[7:7:{0}:5:1]",
              "    IADD3 R9, R7, RZ, RZ;[7:7:{0}:5:1]",
-             "    STG.E desc[UR4][R8.64+0x0], R4;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R8,R9}+0x0], R4;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))

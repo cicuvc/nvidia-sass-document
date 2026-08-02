@@ -149,6 +149,17 @@ Key conventions for notes:
 - Latency tables: map the instruction's pipe to the correct row in TABLE_TRUE/TABLE_OUTPUT/TABLE_ANTI
 
 ## Critical gotchas
+- **Explicit register groups in hand-assembled SASS**: every 64/128-bit operand lists
+  **all** its registers as `{Ra,Rb}` / `{Ra,Rb,Rc,Rd}`. The legacy implicit forms are
+  rejected by the parser/matcher: `R6.64`, `LDC.64 R6`, `LDCU.64 UR4`,
+  `desc[UR4]`, `MOV.64 R0` (single-reg dest) — all must be rewritten
+  (`LDC.64 {R6,R7}`, `desc[{UR4,UR5}]`, `STG desc[{UR4,UR5}][{R6,R7}+0x0]`).
+  This is why the UR4/UR5-descriptor and R6/R7-address reuse bugs are gone: the
+  pair is explicit, and the matcher cross-checks the group width against the
+  matched variant's `IDEST_SIZE`/`ISRC_*_SIZE` (a single register on a 64-bit
+  slot, or a mismatched group width, is an error). Note this is the **assembler
+  source dialect only** — cuobjdump still *prints* `[R6.64+0x0]`/`desc[UR4]`
+  and the tools decoders keep parsing that printer syntax.
 - The header says `ARCHITECTURE "Volta"` and `WORD_SIZE 64`, but this is the **sm_90** file and each SASS instruction is **16 bytes / 128 bits** (`FUNIT uC` -> `ENCODING WIDTH 128`; bit positions in `BITS_*`/`FUNIT` masks run [127:0], MSB-left). Trust the 128-bit width, not `WORD_SIZE`.
 - Opcode names carry a pipe suffix in the latency file (e.g. `IADD3` and `IADD3int_pipe` are the same op; the suffixed form is the pipe-bound variant). Both appear in OPERATION SETS.
 - "Illegal encoding" tables (`TABLES_*_illegal_encodings`) map input tuples to error codes; they are *rejections*, not valid decodes.

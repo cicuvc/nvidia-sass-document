@@ -143,6 +143,19 @@ class ConditionEvaluator:
                 failures.append((c["error"], c.get("message", "")))
         return failures
 
+    def eval_int(self, predicate: str) -> Optional[int]:
+        """Evaluate a pure-arithmetic expression (size predicates) to an int.
+
+        Returns None on any parse/resolve failure (caller treats as "no
+        constraint").  Used for validating explicit register-group width
+        against the matched variant's IDEST_SIZE/ISRC_*_SIZE."""
+        self._toks = tokenize(predicate)
+        self._pos = 0
+        try:
+            return self._impl()
+        except Exception:
+            return None
+
     # ------------------------------------------------------------------
     # Grammar
     # ------------------------------------------------------------------

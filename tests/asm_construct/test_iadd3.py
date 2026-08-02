@@ -8,8 +8,8 @@ import struct
 
 cubin = assemble('''
 #fn carry_test(out<32>) {
-    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]
-    LDC.64 R6, #param(out);[0:7:{}:1:0]
+    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]
+    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 
     MOV32I R0, 0xFFFFFFFF;[7:7:{}:1:0]
     MOV32I R1, 0xFFFFFFFF;[7:7:{}:1:0]
@@ -17,19 +17,19 @@ cubin = assemble('''
 
     IADD3 R3, P0, P1, R0, R1, R2;[7:7:{}:5:0]
     IADD3.X R3, P0, P1, R0, R1, R2, P0, P1;[7:7:{}:5:0]
-    STG.E desc[UR4][R6.64], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}], R3;[7:1:{0}:1:0]
 
     P2R R3, PR, RZ, 0x7f;[7:7:{1}:1:0]
-    STG.E desc[UR4][R6.64+0x4], R3;[7:1:{}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R3;[7:1:{}:1:0]
 
     P2R.B1 R5, PR, RZ, 0x7f;[7:7:{1}:5:1]
-    STG.E desc[UR4][R6.64+0x8], R5;[7:1:{}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R5;[7:1:{}:1:0]
 
     P2R.B2 R5, PR, RZ, 0x7f;[7:7:{1}:5:1]
-    STG.E desc[UR4][R6.64+0xC], R5;[7:1:{}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R5;[7:1:{}:1:0]
 
     P2R.B3 R5, PR, RZ, 0x7f;[7:7:{1}:5:1]
-    STG.E desc[UR4][R6.64+0x10], R5;[7:1:{}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x10], R5;[7:1:{}:1:0]
 
     EXIT;[7:7:{}:5:0]
 }

@@ -19,8 +19,8 @@ from assembler import assemble, CudaModule
 
 def build():
     lines = ["#fn s2r_test(out<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(out);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
              # S2R writes SB0 (wr=0); result is ready only after SB0 set.
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              # derive per-thread address out + 4*tid
@@ -29,7 +29,7 @@ def build():
              "    IADD3 R20, R6, R5, RZ;[7:7:{}:5:1]",
              "    IADD3 R21, R7, RZ, RZ;[7:7:{}:5:1]",
              # STG waits on SB0 (the S2R) before reading R20/R2
-             "    STG.E desc[UR4][R20.64], R2;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R20,R21}], R2;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     return assemble("\n".join(lines))

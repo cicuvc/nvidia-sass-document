@@ -32,8 +32,8 @@ import ctypes
 # output predicate P0 capturing the carry-out bit.
 src = '''
 #fn imad_x_test(out<16>) {
-    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]
-    LDC.64 R6, #param(out);[0:7:{}:1:0]
+    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]
+    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 
     // [1] IMAD.X no invert: 0xFFFFFFFF*0xFFFFFFFF + 1
     //     lo32 = 0xFFFFFFFE00000001 + 1 = 0xFFFFFFFE00000002 -> lo = 2
@@ -41,22 +41,22 @@ src = '''
     MOV32I R1, 0xFFFFFFFF;[7:7:{}:5:1]
     MOV32I R2, 0x00000001;[7:7:{}:5:1]
     IMAD.X R3, R0, R1, R2, P0;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}], R3;[7:1:{0}:1:0]
 
     // [2] IMAD.X with ~Rc (one's complement): + ~1 = + 0xFFFFFFFE
     //     0xFFFFFFFE00000001 + 0xFFFFFFFE = 0xFFFFFFFEFFFFFFFF -> lo = 0xFFFFFFFF
     IMAD.X R3, R0, R1, ~R2, P1;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x4], R3;[7:1:{0}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R3;[7:1:{0}:1:0]
 
     // [3] IMAD.WIDE.X
     MOV32I R2, 0x00000000;[7:7:{}:5:1]
     MOV32I R3, 0x00000000;[7:7:{}:5:1]
-    IMAD.WIDE.X R4, P2, R0, R1, RZ, P3;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0x8], R4;[7:1:{0}:1:0]
+    IMAD.WIDE.X {R4,R5}, P2, R0, R1, {RZ,RZ}, P3;[7:7:{}:5:1]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R4;[7:1:{0}:1:0]
 
     // [4] IMAD.HI.X
-    IMAD.HI.X R4, P4, R0, R1, RZ, P5;[7:7:{}:5:1]
-    STG.E desc[UR4][R6.64+0xC], R4;[7:1:{0}:1:0]
+    IMAD.HI.X R4, P4, R0, R1, {RZ,RZ}, P5;[7:7:{}:5:1]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R4;[7:1:{0}:1:0]
 
     EXIT;[7:7:{}:5:0]
 }

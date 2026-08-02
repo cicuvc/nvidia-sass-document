@@ -39,21 +39,21 @@ from assembler import assemble, CudaModule
 
 def build_kernel(insts):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
-             "    CS2R R30, SR_CLOCKLO;[7:7:{}:5:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
+             "    CS2R {R30,R31}, SR_CLOCKLO;[7:7:{}:5:0]",
              "    NOP;[7:7:{}:5:0]"]
     lines += list(insts)
-    lines += ["    CS2R R26, SR_CLOCKLO;[7:7:{}:5:0]",
+    lines += ["    CS2R {R26,R27}, SR_CLOCKLO;[7:7:{}:5:0]",
               "    NOP;[7:7:{}:5:0]",
               "    MOV R8, R30;[7:7:{}:5:1]",
               "    MOV R9, R31;[7:7:{}:5:1]",
               "    MOV R10, R26;[7:7:{}:5:1]",
               "    MOV R11, R27;[7:7:{}:5:1]",
-              "    STG.E desc[UR4][R6.64+0x0], R8;[0:1:{0}:1:0]",
-              "    STG.E desc[UR4][R6.64+0x4], R9;[0:1:{0}:1:0]",
-              "    STG.E desc[UR4][R6.64+0x8], R10;[0:1:{0}:1:0]",
-              "    STG.E desc[UR4][R6.64+0xC], R11;[0:1:{0}:1:0]",
+              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R8;[0:1:{0}:1:0]",
+              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R9;[0:1:{0}:1:0]",
+              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R10;[0:1:{0}:1:0]",
+              "    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R11;[0:1:{0}:1:0]",
               "    EXIT;[7:7:{}:5:0]",
               "}"]
     return assemble("\n".join(lines))
@@ -75,13 +75,13 @@ def run_total(insts):
 # --- 1. execution continues / no side effect --------------------------------
 def build_continue():
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 UR4, c[0x0][0x358];[0:7:{}:1:0]",
-             "    LDC.64 R6, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    MOV32I R10, 0x00001000;[7:7:{}:5:1]",
              "    NANOTRAP R10;[7:7:{}:5:1]",
              "    MOV32I R22, 0xdeadbeef;[7:7:{}:5:1]",
-             "    STG.E desc[UR4][R6.64+0x0], R22;[0:1:{0}:1:0]",
-             "    STG.E desc[UR4][R6.64+0x4], R10;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R22;[0:1:{0}:1:0]",
+             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R10;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     cubin = assemble("\n".join(lines))

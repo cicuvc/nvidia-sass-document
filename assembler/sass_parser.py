@@ -284,20 +284,24 @@ class Parser:
             val = -int(t2.text, 0)
             return Operand.imm_s(val)
 
+        # explicit register group: {Ra,Rb} / {Ra,Rb,Rc,Rd} (64/128-bit)
+        if t.type == "LBRACE":
+            return self._parse_reg_group()
+
         # registers
         if t.type == "REG":
             self.pop()
-            width = self._parse_width_suffix()
+            self._reject_width_suffix(t.text)
             iswz = self._parse_iswz_suffix()
-            op = Operand.reg(t.text, width=width)
+            op = Operand.reg(t.text, width=32)
             op.iswz = iswz
             return op
 
         if t.type == "UREG":
             self.pop()
-            width = self._parse_width_suffix()
+            self._reject_width_suffix(t.text)
             iswz = self._parse_iswz_suffix()
-            op = Operand.ureg(t.text, width=width)
+            op = Operand.ureg(t.text, width=32)
             op.iswz = iswz
             return op
 
@@ -361,19 +365,64 @@ class Parser:
 
         raise SyntaxError(f"unexpected token {t.type}({t.text!r})")
 
-    def _parse_width_suffix(self) -> int:
+    def _reject_width_suffix(self, regname: str) -> None:
+        """A numeric register-width suffix (.64/.128) is obsolete — every
+        register of a wide operand must be listed explicitly as {Ra,Rb}."""
         if self.peek() and self.peek().type == "DOT":
-            # only consume .N or .64-style numeric widths; leave .H0_H0 etc.
             nxt = self.peek2()
-            if nxt and nxt.type == "NUMBER":
-                self.pop()
-                self.pop()
-                return int(nxt.text)
-            if nxt and nxt.type == "IDENT" and nxt.text.isdigit():
-                self.pop()
-                self.pop()
-                return int(nxt.text)
-        return 32
+            if nxt and (nxt.type == "NUMBER"
+                        or (nxt.type == "IDENT" and nxt.text.isdigit())):
+                raise SyntaxError(
+                    f"register width suffix .{nxt.text} on {regname} is "
+                    f"obsolete — list every register explicitly, e.g. "
+                    f"{{{regname},{regname[:-1]}{int(regname[-1:])+1 if regname[-1].isdigit() else ''}}}"
+                    f" for a 64-bit operand")
+
+    def _parse_reg_group(self) -> Operand:
+        """Parse an explicit multi-register operand {Ra,Rb} / {Ra,Rb,Rc,Rd}.
+
+        Members must be same-class, consecutive, in-range (a group of all RZ
+        is allowed).  Returns a REG/UREG operand with ``regs`` set and
+        ``width`` = len(regs)*32."""
+        self.expect("LBRACE")
+        regs: list[int] = []
+        uniform: bool | None = None
+        while True:
+            t = self.expect("REG", "UREG")
+            is_uni = t.type == "UREG"
+            if uniform is None:
+                uniform = is_uni
+            elif uniform != is_uni:
+                raise SyntaxError(
+                    "register group cannot mix R and UR registers")
+            if t.text.upper() in ("RZ", "URZ"):
+                regs.append(255)
+            else:
+                regs.append(int(t.text[2:] if is_uni else t.text[1:]))
+            if not self.skip("COMMA"):
+                break
+        self.expect("RBRACE")
+        if len(regs) not in (2, 4):
+            raise SyntaxError(
+                f"register group must list 2 (64-bit) or 4 (128-bit) "
+                f"registers, got {len(regs)}")
+        all_rz = all(r == 255 for r in regs)
+        if not all_rz:
+            if 255 in regs:
+                raise SyntaxError(
+                    "register group cannot mix RZ with real registers")
+            for a, b in zip(regs, regs[1:]):
+                if b != a + 1:
+                    raise SyntaxError(
+                        f"register group must be consecutive, got {regs}")
+            kind = OperandKind.UREG if uniform else OperandKind.REG
+            hi = 63 if uniform else 254
+            for r in regs:
+                if r > hi:
+                    raise SyntaxError(
+                        f"register {r} out of range for "
+                        f"{'uniform' if uniform else 'general'} register group")
+        return Operand.reg_group(regs, uniform=bool(uniform))
 
     _ISWZ_MAP = {"H1_H0": 0, "F32": 1, "H0_H0": 2, "H1_H1": 3, "H0_NH1": 4}
 
@@ -393,16 +442,28 @@ class Parser:
         self.pop()  # desc
         self.expect("LBRACKET")
         t = self.peek()
-        if t and t.type == "REG":
-            self.pop()
-            ureg_val = 255 if t.text.upper() == "RZ" else int(t.text[1:])
-            ureg_op = Operand(OperandKind.UREG, ureg_val)
+        if t and t.type == "LBRACE":
+            grp = self._parse_reg_group()
+            if grp.kind != OperandKind.UREG or len(grp.regs or ()) != 2:
+                raise SyntaxError(
+                    "descriptor must be a 64-bit uniform pair: "
+                    "desc[{URx,URx+1}]")
+            base = grp.regs[0]
+        elif t and t.type in ("REG", "UREG"):
+            raise SyntaxError(
+                "single-register descriptor is ambiguous (a descriptor is "
+                "always the 64-bit pair URx:URx+1) — write "
+                "desc[{URx,URx+1}]")
         else:
-            t = self.expect("UREG")
-            ureg_op = Operand.ureg(t.text)
-        width = self._parse_width_suffix()
+            raise SyntaxError(
+                "expected descriptor register group after 'desc['")
         self.expect("RBRACKET")
+        ureg_op = Operand.ureg("URZ" if base == 255 else f"UR{base}")
+        ureg_op.regs = [base, base + 1] if base != 255 else [255, 255]
+        ureg_op.width = 64
         op = Operand.mem_desc(ureg_op)
+        op.regs = ureg_op.regs
+        op.width = 64
         if self.peek() and self.peek().type == "LBRACKET":
             addr = self._parse_mem_addr()
             op.addr_reg = addr.value if isinstance(addr.value, int) else 0
@@ -444,6 +505,7 @@ class Parser:
         self.expect("RBRACKET")
         op = Operand.mem_addr(base, offset=offset)
         op.width = base.width
+        op.regs = base.regs
         return op
 
     def parse_kernel(self) -> KernelDecl:
