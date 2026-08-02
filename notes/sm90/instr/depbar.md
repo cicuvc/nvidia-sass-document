@@ -94,3 +94,34 @@ warp's whole cp.async group count; `cnt=1` keeps one group in flight
   outstanding LDGSTS groups a scoreboard can track).
 - `depbar_ur_` dynamic-count use: which PTX (`cp.async.wait_group` with a runtime
   operand?) emits the uniform-register count form `0x1d1a`.
+
+## Resolved: silicon-verified LE partial-drain semantics (SM120)
+
+`tests/asm_construct/test_depbar.py` verifies the counted wait WITHOUT
+LDGSTS/LDGDEPBAR, by bookkeeping a scoreboard with ordinary `wr=SBn` ops:
+2 MUFU (~18 cyc) + 1 cold LDG (~500-1000 cyc), all `wr=SB0` -> counter 3.
+
+| barrier | wait (cyc) | LDG result |
+|---------|-----------|------------|
+| `DEPBAR.LE SB0, 3` | ~10 | stale garbage (load in flight) |
+| `DEPBAR.LE SB0, 1` | ~10 | stale garbage (load STILL in flight) |
+| `DEPBAR.LE SB0, 0` | ~500-1000 | valid |
+| `req={0}` consumer | ~500-1000 | valid |
+
+Conclusive: **`DEPBAR.LE SBn, cnt` proceeds as soon as SBn's counter is
+`<= cnt`** — with cnt>=1 it lets dependent code run while ops are still in
+flight (their registers are stale), while `cnt=0` is the same force-to-zero as
+a `req` wait.  The S-list `{S}` forces those scoreboards to 0 even when the LE
+part is already satisfied (`DEPBAR.LE SB0, 63, {1}` waited for a SB1 load);
+`DEPBAR {S}` is a pure force-0 drain; `DEPBAR.ALL` drains all.  `depbar_ur_`
+(dynamic count from a uniform reg, opcode 0x1d1a, URb at [39:32], S-list at
+[53:48]) verified with UR=0 (drains) vs UR=1 (proceeds early).
+
+Hand-assembler gotchas:
+- A uniform-register count needs the LDCU loaded with a sufficient stall
+  (`LDCU UR3, #param(cnt);[3:7:{}:2:0]` — stall=2, yield=0) AND the DEPBAR
+  must `req` that scoreboard (`DEPBAR.LE SB0, UR3;[7:7:{3}:5:1]`), else it
+  reads a stale 0.
+- Encoding: le[47], sbidx[46:44], cnt[43:38], S-list[37:32] (reg form) /
+  [53:48] (UR form).  The assembler rejects `sbidx ∈ S` (matches the spec
+  condition, which required adding `&`/`<<` to the condition evaluator).

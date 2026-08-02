@@ -41,6 +41,7 @@ TOKENS = [
     ("PRED", r"(?:P[0-6]|PT)\b"),
     ("UPRED", r"(?:UP[0-6]|UPT)\b"),
     ("BAR", r"(?<!\.)B(?:15|1[0-4]|[0-9])\b"),
+    ("SB", r"SB[0-5]\b"),
     ("IDENT", r"[A-Za-z_][A-Za-z0-9_]*"),
 ]
 
@@ -343,6 +344,11 @@ class Parser:
             self.pop()
             return Operand(OperandKind.BAR, int(t.text[1:]))
 
+        # scoreboard: SB0..SB5 (DEPBAR)
+        if t.type == "SB":
+            self.pop()
+            return Operand.sb(t.text)
+
         # label reference: #label(name)
         if t.type == "LABEL_REF_DIRECTIVE":
             self.pop()
@@ -391,12 +397,24 @@ class Parser:
                     f" for a 64-bit operand")
 
     def _parse_reg_group(self) -> Operand:
-        """Parse an explicit multi-register operand {Ra,Rb} / {Ra,Rb,Rc,Rd}.
-
-        Members must be same-class, consecutive, in-range (a group of all RZ
-        is allowed).  Returns a REG/UREG operand with ``regs`` set and
-        ``width`` = len(regs)*32."""
+        """Parse an explicit multi-register operand {Ra,Rb} / {Ra,Rb,Rc,Rd},
+        or a DEPBAR scoreboard_list bitset {0,2,4} when the members are
+        plain numbers."""
         self.expect("LBRACE")
+        t0 = self.peek()
+        if t0 and t0.type in ("NUMBER", "HEX"):
+            idxs: list[int] = []
+            while True:
+                t = self.expect("NUMBER", "HEX")
+                idxs.append(int(t.text, 0))
+                if not self.skip("COMMA"):
+                    break
+            self.expect("RBRACE")
+            for b in idxs:
+                if b < 0 or b > 5:
+                    raise SyntaxError(
+                        f"scoreboard_list bit {b} out of range (SB0..SB5)")
+            return Operand.bitset(idxs)
         regs: list[int] = []
         uniform: bool | None = None
         while True:

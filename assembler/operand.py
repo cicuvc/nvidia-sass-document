@@ -21,6 +21,8 @@ class OperandKind(enum.Enum):
     PR = "PR"
     NP = "NP"
     BAR = "BAR"
+    SB = "SB"
+    BITSET = "BITSET"
 
 
 @dataclass
@@ -131,6 +133,24 @@ class Operand:
     @staticmethod
     def mem_desc(ureg: Operand) -> Operand:
         return Operand(OperandKind.MEM_DESC, ureg.value)
+
+    @staticmethod
+    def bar(name: str) -> Operand:
+        """BAR/BD bar register B0..B15."""
+        return Operand(OperandKind.BAR, int(name[1:]))
+
+    @staticmethod
+    def sb(name: str) -> Operand:
+        """DEPBAR scoreboard SB0..SB5."""
+        return Operand(OperandKind.SB, int(name[2:]))
+
+    @staticmethod
+    def bitset(bit_indices: list[int]) -> Operand:
+        """DEPBAR scoreboard_list bitset {0,2,4} -> bitmask."""
+        mask = 0
+        for b in bit_indices:
+            mask |= 1 << b
+        return Operand(OperandKind.BITSET, mask)
 
     @staticmethod
     def mem_addr(base: Operand, offset: int = 0) -> Operand:

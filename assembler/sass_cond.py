@@ -62,7 +62,7 @@ def tokenize(predicate: str) -> list[tuple[str, str]]:
             i = j
             continue
         two = predicate[i:i + 2]
-        if two in ("==", "!=", "<=", ">=", "&&", "||", "->"):
+        if two in ("==", "!=", "<=", ">=", "&&", "||", "->", "<<", ">>"):
             toks.append(("OP", two))
             i += 2
             continue
@@ -80,7 +80,7 @@ def tokenize(predicate: str) -> list[tuple[str, str]]:
             toks.append(("CONST", predicate[i + 1:j]))
             i = j
             continue
-        if c in "()+-*%<>!@,":
+        if c in "()+-*%<>!@,&":
             toks.append(("OP", c))
             i += 1
             continue
@@ -192,21 +192,38 @@ class ConditionEvaluator:
         return v
 
     def _and_expr(self) -> int:
-        v = self._cmp()
+        v = self._bitand()
         while self._eat_op("&&"):
-            r = self._cmp()
+            r = self._bitand()
             v = 1 if (v and r) else 0
         return v
 
+    def _bitand(self) -> int:
+        v = self._cmp()
+        while self._eat_op("&"):
+            v = v & self._cmp()
+        return v
+
     def _cmp(self) -> int:
-        left = self._add()
+        left = self._shift()
         t = self._peek()
         if t and t[0] == "OP" and t[1] in ("==", "!=", "<=", ">=", "<", ">"):
             op = t[1]
             self._pos += 1
-            right = self._add()
+            right = self._shift()
             return self._compare(left, op, right)
         return left
+
+    def _shift(self) -> int:
+        v = self._add()
+        while True:
+            t = self._peek()
+            if t and t[0] == "OP" and t[1] in ("<<", ">>"):
+                self._pos += 1
+                r = self._add()
+                v = v << r if t[1] == "<<" else v >> r
+            else:
+                return v
 
     def _add(self) -> int:
         v = self._mul()

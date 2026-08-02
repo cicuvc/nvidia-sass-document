@@ -26,6 +26,9 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.SPECIAL_REG: {"SpecialRegister", "CBU_STATE", "CBU_STATE_NONBAR", "ATEXIT_PCONLY"},
     OperandKind.PR:        {"PR"},
     OperandKind.NP:        {"NP"},
+    OperandKind.BAR:       {"BD", "CBU_STATE", "CBU_STATE_NONBAR"},
+    OperandKind.SB:        {"Scoreboard"},
+    OperandKind.BITSET:    {"BITSET"},
 }
 
 SCHED_TYPES = {"REQ", "BITSET", "WR", "RD", "USCHED_INFO", "BATCH_T", "PM_PRED", "REUSE", "PREDICATE"}
@@ -253,7 +256,8 @@ class SassMatcher:
         all_candidates = [
             s for s in slots
             if not is_pg(s)
-            and s["type"] not in SCHED_TYPES
+            and (s["type"] not in SCHED_TYPES
+                 or (s["type"] == "BITSET" and s["name"] not in SCHED_SLOT_NAMES))
             and s["name"] not in SCHED_SLOT_NAMES
         ]
         if not all_candidates:
@@ -572,6 +576,10 @@ class SassMatcher:
             return None
         if st == "PR":
             return 0
+        if st == "Scoreboard":
+            return v if isinstance(v, int) else None
+        if st == "BITSET":
+            return v if isinstance(v, int) else None
         if st == "BD":
             return v if isinstance(v, int) else None
         if st == "NP":
