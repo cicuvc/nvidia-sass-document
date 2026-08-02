@@ -67,3 +67,15 @@ TRAP_RETURN_PC cannot be preset to a valid PC (see `cbu_state.md`).  NANOTRAP
 with TRPC unset is swallowed: execution continues fall-through (verified,
 `tests/asm_construct/test_trpc_write.py`).  The trap-return PC is owned by the
 driver's trap machinery, not user-writable.
+
+## Resolved: TRPC does NOT become a NANOTRAP return target (SM120, 2026-08)
+
+Even when TRAP_RETURN_PC is legitimately set to a valid PC — via BSSY's
+divergence side effect (BSSY in a divergent region writes TRPC = BSSY address,
+verified 0x071675e0) — a following NANOTRAP is still **swallowed** and
+execution continues **fall-through**: the divergent path's instructions after
+the NANOTRAP all execute, no jump to the BSSY, no loop, same ~0.2 ms timing as
+the no-trap control (per-lane stores, `tests/asm_construct/test_trpc_write.py`
+setup).  So TRPC is NOT a NANOTRAP return target; the injected trap is handled
+internally without a TRPC-based return.  (An earlier apparent "jump" was a
+same-address store race between the two divergent paths.)
