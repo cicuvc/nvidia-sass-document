@@ -151,3 +151,12 @@ F32 sources (denormal handling); F64 conversions omit it.
 - F16/BF16 source lowering: `(int)__half2float` did not emit a direct `F16`-src
   F2I here (went through promotion) — confirm whether `cvt.rzi.s32.f16` PTX emits
   the `_16b` F2I variant directly.
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_conversions.py`: F2I float->int verified for all
+four Round3 modes (`.ROUND`=nearest-even, `.FLOOR`, `.CEIL`, `.TRUNC`) on
+S32.F32 (ties, halves, INT bounds) and `.FTZ` (denormal input flushed).
+U32.F32.TRUNC verified for in-range values (negative is undefined/0).
+Note the assembler uses the Round3 names (not PTX .rn/.rm/.rp/.rz); I2F uses
+Round1 (RN/RM/RP/RZ).  Same DECOUPLED_RD_WR_SCBD scoreboard discipline.

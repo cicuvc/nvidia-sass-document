@@ -40,3 +40,12 @@ RIR variant: Rb replaced with 32-bit signed immediate at [63:32].
 ## Latency
 
 `int_pipe`, `INST_TYPE_COUPLED_MATH`. `FXU_OPS` group. Standard integer-pipe latency (1 cycle output typical).
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_conversions.py`: `I2I.SAT.<U8|S8|U16|S16> Rd, Rb`
+converts S32 -> narrow with saturation (clamp to dest range, no wrap):
+U8 clamps to [0,255], S8 [-128,127], U16 [0,65535], S16 [-32768,32767]
+(verified for negatives, overflow, INT_MIN/MAX).  dstfmt at instr[77:76]
+(U8=0,S8=1,U16=2,S16=3).  int_pipe COUPLED — consumer must `req` the
+LDC-loaded input (stall alone is not enough).

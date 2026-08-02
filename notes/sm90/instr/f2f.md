@@ -54,3 +54,13 @@ Grouped by: {downconvert, upconvert} × {F32, F64} × {RRR, RIR, RCR, RCxR, RUR}
 ## Latency
 
 `mio_pipe`, MUFU dispatch. Decoupled scoreboard with variable-latency encoding. Higher latency than the int_pipe F2FP equivalent.
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_conversions.py`: F2F float format conversion
+verified: F32->F16, F16->F32, F32->BF16, BF16->F32 (exact-representable
+values; result f16/bf16 in the register's low 16 bits).  The combined
+dstfmt.srcfmt modifier is a single dotted enum value (e.g. `F2F.F16.F32` —
+the assembler now joins `.F16`+`.F32` into the enum key).  Rounding on the
+downconvert is RN by default.  mio_pipe DECOUPLED_RD_WR_SCBD (scoreboard as
+I2F/F2I).

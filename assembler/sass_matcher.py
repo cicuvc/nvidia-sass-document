@@ -649,22 +649,16 @@ class SassMatcher:
             # the opcode, not encoded in any field): consume it if present,
             # otherwise optional — skip.
             if default is None and encoded_slots is not None and name not in encoded_slots:
-                for mod in remaining[:]:
-                    if mod.upper() in enum_vals:
-                        result[name] = enum_vals[mod.upper()]
-                        remaining.remove(mod)
-                        matched = True
-                        break
+                hit = self._consume_enum(remaining, enum_vals)
+                if hit is not None:
+                    result[name], remaining = hit
                 continue
 
             matched = False
-            for mod in remaining[:]:
-                val = enum_vals.get(mod.upper())
-                if val is not None:
-                    result[name] = val
-                    remaining.remove(mod)
-                    matched = True
-                    break
+            hit = self._consume_enum(remaining, enum_vals)
+            if hit is not None:
+                result[name], remaining = hit
+                matched = True
 
             if not matched:
                 if default is not None:
@@ -677,6 +671,22 @@ class SassMatcher:
             return None
 
         return result
+
+    @staticmethod
+    def _consume_enum(remaining: list[str], enum_vals: dict) -> Optional[tuple[int, list[str]]]:
+        """Match a slot's enum value against the front of `remaining`, trying
+        a single modifier first, then dot-joined sequences (e.g. F2F.F16.F32
+        -> ['F16','F32'] joined to enum value 'F16.F32').  Returns (value,
+        remaining) or None."""
+        for i in range(len(remaining)):
+            for k in range(1, min(4, len(remaining) - i) + 1):
+                cand = ".".join(remaining[i:i + k])
+                val = enum_vals.get(cand.upper())
+                if val is not None:
+                    new_remaining = list(remaining)
+                    del new_remaining[i:i + k]
+                    return val, new_remaining
+        return None
 
     def _parse_default(self, default: str, etype: str) -> int:
         # Format: "value" (e.g. "32", "S32", "PT", "noreuse"),

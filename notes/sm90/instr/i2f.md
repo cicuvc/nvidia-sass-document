@@ -41,3 +41,13 @@ I2F is the legacy mio_pipe/MUFU version. The I2FP variant (idx 197 in ref_memo) 
 ## Latency
 
 `mio_pipe`, MUFU dispatch. Decoupled scoreboard with variable-latency encoding.
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_conversions.py`: I2F converts S32/U32/S16/U16 ->
+F32 and S32/U32/S64 -> F64 (legacy MUFU-class).  Verified against Python:
+- F32.S32/U32/S16/U16 -> exact float; F64 forms -> 64-bit double dest {Rd,Rd+1}.
+- Rounding via Round1 (RN default; `.RZ` = rnd=3).
+- mio_pipe DECOUPLED_RD_WR_SCBD: input `wr=SB1`, conversion `req={1}` +
+  `wr=SB2`, stores `req={1,2}`.  The 64-bit dest needs the explicit `{R8,R9}`
+  group and BOTH words stored.
