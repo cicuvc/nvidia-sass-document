@@ -84,3 +84,18 @@ Test: `tests/vote_test.cu`.
 ## Open questions
 - Whether ptxas ever emits VOTE with both `Rd` and a real `Pu` simultaneously (e.g. a fused
   ballot + any); all observed cases use exactly one destination.
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_vote.py` confirms on silicon:
+- Ballot mask: `VOTE.ANY Rd, PT, Pp` gives bit i = lane i's Pp over the ACTIVE
+  lanes (membermask dropped).  tid<16 -> 0x0000FFFF, tid%2(odd) -> 0xAAAAAAAA,
+  all-true -> 0xFFFFFFFF, `!P0` -> 0xFFFF0000.
+- Vote predicates: `VOTE.ALL Pu` = AND (0 for tid<16, 1 for all-true);
+  `VOTE.ANY Pu` = OR; `VOTE.EQ Pu` = all-active-equal.
+- Divergent active mask: inside `@P2(tid<16)`, the ballot reflects only the
+  active lanes (0x000000FF when P0=tid<8 inside); inactive lanes never store.
+- Pp[89:87] with negate bit[90] (`!Pp`); Pu[83:81]; voteop[73:72].
+- int_pipe fixed latency: the Pu predicate needs ~8-16 NOP cross-pipe delay
+  before an `@P` consumer (same discipline as ELECT); the ISETP feeding Pp
+  needs stall=13 (CBU predicate latency).
