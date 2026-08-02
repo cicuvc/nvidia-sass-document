@@ -141,3 +141,17 @@ same kernel `BMOV TRAP_RETURN_PC.LO` is warp-uniform (both groups read the
 BSSY instruction's address) — per-lane/per-group PCs live only in the warp
 scheduler and are not exposed. Divergence LEVELS are additionally visible via
 the B-register stack (B0..B15 masks).
+
+## Resolved: TRAP_RETURN_PC / ATEXIT_PC are WRITE-PROTECTED (SM120, 2026-08)
+
+`tests/asm_construct/test_trpc_write.py`: `BMOV TRAP_RETURN_PC.LO/.HI, src`
+and `BMOV ATEXIT_PC.LO, src` fault with ILLEGAL_INSTRUCTION (715) at runtime
+even though the encoding is legal per the spec (cuobjdump decodes
+`BMOV.32 TRAP_RETURN_PC.LO, R4` correctly) and the spec CONDITIONS pass (the
+pquad check is an implication, only active with `.PQUAD`).  BMOV writes to
+MEXITED / OPT_STACK work fine.  So the trap / at-exit PC slots are hardware
+WRITE-protected from user SASS — owned by the driver's trap/at-exit machinery —
+and are only READ-able (they read the live PC during divergence as a side
+effect).  Consequence: one cannot set TRAP_RETURN_PC to a valid PC and then
+NANOTRAP to make the trap "return" there; NANOTRAP is swallowed and execution
+continues fall-through.

@@ -59,3 +59,11 @@ disturbing the compute context.
   the `cbu_pipe` with (BRU/CBU ops, `CBU_OPS_WITH_REQ` set in the latency
   file).
 - `fp64_control.md` — earlier note listing NANOTRAP among cbu_pipe ops.
+
+## Resolved: TRAP_RETURN_PC write-protection blocks the "set-TRPC + NANOTRAP" experiment
+
+`BMOV TRAP_RETURN_PC.LO/.HI, src` is hardware-rejected (715) from user SASS, so
+TRAP_RETURN_PC cannot be preset to a valid PC (see `cbu_state.md`).  NANOTRAP
+with TRPC unset is swallowed: execution continues fall-through (verified,
+`tests/asm_construct/test_trpc_write.py`).  The trap-return PC is owned by the
+driver's trap machinery, not user-writable.
