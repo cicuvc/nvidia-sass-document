@@ -62,3 +62,24 @@ IDE.DI 3088                   → flush/disable the expansion state
 
 This is analogous to IMAD.X/IMAD.HI carry chains, but managed through a
 separate control instruction rather than predicate registers.
+
+## Resolved: silicon-verified (SM120) — a dual-issue scheduler control op
+
+`IDE` runs legally with no registers and no observable data effect.  Findings:
+
+- **Sb is hardware-locked to 0x0C10 (3088)**: patching any other value into
+  [47:32] faults 715 (ILLEGAL_INSTRUCTION).  The spec CONDITION `Sb == 3088`
+  is a real hardware rejection, matching the assembler's assemble-time check.
+- **action bit [84] (EN=0/DI=1) has no observable effect** on data paths:
+  `IDE.EN`/`IDE.DI`/plain `IDE` are indistinguishable, and inserting them
+  between `IDP.2A.LO` and `IDP.2A.HI` does not change the dot-product chain.
+- **Dual-issue class**: IDE is a member of `CoupledDispOverlapWithMathOps`
+  (sm_90_latencies.txt line ~235) alongside NOP, CS2R, LEPC, RPCMOV, PMTRIG,
+  DEPBAR — control/sync ops that can overlap a math instruction in the coupled
+  dispatch.  The FUNIT control word carries a dedicated `NencIDE` field that
+  the scheduler decodes.
+- **ptxas never emits IDE** (0 occurrences across cublas/cusparse/cudnn/
+  cudart dumps and aggressive dp4a/dp2a compile probes).  It is a framework/
+  hardware control instruction, likely a dispatch/state enable for the
+  integer-dot-product unit, with no software-visible semantic beyond
+  "this slot is an IDE".
