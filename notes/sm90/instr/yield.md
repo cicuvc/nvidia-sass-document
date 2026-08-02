@@ -91,3 +91,18 @@ interleaved, can complete, and release — breaking the pre-Volta warp-internal 
 - The exact scheduler policy (how strongly/for how long YIELD deprioritizes the warp, and
   its interaction with the control-word `stall`/`usched_info` bits) is not exposed by the
   spec — only that YIELD is the explicit yield op on the CBU pipe.
+
+## Resolved: same-warp spin deadlock demonstrated (SM120, 2026-08)
+
+`tests/asm_construct/test_yield.py` reproduces the classic ITS forward-progress
+case on a single warp: `{tid 0}` = producer sets a memory flag; `{tid 1..31}`
+= spin consumers. The warp splits into two independent-PC groups (Volta+ ITS):
+
+- spin body = **NOP** → **DEADLOCK** (the tight `LDG→NOP→ISETP→@P1 BRA` loop
+  monopolizes the warp's issue slots, so the producer group's `MOV/STG/EXIT`
+  never issue — kernel never completes).
+- spin body = **YIELD** → completes (`flag=0x1`, `result=0xDEADBEEF`).
+
+ptxas emits exactly this for an empty `while (*flag==0) {}` spin
+(sm_120, `-O3`): `LDG.E.STRONG.SYS flag → YIELD → ISETP → @!P0 BRA` — the
+YIELD is the compiler's explicit forward-progress guarantee for spinning warps.
