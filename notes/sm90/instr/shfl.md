@@ -83,3 +83,18 @@ Decoder: `tools/decode_shfl.py` (all 7 vectors pass). Test: `tests/shfl_test.cu`
 - 64-bit / vector shuffles: `__shfl_sync` on 64-bit types splits into two 32-bit SHFLs — not
   a distinct SHFL encoding (`IDEST_SIZE`/`ISRC_A_SIZE` are fixed 32 here).
 - `Pu` (source-lane-valid) is always a PT sink in compiler output; no intrinsic exposes it.
+
+## Resolved: silicon-verified modes + Pu + scoreboard (SM120, 2026-08)
+
+`tests/asm_construct/test_shfl.py` confirms all four modes (Ra = per-lane tid):
+- IDX source=5 -> every lane reads 5; UP delta=4 -> lane t gets t-4 (t>=4,
+  own otherwise); DOWN delta=4 -> lane t gets t+4 (t<28, own otherwise);
+  BFLY mask=4 -> t^4.  Out-of-range source returns the lane's OWN Ra.
+- `Pu` = source-in-range predicate (UP: 1 for t>=4; all 1 for IDX/BFLY).
+- UP's bound must be 0 (RZ) — using 0x1f makes UP a no-op identity; DOWN/IDX/
+  BFLY use 0x1f (full-warp segment).
+
+Hand-assembler gotchas: SHFL is DECOUPLED_RD_WR_SCBD — the result needs a
+write scoreboard (`wr`) consumed by `req`; and the `Pu` predicate needs a long
+(~16 NOP) cross-pipe delay (mio_pipe -> int_pipe) before an `@P` consumer reads
+it.  The membermask is dropped (shuffle over the hardware active mask).
