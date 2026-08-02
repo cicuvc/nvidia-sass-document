@@ -39,3 +39,28 @@ Output `Pu` (predicate) flags special conditions (input zero → all bits set? o
 ## Latency
 
 `mio_pipe`, MUFU dispatch. Latency comparable to other MUFU ops (higher than int_pipe).
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_brev_flo_popc.py` + `tools/decode_brev_flo_popc.py`
+confirm FLO = PTX `bfind` exactly:
+
+| SASS | PTX | Rd (valid input) | degenerate |
+|------|-----|-------------------|------------|
+| `FLO.U32` | bfind.u32 | index of MSB set bit (0..31) | input 0 -> 0xFFFFFFFF |
+| `FLO` (S32) | bfind.s32 | index of MSB bit differing from sign (neg: MSB of ~b) | 0 or 0xFFFFFFFF -> 0xFFFFFFFF |
+| `FLO.U32.SH` | bfind.shiftamt.u32 | clz(b) | input 0 -> 0xFFFFFFFF |
+| `FLO.SH` | bfind.shiftamt.s32 | clz-based (neg: clz(~b)) | 0 or -1 -> 0xFFFFFFFF |
+
+- **Pu = "scan found a bit"**: 1 when Rd is a valid index, 0 in the
+  degenerate cases (Rd==0xFFFFFFFF).  It is NOT "input zero" — S32 FLO of
+  0xFFFFFFFF also clears Pu (both all-zero and all-ones are degenerate).
+- `[~]` inverts Rb first = find leading zero.
+- Pu is hidden by ptxas (encoded PT) when unused; `FLO.U32 R0, R2` is the
+  common emission.
+- ptxas mapping: `bfind.u32/s32` -> FLO.U32/FLO; `bfind.shiftamt.*` -> .SH.
+
+Hand-assembler gotchas: mio_pipe DECOUPLED_RD_WR_SCBD — result write needs a
+scoreboard (`wr`) consumed by `req`; the Pu predicate needs ~20 NOP
+cross-pipe delay before an @P consumer (like SHFL).  FLO is slow (~MUFU
+latency), so dependent consumers should use the scoreboard, not a short stall.

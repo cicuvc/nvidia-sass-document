@@ -36,3 +36,12 @@ Counts the number of set bits (population count) in a register: `Rd = popcount([
 ## Latency
 
 `mio_pipe`, `MIO_CBU_OPS_WITHOUT_ELECT` group. MUFU dispatch means higher latency than int_pipe ops.
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_brev_flo_popc.py`: `POPC Rd, [!]Rb` = popcount;
+`[~]` inverts Rb first (counts zero bits).  Verified: 0xFFFFFFFF->32,
+0x80000000->1, 0x0F0F0F0F->16, 0x12345678->13; `POPC Rd, ~0x0F0F0F0F`->16.
+ptxas emits `POPC` from PTX `popc` (__popc).  Sb_invert at lo[63].
+
+Same mio_pipe scoreboard discipline as BREV/FLO.

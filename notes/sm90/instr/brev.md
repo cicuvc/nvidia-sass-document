@@ -43,3 +43,12 @@ Reverses the order of bits in a register: `Rd = bit_reverse(Rb)`. Bit 0 becomes 
 ## Latency
 
 `mio_pipe`, MUFU dispatch. Decoupled scoreboard with variable-latency encoding.
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_brev_flo_popc.py`: `BREV Rd, Rb` reverses all 32
+bits (bit i <-> bit 31-i).  Verified: 0x1 -> 0x80000000, 0x80000000 -> 0x1,
+0xFFFF0000 -> 0x0000FFFF, 0x55555555 -> 0xAAAAAAAA, 0x12345678 -> 0x1E6A2C48.
+No modifiers (no `[~]`).  ptxas emits `BREV` from PTX `brev` (__brev).
+
+Same mio_pipe scoreboard discipline as POPC/FLO.
