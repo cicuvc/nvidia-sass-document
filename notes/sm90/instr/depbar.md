@@ -125,3 +125,25 @@ Hand-assembler gotchas:
 - Encoding: le[47], sbidx[46:44], cnt[43:38], S-list[37:32] (reg form) /
   [53:48] (UR form).  The assembler rejects `sbidx ∈ S` (matches the spec
   condition, which required adding `&`/`<<` to the condition evaluator).
+
+## DEPBAR.LE immediate sweep: threshold == number of in-flight LDGs
+
+`/tmp/scan_depbar.py`: burst of `m` MUFU (~18 cyc) + `n` cold LDG
+(~330-370 cyc) all `wr=SB0`, CS2R t0 after the burst, `DEPBAR.LE SB0, imm`,
+CS2R t1.  Measured wait (cyc, min of 3 runs):
+
+| m | n | imm < n | imm = n | imm > n |
+|---|----|---------|---------|---------|
+| 2 | 1 | 0 -> 345 | 1 -> 10 | 10 |
+| 3 | 2 | 0 -> 332, 1 -> 330 | 2 -> 10 | 10 |
+| 4 | 3 | 0 -> 330, 1 -> 328, 2 -> 369 | 3 -> 10 | 10 |
+| 2 | 3 | 0 -> 328, 1 -> 334, 2 -> 372 | 3 -> 10 | 10 |
+
+Step function: **wait is ~10 cyc (DEPBAR+CS2R overhead) whenever `imm >= n`
+and ~330-370 cyc whenever `imm < n`.**  The MUFU contributions have already
+drained by the time DEPBAR observes the counter (each ~18 cyc, issued before
+t0), so the counter at the DEPBAR is exactly `n` (the LDGs still in flight).
+`DEPBAR.LE SB0, n` therefore proceeds while all n loads are in flight — the
+pipelining sweet spot; `imm = n-1` waits one load-batch, `imm = 0` waits all.
+The co-issued LDGs drain as a batch, so `imm` in [0, n-1] all land on ~one
+batch latency rather than `(n-imm)` distinct steps.
