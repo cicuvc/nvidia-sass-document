@@ -129,3 +129,15 @@ Rmask, TGT` … `ENDCOLLECTIVE` region**: it reads `Rmask & active-lanes` while
 the region is open and 0x0 after `ENDCOLLECTIVE`. `WARPSYNC.COLLECTIVE`
 requires `Rmask ⊇` the lanes executing it (else ILLEGAL_INSTRUCTION 715). See
 `warpsync.md` / `endcollective.md` and `test_warpsync_collective.py`.
+
+## Resolved: MACTIVE is per-PC-group readable (SM120, 2026-08)
+
+In a two-path divergence (`BSSY B0` + `@P0 BRA pathA`), each divergent group
+executes its own `BMOV R4, MACTIVE`: the tid<16 group reads **0xFFFF** and the
+tid>=16 group reads **0xFFFF0000** — MACTIVE reveals the *currently executing*
+PC group's lane membership, so the warp's group STRUCTURE (which lanes per
+group) is architecturally visible. The group PCs themselves are not: in the
+same kernel `BMOV TRAP_RETURN_PC.LO` is warp-uniform (both groups read the
+BSSY instruction's address) — per-lane/per-group PCs live only in the warp
+scheduler and are not exposed. Divergence LEVELS are additionally visible via
+the B-register stack (B0..B15 masks).
