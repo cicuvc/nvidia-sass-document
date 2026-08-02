@@ -82,3 +82,12 @@ pass). Test: `tests/lepc_test.cu` (printf).
 - Whether the R_I_R immediate ever prints as a raw offset or `.REL` relocatable form in other
   contexts (only the resolved-target vprintf-return case was captured).
 - Whether `LEPC Rd` (RRR) is ever emitted on sm_90 (not seen; BRX/CALL are self-relative).
+
+## Resolved: LEPC is the correct PC base for indirect branches (SM120)
+
+Verified (`tests/asm_construct/test_jmx.py`): `LEPC Rd` returns the current PC
+(both the 0x34e RRR form and the 0x94e PC+imm58 form, base 0x07167500
+consistent), and `ULEPC URd` the uniform PC.  This is the proper base for the
+absolute indirect branches JMX/JMXU (target = register + off) — NOT
+TRAP_RETURN_PC (unreliable divergence side-effect).  LEPC+JMX forms the
+classic jump-table idiom.

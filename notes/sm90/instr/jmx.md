@@ -47,3 +47,13 @@ Not emitted by ptxas. Ground truth via **cubin-patching + nvdisasm**: self-test 
 ## Open questions
 - The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.
 - Real jump-table usage is unobserved because ptxas never emitted these in the sampled code.
+
+## Resolved: JMX is ABSOLUTE (target = Ra + off), base from LEPC (SM120)
+
+Verified (`tests/asm_construct/test_jmx.py`): `JMX Ra, off` branches to
+**`Ra + off`** (Ra = 64-bit ABSOLUTE address, off = signed byte offset) — the
+absolute twin of BRX (`next_pc + Ra + off`).  The PROPER base is **LEPC Rd**
+(load effective PC) — `LEPC Rd` returns the current PC (verified: the RRR form
+and the PC+sImm58 form both give base 0x07167500).  TRAP_RETURN_PC is an
+unreliable divergence-side effect, NOT a PC source.  Offset operands on scaled
+fields are BYTES (encoder divides by SCALE 4).

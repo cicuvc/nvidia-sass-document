@@ -47,3 +47,10 @@ Not emitted by ptxas. Ground truth via **cubin-patching + nvdisasm**: self-test 
 
 ## Open questions
 - The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.
+
+## Resolved: JMXU is ABSOLUTE (target = URa + off), base from ULEPC (SM120)
+
+Verified (`tests/asm_construct/test_jmx.py`): `JMXU URa, off` = `URa + off`
+(uniform-register absolute indirect), same as JMX but warp-uniform.  Base comes
+from **ULEPC URd** (uniform load effective PC).  URa must be even-aligned
+(64-bit pair), like JMX's Ra.
