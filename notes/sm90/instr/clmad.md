@@ -80,3 +80,22 @@ Decoder + round-trip test: `tools/decode_clmad.py`. Test (does not compile on CU
   const-bank/uniform forms, whether `.LO` is printed or hidden as default, and the reuse-flag
   rendering.
 - Confirm the 12–13-cycle latency and whether both halves (`.LO`+`.HI`) are ever fused.
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_clmad_idp.py` confirms CLMAD = PTX `clmad.lo/hi.u64`
+exactly: carryless (GF(2)[x]) product of the 64-bit pairs, `.LO`/`.HI` select
+the low/high 64-bit half of the 128-bit product, then XOR with c.
+- `CLMAD.LO {Rd,Rd+1}, {Ra,Ra+1}, {Rb,Rb+1}, {Rc,Rc+1}`
+- All operands are 64-bit register pairs (explicit `{R,R}`).
+- Verified: 3⊗3 = 5 (NOT 9 — carryless, distinguishes from integer mul),
+  FFFF..FF ⊗ FFFF..FF = 5555..55 (alternating), hi/lo of random 64-bit pairs,
+  `{Rc,Rc+1}` XOR accumulation.  hilo bit at instr[77].
+- `.LO` is NOT hidden/default — both must be written.
+
+Hand-assembler gotchas: CLMAD is `COUPLED_EMULATABLE` / `VQ_REDIRECTABLE` —
+variable latency, unlike plain COUPLED_MATH.  The result write needs a
+scoreboard (`wr`) and the consuming stores must `req` it (the first attempt
+with plain stall gave garbage).  Load inputs with `wr=SB1`, CLMAD `wr=SB2`,
+result `STG req={1,2}`.  ptxas on CUDA 12.8 cannot emit CLMAD (PTX 9.3) — the
+only reference vectors here are our own.

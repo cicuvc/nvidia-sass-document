@@ -102,3 +102,18 @@ incompatible with DRAIN/WAITn tokens (enforced by CONDITION).
 | `dp4a.u32.u32 %r, %a, %b, %c` | `IDP.4A.U8.U8 Rd, Ra, Rb, Rc` |
 | `dp2a.lo.u32.u32 %r, %a, %b, %c` | `IDP.2A.LO.U16.U8 Rd, Ra, Rb, Rc` |
 | `dp2a.hi.u32.u32 %r, %a, %b, %c` | `IDP.2A.HI.U16.U8 Rd, Ra, Rb, Rc` |
+
+## Resolved: silicon-verified semantics (SM120)
+
+`tests/asm_construct/test_clmad_idp.py` confirms IDP = PTX dp4a/dp2a:
+- `IDP.4A.<U8|S8>.<U8|S8> Rd, Ra, Rb, [-|Rc]` = dp4a — 4-way byte dot product,
+  d = Rc + Σ sign/zeroext(a.b[i])·sign/zeroext(b.b[i]).  SrcAFmt=bit[73],
+  SrcBFmt=bit[74].  `-Rc` (bit[75]) negates the accumulator (verified).
+- `IDP.2A.LO/HI.<U16|S16>.<U8|S8> Rd, Ra, Rb, [-|Rc]` = dp2a — a = two 16-bit
+  values, b = four 8-bit values; LO uses b[0:1], HI uses b[2:3].
+- All 4 dp4a fmt combos + 3 dp2a combos verified against Python references;
+  encodings byte-match ptxas sm_120.
+
+Both are COUPLED_MATH (fixed latency); the PRMT-style scoreboard discipline
+(wr=SB1 on inputs, `req={1}`) applies.  SASS modifier order: mode first
+(`4A` / `2A.LO` / `2A.HI`), then A format, then B format.

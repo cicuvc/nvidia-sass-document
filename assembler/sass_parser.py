@@ -74,7 +74,9 @@ class Lexer:
                 continue
             if m.lastgroup == "COMMENT":
                 continue
-            tokens.append(Token(m.lastgroup, m.group(), m.start()))
+            # Token.col carries the absolute char offset so the parser can
+            # check text adjacency (".4A" -> NUMBER+IDENT merge).
+            tokens.append(Token(m.lastgroup, m.group(), line=0, col=m.start()))
         return tokens
 
 
@@ -186,7 +188,17 @@ class Parser:
                 # Token.col); ".64 ATEXIT_PC" stays two tokens.
                 if (nxt and nxt.type == "IDENT"
                         and nxt.col == num_tok.col + len(num_tok.text)):
-                    modifiers.append(num + self.pop().text)
+                    merged = num + self.pop().text
+                    # ".2A.LO"/".2A.HI" — a size+alpha modifier directly
+                    # followed by .LO/.HI is one enum value (IDP.2A mode).
+                    if (merged[-1].isalpha() and self.peek()
+                            and self.peek().type == "DOT"
+                            and self.peek2() and self.peek2().type == "IDENT"
+                            and self.peek2().text in ("LO", "HI")
+                            and self.peek2().col == self.peek().col + 1):
+                        self.pop()
+                        merged += "." + self.pop().text
+                    modifiers.append(merged)
                 else:
                     modifiers.append(num)
             elif tok and tok.type == "HEX":
