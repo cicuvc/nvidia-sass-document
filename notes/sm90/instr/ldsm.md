@@ -32,31 +32,32 @@ Modifiers: `.SZ` = `.16` (b16) | `.U4TO8`/`.S4TO8` (M816) | `.U2TO4`/`.S2TO4`
 
 ## Address model (silicon-verified SM120, matches ldmatrix.m8n8.*)
 
-Lane `t` supplies the address of the row named by `t`:
+**X4 is the base case; X1/X2 are `num`-limited subsets of it.**  The hardware
+performs NO layout/stride assumption — every address is just the start of a
+16-byte row that the user placed there.
 
-```
-.x1:      addr_t = base + t*16                 (matrix 0, row t, stride 16)
-.x2/.x4:  addr_t = base + (t//8)*128 + (t%8)*32
-             matrix t//8 at +m*128, row t%8, row-stride 32
-```
+1. The 32 lanes' addresses are grouped by 8: group `g` = lanes `8g..8g+7`.
+2. `.x4` processes all 4 groups, `.x2` the first 2, `.x1` the first 1.
+3. Each group reads the `8 × 16` bytes at its 8 addresses and splits them
+   into 32 32-bit words.
+4. Those 32 words are written to **one register** of the 32 lanes: word
+   (row `r`, block `c`) of group `g` (row data `addr_{8g+r}[4c..+4)`) lands in
+   lane `4r + c`, register `g`.  So lane `t`'s register for matrix `m` holds
+   row `t//4`, bytes `[4*(t%4)..+4)` of the row, fetched from the address
+   supplied by lane `t//4` (i.e. `addr_{8m + t//4}`); `lo16` = element at
+   `+4*(t%4)`, `hi16` = `+4*(t%4)+2` (row-major `.M88`).
 
-* `.x1` stores a matrix contiguously (row-stride 16, 8 rows = 128 bytes).
-* `.x2`/`.x4` store each matrix with **row-stride 32** (16 bytes of data +
-  16-byte gap per row).  Matrices sit at `m*128` offsets.  nvcc's optimizer
-  turns the `.x2` address into `(t%8)*32` when the matrices are adjacent —
-  this is the same formula, since `(t//8)*128 + (t%8)*32` is what the layout
-  needs (a 32-byte row stride, NOT 16 — my first guesses of a 16-byte stride
-  or interleaved `[mat0|mat1]` rows were wrong).
-* Rows are 16 bytes of data; the 16 bytes at `+16..+31` of each 32-byte row
-  are not part of the matrix.
-
-**Fragment distribution** (row-major `.M88`): lane `t`'s register for matrix
-`m` holds row `(t//4)` of that matrix, bytes `[4*(t%4) .. +4)` of the 16-byte
-row.  The row's data is fetched from the address supplied by lane `t//4`
-(`addr_{t//4}`).  `lo16` = element at `+4*(t%4)`, `hi16` = `+4*(t%4)+2`.
-
-For `.x2`/`.x4`, register `k` (`k*32+...` slot) holds matrix `k`'s fragment;
-the per-matrix fragment layout inside each matrix is identical to `.x1`.
+Consequently the address formula is entirely up to the caller.  Verified
+equivalences:
+* `.x1` reads the same matrix with contiguous (stride-16) addresses
+  `addr_t = base + t*16` OR stride-32 addresses `addr_t = base + (t%8)*32`
+  (the `.x4` group-0 layout) OR a scrambled per-row order
+  `addr_t = base + 16*((t*3+1)%8)` — the fragment always comes from whatever
+  rows the group-0 addresses name.
+* `.x2`/`.x4` use `addr_t = base + (t//8)*128 + (t%8)*32` for matrices at
+  `m*128` with row-stride 32.  nvcc's optimizer reduces this to `(t%8)*32`
+  for adjacent matrices.  (My earlier "x1 stride 16 vs x2/x4 stride 32" was
+  a property of the tested layouts, NOT a hardware rule.)
 
 **Transposed `.MT88`**: lane `t`'s register holds `a[(t%4)*2][t//4]` (lo16)
 and `a[(t%4)*2+1][t//4]` (hi16).  The two data rows come from the addresses

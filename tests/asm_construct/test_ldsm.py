@@ -139,5 +139,29 @@ check("M88.x4 regs = matrices 0..3", "ok" if not bad else bad[:5], "ok")
 v = run_ldsm(addr_x1, 1, mode="MT88")
 check("MT88.x1 transposed fragment", v[0:32], [mt88x1(0, t) for t in range(32)])
 
+# --- 5. address model is user-driven: X4 is the base case ------------------
+# X1/X2 just take the first N 8-thread groups.  Each group reads the 8×16B
+# at its 8 addresses, splits into 32 32-bit words written to lanes 0..31.
+# So the SAME matrix can be read with stride-16 (contiguous) or stride-32
+# (X4-group-0) addresses, or even a scrambled row order.
+def m88_s32(t):                       # stride-32 layout: value = 16r + c
+    r, lane = t // 4, t % 4
+    lo = 16*r + 2*lane
+    return lo | ((lo + 1) << 16)
+addr_s32 = lambda b: [b + (t % 8) * 32 for t in range(32)]
+v = run_ldsm(addr_s32, 1)
+check("M88.x1 stride-32 addrs (X4-group0 layout)", v[0:32],
+      [m88_s32(t) for t in range(32)])
+
+# scrambled per-row addresses: lane t%8 supplies row (t*3+1)%8 of a
+# stride-16 matrix; fragment row (t//4) reads the row that lane (t//4) named.
+def m88_sc(t):
+    row = (t // 4 * 3 + 1) % 8
+    lo = 8*row + 2*(t % 4)
+    return lo | ((lo + 1) << 16)
+v = run_ldsm(lambda b: [b + 16*((t * 3 + 1) % 8) for t in range(32)], 1)
+check("M88.x1 scrambled row addresses", v[0:32],
+      [m88_sc(t) for t in range(32)])
+
 print(f"\n=== LDSM (ldmatrix): {'ALL PASS' if ok else 'FAILURES'} ===")
 sys.exit(0 if ok else 1)
