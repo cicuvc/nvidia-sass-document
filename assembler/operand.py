@@ -193,6 +193,17 @@ class Sched:
         stall = int(parts[3], 0)
         yield_val = int(parts[4], 0)
         batch_t = int(parts[5], 0) if len(parts) >= 6 else 0
+        # Hardware scoreboards are SB0..SB5.  wr/rd of 7 means "no
+        # scoreboard"; 6 does not exist and must not be used.  req_bits is a
+        # 6-bit BITSET, so bits beyond 5 cannot be encoded.
+        for name, v in (("wr", wr_sb), ("rd", rd_sb)):
+            if v == 6:
+                raise ValueError(
+                    f"scoreboard {name}=6 does not exist (valid: 0-5, 7=off)")
+        for b in sorted(req_bits):
+            if b > 5:
+                raise ValueError(
+                    f"req scoreboard bit {b} out of range (only SB0..SB5 exist)")
         return Sched(wr_sb=wr_sb, rd_sb=rd_sb, req_bits=req_bits,
                      stall=stall, yield_val=yield_val, batch_t=batch_t)
 
