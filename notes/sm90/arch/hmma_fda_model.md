@@ -59,3 +59,56 @@ identical 16-bit packing.)
 - CoFDA (chain-of-FDA) shapes, e.g. the Ampere `HMMA.16816.F32` path, are not
   modeled here — only the Hopper FDA(F=25) behavior is covered.
 - 2:4 sparse (`HMMA.SP`) and indexed-RF (`INDF`) variants are out of scope.
+
+## QMMA (fp8) extension — m16n8k32 e4m3
+
+`tools/hmma_model.py` also models **QMMA.16832.F32.E4M3.E4M3** (SM120), the
+fp8 path, reusing the exact FDA machinery with two fp8-specific behaviors
+(probed on hardware):
+
+1. **fp8 inputs carry NO special values.**  The e4m3 all-ones exponent is an
+   *ordinary* exponent: `0x7C` = 384, `0x7E` = 448.  Only the fully all-ones
+   byte `0x7F`/`0xFF` is NaN (canonical `0x7FFFFFFF`).  There is no fp8
+   infinity; only the FP32 accumulator C propagates NaN/inf.
+2. **Fragment layout** reuses the HMMA register packing — each 16-bit slot is
+   split into two 8-bit fp8.  fp8 byte *i* pairs only with byte *i* (no
+   cross-byte), each pair folds 4 k:
+   ```
+   D0/D1: {a0.i,b0.i} {a2.i,b1.i}   i in 0..3   (8 pairs x 4k = 32k)
+   D2/D3: {a1.i,b0.i} {a3.i,b1.i}
+   ```
+   `qmma_frag_pairs()` / `qmma_frag()` implement this.
+
+Verified: D matches nvcc `mma.sync.aligned.m16n8k32.row.col.f32.e4m3.e4m3.f32`
+(sm_120; sm_90 ptxas splits it into two HMMA.16816.F32), the model is
+bit-exact on random signed fragments (incl. exp-15 patterns), the FDA F=25
+align step holds (C bit at 2^-14 preserved → 5.0+2^-14), and output rounding
+is RZ (1.5 ulp → 1 ulp).  `decode_qmma.py` covers the 0x27a encoding.
+
+## QMMA.SF — block scaling (MXFP8, sm_120)
+
+`QMMA.SF.16832.F32.{srcFmtA}.{srcFmtB}.E8 Rd, Ra, Rb, Rc, Re, Rh, URi`
+(opcode 0x47a) is the block-scaled fp8 MMA; `MXQMMA.SF...` (0x47e) is the
+smaller-format (S2_6) sibling.  This is the SASS for PTX
+`mma.sync.aligned.m16n8k32.row.col.kind::mxf8f6f4.block_scale.scale_vec::1X
+.f32.<atype>.<btype>.f32.ue8m0` (sm_120a).
+
+Semantics (per the OCP MX spec, arXiv:2511.10909 appendix, and PTX docs):
+- A and B each carry a per-32-column **E8M0 scale** (`A^SF` is M × K/32,
+  `B^SF` is K/32 × N; K=32 → 1 column).  Every product scales by it:
+  `d = Σ_k (a·2^(eA−127))·(b·2^(eB−127)) + c`.
+- **Re / Rh** are the 32-bit scale-A / scale-B data: 4 candidate E8M0 bytes.
+- **URi** is a uniform selector register; its **low 2 bits = byte-id** (which
+  of the 4 E8M0 bytes of Re/Rh feeds the block), higher bits = thread-id
+  (which lane's scale data).  `URZ` (255) selects byte 0 of the local Re/Rh.
+
+Verified on SM120 (`test_qmma_sf.py`):
+- scale 1×/2×/0.5× (E8M0 0x7F/0x80/0x7E) scale A·B exactly; Re×Rh composes
+  (2×2→4×, 2×0.5→1×).
+- URi byte selector: sel%4 picks Re byte 0..3 (2/1/1/~0× with Re=0x017F7F80).
+- SASS encoding matches nvcc's block_scale lowering (data bits, modulo
+  operand choices).  Fragment layout is identical to plain QMMA (each 16-bit
+  slot = 2 fp8); the scale operands ride in Re/Rh/URi.
+
+Note the QMMA srcFmt enum (probed): **E4M3=0, E3M4=1, E2M3=2, E5M2=4,
+E3M2=5, E2M1=6** — grouped by mantissa width, not the SRCFMTA_qmma 0..5 order.
