@@ -57,17 +57,21 @@ def run(body, timeout_s=6):
 
 ok = True
 
-# YIELD version completes.
-flag, res = run("YIELD")
-good = flag == 1 and res == 0xDEADBEEF
-if not good:
-    ok = False
-print(f"{'ok ' if good else 'FAIL'} YIELD spin: COMPLETED flag=%#x result=%#x" % (flag, res))
+if __name__ == "__main__":
+    # YIELD version completes.
+    flag, res = run("YIELD")
+    good = flag == 1 and res == 0xDEADBEEF
+    if not good:
+        ok = False
+    print(f"{'ok ' if good else 'FAIL'} YIELD spin: COMPLETED flag=%#x result=%#x" % (flag, res))
 
-# NO-YIELD version deadlocks (kernel never completes).  Run in a subprocess so
-# the genuine deadlock is killed by a hard timeout instead of hanging this test.
-import subprocess
-CHILD = r'''
+    # NO-YIELD version deadlocks (kernel never completes).  Run in a subprocess
+    # so the genuine deadlock is killed by a hard timeout instead of hanging
+    # this test.  The child loads this module ONLY for `run`/`spin_kernel`; the
+    # guard above keeps the child from re-spawning its own child (which would
+    # leave a chain of orphaned deadlocked processes).
+    import subprocess
+    CHILD = r'''
 import sys, struct
 sys.path.insert(0, "__BASE__")
 from assembler import assemble, CudaModule
@@ -78,20 +82,21 @@ t = importlib.util.module_from_spec(spec); spec.loader.exec_module(t)
 flag, res = t.run("NOP", timeout_s=6)
 print("COMPLETED", flag, res)
 '''
-THIS = str(Path(__file__).resolve())
-py = (CHILD.replace("__BASE__", str(Path(__file__).resolve().parents[2]))
-          .replace("__THIS__", THIS))
-try:
-    r = subprocess.run([sys.executable, "-c", py], capture_output=True,
-                       text=True, timeout=8)
-    if r.stdout.strip().startswith("COMPLETED"):
-        print("FAIL NOP spin: completed (no deadlock)")
-        ok = False
-    else:
-        print("FAIL NOP spin: unexpected", repr(r.stdout[:60]))
-        ok = False
-except subprocess.TimeoutExpired:
-    print("ok  NOP spin: DEADLOCK (as expected)")
+    THIS = str(Path(__file__).resolve())
+    py = (CHILD.replace("__BASE__", str(Path(__file__).resolve().parents[2]))
+              .replace("__THIS__", THIS))
+    try:
+        r = subprocess.run([sys.executable, "-c", py], capture_output=True,
+                           text=True, timeout=8)
+        if r.stdout.strip().startswith("COMPLETED"):
+            print("FAIL NOP spin: completed (no deadlock)")
+            ok = False
+        else:
+            print(f"FAIL NOP spin: unexpected stdout={r.stdout[:60]!r} "
+                  f"stderr={r.stderr[:200]!r}")
+            ok = False
+    except subprocess.TimeoutExpired:
+        print("ok  NOP spin: DEADLOCK (as expected)")
 
-print(f"\n=== YIELD spin-lock forward progress: {'ALL PASS' if ok else 'FAILURES'} ===")
-sys.exit(0 if ok else 1)
+    print(f"\n=== YIELD spin-lock forward progress: {'ALL PASS' if ok else 'FAILURES'} ===")
+    sys.exit(0 if ok else 1)
