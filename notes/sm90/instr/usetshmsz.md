@@ -1,29 +1,54 @@
-# SETSMEMSIZE (USETSHMSZ) — Set shared-memory size (uniform hint)
+# SETSMEMSIZE (USETSHMSZ) — Set shared-memory size (shrink-only, uniform)
 
 **Opcode mnemonic:** `USETSHMSZ` = `0b1100111001001` = **0x19c9** (imm / FLUSH) / `0b1001111001001` = **0x13c9** (UR form) | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`, `VIRTUAL_QUEUE=$VQ_UNORDERED` | compute-only (`SHADER_TYPE==CS`)
 
-> **Status: NOT empirically verified.** ptxas/nvcc (CUDA 13.1) never emitted this from the
-> C/C++ or inline-PTX I could construct, and it is absent from libcublas / libcublasLt and
-> the crucible ptxas dumps. No PTX mnemonic maps to it in the ISA 9.3 docs. Everything below
-> is spec-derived (from the CLASS ENCODING) plus **semantic speculation**; the encodings are
-> constructed from the field layout, not captured from silicon.
+> **Status: EMPIRICALLY VERIFIED on SM120 (RTX 5090).** Full GPU probe below
+> (`tests/asm_construct/test_usetshmsz.py`). ptxas/nvcc (CUDA 13.x) never emit
+> this from C/C++ or PTX, and it is absent from libcublas / libcublasLt and the
+> crucible ptxas dumps — it is a shrink-only runtime knob, not a compiler
+> product. Encodings below are spec-derived + round-trip verified by the
+> assembler; the **behavior** is empirically pinned down.
 
-## Semantics (speculation)
-"**U-SET-SHM-SZ**" = uniform *Set Shared-Memory Size*. Opcode `0x19c9` sits immediately after
-`USETMAXREG` (`0x19c8`) and shares its shape (udp_pipe, compute-only, `DECOUPLED_*_SCBD`,
-`VQ_UNORDERED`, uniform-predicate guard, imm/UR/modifier trio). Both look like Hopper
-**dynamic resource-partitioning hints** issued from the uniform datapath.
+## Semantics (verified on silicon)
 
-Best guess: it declares/updates the amount of **shared memory** the CTA (or CGA/cluster) will
-use — i.e. the SASS-level counterpart of dynamic shared-memory reconfiguration
-(`cudaFuncAttributeMaxDynamicSharedMemorySize`) and/or distributed-shared-memory (DSMEM) setup
-for thread-block clusters. The 20-bit byte-size immediate (≤ 1 MiB range) comfortably covers
-Hopper's ~227 KiB max shared window. Being `DECOUPLED_RD_SCBD` with no destination, it is a
-fire-and-forget configuration hint (reads a scoreboard for ordering; writes nothing).
+`USETSHMSZ` **shrinks the CTA's shared-memory window** to the given byte size,
+issued from the uniform datapath. The window is a runtime, per-launch state:
+the instruction may only **decrease** it, never grow it back.
 
-The `.FLUSH` form (no operand) most likely **commits/flushes** a pending size configuration.
-Unlike `USETMAXREG`, there is **no predicate output** — it is not a try/allocate op, just a
-size announcement, consistent with a hint that cannot fail.
+Empirically confirmed rules (SM120, decl `#pragma SHARED(0x1000)`, block 32):
+
+1. **Monotone decrease only.** A value **larger than the *current* window**
+   traps with `ILLEGAL_INSTRUCTION` (CUDA error 715). `0x1000` on a 4 KiB
+   window is legal; `0x2000` (or `0x8000`) is not. "Once shrunk you can't grow
+   back" — and the bound is **relative to the current size**, not the initial
+   one: after `USETSHMSZ 0x200`, `USETSHMSZ 0x400` is illegal even though
+   `0x400 < 0x1000`, while `USETSHMSZ 0x100`/`0x200` remain legal.
+2. **Can keep shrinking.** Chains like `0x800 → 0x400 → 0x200 → 0x100 → 0x80
+   → 0x0` all execute; even `0x0` is legal.
+3. **128-byte granularity.** Legal values are multiples of 128 B: `0x0`,
+   `0x80`, `0x100`, `0x180`, `0x1000` … are fine; `0x40`, `0x7F`, `0x101`,
+   `0x1C0` trap 715. (0x1C0 = 448 = 3.5·128.)
+4. **Initial window = the size the driver allocated for the CTA** (here the
+   cubin `SHARED` declaration). Setting a value above it is illegal — which is
+   also why `USETSHMSZ` is per-launch: the next kernel launch resets the
+   window to its own allocation, so a shrink in one kernel does **not** affect
+   a later kernel's initial window.
+5. **The shrink takes effect immediately on the window.** After setting
+   `0x200`, `STS/LDS` at `@0x80` works but `@0x400` (beyond the new window)
+   faults with `ILLEGAL_ADDRESS` (CUDA error 700). So the reduction is real,
+   not a no-op.
+6. **`.FLUSH`** executes cleanly and does **not** lift the monotone rule:
+   after `0x200` + `.FLUSH`, growing to `0x400` still traps, shrinking to
+   `0x100` is still fine. It commits the pending size; the "can't grow back"
+   constraint is unaffected.
+7. **UR form** (`0x13c9`, size from a uniform register) obeys the same
+   monotone + granularity rules.
+
+Reading: it is a fire-and-forget configuration hint on the uniform datapath
+(`DECOUPLED_RD_SCBD`, no destination, `VQ_UNORDERED`) — hardware turns a
+"too large" request into `ILLEGAL_INSTRUCTION`. Likely purpose is Blackwell
+L1/shared re-partitioning where a CTA can hand SRAM back to the L1/shared
+pool at runtime; the shrink persists only for the lifetime of the launch.
 
 ## Variant overview (3 CLASS variants)
 | CLASS | opcode | operand | `e`[72] | ISRC_B_SIZE |
@@ -32,8 +57,9 @@ size announcement, consistent with a hint that cannot fail.
 | `usetshmsz__FLUSH` | 0x19c9 | none, `/FLUSHONLY` modifier | 1 | 0 |
 | `usetshmsz__URb`   | 0x13c9 | `UniformRegister` `URb` (size in UR) | 0 | 32 |
 
-`FLUSHONLY "FLUSH"=1`. The single distinguishing bit `e`[72]: `0` = normal (size via imm or
-UR), `1` = `.FLUSH`. imm vs UR is selected by opcode (`0x19c9` vs `0x13c9`).
+`FLUSHONLY "FLUSH"=1`. The single distinguishing bit `e`[72]: `0` = normal
+(size via imm or UR), `1` = `.FLUSH`. imm vs UR is selected by opcode
+(`0x19c9` vs `0x13c9`).
 
 ## Bit layout (128-bit)
 | bits | field | source | notes |
@@ -57,28 +83,33 @@ UR), `1` = `.FLUSH`. imm vs UR is selected by opcode (`0x19c9` vs `0x13c9`).
 | imm width | 10-bit (`Sb`[41:32]) | 20-bit (`Sb`[51:32]) |
 | modifier bits | `num`[73:72] mode, `sh`[74] pool | `e`[72] flush |
 | PTX | `setmaxnreg` | (none found) |
+| verified behavior | — | shrink-only, 128B granule, 715 on grow |
 
 ## Latency (from sm_90_latencies.txt)
-`udp_pipe` member (`USETSHMSZ, USETSHMSZudp_pipe` listed in the pipe). No dedicated latency
-row observed beyond generic udp_pipe behavior; no GPR/UGPR result (`IDEST_SIZE=0`), so it
-contributes no true/output dependency to consumers — only scoreboard ordering via `req_bit_set`.
+`udp_pipe` member (`USETSHMSZ, USETSHMSZudp_pipe` listed in the pipe). No
+dedicated latency row observed beyond generic udp_pipe behavior; no
+GPR/UGPR result (`IDEST_SIZE=0`), so it contributes no true/output dependency
+to consumers — only scoreboard ordering via `req_bit_set`. The size read
+(`Sb` imm or `URb`) is a uniform-datapath operand, so `src_rel_sb` ordering
+applies when the size comes from a freshly-loaded UR.
 
-## Constructed encodings (SYNTHETIC — round-trip only, not silicon-verified)
-| Lo64 | Hi64* | Reconstruction |
-|------|-------|----------------|
-| `0x00008000000079c9` | `0x0000000008000000` | `USETSHMSZ 0x8000` |
-| `0x000fffff000079c9` | `0x0000000008000000` | `USETSHMSZ 0xfffff` |
-| `0x0000000500007 3c9` | `0x0000000008000000` | `USETSHMSZ UR5` |
-| `0x00000000000079c9` | `0x0000000008000100` | `USETSHMSZ.FLUSH` |
+## Verified encodings
+| Lo64 | Hi64 | Disassembly | case |
+|------|------|-------------|------|
+| `0x00008000000079c9` | `0x000fe20008000000` | `USETSHMSZ 0x8000` | imm, shrink 32K on 64K decl OK |
+| `0x00000005000073c9` | `0x000fe20008000000` | `USETSHMSZ UR5` | UR form |
+| `0x00000000000079c9` | `0x000fe20008000100` | `USETSHMSZ.FLUSH` | FLUSH form |
 
-\* Hi64 shows only the opcode bit[91] and `e` bit[72]; real scheduling/scoreboard bits
-(`opex`, `req_bit_set`, …) are compiler-chosen and unknown. Decoder + round-trip test:
-`tools/decode_usetshmsz.py`.
+Decoder + round-trip test: `tools/decode_usetshmsz.py`. GPU behavior probe:
+`tests/asm_construct/test_usetshmsz.py`.
 
 ## Open questions
-- **Unconfirmed semantics** — the "shared-memory size" reading is inference from the mnemonic
-  and its `USETMAXREG` neighbor; needs a real emission to confirm operand units (bytes?
-  granularity?) and what `.FLUSH` commits.
-- What toolchain path emits it (cluster kernels? a specific driver ABI prologue?) — none of the
-  available libraries contain it.
-- Whether the size is CTA-scoped or cluster/CGA-scoped (DSMEM).
+- Why does the ISA expose a shrink-only runtime knob? Presumably to hand SRAM
+  back to the L1/shared pool mid-kernel on Blackwell (sm_100+) — the sm_90
+  file ships it, but the observed behavior is on sm_120.
+- Whether the freed window is actually re-partitioned toward L1 (performance
+  probe possible: shrunk kernel vs same kernel with no USETSHMSZ, measure
+  local-memory/global latency).
+- CTA- vs cluster-scoped effects when multiple CTAs share an SM; and whether
+  the initial window for a kernel that declares **less** than the driver max
+  is the declared size (observed) or could be larger on other configurations.
