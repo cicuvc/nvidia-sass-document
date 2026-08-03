@@ -10,13 +10,17 @@ Both are grep-first: never `Read` them whole. Use `grep -n` to locate a section,
 
 ### Current state
 - **197/207** compute instructions documented (notes + decoder + test kernel). Only `F2FP` and `RTT` remain unchecked.
-- **168 notes** (`notes/`) — 143 per-instruction + 25 cross-cutting / infrastructure notes (pipes, scoreboards, memory model, CBU state, tensor-core microarch, etc.).
-- **96 decoders** (`tools/decode_*.py`) — one per documented instruction, each validated against real cuobjdump vectors.
-- **103 test kernels** (`tests/*.cu`) — CUDA C / PTX inline-asm kernels that exercise encodings and compile → cuobjdump verification.
-- **100 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, shared libs).
+- **194 notes** (`notes/`) — 168 per-instruction + 26 cross-cutting / infrastructure notes (pipes, scoreboards, memory model, CBU state, tensor-core microarch, FDA/bit-accurate MMA model, etc.).
+- **109 decoders** (`tools/decode_*.py`) — one per documented instruction, each validated against real cuobjdump vectors.
+- **177 CUDA kernels** (`tests/*.cu`) + **87 assembler/round-trip tests** (`tests/asm_construct/test_*.py`) that build SASS by hand, load it through `assembler/`, and run it on a GPU.
+- **124 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, `hmma_model.py`, shared libs).
 
-### Phase 2: Refinement (current effort)
-Initial doc-writing pass is complete. Next: **tighten the notes** — make descriptions precise and consistent, resolve open questions, consolidate related instructions, and improve cross-references. Guidelines below.
+### Current work
+The repo now also ships a **working SASS assembler + GPU runner** (`assembler/`,
+see `ASSEMBLER_MANUAL.md`) and a bit-accurate tensor-core fp16/bf16/fp8
+reference model (`tools/hmma_model.py`).  Tests build kernels as SASS text,
+assemble to cubin, and run them (HMMA/QMMA tensor-core, LDG/STG, cp.async,
+memory model probes).  Doc-writing continues against `TODO.md`.
 
 ## Tooling (`tools/`)
 A stdlib-only extractor turns the spec into a queryable JSON DB — prefer it over ad-hoc `grep`/manual parsing for structured lookups.
@@ -25,6 +29,25 @@ A stdlib-only extractor turns the spec into a queryable JSON DB — prefer it ov
 - Regenerate `sm90.json` after any parser change; trust the validation gate (asserts opcode presence + bit ranges ⊆[0,127] + width==Σ span per field).
 
 Parser gotchas already handled (don't reintroduce): sub-section keywords and even the next `CLASS` can be **glued after `;` with no newline** (`;OPCODES`, `ENCODING!..._unused`, `;CLASS "..."`); multiple `BITS_` statements may share one physical line; field names can contain digits, so bit-pairs are consumed until their count equals the declared width; `imad_pseudo_*` classes carry a `REMAP "..."` directive instead of `BITS_` (no opcode field — expected).
+
+## Assembler (`assembler/`)
+A hand-written SASS → cubin toolchain targeting **sm_120** (regenerated `sm120.json`), plus a CTypes CUDA runner and a scoreboard dependency checker.  Full syntax and feature list: **`ASSEMBLER_MANUAL.md`** (read it before writing SASS-by-hand tests).
+
+Key entry points (`from assembler import ...`):
+- `assemble(source, kernel_name="", check_deps=True, strict_deps=False) -> bytes` (cubin)
+- `assemble_kernel(source, ...) -> AssembleResult` (also `.encoded` = list of `(lo64,hi64)`, `.params`)
+- `assemble_flat(source) -> list[(lo64,hi64)]` — encode only, for decoder/round-trip tests
+- `CudaModule(cubin)` — `launch(func, grid, block, args)`, `devmem_alloc/free`, `device_read/write`, `synchronize`; drives the GPU without nvcc at runtime
+
+Source dialect essentials (see §3–§4 of the manual):
+- Kernel: `#fn name(p1<4>, p2<8>) { ... }`; `#param(name)` → `c[0x0][0x380+off]`; `#spec_const(SLOT_DEFAULT_CDESC)` → `c[0x0][0x358]` (default global cache descriptor); `#pragma NAME(value)` sets `MAXREG_COUNT`/`SHARED`/`SHADER_TYPE`/`MBARRIER_*`; labels via `#def_label(name)` + `#label(name)`.
+- Scheduling bracket `[wr:rd:{req}:stall:yield[:batch_t]]` on every line; scoreboards are SB0–SB5 (7 = none, 6 rejected).
+- **64/128-bit operands MUST be explicit register groups** `{Ra,Rb}`/`{Ra,Rb,Rc,Rd}` (cuobjdump prints the scalar shorthand; the assembler source requires groups — this is the #1 gotcha).
+- `LDCU` is the sm_120 name of `ULDC`.
+- HMMA/QMMA results are NOT scoreboarded (COUPLED_EMULATABLE): pad **≥16 NOP** before reading `Rd` (fewer can fault 0x715).
+- QMMA srcFmt enum (probed): `E4M3=0, E3M4=1, E2M3=2, E5M2=4, E3M2=5, E2M1=6`.
+
+Running tests: `python3 tools/run_tests.py [-j N]` (parallel processes; timing/descriptor-sensitive tests run serially — see `TIMING_SENSITIVE` in run_tests.py).  When adding a GPU test prefer independent buffers/streams; keep `test_cache_desc`-style per-stream state out of the parallel batch.
 
 ## Documentation workflow (current effort)
 Goal: write a per-instruction reference doc for every **compute** SASS instruction. Split across sessions.

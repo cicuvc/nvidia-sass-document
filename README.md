@@ -21,13 +21,15 @@ microarchitectural speculation.
 | `sm100_instructions.txt` | Blackwell full instruction/encoding spec. |
 | `sm100_latencies.txt` | Blackwell pipe grouping + scoreboard/latency tables. |
 | `sm_75_instructions.txt`, `sm_80_instructions.txt` | Older-arch dumps for cross-arch comparison. |
-| `tools/` | stdlib-only extractors + query CLIs + per-instruction decoders (sm_90 and sm100). |
-| `notes/sm90/instr/` | Per-instruction reference docs for sm_90 (164 instructions). |
-| `notes/sm90/arch/` | Cross-cutting microarchitecture notes for sm_90 (24 topics). |
+| `tools/` | stdlib-only extractors + query CLIs + per-instruction decoders (sm_90 and sm100) + bit-accurate MMA model (`hmma_model.py`). |
+| `assembler/` | Hand-written SASS → cubin toolchain (sm_120) + CTypes GPU runner + scoreboard dependency checker. See `ASSEMBLER_MANUAL.md`. |
+| `ASSEMBLER_MANUAL.md` | Full assembler syntax, features, and usage notes. |
+| `notes/sm90/instr/` | Per-instruction reference docs for sm_90 (168 instructions). |
+| `notes/sm90/arch/` | Cross-cutting microarchitecture notes for sm_90 (26 topics). |
 | `notes/sm100/instr/` | Per-instruction reference docs for sm100 (20 instructions). |
 | `notes/sm100/arch/` | Cross-cutting microarchitecture notes for sm100 (4 topics). |
 | `notes/sm100/OVERVIEW.md` | Summary of sm_90 → sm100 encoding/capability changes. |
-| `tests/` | CUDA (`.cu`) kernels that force specific SASS encodings and probe microarch behavior (170 files). |
+| `tests/` | CUDA (`.cu`) kernels that force specific SASS encodings and probe microarch behavior (177 files), plus `tests/asm_construct/` assembler round-trip + GPU tests (87 `.py` files). |
 | `TODO.md` | Master checklist of sm_90 instructions to document (197/207 done). |
 | `ref_memo.txt` | Curated sm_70..sm_90 opcode roster (source of the checklist). |
 | `sm90.json`, `sm100.json` | Generated queryable DBs (~21 MB each, gitignored/regenerable). |
@@ -59,7 +61,36 @@ python3 tools/query_sm100.py pipe <MNEMONIC>
 
 `tools/decode_<mnem>.py` are minimal per-instruction decoders: they extract
 fields from a 128-bit encoding (lo64 + hi64) and reconstruct the SASS assembly,
-validated against real cuobjdump vectors.
+validated against real cuobjdump vectors.  `tools/hmma_model.py` is a
+bit-accurate FDA (Fused-Dot-Add) reference model of the tensor-core
+fp16/bf16/fp8 HMMA/QMMA path.
+
+### Assembler (`assembler/`) and running tests
+
+SASS-by-hand kernels are assembled to cubin and run on a GPU without nvcc:
+
+```python
+from assembler import assemble, CudaModule
+mod = CudaModule(assemble("#fn k(out<2048>) { ... }"))
+d = mod.devmem_alloc(2048 * 4)
+mod.launch("k", grid=(1,), block=(32,), args=[d])
+mod.synchronize()
+out = mod.device_read(d, 128)
+```
+
+- `assemble(source)` / `assemble_kernel(source)` (→ `AssembleResult`) /
+  `assemble_flat(source)` (→ list of `(lo64, hi64)`).
+- `CudaModule(cubin)`: `launch`, `devmem_alloc/free`, `device_read/write`,
+  `device_name`.  Scoreboard dependency checking is on by default
+  (`check_deps` / `strict_deps`).
+- Full syntax + gotchas: **`ASSEMBLER_MANUAL.md`** (explicit register groups,
+  scheduling brackets, `#fn`/`#param`/`#spec_const`, MMA result-wait rules).
+
+Run the assembler/GPU test suite:
+
+```bash
+python3 tools/run_tests.py [-j N]      # parallel processes; timing/descriptor tests serial
+```
 
 ## Key facts about the ISA (sm_90 and sm100)
 
@@ -83,10 +114,10 @@ validated against real cuobjdump vectors.
 | Instructions documented | 197 |
 | Remaining | 5 (F2FP, RTT, QSPC, UCGABAR_GET, UCGABAR_SET) |
 | Special (pending resolution) | 1 (LDCU — likely LDC variant) |
-| Per-instruction notes | 164 (some consolidated: e.g. HADD2/HADD2_F32, DADD/DADD_F64) |
-| Cross-cutting arch notes | 24 |
-| Decoder scripts | 105 |
-| Test kernels | 170 |
+| Per-instruction notes | 168 (some consolidated: e.g. HADD2/HADD2_F32, DADD/DADD_F64) |
+| Cross-cutting arch notes | 26 |
+| Decoder scripts | 109 |
+| Test kernels | 177 (`.cu`) + 87 assembler/GPU tests (`tests/asm_construct/test_*.py`) |
 
 ### sm100 (Blackwell)
 | Metric | Count |
