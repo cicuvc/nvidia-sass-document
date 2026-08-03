@@ -100,6 +100,10 @@ def main() -> int:
     ap.add_argument("--dump", action="store_true", default=True, help="Dump parsed instructions")
     ap.add_argument("-v", "--verbose", action="store_true", help="Verbose operand detail")
     ap.add_argument("--debug-tokens", action="store_true", help="Dump raw tokens")
+    ap.add_argument("--no-check-deps", action="store_true",
+                    help="Disable the scoreboard dependency checker")
+    ap.add_argument("--strict-deps", action="store_true",
+                    help="Treat dependency warnings as errors (exit 1)")
     args = ap.parse_args()
 
     path = Path(args.input)
@@ -170,6 +174,35 @@ def main() -> int:
     with open(db_path) as f:
         db = json.load(f)
     encoder = SassEncoder(db)
+
+    # Scoreboard dependency check (CFG).  Needs resolved label offsets.
+    if not args.no_check_deps:
+        from .sass_depcheck import run_depcheck
+        addrs: list[int | None] = []
+        labels: dict[str, int] = {}
+        pc = 0
+        for i, inst in enumerate(insts):
+            if inst.mnemonic == "_label_":
+                labels.setdefault(inst.label, pc)
+            addrs.append(pc)
+            if inst.mnemonic != "_label_":
+                pc += 16
+        from .operand import OperandKind
+        for inst, ia in zip(insts, addrs):
+            if inst.mnemonic == "_label_" or inst is None:
+                continue
+            for op in inst.operands:
+                if op.kind == OperandKind.LABEL:
+                    op.kind = OperandKind.IMM_S
+                    op.value = labels[op.value] - (ia + 16)
+        diags = run_depcheck(db, insts, results, addrs,
+                             kernel_name=kernel.name if kernel else args.kernel_name,
+                             strict=args.strict_deps)
+        if args.strict_deps and diags:
+            print(f"error: {len(diags)} dependency diagnostic(s) under "
+                  f"--strict-deps", file=sys.stderr)
+            return 1
+
     encoded: list[tuple[int, int]] = []
     for i, inst in enumerate(insts):
         if inst.mnemonic == "_label_" or results[i] is None:

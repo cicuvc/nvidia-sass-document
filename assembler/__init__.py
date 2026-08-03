@@ -53,13 +53,18 @@ def _make_matcher_encoder():
     return _Matcher(db), SassEncoder(db)
 
 
-def _resolve_labels_and_encode(insts, matcher, encoder):
+def _resolve_labels_and_encode(insts, matcher, encoder, *,
+                               check_deps=False, strict_deps=False,
+                               kernel_name=""):
     """Two-pass encode with PC-relative label resolution.
 
     Pass 1: each non-label instruction occupies 16 bytes; build the
     label→byte-offset map.  Pass 2: replace every LABEL operand with the
     relative byte offset ``target - next_pc`` (branch fields are scaled
     PC-relative, base = the following instruction), then match + encode.
+    When ``check_deps`` is set, run the CFG scoreboard dependency checker
+    over the matched instructions (warnings to stderr; ``strict_deps``
+    promotes them to errors).
     """
     from .operand import OperandKind
 
@@ -69,14 +74,16 @@ def _resolve_labels_and_encode(insts, matcher, encoder):
     for inst in insts:
         if inst.mnemonic == "_label_":
             labels.setdefault(inst.label, addr)
-            addrs.append(None)
+            addrs.append(addr)
         else:
             addrs.append(addr)
             addr += 16
 
     encoded = []
+    results = []
     for inst, ia in zip(insts, addrs):
         if inst.mnemonic == "_label_":
+            results.append(None)
             continue
         for op in inst.operands:
             if op.kind == OperandKind.LABEL:
@@ -86,8 +93,14 @@ def _resolve_labels_and_encode(insts, matcher, encoder):
                 op.kind = OperandKind.IMM_S
                 op.value = target - (ia + 16)
         r = matcher.match(inst)
+        results.append(r)
         lo, hi = encoder.encode(r, inst.sched)
         encoded.append((lo, hi))
+
+    if check_deps:
+        from .sass_depcheck import run_depcheck
+        run_depcheck(matcher.db, insts, results, addrs,
+                     kernel_name=kernel_name, strict=strict_deps)
     return encoded
 
 
@@ -101,14 +114,19 @@ class AssembleResult:
     params: list[tuple[int, int, int]]
 
 
-def assemble(source: str, kernel_name: str = "") -> bytes:
+def assemble(source: str, kernel_name: str = "", *,
+             check_deps: bool = True, strict_deps: bool = False) -> bytes:
     """Assemble SASS source → cubin bytes.
 
     Accepts either a ``#fn name(params) {{ ... }}`` kernel declaration or
     standalone SASS instructions (requires ``kernel_name`` for the latter).
+    ``check_deps`` (default on) runs the scoreboard dependency checker over
+    the kernel; warnings go to stderr.  ``strict_deps`` turns warnings into
+    errors.
     """
     if source.lstrip().startswith("#fn"):
-        result = assemble_kernel(source)
+        result = assemble_kernel(source, check_deps=check_deps,
+                                 strict_deps=strict_deps)
         return result.code
     if not kernel_name:
         raise ValueError("kernel_name required for standalone instructions")
@@ -121,12 +139,16 @@ def assemble(source: str, kernel_name: str = "") -> bytes:
     return cb.build()
 
 
-def assemble_kernel(source: str) -> AssembleResult:
+def assemble_kernel(source: str, *, check_deps: bool = True,
+                    strict_deps: bool = False) -> AssembleResult:
     """Assemble a ``#fn name(params) {{ ... }}`` block → AssembleResult."""
     k = parse_kernel(source)
     matcher, encoder = _make_matcher_encoder()
     cb = CubinBuilder()
-    encoded = _resolve_labels_and_encode(k.instructions, matcher, encoder)
+    encoded = _resolve_labels_and_encode(k.instructions, matcher, encoder,
+                                         check_deps=check_deps,
+                                         strict_deps=strict_deps,
+                                         kernel_name=k.name)
     cb.set_code(encoded, kernel_name=k.name)
     if k.params:
         cb.set_params([(i, p.ordinal, p.size)
