@@ -63,7 +63,7 @@ cases = [
     ("BMSK.C R2, RZ, 0x1F",        0x7FFFFFFF, (0x00000000, None)),        # pos=0 w=31
 ]
 
-lines = ["#fn k(out<128>) {",
+lines = ["#fn k(out<8>) {",
          "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]"]
 off = 0x40            # main battery AFTER the per-block RUR region (0x00..0x20)

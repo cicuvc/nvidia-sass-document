@@ -43,7 +43,7 @@ NAN = 0x7fc00000
 DEN = 1                 # smallest denormal
 
 def run(pairs):
-    lines = ["#fn k(buf<4096>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
@@ -129,7 +129,7 @@ check("-1/2 safe", run([(fb(0) | 0x80000000, fb(1))])[0], 0)
 
 # 9. negate/absolute modifiers don't change the decision (magnitude-based)
 def run_mods(pairs, ra_form="R10", rb_form="R11"):
-    lines = ["#fn k(buf<4096>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",

@@ -40,12 +40,19 @@ Key entry points (`from assembler import ...`):
 - `CudaModule(cubin)` — `launch(func, grid, block, args)`, `devmem_alloc/free`, `device_read/write`, `synchronize`; drives the GPU without nvcc at runtime
 
 Source dialect essentials (see §3–§4 of the manual):
-- Kernel: `#fn name(p1<4>, p2<8>) { ... }`; `#param(name)` → `c[0x0][0x380+off]`; `#spec_const(SLOT_DEFAULT_CDESC)` → `c[0x0][0x358]` (default global cache descriptor); `#pragma NAME(value)` sets `MAXREG_COUNT`/`SHARED`/`SHADER_TYPE`/`MBARRIER_*`; labels via `#def_label(name)` + `#label(name)`.
+- Kernel: `#fn name(p1<4>, p2<8>) { ... }`; `<size>` is the parameter's byte
+  width (pointer = 8, tensor map = 128), NOT the buffer size a pointer points
+  at; `#param(name)` → `c[0x0][0x380+off]`; `#spec_const(SLOT_DEFAULT_CDESC)`
+  → `c[0x0][0x358]` (default global cache descriptor); `#pragma NAME(value)`
+  sets `MAXREG_COUNT`/`SHARED`/`SHADER_TYPE`/`MBARRIER_*`; labels via
+  `#def_label(name)` + `#label(name)`.
 - Scheduling bracket `[wr:rd:{req}:stall:yield[:batch_t]]` on every line; scoreboards are SB0–SB5 (7 = none, 6 rejected).
 - **64/128-bit operands MUST be explicit register groups** `{Ra,Rb}`/`{Ra,Rb,Rc,Rd}` (cuobjdump prints the scalar shorthand; the assembler source requires groups — this is the #1 gotcha).
 - `LDCU` is the sm_120 name of `ULDC`.
 - HMMA/QMMA results are NOT scoreboarded (COUPLED_EMULATABLE): pad **≥16 NOP** before reading `Rd` (fewer can fault 0x715).
 - QMMA srcFmt enum (probed): `E4M3=0, E3M4=1, E2M3=2, E5M2=4, E3M2=5, E2M1=6`.
+- `CudaModule.launch` packs pointer args as 8 bytes and `bytes` args (tensor
+  maps) at their full size; param sizes are read from the cubin's KPARAM.
 
 Running tests: `python3 tools/run_tests.py [-j N]` (parallel processes; timing/descriptor-sensitive tests run serially — see `TIMING_SENSITIVE` in run_tests.py).  When adding a GPU test prefer independent buffers/streams; keep `test_cache_desc`-style per-stream state out of the parallel batch.
 

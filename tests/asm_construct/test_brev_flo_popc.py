@@ -39,7 +39,7 @@ def check(name, got, want):
 def build(lines):
     hdr = ["    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
            "    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]"]
-    src = "#fn k(out<1024>) {\n" + "\n".join(hdr + lines) + "\n    EXIT;[7:7:{}:5:0]\n}"
+    src = "#fn k(out<8>) {\n" + "\n".join(hdr + lines) + "\n    EXIT;[7:7:{}:5:0]\n}"
     return assemble(src)
 
 def run_battery(name, instr, values, pu=False):

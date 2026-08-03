@@ -84,7 +84,7 @@ def run_sz(sz, nwords):
     stores = "".join(
         f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{0x40+i*4:X}], R{10+i};[0:1:{{0}}:1:0]\n"
         for i in range(nwords))
-    src = f"""#fn k(out<1024>) {{
+    src = f"""#fn k(out<8>) {{
     #pragma SHARED(0x4000)
     LDCU.64 {{UR4,UR5}}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{{}}:1:0]
     LDC.64 {{R6,R7}}, #param(out);[1:7:{{}}:1:0]

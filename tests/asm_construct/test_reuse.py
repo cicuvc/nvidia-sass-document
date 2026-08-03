@@ -182,7 +182,7 @@ add("oldval-R13-consumer",
     "FRESH: P2's reuse of R13 is NOT latched (single entry holds R10); a "
     "consumer of R13 reads RF (4*2+3=11)")
 
-lines = ["#fn reuse_test(out<256>) {",
+lines = ["#fn reuse_test(out<8>) {",
          "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
          "    MOV32I R13, 0x40800000;[7:7:{}:5:1]",

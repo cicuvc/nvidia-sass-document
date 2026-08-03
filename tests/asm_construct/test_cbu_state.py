@@ -52,7 +52,7 @@ def capture(slot, mode, block=32):
         pre += ["    BSSY B0, #label(join);[7:7:{}:5:1]",
                 "    @!P0 BRA #label(join);[7:7:{}:5:1]"]
         tail = ["    BSYNC B0;[7:7:{}:5:1]", "    #def_label(join)"]
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]"] + pre + [
              f"    BMOV R4, {slot};[0:7:{{}}:5:1]"] + ["    IADD3 R10, R10, RZ, RZ;[7:7:{}:5:1]"] * 8 + [

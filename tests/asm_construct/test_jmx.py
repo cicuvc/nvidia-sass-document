@@ -37,7 +37,7 @@ def check(name, got, want):
     print(f"{'ok ' if good else 'FAIL'} {name}: {got}")
 
 def run(kernel_lines, block=32, buf=1024):
-    src = "#fn k(buf<1024>) {\n" + "\n".join(kernel_lines) + "\n}"
+    src = "#fn k(buf<8>) {\n" + "\n".join(kernel_lines) + "\n}"
     cubin = assemble(src)
     mod = CudaModule(cubin)
     d = mod.devmem_alloc(buf)

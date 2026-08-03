@@ -25,7 +25,7 @@ FIVE = 0x40A00000   # 5.0
 
 
 def build():
-    lines = ["#fn ldg_test(out<1024>) {",
+    lines = ["#fn ldg_test(out<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",   # desc policy, wr=SB0
              "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
              "    LDG.E R20, desc[{UR4,UR5}][{R6,R7}+0x20];[1:7:{0}:5:1]",  # wait SB0, wr=SB1

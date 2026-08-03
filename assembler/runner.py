@@ -14,6 +14,7 @@ Usage:
 
 from __future__ import annotations
 import ctypes
+import struct
 import ctypes.util
 from typing import Optional
 
@@ -108,6 +109,13 @@ class CudaModule:
 
         self._mod = ctypes.c_void_p()
         _check(lib.cuModuleLoadData(ctypes.byref(self._mod), cubin))
+
+        # Per-parameter sizes (bytes) from the cubin's EIATTR_KPARAM_INFO
+        # records.  Sized so a kernel's kernelParams array can carry values of
+        # the right width (8 for pointers, 256 for __grid_constant__ tensor
+        # maps).  None means "unknown / assume 8" (e.g. nvcc cubins where we
+        # haven't parsed the layout, or legacy 8-byte-only usage).
+        self._param_sizes = _extract_param_sizes(cubin)
 
         # Cache functions
         self._funcs: dict[str, ctypes.c_void_p] = {}
@@ -225,15 +233,25 @@ class CudaModule:
         self.launch(func_name, grid=grid, block=block, args=args,
                     shared_mem=shared_mem, stream=stream)
 
-    @staticmethod
-    def _kernel_param_array(args):
-        """kernelParams convention: array of pointers to uint64 arg slots."""
+    def _kernel_param_array(self, args):
+        """kernelParams convention: array of pointers to each argument value.
+
+        An int arg is an 8-byte slot (pointer-sized, which the driver reads
+        for 4/8-byte params); a bytes/bytearray arg supplies the raw value at
+        the parameter's size (e.g. a 256-byte __grid_constant__ CUtensorMap).
+        """
         if not args:
             return None
-        arg_bufs = [ctypes.c_uint64(a) for a in args]
-        return (ctypes.c_void_p * len(args))(
-            *(ctypes.cast(ctypes.pointer(b), ctypes.c_void_p)
-              for b in arg_bufs)
+        sizes = self._param_sizes or []
+        bufs = []
+        for i, a in enumerate(args):
+            sz = sizes[i] if i < len(sizes) else 8
+            if isinstance(a, (bytes, bytearray, memoryview)):
+                bufs.append(ctypes.create_string_buffer(bytes(a), max(sz, len(a))))
+            else:
+                bufs.append(ctypes.c_uint64(int(a)))
+        return (ctypes.c_void_p * len(bufs))(
+            *(ctypes.cast(ctypes.pointer(b), ctypes.c_void_p) for b in bufs)
         )
 
     def synchronize(self) -> None:
@@ -272,3 +290,32 @@ def _pad3(t, default=1):
     if len(t) >= 3:
         return t[0], t[1], t[2]
     return t[0], t[1] if len(t) > 1 else default, default
+
+
+def _extract_param_sizes(cubin: bytes) -> list[int] | None:
+    """Per-parameter byte sizes from the cubin's EIATTR_KPARAM_INFO records.
+
+    KPARAM items are 16 bytes: ``04 17 0c 00 00 00 00 00 00 <off4> <flags4>``
+    with the payload's u32[1] = (offset<<16)|ordinal at byte +8 and u32[2]
+    (size code ``(size << 2) | 1``, low 16 bits 0xf000) at byte +12.
+    Returns a list indexed by parameter ordinal, or None if nothing parsed
+    (e.g. a cubin we did not generate).
+    """
+    sizes = {}
+    pat = b"\x04\x17\x0c\x00\x00\x00\x00\x00"   # 9-byte prefix; byte 9 is the
+    i = 0                                        # param-index low byte (varies)
+    while True:
+        j = cubin.find(pat, i)
+        if j < 0:
+            break
+        off = struct.unpack_from("<I", cubin, j + 8)[0]
+        flags = struct.unpack_from("<I", cubin, j + 12)[0]
+        if (flags & 0xf000) == 0xf000:
+            ordinal = off & 0xffff
+            size = ((flags >> 16) - 1) >> 2
+            if 1 <= size <= (1 << 16):
+                sizes[ordinal] = size
+        i = j + 1
+    if not sizes:
+        return None
+    return [sizes[o] for o in sorted(sizes)]

@@ -80,7 +80,7 @@ def run_clmad(lo_hi, a, b, c):
              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R4;[0:1:{1}:1:0]",
              "    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R8;[0:1:{1,2}:1:0]",
              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x10], R9;[0:1:{1,2}:1:0]"]
-    src = "#fn k(out<32>, a<8>, b<8>, c<8>) {\n" + "\n".join(lines) + "\n    EXIT;[7:7:{}:5:0]\n}"
+    src = "#fn k(out<8>, a<8>, b<8>, c<8>) {\n" + "\n".join(lines) + "\n    EXIT;[7:7:{}:5:0]\n}"
     mod = CudaModule(assemble(src))
     d = mod.devmem_alloc(32)
     try:
@@ -102,7 +102,7 @@ def run_idp(instr, a, b, c):
              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R1;[0:1:{}:1:0]",
              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x8], R2;[0:1:{}:1:0]",
              "    STG.E desc[{UR4,UR5}][{R6,R7}+0xC], R10;[0:1:{}:1:0]"]
-    src = "#fn k(out<16>, a<4>, b<4>, c<4>) {\n" + "\n".join(lines) + "\n    EXIT;[7:7:{}:5:0]\n}"
+    src = "#fn k(out<8>, a<4>, b<4>, c<4>) {\n" + "\n".join(lines) + "\n    EXIT;[7:7:{}:5:0]\n}"
     mod = CudaModule(assemble(src))
     d = mod.devmem_alloc(16)
     try:

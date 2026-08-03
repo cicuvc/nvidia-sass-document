@@ -35,7 +35,7 @@ import sys, struct
 sys.path.insert(0, "__BASE__")
 from assembler import assemble, CudaModule
 slot = sys.argv[1]
-lines = ["#fn k(buf<1024>) {",
+lines = ["#fn k(buf<8>) {",
          "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R4, 0xDEADBEEF;[7:7:{}:5:1]",
@@ -75,7 +75,7 @@ CHILD2 = r'''
 import sys, struct
 sys.path.insert(0, "__BASE__")
 from assembler import assemble, CudaModule
-lines = ["#fn k(buf<1024>) {",
+lines = ["#fn k(buf<8>) {",
          "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",

@@ -29,7 +29,7 @@ def check(name, got, want):
 def run_vote(pred_setup, vote_instr, block=32, divergent=False):
     """pred_setup sets P0 (and P2 if divergent); vote_instr is the VOTE.
     Returns (ballot_per_lane, pu_per_lane) each 32-entry (0 for inactive)."""
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(buf);[1:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",

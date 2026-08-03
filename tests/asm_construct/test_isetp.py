@@ -26,7 +26,7 @@ import struct
 #   P2R R, PR, RZ, 0x7f; [7:7:{1}:8:0]
 
 cubin = assemble('''
-#fn isetp_test(out<64>) {
+#fn isetp_test(out<8>) {
     LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 

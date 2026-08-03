@@ -43,7 +43,7 @@ STALL = 13   # ISETP->predicated-BRA latency floor
 def run(body, block=32):
     """body: list of SASS lines inside the kernel; stores R20/R21/R22 per lane
     at buf[4*tid], buf[4*tid+128], buf[4*tid+256]."""
-    lines = ["#fn k(buf<2048>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",

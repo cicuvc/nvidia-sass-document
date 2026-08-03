@@ -72,7 +72,7 @@ SRC1 = f"""#fn ubrev_test(in<8>, out<1024>) {{
 }}"""
 
 # Kernel 2: UBREV of a baked-in immediate (0x18be RIR form).
-SRC2 = f"""#fn ubrev_imm(out<1024>) {{
+SRC2 = f"""#fn ubrev_imm(out<8>) {{
     LDCU.64 {{UR4, UR5}}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{{}}:1:0]
     LDC.64 {{R6, R7}}, #param(out);[1:7:{{}}:1:0]
     UBREV UR8, 0x0F0F0F0F;[7:7:{{}}:5:1]

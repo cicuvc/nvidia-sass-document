@@ -22,7 +22,7 @@ from assembler import assemble, CudaModule
 # ---------------------------------------------------------------------------
 
 def build(set_inst, read_reg):
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
@@ -94,7 +94,7 @@ print("ALL packs X=R20 (low32), Y=R21[15:0], Z=R21[31:16].")
 # Inject an invalid-SMID value (0xFFFF); if SETCTAID migrated the CTA, the
 # SR_VIRTUALSMID readback would change.  It stays constant.
 def build_sm(set_inst):
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",

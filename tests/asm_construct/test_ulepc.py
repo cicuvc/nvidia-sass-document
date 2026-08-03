@@ -58,7 +58,7 @@ def read_ur_pair(ur_lo, ur_hi, rd_lo, rd_hi, off):
 """
 
 
-SRC = f"""#fn t(out<1024>) {{
+SRC = f"""#fn t(out<8>) {{
     LDCU.64 {{UR4, UR5}}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{{}}:1:0]
     LDC.64 {{R6, R7}}, #param(out);[1:7:{{}}:1:0]
     ULEPC {{UR16, UR17}};[7:7:{{}}:5:1]           # 0x20 — pc-only

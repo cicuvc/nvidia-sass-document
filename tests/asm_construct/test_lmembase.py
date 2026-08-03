@@ -27,7 +27,7 @@ from assembler import assemble, CudaModule
 # ---------------------------------------------------------------------------
 
 def build_roundtrip(addr_lo, addr_hi):
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              f"    MOV32I R10, 0x{addr_lo:08x};[7:7:{{}}:5:1]",
@@ -61,7 +61,7 @@ def run_roundtrip(addr):
 
 
 def build_getdefault():
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    GETLMEMBASE {R8,R9};[0:7:{}:5:1]",

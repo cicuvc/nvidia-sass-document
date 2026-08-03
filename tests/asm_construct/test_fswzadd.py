@@ -51,7 +51,7 @@ F = lambda b: struct.unpack("<f", struct.pack("<I", b))[0]
 
 def run(nps, Ra, Rc, mods="", nlanes=8):
     """Per-lane LDG Ra/Rc, FSWZADD, STG result at buf+lane*4+0x100."""
-    lines = ["#fn fswz(buf<4096>) {",
+    lines = ["#fn fswz(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",

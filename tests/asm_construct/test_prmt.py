@@ -80,7 +80,7 @@ def run_case(instr, params, count):
              "    STG.E desc[{UR4,UR5}][{R2,R3}+0x4], R1;[0:1:{}:1:0]",
              "    STG.E desc[{UR4,UR5}][{R2,R3}+0x8], R4;[0:1:{}:1:0]",
              "    STG.E desc[{UR4,UR5}][{R2,R3}+0xC], R10;[0:1:{}:1:0]"]
-    src = ("#fn k(out<16>, a<4>, b<4>, sel<4>) {\n"
+    src = ("#fn k(out<8>, a<4>, b<4>, sel<4>) {\n"
            + "\n".join(lines) + "\n    EXIT;[7:7:{}:5:0]\n}")
     mod = CudaModule(assemble(src))
     d = mod.devmem_alloc(16)

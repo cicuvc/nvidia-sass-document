@@ -46,7 +46,7 @@ def mcollective_inside(mask, exit_lanes, block=32):
     if exit_lanes:
         pre += ["    ISETP.LT.AND P0, PT, R2, 0x10, PT;[7:7:{0}:13:1]",
                 "    @P0 EXIT;[7:7:{}:5:0]"]
-    lines = ["#fn k(buf<1024>) {"] + pre + [
+    lines = ["#fn k(buf<8>) {"] + pre + [
              f"    MOV32I R5, 0x{mask};[7:7:{{}}:5:1]",
              "    BSSY B1, #label(loop);[7:7:{}:5:1]",
              "    WARPSYNC.COLLECTIVE R5, #label(sync);[7:7:{}:5:1]",
@@ -84,7 +84,7 @@ check("MCOLLECTIVE inside (mask=0xFFFF0000 exact) = 0xFFFF0000",
 
 # ---- MCOLLECTIVE after ENDCOLLECTIVE = 0 ----------------------------------
 def mcollective_after():
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
              "    MOV32I R5, 0xFFFFFFFF;[7:7:{}:5:1]",
@@ -117,7 +117,7 @@ CHILD = r'''
 import sys, struct
 sys.path.insert(0, "__BASE__")
 from assembler import assemble, CudaModule
-lines = ["#fn k(buf<1024>) {",
+lines = ["#fn k(buf<8>) {",
          "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R5, 0x0000FFFF;[7:7:{}:5:1]",
@@ -180,7 +180,7 @@ elif mode == "bssy":
            "    #def_label(i)"]
 elif mode == "exit":
     mid = ["    @P0 EXIT;[7:7:{}:5:0]", "    MOV32I R20, 0x1;[7:7:{}:5:1]"]
-lines = ["#fn k(buf<1024>) {"] + pre + mid + [
+lines = ["#fn k(buf<8>) {"] + pre + mid + [
          "    ENDCOLLECTIVE;[7:7:{}:5:1]",
          "    #def_label(sync)", "    BSYNC B1;[7:7:{}:5:1]",
          "    #def_label(loop)", "    EXIT;[7:7:{}:5:0]", "}"]

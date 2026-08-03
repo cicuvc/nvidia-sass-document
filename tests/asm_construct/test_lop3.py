@@ -30,7 +30,7 @@ def lut32(lut, a, b, c):
     return res
 
 cubin = assemble('''
-#fn lop3_test(out<64>) {
+#fn lop3_test(out<8>) {
     LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 

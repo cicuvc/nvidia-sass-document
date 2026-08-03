@@ -20,7 +20,7 @@ from assembler import assemble, CudaModule
 # ---------------------------------------------------------------------------
 
 def build_kernel(movs, inst, extra_stores=None):
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]"]
     for reg, val in movs.items():
@@ -112,7 +112,7 @@ check("GT.AND (2>2 F,5>5 F) -> 0", o, 0x00000000)
 # ============================= HSETP2 =======================================
 def run_pred(movs, inst):
     # P0/P1 -> conditional MOV -> store two regs
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]"]
     for reg, val in movs.items():

@@ -40,7 +40,7 @@ def run_in_subprocess(bpt, sb):
 import sys, struct
 sys.path.insert(0, {ASSEMBLER!r})
 from assembler import assemble, CudaModule
-lines = ["#fn k(buf<1024>) {{",
+lines = ["#fn k(buf<8>) {{",
          "    LDCU.64 {{UR4, UR5}}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{{}}:1:0]",
          "    LDC.64 {{R6, R7}}, #param(buf);[0:7:{{}}:1:0]",
          "    BPT.{bpt} 0x{sb:x};[7:7:{{}}:5:1]",

@@ -29,7 +29,7 @@ def check(name, got, want):
     print(f"{'ok ' if good else 'FAIL'} {name:<44} {got}")
 
 NOP = "    NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]\n"
-KERNEL = """#fn k(out<2048>) {
+KERNEL = """#fn k(out<8>) {
     LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]
     LDG.E.128 {R16,R17,R18,R19}, desc[{UR4,UR5}][{R6,R7}+0x0];[5:7:{0,1}:8:1]

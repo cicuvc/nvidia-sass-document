@@ -38,7 +38,7 @@ from assembler import assemble, CudaModule
 # ---------------------------------------------------------------------------
 
 def build_kernel(insts):
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    CS2R {R30,R31}, SR_CLOCKLO;[7:7:{}:5:0]",
@@ -74,7 +74,7 @@ def run_total(insts):
 
 # --- 1. execution continues / no side effect --------------------------------
 def build_continue():
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    MOV32I R10, 0x00001000;[7:7:{}:5:1]",

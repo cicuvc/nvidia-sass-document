@@ -40,7 +40,7 @@ def run_rt(ldg_mod, ldg_sz, dest, src_off, dst_off, block=1):
     """
     width = {"U8": 1, "S8": 1, "U16": 2, "S16": 2, "": 4, "32": 4, "64": 8,
              "128": 16}[ldg_sz]
-    lines = ["#fn k(out<1024>) {",
+    lines = ["#fn k(out<8>) {",
              "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]",
              f"    LDG.{ldg_mod}{'.' + ldg_sz if ldg_sz else ''} {dest}, desc[{{UR4,UR5}}][{{R6,R7}}+0x{src_off:X}];[1:7:{{0}}:5:1]",
@@ -72,7 +72,7 @@ def ext_case(ldg_sz, want):
         dest = "{R8,R9,R10,R11}"
     else:
         dest = "R8"
-    lines = ["#fn k(out<1024>) {",
+    lines = ["#fn k(out<8>) {",
              "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]",
              f"    LDG.E{'.' + ldg_sz if ldg_sz else ''} {dest}, desc[{{UR4,UR5}}][{{R6,R7}}+0x{src_off:X}];[1:7:{{0}}:5:1]",
@@ -137,7 +137,7 @@ def stg_write(sz, mods="E", value=0x88776655):
     else:
         dreg = "R8"
     s2 = f"{'.' + sz if sz else ''}"
-    lines = ["#fn k(out<1024>) {",
+    lines = ["#fn k(out<8>) {",
              "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]",
              "    MOV32I R8, 0x88776655;[7:7:{}:5:1]",

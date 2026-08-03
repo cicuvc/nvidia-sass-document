@@ -64,7 +64,7 @@ cases = [
     ("SGXT R2, R0, 0x4",          0xFFFFFFF8, 0x00000008),  # Ra=0x8 N=4
 ]
 
-lines = ["#fn k(out<192>) {",
+lines = ["#fn k(out<8>) {",
          "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
          "    MOV32I R1, 0x00000005;[7:7:{}:5:1]"]

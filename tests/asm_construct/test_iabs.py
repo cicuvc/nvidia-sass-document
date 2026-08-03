@@ -18,7 +18,7 @@ import struct
 # forms are exercised here directly.
 
 cubin = assemble('''
-#fn iabs_test(out<64>, n<4>) {
+#fn iabs_test(out<8>, n<4>) {
     LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]
     LDCU UR3, #param(n);[2:7:{}:1:0]     // n = -3; NOT UR5 — UR4:UR5 is the

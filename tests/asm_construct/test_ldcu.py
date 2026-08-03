@@ -67,7 +67,7 @@ def kernel_sz(sz, base, nregs):
                   f"    UMOV UR14, UR{base+i};[7:7:{{0}}:5:1]\n"
                   f"    IADD3 R2, PT, PT, RZ, UR14, RZ;[7:7:{{}}:8:1]\n"
                   f"{FILL}{FILL}    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{i*4:X}], R2;[7:7:{{0,1}}:1:0]\n")
-    return f"""#fn t(in<16>, out<1024>) {{
+    return f"""#fn t(in<8>, out<1024>) {{
     LDCU.64 {{UR4, UR5}}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{{}}:1:0]
     LDC.64 {{R6, R7}}, #param(out);[1:7:{{}}:1:0]
     LDCU{sz} {grp}, #param(in);[2:7:{{}}:1:0]

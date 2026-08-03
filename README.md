@@ -71,7 +71,7 @@ SASS-by-hand kernels are assembled to cubin and run on a GPU without nvcc:
 
 ```python
 from assembler import assemble, CudaModule
-mod = CudaModule(assemble("#fn k(out<2048>) { ... }"))
+mod = CudaModule(assemble("#fn k(out<8>) { ... }"))  # <size> = param byte width
 d = mod.devmem_alloc(2048 * 4)
 mod.launch("k", grid=(1,), block=(32,), args=[d])
 mod.synchronize()

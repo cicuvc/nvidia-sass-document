@@ -30,7 +30,7 @@ def check(name, got, want):
 
 # ---- 1. mask observation --------------------------------------------------
 def build_mask():
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
@@ -67,7 +67,7 @@ sys.path.insert(0, "__BASE__")
 from assembler import assemble, CudaModule
 use_break = sys.argv[1] == "yes"
 brk = "    @P0 BREAK B0;[7:7:{}:5:1]" if use_break else "    NOP;[7:7:{}:5:1]"
-lines = ["#fn k(buf<2048>) {",
+lines = ["#fn k(buf<8>) {",
          "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    S2R R2, SR_TID.X;[0:7:{}:5:1]",

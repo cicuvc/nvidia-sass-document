@@ -71,7 +71,7 @@ def settle_store(ur, rd, off):
 
 
 def kernel(body):
-    return f"""#fn t(out<1024>) {{
+    return f"""#fn t(out<8>) {{
     LDCU.64 {{UR4, UR5}}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{{}}:1:0]
     LDC.64 {{R6, R7}}, #param(out);[1:7:{{}}:1:0]
 {body}    EXIT;[7:7:{{}}:5:0]

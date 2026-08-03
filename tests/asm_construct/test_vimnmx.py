@@ -38,7 +38,7 @@ for name, got, ref in (("PT (min) ", got_pt, REF_PT), ("!PT (max)", got_npt, REF
 # ---------------------------------------------------------------------------
 # GPU semantic battery
 # ---------------------------------------------------------------------------
-src = """#fn k(out<128>) {
+src = """#fn k(out<8>) {
     LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 

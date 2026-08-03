@@ -176,12 +176,16 @@ def eiattr_shader_type(func_sym: int, shader_type: int) -> bytes:
 
 
 def eiattr_kparam(ordinal: int, offset: int, size: int) -> bytes:
-    sz_code = 0x21 if size >= 8 else 0x11
+    # EIATTR_KPARAM_INFO size code (bits 16-31, probed from nvcc): the 16-bit
+    # code is (size << 2) | 1, e.g. 4 -> 0x0011, 8 -> 0x0021, 16 -> 0x0041,
+    # 256 -> 0x0401.  So a pointer (8) is 0x21 and a 256-byte __grid_constant__
+    # CUtensorMap is 0x401.  The old 0x21/0x11 if/else only covered 4/8.
+    sz_code = (size << 2) | 1
     flags = (sz_code << 16) | 0xf000
     # EIATTR_KPARAM_INFO payload (matches ptxas, CUDA 12.8):
     #   u32[0] = 0
     #   u32[1] = (param byte offset within the cbank buffer) << 16 | param index
-    #   u32[2] = flags (size class in bits 16-23, 0xf000 fixed)
+    #   u32[2] = flags (size class in bits 16-31, 0xf000 fixed)
     return struct.pack("<BBHIII", 4, 0x17, 12, 0,
                        (offset << 16) | ordinal, flags)
 

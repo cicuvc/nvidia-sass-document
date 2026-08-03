@@ -53,7 +53,7 @@ def elect(cands, block=32):
         inner = ["    LOP3 R3, R2, 0x1, RZ, 0xc0;[7:7:{0}:5:1]",
                  "    ISETP.EQ.AND P1, PT, R3, 0x1, PT;[7:7:{0}:13:1]",
                  "    ELECT P0, UR8, P1;[7:7:{}:5:1]"]
-    lines = ["#fn k(buf<1024>) {",
+    lines = ["#fn k(buf<8>) {",
              "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",

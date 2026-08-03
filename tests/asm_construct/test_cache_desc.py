@@ -82,7 +82,7 @@ __global__ void frac_reg(char* ptr, uint64_t* out, uint64_t* pol, float fr) {
 
 # Assembler kernel that dumps the driver-placed policy word at c[0x0][0x358].
 FILL = "    IADD3 R10, R10, RZ, RZ;[7:7:{}:5:1]\n"
-SRC_358 = f"""#fn rd358(out<1024>) {{
+SRC_358 = f"""#fn rd358(out<8>) {{
     LDCU.64 {{UR4, UR5}}, c[0x0][0x358];[0:7:{{}}:1:0]
     LDC.64 {{R6, R7}}, #param(out);[1:7:{{}}:1:0]
     UMOV UR9, UR4;[7:7:{{}}:5:1]
