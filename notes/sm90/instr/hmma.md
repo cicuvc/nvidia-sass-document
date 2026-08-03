@@ -158,6 +158,14 @@ See `../arch/hmma_pipeline.md` for detailed empirical analysis. Key values:
 | Pipe occupancy | FMALITE_Occupancy [2] |
 | Scoreboard model | Fixed-latency (dst_wr_sb=7, no write scoreboard) |
 
+**Result wait (empirical, SM120):** HMMA is `INST_TYPE_COUPLED_EMULATABLE`
+and emits **no write scoreboard**, so a consumer reading `Rd` must wait with
+explicit stall.  Measured with register-immediate operands (MOV32I): **8 NOP
+after the HMMA faults 0x715** (`CUDA_ERROR_ILLEGAL_INSTRUCTION`), **≥16 NOP is
+reliable**.  When the operands come from a preceding `LDG` and the HMMA carries
+`req` on that LDG's scoreboard, the LDG wait defers the HMMA enough that 8 NOP
+suffices; the safest form is 16 NOP regardless of operand source.
+
 ## PTX→SASS mapping
 
 HMMA implements PTX `mma.sync.aligned` for fp16/bf16/tf32/e6m9 types.
@@ -168,6 +176,7 @@ HMMA implements PTX `mma.sync.aligned` for fp16/bf16/tf32/e6m9 types.
 | `mma.sync.aligned.m16n8k16.f16.f16.f16` | `HMMA.16816.F16` |
 | `mma.sync.aligned.m16n8k8.f16.f16.f32` | `HMMA.1688.F32` |
 | `mma.sync.aligned.m16n8k16.f16.f16.f32` | `HMMA.16816.F32` |
+| `mma.sync.aligned.m16n8k16.bf16.bf16.f32` | `HMMA.16816.F32.BF16` (bf16a32) |
 | `mma.sync.aligned.m16n8k8.tf32.tf32.f32` | `HMMA.1688.F32.TF32` |
 | `mma.sync.aligned.m16n8k4.tf32.tf32.f32` | `HMMA.1684.F32.TF32` |
 | Sparse `mma.sync.aligned.m16n8k16.f16.f16.f16` | `HMMA.16816.F16.SP.TID` |
@@ -225,3 +234,38 @@ compiler infers it from operand lifetimes.
 - **IndexedRF usage**: When does ptxas choose indexed register file
   addressing over standard register file? Possibly for uniform-register-resident
   accumulators or warp-uniform matrices.
+- **Sparse / indexed-RF layouts**: the metadata register layout for
+  `HMMA.SP` and the descriptor format for `HMMA...INDF` are unverified
+  (documented from the spec tables only).
+- **Canonical D wait**: whether a `depbar`/write-scoreboard form is the
+  canonical alternative to NOP padding for the unscoreboarded result (only
+  16-NOP padding was verified).
+
+## Verified encodings (bf16a32, SM120 vs nvcc)
+
+```
+Lo64                Hi64                Disassembly
+0x000000020404723c  0x000fe20000041808  HMMA.16816.F32.BF16 R4, R4, R2, R8   (nvcc mma.sync m16n8k16 bf16)
+0x00000014101c723c  0x000fe20000041818  HMMA.16816.F32.BF16 R28, R16, R20, R24 (hand-assembled)
+```
+
+Data bits [0:104] of the hand-assembled HMMA match nvcc exactly (same
+registers: lo identical, hi differs only in the usched/opex control word).
+The nvcc HMMA carries `usched_info=23`, hand forms 17 — both valid per
+`TABLES_opex_3` and both execute correctly.
+
+**Semantic verification** (`tests/asm_construct/test_hmma.py`): a fixed
+per-lane fragment (a0..a3, b0..b1, c0..c3) in global memory is LDG'd, fed to
+hand-built `HMMA.16816.F32.BF16`, and D compared against nvcc `mma.sync` with
+identical fragments:
+- A=B=1.0, C=10..13 -> D = 8 + C = 18,19,20,21 (matches nvcc mma_frag2)
+- A=2.0  -> D = 16 + C = 26,27,28,29
+- A=0    -> D = C = 10,11,12,13
+- All stall/yield schedules (1..7 x y=0/1) encodable and correct.
+
+Fragment words are read from a *fixed* address (all 32 lanes read the same
+16-word block), so no SR_TID addressing is involved; this sidesteps the
+uniform-scoreboard setup needed for per-lane fragments.  The fragment layout
+itself is verified only consistent-with-nvcc, not re-derived.
+
+Decoder: `tools/decode_hmma.py` (opcode 0x23c, size/dstfmt/srcfmt/Rd/Ra/Rb/Rc).
