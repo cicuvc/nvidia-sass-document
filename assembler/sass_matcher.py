@@ -691,6 +691,13 @@ class SassMatcher:
             if not matched:
                 if default is not None:
                     result[name] = self._parse_default(default, etype)
+                elif (not remaining and
+                        etype.startswith("ONLY")):
+                    # Width-constraint slot (ONLY64/ONLY256/ONLY32) with no
+                    # default: its value is implied by the operand width, not
+                    # by a user modifier.  With no modifiers left to consume
+                    # it is optional — skip instead of failing.
+                    continue
                 else:
                     return None
 
