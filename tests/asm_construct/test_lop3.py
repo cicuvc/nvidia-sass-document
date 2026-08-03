@@ -31,7 +31,7 @@ def lut32(lut, a, b, c):
 
 cubin = assemble('''
 #fn lop3_test(out<64>) {
-    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]
+    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 
     // === LUT truth-table: A=0x0F, B=0x33, C=0x55 ===

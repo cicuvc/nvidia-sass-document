@@ -169,7 +169,7 @@ for i in range(24):
 # Build kernel
 # ---------------------------------------------------------------------------
 lines = ["#fn ffma_test(out<1024>) {",
-         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]"]
 for i, (label, a, b, c, mode, _exp) in enumerate(cases):
     lines.append(f"    MOV32I R0, 0x{a:08X};[7:7:{{}}:5:1]")

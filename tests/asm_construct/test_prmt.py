@@ -70,7 +70,7 @@ def run_case(instr, params, count):
     """One kernel per case: LDC a/b/sel into R0/R1/R4 (all wr=SB1), run
     `instr`, store inputs + result.  The 3 input stores before the result
     store give the PRMT writeback time to land (int_pipe COUPLED)."""
-    lines = ["    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]",
+    lines = ["    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]",
              "    LDC.64 {R2,R3}, #param(out);[1:7:{}:1:0]",
              "    LDC R0, #param(a);[1:7:{}:1:0]",
              "    LDC R1, #param(b);[1:7:{}:1:0]",

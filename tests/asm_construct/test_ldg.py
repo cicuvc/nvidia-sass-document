@@ -14,7 +14,7 @@ from assembler import assemble, CudaModule
 # CUDA_ERROR_ILLEGAL_ADDRESS (700).
 #
 # Working pattern (mirrors ptxas `LDG.E ... &req={0} &wr=0x2`):
-#   LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]   # wr=0 -> sets SB0
+#   LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]   # wr=0 -> sets SB0
 #   LDG.E  R20, desc[{UR4,UR5}][{R6,R7}+0x20];[1:7:{0}:5:1]  # req={0} waits SB0
 #                                                     # (descriptor), wr=1 result
 #   IADD3  R22, R20, RZ, RZ;[7:7:{1}:5:1]    # first use of R20 waits SB1
@@ -26,7 +26,7 @@ FIVE = 0x40A00000   # 5.0
 
 def build():
     lines = ["#fn ldg_test(out<1024>) {",
-             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",   # desc policy, wr=SB0
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",   # desc policy, wr=SB0
              "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
              "    LDG.E R20, desc[{UR4,UR5}][{R6,R7}+0x20];[1:7:{0}:5:1]",  # wait SB0, wr=SB1
              "    IADD3 R22, R20, RZ, RZ;[7:7:{1}:5:1]",       # first use waits SB1

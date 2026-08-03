@@ -44,7 +44,7 @@ def run(body, block=32):
     """body: list of SASS lines inside the kernel; stores R20/R21/R22 per lane
     at buf[4*tid], buf[4*tid+128], buf[4*tid+256]."""
     lines = ["#fn k(buf<2048>) {",
-             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    MOV32I R20, 0xAAAAAAAA;[7:7:{0}:5:1]",

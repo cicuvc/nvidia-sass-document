@@ -51,7 +51,7 @@ def run(kernel_lines, block=32, buf=1024):
 # ---- 1. JMX absolute via LEPC ----------------------------------------------
 # ULEPC? No — per-thread LEPC R4 at 0x20. JMX R4,0x50 -> R4+0x50 = MOV R22,
 # skipping the MOV R21 (0x60).
-v = run(["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+v = run(["    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",
@@ -69,7 +69,7 @@ check("JMX R4(LEPC-PC)+0x50 lands at 0x70 (skips MOV R21)",
       (v[0], v[1], v[2]), (0x11111111, 0xBBBBBBBB, 0x33333333))
 
 # ---- 2. JMXU absolute via ULEPC --------------------------------------------
-v = run(["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+v = run(["    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",
@@ -86,7 +86,7 @@ check("JMXU UR4(ULEPC-PC)+0x40 lands at 0x60 (skips MOV R21)",
       (v[0], v[1], v[2]), (0x11111111, 0xBBBBBBBB, 0x33333333))
 
 # ---- 3. BRX relative (R4=0 + label) ----------------------------------------
-v = run(["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+v = run(["    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",
@@ -103,7 +103,7 @@ check("BRX R4=0 + label lands on x (relative)",
       (v[0], v[1]), (0xAAAAAAAA, 0xBBBBBBBB))
 
 # ---- 4. BRXU relative (UR=0 + label) ---------------------------------------
-v = run(["    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+v = run(["    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
          "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
          "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",

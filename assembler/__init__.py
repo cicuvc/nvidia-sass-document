@@ -41,16 +41,27 @@ from .runner import CudaModule
 
 _DB_PATH = Path(__file__).resolve().parent.parent / "sm120.json"
 
+# db / matcher / encoder are read-only once built; cache them process-wide.
+_DB: dict | None = None
+_MATCHER_ENC: tuple | None = None
+
 
 def _load_db():
-    with open(_DB_PATH) as f:
-        return json.load(f)
+    global _DB
+    if _DB is None:
+        with open(_DB_PATH) as f:
+            _DB = json.load(f)
+    return _DB
 
 
 def _make_matcher_encoder():
-    db = _load_db()
-    from .sass_matcher import SassMatcher as _Matcher
-    return _Matcher(db), SassEncoder(db)
+    global _MATCHER_ENC
+    if _MATCHER_ENC is None:
+        db = _load_db()
+        assert db is not None
+        from .sass_matcher import SassMatcher as _Matcher
+        _MATCHER_ENC = (_Matcher(db), SassEncoder(db))
+    return _MATCHER_ENC
 
 
 def _resolve_labels_and_encode(insts, matcher, encoder, *,

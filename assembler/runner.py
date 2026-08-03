@@ -62,6 +62,36 @@ def _check(err: int) -> None:
         raise RuntimeError(f"CUDA error {err} ({ename}): {edesc}")
 
 
+# Process-global CUDA context shared by every CudaModule.  cuCtxCreate is
+# ~0.4 s; reusing one context keeps per-module load at ~0.
+_CTX: dict[int, ctypes.c_void_p] = {}
+
+
+def _shared_ctx(device: int = 0) -> ctypes.c_void_p:
+    """Return (creating on first use) a process-global context for a device."""
+    lib = _cuda()
+    if device not in _CTX:
+        _check(lib.cuInit(0))
+        dev = ctypes.c_int(device)
+        _check(lib.cuDeviceGet(ctypes.byref(dev), device))
+        ctx = ctypes.c_void_p()
+        _check(lib.cuCtxCreate(ctypes.byref(ctx), 0, dev))
+        _CTX[device] = ctx
+    return _CTX[device]
+
+
+def reset_context() -> None:
+    """Destroy the shared context(s).  Call after a kernel fault so the next
+    CudaModule starts fresh instead of reusing a poisoned context."""
+    lib = _cuda()
+    for ctx in _CTX.values():
+        try:
+            lib.cuCtxDestroy(ctx)
+        except Exception:
+            pass
+    _CTX.clear()
+
+
 class CudaModule:
     """Load and launch a cubin on a CUDA-capable GPU.
 
@@ -72,11 +102,9 @@ class CudaModule:
 
     def __init__(self, cubin: bytes, device: int = 0):
         lib = _cuda()
-        _check(lib.cuInit(0))
         self._dev = ctypes.c_int(device)
-        _check(lib.cuDeviceGet(ctypes.byref(self._dev), device))
-        self._ctx = ctypes.c_void_p()
-        _check(lib.cuCtxCreate(ctypes.byref(self._ctx), 0, self._dev))
+        self._ctx = _shared_ctx(device)
+        _check(lib.cuCtxSetCurrent(self._ctx))
 
         self._mod = ctypes.c_void_p()
         _check(lib.cuModuleLoadData(ctypes.byref(self._mod), cubin))
@@ -85,12 +113,9 @@ class CudaModule:
         self._funcs: dict[str, ctypes.c_void_p] = {}
 
     def __del__(self):
-        try:
-            lib = _cuda()
-            if hasattr(self, '_ctx') and self._ctx:
-                lib.cuCtxDestroy(self._ctx)
-        except Exception:
-            pass
+        # The context is process-global (shared across modules); it is not
+        # destroyed here — see reset_context().
+        pass
 
     @property
     def device_name(self) -> str:

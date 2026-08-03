@@ -23,7 +23,7 @@ from assembler import assemble, CudaModule
 
 def spin_kernel(spin_body: str):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    ISETP.EQ.AND P0, PT, R2, 0x0, PT;[7:7:{0}:13:1]",   # P0 = tid==0

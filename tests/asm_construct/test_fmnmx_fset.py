@@ -165,7 +165,7 @@ FCMP = [("FSP", *c) for c in fc_cases]
 
 # Each FSETP case: ISETP to set P2, FSETP to P0/P1, P2R P0 and P1 out.
 lines = ["#fn fmx_test(out<1024>) {",
-         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]"]
 out = 0
 

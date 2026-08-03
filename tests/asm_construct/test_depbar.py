@@ -38,7 +38,7 @@ def check(name, got, want):
 def run_probe(depbar, extra_wr1_load=False, ur_cnt=None):
     """2 MUFU + 1 cold LDG on SB0 (counter=3); optional SB1 load; DEPBAR.
     Returns (wait_delta_cycles, ldg_value_after)."""
-    lines = ["    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]",
+    lines = ["    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]",
              "    LDC.64 {R2,R3}, #param(src);[1:7:{}:1:0]",
              "    MOV32I R1, 0x3f800000;[7:7:{}:5:1]",

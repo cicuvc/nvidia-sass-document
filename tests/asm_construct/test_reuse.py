@@ -183,7 +183,7 @@ add("oldval-R13-consumer",
     "consumer of R13 reads RF (4*2+3=11)")
 
 lines = ["#fn reuse_test(out<256>) {",
-         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
          "    MOV32I R13, 0x40800000;[7:7:{}:5:1]",
          "    MOV32I R17, 0x40A00000;[7:7:{}:5:1]"]

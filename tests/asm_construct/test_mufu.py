@@ -34,7 +34,7 @@ def build_kernel(op, src64=False):
     else:
         src = "    LDG.E R10, desc[{UR4,UR5}][{R16,R17}];[1:7:{0}:5:1]"
     lines = ["#fn mufu(buf<16384>) {",
-             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",
              "    IADD3 R4, R2, R2, RZ;[7:7:{0}:5:1]",

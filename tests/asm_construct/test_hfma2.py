@@ -29,7 +29,7 @@ from assembler import assemble, CudaModule
 
 def build_kernel(movs, hfma_inst):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]"]
     for reg, val in movs.items():
         lines.append(f"    MOV32I R{reg}, 0x{val:08x};[7:7:{{}}:5:1]")

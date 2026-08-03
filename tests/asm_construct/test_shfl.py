@@ -47,7 +47,7 @@ def shfl(mode):
     elif mode == "bfly":
         sh = "    SHFL.BFLY P1, R5, R2, 0x4, 0x1f;[2:7:{0}:5:1]"
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 {UR4,UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(buf);[1:7:{}:1:0]",
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]", pre, sh]
     lines += ["    NOP;[7:7:{}:5:1]"] * 16

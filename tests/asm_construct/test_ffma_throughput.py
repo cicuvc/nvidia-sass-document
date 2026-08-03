@@ -25,7 +25,7 @@ from assembler import assemble, CudaModule
 def build_kernel(body_insts, N=96):
     dsts = [40 + 2 * i for i in range(20)]
     lines = ["#fn thr(buf<4096>) {",
-             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
              "    LDG.E R10, desc[{UR4,UR5}][{R6,R7}];[1:7:{0}:5:1]",
              "    IADD3 R18, R10, RZ, RZ;[7:7:{1}:5:1]",

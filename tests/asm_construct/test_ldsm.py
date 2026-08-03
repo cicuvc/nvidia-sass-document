@@ -49,7 +49,7 @@ def run_ldsm(addrfn, num, mode="M88", block=32):
               "4": ("    STG.E desc[{UR4,UR5}][{R16,R17}+0x80], R21;[0:1:{1}:1:0]\n"
                     "    STG.E desc[{UR4,UR5}][{R16,R17}+0x100], R22;[0:1:{1}:1:0]\n"
                     "    STG.E desc[{UR4,UR5}][{R16,R17}+0x180], R23;[0:1:{1}:1:0]\n")}.get(str(num), "")
-    body = f"""    LDCU.64 {{UR4,UR5}}, c[0x0][0x358];[1:7:{{}}:2:0]
+    body = f"""    LDCU.64 {{UR4,UR5}}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{{}}:2:0]
     LDC.64 {{R6,R7}}, #param(out);[1:7:{{}}:1:0]
     LDC.64 {{R8,R9}}, #param(inj);[1:7:{{}}:1:0]
     LDC.64 {{R10,R11}}, #param(addr);[1:7:{{}}:1:0]

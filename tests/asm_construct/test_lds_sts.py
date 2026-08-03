@@ -54,13 +54,13 @@ for off, want in [(0x0, 0xDEADBEEF), (0x3FC, 0x12345678), (0x1000, 0xCAFEBABE),
             "    NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]\n"
             "    IADD3 R2, R1, RZ, RZ;[7:7:{1}:5:1]\n"
             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R2;[0:1:{1}:1:0]\n" % want)
-    body = ("    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]\n"
+    body = ("    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]\n"
             "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]\n" + body)
     r = run_kernel(body)[0]
     check(f"roundtrip @0x{off:X}", hex(r), hex(want))
 
 # --- 2. register-offset addressing + multi-lane ----------------------------
-body = ("    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]\n"
+body = ("    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]\n"
         "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]\n"
         "    S2R R0, SR_TID.X;[0:7:{}:5:1]\n"
         "    IADD3 R3, R0, R0, RZ;[7:7:{0}:5:1]\n"
@@ -78,7 +78,7 @@ check("multi-lane shared[tid]=tid", v[:8], tuple(range(8)))
 # store a 4-byte pattern at shared[0]: bytes 0x81, 0x02, 0x03, 0x84
 pattern = 0x84030281
 def narrow(lds_sfx, want):
-    body = ("    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]\n"
+    body = ("    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]\n"
             "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]\n"
             f"    MOV32I R0, 0x{pattern:08X};[7:7:{{}}:5:1]\n"
             "    STS [RZ+0x0], R0;[7:7:{}:5:1]\n"
@@ -95,7 +95,7 @@ narrow("S16", 0x00000281)       # 0x0281 sign bit clear -> no extend
 # byte-offset loads: store full pattern at 0, read byte 1 (0x02) and byte 3
 # (0x84 sign-extended)
 for lds, off, want in [("U8", 0x1, 0x02), ("S8", 0x3, 0xFFFFFF84)]:
-    body = ("    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]\n"
+    body = ("    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]\n"
             "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]\n"
             "    MOV32I R0, 0x84030281;[7:7:{}:5:1]\n"
             "    STS [RZ+0x0], R0;[7:7:{}:5:1]\n"
@@ -107,7 +107,7 @@ for lds, off, want in [("U8", 0x1, 0x02), ("S8", 0x3, 0xFFFFFF84)]:
     check(f"LDS.{lds} @byte0x{off:X}", hex(r), hex(want))
 
 # --- 4. 64-bit / 128-bit loads and stores ----------------------------------
-body = ("    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]\n"
+body = ("    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]\n"
         "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]\n"
         "    MOV32I R0, 0x11111111;[7:7:{}:5:1]\n"
         "    MOV32I R1, 0x22222222;[7:7:{}:5:1]\n"

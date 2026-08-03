@@ -127,7 +127,7 @@ for _, _, lo, hi, d, fmt, hilo, k, cw, exp in cases:
 # Build the kernel: same case list drives the SASS text and the expectations.
 # ---------------------------------------------------------------------------
 lines = ["#fn shf_test(out<256>) {",
-         "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+         "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
          "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
          "    MOV32I R0, 0x89ABCDEF;[7:7:{}:5:1]   // Ra: low half",
          "    MOV32I R1, 0x01234567;[7:7:{}:5:1]   // Rc: high half",

@@ -27,9 +27,11 @@ because a field is absent from the slot_map.
 """
 
 import re
+from functools import lru_cache
 from typing import Any, Optional
 
 
+@lru_cache(maxsize=4096)
 def tokenize(predicate: str) -> list[tuple[str, str]]:
     toks: list[tuple[str, str]] = []
     i, n = 0, len(predicate)

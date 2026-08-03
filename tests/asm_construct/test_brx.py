@@ -37,7 +37,7 @@ def check(name, got, want):
 
 def run(r4, block=32):
     lines = ["#fn k(buf<1024>) {",
-             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[1:7:{}:1:0]",
              "    MOV32I R20, 0xAAAAAAAA;[7:7:{}:5:1]",
              "    MOV32I R21, 0xBBBBBBBB;[7:7:{}:5:1]",

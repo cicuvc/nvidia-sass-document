@@ -60,7 +60,7 @@ def round_f32(f, mode):
 def run_mio(instr, x, xregs=1, dregs=1):
     """mio_pipe conversion: load x into R0 (or R0:R1), run instr (Rd=R8/R8:R9),
     store result.  wr=SB2 on the conversion, STG req={1,2}."""
-    lines = ["    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]",
+    lines = ["    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]",
              "    LDC R0, #param(p0);[1:7:{}:1:0]"]
     if xregs == 2:
@@ -95,7 +95,7 @@ def i2i_sat(dst, x):
 
 def i2i_run(dst, x):
     src = ("#fn k(out<8>, p0<4>) {\n"
-           "    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]\n"
+           "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]\n"
            "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]\n"
            "    LDC R0, #param(p0);[1:7:{}:1:0]\n"
            f"    I2I.SAT.{dst} R8, R0;[7:7:{{1}}:5:1]\n"

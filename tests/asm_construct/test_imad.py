@@ -9,7 +9,7 @@ import ctypes
 
 cubin = assemble('''
 #fn imad_test(out<48>) {
-    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]
+    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]
 
     // === 1: LO RRR — 5*10+100 = 150 ===

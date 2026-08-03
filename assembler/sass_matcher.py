@@ -59,6 +59,10 @@ class SassMatcher:
         self._by_mnemonic: dict[str, list[dict]] = defaultdict(list)
         for v in db["variants"]:
             self._by_mnemonic.setdefault(v["mnemonic"], []).append(v)
+            # Pre-parse each variant's operand groups once (FORMAT is static);
+            # this is the hot path in match().
+            v["_op_groups"] = self._make_operand_groups(
+                v["format"]["slots"], v["format"]["raw"])
         self._cond_errors: list[str] = []
 
     # ------------------------------------------------------------------
@@ -90,8 +94,8 @@ class SassMatcher:
         slots = variant["format"]["slots"]
         raw_fmt = variant["format"]["raw"]
 
-        # 1. Parse operand groups from FORMAT
-        op_groups = self._make_operand_groups(slots, raw_fmt)
+        # 1. Parse operand groups from FORMAT (precomputed in __init__)
+        op_groups = variant.get("_op_groups") or self._make_operand_groups(slots, raw_fmt)
 
         # 2. Match operands to groups (flexible — optional slots can be omitted)
         slot_map: dict[str, Any] = {}

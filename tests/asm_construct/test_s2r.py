@@ -19,7 +19,7 @@ from assembler import assemble, CudaModule
 
 def build():
     lines = ["#fn s2r_test(out<1024>) {",
-             "    LDCU.64 {UR4, UR5}, c[0x0][0x358];[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
              # S2R writes SB0 (wr=0); result is ready only after SB0 set.
              "    S2R R2, SR_TID.X;[0:7:{}:5:1]",

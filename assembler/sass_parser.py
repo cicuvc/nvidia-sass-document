@@ -7,6 +7,14 @@ from .operand import Operand, OperandKind, ParsedInstruction, Sched
 # --- Token types ---
 from .operand import Operand, OperandKind, ParsedInstruction, Sched, ParamDecl, KernelDecl
 
+# Named const-bank slots per sm120 driver convention.  #spec_const(NAME)
+# resolves to a fixed c[bank][offset] slot.
+#   SLOT_DEFAULT_CDESC — the default cache descriptor the driver plants for
+#   every kernel at c[0x0][0x358]; used as desc[...] for global accesses.
+SPEC_CONST_MAP = {
+    "SLOT_DEFAULT_CDESC": (0, 0x358),
+}
+
 TOKENS = [
     ("NEWLINE", r"\n|\r\n?"),
     ("SKIP", r"[ \t]+"),
@@ -14,6 +22,7 @@ TOKENS = [
     ("DEF_LABEL_DIRECTIVE", r"#def_label\b"),
     ("LABEL_REF_DIRECTIVE", r"#label\b"),
     ("PARAM_DIRECTIVE", r"#param\b"),
+    ("SPEC_CONST_DIRECTIVE", r"#spec_const\b"),
     ("PRAGMA_DIRECTIVE", r"#pragma\b"),
     ("COMMENT", r"#[^\n]*|//[^\n]*"),
     ("SEMICOLON", r";"),
@@ -361,6 +370,10 @@ class Parser:
         if t.type == "PARAM_DIRECTIVE":
             return self._parse_param_ref()
 
+        # named special constant: #spec_const(NAME) → CONST_BANK
+        if t.type == "SPEC_CONST_DIRECTIVE":
+            return self._parse_spec_const()
+
         # memory address: [Rx.64+offset]
         if t.type == "LBRACKET":
             return self._parse_mem_addr()
@@ -507,6 +520,19 @@ class Parser:
         name_t = self.expect("IDENT")
         self.expect("RPAREN")
         return Operand(OperandKind.PARAM_REF, name_t.text)
+
+    def _parse_spec_const(self) -> Operand:
+        """#spec_const(NAME) → a fixed const-bank slot (sm120 driver
+        conventions).  E.g. SLOT_DEFAULT_CDESC = the default cache descriptor
+        the driver plants at c[0x0][0x358]."""
+        self.pop()  # #spec_const
+        self.expect("LPAREN")
+        name_t = self.expect("IDENT")
+        self.expect("RPAREN")
+        slot = SPEC_CONST_MAP.get(name_t.text)
+        if slot is None:
+            raise SyntaxError(f"unknown #spec_const name {name_t.text!r}")
+        return Operand.const_bank(*slot)
 
     def _parse_const_bank(self) -> Operand:
         self.pop()  # c

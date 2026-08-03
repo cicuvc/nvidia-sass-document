@@ -67,7 +67,7 @@ def dp2a(mode, af, bf, a, b, c):
     return (c + Va[0] * Vb[sel] + Va[1] * Vb[sel + 1]) & 0xFFFFFFFF
 
 def run_clmad(lo_hi, a, b, c):
-    lines = ["    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]",
+    lines = ["    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]",
              "    LDC.64 {R0,R1}, #param(a);[1:7:{}:1:0]",
              "    LDC.64 {R2,R3}, #param(b);[1:7:{}:1:0]",
@@ -92,7 +92,7 @@ def run_clmad(lo_hi, a, b, c):
         mod.devmem_free(d)
 
 def run_idp(instr, a, b, c):
-    lines = ["    LDCU.64 {UR4,UR5}, c[0x0][0x358];[1:7:{}:1:0]",
+    lines = ["    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[1:7:{}:1:0]",
              "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]",
              "    LDC R0, #param(a);[1:7:{}:1:0]",
              "    LDC R1, #param(b);[1:7:{}:1:0]",
