@@ -197,13 +197,12 @@ All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
 
 Hand-assembler gotchas:
 - **Shared memory window**: the SM120 driver maps only ~1KB per CTA for a
-  kernel with no declared shared; LDS/STS beyond it fault 700.  The reliable
-  way to get a bigger window in hand-built cubins is to pass the size as the
-  dynamic `shared_mem` launch parameter (verified up to 16KB).  A static
-  `.nv.shared.<kernel>` NOBITS section (`#pragma SHARED(n)`) is now emitted
-  (matching nvcc's flags=0x43/align=4) and cuobjdump reports the smem, but
-  the driver does not yet allocate from it — the exact association mechanism
-  (nvcc's section has sh_info pointing at the merc info + a local STT_OBJECT
-  symbol) is unresolved.
+  kernel with no declared shared; LDS/STS beyond it fault 700.  Static
+  allocation works via `#pragma SHARED(n)` -> a `.nv.shared.<kernel>` NOBITS
+  section (nvcc flags=0x43, align=4, size = n + 0x400 padding) whose
+  **sh_info points at the .text.<kernel> section index** — that sh_info->.text
+  link is what makes the driver allocate the window (verified 16KB: accesses
+  up to ~0x43FF work).  The `cuFuncGetAttribute(SHARED_SIZE)` still reports
+  1024 but the actual allocation follows the section.
 - LDS/STS address brackets `[Ra + URb + off]` (uniform variant, STRIDE
   .X1/.X4/.X8/.X16) are parsed as one operand group now.

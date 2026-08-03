@@ -28,14 +28,17 @@ def check(name, got, want):
     print(f"{'ok ' if good else 'FAIL'} {name:<44} {got}")
 
 def run_kernel(body, nparams=0, block=1, smem=0x4000):
-    """Build a kernel with the given instruction body (params p0..), run with
-    dynamic shared, return the out buffer words."""
+    """Build a kernel with the given instruction body (params p0..) that
+    declares `smem` bytes of STATIC shared (#pragma SHARED), run, return the
+    out buffer words.  The .nv.shared.<kernel> section (0x400-padded, sh_info
+    -> .text) now makes the driver allocate the window."""
     sig = "out<128>" + "".join(f", p{i}<4>" for i in range(nparams))
-    src = ("#fn k(%s) {\n" % sig + body + "    EXIT;[7:7:{}:5:0]\n}")
+    src = ("#fn k(%s) {\n    #pragma SHARED(0x%X)\n" % (sig, smem) + body
+           + "    EXIT;[7:7:{}:5:0]\n}")
     mod = CudaModule(assemble(src))
     d = mod.devmem_alloc(128)
     args = [d] + list(range(nparams))
-    mod.launch("k", grid=(1,), block=(block,), args=args, shared_mem=smem)
+    mod.launch("k", grid=(1,), block=(block,), args=args)
     mod.synchronize()
     v = struct.unpack("<32I", mod.device_read(d, 128))
     try: mod.devmem_free(d)

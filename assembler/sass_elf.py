@@ -358,6 +358,13 @@ class CubinBuilder:
         # small register file, which faults on R14+).
         sym_text = symtab.add(strtab.add(f".text.{mn}"),
                               STB_LOCAL, STT_SECTION, 0)
+        # nvcc places the shared-section symbol second (STT_SECTION), right
+        # after .text — the driver links a kernel's static shared window to
+        # this symbol.
+        sym_shared = None
+        if self._shared_mem:
+            sym_shared = symtab.add(strtab.add(f".nv.shared.{mn}"),
+                                    STB_LOCAL, STT_SECTION, 0)
         sym_rsm = symtab.add(strtab.add(".nv.reservedSmem.offset0"),
                              STB_LOCAL, STT_OBJECT, 0,
                              value=0x40, size=4, other=VIS_HIDDEN)
@@ -369,10 +376,6 @@ class CubinBuilder:
                               size=len(self._instructions) * 16)
         sym_c0 = symtab.add(strtab.add(f".nv.constant0.{mn}"),
                             STB_LOCAL, STT_SECTION, 0)
-        sym_shared = None
-        if self._shared_mem:
-            sym_shared = symtab.add(strtab.add(f".nv.shared.{mn}"),
-                                    STB_LOCAL, STT_OBJECT, 0)
 
         # 7: .nv.info (device-wide)
         # Auto-compute regcount from instructions — latest register used
@@ -460,8 +463,10 @@ class CubinBuilder:
         # (LDS/STS window).  The driver allocates this many bytes per CTA.
         # flags = SHF_WRITE|SHF_ALLOC|SHF_INFO_LINK (0x43), matching nvcc —
         # the SHF_INFO_LINK bit is what marks it as the real shared image.
+        # nvcc pads the declared size by 0x400 (the CTA shared base window):
+        # 16KB of __shared__ -> a 0x4400 section, so usable = size - 0x400.
         if self._shared_mem:
-            sec(f".nv.shared.{mn}", SHT_NOBITS, content=b"\x00" * self._shared_mem,
+            sec(f".nv.shared.{mn}", SHT_NOBITS, content=b"\x00" * (self._shared_mem + 0x400),
                 flags=SHF_WRITE | SHF_ALLOC | SHF_INFO_LINK, align=4, nobits=True)
 
         # 14: .nv.constant0._Z<name>
@@ -507,12 +512,10 @@ class CubinBuilder:
         symtab.entries[sym_c0].st_shndx = c0_sec_idx
         if sym_shared is not None:
             symtab.entries[sym_shared].st_shndx = shared_sec_idx
-            # mirror nvcc: the .nv.shared.<kernel> section's sh_info links to
-            # the per-kernel .nv.info section (so the driver associates the
-            # shared allocation with this function).
-            nvinfo_krn_idx = next(i for i, s in enumerate(secs)
-                                  if s.name == f".nv.info.{mn}")
-            secs[shared_sec_idx].info_idx = nvinfo_krn_idx
+            # The .nv.shared.<kernel> section's sh_info must point at the
+            # .text.<kernel> section index — that is what links the shared
+            # allocation to this kernel's code section.
+            secs[shared_sec_idx].info_idx = text_sec_idx
 
         # Fix link/info
         symtab_idx = next(i for i, s in enumerate(secs) if s.name == ".symtab")

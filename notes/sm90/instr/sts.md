@@ -195,4 +195,4 @@ window semantics (see lds.md): 32-bit/64-bit stores, narrow stores
 STS is DECOUPLED_RD_SCBD (no result scoreboard — there is no destination
 register); the stored data register must be scoreboard-ready like any input.
 Shared-window allocation note in lds.md applies (dynamic shared_mem at
-launch; static section not yet consumed by the driver).
+launch; static .nv.shared section with sh_info->.text now allocates the window.)
