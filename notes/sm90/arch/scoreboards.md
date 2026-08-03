@@ -81,6 +81,15 @@ when you need what `req` can't express: counted/partial drains (`≤N`, async
 multi-buffering), draining a *set* of scoreboards with no natural consumer, or a
 dynamic (uniform-register) threshold.
 
+**10. Checker implication (AUTO_DEP_ANALYSIS §5a.4).** For the assembler's
+dependency checker, `req` / `DEPBAR.LE SBn, 0x0` are *exact kills* of all
+outstanding claims on SBn, but `DEPBAR.LE SBn, m (m>0)` grants **no per-claim
+coverage** — the ≤m surviving claims have unknown identity (completion is not
+program-ordered), so a consumer relying on a partial drain alone must still be
+flagged as missing its `req`.  A partial drain contributes only a count fact
+(in-flight upper bound `ub[SBn] ≤ m`), which a separate count lattice uses for
+tally-capacity checks, not for data-dependency clearance.
+
 ## Field recap (per `control_codes.md`)
 `req_bit_set`[121:116] · `src_rel_sb`[115:113] · `dst_wr_sb`[112:110]
 (`VarLatOperandEnc`, 7=none). `DEPBAR.LE`: `sbidx`[46:44], `cnt`[43:38],
