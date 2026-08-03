@@ -53,12 +53,18 @@ hi64 |= (7 << 49) | (7 << 46)  // src=7, dst=7, no barriers
 
 `desc[UR4]` consumes the UR4:UR5 uniform register pair as a **64-bit L2 cache
 eviction policy word**, introduced at sm_80 alongside `createpolicy`.
-- UR4 (low 32 bits): base policy, typically 0 = default/no special policy.
-- UR5 (high 32 bits): encodes cache priority, fraction/window fields.
+- Two formats, fully bit-decoded in `notes/sm90/arch/cache_descriptor.md`:
+  * `createpolicy.{fractional,range}`: UR4 = 0; UR5 = priority byte [31:24] +
+    fraction nibble [23:20] (fractional) or gsz/agr/win fields (range).
+  * access property (`createpolicy.cvt` = pass-through, or stream policy at
+    `c[0x0][0x358]`): UR4 = `(base_ptr>>12) & 0xFFFFFFFF`; UR5 = hit/miss byte
+    [31:24] + `floor(hitRatio×16)` [23:20] + `num_bytes/128` [19:0].
 
 The "table index" interpretation was disproven:
-1. All UR4 values produce identical behavior — there is no table of base addresses.
-2. UR5 bytes of 0xFF cause hardware faults — the word is validated as a policy.
+1. UR4 encodes the access-property window base (>>12), not a table index.
+2. STG validates the UR5 high bytes: 0xFF in [31:16] (priority/ratio fields) raises
+   CUDA_ERROR_ILLEGAL_INSTRUCTION (715); LDG accepts any value tested. Exact
+   illegal-value set still TBD.
 3. `ULDC.64` loads the full 64-bit pair; both registers are consumed.
 4. sm_80 SASS shows `UMOV UR5, 0x14f00000` directly — the same policy encoding.
 

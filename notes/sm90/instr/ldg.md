@@ -66,16 +66,17 @@ parameters and the register(s) provide the byte address.
 
 `desc[UR4]` actually uses the UR4:UR5 pair as a **64-bit descriptor word**, not just UR4
 alone. The compiler always loads the pair via `LDCU.64 UR4, c[0x0][offset]` (64-bit load).
-The lower 32 bits (UR4) provide the base descriptor index (typically 0 for default global
-memory). The upper 32 bits (UR5) encode **cache eviction policy** and other attributes in
-a byte-packed format.
+There are **two 64-bit formats** (fully decoded in `notes/sm90/arch/cache_descriptor.md`):
+`createpolicy`-generated descriptors put everything in UR5 with **UR4 = 0**; driver
+access-property descriptors (`createpolicy.cvt` / stream policy) fill both halves
+(UR4 = window base >> 12, UR5 = hit/miss + ratio + window size).
 
 **Evidence:**
 - `LDCU.64 UR4, c[0x0][0x358]` loads 64 bits into UR4:UR5; STG/LDG only names `desc[UR4]`
   but UR5 is implicitly consumed.
-- Any byte in UR5 set to `0xFF` (all 8 bits) causes an execution fault — the hardware
-  validates specific byte-aligned fields within the 64-bit descriptor.
-- `0xDEADBEEF` in UR5 works fine (no byte = 0xFF); `0xFFFF0000` faults.
+- Store-path validation (LDG accepts everything tested): UR5 high bytes [31:16]
+  (priority/ratio fields) equal to 0xFF raise `CUDA_ERROR_ILLEGAL_INSTRUCTION` (715);
+  `0xDEADBEEF` in UR5 works fine and `0x0000FFFF` (UR5 low word) is accepted.
 
 **Cache policy encoding (fractional, from `createpolicy` PTX → SASS):**
 
@@ -150,10 +151,12 @@ shift of 20:
 | 1024 / 8192 | 1/8 | 0x20 | 1 | ratio does NOT affect window |
 | 512 / 4096 | 1/8 | 0x20 | 1 | |
 
-The window field depends only on **total size**, not the ratio. Apparent
-mapping: `window = min(total / 8192, 3) * 32 + 32` (clamps to 0x20 for
-total ≤ 8192, 0x40 for 16384, 0x60 for 32768). The hardware likely uses
-this as `total / 128` capped and quantized.
+The window field is exactly
+`win = min(((addr + (1<<UR10) + primary − 1) >> UR10) − (addr >> UR10), 0x7F)` with
+`UR10 = max(ceil(log2(total)) − 7, 12)`; the table above is the addr-aligned,
+small-total subset. The [18:12] `agr` field carries `(addr >> UR10) & 0x7F` and
+[23:20] carries `UR10 − 12`. Verified against 432 GPU reads across 6 priority
+combos × 18 size pairs × 4 address offsets — see the arch note.
 
 **Priority byte for range mode:**
 
@@ -169,9 +172,11 @@ Bit 3 set in the priority byte appears to be a "range mode" flag.
 **CVT mode** (`createpolicy.cvt.L2.b64 policy, access-property`):
 
 Converts an access property handle (obtained from CUDA Driver API e.g.
-`cudaStreamSetAttribute` / `CUaccessPolicyWindow`) into a cache policy.
-Produces a **non-zero UR4** value — both halves of the 64-bit pair are populated,
-unlike fractional and range which only use UR5. Observed via stream-level policy:
+`cudaStreamSetAttribute` / `CUaccessPolicyWindow`) into a cache policy — on sm_120 this
+is a **pass-through** (verified: any 64-bit input becomes the desc verbatim; SASS is
+`LDCU.64 UR4, c[0x0][..]` + `UIMAD.WIDE.U32 UR4, URZ, URZ, UR4`). Both halves are
+populated: UR4 = `(base_ptr >> 12) & 0xFFFFFFFF`, UR5 = hit/miss byte [31:24] |
+`floor(hitRatio×16)` [23:20] | `num_bytes/128` [19:0]. Observed via stream-level policy:
 
 ```
 Default stream:   c[0x0][0x358] = 0x00000000_00000000  (no policy)
