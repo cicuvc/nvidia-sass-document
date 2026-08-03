@@ -278,4 +278,34 @@ Fragment words are read from a *fixed* address (all 32 lanes read the same
 uniform-scoreboard setup needed for per-lane fragments.  The fragment layout
 itself is verified only consistent-with-nvcc, not re-derived.
 
+## Bit-level precision (MMA-Sim FDA model, verified)
+
+`tests/asm_construct/test_hmma_precision.py` verifies the FP32-accumulate
+outputs bit-for-bit against the **Fused-Dot-Add (FDA)** model of the
+MMA-Sim paper (arXiv:2511.10909): Hopper HMMA uses F=25 fractional bits in
+the align step (Step 3) and **round-to-zero (RZ)** at the FP32 23rd
+fractional bit on output (Step 5).  All cases use a fixed fragment with only
+c0 and one b0 entry nonzero, so D0 = c0 + P with P = 4·b0 (a carries 4× 1.0).
+
+Verified (both `HMMA.16816.F32.BF16` and `HMMA.16816.F32`):
+
+| behavior | case | result |
+|---|---|---|
+| **Output RZ, not RNE** (Step 5) | D0 = 1.0 + 3·2⁻²⁴ (= 1.5 ulp of 1.0) | `0x3f800001` (1 ulp, truncate; RNE would give 2 ulp) |
+| RZ symmetric for negatives | D0 = −1.0 + 3·2⁻²⁴ | `0xbf7ffffe` (−1.0 + 2⁻²³) |
+| Exact fixed-point sum (Step 4) | P = 3·2⁻²⁴, c0 = 0 | `0x34400000` (exact) |
+| FP32 output range keeps small P | c0 = 2²⁰, P = 8 | `0x49800040` (2²⁰ + 8) |
+| **NaN in → canonical 0x7FFFFFFF** (Step 1) | c, a, b NaN | `0x7fffffff` |
+| **0 × ∞ → NaN** | a=0, b=∞ | `0x7fffffff` |
+| **+∞ and −∞ products mixed → NaN** | a={+∞,+∞}, b={+∞,−∞} | `0x7fffffff` |
+| single +∞×−∞ → −∞ (sign, not NaN) | a={+∞,1}, b={−∞,0} | `0xff800000` |
+| one inf kind propagates | c=+∞ or a=+∞ | `0x7f800000` |
+| **subnormal inputs supported** (full FP32 dynamic range) | f16 b = 2⁻²⁴ (min subnormal) | P = 4·2⁻²⁴ = 2⁻²² exact |
+
+The RZ output (not RNE) is the distinctive FDA/FP32 behavior: a non-tie
+1.5-ulp fraction truncates toward zero on both signs, whereas RNE would
+round ties to even (2 ulp).  This matches MMA-Sim's Hopper F=25/FDA model
+and explains the DeepSeek-reported tensor-core accumulation loss (13-bit
+FP8 QGMMA vs 25-bit HMMA are separate paths).
+
 Decoder: `tools/decode_hmma.py` (opcode 0x23c, size/dstfmt/srcfmt/Rd/Ra/Rb/Rc).
