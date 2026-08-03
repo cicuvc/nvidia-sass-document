@@ -1,0 +1,57 @@
+\appendix
+\label{sec:appendix}
+
+\subsection{Floating-point formats for matrix multiplication}
+\label{ssec:FPformat}
+
+Floating-point matrix multiplication is one of the most fundamental and dominant operations in numerical computing, high-performance computing, and deep learning. Traditionally, IEEE-754 double-precision (FP64) and single-precision (FP32) formats are most prevalent in software and hardware. FP64 and FP32 matrix multiplication is implemented with standard IEEE-754 arithmetic \cite{ieee_ieee_2019}, i.e., floating-point multiplication and addition, or fused multiply-add (FMA) operation.
+
+As deep neural networks (DNNs) become increasingly popular, the computational efficiency and scalability of floating-point matrix multiplication has become even more critical to modern computer systems. To achieve high efficiency and scalability, recent DNNs, particularly large language models (LLMs), adopt low-precision floating-point formats.
+
+Among the low-precision formats, TensorFloat-32 (TF32), half-precision (FP16) and brain-float16 (BF16) formats use the encoding method similar to the IEEE-754 standard for normal numbers, subnormal numbers, zeros, infinities and NaNs; they just reduce the number of exponential bits and the number of mantissa bits. Other formats have more complexities.
+
+Eight-bit formats (FP8) include four common variants: E5M2, E4M3FN, E5M2FNUZ, and E4M3FNUZ, where E$x$M$y$ indicates $x$ exponential bits and $y$ mantissa bits, and FN and FNUZ denote different special encoding methods (FN has no infinity, and FNUZ has neither infinity nor negative zero). The E5M2 and E4M3FN variants are defined by \cite{micikevicius_fp8_2022,open_compute_project_ocp_2023} and supported by recent NVIDIA GPUs. The E5M2FNUZ and E4M3FNUZ variants are defined by \cite{noune_8-bit_2022} and supported by AMD CDNA3 GPU.
+
+The encoding method of six-bit (FP6) and four-bit (FP4) formats discards support for infinity, negative zero, and NaN. In addition, a group of 32 FP8, FP6, or FP4 numbers can be extended to MXFP8, MXFP6, or MXFP4 formats \cite{open_compute_project_ocp_2023} by multiplying a scale factor shared by all 32 elements. The scale factor is encoded as UE8M0, which can only represent NaN and the power of twos ranging from $2^{-127}$ to $2^{127}$. NVIDIA also supports a variant of MXFP4 by reducing the block size from 32 to 16, and an additional variant called NVFP4 by additionally changing the scale factor format from UE8M0 to UE4M3 (unsigned E4M3FN).
+
+\subsection{Tensor Core instructions}
+\label{ssec:TCinst}
+NVIDIA GPUs provide warp-level matrix multiply-accumulate instructions (DMMA, HMMA, QMMA, and OMMA) to perform the matrix multiply-add operation (Equation \ref{eq:mm}) with Tensor Cores. In addition, the Hopper architecture provides warp-group-level matrix multiply-accumulate instructions (HGMMA and QGMMA), and the Blackwell architecture provides warp-group-level/warp-group-pair-level matrix multiply-accumulate instructions (UTCHMMA, UTCQMMA, and UTCOMMA). All these Tensor Core instructions and their compatability are listed in Table \ref{tab:nvmodel}.
+
+These Tensor Core instructions support a large number of data types and shapes, which are indicated by the instruction names (except the UTCHMMA, UTCQMMA, and UTCOMMA instructions, whose type and shape information are stored in an instruction descriptor data structure). The shapes of the matrices are indicated by \textit{MNK} or \textit{M}x\textit{N}x\textit{K}. For example, ``16816'' or ``16x8x16'' means that $M=16$, $N=8$, and $K=16$.
+
+For DMMA instructions, the data types of $A$, $B$, $C$, and $D$ are double-precision (FP64).
+
+For HMMA and HGMMA instructions, the data types of $A$ and $B$ must be the same. The specific data types are indicated by the instruction suffix as shown below.
+\begin{itemize}
+    \item ``.F32.TF32'' means that $A$ and $B$ are TF32, and $C$ and $D$ are FP32.
+    \item ``.F32.BF16'' means that $A$ and $B$ are BF16, and $C$ and $D$ are FP32.
+    \item Otherwise, $A$ and $B$ are FP16.
+    \begin{itemize}
+        \item ``.F32'' or ``.F32.F32'' means that $C$ and $D$ are FP32.
+        \item ``.F16'' or ``.F16.F16'' means that $C$ and $D$ are FP16.
+        \item ``.F32.F16'' means that $D$ is FP32 and $C$ is FP16.
+    \end{itemize}
+\end{itemize}
+HMMA.884 instructions are special because one instruction can perform four concurrent $8\times 8\times 4$ matrix multiplications simultaneously. Other instructions only perform one $M\times N\times K$ matrix multiplication operation.
+
+For QMMA and QGMMA instructions, the data types of $C$, $D$, $A$, and $B$ are indicated by ``\textit{.cdtype.atype.btype}''. $A$ or $B$ can be any FP8 data type (E4M3 or E5M2), or any FP8, FP6, or FP4 data type (E4M3, E5M2, E2M3, E3M2, or E2M1) on the RTX Blackwell architecture. NVIDIA uses E4M3 to represent the E4M3FN encoding for FP8. The data types of $C$ and $D$ must be the same and can be FP32 or FP16. 
+
+QMMA.SF instructions support MXFP8, MXFP6, and MXFP4 data types. Specifically, indicated by ``\textit{.cdtype.atype.btype.sftype}'', $C$ and $D$ are FP32, $A_{M\times K}$ and $B_{K\times N}$ are FP8, FP6, or FP4, and the scale factors $A^{SF}_{M\times (K/32)}$ and $B^{SF}_{(K/32)\times N}$ are UE8M0. Each output element is computed as
+\begin{equation}
+\label{eq:mxfpmm}
+d_{ij}=c_{ij} + \sum_{k=0}^{K-1}a_{ik}a^{SF}_{i\lfloor k/S \rfloor}b_{kj}b^{SF}_{\lfloor k/S \rfloor j}
+\end{equation}
+where $S=32$ is the block size.
+
+Similarly, the OMMA.SF instruction with the ``.F32.E2M1.E2M1.E8'' suffix supports MXFP4 input. In addition, the OMMA.SF instruction with the ``.F32.E2M1.E2M1.UE4M3.4X'' suffix supports NVFP4 input, where the scale factors $A^{SF}_{M\times (K/16)}$ and $B^{SF}_{(K/16)\times N}$ are UE4M3 and the block size $S$ is 16 instead of 32.
+
+Blackwell-specific instructions support similar data types and more matrix shapes in terms of $M$ and $N$. Specifically, UTCHMMA supports the data type combinations same as HGMMA, with $K=8$ for TF32 and $K=16$ for FP16 and BF16. UTCQMMA supports data type combinations same as QMMA and QMMA.SF on RTX Blackwell, with $K=32$ and optional scale factors of block size $32$. UTCOMMA and UTCOMMA.X4 support the same data types as OMMA.SF instructions, with $K=64$ and the block size being 32 or 16.
+
+\subsection{Matrix Core instructions}
+
+Recent AMD GPUs provide warp-level matrix fused-multiply-add (MFMA) instructions to perform the matrix multiply-add operation (Equation \ref{eq:mm}) with Matrix Cores. At the time of writing, we do not have a CDNA1 GPU, so this paper only covers the CDNA2 and CDNA3 architecture and leaves CDNA1 for future work. We list their Matrix Core instructions in Table \ref{tab:amdmodel}.
+
+For CDNA2 MFMA instructions, the shape and type information is indicated by instruction names in format v\_mfma\_\textit{cdtype}\_\textit{M}x\textit{N}x\textit{K}\textit{abtype}. Some BF16 instructions have a ``\_1k'' suffix to distinguish from legacy BF16 instructions inherited from CDNA1.
+
+CDNA3 renames the instructions in format v\_mfma\_\textit{cdtype}\_\textit{M}x\textit{N}x\textit{K}[\_\textit{T}b]\_\textit{abtype}, where \textit{abtype} can be \textit{atype\_btype} for FP8 instructions, and $T$ means the number of concurrent matrix multiplications executed by one instruction (CDNA2 also does so but omits this information in its instruction names). AMD uses xf32 to represent TF32, fp8 to represent E4M3FNUZ, and bf8 to represent E5M2FNUZ.

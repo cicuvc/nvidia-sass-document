@@ -1,0 +1,17 @@
+\section{Motivation}
+\label{sec:motivation}
+
+Floating-point matrix multiplication is the most computationally intensive operation in modern deep neural networks (DNNs), especially in large language models (LLMs). To accelerate floating-point matrix multiplication, modern GPUs have integrated specialized matrix multiplication accelerators (MMAs) such as NVIDIA Tensor Cores and AMD Matrix Cores. MMAs provide various matrix multiplication instructions (MMIs) that accelerate one or more matrix multiply-add operations
+\begin{equation}
+\label{eq:mm}
+D_{M\times N} = A_{M\times K} \times B_{K\times N} + C_{M\times N},
+\end{equation} 
+where $A$, $B$, and $C$ are input matrices, and $D$ is the output matrix. $C$ and $D$ serve as accumulators so that large matrix multiplications can be computed by iterating the matrix multiply-add operations. For example, multiplying two $64\times 64$ matrices requires $(64/M)\times (64/N)\times (64/K)$ matrix multiply-add operations.
+
+However, the complexity and diversity of MMIs introduce numerical issues that have profound implications for DNNs. As there is currently no specification that standardizes the design and arithmetic behavior of MMIs, hardware vendors can implement the MMIs at their own discretion. As a result, different vendors provide MMIs with different shapes and data types, as detailed in the \nameref{sec:appendix}. Although some MMIs retain the same shapes and data types across several generations of MMAs from the same vendor, previous studies \cite{fasi_numerical_2021,li_fttn_2024,xie_revealing_2025} have revealed that different generations of MMAs adopt distinct approaches for computing the same matrix multiply-add operation (Equation \ref{eq:mm}).
+
+Specifically, since no specification defines the standard output of Equation \ref{eq:mm}, hardware vendors are free to implement it with different computational precision, dynamic ranges, rounding modes, special-value handling rules, etc. These implementation details are undocumented, but they are critical to the numerical accuracy of matrix multiplication and higher-level DNNs. For example, previous studies \cite{deepseek-ai_deepseek-v3_2024,pytorch_developers_pytorch_2025} have reported that the accumulation precision of 8-bit floating-point (FP8) MMIs on the NVIDIA Hopper architecture and the dynamic range of 16-bit floating-point (FP16 and BF16) MMIs on the CDNA2 architecture are insufficient for stable DNN training, and can lead to significant degradation in training accuracy. As the root cause is the undocumented internal arithmetic behavior of the hardware, it is difficult for software developers to diagnose and address the issues.
+
+In addition, as MMIs differ in shape and arithmetic behavior, different MMAs will produce inconsistent outputs for the same floating-point matrix multiplication \cite{li_discovery_2024}. Consequently, the reproducibility of DNNs is compromised, and maintaining consistent DNN behaviors across different MMAs becomes very difficult. Without understanding the arithmetic behaviors of existing MMAs, it is also difficult for new hardware vendors to ensure numerical consistency with them.
+
+Therefore, complete and accurate modeling of the arithmetic behaviors of MMAs is crucial for addressing these issues. To this end, we aim to construct a bit-accurate reference model for MMAs, which provides a thorough dissection and bit-accurate simulation of the arithmetic behavior of each MMI.

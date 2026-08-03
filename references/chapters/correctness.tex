@@ -1,0 +1,12 @@
+\section{Correctness Validation}
+\label{sec:correctness}
+
+To validate the correctness of our reference model MMA-Sim, we compare the hardware behavior with our model and check their equivalence. Because the hardware behavior is a black box, we adopt comparative testing to verify bitwise equivalence.
+
+To this end, we implement MMA-Sim with 2800+ lines of Python code. Then, we implement wrapper functions for each Tensor Core and Matrix Core instruction using 3000+ lines of CUDA code and 1400+ lines of HIP code, and integrate them into a Python subpackage. Thus, we can generate inputs and send them to both MMA-Sim and the hardware through Python scripts. 
+
+We run our experiments on the following GPUs: NVIDIA V100 (Volta), NVIDIA T4 (Turing), NVIDIA A100 (Ampere), NVIDIA RTX 4090 (Ada Lovelace), NVIDIA H100 (Hopper), NVIDIA B200 (Blackwell), NVIDIA RTX PRO 6000 Blackwell (RTX Blackwell), AMD MI250X (CDNA2), and AMD MI300X (CDNA3). These GPUs include all architectures equipped with Tensor Cores and the latest two architectures equipped with Matrix Cores.
+
+We test each instruction with over one million sets of inputs generated from random bit streams (covering both general and edge cases). The outputs of MMA-Sim and the hardware are bitwise identical, demonstrating that MMA-Sim is bit-accurate (except for the following special cases).
+
+\textbf{Special cases for NaNs.} Even for FP32/FP16 NaN outputs on Tensor Cores, the outputs of MMA-Sim are bitwise identical to those of the hardware. NaN outputs for Tensor Core DMMA instructions and Matrix Core MFMA instructions are exceptions. In these cases, although both MMA-Sim and the corresponding hardware output NaNs, their NaN payloads may be different. This is because these instructions do not use the canonical encoding for NaNs, and their encoding rule for the NaN payloads is unknown. To the best of our knowledge, no software currently needs the NaN payloads of Tensor Cores or Matrix Cores, so we leave these cases to future work.

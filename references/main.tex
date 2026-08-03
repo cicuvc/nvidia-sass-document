@@ -1,0 +1,56 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+% \usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage[hyphens]{url}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+
+% \usepackage{graphicx}
+% \usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{subcaption}
+\usepackage{comment}
+\usepackage{enumitem}
+\usepackage{nameref}
+ 
+\begin{document}
+
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+
+\pagenumbering{arabic}
+
+\title{MMA-Sim: Bit-Accurate Reference Model of Tensor Cores and Matrix Cores}
+\author{Peichen Xie, Yang Wang, Fan Yang, Mao Yang\\\textit{Microsoft Research}}
+
+
+\maketitle
+\thispagestyle{plain}
+\pagestyle{plain}
+
+
+\input{chapters/abstract}
+\input{chapters/intro}
+\input{chapters/motivation}
+\input{chapters/method}
+\input{chapters/model}
+\input{chapters/correctness}
+\input{chapters/findings}
+\input{chapters/relatedwork}
+\input{chapters/conclusion}
+\input{chapters/appendix}
+
+% \bibliographystyle{ACM-Reference-Format}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

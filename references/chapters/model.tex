@@ -1,0 +1,252 @@
+\section{Bit-Accurate Reference Model}
+\label{sec:model}
+
+Based on our numerical experiments for the matrix multiplication instructions (MMIs) from ten GPU architectures, including all the eight NVIDIA GPU architectures with Tensor Cores (from Volta to RTX Blackwell) and the latest two AMD architectures with Matrix Cores (CDNA2 and CDNA3), we construct nine arithmetic algorithms in total. Table \ref{tab:nvmodel} lists our arithmetic algorithms for Tensor Core instructions, and Table \ref{tab:amdmodel} lists our arithmetic algorithms for Matrix Core instructions.
+
+Based on these arithmetic algorithms, we build a simulator called MMA-Sim, which serves as our bit-accurate reference model. With MMA-Sim, users can simulate any MMI from any GPU architecture by providing input floating-point matrices $A$, $B$, and $C$, and obtain the output matrix $D$ such that $d_{ij}=f(c_{i,j}, a_{i0}, a_{i1}, ..., b_{0j}, b_{1j}, ...)$ where $f$ is the arithmetic algorithm for the MMI.
+
+\begin{table*}[t]
+\caption{Bit-accurate arithmetic algorithms for NVIDIA Tensor Core instructions on eight architectures from Volta to RTX Blackwell. Each cell shows the algorithm that models the instruction bit-accurately. N/A means the instruction is not available for the architecture.}
+\label{tab:nvmodel}
+\centering \scriptsize
+\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\hline
+Instruction & Volta & Turing & Ampere & Ada Lovelace & Hopper & Blackwell & RTX Blackwell \\ \hline
+\begin{tabular}[c]{@{}l@{}}HMMA.884.F32.F32\\ HMMA.884.F32.F16\\ HMMA.884.F16.F16\end{tabular} & FDA(F=23) & FDA(F=24) & N/A & N/A & N/A & N/A & N/A \\ \hline
+\begin{tabular}[c]{@{}l@{}}HMMA.1688.F32\\ HMMA.1688.F16\end{tabular} & N/A & FDA(F=24) & FDA(F=24) & FDA(F=24) & FDA(F=25) & FDA(F=25) & FDA(F=25) \\ \hline
+DMMA.884 / DMMA.8x8x4 & N/A & N/A & SFMA & SFMA & SFMA & SFMA & SFMA \\ \hline
+\begin{tabular}[c]{@{}l@{}}HMMA.1688.F32.TF32\\ HMMA.16816.F32\\ HMMA.16816.F16\\ HMMA.16816.F32.BF16\end{tabular} & N/A & N/A & CoFDA(F=24) & CoFDA(F=24) & FDA(F=25) & FDA(F=25) & FDA(F=25) \\ \hline
+\begin{tabular}[c]{@{}l@{}}HMMA.1684.F32.TF32\\ HMMA.1688.F32.BF16\end{tabular} & N/A & N/A & FDA(F=24) & FDA(F=24) & FDA(F=25) & FDA(F=25) & FDA(F=25) \\ \hline
+\begin{tabular}[c]{@{}l@{}}QMMA.16832.F32.\textit{f8type}.\textit{f8type}\\ QMMA.16832.F16.\textit{f8type}.\textit{f8type}\end{tabular} & N/A & N/A & N/A & CoFDA(F=13) & N/A & N/A & FDA(F=25) \\ \hline
+\begin{tabular}[c]{@{}l@{}}QMMA.16816.F32.\textit{f8type}.\textit{f8type}\\ QMMA.16816.F16.\textit{f8type}.\textit{f8type}\end{tabular} & N/A & N/A & N/A & FDA(F=13) & N/A & N/A & FDA(F=25) \\ \hline
+\begin{tabular}[c]{@{}l@{}}DMMA.16x8x16\\ DMMA.16x8x8\\ DMMA.16x8x4\end{tabular} & N/A & N/A & N/A & N/A & SFMA & N/A & N/A \\ \hline
+\begin{tabular}[c]{@{}l@{}}HGMMA.64x8x8.F32.TF32\\ HGMMA.64x8x16.F32\\ HGMMA.64x8x16.F16\\ HGMMA.64x8x16.F32.BF16\end{tabular} & N/A & N/A & N/A & N/A & FDA(F=25) & N/A & N/A \\ \hline
+\begin{tabular}[c]{@{}l@{}}QGMMA.64x8x32.F32.\textit{f8type}.\textit{f8type}\\ QGMMA.64x8x32.F16.\textit{f8type}.\textit{f8type}\end{tabular} & N/A & N/A & N/A & N/A & FDA(F=13) & N/A & N/A \\ \hline
+\begin{tabular}[c]{@{}l@{}}UTCHMMA\\ UTCQMMA\end{tabular} & N/A & N/A & N/A & N/A & N/A & FDA(F=25) & N/A \\ \hline
+\begin{tabular}[c]{@{}l@{}}UTCOMMA\\ UTCOMMA.4X\end{tabular} & N/A & N/A & N/A & N/A & N/A & GDFS & N/A \\ \hline
+\begin{tabular}[c]{@{}l@{}}QMMA.16832.F32.\textit{f8f6f4type}.\textit{f8f6f4type}\\ QMMA.16832.F16.\textit{f8f6f4type}.\textit{f8f6f4type}\\ QMMA.SF.16832.F32.\textit{f8f6f4type}.\textit{f8f6f4type}.E8\end{tabular} & N/A & N/A & N/A & N/A & N/A & N/A & FDA(F=25) \\ \hline
+\begin{tabular}[c]{@{}l@{}}OMMA.SF.16864.F32.E2M1.E2M1.E8\\ OMMA.SF.16864.F32.E2M1.E2M1.UE4M3.4X\end{tabular} & N/A & N/A & N/A & N/A & N/A & N/A & GDFS \\ \hline
+\end{tabular}
+\\
+\footnotesize \raggedright
+* \textit{f8type} can be E4M3 or E5M2 and \textit{f8f6f4type} can be E4M3, E5M2, E2M3, E3M2, or E2M1.
+
+\end{table*}
+
+
+\begin{table}[ht]
+\caption{Bit-accurate arithmetic algorithms for AMD Matrix Core instructions on the CDNA2 and CDNA3 architectures. The instruction prefix ``v\_mfma\_'' is omitted. We use the reformatted instruction names on CDNA3 unless explicitly mentioned.}
+\label{tab:amdmodel}
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+Instruction & CDNA2 & CDNA3 \\ \hline
+\begin{tabular}[c]{@{}l@{}}f64\_16x16x4\_f64\\ f64\_4x4x4 4b\_f64\\ f32\_32x32x1\_2b\_f32\\ f32\_16x16x1\_4b\_f32\\ f32\_4x4x1\_16b\_f32\\ f32\_32x32x2\_f32\\ f32\_16x16x4\_f32\end{tabular} & SFMA & SFMA \\ \hline
+f32\_16x16x8\_xf32 & N/A & CoFDRDA \\ \hline
+f32\_32x32x4\_xf32 & N/A & FDRDA \\ \hline
+\begin{tabular}[c]{@{}l@{}}f32\_32x32x4\_2b\_f16\\ f32\_16x16x4\_4b\_f16\\ f32\_4x4x4\_16b\_f16\\ f32\_32x32x8\_f16\end{tabular} & GPS(G=4) & FDRDA \\ \hline
+f32\_16x16x16\_f16 & GPS(G=4) & CoFDRDA \\ \hline
+\begin{tabular}[c]{@{}l@{}}(CDNA2 names)\\ f32\_32x32x2bf16\\ f32\_16x16x2bf16\\ f32\_4x4x2bf16\\ f32\_32x32x4bf16\\ f32\_16x16x8bf16\end{tabular} & GPS(G=2) & N/A \\ \hline
+\begin{tabular}[c]{@{}l@{}}f32\_32x32x4\_2b\_bf16\\ f32\_16x16x4\_4b\_bf16\\ f32\_4x4x4\_16b\_bf16\\ f32\_32x32x8\_bf16\end{tabular} & GPS(G=4) & FDRDA \\ \hline
+f32\_16x16x16\_bf16 & GPS(G=4) & CoFDRDA \\ \hline
+\begin{tabular}[c]{@{}l@{}}f32\_16x16x32\_bf8\_bf8\\ f32\_16x16x32\_bf8\_fp8\\ f32\_16x16x32\_fp8\_bf8\\ f32\_16x16x32\_fp8\_fp8\end{tabular} & N/A & CoGFDRDA \\ \hline
+\begin{tabular}[c]{@{}l@{}}f32\_32x32x16\_bf8\_bf8\\ f32\_32x32x16\_bf8\_fp8\\ f32\_32x32x16\_fp8\_bf8\\ f32\_32x32x16\_fp8\_fp8\end{tabular} & N/A & GFDRDA \\ \hline
+\end{tabular}
+\end{table}
+
+
+
+
+
+
+
+\subsection{Sequential-fused-multiply-add (SFMA) algorithm}
+
+The sequential-fused-multiply-add (SFMA) algorithm is constructed for Tensor Core DMMA instructions and Matrix Core double-precision (FP64) and single-precision (FP32) MFMA instructions. In this algorithm, $f(c,\mathbf{a},\mathbf{b})$ is computed by sequentially applying the standard fused-multiply-add (FMA) operation, as shown in Algorithm \ref{alg:sfma}.
+
+\begin{algorithm}
+\small
+\caption{Sequential-fused-multiply-add (SFMA) algorithm.}
+\label{alg:sfma}
+\begin{algorithmic}
+\Require $a_0, a_1, ..., a_{K-1}, b_0, b_1, ..., b_{K-1}, c$
+\Ensure $d = \sum_{k=0}^{K-1}a_{k}b_{k}+c$
+\State $d \gets c$
+\For{$k\gets0$ to $K-1$}
+    \State $d\gets\mathrm{FMA}(a_k,b_k,d)$
+\EndFor
+\State \Return $d$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Group-pairwise-sum (GPS) algorithm}
+
+The group-pairwise-sum (GPS) algorithm is constructed for Matrix Core 16-bit floating-point (FP16 and BF16) MFMA instructions on the CDNA2 architecture. In this algorithm, $f(c,\mathbf{a},\mathbf{b})$ is a composition of standard floating-point addition and multiplication operations with subnormal flushing. Specifically, the computation consists of the following four steps.
+
+\textbf{Step 1} is flushing input subnormals. If any number in $A$, $B$, or $C$ is a subnormal number, it is flushed to positive zero ($+0.0$).
+
+\textbf{Step 2} is multiplication. Each $a_k$ is multiplied by $b_k$ with the standard FP32 multiplication operation, generating the FP32 product $p_k$. Then, if $p_k$ is a subnormal number, it is flushed to zero with its sign preserved.
+
+\textbf{Step 3} is pairwise summation. Every $G$ consecutive products are summed pairwise using the standard FP32 addition operation with sign-preserved subnormal flushing, as shown in Algorithm \ref{alg:pairwise}. This step generates $K/G$ FP32 group sums denoted by $\gamma_0, \gamma_1, ..., \gamma_{K/G-1}$.
+
+\textbf{Step 4} is sequential summation. Finally, $c$ and the $K/G$ group sums are summed sequentially with the standard FP32 addition operation with sign-preserved subnormal flushing.
+
+Algorithm \ref{alg:gps} elaborates the GPS algorithm. Different instructions use different values of $G$, as listed below.
+
+\begin{itemize}
+    \item For the FP16 MFMA instructions, $G=4$.
+    \item For the BF16 MFMA instructions with ``\_1k'' suffix, $G=4$.
+    \item For the BF16 MFMA instructions without ``\_1k'' suffix, $G=2$.
+\end{itemize}
+
+\begin{algorithm}
+\small
+\caption{Pairwise sum function.}
+\label{alg:pairwise}
+\begin{algorithmic}
+\Require $p_0, p_1, ..., p_{G-1}$
+\Ensure $\gamma = \sum_{k}p_k$
+\Function{PairwiseSum}{$p_0, p_1, ..., p_{n-1}$}
+\If{$n=1$}
+    \State \Return $p_0$
+\Else
+    \State $\gamma \gets \textsc{PairwiseSum}(p_0, p_1, ..., p_{n/2-1})$
+    \State $\gamma \gets \gamma+ \textsc{PairwiseSum}(p_{n/2}, p_{n/2+1}, ..., p_{n-1})$
+    \State $\gamma \gets \gamma \times 0.0$ if $|\gamma|<2^{-126}$ \Comment{Flush to zero with sign preserved}
+    \State \Return $\gamma$
+\EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\small
+\caption{Group-pairwise-sum (GPS) algorithm.}
+\label{alg:gps}
+\begin{algorithmic}
+\Require $a_0, a_1, ..., a_{K-1}, b_0, b_1, ..., b_{K-1}, c$ and $G$
+\Ensure $d = \sum_{k=0}^{K-1}a_{k}b_{k}+c$
+\For{$k\gets 0$ to $K-1$}
+    \State $a_k \gets +0.0$ if $|a_k|<2^{-126}$  \Comment{Flush to positive zero}
+    \State $b_k \gets +0.0$ if $|b_k|<2^{-126}$
+    \State $p_k \gets\mathrm{FP32}(a_k)\times\mathrm{FP32}(b_k)$
+    \State $p_k\gets p_k\times 0.0$ if $|p_k|<2^{-126}$ \Comment{Flush to zero with sign preserved}
+\EndFor
+\State $d \gets c$
+\State $d\gets +0.0$ if $|d|<2^{-126}$ \Comment{Flush to positive zero}
+\For{$k\gets0$ to $K-G$ step $G$}
+    \State $d\gets d+\textsc{PairwiseSum}(p_k, p_{k+1}, ..., p_{k+G-1})$
+    \State $d\gets d\times 0.0$ if $|d|<2^{-126}$ \Comment{Flush to zero with sign preserved}
+\EndFor
+\State \Return $d$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Fused-dot-add (FDA) algorithm}
+
+The fused-dot-add (FDA) algorithm is constructed for all HMMA, QMMA, HGMMA, HQMMA, UTCHMMA, and UTCQMMA instructions on Tensor Cores, covering floating-point formats from TF32 to FP4. In this algorithm, the computation of an FDA operation consists of five steps.
+
+\textbf{Step 1} is checking special values, i.e., infinity and NaN. If there is any NaN in the input, or $0\times \infty$ exists, the output $d$ is NaN, which is encoded as 0x7FFFFFFF for FP32 output or 0x7FFF for FP16 output (the canonical NaNs of NVIDIA). If there are both $+\infty$ and $-\infty$ in the products and $c$, the output is NaN. If only one kind of infinity exists, the output equals it. Otherwise, no special value exists, and we go to the next step.
+
+\textbf{Step 2} is computing the products of $a$s and $b$s using their significands and exponents. Specifically, we use $s_{a_k}\times 2^{e_{a_k}}$ and $s_{b_k}\times 2^{e_{b_k}}$ to denote $a_k$ and $b_k$ respectively, where $1\le |s|<2$ for normal numbers and $|s|<1$ for subnormal numbers, and the exponents are obtained from their raw floating-point representation (for example, for the BF16 format, $2^{-127}$ is a subnormal number, and should be denoted by $0.5 \times 2^{-126}$ because $-126$ is the minimum exponent of BF16). Then, the product $p_k=a_kb_k=s_k\times 2^{e_k}$ is computed by $s_k=s_{a_k}\times s_{b_k}$ and $e_k=e_{a_k}+e_{b_k}$. In this step, the product is not normalized. For example, if $a_k=1.5\times 2^{e_{a_k}}$ and $b_k=1.5\times 2^{e_{b_k}}$, $p_k$ should be $2.25\times 2^{e_{a_k}+e_{b_k}}$ instead of $1.125\times 2^{e_{a_k}+e_{b_k}+1}$. The significands are computed and stored as fixed-point numbers without precision loss, overflow, or underflow.
+
+\textbf{Step 3} is aligning the products and $c$ to their maximum exponent $e_{max}=\max \{e_c, e_0, e_1, e_2, ...\}$.
+After obtaining the maximum exponent $e_{max}$, each significand $s_k$ (including $s_c$ and $s_0$, $s_1$, ...) is shifted right by $e_{max}-e_k$ bits respectively. The result has only $F$ fractional bits, and the shifted-out bits are truncated (effectively rounded to zero). The value of $F$ depends on the architecture and instruction, as shown below.
+
+\begin{itemize}
+    \item Volta: $F=23$ for HMMA.
+    \item Turing and Ampere: $F=24$ for HMMA.
+    \item Ada Lovelace: $F=24$ for HMMA and $F=13$ for QMMA.
+    \item Hopper: $F=25$ for HMMA and HGMMA and $F=13$ for QGMMA.
+    \item Blackwell: $F=25$ for HMMA, UTCHMMA, and UTCQMMA.
+    \item RTX Blackwell: $F=25$ for HMMA and QMMA.
+\end{itemize}
+
+\textbf{Step 4} is summing the products and $c$. With the alignment and truncation in Step 3, this step only needs to sum the shifted significands using fixed-point arithmetic ($F$ fractional bits). Therefore, the result of the summation is exact and independent of the summation order.
+
+\textbf{Step 5} is normalizing the sum to the floating-point format of the output, i.e., FP32 or FP16. After Step 4, the sum is represented by $s_{sum}\times 2^{e_{max}}$. For FP32 output, this number is normalized to the exponent range of FP32. If the absolute value of the normalized result is larger than or equal to $2^{128}$, it becomes infinity. Otherwise, its significand is rounded to zero (RZ) at the 13th fractional bit for Ada Lovelace QMMA or Hopper QGMMA instructions or the 23rd fractional bit for other instructions. For FP16 output, this number is normalized to the exponent range of FP16. Then, its significand is rounded at the 10th fractional bit using the round-to-nearest-ties-to-even (RNE) rule. If the absolute value of the rounded result is larger than or equal to $(2-2^{11})\times2^{15}$, it becomes infinity. Otherwise, it is normalized to FP16 again following the RNE rule. 
+
+\textbf{TF32 truncation (Step 0) and unexpected implication.} Although a TF32 number is encoded as E8M10 and has only 19 available bits, it is stored in 32 bits (essentially an FP32 number). We find that Tensor Cores always treat the 13 least significant bits as zero for computation. This leads to an interesting consequence: a NaN value may be converted to infinity. For example, if the input element is 0x7F800001 (NaN), then it will be converted to infinity (0x7F800000), which is unexpected.
+
+\textbf{Scale factor.} The QMMA.SF and UTCQMMA instructions for MXFP8, MXFP6, and MXFP4 formats introduce UE8M0 scale factors in the input (see \nameref{sec:appendix}-\ref{ssec:TCinst}). To multiply the scale factors, only Step 1 and Step 2 need to be modified. In Step 1, if any scale factor is NaN, the result should be NaN. In Step 2, the product $p_k=a_kb_k=s_k\times 2^{e_k}$ is computed by $s_k=s_{a_k}\times s_{b_k}$ and $e_k=e_{a_k}+e_{b_k}+e_{a^{SF}_{\lfloor k/32\rfloor}}+e_{b^{SF}_{\lfloor k/32\rfloor}}$.
+
+\subsection{Chain-of-FDA (CoFDA) algorithm}
+
+For most Tensor Core instructions, $d=g(c, a_0, a_1, ..., a_{K-1}, b_0, b_1, ..., b_{K-1})$ where $g(c, \mathbf{a}, \mathbf{b})$ stands for an FDA operation. However, for HMMA.1688.F32.TF32, HMMA.16816.F32, HMMA.16816.F16, and HMMA.16816.F32.BF16 on Ampere and Ada Lovelace, and QMMA.16832.F32.\textit{f8type}.\textit{f8type} and QMMA.16832.F16.\textit{f8type}.\textit{f8type} on Ada Lovelace, one FDA operation can compute only $K/2$ pairs of multiplicands, and $d$ is computed using a chain of two FDA operations, i.e.,
+\begin{equation}
+\label{eq:chain}
+\begin{split}
+    d=g( & g(c, a_0, a_1, ..., a_{K/2-1}, b_0, b_1, ..., b_{K/2-1}),\\
+    &a_{K/2}, a_{K/2+1}, ..., a_{K-1}, b_{K/2}, b_{K/2+1}, ..., b_{K-1}).
+\end{split}
+\end{equation}
+
+
+\subsection{Group-dot-fused-sum (GDFS) algorithm}
+
+The group-dot-fused-sum (GDFS) algorithm is constructed for all OMMA and UTCOMMA instructions on Tensor Cores, covering MXFP4 and NVFP4 data types. In this algorithm, the computation of a GDFS operation consists of seven steps.
+
+\textbf{Step 1} is checking special values. Since FP4 numbers have no infinity or NaN, and UE4M3 and UE8M0 numbers have no infinity, this step is relatively easier. If there is any NaN in the scale factor or $c$ is NaN, the output $d$ is NaN, which is encoded as 0x7FFFFFFF. If $c$ is infinity, $d=c$. Otherwise, no special value exists, and we go to the next step.
+
+\textbf{Step 2} is computing the products of $a$s and $b$s using fixed-point arithmetic. Then, the product $p_k=a_kb_k$ is a fixed-point number whose non-zero absolute value ranges from 0.25 to 36. This step has no precision loss, and the products are stored exactly.
+
+\textbf{Step 3} is summing the products in groups of 16. Although the input block size can be 32 or 16, the summation group size is fixed to be 16. So, every 16 consecutive products are summed using fixed-point arithmetic, generating $64/16=4$ group dot products, denoted by $\sigma_0$, $\sigma_1$, $\sigma_2$, and $\sigma_3$.
+
+\textbf{Step 4} is multiplying the group dot products by their respective scale factors. The results are represented by significands and exponents as $\gamma_k=\sigma_k a^{SF}_{\lfloor 16k/S\rfloor}b^{SF}_{\lfloor 16k/S\rfloor}=s_k\times 2^{e_k}$, where $S$ denotes the block size. The significand $s_k$ is the group dot product multiplied by the product of the significands of the two scale factors, as $s_k=\sigma_ks_{a^{SF}_{\lfloor 16k/S\rfloor}}s_{b^{SF}_{\lfloor 16k/S\rfloor}}$. The exponent $e_k$ is the sum of the exponents of the two scale factors, as $e_k = e_{a^{SF}_{\lfloor 16k/S\rfloor}}+e_{b^{SF}_{\lfloor 16k/S\rfloor}}$. The significands are stored as fixed-point numbers with $F=35$ fractional bits. So far, there is no precision loss in any computation or storage.
+
+\textbf{Step 5} is aligning $s_0, s_1, s_2, s_3$ and $c$ to their maximum exponent $e_{max}=\max \{e_c, e_0, e_1, e_2, e_3\}$, truncating the bits shifted out of $F=35$ fractional bits using rounding-to-zero (RZ) rule. This step is similar to Step 3 in the FDA algorithm.
+
+\textbf{Step 6} is summing the results of Step 5 with fixed-point arithmetic, which is similar to Step 4 in the FDA algorithm.
+
+\textbf{Step 7} is normalizing the sum to FP32, which is similar to Step 5 in the FDA algorithm.
+
+\textbf{UE4M3 truncation (Step 0).} Although a UE4M3 number has only 7 available bits, it is stored in 8 bits (essentially an FP8 number). Tensor Cores always treat its most significant bit as zero.
+
+
+\subsection{Fused-dot-round-down-add (FDRDA) algorithm}
+
+The fused-dot-round-down-add (FDRDA) algorithm is constructed for Matrix Core TF32, FP16, and BF16 MFMA instructions on the CDNA3 architecture. In this algorithm, the computation of an FDRDA operation consists of seven steps.
+
+\textbf{Step 1} is checking special values, which is the same as Step 1 of the FDA algorithm.
+
+\textbf{Step 2} is computing the products of $a$s and $b$s using their significands and exponents. This is basically the same as Step 2 of the FDA algorithm, except that the products can overflow. If $p_k\ge2^{128}$, it overflows to $+\infty$. If $p_k\le -2^{128}$, it overflows to $-\infty$.
+
+\textbf{Step 3} is checking special values again. If both $+\infty$ and $-\infty$ exist in the products, the output $d$ is NaN. If only one kind of infinity exists, the output equals that. Otherwise, no special value exists and we go to the next step.
+
+\textbf{Step 4} is aligning the products to their maximum exponent $e_{dot}=\max \{e_0, e_1, e_2, ...\}$, truncating the shifted-out bits. This step is similar to Step 3 in the FDA algorithm except that $c$ is excluded. In this algorithm, $F=24$.
+
+\textbf{Step 5} is summing the products using fixed-point arithmetic, which is similar to Step 4 in the FDA algorithm except excluding $c$. The result is represented by $s_{dot}\times 2^{e_{dot}}$.
+
+\textbf{Step 6} is aligning the dot-product result with $c$ to their maximum exponent $e_{max}=\max \{e_{dot}, e_c\}$. Similarly, after obtaining the maximum exponent $e_{max}$, the significand $s_{dot}$ is shifted right by $e_{max}-e_{dot}$ bits, and the parts shifted out of the 31st fractional bit are rounded down (rather than rounded to zero). The significand $s_c$ is shifted right by $e_{max}-e_c$ bits, and the parts shifted out of the 24th fractional bit are rounded down (rather than rounded to zero).
+
+\textbf{Step 7} is summing the two rounded significands using fixed-point arithmetic, generating $s_{sum}$.
+
+\textbf{Step 8} is normalizing the result $s_{sum}\times 2^{e_{max}}$ to FP32 using the round-to-nearest-ties-to-even (RNE) rule. This complies with the standard FP32 conversion algorithm.
+
+\textbf{TF32 truncation (Step 0).} Similar to Tensor Cores, Matrix Cores always treat the 13 least significant bits of the TF32 inputs as zero, which can convert NaN to infinity.
+
+\subsection{Chain-of-FDRDA (CoFDRDA) algorithm}
+
+For most TF32, FP16 and BF16 MFMA instructions on CDNA3, $d=g(c, a_0, a_1, ..., a_{K-1}, b_0, b_1, ..., b_{K-1})$ where $g(c, \mathbf{a}, \mathbf{b})$ stands for an FDRDA operation. However, for v\_mfma\_f32\_16x16x8\_xf32, v\_mfma\_f32\_16x16x16\_f16, and v\_mfma\_f32\_16x16x16\_bf16, one FDRDA operation can compute only $K/2$ pairs of multiplicands, and $d$ is computed using a chain of two FDRDA operations, as formulated by Equation \ref{eq:chain}.
+
+\subsection{Group-fused-dot-round-down-add (GFDRDA) algorithm}
+
+The group-fused-dot-round-down-add (GFDRDA) algorithm is constructed for Matrix Core FP8 MFMA instructions on the CDNA3 architecture. In this algorithm, the computation of a GFDRDA operation consists of seven steps.
+
+\textbf{Step 1, 2, 3} are the same as Step 1, 2, 3 in the FDRDA algorithm.
+
+\textbf{Step 4} is aligning the products of even indices to their maximum exponent $e_{even}=\max \{e_0, e_2, e_4, ...\}$, and aligning the products of odd indices to their maximum exponent $e_{odd}=\max \{e_1, e_3, e_5, ...\}$. Similar to Step 4 of FDRDA, the bits shifted out of $F=24$ fractional bits are truncated using rounding-to-zero (RZ) rule.
+
+\textbf{Step 5} is summing the two groups of products respectively using fixed-point arithmetic, which is similar to Step 5 of FDRDA. The results are represented by $s_{even}\times 2^{e_{even}}$ and $s_{odd}\times 2^{e_{odd}}$.
+
+\textbf{Step 6} is aligning the two dot products to their maximum exponent $e_{dot}=\max\{e_{even}, e_{odd}\}$. The significands $s_{even}$ and $s_{odd}$ are shifted right by $e_{dot}-e_{even}$ and $e_{dot}-e_{odd}$ bits respectively. The bits shifted out of $F=24$ fractional bits are rounded down (RD) rather than rounded to zero.
+
+\textbf{Step 7} is summing the two rounded significands using fixed-point arithmetic, generating $s_{dot}$.
+
+\textbf{Step 8} is aligning the dot-product result with $c$ to their maximum exponent $e_{max}=\max \{e_{dot}, e_c\}$. Specifically, $s_{dot}$ is shifted right by $e_{max}-e_{dot}$ bits and rounded down at the 31st fractional bit, the same as in Step 6 of FDRDA. Similarly, $s_c$ is shifted right by $e_{max}-e_c$ bits and rounded at the 24th fractional bit. However, the rounding mode of $s_c$ has an additional check: if $e_c < e_{max}-25$, then $s_c$ is  rounded to zero. Otherwise, $s_c$ is rounded down.
+
+\textbf{Step 9, 10} are the same as Step 7, 8 of FDRDA.
+
+\subsection{Chain-of-GFDRDA (CoGFDRDA) algorithm}
+
+One GFDRDA operation can compute only 16 pairs of multiplicands. Therefore, for the FP8 MFMA instructions with $K=32$, $d$ is computed using a chain of two GFDRDA operations, as formulated by Equation \ref{eq:chain}.
