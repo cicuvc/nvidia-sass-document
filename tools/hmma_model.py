@@ -68,6 +68,22 @@ def _is_zero_half(v, mant):
     return (v & ((1 << (mant + 1)) - 1)) == 0
 
 
+def _sign_pos(v, mant):
+    return not (v >> (mant + _ebits(mant)))
+
+
+def _sm_fp8(v, mant=3, bias=7, ebits=4):
+    """Decompose an fp8 (e4m3/e5m2-style) value.  NVIDIA QMMA treats the
+    all-ones exponent as an ordinary value (exp 15 -> 2^8 for e4m3): there are
+    NO NaN/inf special values in fp8 inputs -- verified on SM120."""
+    sign = -1 if (v >> (mant + ebits)) else 1
+    e = (v >> mant) & ((1 << ebits) - 1)
+    m = v & ((1 << mant) - 1)
+    if e == 0:
+        return sign, m, mant, 1 - bias
+    return sign, (1 << mant) + m, mant, e - bias
+
+
 def _tz_div(num, den):
     """num//den truncated toward zero (RZ), not floor."""
     q, r = divmod(num, den)
@@ -86,34 +102,58 @@ def fda(c_bits, a_vals, b_vals, fmt="bf16"):
     """One output element: d = f(c, a_0..K-1, b_0..K-1).
 
     c_bits: FP32 bits of the accumulator.  a_vals/b_vals: half-precision bit
-    values (bf16 or f16).  Returns the FP32 output bits.
+    values (bf16, f16, or fp8 e4m3).  Returns the FP32 output bits.
     """
-    mant = 7 if fmt == "bf16" else 10
-    bias = 127 if fmt == "bf16" else 15
+    if fmt == "e4m3":
+        mant, bias = 3, 7
+        is_fp8 = True
+    else:
+        mant = 7 if fmt == "bf16" else 10
+        bias = 127 if fmt == "bf16" else 15
+        is_fp8 = False
 
     # ---- Step 1: special values -----------------------------------------
+    # fp8 inputs carry NO special values (exp-15 is an ordinary exponent);
+    # only the FP32 accumulator C can be NaN/inf.  For bf16/f16 the full FDA
+    # special-value logic applies (any NaN -> canonical, 0*inf -> NaN, only one
+    # inf kind -> that inf, both kinds -> NaN).
     if _special(c_bits, 23) == "nan":
         return NAN_OUT
-    infs = []
-    c_sp = _special(c_bits, 23)
-    if c_sp in ("+inf", "-inf"):
-        infs.append(c_sp)
-    for a, b in zip(a_vals, b_vals):
-        sa, sb = _special(a, mant), _special(b, mant)
-        if sa == "nan" or sb == "nan":
-            return NAN_OUT
-        if sa in ("+inf", "-inf") or sb in ("+inf", "-inf"):
-            za, zb = _is_zero_half(a, mant), _is_zero_half(b, mant)
-            if (sa in ("+inf", "-inf") and zb) or (sb in ("+inf", "-inf") and za):
-                return NAN_OUT                      # 0 * inf
-            if sa in ("+inf", "-inf") and sb in ("+inf", "-inf"):
-                infs.append("+inf" if sa == sb else "-inf")
-            else:
-                infs.append(sa if sa != "num" else sb)
-    if infs:
-        if "+inf" in infs and "-inf" in infs:
-            return NAN_OUT
-        return 0x7F800000 if "+inf" in infs else 0xFF800000
+    if is_fp8:
+        # fp8 e4m3: only the all-ones pattern 0x7F/0xFF is NaN; every other
+        # bit pattern (incl. exp-15) is an ordinary value.  No fp8 infinity.
+        # NaN wins over c's inf, so check fp8 NaN before propagating c.
+        for a, b in zip(a_vals, b_vals):
+            if a in (0x7F, 0xFF) or b in (0x7F, 0xFF):
+                return NAN_OUT
+        c_sp = _special(c_bits, 23)
+        if c_sp in ("+inf", "-inf"):
+            return 0x7F800000 if c_sp == "+inf" else 0xFF800000
+    else:
+        infs = []
+        c_sp = _special(c_bits, 23)
+        if c_sp in ("+inf", "-inf"):
+            infs.append(c_sp)                 # c's inf joins the sign mix
+        for a, b in zip(a_vals, b_vals):
+            sa, sb = _special(a, mant), _special(b, mant)
+            if sa == "nan" or sb == "nan":
+                return NAN_OUT
+            if sa in ("+inf", "-inf") or sb in ("+inf", "-inf"):
+                za, zb = _is_zero_half(a, mant), _is_zero_half(b, mant)
+                if (sa in ("+inf", "-inf") and zb) or (sb in ("+inf", "-inf") and za):
+                    return NAN_OUT                      # 0 * inf
+                # product sign: finite * inf and inf * inf follow the sign
+                if sa in ("+inf", "-inf") and sb in ("+inf", "-inf"):
+                    prod = "+inf" if sa == sb else "-inf"
+                elif sa in ("+inf", "-inf"):
+                    prod = sa if _sign_pos(b, mant) else ("-inf" if sa == "+inf" else "+inf")
+                else:
+                    prod = sb if _sign_pos(a, mant) else ("-inf" if sb == "+inf" else "+inf")
+                infs.append(prod)
+        if infs:
+            if "+inf" in infs and "-inf" in infs:
+                return NAN_OUT
+            return 0x7F800000 if "+inf" in infs else 0xFF800000
 
     # ---- Step 2: exact products (significand x exponent, no normalization) --
     c_sign, c_num, c_den, c_e = _fp32_sm(c_bits)
@@ -121,8 +161,12 @@ def fda(c_bits, a_vals, b_vals, fmt="bf16"):
     prods = []
     e_max = c_e if have_c else None
     for a, b in zip(a_vals, b_vals):
-        sa, anum, aden, ae = _sm(a, mant, bias)
-        sb, bnum, bden, be = _sm(b, mant, bias)
+        if is_fp8:
+            sa, anum, aden, ae = _sm_fp8(a)
+            sb, bnum, bden, be = _sm_fp8(b)
+        else:
+            sa, anum, aden, ae = _sm(a, mant, bias)
+            sb, bnum, bden, be = _sm(b, mant, bias)
         p = (sa * sb, anum * bnum, aden + bden, ae + be)
         prods.append(p)
         if e_max is None or p[3] > e_max:
@@ -200,6 +244,41 @@ def hmma_frag(frag16, fmt="bf16"):
             fda(c2, A2, B2, fmt), fda(c3, A2, B2, fmt)]
 
 
+def qmma_frag_pairs(frag16):
+    """m16n8k32 fp8 fragment (16 words: a0..a3, b0..b1, c0..c3) -> k-pairs.
+
+    Each a/b word holds 4 fp8 values (byte i, little-endian).  Probed on SM120:
+    fp8 byte i pairs only with byte i (no cross-byte), each pair folds 4 k.
+
+      D0/D1: {a0.i,b0.i} {a2.i,b1.i}  for i in 0..3   (8 pairs x 4k = 32k)
+      D2/D3: {a1.i,b0.i} {a3.i,b1.i}  for i in 0..3
+
+    Returns (c0,c1,c2,c3, P_pairs, Q_pairs) with flat [a,b,a,b,...] of 8
+    fp8 k-pairs each.
+    """
+    a = [frag16[i] for i in range(4)]
+    b = [frag16[4], frag16[5]]
+    ai = [[(a[i] >> (8 * j)) & 0xFF for j in range(4)] for i in range(4)]
+    bi = [[(b[i] >> (8 * j)) & 0xFF for j in range(4)] for i in range(2)]
+    P = []
+    Q = []
+    for j in range(4):
+        P += [ai[0][j], bi[0][j]] * 4 + [ai[2][j], bi[1][j]] * 4
+        Q += [ai[1][j], bi[0][j]] * 4 + [ai[3][j], bi[1][j]] * 4
+    return frag16[8], frag16[9], frag16[10], frag16[11], P, Q
+
+
+def qmma_frag(frag16):
+    """Compute D0..D3 for a full m16n8k32 e4m3 fragment, as FP32 bits."""
+    c0, c1, c2, c3, P, Q = qmma_frag_pairs(frag16)
+    A = [P[i] for i in range(0, len(P), 2)]
+    B = [P[i] for i in range(1, len(P), 2)]
+    A2 = [Q[i] for i in range(0, len(Q), 2)]
+    B2 = [Q[i] for i in range(1, len(Q), 2)]
+    return [fda(c0, A, B, "e4m3"), fda(c1, A, B, "e4m3"),
+            fda(c2, A2, B2, "e4m3"), fda(c3, A2, B2, "e4m3")]
+
+
 # ---- self-test against hardware-verified vectors ---------------------------
 def _check(name, got, want):
     ok = got == want
@@ -232,12 +311,45 @@ def selftest():
                                                [0x7F80, 0xFF80, 0, 0], B), 0x7FFFFFFF)
     ok &= _check("c=+inf -> +inf", fda(0x7F800000, a1, b3340, B), 0x7F800000)
     ok &= _check("c=-inf -> -inf", fda(0xFF800000, a1, b3340, B), 0xFF800000)
+    # c's inf joins the sign mix: c=-inf + product +inf -> NaN
+    ok &= _check("c=-inf + prod +inf -> NaN",
+                 fda(0xFF800000, [0x7F80] * 4, [0x7F80] * 4, B), 0x7FFFFFFF)
+    # negative finite * +inf -> -inf (product sign)
+    ok &= _check("neg * +inf -> -inf",
+                 fda(0, [0xBF80, ONE_B, ONE_B, ONE_B], [0x7F80, 0, 0, 0], B), 0xFF800000)
     ok &= _check("f16 c=1.0 + 3*2^-22 (subnormal b=3*2^-24)",
                  fda(0x3F800000, [ONE_F] * 4, [0x0003] * 4, F16), 0x3F800006)
     ok &= _check("product overflow -> +inf",
                  fda(0, [0x7F80] * 4, [0x7F80] * 4, B), 0x7F800000)
     ok &= _check("f16 subnormal 2^-24 * 4 = 2^-22",
                  fda(0, [ONE_F] * 4, [0x0001] * 4, F16), 0x34800000)
+    # ---- QMMA m16n8k32 e4m3 (via fragment layout) ------------------------
+    def fiv(v): return struct.unpack("<I", struct.pack("<f", v))[0]
+    qf = [0] * 16
+    for i in range(6):
+        qf[i] = 0x38383838                     # fp8 e4m3 1.0 x4
+    for i in range(4):
+        qf[8 + i] = fiv(float([10, 11, 12, 13][i]))
+    ok &= _check("qmma A=B=1 -> 42,43,44,45",
+                 qmma_frag(qf)[0], 0x42280000)
+    ok &= _check("qmma A=B=1 D1", qmma_frag(qf)[1], 0x422C0000)
+    ok &= _check("qmma A=B=1 D2", qmma_frag(qf)[2], 0x42300000)
+    ok &= _check("qmma A=B=1 D3", qmma_frag(qf)[3], 0x42340000)
+    # RZ: c0 = 1.0 + 3*2^-22 (0x3F800006), P=4 -> D0 = 5.0 + 1.5ulp -> 1ulp
+    qf2 = [0] * 16
+    qf2[0], qf2[4], qf2[8] = 0x38, 0x38, 0x3F800006
+    ok &= _check("qmma RZ 1.5ulp -> 1ulp", qmma_frag(qf2)[0], 0x40A00001)
+    # F=25: c0 = 1.0 + 2^-14, P=4 -> 5.0 + 2^-14 (0x40A00080)
+    qf3 = [0] * 16
+    qf3[0], qf3[4], qf3[8] = 0x38, 0x38, 0x3F800200
+    ok &= _check("qmma F=25 (5.0+2^-14)", qmma_frag(qf3)[0], 0x40A00080)
+    # fp8 NaN (0x7F all-ones) -> canonical; exp-15 mant<7 is an ordinary value
+    ok &= _check("qmma fp8 NaN -> canonical",
+                 qmma_frag([0x7F, 0, 0, 0, 0x38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])[0],
+                 0x7FFFFFFF)
+    ok &= _check("qmma fp8 0x7C = 384 (exp15 value)",
+                 qmma_frag([0x7C, 0, 0, 0, 0x38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])[0],
+                 0x44C00000)
     print(f"\nFDA self-test: {'ALL PASS' if ok else 'FAILURES'}")
     return ok
 

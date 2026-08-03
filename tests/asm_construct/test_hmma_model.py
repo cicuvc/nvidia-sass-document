@@ -63,10 +63,29 @@ def run_hw(srcfmt, frag16):
 
 
 def rand_half(fmt):
+    """Layered random bf16/f16: normal, extreme exponents, subnormal/zero,
+    and NaN/inf (so the FDA special-value paths are exercised)."""
     mant = 7 if fmt == "bf16" else 10
     ebits = 8 if fmt == "bf16" else 5
-    e = random.randint(1, (1 << ebits) - 2)
-    m = random.randint(0, (1 << mant) - 1)
+    r = random.random()
+    if r < 0.5:
+        e = random.randint(1, (1 << ebits) - 2)
+        m = random.randint(0, (1 << mant) - 1)
+    elif r < 0.7:
+        c = random.random()
+        if c < 0.3:
+            e, m = 1, 0                       # min normal
+        elif c < 0.6:
+            e, m = (1 << ebits) - 2, (1 << mant) - 1   # max normal
+        elif c < 0.85:
+            e, m = 0, random.randint(1, (1 << mant) - 1)  # subnormal
+        else:
+            e, m = 0, 0                       # zero
+    else:
+        if random.random() < 0.5:
+            e, m = (1 << ebits) - 1, 0        # inf
+        else:
+            e, m = (1 << ebits) - 1, random.randint(1, (1 << mant) - 1)  # NaN
     v = (e << mant) | m
     if random.random() < 0.5:
         v |= 1 << (mant + ebits)
@@ -74,10 +93,16 @@ def rand_half(fmt):
 
 
 def rand_f32():
-    if random.random() < 0.2:
-        return random.choice([0x7F800000, 0xFF800000, 0x7FC00000, 0x7F800001,
-                              0, 0x80000000])
-    return struct.unpack("<I", struct.pack("<f", random.uniform(-1e3, 1e3)))[0]
+    r = random.random()
+    if r < 0.75:
+        return struct.unpack("<I", struct.pack("<f", random.uniform(-1e4, 1e4)))[0]
+    if r < 0.85:
+        return struct.unpack("<I", struct.pack("<f", random.uniform(-1e35, 1e35)))[0]
+    if r < 0.93:
+        return random.choice([0, 0x80000000])
+    if r < 0.97:
+        return random.choice([0x7F800000, 0xFF800000])
+    return random.choice([0x7FC00000, 0x7F800001, 0xFFC00000])
 
 
 # --- FDA model self-test (already-verified bit vectors) ---------------------
@@ -87,7 +112,7 @@ check("model self-test", [selftest_ok], [True])
 # --- random fragments vs hardware, bit-exact ---------------------------------
 random.seed(0xC0FFEE)
 for fmt, sf in [("bf16", "BF16"), ("f16", "F16")]:
-    for trial in range(8):
+    for trial in range(16):
         frag = [rand_half(fmt) | (rand_half(fmt) << 16) if i < 6 else rand_f32()
                 for i in range(16)]
         hw = run_hw(sf, frag)
