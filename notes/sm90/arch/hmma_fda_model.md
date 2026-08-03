@@ -112,3 +112,26 @@ Verified on SM120 (`test_qmma_sf.py`):
 
 Note the QMMA srcFmt enum (probed): **E4M3=0, E3M4=1, E2M3=2, E5M2=4,
 E3M2=5, E2M1=6** — grouped by mantissa width, not the SRCFMTA_qmma 0..5 order.
+
+## OMMA.SF — MXFP4 block scaling, m16n8k64 e2m1 (sm_120)
+
+`OMMA.SF.16864.F32.E2M1.E2M1.E8 Rd, Ra, Rb, Rc, Re, Rh, URi` (opcode 0x47f)
+is the MXFP4 block-scaled MMA; SASS for PTX
+`mma.sync.aligned.m16n8k64.row.col.kind::mxf4.block_scale.f32.e2m1.e2m1
+.f32.ue8m0` (sm_120a).  Per the MMA-Sim appendix this is the GDFS path
+(group of 16, F=35) — not modeled here, only the observable arithmetic.
+
+Verified SM120 (`test_omma.py`):
+- **e2m1 packing** is 4 bits/element (no padding for `kind::mxf4`):
+  sign bit 3, exp bits 2-1 (bias 1), mantissa bit 0.  Probed values:
+  `0x1 = 0.5` (subnormal), `0x2 = 1.0`, `0x6 = 4.0`.
+- **A·B = 64 k** (m16n8k64) at all-1.0: 16 / 64 / 1024 for e2m1 0x1/0x2/0x6.
+- **scale 2X** (scale_A is M × K/32 = M × 2): **byte 0 of Re scales k 0..31,
+  byte 1 scales k 32..63**.  Re = 0x017F7F80 gives 32·2 + 32·1 = 96; scale
+  2x → 128, scale 0 → 0.  (Rh likewise for B's two 32-row groups.)
+- **URi**: only sel=0 (byte-id 0) is legal here — other values fault 0x715.
+  QMMA.SF's URi accepts sel 0..3; OMMA's appears more restricted.
+- Encoding data bits match nvcc's lowering.
+
+`decode_qmma.py` covers the 0x47f encoding (srcFmt mode/op bits 78/79,
+scalefmt memdesc bit 82, scaleVectorSz nottid0 bit 83).

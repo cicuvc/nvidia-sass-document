@@ -27,6 +27,9 @@ SIZE = {0: "16816", 1: "16832"}
 # QMMA srcFmt enum (sm120, probed): grouped by mantissa width.
 # E4M3/E3M4/E2M3 (3-mantissa) = 0/1/2, E5M2/E3M2/E2M1 (2-mantissa) = 4/5/6.
 FMT = {0: "E4M3", 1: "E3M4", 2: "E2M3", 4: "E5M2", 5: "E3M2", 6: "E2M1"}
+# OMMA (mxfp4) srcFmt / scale-format enums.
+OMMA_FMT = {0: "E2M1", 1: "E0M3"}
+SCALEFMT = {0: "E8", 1: "UE4M3"}
 
 
 def bits(v, hi, lo):
@@ -44,7 +47,7 @@ def pred(idx, neg):
 def decode(lo64, hi64, pc=0):
     inst = lo64 | (hi64 << 64)
     opcode = (bits(inst, 91, 91) << 12) | bits(inst, 11, 0)
-    if opcode not in (0x27a, 0x47a, 0x47e):
+    if opcode not in (0x27a, 0x47a, 0x47e, 0x47f):
         return "?opcode 0x%x" % opcode
 
     pg, pg_not = bits(inst, 14, 12), bits(inst, 15, 15)
@@ -52,25 +55,31 @@ def decode(lo64, hi64, pc=0):
 
     rd, ra, rb, rc = (bits(inst, 23, 16), bits(inst, 31, 24),
                       bits(inst, 39, 32), bits(inst, 71, 64))
-    if opcode in (0x47a, 0x47e):            # QMMA.SF / MXQMMA (block scaling)
+    re, rh = bits(inst, 47, 40), bits(inst, 59, 52)
+    uri = (bits(inst, 77, 73) << 3) | bits(inst, 62, 60)
+    uri_s = "URZ" if uri == 255 else "UR%d" % uri
+    if opcode == 0x47f:                     # OMMA.SF (MXFP4 e2m1 block scale)
+        sfa = OMMA_FMT.get(bits(inst, 78, 78), "?")
+        sfb = OMMA_FMT.get(bits(inst, 79, 79), "?")
+        sf = SCALEFMT.get(bits(inst, 82, 82), "?")
+        mnem = "OMMA.SF.16864.F32.%s.%s.%s" % (sfa, sfb, sf)
+    elif opcode in (0x47a, 0x47e):          # QMMA.SF / MXQMMA
         size = "16832"
         dstfmt = "F32"
         sfa = FMT.get(bits(inst, 83, 82) | (bits(inst, 78, 78) << 2), "?")
         sfb = FMT.get(bits(inst, 85, 84) | (bits(inst, 79, 79) << 2), "?")
-        re, rh = bits(inst, 47, 40), bits(inst, 59, 52)
-        uri = (bits(inst, 77, 73) << 3) | bits(inst, 62, 60)
-        uri_s = "URZ" if uri == 255 else "UR%d" % uri
         name = "MXQMMA" if opcode == 0x47e else "QMMA"
         mnem = "%s.SF.%s.%s.%s.%s.E8" % (name, size, dstfmt, sfa, sfb)
-        return "%s%s %s, %s, %s, %s, %s, %s, %s" % (
-            guard, mnem, reg(rd), reg(ra), reg(rb), reg(rc), reg(re), reg(rh),
-            uri_s)
-    size = SIZE.get(bits(inst, 76, 75), "?")
-    dstfmt = "F32" if bits(inst, 77, 77) else "F16"
-    sfa = FMT.get(bits(inst, 83, 82) | (bits(inst, 78, 78) << 2), "?")
-    sfb = FMT.get(bits(inst, 85, 84) | (bits(inst, 79, 79) << 2), "?")
-    return "%sQMMA.%s.%s.%s.%s %s, %s, %s, %s" % (
-        guard, size, dstfmt, sfa, sfb, reg(rd), reg(ra), reg(rb), reg(rc))
+    else:
+        size = SIZE.get(bits(inst, 76, 75), "?")
+        dstfmt = "F32" if bits(inst, 77, 77) else "F16"
+        sfa = FMT.get(bits(inst, 83, 82) | (bits(inst, 78, 78) << 2), "?")
+        sfb = FMT.get(bits(inst, 85, 84) | (bits(inst, 79, 79) << 2), "?")
+        return "%sQMMA.%s.%s.%s.%s %s, %s, %s, %s" % (
+            guard, size, dstfmt, sfa, sfb, reg(rd), reg(ra), reg(rb), reg(rc))
+    return "%s%s %s, %s, %s, %s, %s, %s, %s" % (
+        guard, mnem, reg(rd), reg(ra), reg(rb), reg(rc), reg(re), reg(rh),
+        uri_s)
 
 
 # (lo64, hi64, expected) — nvcc mma.sync lowering (verified)
@@ -79,6 +88,8 @@ VECTORS = [
      "QMMA.16832.F32.E4M3.E4M3 R4, R4, R2, R12"),
     (0x7ff0ff020404747a, 0x000fe2000000beff,
      "QMMA.SF.16832.F32.E4M3.E5M2.E8 R4, R4, R2, RZ, RZ, RZ, URZ"),
+    (0x7ff0ff020404747f, 0x000fe20000083eff,
+     "OMMA.SF.16864.F32.E2M1.E2M1.E8 R4, R4, R2, RZ, RZ, RZ, URZ"),
 ]
 
 
