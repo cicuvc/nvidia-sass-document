@@ -19,14 +19,17 @@ from pathlib import Path
 
 TESTS_DIR = Path(__file__).resolve().parent.parent / "tests" / "asm_construct"
 
-# Tests that measure absolute cycles/throughput: they must not share the GPU
-# with concurrent kernels or their numbers drift.
+# Tests that must not share the GPU with concurrent kernels: either they
+# measure absolute cycles/throughput (numbers drift) or they depend on
+# per-stream driver state (access-policy window descriptors) that other
+# workers can disturb.  They run serially after the parallel batch.
 TIMING_SENSITIVE = {
     "test_mufu_latency",
     "test_mufu_throughput",
     "test_ffma_throughput",
     "test_depbar",
     "test_mufu",
+    "test_cache_desc",          # cuStreamSetAttribute access-policy window
 }
 
 
