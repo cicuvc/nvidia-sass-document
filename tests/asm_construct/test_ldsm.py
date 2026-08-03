@@ -139,6 +139,18 @@ check("M88.x4 regs = matrices 0..3", "ok" if not bad else bad[:5], "ok")
 v = run_ldsm(addr_x1, 1, mode="MT88")
 check("MT88.x1 transposed fragment", v[0:32], [mt88x1(0, t) for t in range(32)])
 
+# --- 4b. MT88.x2 / MT88.x4: group->register mapping survives transpose ------
+def mt88xN(g, t):                    # a[g][(t%4)*2][t//4] (lo), ...+1 (hi)
+    lo = 64*g + 16*((t % 4) * 2) + t // 4
+    hi = 64*g + 16*((t % 4) * 2 + 1) + t // 4
+    return lo | (hi << 16)
+v = run_ldsm(addr_xN, 2, mode="MT88")
+bad = [t for t in range(32) for g in range(2) if v[g*32+t] != mt88xN(g, t)]
+check("MT88.x2 group g -> reg g", "ok" if not bad else bad[:5], "ok")
+v = run_ldsm(addr_xN, 4, mode="MT88")
+bad = [t for t in range(32) for g in range(4) if v[g*32+t] != mt88xN(g, t)]
+check("MT88.x4 group g -> reg g", "ok" if not bad else bad[:5], "ok")
+
 # --- 5. address model is user-driven: X4 is the base case ------------------
 # X1/X2 just take the first N 8-thread groups.  Each group reads the 8×16B
 # at its 8 addresses, splits into 32 32-bit words written to lanes 0..31.

@@ -66,6 +66,15 @@ supplied by lanes `(t%4)*2` and `(t%4)*2+1`.  (Verified: transpose reads
 was zero made odd columns read back zero — a test-injection artifact, not a
 transpose issue.)
 
+**Group→register mapping survives `.trans`**: for `.x2`/`.x4`, group `g`
+(after transpose) still lands in register `g` — verified for `.MT88.x2` and
+`.MT88.x4` exactly as for `.M88`.  So at the SASS level the transpose never
+shuffles which *register* a group's data goes to; it only changes the
+fragment *contents*.  When a `ldmatrix`/MMA pipeline needs register reordering
+(ptxas inserting MOVs to split/reorder a 4-register tuple), the mismatch
+comes from the fragment layout vs. the MMA operand expectation, NOT from any
+group↔register remap inside LDSM.
+
 ## Encoding (from CLASS ldsm__sImmOffset)
 
 ```
