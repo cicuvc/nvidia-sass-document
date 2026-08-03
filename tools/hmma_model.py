@@ -84,6 +84,115 @@ def _sm_fp8(v, mant=3, bias=7, ebits=4):
     return sign, (1 << mant) + m, mant, e - bias
 
 
+def _sm_e2m1(v):
+    """Decompose a 4-bit MXFP4 e2m1 value (sign bit 3, exp bits 2-1 bias 1,
+    mantissa bit 0).  Value = sign * num/2^1 * 2**(exp-1); subnormal (exp 0)
+    = mant * 2**-1.  Probed on SM120: 0x1=0.5, 0x2=1.0, 0x6=4.0."""
+    sign = -1 if (v >> 3) else 1
+    e = (v >> 1) & 0x3
+    m = v & 1
+    if e == 0:
+        return sign, m, 0, -1                 # subnormal: m * 2**-1
+    return sign, 2 + m, 1, e - 1              # (2+m)/2^1 * 2**(e-1)
+
+
+def gdfs(c_bits, a_vals, b_vals, a_scale_exp, b_scale_exp, block=32):
+    """One OMMA.SF output element via the GDFS model (arXiv:2511.10909).
+
+    GDFS (F=35, group of 16) for MXFP4: products are exact fixed-point; every
+    16 consecutive products sum into one group dot product sigma_j; each group
+    scales by E8M0 scale factors (one per `block` columns, so a scale covers
+    block/16 groups).  The scaled groups align to e_max and truncate (RZ) at
+    35 fractional bits, sum, and normalize to FP32.
+
+    a_vals/b_vals: e2m1 4-bit values (len 64 for m16n8k64).
+    a_scale_exp/b_scale_exp: list of unbiased exponents of the E8M0 scale
+    columns (len K/block), indexed by group//(block/16).
+    """
+    if _special(c_bits, 23) == "nan":
+        return NAN_OUT
+    c_sp = _special(c_bits, 23)
+    if c_sp in ("+inf", "-inf"):
+        return c_bits                          # d = c
+    # scale NaN (E8M0 0xFF) -> canonical NaN
+    if 0xFF in a_scale_exp or 0xFF in b_scale_exp:
+        return NAN_OUT
+
+    c_sign, c_num, c_den, c_e = _fp32_sm(c_bits)
+    have_c = c_num != 0
+
+    # Step 2: exact products (significand x exponent, no normalization)
+    prods = []
+    for a, b in zip(a_vals, b_vals):
+        sa, anum, aden, ae = _sm_e2m1(a)
+        sb, bnum, bden, be = _sm_e2m1(b)
+        prods.append((sa * sb, anum * bnum, aden + bden, ae + be))
+
+    # Step 3: group of 16 sums -> sigma_j (fixed point at F=35 fractional
+    # bits relative to the group's max exponent); Step 4: scale by E8M0.
+    F = 35
+    group = 16
+    groups_per_scale = block // group
+    sigmas = []                                 # (sign*num, exp of 2^-F unit)
+    for j in range(0, len(prods), group):
+        s_grp = prods[j:j + group]
+        sc = a_scale_exp[j // (group * groups_per_scale)]
+        sc += b_scale_exp[j // (group * groups_per_scale)]
+        e_grp = max(p[3] for p in s_grp)
+        total = 0
+        for sign, num, den_log2, e in s_grp:
+            k = e - e_grp - den_log2 + F
+            total += sign * ((num << k) if k >= 0 else _tz_div(num, 1 << (-k)))
+        # sigma value = total * 2**(e_grp - F + sc)
+        sigmas.append((total, e_grp - F + sc))
+
+    # Step 5: align sigmas and c to e_max, truncate (RZ) to F bits.
+    e_max = None
+    if have_c:
+        e_max = c_e
+    for _, e in sigmas:
+        if e_max is None or e > e_max:
+            e_max = e
+    if e_max is None:
+        e_max = 0
+    total = 0
+    if have_c:
+        total += _to_fixed(c_sign * c_num, c_den, c_e - e_max + F)
+    for num, e in sigmas:
+        # sigma is an integer at 2^e (den_log2 folded in); align to e_max+F
+        k = e - e_max + F
+        total += (num << k) if k >= 0 else _tz_div(num, 1 << (-k))
+
+    # Step 7: normalize to FP32 (RZ at bit 23, like FDA Step 5)
+    return _normalize_fp32(total, e_max - F)
+
+
+def _normalize_fp32(total, e_base):
+    """Shared FP32 normalization: value = total * 2**e_base; RZ at bit 23,
+    |sum| >= 2^128 -> inf, subnormal down to 2^-149."""
+    if total == 0:
+        return 0x00000000
+    neg = total < 0
+    t = -total if neg else total
+    bl = t.bit_length()
+    e_val = e_base + (bl - 1)
+    if e_val >= 128:
+        return 0xFF800000 if neg else 0x7F800000
+    if e_val < -126:
+        shift = e_val + 149
+        if shift < 0:
+            return 0x80000000 if neg else 0x00000000
+        m = t >> shift
+        if m == 0:
+            return 0x80000000 if neg else 0x00000000
+        return (0x80000000 if neg else 0) | m
+    if bl >= 24:
+        m = (t >> (bl - 24)) & 0x7FFFFF
+    else:
+        m = (t << (24 - bl)) & 0x7FFFFF
+    return (0x80000000 if neg else 0) | ((e_val + 127) << 23) | m
+
+
 def _tz_div(num, den):
     """num//den truncated toward zero (RZ), not floor."""
     q, r = divmod(num, den)
@@ -279,6 +388,60 @@ def qmma_frag(frag16):
             fda(c2, A2, B2, "e4m3"), fda(c3, A2, B2, "e4m3")]
 
 
+def e8m0_exp(byte):
+    """E8M0 scale exponent (unbiased): 2**(b-127); 0xFF is NaN."""
+    return byte - 127 if byte != 0xFF else 0xFF
+
+
+def omma_frag_pairs(frag16):
+    """m16n8k64 mxfp4 fragment (16 words: a0..a3, b0..b1, c0..c3) -> k-pairs.
+
+    Each a/b word holds 8 e2m1 (4-bit) values, nibble n little-endian.  Probed
+    on SM120: nibble n pairs only with nibble n; each pair folds 4 k.
+
+      D0/D1: {a0.n, b0.n}x4 {a2.n, b1.n}x4   n in 0..7   (16 pairs -> 64 k)
+      D2/D3: {a1.n, b0.n}x4 {a3.n, b1.n}x4
+
+    Scale (2X): byte 0 of Re/Rh scales k 0..31 (groups 0-1), byte 1 scales
+    k 32..63 (groups 2-3).  frag16[6] = Re, frag16[7] = Rh (hand-assembled
+    layout: a0..a3, b0..b1, Re, Rh, c0..c3).
+    Returns (c0,c1,c2,c3, P_pairs, Q_pairs, a_scale_exp, b_scale_exp) where
+    _pairs are flat [a,b,a,b,...] of 64 k-pairs (4-bit e2m1 values).
+    """
+    a = [frag16[i] for i in range(4)]
+    b = [frag16[4], frag16[5]]
+    ai = [[(a[w] >> (4 * n)) & 0xF for n in range(8)] for w in range(4)]
+    bi = [[(b[w] >> (4 * n)) & 0xF for n in range(8)] for w in range(2)]
+    P = []
+    Q = []
+    # scale 2X: a0/a1 (k 0..31) use Re byte 0, a2/a3 (k 32..63) use byte 1.
+    # Order the k-pairs so the a0/a2 halves fall in the right scale groups.
+    for n in range(8):
+        P += [ai[0][n], bi[0][n]] * 4           # a0.n x b0.n (scale byte 0)
+    for n in range(8):
+        P += [ai[2][n], bi[1][n]] * 4           # a2.n x b1.n (scale byte 1)
+    for n in range(8):
+        Q += [ai[1][n], bi[0][n]] * 4
+    for n in range(8):
+        Q += [ai[3][n], bi[1][n]] * 4
+    re = frag16[6] & 0xFFFF
+    rh = frag16[7] & 0xFFFF
+    a_scale_exp = [e8m0_exp(re & 0xFF), e8m0_exp((re >> 8) & 0xFF)]
+    b_scale_exp = [e8m0_exp(rh & 0xFF), e8m0_exp((rh >> 8) & 0xFF)]
+    return frag16[8], frag16[9], frag16[10], frag16[11], P, Q, a_scale_exp, b_scale_exp
+
+
+def omma_frag(frag16):
+    """Compute D0..D3 for a full m16n8k64 mxfp4 fragment, as FP32 bits."""
+    c0, c1, c2, c3, P, Q, aes, bes = omma_frag_pairs(frag16)
+    A = [P[i] for i in range(0, len(P), 2)]
+    B = [P[i] for i in range(1, len(P), 2)]
+    A2 = [Q[i] for i in range(0, len(Q), 2)]
+    B2 = [Q[i] for i in range(1, len(Q), 2)]
+    return [gdfs(c0, A, B, aes, bes), gdfs(c1, A, B, aes, bes),
+            gdfs(c2, A2, B2, aes, bes), gdfs(c3, A2, B2, aes, bes)]
+
+
 # ---- self-test against hardware-verified vectors ---------------------------
 def _check(name, got, want):
     ok = got == want
@@ -350,6 +513,18 @@ def selftest():
     ok &= _check("qmma fp8 0x7C = 384 (exp15 value)",
                  qmma_frag([0x7C, 0, 0, 0, 0x38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])[0],
                  0x44C00000)
+    # ---- OMMA MXFP4 m16n8k64 (GDFS) ---------------------------------------
+    def omf(av, bv, re=0x7F7F7F7F, rh=0x7F7F7F7F):
+        f = [0] * 16
+        for i in range(4): f[i] = av
+        for i in range(2): f[4 + i] = bv
+        f[6] = re; f[7] = rh
+        return omma_frag(f)
+    ok &= _check("omma e2m1 1.0 A*B=64", omf(0x22222222, 0x22222222)[0], 0x42800000)
+    ok &= _check("omma e2m1 0.5 A*B=16", omf(0x11111111, 0x11111111)[0], 0x41800000)
+    ok &= _check("omma e2m1 4.0 A*B=1024", omf(0x66666666, 0x66666666)[0], 0x44800000)
+    ok &= _check("omma scale 2x -> 128", omf(0x22222222, 0x22222222, 0x80808080)[0], 0x43000000)
+    ok &= _check("omma scale 2,1 -> 96", omf(0x22222222, 0x22222222, 0x017F7F80)[0], 0x42C00000)
     print(f"\nFDA self-test: {'ALL PASS' if ok else 'FAILURES'}")
     return ok
 

@@ -1,8 +1,10 @@
-import sys, struct
+import sys, struct, random
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 
 from assembler import assemble, CudaModule, assemble_flat
+import hmma_model as M
 
 # ---------------------------------------------------------------------------
 # OMMA.SF — block-scaled MXFP4 tensor-core MMA, m16n8k64 e2m1 -> f32.
@@ -97,6 +99,39 @@ diff = sorted(
     set(g for g in range(64, 105) if ((e[1] & mask_hi) >> (g - 64)) & 1
         != ((nv_hi & mask_hi) >> (g - 64)) & 1))
 check("OMMA encode matches nvcc (bits 0-104)", diff, [])
+
+# --- bit-accurate GDFS model vs hardware on random fragments -----------------
+random.seed(0x0FFA)
+def rnd():
+    return random.choice([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF])
+
+
+def run_omma_bits(frag16):
+    k = KERNEL.replace("RE", "7F7F7F7F").replace("RH", "7F7F7F7F")
+    mod = CudaModule(assemble(k))
+    d = mod.devmem_alloc(2048 * 4)
+    buf = [0] * 2048
+    buf[:16] = frag16
+    mod.device_write(d, struct.pack("<%dI" % 2048, *buf))
+    mod.launch("k", grid=(1,), block=(32,), args=[d, 0])
+    mod.synchronize()
+    return struct.unpack("<4I", mod.device_read(d + 0x40, 16))
+
+
+for mode in ["c0", "crand"]:
+    for trial in range(8):
+        f = [0] * 16
+        for i in range(6):
+            f[i] = rnd() | (rnd() << 4) | (rnd() << 8) | (rnd() << 12) | \
+                   (rnd() << 16) | (rnd() << 20) | (rnd() << 24) | (rnd() << 28)
+        f[6] = 0x7F7F7F7F
+        f[7] = 0x7F7F7F7F
+        if mode == "crand":
+            for i in range(4):
+                f[8 + i] = struct.unpack("<I", struct.pack("<f", random.uniform(-100, 100)))[0]
+        hw = run_omma_bits(f)
+        md = M.omma_frag(f)
+        check(f"OMMA random frag ({mode}) {trial}", hw, md)
 
 print(f"\n=== OMMA m16n8k64 MXFP4: {'ALL PASS' if ok else 'FAILURES'} ===")
 sys.exit(0 if ok else 1)

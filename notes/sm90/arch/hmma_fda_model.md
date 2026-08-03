@@ -135,3 +135,25 @@ Verified SM120 (`test_omma.py`):
 
 `decode_qmma.py` covers the 0x47f encoding (srcFmt mode/op bits 78/79,
 scalefmt memdesc bit 82, scaleVectorSz nottid0 bit 83).
+
+### Bit-accurate OMMA model (GDFS, F=35)
+
+`hmma_model.gdfs(c, a[], b[], a_scale_exp, b_scale_exp)` implements the
+GDFS algorithm bit-exactly, verified 32/32 random fragments vs SM120
+(`test_omma.py`):
+
+- **e2m1** decomposed as sign(bit3)/exp(2,bias 1)/mant(bit0); subnormal
+  (exp 0) = mant * 2^-1.
+- **products** are exact fixed-point; every **16 products** sum to a group
+  dot product σ (F=35 fractional bits kept inside the group sum — dropping
+  them early was a bug that made subnormal products vanish).
+- **scale**: E8M0 exponents added per 32-column block.  **Scale 2X maps by A
+  operand, not nibble**: a0×b0 (k 0..31) uses Re/Rh byte 0, a2×b1 (k 32..63)
+  uses byte 1; the k-pairs are ordered accordingly so groups land in the
+  right scale column.
+- aligned to e_max, RZ-truncate at F=35, sum, normalize to FP32 (RZ at
+  bit 23, shared `_normalize_fp32`).
+- fragment layout (probed): 4-bit e2m1, nibble n pairs only with nibble n,
+  each pair folds 4 k.  D0/D1 = {a0.n×b0.n, a2.n×b1.n}, D2/D3 = {a1.n×b0.n,
+  a3.n×b1.n}.  `omma_frag(frag16)` (frag16[6]=Re, [7]=Rh, [8..11]=c) returns
+  D0..D3.
