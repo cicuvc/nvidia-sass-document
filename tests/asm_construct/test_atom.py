@@ -92,14 +92,16 @@ check("ATOM ret MAX old (tid0 0..255) ", v[8] < 256, True)
 check("ATOM ret EXCH old              ", v[9] < 256, True)
 
 print("=== 2. CAS (first-wins, order nondeterministic) ===")
-# CAS slot: init 0xDEADBEEF, each thread CAS(0xDEADBEEF -> tid); first winner
+# CAS slot: host-initialized 0xDEADBEEF, each thread CAS(0xDEADBEEF -> tid);
+# first winner.  Initialized from the host (not a kernel STG) so there is no
+# write-read race between the init store and the CAS loops — no MEMBAR needed.
 mod, d = build_kernel([
     "S2R R2, SR_TID.X;[0:7:{}:5:1]",
     "MOV32I R11, 0xDEADBEEF;[7:7:{}:5:1]",
-    "STG.E desc[{UR4,UR5}][{R6,R7}+60], R11;[0:1:{0,1}:1:0]",      # init
     "ATOM.E.CAS.STRONG.GPU PT, R16, [{R6,R7}+60], R11, R2;[5:7:{0,1}:8:1]",
     "STG.E desc[{UR4,UR5}][{R6,R7}+64], R16;[0:1:{0,1,5}:1:0]",
 ])
+mod.device_write(d + 240, struct.pack("<I", 0xDEADBEEF))  # host-init [p]+60 (no kernel race)
 v = launch(mod, d)
 check("CAS.S32 winner (some tid 0..255)", 0 <= v[15] < 256, True)
 check("CAS.S32 loser old (tid0)          ", v[16] < 256, True)
