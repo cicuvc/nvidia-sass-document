@@ -8,6 +8,22 @@ Loads data from constant memory (`c[bank][addr]`) into a **uniform register** (`
 
 The load size is configured by the `sz` modifier: loads can be 8-bit, 16-bit, 32-bit, or 64-bit. For sub-32-bit loads, the value is zero/sign-extended into the destination URd.
 
+**SM120 note:** the instruction is named **LDCU** there (opcodes 0x17ac const,
+0x1bac reg-indexed bank, 0x19ac UR-offset) and the size enum is
+`SZ_U8_S8_U16_S16_32_64_128` (adds `.128`, a four-register 4-aligned quad).
+Silicon-verified (`tests/asm_construct/test_ldcu.py`, RTX 5090): 32-bit,
+`.U8`/`.S8`/`.U16`/`.S16` zero/sign-extension, `.64` pair (low word first),
+`.128` quad (read from two contiguous 8-byte params). The `&wr` scoreboard
+is a **real encodable field** on sm_120 (`VarLatOperandEnc(dst_wr_sb)`), so
+consumers wait via `req={n}` — unlike most udp ops whose wr is pinned *7.
+
+Caveats confirmed on silicon: LDCU param reads lag ~4 launches with module
+reuse (fresh module per launch reads correctly); the first udp read of a
+freshly loaded UR is stale (dummy UMOV settles it); >8-byte params can't be
+passed via the runner's uint64 arg convention (use contiguous 8-byte
+params). The sm_120 `.256` form (two register operands + word_mask) is not
+yet reachable through the assembler.
+
 **Scoreboard:** Coupled (unified read+write scoreboard), consistent with all `udp_pipe` instructions. The source release and destination write scoreboards are hardwired to `*7` (inactive), since constant memory loads on the UDP pipe are serialized through the CBU.
 
 ## Variant overview

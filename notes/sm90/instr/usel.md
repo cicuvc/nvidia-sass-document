@@ -7,6 +7,14 @@
 Uniform register conditional select: `URd = UPp ? URa : URb` (noimm) or `URd = UPp ? URa : imm32` (imm).
 The uniform predicate `UPp` controls which source is forwarded to the destination.
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_usel.py`, RTX 5090):**
+32-bit form `URd = UPp ? URa : URb|imm` with `[!]UPp` negation all correct.
+
+**64-bit register-form QUIRK:** `USEL.64 {URd,URd+1}, {URa,URa+1}, {URb,URb+1}, UPp`
+with `UPp=1` selects the URa pair correctly, but with `UPp=0` the result is
+`{URb, URb}` — the HIGH word duplicates the LOW word (URb+1 is not read).
+The 64-bit IMM form is correct on both paths (`UPp=0` → `{imm, 0}`).
+
 ## Variant overview
 
 | Variant | Opcode | Format | Observed? |

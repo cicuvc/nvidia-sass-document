@@ -6,7 +6,12 @@
 
 Sign-extends a uniform-register value: `URd = sign_extend(URa, size_from_URb)`. The size to extend from is encoded in or derived from `URb`. The `cw` modifier selects clamp-to-word (C) or wrap (W) behavior.
 
-No empirical examples found in libcublas or ptxas output on sm_90, CUDA 13.1.
+**Silicon-verified on SM120 (`tests/asm_construct/test_usgxt.py`, RTX 5090):**
+identical semantics to SGXT — `N = URb` (unmasked for clamp); `.U32`
+zero-extends, default `.S32` sign-extends; N=0 → 0; clamp N≥32 → URa
+unchanged; wrap N mod 32 (32→0, 33→1).  Verified 16 cases incl. the imm
+form (opcodes 0x129a UUU / 0x189a imm; cw [75], fmt [73] — same bit
+positions as SGXT).
 
 ## Variant overview
 

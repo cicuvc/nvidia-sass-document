@@ -4,12 +4,23 @@
 
 ## Semantics
 
-Vector integer minimum/maximum operation: `Rd = min(Ra, Rb) / max(Ra, Rb)` (direction determined by fmt field). The `.RELU` modifier clamps the result to ≥0 (rectified linear unit activation). The predicate form outputs `Pp` indicating which operand was selected.
+Vector integer minimum/maximum operation: `Rd = min(Ra, Rb) / max(Ra, Rb)` (direction selected by `Pp@not`: `PT` = min, `!PT` = max; `fmt` only selects signedness). The `.RELU` modifier clamps the result to ≥0 (rectified linear unit activation).
 
 Standard form: `VIMNMX.U32 Rd, Ra, Rb, PT` (or `S32` for signed comparison).  
 RELU form: `VIMNMX.RELU Rd, Ra, Rb, PT` — same as U32 but clamps negative results to 0.
 
 Widely used in CUDA DL kernels and integer clamping operations.
+
+**Correction (silicon-verified sm_120, `tests/asm_construct/test_vimnmx.py`):**
+the 4-operand sm_120 form's `Pp` slot is **direction-only** and does **not**
+write the predicate. `PT`/`!PT` → min/max (the only form ptxas emits).
+With a real destination predicate (`P0`..`P6`) the min/max **sense flips**:
+`P0..P6` compute **max**, `!P0..!P6` compute **min**, and the predicate is
+left unchanged (pre-setting `P0=1` survives the instruction). The
+predicate-*output* capability lives in the separate 6-operand
+`vimnmx_pred_*` form (sm_90 spec; sm_120 VIMNMX exposes only the 4-operand
+form), where `Pu`/`Pv` report "Ra is the result source" and "Ra != Rb"
+(same semantics as the Blackwell IMNMX extended form).
 
 ## Variants
 
@@ -57,3 +68,16 @@ The RELU variant sets bit [76]=1; the U32 variant sets fmt=0.
 ## Latency
 
 `int_pipe`, `INST_TYPE_COUPLED_MATH`. `FXU_OPS` group. Coupled scoreboard, standard integer-pipe latency.
+
+## SM120 verification (`tests/asm_construct/test_vimnmx.py`, RTX 5090)
+
+sm_120 keeps 3 variants (RRR `0x248`, RIR `0x848`, RUR `0x1c48`; no const-bank
+forms) with `FMT_vimnmx` → [74:72] (0=U32, 1=S32, 2=U16x2, 3=S16x2, 4=U8x4,
+5=S8x4), `relu` → [76] (signed fmt only, enforced), `Pp` → [89:87] + `Pp@not`
+→ [90]. The assembler reproduces the ptxas encodings bit-for-bit
+(`VIMNMX.S32 R9, R2, R5, PT/!PT` with `[7:7:{2}:5:1]`).
+
+Silicon-verified (15-case battery, all pass): U32/S32 min-max incl. negatives,
+`.RELU` clamp-to-0, RIR immediate, RUR uniform register, U16x2 packed
+min/max, the real-predicate direction flip above, and `Pp` not being written
+by the 4-operand form.

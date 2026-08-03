@@ -6,6 +6,20 @@
 
 Uniform three-input bitwise logic operation. Applies an 8-bit look-up table (LUT) across three source operands `(URa, URb, URc)` producing `URd`. Equivalent to `LOP3` for uniform registers.
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_ulop3.py`, RTX 5090) —
+LUT INDEX QUIRK:** bit i of the result is
+
+```
+out_i = LUT[ (c_i) | (b_i)<<1 | (a_i)<<2 ]
+```
+
+i.e. the truth-table index uses the inputs in the order **(c, b, a)** — the
+`URa` and `URc` inputs are SWAPPED relative to the standard LOP3 index order
+`(a | b<<1 | c<<2)`.  Verified against 15 LUT values; the named-op LUTs
+(AND=0x80, OR=0xFE, XOR=0x96, PASS_B=0xCC) are invariant under the swap,
+which is why the LOP forms "just work".  Also verified: `.LUT` imm32 form
+(URb as immediate) and `~` inversion on sources (LOP mode).
+
 Two modes exist:
 - **LUT (`LUTOnly`):** An 8-bit LUT value is specified as an immediate. Each bit `i` (0–7) of the LUT encodes the output for input combination `{URa[i], URb[i], URc[i]}` (bit-sliced across the 32-bit word).
 - **LOP (`LOP`):** A named logic operation (`AND`=0, `OR`=1, `XOR`=2, `PASS_B`=3) is selected, with optional `[~]` inversions on source operands. The 8-bit SRa field is computed from a lookup table (TABLES_op_0 / TABLES_op_1).

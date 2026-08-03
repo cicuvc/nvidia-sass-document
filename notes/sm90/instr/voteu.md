@@ -1,5 +1,18 @@
 # VOTEU — Uniform warp vote / ballot
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_voteu.py`, RTX 5090):**
+
+```
+VOTEU[.ALL|.ANY|.EQ] URd, UPu, [!]Pp
+  URd = BALLOT mask (bit L = lane L's effective Pp) — NOT the VOTE-style
+        0xFFFFFFFF/0 reduction mirror!
+  UPu = the vote reduction over the 32 lanes (ALL/ANY/EQ).
+```
+
+Verified: `P0 = (tid<8)` gives ballot `0x000000FF` with ANY/ALL/EQ reductions
+(UP0 = 1/0/0), `!P0` ballot `0xFFFFFF00`, all-true/all-false/EQ-half cases.
+URd defaults to URZ (discard) when omitted.
+
 **Opcode mnemonic:** `VOTEU` = `0b100010000110` = **0x886** | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency)
 
 The uniform-datapath sibling of `VOTE` (see `vote.md`). Same warp reduction of a per-lane

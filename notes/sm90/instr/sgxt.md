@@ -15,8 +15,9 @@ third operand) and sign-extends (S32) or zero-extends (U32) them to 32 bits. Uni
 | `.clamp` (default) | (hidden) | `cw`=C |
 | `.wrap` | `.W` | `cw`=W |
 
-N = `Rb & 0x1f`. For `.s32`, bit (N−1) of `Ra` is replicated up to bit 31; for `.u32`, bits ≥N
-are cleared. N=0 → 0. N≥32: `.clamp` returns `Ra` unchanged, `.wrap` uses N mod 32.
+N = `Rb` (unmasked). For `.s32`, bit (N−1) of `Ra` is replicated up to bit 31; for `.u32`, bits ≥N
+are cleared. N=0 → 0. N≥32: `.clamp` returns `Ra` unchanged (N is **not** masked to 5 bits —
+verified with N=32, 33 and 0xFFFFFFFF), `.wrap` uses N mod 32 (N=32→0, N=33→1, 0xFFFFFFFF→31).
 
 ## Variant overview (5 CLASS variants — position operand shape)
 | opcode | form | position operand |
@@ -74,3 +75,12 @@ SGXT; SGXT appears when PTX `szext` is used explicitly (or from some library cod
 
 ## Open questions
 - Const-bank (RCR/RCxR) text form unverified (only RRR/imm/uniform paths exercised).
+
+## SM120 verification (`tests/asm_construct/test_sgxt.py`, RTX 5090)
+
+sm_120 keeps 3 variants (RRR `0x21a`, RIR `0x81a`, RUR `0x1c1a`; RCR/RCxR
+dropped). The assembler reproduces the ptxas `szext` encodings bit-for-bit
+(`SGXT[.W][.U32] R7, R4, 0x5` with `[7:7:{3}:5:1]` — cw [75], fmt [73]).
+Silicon-verified 16-case battery + RUR (3 concurrent blocks): sign/zero
+extension for N=1..31, N=0 → 0, clamp N≥32 → `Ra` unchanged, wrap N mod 32,
+register (RRR) and uniform (RUR) width operands.

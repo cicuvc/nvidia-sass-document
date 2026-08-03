@@ -4,9 +4,18 @@
 
 ## Semantics
 
-Creates a bitmask from position and size: `URd = bitmask(URa, URb)` or `URd = bitmask(imm32, URb)`. The CWMode modifier selects clamp (C) or wrap (W) behavior for overflow. Equivalent to `BMSK` for uniform registers.
+Creates a bitmask from position and size: `URd = ((1 << width) - 1) << pos`,
+truncated to 32 bits. **`URa` = position, `URb` = width** (silicon-confirmed,
+same as BMSK). The CWMode modifier selects clamp (C, default) or wrap (W)
+behavior for overflow:
+- **C** — operands as-is; the "clamp" is the natural 32-bit truncation
+  (`pos=2, w=32` → `0xFFFFFFFC`, not a width-clamped `0x3FFFFFFC`).
+- **W** — `pos & 31` and `width & 31` before the same formula.
 
-No empirical examples found.
+Silicon-verified on SM120 (`tests/asm_construct/test_ubmsk.py`, RTX 5090):
+17/17 cases — RIR (12) and RUR (5) forms, C and W, boundary positions/widths.
+Uses the uniform-datapath recipe from `ubrev.md` (dummy first udp read, UMOV
+settling before the GPR consumer, fresh module per launch).
 
 ## Variants
 

@@ -4,11 +4,24 @@
 
 ## Semantics
 
-Computes an aligned effective address in uniform registers: `URd.64 = clear_low_bits(URa.64 + URb, constSize)` (or `URa.64 + imm16`). The `constSize` (0–8) controls how many low bits are cleared, aligning the result to a 2<sup>constSize</sup> boundary.
+**Silicon-verified on SM120 (`tests/asm_construct/test_uclea.py`, RTX 5090) —
+the assumed "align down" semantics are WRONG on sm_120.** The instruction
+computes:
 
-Both URd and URa are 64-bit values (register pairs, even-aligned). UPu is a uniform predicate output (likely flags overflow or special condition).
+```
+URd.64 = (URa.64 << 6) + URb        (URb = 32-bit uniform or imm16)
+```
 
-No empirical examples found in libcublas or ptxas output on sm_90, CUDA 13.1.
+a hardwired 6-bit left shift (×64) of the full 64-bit `URa` pair plus the
+32-bit offset, truncated to 64 bits. `constSize` (validated 0–16) has **no
+observable effect** (K=0, 5, 16 all produce identical results), and `UPu`
+is **never asserted** (probed: 32/64-bit carry, truncation, zero, low-bit
+patterns). Both URd and URa are 64-bit values (even-aligned register pairs).
+
+Possible interpretation: the "clear effective address" scales a
+64-byte-granular descriptor index (`URa`) by 64 and adds a byte offset
+(`URb`) — i.e. the constSize notion is vestigial on sm_120. No empirical
+examples found in libcublas or ptxas output on sm_90, CUDA 13.1.
 
 ## Variant overview
 
@@ -48,4 +61,6 @@ URb replaced with 16-bit immediate at [47:32].
 
 - No empirical examples. Likely used for TMA descriptor base-address alignment in UTMA sequences.
 - `constSize` range 0–8 means alignment up to 256 bytes. Typical TMA descriptors require 32-byte (constSize=5) or 128-byte alignment.
-- UPu predicate output — overflow? carry? zero?
+- ~~UPu predicate output — overflow? carry? zero?~~ **Resolved (sm_120): UPu is
+  never asserted in any probe**; the constSize field likewise has no
+  observable effect — silicon computes `(URa.64 << 6) + URb`.

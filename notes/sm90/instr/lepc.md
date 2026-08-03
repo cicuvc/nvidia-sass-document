@@ -21,6 +21,8 @@ Observed idiom (printf → vprintf call):
 Two forms:
 - **`LEPC Rd`** (0x34e, RRR) — just the current PC. Classic sm_70 idiom
   (`LEPC Rd; … BRX Rd+off` jump tables). Not observed on sm_90 (BRX is self-relative there).
+  Verified on sm_120 (RTX 5090): the pc-only form returns the address of the LEPC itself
+  (same convention as the uniform twin `ULEPC`, see `ulepc.md`).
 - **`LEPC Rd, sImm58`** (0x94e, R_I_R) — PC + 58-bit signed offset in one instruction (sm_90).
   The `RSImm` prints as a resolved target, not a raw offset.
 

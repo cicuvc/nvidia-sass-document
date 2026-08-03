@@ -6,7 +6,28 @@
 
 Copies the hardware uniform predicate register (`UPR`) into a uniform register (`URd`), optionally combined with a source register and an immediate/register offset.
 
-The `UPR` is a special single-bit uniform predicate that represents the result of warp-wide voting or predicate reduction. UP2UR expands this single bit into a full 32-bit URd value (0 or 1).
+**Silicon-verified on SM120 (`tests/asm_construct/test_up2ur.py`, RTX 5090):**
+`UPR` is NOT a single bit — it reads the **whole uniform predicate register
+file as a bitmask** (bit N = uniform predicate UPN; written by UISETP/VOTEU
+and any other uniform-predicate write). Semantics:
+
+```
+simple:    URd = UPR_mask                  (UP0->1, UP1->2, UP3->8, ...)
+.Bx:       URd = UPR_mask << (8*Bx)        (byte-lane insert)
+imm/URb:   URd = URa + (UPR_mask & imm/URb)  (bitwise-AND added directly)
+```
+
+Verified: bitmask accumulation (UP0+UP1 -> 3), VOTEU writing UPR
+(VOTEU.ANY UP2, PT -> 4), all four `.Bx` lanes, and the mask-AND addend
+model across UPR/imm/URb combinations.
+
+Caveat: uniform predicates **persist across launches** (like the uniform
+register file) — a stale predicate bit makes UPR reads inconsistent unless
+the predicates are cleared first (UISETP.F UP0..UP3 preamble in the test).
+
+*(Pre-silicon assumption, superseded: "UPR is a special single-bit uniform
+predicate... expanded into 0 or 1" — the verified behavior is the full
+bitmask above.)*
 
 The `insert` modifier (B3B0) selects which byte lane of URd receives the UPR value:
 - `B0` (0) — insert into byte 0 (bits [7:0])

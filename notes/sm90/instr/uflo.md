@@ -6,6 +6,19 @@
 
 Finds the position of the leading one (or zero, via `[~]` inversion) in a uniform register: `URd = find_leading_one(URb)`. Result is the 0-based bit position (0–31 for 32-bit). The `sh` modifier optionally shifts the result.
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_uflo.py`, RTX 5090) —
+the semantics are a "leading bit BOUNDARY", not a plain leading-one:**
+UFLO returns the position of the first bit (scanning from bit 31 down) that
+DIFFERS from bit 31:
+- bit31 = 0 → position of the highest set bit (classic leading one);
+- bit31 = 1 → position of the highest CLEARED bit below the leading run of
+  ones (`0xC0000000` → 29, `0xFFFF0000` → 15, `0x80000000` → 30);
+- all bits equal (`0` or `0xFFFFFFFF`) → `0xFFFFFFFF` (no boundary).
+
+`.SH` = `31 - plain` (the leading run length: `0xFFFF0000` → 16);
+`[~]` inverts the input first.  Verified: all single-bit inputs, leading
+one/zero runs, sentinels, `.SH`, `[~]`, imm form (0x12bd/0x18bd).
+
 No empirical examples found in libcublas or ptxas output on sm_90, CUDA 13.1.
 
 ## Variant overview

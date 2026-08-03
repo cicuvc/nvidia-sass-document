@@ -36,5 +36,8 @@ Self-test 3/3; `tests/griddep2.cu` 2/2 per dump.
 ### PTX→SASS mapping
 `griddepcontrol.wait` → `ACQBULK`. Emitted for kernels launched with PDL attribute.
 
+### SM120 assembler verification (`tests/asm_construct/test_pdl.py`)
+On sm_120 (CUDA 12.8) ptxas emits ACQBULK with `?WAIT6_END_GROUP`: `0x000000000000782e / 0x000fcc0000000000` — identical bytes to sm_90. The repo assembler (`assembler/`, backed by sm120.json) reproduces the ptxas encoding bit-for-bit with bracket `[7:7:{}:6:1]`, and the built cubin round-trips through cuobjdump as `ACQBULK ?WAIT6_END_GROUP`. GPU check (RTX 5090): a consumer launched with `CU_LAUNCH_ATTRIBUTE_PROGRAMMATIC_STREAM_SERIALIZATION` waits via ACQBULK and observes the producer's pre-PREEXIT write; with no prerequisite it returns immediately.
+
 ## Open questions
 - Exact scope of `ACQBULK`'s acquire (grid vs cluster) is not spec-stated.

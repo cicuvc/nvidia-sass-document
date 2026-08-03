@@ -6,6 +6,20 @@
 
 Permutes bytes from source registers into a destination uniform register. Equivalent to PRMT for uniform registers. The `imm32` (or URb) is a 4-byte permute control word, where each byte selects a source byte channel from the concatenation of `{URa, URc}` (or `{URa, imm32}` / `{URa, URb}`).
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_uprmt.py`, RTX 5090):**
+`UPRMT URd, URa, URb|imm32, URc` — output byte i uses control nibble i
+(LSB-first):
+
+```
+sel = control nibble i
+  bits 1:0 -> byte index;  bit 2 -> source (0=URa, 1=URc)
+  bit 3 set -> 0x00, except sel == 0xF -> 0xFF
+```
+
+Verified across identity (`0x76543210`), interleave (`0x5410`), splats,
+invalid selectors (0x8-0xE → 0), 0xF → 0xFF, and both register and imm
+control forms.
+
 The `idx` modifier (IDXOnly, always 0 on sm_90) indicates indexed permute mode.
 
 ## Variant overview

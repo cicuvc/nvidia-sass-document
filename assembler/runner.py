@@ -154,27 +154,87 @@ class CudaModule:
         pointers).
         """
         f = self.func(func_name)
-        raw_args = None
-        if args:
-            # Each arg is stored as a uint64 (CUdeviceptr) and we pass
-            # a pointer to it, matching the kernelParams convention.
-            arg_bufs = [ctypes.c_uint64(a) for a in args]
-            raw_args = (ctypes.c_void_p * len(args))(
-                *(ctypes.cast(ctypes.pointer(b), ctypes.c_void_p)
-                  for b in arg_bufs)
-            )
-        def _pad3(t, default=1):
-            if isinstance(t, int):
-                return t, default, default
-            if len(t) >= 3:
-                return t[0], t[1], t[2]
-            return t[0], t[1] if len(t) > 1 else default, default
+        raw_args = self._kernel_param_array(args)
         gx, gy, gz = _pad3(grid)
         bx, by, bz = _pad3(block)
         _check(_cuda().cuLaunchKernel(
             f, gx, gy, gz, bx, by, bz, shared_mem,
             ctypes.c_void_p(stream), raw_args, None,
         ))
+
+    def launch_ex(self, func_name: str, *,
+                  grid: tuple[int, ...] = (1, 1, 1),
+                  block: tuple[int, ...] = (256, 1, 1),
+                  args: list | None = None,
+                  shared_mem: int = 0,
+                  stream: int = 0,
+                  programmatic_serialization: bool = False) -> None:
+        """Launch a kernel through ``cuLaunchKernelEx``.
+
+        ``programmatic_serialization`` sets
+        ``CU_LAUNCH_ATTRIBUTE_PROGRAMMATIC_STREAM_SERIALIZATION`` (PDL):
+        the kernel may overlap with the previous kernel on the same stream,
+        resolving its stream dependency programmatically via
+        ``griddepcontrol`` (SASS ACQBULK / PREEXIT).
+        """
+        f = self.func(func_name)
+        raw_args = self._kernel_param_array(args)
+        gx, gy, gz = _pad3(grid)
+        bx, by, bz = _pad3(block)
+
+        attrs = None
+        num_attrs = 0
+        if programmatic_serialization:
+            # CU_LAUNCH_ATTRIBUTE_PROGRAMMATIC_STREAM_SERIALIZATION == 6
+            # (CUDA 12/13 driver); value is a 64-byte union, first member an int.
+            class AttrVal(ctypes.Union):
+                _fields_ = [("pad", ctypes.c_ubyte * 64)]
+
+            class LaunchAttr(ctypes.Structure):
+                _fields_ = [("id", ctypes.c_int),
+                            ("pad", ctypes.c_ubyte * 4),
+                            ("value", AttrVal)]
+
+            attr = LaunchAttr()
+            attr.id = 6
+            ctypes.memset(ctypes.byref(attr.value), 0,
+                          ctypes.sizeof(attr.value))
+            ctypes.cast(ctypes.pointer(attr.value),
+                        ctypes.POINTER(ctypes.c_int))[0] = 1
+            attrs = ctypes.cast(ctypes.pointer(attr),
+                                ctypes.POINTER(LaunchAttr))
+
+            class LaunchConfig(ctypes.Structure):
+                _fields_ = [("gridDimX", ctypes.c_uint),
+                            ("gridDimY", ctypes.c_uint),
+                            ("gridDimZ", ctypes.c_uint),
+                            ("blockDimX", ctypes.c_uint),
+                            ("blockDimY", ctypes.c_uint),
+                            ("blockDimZ", ctypes.c_uint),
+                            ("sharedMemBytes", ctypes.c_uint),
+                            ("hStream", ctypes.c_void_p),
+                            ("attrs", ctypes.POINTER(LaunchAttr)),
+                            ("numAttrs", ctypes.c_uint)]
+
+            cfg = LaunchConfig(gx, gy, gz, bx, by, bz, shared_mem,
+                               ctypes.c_void_p(stream), attrs, 1)
+            _check(_cuda().cuLaunchKernelEx(
+                ctypes.byref(cfg), f, raw_args, None))
+            return
+
+        self.launch(func_name, grid=grid, block=block, args=args,
+                    shared_mem=shared_mem, stream=stream)
+
+    @staticmethod
+    def _kernel_param_array(args):
+        """kernelParams convention: array of pointers to uint64 arg slots."""
+        if not args:
+            return None
+        arg_bufs = [ctypes.c_uint64(a) for a in args]
+        return (ctypes.c_void_p * len(args))(
+            *(ctypes.cast(ctypes.pointer(b), ctypes.c_void_p)
+              for b in arg_bufs)
+        )
 
     def synchronize(self) -> None:
         """Wait for all pending GPU work."""
@@ -204,3 +264,11 @@ class CudaModule:
         """Write bytes to device memory."""
         _check(
             _cuda().cuMemcpyHtoD(ptr, ctypes.c_char_p(data), len(data)))
+
+
+def _pad3(t, default=1):
+    if isinstance(t, int):
+        return t, default, default
+    if len(t) >= 3:
+        return t[0], t[1], t[2]
+    return t[0], t[1] if len(t) > 1 else default, default

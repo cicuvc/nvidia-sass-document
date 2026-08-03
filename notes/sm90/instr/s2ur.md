@@ -7,6 +7,13 @@ Copy a hardware **special register** `SRa` into a uniform register `URd`. The un
 ## Semantics
 `URd` (32-bit) = value of special register `SRa` (`SRa`[79:72], 8-bit index). Decoupled (`VQ_SR2UR`=29) — consumers wait via the write scoreboard. `SRa` 84/85 (`SR_ESR_PC`/`_HI`) are trap-mode only.
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_s2ur.py`, RTX 5090):**
+SR_CTAID.X tracks the block index per block (identical to S2R in every
+configuration probed), SR_CTAID.Y = 0 (grid Y=1), SR_CLOCKLO nonzero,
+SR_LANEID reads a per-warp value.  The per-block store harness used a
+fixed-address store (the GPR-pipe S2R/IMAD per-block addressing path races
+because IMAD's result scoreboard is pinned `*7`).
+
 Not all SR reads use S2UR: `clock()`/`clock64()` use **`CS2R`** for the `SR_CLOCKLO/HI` counters; `blockDim`/`gridDim` usually come from the constant bank.
 
 ## Fields (128-bit)

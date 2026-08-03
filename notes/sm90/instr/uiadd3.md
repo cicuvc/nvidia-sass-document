@@ -32,6 +32,22 @@ Same convention as IADD3: `UPu` and `UPv` are carry outputs, modeled as
 values (UP0, UP1, etc.) capture the two carry bits from the 3-input addition.
 For .64 mode, carries propagate the 64-bit sum.
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_uiadd3.py`, RTX 5090):**
+
+```
+URd = URa + URb + URc (mod 2^32)
+UPu = carry of stage 1: (URa + URb) >= 2^32
+UPv = carry of stage 2: ((URa + URb) mod 2^32) + URc >= 2^32
+UIADD3.X ... UPp, UPq:  sum += UPp + UPq   (each set predicate contributes 1;
+                         [!] negates the input bit)
+```
+
+Verified 16 cases incl. 3-input overflow (`0xFFFFFFFF*3` → carries 1,1),
+negated sources, imm form, and the `.X` carry chain.  **No `UIADD3.64`
+variant exists in the sm_90/sm_120 spec** (the table above is unverified) —
+64-bit uniform adds are done by chaining 32-bit `.X` with the carry
+predicates.
+
 ### X-mode carry chain
 
 The X overlay adds two explicit carry predicates (`UPp, UPq`) which encode

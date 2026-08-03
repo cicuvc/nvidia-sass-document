@@ -8,7 +8,25 @@ Uniform integer comparison producing uniform predicate outputs. Compares two uni
 
 Two forms:
 - **Simple:** `UPu = (URa icmp URb)` — single comparison, one predicate output
-- **Full:** `{UPu, UPv} = bop( (URa icmp URb), UPp )` — combined with prior predicate via boolean AND/OR/XOR, two predicate outputs
+- **Full:** `UPu = comp bop UPp; UPv = !comp bop UPp` — combined with the
+  input predicate via AND/OR/XOR, two predicate outputs
+
+**Silicon-verified on SM120 (`tests/asm_construct/test_uisetp.py`, RTX 5090):**
+all 8 icmp modes (F/LT/EQ/LE/GT/NE/GE/T) × 3 input sets, the full-form
+bop/UPp matrix (11 cases: `UPu = comp bop UPp`, `UPv = !comp bop UPp`,
+incl. negated `!UPp`), and imm16 operands.
+
+Uniform-datapath notes from the verification:
+- A UISETP-written uniform predicate is not reliably readable by the FIRST
+  udp consumer — one dummy udp read (a second UISETP using UPp=UP0,
+  result discarded) settles it, exactly like LDCU-loaded uniform registers.
+- Only udp instructions with a `UniformPredicate` guard (e.g. UMOV) can
+  consume uniform predicates; `@UP0 MOV32I` would encode a GPR predicate.
+- The 64-bit forms (`.U64`/`.S64`) pass direction tests (signed negatives,
+  high-word differences, `LT(1<<32, (1<<32)+1)`) but some equal/low-word
+  cases return unexpected results (e.g. `EQ(5,5)=0`, `LT(5,5)=1`) — **open
+  question**, likely a sm_120 silicon quirk or a different 64-bit predicate
+  convention.
 
 No empirical examples found on sm_90, CUDA 13.1.
 

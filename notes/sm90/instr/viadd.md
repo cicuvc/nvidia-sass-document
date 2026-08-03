@@ -55,3 +55,30 @@ Issued on the FP pipeline (not the integer pipe) for scheduling balance — allo
 ## Latency
 
 `fmalighter_pipe`, `INST_TYPE_COUPLED_MATH`. Dispatched to the lighter FP pipeline for scheduling balance.
+
+## SM120 verification (`tests/asm_construct/test_viadd.py`, RTX 5090)
+
+sm_120 drops the const-bank variants (RCR/RCxR absent) and adds the `[-]Ra`
+negate and `.ISAT` saturation:
+
+| Variant | Opcode | Format |
+|---------|--------|--------|
+| `viadd__RRR_RRR` | `0x236` | `VIADD[.fmt][.ISAT] Rd, [-]Ra, [-]Rb` |
+| `viadd__RuIR_RIR` | `0x836` | `VIADD[.fmt][.ISAT] Rd, [-]Ra, imm32` |
+| `viadd__RUR_RUR` | `0x1c36` | `VIADD[.fmt][.ISAT] Rd, [-]Ra, URb` |
+
+Field map: `fmt` → [75:73] (`FMT_viadd`: 0=U32, 1=U16x2, 2=S32, 3=S16x2,
+4=U8x4, 5=S8x4), `Ra@negate` → [72], `Rb@negate` → [63], `isat` → [80].
+Negating **both** operands is an illegal combination (CONDITIONS `nA-Rb` /
+`Ra-nB` — assembler rejects it).
+
+Silicon-verified semantics (14-case battery + byte checks, all pass):
+- `Rd = Ra + Rb`; `[-]Rb` → `Ra - Rb`; `[-]Ra` → `-Ra + Rb` (one negate max).
+- `.ISAT` saturates per-lane: S32 at ±2^31, U32 at 0xFFFFFFFF, S16x2 per
+  half-word (e.g. `{0x7FFF,0x8000}+{1,1}` → `{0x7FFF,0x8001}`: hi lane
+  saturates at +max, lo lane `0x8000+1` is not an overflow).
+- Packed wraps without `.ISAT` (U16x2/S16x2/U8x4 lane-wise add).
+- RIR immediate and RUR uniform-register forms verified on GPU.
+
+Note: ptxas on sm_120 does **not** emit VIADD for plain integer adds (it uses
+IADD3); VIADD is only a scheduling-balance op, exercised here directly.

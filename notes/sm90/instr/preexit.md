@@ -36,5 +36,8 @@ Self-test 3/3; `tests/griddep2.cu` 2/2 per dump.
 ### PTX→SASS mapping
 `griddepcontrol.launch_dependents` → `PREEXIT`. Emitted for kernels launched with PDL attribute (`cudaLaunchAttributeProgrammaticStreamSerialization`).
 
+### SM120 assembler verification (`tests/asm_construct/test_pdl.py`)
+On sm_120 (CUDA 12.8) ptxas emits PREEXIT with `?trans3`: `0x000000000000782d / 0x000fe60000000000` — same opcode, but a different scheduling word than sm_90's `?trans8` (`0x000ff00000000000`). The repo assembler (`assembler/`, backed by sm120.json) reproduces the ptxas encoding bit-for-bit with bracket `[7:7:{}:3:0]`, and the built cubin round-trips through cuobjdump as `PREEXIT ?trans3`. GPU check (RTX 5090): a producer launched with `CU_LAUNCH_ATTRIBUTE_PROGRAMMATIC_STREAM_SERIALIZATION` signals via PREEXIT, and the paired consumer ACQBULK observes the write published before the signal (release/acquire pair).
+
 ## Open questions
 - Whether `PREEXIT` interacts with the at-exit state (`ATEXIT_PC`/`MATEXIT`) beyond the PDL signal.

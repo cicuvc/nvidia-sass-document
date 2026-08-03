@@ -6,6 +6,19 @@
 
 Uniform predicate-level logic operation. Produces one or two uniform predicate outputs from a 3-input logic function. Unlike ULOP3 (which produces a uniform register), UPLOP3 computes predicates — single-bit results driven through the uniform predicate register file.
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_uplop3.py`, RTX 5090):**
+
+```
+UPu = uimm8[ (UPr) | (UPq)<<1 | (UPp)<<2 ]
+UPv = vimm8[ (UPr) | (UPq)<<1 | (UPp)<<2 ]
+```
+
+— the truth-table index order is **(r, q, p)**, the same p/r swap found on
+ULOP3 (vs the "standard" p|q<<1|r<<2). `[!]` negates the corresponding
+input bit. Verified: uimm8 over all 8 input combos × 4 LUTs, vimm8 over
+16 combos, `!UPr` negation, and the 1-output ALT form. Outputs read back via
+UP2UR's UPR bitmask.
+
 Two modes exist:
 - **LUT (`LUTOnly`):** An 8-bit LUT determines the output for each of the 8 possible predicate input combinations. Two LUTs (`uimm8`, `vimm8`) for the 2-output form.
 - **LOP (`PLOP_OP_NOREG`):** A named operation (AND=32768, XOR=38400, SEL=51712, OR=65024) without register inputs. No empirical examples.

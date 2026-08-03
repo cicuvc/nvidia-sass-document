@@ -4,7 +4,31 @@
 
 ## Semantics
 
-Computes a uniform-register effective address: `URd = URa + URb + URc + scale*imm` (or `URd = URa + URb * scale + URc + imm` for the imm variant). The result is a 32-bit integer written to a uniform register. Used for computing base+offset addresses for subsequent uniform memory operations.
+**Silicon-verified on SM120 (`tests/asm_construct/test_ulea.py`, RTX 5090):**
+`.HI` is mandatory (HIONLY_lea has only the HI value) and the 32-bit result
+is:
+
+```
+noimm: URd = URb + (URc << scale)      -- the FORMAT's URa is NOT used
+imm:   URd = imm32 + (URc << scale)    -- URa again NOT used
+```
+
+URa (bits [31:24]) provably does not contribute (varying it 0..0x100 leaves
+the result unchanged); URc lives at [71:64], URb at [39:32], scale at
+[79:75].  Verified across scales 0..5 and multiple operand values, plus the
+`.X` form (which probes one higher than the noimm base — see open question).
+
+**Open question:** the negate bits (`-URa` → e [72], `-URb` → [63]) produce a
+stable but unexpected result (e.g. `URc - (scale << 5)` for probed inputs),
+identical for both negates and dropping URb from the sum — does not match a
+plain "subtract the negated operand".  Likely a sm_120 quirk of the negated
+form; needs more investigation.
+
+*(Pre-silicon assumption, superseded by the SM120 finding above: "computes
+`URd = URa + URb + URc + scale*imm`..." — the verified sm_120 behavior is
+`URb + (URc << scale)` / `imm + (URc << scale)` with URa unused.)* The result
+is a 32-bit integer written to a uniform register, used for computing
+base+offset addresses for subsequent uniform memory operations.
 
 There are two primary forms:
 - **Noimm (URURUR):** pure register arithmetic — `URd = URa + URb + URc` with optional scale

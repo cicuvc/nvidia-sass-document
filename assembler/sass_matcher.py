@@ -23,7 +23,8 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.MEM_ADDR:  {"Register", "NonZeroRegister", "UniformRegister"},
     OperandKind.LABEL:     {"RSImm", "SImm", "UImm", "BD"},
     OperandKind.BAR:       {"BD", "CBU_STATE", "CBU_STATE_NONBAR"},
-    OperandKind.SPECIAL_REG: {"SpecialRegister", "CBU_STATE", "CBU_STATE_NONBAR", "ATEXIT_PCONLY"},
+    OperandKind.SPECIAL_REG: {"SpecialRegister", "CBU_STATE", "CBU_STATE_NONBAR",
+                              "ATEXIT_PCONLY", "UPRONLY"},
     OperandKind.PR:        {"PR"},
     OperandKind.NP:        {"NP"},
     OperandKind.BAR:       {"BD", "CBU_STATE", "CBU_STATE_NONBAR"},
@@ -103,11 +104,19 @@ class SassMatcher:
         if used_groups is None:
             return None
 
-        # Set guard predicate from instruction prefix @[!]Px
+        # Set guard predicate from instruction prefix @[!]Px.  Uniform
+        # instructions guard on a UniformPredicate slot named UPg (regular
+        # instructions use Pg) — key the slot map by whichever the class uses.
+        pred_slot = "Pg"
+        for s in slots:
+            if s.get("name") in ("Pg", "UPg") and \
+                    s.get("type") in ("Predicate", "UniformPredicate"):
+                pred_slot = s["name"]
+                break
         if inst.pred is not None:
-            slot_map["Pg"] = inst.pred
+            slot_map[pred_slot] = inst.pred
         if inst.pred_not:
-            slot_map["Pg_not"] = 1
+            slot_map[f"{pred_slot}_not"] = 1
 
         # Figure out which modifier slots were consumed by operand matching
         consumed_mods = set()
@@ -591,7 +600,7 @@ class SassMatcher:
             return v if isinstance(v, int) else None
         if st == "UniformRegister":
             return v if isinstance(v, int) else None
-        if st in ("Predicate",):
+        if st in ("Predicate", "UniformPredicate"):
             return v if isinstance(v, int) else None
         if st in ("UImm", "SImm", "RSImm"):
             return v if isinstance(v, int) else None
@@ -612,9 +621,9 @@ class SassMatcher:
             return v if isinstance(v, int) else None
         if st == "NP":
             return v if isinstance(v, int) else None
-        if st == "SpecialRegister":
+        if st in ("SpecialRegister", "UPRONLY"):
             v_str = v if isinstance(v, str) else ""
-            enum_vals = self.db["enums"].get("SpecialRegister", {})
+            enum_vals = self.db["enums"].get(st, {})
             for name, val in enum_vals.items():
                 if name.replace("_", "").upper() == v_str.replace("_", "").upper() \
                    and isinstance(val, int):
@@ -713,10 +722,14 @@ class SassMatcher:
         a single modifier first, then dot-joined sequences (e.g. F2F.F16.F32
         -> ['F16','F32'] joined to enum value 'F16.F32').  Returns (value,
         remaining) or None."""
+        # Spec enum names are mixed-case (e.g. "U16x2"), so match
+        # case-insensitively (same normalization used by _parse_default).
+        upper_map = {k.upper(): v for k, v in enum_vals.items()
+                     if isinstance(v, int)}
         for i in range(len(remaining)):
             for k in range(1, min(4, len(remaining) - i) + 1):
                 cand = ".".join(remaining[i:i + k])
-                val = enum_vals.get(cand.upper())
+                val = upper_map.get(cand.upper())
                 if val is not None:
                     new_remaining = list(remaining)
                     del new_remaining[i:i + k]

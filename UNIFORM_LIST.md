@@ -1,0 +1,22 @@
+- [x] **UBREV** (idx 138) — Uniform bit reverse
+- [x] **UBMSK** (idx 139) — Uniform bitmask
+- [x] **UCLEA** (idx 140) — Uniform clear effective address (align to power-of-2 boundary)
+- [x] **UISETP** (idx 141) — Uniform integer set-predicate
+- [x] **ULDC** (idx 142) — Uniform load constant
+- [x] **ULEA** (idx 143) — Uniform load effective address
+- [x] **UP2UR** (idx 144) — Uniform predicate to uniform register
+- [x] **ULOP3** (idx 145) — Uniform three-input logic (arbitrary LUT)
+- [x] **UPLOP3** (idx 146) — Uniform predicate three-input logic
+- [x] **USEL** (idx 147) — Uniform register conditional select
+- [x] **USGXT** (idx 148) — Uniform sign-extend
+- [x] **UFLO** (idx 149) — Uniform find leading one
+- [x] **UIADD3** (idx 150) — Uniform three-input integer add
+- [x] **UIMAD** (idx 151) — Uniform integer multiply-add
+- [x] **UMOV** (idx 152) — Uniform register move
+- [x] **UPRMT** (idx 153) — Uniform byte permute
+- [x] **VOTEU** (idx 154) — Uniform warp vote / ballot (uniform-register results; `__activemask()`)
+- [x] **UPOPC** (idx 155) — Uniform population count
+- [x] **USHF** (idx 156) — Uniform funnel shift
+- [x] **S2UR** (idx 169) — Special register to uniform register (udp sibling of S2R)
+- [x] **R2UR_H** (idx 226) — Register to uniform register, high half  `-> R2UR` (sm_120: no separate H encoding; 64-bit moves are two R2URs, low then high — verified)
+- [x] **ULEPC** (idx 238) — Uniform load effective PC (pc-only = own PC; imm form = (instr+16)+sImm58; identical to LEPC — verified)

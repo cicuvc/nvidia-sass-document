@@ -276,6 +276,14 @@ class Parser:
                 op.absolute = True
                 return op
             op = self._parse_operand_inner()
+            # "-" before an immediate is a signed immediate (e.g. -0x10 in
+            # ULEPC/LEPC RSImm, BSSY/BSYNC offsets), not a register-negate
+            # flag: fold the sign into the value so SImm/RSImm encoders see
+            # a two's-complement quantity instead of the magnitude.
+            if op.kind in (OperandKind.IMM_U, OperandKind.IMM_S):
+                op.kind = OperandKind.IMM_S
+                op.value = -op.value
+                return op
             op.negated = True
             return op
         if self.peek() and self.peek().type == "PIPE":

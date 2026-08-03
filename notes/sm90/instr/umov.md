@@ -7,6 +7,12 @@
 Moves a value into a uniform register: `URd = URb` (register) or `URd = imm32` (immediate).
 The simplest uniform-register instruction — pure data movement without computation.
 
+**Silicon-verified on SM120 (`tests/asm_construct/test_umov.py`, RTX 5090):**
+register and imm32 forms (0x1c82 / 0x882), plus `.64` pair (`{URd,URd+1} <-
+{URb,URb+1}`) and 64-bit immediate forms.  UMOV is also the standard udp
+"settling" filler used across all uniform-instruction tests (dummy first
+read / GPR-consumer settling).
+
 ## Variant overview
 
 | Variant | Opcode | Format | Observed? |
