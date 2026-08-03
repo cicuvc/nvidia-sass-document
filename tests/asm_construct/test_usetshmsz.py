@@ -157,7 +157,45 @@ except RuntimeError as e:
     print(f"  {'per-launch reset':<22} expect OK     -> ERR {str(e)[:44]}  FAIL")
 ok &= per
 
+# occupancy: shrinking must NOT raise the peak concurrent CTA count.
+# CTA residency is fixed at launch by the static shared decl (see note).
+OCC = ("""#fn k(state<8>) {
+    #pragma SHARED(0x10000)
+    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
+    LDC.64 {R6,R7}, #param(state);[1:7:{}:1:0]
+{usi}    MOV32I R10, 0x1;[7:7:{}:5:1]
+    ATOM.ADD P0, RZ, [{R6,R7}], R10;[5:7:{0,1}:8:1]
+    MOV32I R20, 500;[7:7:{}:5:1]
+#def_label(spin)
+    LDG.E R18, [{R6,R7}];[5:7:{0,1}:8:1]
+    ATOM.MAX P2, RZ, [{R6,R7}+4], R18;[5:7:{0,1,5}:8:1]
+    IADD3 R20, R20, -1, RZ;[7:7:{0}:5:1]
+    ISETP.GT.AND P0, PT, R20, RZ, PT;[7:7:{}:5:1]
+    @P0 BRA #label(spin);[7:7:{}:5:1]
+    MOV32I R10, -1;[7:7:{}:5:1]
+    ATOM.ADD P3, RZ, [{R6,R7}], R10;[5:7:{0,1}:8:1]
+    EXIT;[7:7:{}:5:0]
+}""")
+
+
+def occ_peak(use_usi):
+    reset_context()
+    mod = CudaModule(assemble(
+        OCC.replace("{usi}", "    USETSHMSZ 0x1000;[7:7:{}:1:0]\n" if use_usi else "")))
+    d = mod.devmem_alloc(4096)
+    mod.device_write(d, struct.pack("<1024I", *([0] * 1024)))
+    mod.launch("k", grid=(1000,), block=(32,), args=[d])
+    mod.synchronize()
+    return struct.unpack("<4I", mod.device_read(d, 16))[1]
+
+
+p_ctrl, p_usi = occ_peak(False), occ_peak(True)
+occ = p_ctrl == p_usi
+print(f"  {'occupancy unchanged':<22} expect ctrl==USI -> ctrl={p_ctrl} USI={p_usi}  {'ok' if occ else 'FAIL'}")
+ok &= occ
+
 print(f"\n=== USETSHMSZ shrink-only semantics: {'ALL OK' if ok else 'FAILED'} ===")
 print("USETSHMSZ shrinks the CTA shared window (128B granule); growing -> 715,"
-      "\nshrink persists within the launch only, .FLUSH does not unlock growth.")
+      "\nshrink persists within the launch only, .FLUSH does not unlock growth,"
+      "\nand shrinking does not raise the concurrent CTA count.")
 sys.exit(0 if ok else 1)

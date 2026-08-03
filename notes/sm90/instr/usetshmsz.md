@@ -44,6 +44,28 @@ Empirically confirmed rules (SM120, decl `#pragma SHARED(0x1000)`, block 32):
 7. **UR form** (`0x13c9`, size from a uniform register) obeys the same
    monotone + granularity rules.
 
+### Occupancy effect: verified NEGATIVE
+
+The natural guess — "shrinking hands SRAM back so the block scheduler can
+reside more CTAs" — was tested and **does not hold** on SM120 (RTX 5090).
+An occupancy probe (block 32, decl 16K/32K/64K, 1000 blocks, each CTA bumps
+a global active counter and atomically max-tracks the peak during a fixed
+spin) shows the peak concurrent CTA count is determined **statically by the
+launched shared size**, and USETSHMSZ does not change it:
+
+| decl | peak CTA/SM (no USI) | peak CTA/SM (USETSHMSZ 4K) |
+|------|---------------------|----------------------------|
+| 16K  | 5 | 5 |
+| 32K  | 3 | 3 |
+| 64K  | 1 | 1 |
+
+So the shrink tightens the **current CTA's** window (verified: a shrunk CTA
+faults on accesses beyond the new window) but the released SRAM is **not**
+used to schedule additional CTAs.  CTA residency is fixed at launch by the
+cubin `SHARED` declaration; the instruction does not feed the block
+scheduler.  What the freed SRAM *does* change (L1 carve-out?) was not
+measurable in this harness and remains open.
+
 Reading: it is a fire-and-forget configuration hint on the uniform datapath
 (`DECOUPLED_RD_SCBD`, no destination, `VQ_UNORDERED`) — hardware turns a
 "too large" request into `ILLEGAL_INSTRUCTION`. Likely purpose is Blackwell
@@ -104,12 +126,12 @@ Decoder + round-trip test: `tools/decode_usetshmsz.py`. GPU behavior probe:
 `tests/asm_construct/test_usetshmsz.py`.
 
 ## Open questions
-- Why does the ISA expose a shrink-only runtime knob? Presumably to hand SRAM
-  back to the L1/shared pool mid-kernel on Blackwell (sm_100+) — the sm_90
-  file ships it, but the observed behavior is on sm_120.
+- Why does the ISA expose a shrink-only runtime knob? It does **not** raise
+  occupancy (verified); the freed SRAM's actual effect (L1 carve-out? cluster
+  pool hand-back?) needs a performance probe. On Blackwell it may exist for
+  future/driver-driven use or PDL-style dependent launches, none of which
+  this harness exercises.
 - Whether the freed window is actually re-partitioned toward L1 (performance
   probe possible: shrunk kernel vs same kernel with no USETSHMSZ, measure
   local-memory/global latency).
-- CTA- vs cluster-scoped effects when multiple CTAs share an SM; and whether
-  the initial window for a kernel that declares **less** than the driver max
-  is the declared size (observed) or could be larger on other configurations.
+- CTA- vs cluster-scoped effects when multiple CTAs share an SM.
