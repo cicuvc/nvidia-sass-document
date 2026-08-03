@@ -84,9 +84,11 @@ class Lexer:
                 continue
             if m.lastgroup == "COMMENT":
                 continue
+            # line = 1 + number of newlines before this token
+            line = self.source[:m.start()].count("\n") + 1
             # Token.col carries the absolute char offset so the parser can
             # check text adjacency (".4A" -> NUMBER+IDENT merge).
-            tokens.append(Token(m.lastgroup, m.group(), line=0, col=m.start()))
+            tokens.append(Token(m.lastgroup, m.group(), line=line, col=m.start()))
         return tokens
 
 
@@ -171,13 +173,17 @@ class Parser:
             pred_not = True
         if self.peek() and self.peek().type in ("PRED", "UPRED"):
             t = self.pop()
-            val = 7 if t.text.upper() == "PT" else int(t.text[1:])
+            if t.type == "UPRED":
+                val = 7 if t.text.upper() == "UPT" else int(t.text[2:])
+            else:
+                val = 7 if t.text.upper() == "PT" else int(t.text[1:])
             # PT with no negation = unpredicated (store as None for encoding defaults).
             # @!PT is a legitimate encoding (Pg=7, Pg_not=1, "never execute").
             pred = val if (pred_not or val != 7) else None
 
         mn = self.expect("IDENT")
         mnemonic = mn.text
+        self._cur_line = mn.line
 
         # modifiers: .IDENT or .NUMBER+IDENT (e.g. .2D)
         modifiers: list[str] = []
@@ -228,7 +234,8 @@ class Parser:
         bracket = self._parse_bracket()
         sched = Sched.parse(bracket)
 
-        return ParsedInstruction(mnemonic=mnemonic, modifiers=modifiers, operands=operands, sched=sched, pred=pred, pred_not=pred_not)
+        line = self._cur_line
+        return ParsedInstruction(mnemonic=mnemonic, modifiers=modifiers, operands=operands, sched=sched, pred=pred, pred_not=pred_not, line=line)
 
     def _parse_operands(self) -> list[Operand]:
         ops: list[Operand] = []

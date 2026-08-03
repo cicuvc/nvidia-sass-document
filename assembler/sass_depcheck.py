@@ -555,6 +555,18 @@ def _regset(rs) -> str:
     return ",".join(_regname(r) for r in sorted(rs))
 
 
+def _fmt_inst(inst) -> str:
+    """Render an instruction as assembler text for diagnostics."""
+    from .sass_asm import fmt_operand
+    parts = [inst.mnemonic]
+    if inst.modifiers:
+        parts.append("." + ".".join(inst.modifiers))
+    if inst.operands:
+        parts.append(" ")
+        parts.append(", ".join(fmt_operand(o) for o in inst.operands))
+    return "".join(parts)
+
+
 def run_depcheck(db: dict, insts, results, addrs, kernel_name="",
                  strict=False, out=None) -> list[Diagnostic]:
     """Run the checker over an aligned (inst, match_result) sequence.
@@ -578,7 +590,10 @@ def run_depcheck(db: dict, insts, results, addrs, kernel_name="",
         for info in infos)
     diags = checker.check(insts, infos, addrs)
     for d in diags:
-        print(f"[depcheck] {kernel_name} inst {d.instr_idx} {d.code}: "
+        inst = insts[d.instr_idx]
+        line = getattr(inst, "line", 0) or 0
+        text = _fmt_inst(inst) if inst is not None else ""
+        print(f"[depcheck] {kernel_name} line:{line} [{d.code}] {text}: "
               f"{d.message}", file=out)
     if diags:
         from collections import Counter

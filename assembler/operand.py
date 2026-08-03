@@ -215,5 +215,6 @@ class ParsedInstruction:
     operands: list[Operand] = field(default_factory=list)
     sched: Sched = field(default_factory=Sched.default)
     label: Optional[str] = None
+    line: int = 0          # source line number (for diagnostics)
     pred: Optional[int] = None  # guard predicate P0-P6 (None = PT/always)
     pred_not: bool = False      # True = @!Px
