@@ -263,6 +263,16 @@ identical fragments:
 - A=0    -> D = C = 10,11,12,13
 - All stall/yield schedules (1..7 x y=0/1) encodable and correct.
 
+Same harness for fp16a32 (`HMMA.16816.F32`, nvcc mma m16n8k16 f16):
+- A=B=1.0 (f16 1.0 = 0x3C00) -> D = 16 + C = 26,27,28,29
+- A=2.0 -> D = 32 + C = 42,43,44,45 ;  A=0 -> C
+
+Note the **A·B contribution differs between f16 and bf16** for the same
+m16n8k16 fragment pattern: A·B = 16 (f16) vs 8 (bf16) at A=B=1.0.  This is a
+real layout difference between the two srcfmts (both use 4+2 registers per
+lane, but the f16 k-accumulation spans all 16 k while bf16 covers 8 — the
+fragment-to-matrix mapping is srcfmt-specific).
+
 Fragment words are read from a *fixed* address (all 32 lanes read the same
 16-word block), so no SR_TID addressing is involved; this sidesteps the
 uniform-scoreboard setup needed for per-lane fragments.  The fragment layout

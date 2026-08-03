@@ -58,16 +58,18 @@ def decode(lo64, hi64, pc=0):
 
     rd, ra, rb, rc = (bits(inst, 23, 16), bits(inst, 31, 24),
                       bits(inst, 39, 32), bits(inst, 71, 64))
-    mnem = "HMMA.%s.%s.%s" % (size, dstfmt, srcfmt)
-    # 16816 with f32 accum: Rd/Rc 4x32, Ra 4x32, Rb 2x32; 1688: Ra/Rb half
-    if size == "16816" and dstfmt == "F32":
-        return "%s%s %s, %s, %s, %s" % (guard, mnem, reg(rd), reg(ra), reg(rb), reg(rc))
+    # F16 is the default source format (no suffix in cuobjdump); BF16/TF32/E6M9
+    # are printed, matching cuobjdump's "HMMA.16816.F32" vs "HMMA.16816.F32.BF16".
+    mnem = "HMMA.%s.%s" % (size, dstfmt)
+    if srcfmt != "F16":
+        mnem += ".%s" % srcfmt
     return "%s%s %s, %s, %s, %s" % (guard, mnem, reg(rd), reg(ra), reg(rb), reg(rc))
 
 
-# (lo64, hi64, expected) — nvcc mma.sync m16n8k16 bf16 lowering (verified)
+# (lo64, hi64, expected) — nvcc mma.sync m16n8k16 bf16/f16 lowering (verified)
 VECTORS = [
     (0x000000020404723c, 0x000fe20000041808, "HMMA.16816.F32.BF16 R4, R4, R2, R8"),
+    (0x000000020404723c, 0x000fe2000000180c, "HMMA.16816.F32 R4, R4, R2, R12"),
     (0x00000014101c723c, 0x000fe20000041818, "HMMA.16816.F32.BF16 R28, R16, R20, R24"),
 ]
 
