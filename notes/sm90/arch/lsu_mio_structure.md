@@ -17,6 +17,15 @@ Tests: `tests/st_readsb.cu`, `tests/readsb_timing.cu`, `tests/readsb_contend.cu`
 - Memory instructions enter a per-SMSP **MIO queue**; a single per-SM **arbiter**
   pulls requests from the 4 SMSP queues, executes against L1/shared, and returns
   responses.
+
+> **External corroboration (NVIDIA forums):** the MIO is described there as the
+> point that communicates the SM's **4 subcores with the parts they share** — i.e.
+> the MIO/LSU arbiter + L1/shared are the SM-scoped shared resource, one per SM
+> (not per subcore), with a queue per SMSP. This matches the empirical model above
+> (per-SMSP queues + single per-SM arbiter) and explains the timing results: a
+> store's source register is consumed at an LSU-internal latch shortly after issue
+> (not held to completion), and a load's write-SB clears only when the shared
+> L1/shared response returns.
 - A **load** clears its *write* scoreboard (`dst_wr_sb`) only when the response
   arrives (full memory latency). Established.
 - Open: (Q1) do memory ops stay in order inside the MIO queue, or can they
