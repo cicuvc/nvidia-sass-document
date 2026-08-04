@@ -132,9 +132,17 @@ enc = assemble_flat(
     "LDS R1, [RZ+UR3];[7:7:{}:5:1]\n"
     "STS [RZ+UR3], R1;[7:7:{}:5:1]\n")
 for i, e in enumerate(enc):
-    assert e[0] & 0xFFF in (0x984, 0x388, 0x1984, 0x1988), (i, hex(e[0]))
+    assert e[0] & 0xFFF in (0x984, 0x388, 0x988, 0x1984, 0x1988), (i, hex(e[0]))
 # offset field [63:40] for the immediate offset cases
 assert (enc[0][0] >> 40) == 0x100, hex(enc[0][0])
+# uniform forms must keep the UR index: [RZ+URb+off] / [URb+off] encode the
+# *_uniform_ variant (opcode 0x1984/0x1988) with the URb index in the slot
+def op13(lo, hi):
+    return (((hi >> 27) & 1) << 12) | (lo & 0xFFF)
+assert op13(*enc[6]) == 0x1984, hex(enc[6][0])        # LDS [RZ+UR3]
+assert (enc[6][0] >> 32) & 0xFF == 3, hex(enc[6][0])  # URb = UR3
+assert op13(*enc[7]) == 0x1988, hex(enc[7][0])        # STS [RZ+UR3]
+assert (enc[7][1] >> 0) & 0xFF == 3, hex(enc[7][1])   # Ra_URc = UR3 (hi [71:64])
 print("encoding self-check: LDS/STS widths + offsets + uniform OK")
 
 print(f"\n=== LDS / STS (shared memory): {'ALL PASS' if ok else 'FAILURES'} ===")

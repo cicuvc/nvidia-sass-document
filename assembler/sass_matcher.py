@@ -577,12 +577,21 @@ class SassMatcher:
 
     def _match_mem_addr(self, group: list[dict], op: Operand,
                         slot_map: dict) -> bool:
+        # A memory address carries exactly one of: a GPR base ([Ra+off]) or
+        # an explicit uniform-register index ([RZ+URb+off]).  The matched
+        # variant must consume the form actually written: variants with a
+        # UniformRegister slot would otherwise either silently drop the UR
+        # index (encoding a different address) or fabricate a URb value from
+        # the GPR base.
+        has_ur_slot = any(s["type"] == "UniformRegister" for s in group)
+        if has_ur_slot != (op.addr_ureg is not None):
+            return False
         for s in group:
             st = s["type"]
             if st in ("Register", "NonZeroRegister", "ZeroRegister"):
                 slot_map[s["name"]] = op.value
             elif st == "UniformRegister":
-                slot_map[s["name"]] = op.addr_ureg if op.addr_ureg is not None else op.value
+                slot_map[s["name"]] = op.addr_ureg
             elif st in ("SImm", "UImm") and "offset" in s["name"].lower():
                 slot_map[s["name"]] = op.offset
             elif st == "ONLY64":

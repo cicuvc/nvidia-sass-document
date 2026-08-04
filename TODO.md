@@ -135,7 +135,7 @@ Load/store/atomic/reduction/cache-control/warp-cross-lane
 - [x] **RED** (idx 104) — Reduction on shared memory (fire-and-forget; dead on sm_90 — ptxas emits ATOMS instead)
 - [x] **ATOMS** (idx 105) — Atomic operation (shared memory)
 - [x] **REDAS** (idx 227) — Reduce-async to distributed shared memory (`red.async.shared::cluster`)
-- [ ] **QSPC** (idx 106) — Query address space type
+- [x] **QSPC** (idx 106) — Query address space type (`isspacep`; G/L/S/D windows, URB+GPR forms; decoder + assembler round-trip + semantic test)
 - [x] **CCTL** (idx 108) — Cache control (L1/L2 line prefetch/writeback/invalidate/discard + whole-cache *ALL)
 - [x] **CCTL_NO_SB** (idx 107) — Cache control, no scoreboard wait (= CCTL whole-cache noSrc forms)  `-> CCTL`
 - [x] **CCTLL** (idx 109) — Cache control, local memory (local-space sibling of CCTL)

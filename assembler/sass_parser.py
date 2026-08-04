@@ -575,6 +575,16 @@ class Parser:
                 self.pop()
                 self.pop()
                 addr_ureg = 255 if nxt.text.upper() == "URZ" else int(nxt.text[2:])
+        # A uniform base ([UR4], [UR4+off], [{UR4,UR5}+off]) is the
+        # cuobjdump-style compact form of [RZ+URb+off]: the address base is
+        # the uniform register, so normalize it to an explicit UR index with
+        # an RZ GPR part (the parser dialect spells this [RZ+URb+off]).
+        base_width = base.width
+        if base.kind == OperandKind.UREG:
+            if addr_ureg is not None:
+                raise SyntaxError("uniform register given twice in address")
+            addr_ureg = base.value
+            base = Operand.reg("RZ")
         offset = 0
         if self.peek() and self.peek().type in ("PLUS", "MINUS"):
             sign = 1 if self.pop().type == "PLUS" else -1
@@ -582,7 +592,7 @@ class Parser:
             offset = sign * int(off_t.text, 0)
         self.expect("RBRACKET")
         op = Operand.mem_addr(base, offset=offset)
-        op.width = base.width
+        op.width = base_width
         op.regs = base.regs
         op.addr_ureg = addr_ureg
         return op
