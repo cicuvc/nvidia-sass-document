@@ -95,7 +95,63 @@ tally-capacity checks, not for data-dependency clearance.
 (`VarLatOperandEnc`, 7=none). `DEPBAR.LE`: `sbidx`[46:44], `cnt`[43:38],
 `scoreboard_list`[37:32].
 
+## Virtual Queue vs Pipe — and why scoreboard ops need a VQ
+
+Two orthogonal execution attributes per CLASS, from different spec files:
+
+- **VQ** (`VIRTUAL_QUEUE`, `sm_90_instructions.txt` `PROPERTIES`) — the
+  execution-queue identity: `VQ_AGU`, `VQ_TEX`, `VQ_MUFU`, `VQ_CBU`,
+  `VQ_FMA64`, `VQ_HMMA/IMMA/DMMA/UMMA`, `VQ_UNORDERED`, plus the
+  `*_UNORDERED_WR` set (`VQ_AGU_UNORDERED_WR`, `VQ_ATOM_UNORDERED`,
+  `VQ_TMA_UNORDERED_WR`, `VQ_SYNCS_UNORDERED_WR`).  The `*_UNORDERED*`
+  flavours encode that the queue executes out of order (relaxed memory
+  ordering).  **Not every instruction has one** — FFMA/IADD3/IMAD report
+  `VIRTUAL_QUEUE=None`.
+- **Pipe** (`sm_90_latencies.txt` `OPERATION SETS`) — functional-unit
+  grouping (`int_pipe`, `fmalighter_pipe`, `fp16_pipe`, `mio_pipe`,
+  `cbu_pipe`, `udp_pipe`, `fma64lite/heavy_pipe`, `fe_pipe`) used **only as
+  the row/column index into the latency matrices**
+  (`TABLE_TRUE/OUTPUT/ANTI`), combined with `MD_PRED(ISRC_*_SIZE)` range
+  formulas from the instruction `PREDICATES`.  Every instruction belongs to
+  ≥1 pipe.
+
+Short hand: **VQ says which queue it runs in (execution identity, incl.
+ordering), Pipe says how many cycles it takes (latency index)**; `INST_TYPE`
+says whether the consumer must wait on a scoreboard.  VQ is finer-grained
+(≈40 enum values vs ~10 pipes).  VQ and pipe usually agree (VQ_AGU → mio_pipe,
+VQ_CBU → cbu_pipe, VQ_HMMA → fp16_pipe, VQ_UDP → udp_pipe) but are not bound:
+`USETSHMSZ` is `udp_pipe` yet `VIRTUAL_QUEUE=$VQ_UNORDERED`.
+
+**Empirical invariant (all 1167 sm_90 CLASSes): a scoreboard op implies a VQ.**
+
+| INST_TYPE | has VQ | no VQ |
+|-----------|--------|-------|
+| `DECOUPLED_*` (RD_WR/RD/WR/BRU_DEPBAR …) | 575 | **0** |
+| `COUPLED_MATH` (FFMA/IADD3/…) | 4 | 549 |
+| `COUPLED_EMULATABLE` (HMMA/QMMA/DMMA…) | 39 | 0 |
+
+So **`dst_wr_sb`/`src_rel_sb`/`req` (the variable-latency scoreboard
+mechanism) are only ever present on instructions that also name a VQ** —
+the VQ is the queue whose completion event the scoreboard waits on; a
+DECOUPLED result has data-dependent latency, so it must carry a VQ to have
+somewhere to complete.  The converse is false: **a VQ does not imply
+scoreboard semantics**.  (a) tensor ops are `COUPLED_EMULATABLE`
+(`VQ_HMMA/IMMA/DMMA/REDIRECTABLE`, 39) — they queue like variable ops but
+their latency is compiler-known (fixed stall/NOP pad, cf. `hmma_pipeline.md`),
+so no `dst_wr_sb`; (b) four `COUPLED_MATH` outliers carry VQs for
+synchronization semantics without variable latency: `ENDCOLLECTIVE`
+(VQ_CBU), `R2UR` (VQ_AGU), `UCGABAR_WAIT`, `USEL` (VQ_UNORDERED).
+
+Mental model: **VQ is the carrier, scoreboard is the tracking** — VQ is
+necessary for the scoreboard, not identical to it.
+
 ## Open questions
 - Exact decrement timing (issue+fixed vs true writeback) per op class.
 - Whether the read-barrier is ever used for operand-collect of ordinary loads or
   only for stores / async / late-read ops (only `STG`/`LDGSTS`-style seen so far).
+- Whether the DECOUPLED⇒VQ invariant holds on sm_120.  The sm90 numbers above
+  were parsed from the raw `sm_90_instructions.txt` (the `sm90.json`/`sm120.json`
+  extractors do **not** carry `VIRTUAL_QUEUE`, so it cannot be verified from the
+  JSON DB); the sm120 raw dump is not on hand, and nvcc-emitted SASS for
+  DECOUPLED ops (`ATOM`/`LDG`/…) shows `wr`/`rd`/`req` scoreboard fields, so the
+  VQ side is inferred, not yet verified from a sm120 text dump.
