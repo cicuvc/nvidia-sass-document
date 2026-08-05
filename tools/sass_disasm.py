@@ -21,6 +21,7 @@ Scheduling bracket `[wr:rd:{req}:stall:yield[:x6]]`:
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -159,11 +160,20 @@ class SASSDisasm:
 
     def slot_attr(self, v: dict, fields: list, name: str, attr: str) -> int:
         f = self.field_for(v, f"{name}@{attr}")
-        if f is None:
+        if f is not None:
+            for ff, val in fields:
+                if ff["name"] == f["name"] and ff["targets"] == f["targets"]:
+                    return val
             return 0
-        for ff, val in fields:
-            if ff["name"] == f["name"] and ff["targets"] == f["targets"]:
-                return val
+        # TABLES_Pnz_N(name@not, name) reverse lookup (HGMMA's UPp@not)
+        if attr == "not":
+            for ff, val in fields:
+                if ff["rhs_kind"] == "table_fn" and f"({name}@not" in ff["rhs"]:
+                    tbl = self.db["tables"].get(ff["rhs"].split("(")[0])
+                    if tbl is not None and val is not None:
+                        for row in tbl["rows"]:
+                            if int(row["out"], 0) == val:
+                                return int(row["in"][0])
         return 0
 
     # ------------------------------------------------------------------
@@ -177,7 +187,7 @@ class SASSDisasm:
             return name
         nm = str(name).split("/")[0].strip().strip('"')
         for k, val in e.items():
-            if k == nm or k.lstrip("_") == nm.lstrip("_"):
+            if (k == nm or k.lstrip("_") == nm.lstrip("_")) and val is not None:
                 return val
         return None
 
@@ -197,6 +207,12 @@ class SASSDisasm:
             return names[0].lstrip("_") if names else None
         for nm, v in e.items():
             if v == val and v is not None:
+                if re.match(r"^E\d+M\d+$", nm):
+                    continue  # fp8 formats (E8M7/E8M10/E6M9) share values with
+                # BF16/TF32/F16 — prefer the human-readable non-fp8 name
+                return nm.lstrip("_")
+        for nm, v in e.items():
+            if v == val and v is not None:
                 return nm.lstrip("_")
         return None
 
@@ -209,7 +225,7 @@ class SASSDisasm:
         if isinstance(d, int):
             enum = self.enums.get(slot["type"], {})
             for name, v in enum.items():
-                if str(name) == str(d):
+                if str(name) == str(d) and v is not None:
                     return v, False
             return d, False
         s = str(d)
@@ -218,6 +234,11 @@ class SASSDisasm:
         if not nm:
             return None, pprint
         val = self.enum_value(slot["type"], nm)
+        if val is None:
+            try:
+                val = int(nm, 0)
+            except ValueError:
+                pass
         return val, pprint
 
     # ------------------------------------------------------------------
@@ -394,12 +415,20 @@ class SASSDisasm:
         val = self.slot_value(v, fields, name)
         default, pprint = self.default_of(s)
 
-        if not pprint and default is not None and (val is None or val == default):
-            return None  # rendered by a composite (e.g. desc group) or defaulted
+        not_ = self.slot_attr(v, fields, name, "not")
+
+        if not pprint and default is not None and not not_ \
+                and (val is None or val == default):
+            # immediate operands render even when == default (IMAD's Sb=32
+            # must not vanish or the imm→noimm variant is mismatched); other
+            # operand kinds skip their defaulted value (LDC's Ra_offset=0).
+            if t in ("SImm", "UImm", "RSImm") and val is not None:
+                pass
+            else:
+                return None
 
         neg = self.slot_attr(v, fields, name, "negate")
         abs_ = self.slot_attr(v, fields, name, "absolute")
-        not_ = self.slot_attr(v, fields, name, "not")
 
         if t == "C":
             bank = 0
@@ -409,11 +438,14 @@ class SASSDisasm:
                     bv = self.slot_value(v, fields, s2["name"])
                     if bv is not None:
                         bank = bv
-                elif s2["name"].endswith("_offset") and s2["type"] == "SImm":
+                elif (s2["name"].endswith("_offset") or s2["name"].endswith("_addr")) \
+                        and s2["type"] == "SImm":
                     ov = None
                     f2 = None
                     for f in v["encoding"]:
-                        if s2["name"] in f["rhs"] and f["name"].endswith("_offset"):
+                        if s2["name"] in f["rhs"] and (
+                                f["name"].endswith("_offset")
+                                or f["name"].endswith("_addr")):
                             f2 = f
                             break
                     if f2 is not None:
@@ -457,6 +489,9 @@ class SASSDisasm:
             txt = nm if nm else f"SR{val}"
         elif t == "BD":
             txt = f"B{val}"
+        elif t in ("GSB0ONLY", "OPTIONAL_GSB"):
+            nm = self.enum_name(t, val)
+            txt = nm if nm else f"gsb{val}"
         elif t in IMM_TYPES:
             txt = self.render_imm(s, val, v)
         elif t == "Scoreboard":
@@ -486,6 +521,13 @@ class SASSDisasm:
             # composite: DESC → desc[UR][R.64+off]
             if s["type"] == "DESC" or name == "memoryDescriptor":
                 txt = self.render_desc(slots, i, v, fields, sm, used)
+                if txt:
+                    ops.append(txt)
+                    i += 1
+                    continue
+            # composite: GMMA → gdesc[UR] (HGMMA/QMMA descriptor)
+            if s["type"] == "GMMA" or name == "gdesc":
+                txt = self.render_gdesc(slots, i, v, fields, sm, used)
                 if txt:
                     ops.append(txt)
                     i += 1
@@ -533,6 +575,26 @@ class SASSDisasm:
                 return False
             j += 1
         return False
+
+    def render_gdesc(self, slots, i, v, fields, sm, used):
+        """gdesc[UR] composite: the GMMA slot followed by a UniformRegister
+        (HGMMA/QMMA descriptor operand)."""
+        # find the UniformRegister following the GMMA slot
+        ureg_s = None
+        for j in range(i + 1, len(slots)):
+            sj = slots[j]
+            if sj["modifier"] or sj["name"] in SCHED_NAMES:
+                continue
+            if sj["type"] == "UniformRegister":
+                ureg_s = sj
+                break
+        if ureg_s is None:
+            return None
+        uval = self.slot_value(v, fields, ureg_s["name"])
+        utxt = self.reg_text(uval, 32, ureg=True)
+        used.add(slots[i]["name"])
+        used.add(ureg_s["name"])
+        return f"gdesc[{utxt}]"
 
     def render_desc(self, slots, i, v, fields, sm, used):
         desc_val = self.slot_value(v, fields, slots[i]["name"])

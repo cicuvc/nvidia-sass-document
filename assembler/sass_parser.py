@@ -348,9 +348,9 @@ class Parser:
             self.pop()
             return Operand.upred(t.text)
 
-        # memory descriptor: desc[URx.64]
-        if t.type == "IDENT" and t.text == "desc":
-            return self._parse_mem_desc()
+        # memory descriptor: desc[URx.64] / gdesc[URx] (GMMA/HGMMA/QMMA)
+        if t.type == "IDENT" and t.text in ("desc", "gdesc"):
+            return self._parse_mem_desc(gdesc=(t.text == "gdesc"))
 
         # const bank: c[bank][offset]
         if t.type == "IDENT" and t.text == "c":
@@ -497,8 +497,8 @@ class Parser:
             return val
         return None
 
-    def _parse_mem_desc(self) -> Operand:
-        self.pop()  # desc
+    def _parse_mem_desc(self, gdesc: bool = False) -> Operand:
+        self.pop()  # desc / gdesc
         self.expect("LBRACKET")
         t = self.peek()
         if t and t.type == "LBRACE":
@@ -508,21 +508,27 @@ class Parser:
                     "descriptor must be a 64-bit uniform pair: "
                     "desc[{URx,URx+1}]")
             base = grp.regs[0]
-        elif t and t.type in ("REG", "UREG"):
-            raise SyntaxError(
-                "single-register descriptor is ambiguous (a descriptor is "
-                "always the 64-bit pair URx:URx+1) — write "
-                "desc[{URx,URx+1}]")
+            regs = [base, base + 1] if base != 255 else [255, 255]
+            width = 64
+        elif t and t.type == "UREG":
+            if not gdesc:
+                raise SyntaxError(
+                    "single-register descriptor is ambiguous (a descriptor is "
+                    "always the 64-bit pair URx:URx+1) — write "
+                    "desc[{URx,URx+1}]")
+            base = int(self.pop().text[2:])
+            regs = [base] if base != 255 else [255]
+            width = 32
         else:
             raise SyntaxError(
                 "expected descriptor register group after 'desc['")
         self.expect("RBRACKET")
         ureg_op = Operand.ureg("URZ" if base == 255 else f"UR{base}")
-        ureg_op.regs = [base, base + 1] if base != 255 else [255, 255]
-        ureg_op.width = 64
+        ureg_op.regs = regs
+        ureg_op.width = width
         op = Operand.mem_desc(ureg_op)
-        op.regs = ureg_op.regs
-        op.width = 64
+        op.regs = regs
+        op.width = width
         if self.peek() and self.peek().type == "LBRACKET":
             addr = self._parse_mem_addr()
             op.addr_reg = addr.value if isinstance(addr.value, int) else 0

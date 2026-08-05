@@ -25,6 +25,7 @@ from assembler import assemble_kernel, arch  # noqa: E402
 
 PARAM_BASE = 0x380
 CDESC_ADDR = 0x358
+ARCH_NAME = "sm120"
 
 BRANCH_RE = re.compile(
     r"^(.*?)\b(BRA|BRX|BRXU|BSSY|BREAK|BSYNC|CALL)\b(.*?)\s*(-?0x[0-9a-fA-F]+)(\s*;.*)$")
@@ -49,11 +50,17 @@ def main() -> int:
     out_path = None
     if "--out" in args:
         out_path = args[args.index("--out") + 1]
+    arch_name = ARCH_NAME
+    if "--arch" in args:
+        arch_name = args[args.index("--arch") + 1]
 
-    arch.set_arch("sm120")
+    arch.set_arch(arch_name)
+    cfg = arch.current()
+    param_base = cfg.param_base
+    cdesc_bank, cdesc_off = cfg.default_cdesc
     kernels = read_cubin(cubin_path)
     k = find_kernel(kernels, kname)
-    db = load_db("sm120.json")
+    db = load_db(cfg.db)
     ds = SASSDisasm(db)
 
     entries: list[tuple[int, str, str | None]] = []
@@ -86,7 +93,7 @@ def main() -> int:
     # parameter name lookup by cbank offset
     def param_ref(cbank_off: int) -> str | None:
         for kp in k.kparams:
-            if PARAM_BASE + kp.offset == cbank_off:
+            if param_base + kp.offset == cbank_off:
                 return f"#param(p{kp.index})"
         return None
 
@@ -105,7 +112,7 @@ def main() -> int:
             text = re.sub(r"c\[0x0\]\[0x([0-9a-fA-F]+)\]",
                           lambda m: param_ref(int(m.group(1), 16))
                           or f"c[0x0][0x{m.group(1).upper()}]", text)
-            text = text.replace(f"c[0x0][0x{CDESC_ADDR:X}]",
+            text = text.replace(f"c[0x{cdesc_bank:x}][0x{cdesc_off:X}]",
                                 "#spec_const(SLOT_DEFAULT_CDESC)")
         out.append(f"    {text}")
     out.append("}")
