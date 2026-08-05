@@ -8,6 +8,13 @@ Each supported GPU arch (sm90 Hopper, sm120 Blackwell) has:
                   H800; sm120: c[0x0][0x358], verified on RTX 5090);
   param_base    — the const-bank offset where the driver places kernel
                   parameters (sm90: 0x210; sm120: 0x380).
+  elf_flags     — ELF header e_flags, which encodes the GPU arch.  The
+                  driver rejects a cubin whose e_flags don't match the
+                  device (CUDA_ERROR_NO_BINARY_FOR_GPU on H20 when the
+                  sm120 flags were used).  Values captured from nvcc:
+                  sm90 0x005a055a, sm120 0x06007802.
+  elf_osabi / elf_abiver — ELF e_ident[EI_OSABI] and e_ident[EI_ABIVERSION],
+                  also arch-specific (nvcc: sm90 0x33/0x07, sm120 0x41/0x08).
 
 The process keeps a current arch (default sm120, matching the historical
 behaviour).  Top-level entry points (``assemble``/``assemble_kernel``/
@@ -26,11 +33,16 @@ class ArchConfig:
     db: str
     default_cdesc: tuple            # (bank, offset)
     param_base: int
+    elf_flags: int
+    elf_osabi: int
+    elf_abiver: int
 
 
 ARCHES: dict[str, ArchConfig] = {
-    "sm90": ArchConfig("sm90", "sm90.json", (0, 0x208), 0x210),
-    "sm120": ArchConfig("sm120", "sm120.json", (0, 0x358), 0x380),
+    "sm90": ArchConfig("sm90", "sm90.json", (0, 0x208), 0x210,
+                       0x005a055a, 0x33, 0x07),
+    "sm120": ArchConfig("sm120", "sm120.json", (0, 0x358), 0x380,
+                        0x06007802, 0x41, 0x08),
 }
 DEFAULT_ARCH = "sm120"
 

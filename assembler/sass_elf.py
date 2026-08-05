@@ -406,14 +406,15 @@ class CubinBuilder:
         # 3: .symtab
         sec(".symtab", SHT_SYMTAB, align=8, entsize=24)
 
-        # 4: .note.nv.tkinfo
-        sec(".note.nv.tkinfo", SHT_NOTE, content=note_nv_tkinfo(),
-            flags=SHF_CUDA_LINK_ONCE)
-
-        # 6: .note.nv.cuver — link to .note.nv.tkinfo section
-        # (link is filled after both sections exist)
-        sec(".note.nv.cuver", SHT_NOTE, content=note_nv_cuver(),
-            flags=SHF_INFO_LINK | SHF_CUDA_RETAIN)
+        # 4/6: .note.nv.tkinfo / .note.nv.cuver — sm120-only (nvcc sm90 cubins
+        # carry no note sections; the sm120 template bytes would be rejected
+        # on Hopper with CUDA_ERROR_NO_BINARY_FOR_GPU).
+        _is_sm120 = arch.current().name == "sm120"
+        if _is_sm120:
+            sec(".note.nv.tkinfo", SHT_NOTE, content=note_nv_tkinfo(),
+                flags=SHF_CUDA_LINK_ONCE)
+            sec(".note.nv.cuver", SHT_NOTE, content=note_nv_cuver(),
+                flags=SHF_INFO_LINK | SHF_CUDA_RETAIN)
 
         # Build symbols early so the EIATTR sections below can reference the
         # correct function / constant0 symbol indices (symbols are fixed-order:
@@ -498,14 +499,16 @@ class CubinBuilder:
         sec(f".nv.info.{mn}", SHT_CUDA_INFO, content=buf,
             flags=SHF_INFO_LINK)
 
-        # 9: .nv.compat
-        compat = bytes([
-            0x02, 0x02, 0x01, 0x00,  # ISA_CLASS=1
-            0x02, 0x05, 0x05, 0x00,  # TCGEN05_MMA=5
-            0x02, 0x03, 0x00, 0x00,  # TENSORMAP_V1=0
-            0x02, 0x06, 0x01, 0x00,  # OPPORTUNISTIC_FINALIZATION=1
-        ])
-        sec(".nv.compat", SHT_CUDA_COMPAT, content=compat)
+        # 9: .nv.compat — sm120-only (Blackwell driver expectation; nvcc sm90
+        # cubins carry no compat section).
+        if _is_sm120:
+            compat = bytes([
+                0x02, 0x02, 0x01, 0x00,  # ISA_CLASS=1
+                0x02, 0x05, 0x05, 0x00,  # TCGEN05_MMA=5
+                0x02, 0x03, 0x00, 0x00,  # TENSORMAP_V1=0
+                0x02, 0x06, 0x01, 0x00,  # OPPORTUNISTIC_FINALIZATION=1
+            ])
+            sec(".nv.compat", SHT_CUDA_COMPAT, content=compat)
 
         # 10: .nv.callgraph
         cg = struct.pack("<8i", 0, -1, 0, -2, 0, -3, 0, -4)
@@ -645,10 +648,15 @@ class CubinBuilder:
         shdr_off = cur
         shdr_size = len(secs) * 64
 
+        cfg = arch.current()
         ehdr = struct.pack("<16sHHIQQQIHHHHHH",
-                           b"\x7fELF\x02\x01\x01\x41\x08\x00\x00\x00\x00\x00\x00\x00\x00",
+                           bytes([
+                               0x7f, ord("E"), ord("L"), ord("F"),
+                               2, 1, 1, cfg.elf_osabi, cfg.elf_abiver,
+                               0, 0, 0, 0, 0, 0, 0,
+                           ]),
                            2, 190, 1, 0, 0, shdr_off,
-                           0x06007802, 64, 0, 0, 64,
+                           cfg.elf_flags, 64, 0, 0, 64,
                            len(secs), shstrtab_idx,
                            )
 
