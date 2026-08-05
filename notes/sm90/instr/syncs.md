@@ -137,6 +137,106 @@ barrier `UCGABAR_*` (`ucgabar_arv.md`) — `barrier.cluster.*` → `UCGABAR`, wh
 `mbarrier.*` (incl. `.cluster` scope via `mapa`/DSMEM) → `SYNCS`.
 
 ## Open questions
+
+## Verified semantics & behavior boundaries (sm_120, RTX 5090, CUDA 13.0)
+
+Hand-written SASS verification (`tests/asm_construct/test_mbarrier.py`,
+`tests/mbarrier_ops_test.cu` — the latter captures the nvcc/ptxas lowering of
+every `mbarrier.*` PTX op on sm_120):
+
+The nvcc lowering is **identical on sm_90 and sm_120** (same SYNCS encodings;
+only the shared-address setup and cbank slots differ) — verified by compiling
+`tests/mbarrier_ops_test.cu` for both archs.
+
+| PTX | SASS | verified behavior |
+|-----|------|-------------------|
+| `mbarrier.init [b], n` | `SYNCS.EXCH.64 URZ, [UR], UR` | writes `((0x100000−n)<<11)<<32 \| (0x100000−n)<<1`; phase completes after `n` arrives |
+| `mbarrier.arrive` | `SYNCS.ARRIVE.TRANS64.A1T0 Rd, [UR], RZ` | arrive+1; token = opaque old state (high word encodes pending count + phase bit 63) |
+| `mbarrier.arrive.expect_tx` | `SYNCS.ARRIVE.TRANS64 Rd, [UR], R` (A1TR) | arrive+1, tx += R |
+| `mbarrier.expect_tx [b], k` | `SYNCS.ARRIVE.TRANS64.RED.A0TR RZ, [UR], R` | **tx += R** (A0TR adds) |
+| `mbarrier.complete_tx [b], k` | `SYNCS.ARRIVE.TRANS64.RED.A0TR RZ,[UR],R0` + `.A0TX RZ,[UR],R2` | **A0TX subtracts** (`R0=0` no-op + `R2=+k`); ptxas emits both |
+| `mbarrier.try_wait.parity` | `SYNCS.PHASECHK.TRANS64.TRYWAIT P, [UR], R` | non-blocking predicate; **parity operand is bit 31 of Rb** (`0`/`0x80000000`) |
+| `mbarrier.test_wait.parity` | `SYNCS.PHASECHK.TRANS64 P, [UR], R` | same, no TRYWAIT bit |
+| `mbarrier.arrive.shared::cluster` | `SYNCS.ARRIVE.TRANS64.RED.A1T0 RZ, [UR], RZ` | remote/DSMEM arrive (Rd must be RZ) |
+| `mbarrier.inval` | `SYNCS.CCTL.IV [UR]` | barrier stops completing; subsequent PHASECHK returns 0 |
+
+**Phase / parity model (verified):** the barrier's current phase has a parity
+bit (state bit 63).  `PHASECHK.parity(P)` returns TRUE iff the phase with
+parity `P` has already completed — i.e. iff the current phase's parity differs
+from `P`.  `init(n)` → after `n` arrives the phase completes and the parity
+flips; the next `n` arrives complete the next phase, etc.
+
+**Completion rule (verified):** a phase completes when the pending arrive
+count reaches 0 **and** the pending tx count reaches 0.  `expect_tx(k)` leaves
+the phase open until `complete_tx(k)` drains the tx credit (verified: 128
+pending blocks, +A0TX(128) completes; 128+128 pending, +A0TX(256) completes).
+
+**Scoreboard usage (hand-written SASS):** SYNCS is decoupled
+(`INST_TYPE_DECOUPLED_RD_WR_SCBD`); the result token/predicate is written
+asynchronously and tracked on `wr_sb`.  ptxas emits e.g. `SYNCS.EXCH … &wr=0x2`
+then waits with `req={2}` (or via `BAR.SYNC`); consumers of the `P0` phase
+predicate must `req` the PHASECHK's `wr_sb`.  Without the pairing, reads race
+(observed garbage).
+
+**try_wait spin-loop shape (critical, verified on sm_120):** the consumer's
+PHASECHK loop MUST branch back on the PHASECHK's own predicate, exactly as
+ptxas emits it:
+```
+poll:
+    SYNCS.PHASECHK.TRANS64.TRYWAIT P0, [UR], RZ   &wr=0x1
+    @!P0 BRA poll                                  &req={1}
+```
+Replacing the back-edge with a timeout counter's derived predicate
+(`@P0 BRA done; IADD3 …; ISETP P1,…; @P1 BRA poll`) makes the mbarrier phase
+NEVER complete — verified with a 0x2000000-iteration counter (~0.8 s) while
+the `@!P0` back-edge completes in microseconds; NOPs inside the loop are
+harmless.  This blocks TMA `cp.async.bulk … complete_tx::bytes` completions
+as well (see `ublkcp.md`).  Presumably the completion/flush machinery only
+recognizes the try_wait spin when the PHASECHK predicate feeds the
+control-flow back-edge directly.
+
+**EIATTR MBARRIER register byte:** `EIATTR_MBARRIER_INSTR_OFFSETS` entries
+encode the mbarrier address register in the 4th u32's byte 2 (ptxas:
+`0x00070100` INIT with `(R255+UR7)`, `0x0004010a` TRYWAIT with `(R255+UR4)`).
+The assembler hardcoded 0x06 (UR6); it now derives the value from the
+instruction — `Sa` [29:24] for SYNCS.EXCH (the address sits in `URa` there),
+`Ra_URc` [69:64] for PHASECHK/CCTL/ARRIVE.  (Patching ptxas's entries to wrong
+registers did not change behavior, so this is a metadata-correctness issue,
+not the completion blocker.)
+
+**Behavior boundaries (traps, CUDA error 719):**
+- negative tx count: `A0TX(-64)` with 0 pending underflows the pending-tx
+  field; the op itself does not trap but the barrier is corrupted and the next
+  `mbarrier` op on it traps.
+- `init(0)`: phase 0 is immediately complete; a subsequent `arrive` traps.
+- mbarrier ops at shared address 0 (or outside the shared window) trap —
+  the address must be the real shared-space form `(CgaCtaId<<24)|off`
+  (CgaCtaId = 0 for the first CTA on sm_120).
+
+**State visibility quirk:** the mbarrier state is not reliably readable with a
+plain `LDS` right after `init`/`expect_tx` (reads 0 in hand-built cubins; the
+nvcc kernel shows the same).  Completion must be observed through
+`PHASECHK`/arrive tokens (or after additional SYNCS ops, when the state
+occasionally becomes LDS-visible).  Use `SYNCS.LD.64`/tokens rather than LDS
+for state inspection.
+
+**Toolchain notes found while building the test:**
+- the assembler's auto `MBARRIER_INSTR_OFFSETS` was 4-byte entries; the driver
+  expects 16-byte `{offset, 0xff, 0, kind_flags}` entries (flags captured from
+  ptxas: EXCH=0x00060100, A1T0=0x00060101, OPTOUT=0x00060103, PHASECHK=
+  0x00060106, CCTL.IV=0x00060108, TRYWAIT=0x0006010a, A0TR=0x0006010b,
+  A0TX=0x0006010c, TMASK.ART0=0x00ff0102) — fixed in `sass_elf.py`.
+- `_compute_regcount` treated UMOV's 32-bit immediate as a register; a count
+  value with low byte ≥ 0xfe inflated regcount past 255 and failed the launch
+  (`0xFFFFE` for `init(2)`) — fixed.
+- `IMAD Rd, RZ, RZ, URx` reads 0 for a uniform source in hand-built cubins;
+  use `MOV Rd, URx` (mov__RU) to move a uniform register to a GPR.
+- the assembler's ULEA: `.HI` returns the high 32 bits of the 64-bit
+  `(URa<<scale)+URb+URc`; ptxas's barrier-address `ULEA` (default LO) form is
+  not assemblable through the 6-operand syntax yet — use `UMOV` for the
+  single-CTA address `0x400`.
+
+## Open questions
 - `SYNCS.CCTL`/`syncs_ld_` (barrier cache-control / state-load with `.WATCH`) renderings are
   not sampled from emitted code; documented from the ISA fields only.
 - `SYNCS.CAS.64`/`SYNCS.LD.64` uniform-atomic operand orderings are spec-derived (not yet

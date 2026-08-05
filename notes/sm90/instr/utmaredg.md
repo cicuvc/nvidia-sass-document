@@ -12,8 +12,11 @@ destination global tensor instead of overwriting it. Identical framing to
 via `UTMACMDFLUSH` + `DEPBAR.LE`), plus a `RedOp` modifier selecting the reduction.
 
 Operands: `UTMAREDG.<dim>[.IM2COL].<op> [URb], [URa] [, desc[URe]]`
-- `URb` — tile **coordinate** block (`Ra_URb`; multi-reg, sized by `dim`)
-- `URa` — 64-bit descriptor pointer + shared source (`Sa`, 2-reg aligned)
+- `URb` — **shared source** address + tile **coordinate** block (`Ra_URb`;
+  multi-reg, sized by `dim`).  For 2D: **{URb+0 = shared source, URb+1 =
+  coord[1] (dim1), URb+2 = coord[0] (dim0)}** — same layout as UTMASTG
+  (verified hand-built on sm_120).
+- `URa` — 64-bit pointer to the tensor-map descriptor (`Sa`, 2-reg aligned)
 - `desc[URe]` — optional memory descriptor (the `_desc` variant, `memdesc=1`)
 
 ## Variant overview
@@ -110,3 +113,16 @@ and→AND, or→OR, xor→XOR` (direct 0–7 mapping).
   in the tensor-map descriptor, not the instruction (no type field observed).
 
 - Whether `_desc` (memdesc=1) reduction form is emitted from stock PTX.
+
+## Hand-built SASS reproduction (verified on sm_120)
+
+`tests/asm_construct/test_utmaredg.py` reproduces `UTMAREDG.2D` for all 8
+RedOps (UINT32 tensor map, simple `ELECT P0` + 8 NOPs + `@!P0 BRA` guard):
+
+- producer: fill shared tile -> single `UTMAREDG.2D.<OP> [UR8], [UR16]` ->
+  `UTMACMDFLUSH` -> `DEPBAR.LE SB0, 0x0` (bulk_group completion, no
+  mbarrier).  No retry handshake / special usched required (plain
+  `?trans1` works, like UTMASTG).
+- element-wise semantics verified: `dst[i] = dst[i] <op> src[i]`, with
+  INC/DEC matching the classic atomic caps (same as UBLKRED):
+  `INC: (dst < src) ? dst+1 : 0`, `DEC: (dst==0 || dst>src) ? src : dst-1`.

@@ -15,8 +15,19 @@ TMA path (`../arch/tma_mbarrier.md`).
 Operands: `UBLKCP.<dst>.<src>[.mods] [URb], [URa], URc [, desc[URe]]`
 - `URb` — **destination** address (64-bit uniform pair; shared or global per `dst`)
 - `URa` — **source** address (`Sa` field; when `src==G` it is a 64-bit global pair, else 32-bit shared)
-- `URc` — the **mbarrier** address / auxiliary (`Ra_URc`, 32-bit); the tx-count barrier for loads
+- `URc` — the **copy size in 16-byte (128-bit) units** (`Ra_URc`, 32-bit) — **not** the
+  mbarrier address (corrected below; the load-direction mbarrier is implicit)
 - `desc[URe]` — optional **memory descriptor** pointer (the `_desc_` variant, `memdesc=1`)
+
+> **Correction (sm_120, CUDA 13.0):** the `URc` operand is the SIZE, not the
+> mbarrier.  Verified empirically on the RTX 5090: `URc=1` copies 16 bytes,
+> `URc=2` copies 32 bytes, `URc=0x10` copies 256 bytes (size = `URc × 16`,
+> consistent with PTX's "size must be a multiple of 16").  ptxas computes
+> `URc` from the byte count via `USHF.R.U32.HI URc, URZ, 0x4, size` +
+> `UPRMT URc, URc, 0x5410, URZ`.  The mbarrier for
+> `cp.async.bulk … mbarrier::complete_tx::bytes` is armed implicitly by the
+> preceding `SYNCS.ARRIVE.TRANS64` (expect_tx) — the UBLKCP encoding has no
+> mbarrier operand.
 
 ## Variant overview
 | variant | opcode | memdesc | extra operand | INST notes |
@@ -149,7 +160,70 @@ the bare `.global.shared::cta.bulk_group` form assembles, so the `cp_mask`/
 `byteMask` partial-copy variants could not be probed.
 
 ## Open questions
+- The load-direction mbarrier tx-completion **is** verified working on this
+  driver (580.65/CUDA 13.0): `tma_cp_test.cu` (repo root) runs `UBLKCP.S.G`
+  with `mbarrier::complete_tx::bytes` and the consumer's `try_wait` spins to
+  completion — data matches on the RTX 5090.  ptxas's pattern: init →
+  `FENCE.VIEW.ASYNC.S`/`MEMBAR.ALL.CTA` → `ELECT` + `UBLKCP` (in a
+  `BSSY`/`@!P0 BRA` divergence frame) → `SYNCS.ARRIVE.TRANS64` (expect_tx
+  with the tx count materialized via `HFMA2` = `0x200`) → consumer
+  `PHASECHK.TRYWAIT` with `wr_sb`/`req` pairing.  The UBLKCP completes the
+  pending tx when the copy finishes (a tx=0 patch made the phase complete
+  immediately and the consumer read stale data).  The hand-built equivalent
+  is fully reproduced — see the resolved section below.
+- The earlier `CUDA_ERROR_INVALID_IMAGE` rejection of
+  `tests/ublkcp_test.cu`'s g2s cubin is **specific to that cubin's other
+  content** (it also contains the multicast kernel), not the `UBLKCP.S.G`
+  instruction — the `tma_cp_test.cu` cubin (plain S.G) loads and runs.
 - `sp2` (LTC64B/128B/256B) L2 sector cache-hint: which PTX `.L2::cache_hint` /
   policy operand emits it (not triggered by the basic kernels here).
 - `SEQUENCED` (`.SEQ`) ordering form and its interaction with the `STRONG.<sco>`
   memory scope (spec requires a non-WEAK `mem` when `seq==SEQUENCED`).
+
+## Hand-built SASS reproduction (resolved)
+
+`tests/asm_construct/test_ublkcp.py` part 4 reproduces the *entire* flow —
+`UBLKCP.S.G` 512 B + mbarrier `try_wait` completion — in hand-written SASS,
+verified on sm_120 (RTX 5090, CUDA 13.0 / driver 580.65, block 32 and block 1).
+The producer is a byte-for-byte match of ptxas's `tma_cp_test.cu` SASS modulo
+register allocation (init on UR12/UR13, `MOV32I R0,512` instead of the HFMA2
+that also yields 0x200; the ULEA/CgaCtaId address dance is a no-op for
+CTA-group 0 and can be dropped).  Three non-obvious requirements were isolated
+empirically:
+
+1. **ELECT race (stale P0).** `@!P0 BRA` immediately after `ELECT P0, URZ, PT`
+   reads a stale `P0=false` on sm_120, so the elected thread skips the
+   producer (marker STGs after the branch never fire; the copy is never
+   issued).  Insert **8 NOPs** between ELECT and the branch, or match ptxas's
+   usched exactly (`ELECT ?trans1`, `BSSY ?WAIT12_END_GROUP`, `@!P0 BRA
+   ?trans5`).  The 8-NOP fix is simpler and equally reliable.
+2. **Descriptor clobber (flaky CUDA 719).** Do **not** reuse `UR4/UR5` (the
+   global-memory descriptor loaded from `SLOT_DEFAULT_CDESC`) for the
+   mbarrier-init computation.  ptxas loads the descriptor into a *different*
+   uniform register in the consumer; when the tail's `STG.E desc[{UR4,UR5}]`
+   uses init-garbage descriptors `{0x7ffff,0x7fff8000}`, the kernel faults
+   intermittently with `CUDA_ERROR_LAUNCH_FAILED` (719), appearing/disappearing
+   with timing (e.g. compute-sanitizer masks it).
+3. **try_wait spin shape (completion never fires).** The consumer's
+   `PHASECHK.TRANS64.TRYWAIT` loop **must branch back on the PHASECHK's own
+   predicate**:
+   ```
+   poll:
+       SYNCS.PHASECHK.TRANS64.TRYWAIT P0, [RZ+UR7], RZ   &wr=0x1
+       @!P0 BRA poll                                      &req={1}
+   ```
+   This is ptxas's exact loop.  If the loop instead uses a timeout counter
+   whose *derived* predicate drives the back-edge
+   (`@P0 BRA done; IADD3 …; ISETP P1,…; @P1 BRA poll`), the mbarrier phase
+   **never completes** — verified with an arbitrarily large counter
+   (`0x2000000` iterations ≈ 0.8 s of polling) while the identical kernel with
+   the `@!P0` back-edge completes in microseconds.  NOPs inside the loop are
+   fine; only the loop-back predicate matters.  (Hypothesis: the
+   completion/flush machinery recognizes the try_wait spin only when the
+   PHASECHK predicate feeds the control-flow back-edge directly.)
+
+The A1TR tx count is the raw byte count (`MOV32I R0, 512` works; ptxas's
+`HFMA2` computes the same 0x200).  The mbarrier must be initialized with
+`SYNCS.EXCH.64` before the copy (`count=1` init state `{0x7ffff, 0x7fff8000}`),
+and the FENCE/MEMBAR chain (FENCE wr=1 → EXCH → MEMBAR → FENCE wr=2) matches
+ptxas's ordering around the UBLKCP issue.

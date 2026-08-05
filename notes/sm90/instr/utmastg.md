@@ -16,8 +16,13 @@ complete through the **bulk-async-group** counted scoreboard
 (`UTMACMDFLUSH` + `DEPBAR.LE`), see `../arch/tma_mbarrier.md`.
 
 Operands: `UTMASTG.<dim>[.IM2COL] [URb], [URa] [, desc[URe]]`
-- `URb` — the tile **coordinate** block (`Ra_URb`; multi-reg, sized by `dim`) into the global tensor
-- `URa` — 64-bit pointer to the tensor-map descriptor (`Sa`, 2-reg aligned) — actually the **source** shared address + descriptor; ptxas emits `[URb],[URa]` with `URb` = descriptor/coord side, `URa` = shared source (same operand convention as `UTMALDG`)
+- `URb` — the **shared source** address + tile **coordinate** block
+  (`Ra_URb`; multi-reg, sized by `dim`).  For 2D the block is
+  **{URb+0 = shared source, URb+1 = coord[1] (dim1), URb+2 = coord[0]
+  (dim0)}** — coordinate order reversed vs the PTX `{c0, c1}` operand
+  (verified hand-built on sm_120; base is 64-bit + dim payload, no mbarrier
+  slot — stores have no consumer barrier).
+- `URa` — 64-bit pointer to the tensor-map descriptor (`Sa`, 2-reg aligned)
 - `desc[URe]` — optional memory descriptor (the `_desc` variant, `memdesc=1`)
 
 ## Variant overview
@@ -107,6 +112,18 @@ Decoder `tools/decode_utmastg.py`: **6/6 PASS**. `dim` is Hi64 bits [81:79]
 | `cp.async.bulk.wait_group.read N` | `DEPBAR.LE SBn, N` |
 
 ## Open questions
-- Exact coord/descriptor packing inside `URb` (base 64-bit vs UTMALDG's 96-bit).
-
 - Whether the `_desc` (memdesc=1) store form is emitted from stock PTX.
+
+## Hand-built SASS reproduction (verified on sm_120)
+
+`tests/asm_construct/test_utmastg.py` reproduces `UTMASTG.2D` end-to-end with
+hand-written SASS (global-memory tensor-map descriptor over the destination
+buffer, simple `ELECT P0` + 8 NOPs + `@!P0 BRA` producer guard):
+
+- producer: fill shared tile -> single `UTMASTG.2D [UR8], [UR16]` issue ->
+  `UTMACMDFLUSH` -> `DEPBAR.LE SB0, 0x0` (bulk_group completion — **no
+  mbarrier**, unlike the load direction).
+- No retry handshake and no special usched required (plain `?trans1` works;
+  contrast UTMALDG which needs `?WAIT12_END_GROUP`).
+- coords `{0,0}` and `{0,8}` verified: UR9 (URb+1) = dim1 offset,
+  UR10 (URb+2) = dim0 offset.

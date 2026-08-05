@@ -261,8 +261,12 @@ class CubinBuilder:
         max_reg = 0
         # Opcodes that carry a 32-bit immediate in bits [63:32], which
         # overlaps the [39:32] scan position and must not be read as a
-        # register: MOV32I/MOV (0x802) and MOV.64 (0x402).
-        imm_lo32_opcodes = {0x802, 0x402}
+        # register: MOV32I/MOV (0x802), MOV.64 (0x402) and UMOV (0x882).
+        # (UMOV's immediate is UImm(32) at [63:32] — its low byte at
+        # [39:32] is NOT a register.  A large immediate such as 0xFFFFE
+        # (count encoding for mbarrier.init) used to inflate the computed
+        # regcount to 264 and fail the launch with OUT_OF_RESOURCES.)
+        imm_lo32_opcodes = {0x802, 0x402, 0x882}
         for lo, hi in instructions:
             op = lo & 0xFFF
             positions = (16, 24) if op in imm_lo32_opcodes else (16, 24, 32)
@@ -283,11 +287,67 @@ class CubinBuilder:
         return max(8, ((max_reg + 10) // 8) * 8) if max_reg else 8
 
     @staticmethod
-    def _compute_mbarrier_offsets(instructions: list[tuple[int, int]]) -> list[int]:
-        """Scan for SYNCS.EXCH (0x5b2) and SYNCS.PHASECHK (0x5a7) at [11:0]."""
-        targets = {0x5b2, 0x5a7}
-        return [i * 16 for i, (lo, hi) in enumerate(instructions)
-                if (lo & 0xFFF) in targets]
+    def _compute_mbarrier_offsets(instructions: list[tuple[int, int]]) -> list[bytes]:
+        """Build EIATTR_MBARRIER_INSTR_OFFSETS entries for the SYNCS
+        (mbarrier) instructions in the kernel.
+
+        Each entry is 16 bytes, matching ptxas (CUDA 12.8):
+        {u32 instr_offset, u32 0xff, u32 0, u32 kind_flags}.  The kind flags
+        were captured from nvcc-built sm_120 cubins:
+          0x00060100 SYNCS.EXCH               (mbarrier.init)
+          0x00060101 SYNCS.ARRIVE.A1T0        (mbarrier.arrive)
+          0x00060103 SYNCS.ARRIVE.OPTOUT.A1T0 (mbarrier.arrive_drop)
+          0x00060106 SYNCS.PHASECHK           (mbarrier.test_wait)
+          0x00060108 SYNCS.CCTL.IV            (mbarrier.inval)
+          0x0006010a SYNCS.PHASECHK.TRYWAIT   (mbarrier.try_wait)
+          0x0006010b SYNCS.ARRIVE.A0TR        (mbarrier.expect_tx/complete_tx)
+          0x0006010c SYNCS.ARRIVE.A0TX        (mbarrier.complete_tx)
+        """
+        def bits(w, hi, lo):
+            return (w >> lo) & ((1 << (hi - lo + 1)) - 1)
+
+        entries = []
+        for i, (lo, hi) in enumerate(instructions):
+            w = (hi << 64) | lo
+            op = ((bits(w, 91, 91) << 12) | bits(w, 11, 0))
+            # The 4th u32 of each entry packs (byte0 = kind, byte1 = stride
+            # flag (1 = MBARRIER_STRIDE_X4), byte2 = the mbarrier ADDRESS
+            # register = Ra_URc [69:64], byte3 = 0).  ptxas example:
+            # SYNCS.EXCH.64 URZ, [UR7], UR4 -> 0x00070100 (UR7);
+            # PHASECHK...TRYWAIT P0, [UR4], RZ -> 0x0004010a (UR4).
+            # The register byte must come from the instruction, not a
+            # constant (the old hardcoded 0x06 wrote UR6 even when the
+            # mbarrier used UR7/UR20).  Note the SYNCS.EXCH form keeps the
+            # address in Sa [29:24] (URa); PHASECHK/CCTL/ARRIVE use
+            # Ra_URc [69:64].
+            mbar_reg = bits(w, 29, 24) if op == 0x15b2 else bits(w, 69, 64)
+            flags = None
+            if op == 0x15b2:                      # SYNCS.EXCH
+                flags = 0x00000100 | (mbar_reg << 16)
+            elif op == 0x19a7:                    # SYNCS.ARRIVE
+                optout = bits(w, 75, 75)
+                retval = bits(w, 74, 73)
+                paramtype = bits(w, 86, 84)
+                if optout:
+                    flags = 0x00000103 | (mbar_reg << 16)
+                elif paramtype == 1:              # A1T0
+                    flags = 0x00000101 | (mbar_reg << 16)
+                elif paramtype == 3:              # A0TR
+                    flags = 0x0000010b | (mbar_reg << 16)
+                elif paramtype == 4:              # A0TX
+                    flags = 0x0000010c | (mbar_reg << 16)
+                elif retval == 1 and paramtype == 5:  # TMASK.ART0
+                    flags = 0x00ff0102 | (mbar_reg << 16)
+                # A1TR (arrive.expect_tx) is intentionally not listed —
+                # ptxas omits it from MBARRIER_INSTR_OFFSETS as well.
+            elif op == 0x15a7:                    # SYNCS.PHASECHK
+                flags = (0x0000010a if bits(w, 72, 72) else 0x00000106) \
+                    | (mbar_reg << 16)
+            elif op == 0x19b1:                    # SYNCS.CCTL (per-addr)
+                flags = 0x00000108 | (mbar_reg << 16)
+            if flags is not None:
+                entries.append(struct.pack("<4I", i * 16, 0xff, 0, flags))
+        return entries
 
     @staticmethod
     def _compute_num_barriers(instructions: list[tuple[int, int]]) -> int:
@@ -423,7 +483,7 @@ class CubinBuilder:
         if self._instructions:
             mbar_offs = self._compute_mbarrier_offsets(self._instructions)
             if mbar_offs:
-                off_buf = struct.pack(f"<{'I' * len(mbar_offs)}", *mbar_offs)
+                off_buf = b"".join(mbar_offs)
                 buf += struct.pack("<BBH", 4, 0x39, len(off_buf)) + off_buf
                 # NUM_MBARRIERS — 0xffff if unknown (no CFG), override via #pragma
                 num_mbar = int(self._pragma_attrs.get("NUM_MBARRIERS", 0xffff))

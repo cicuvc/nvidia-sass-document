@@ -12,7 +12,13 @@ transaction (byte) count as data lands (`complete_tx::bytes`). Contrast with
 UTMALDG carries a tensor `dim` and (optionally) im2col.
 
 Operands: `UTMALDG.<dim>[.mods] [URb], [URa] [, URc] [, desc[URe]]`
-- `URb` — **destination** shared address + the tile **coordinate** block (`Ra_URb`; multi-reg, sized by `dim`)
+- `URb` — **destination** shared address + the **mbarrier** address + the tile
+  **coordinate** block (`Ra_URb`; multi-reg, sized by `dim`).  For 2D the block
+  is **{URb+0 = dst smem, URb+1 = MBARRIER address, URb+2 = coord[1] (dim1),
+  URb+3 = coord[0] (dim0)}** — the load-direction mbarrier is passed *inside*
+  the coordinate block (verified hand-built on sm_120; leaving the mbar slot
+  0 makes the TMA completion target barrier@0 and the phase never completes).
+  The coordinate order in SASS is reversed vs the PTX `{c0, c1}` operand.
 - `URa` — **source** = 64-bit pointer to the tensor-map descriptor (`Sa`, 2-reg aligned)
 - `URc` — the **mbarrier** address (tx-count) / cluster **CTA-mask** for multicast (`Ra_URc`; only in the 0x13b4 form)
 - `desc[URe]` — optional memory descriptor (the `_desc` variant, `memdesc=1`)
@@ -115,9 +121,28 @@ Framing: preceded by `mbarrier.init`/`arrive.expect_tx` (`SYNCS.EXCH.64` /
 `SYNCS.ARRIVE.TRANS64`) and issued under `@P0 ELECT P1` (single elected thread).
 
 ## Open questions
-- Where the tile **coordinate registers** live: `URb` names the destination smem,
-  but the coordinates ride in the multi-register block sized by `ISRC_B_SIZE`
-  (96 + dim payload). Exact packing of coords vs im2col offsets not bit-decoded here.
+- 3D–5D coordinate-block packing (mbar slot position for higher ranks, im2col
+  offset slots) — only the 2D layout was empirically verified.
 
 - Whether the `_desc` (memdesc=1) form is ever emitted from stock PTX, and what
   `desc[URe]` carries (cache/L2 policy descriptor).
+
+## Hand-built SASS reproduction (verified on sm_120)
+
+`tests/asm_construct/test_utmaldg.py` reproduces `UTMALDG.2D` end-to-end with
+hand-written SASS (global-memory tensor-map descriptor, simple
+`ELECT P0` + 8 NOPs + `@!P0 BRA` producer guard, mbarrier tx completion):
+
+- producer: `mbarrier.init` (`SYNCS.EXCH.64`) → `FENCE`/`MEMBAR`/`FENCE` →
+  `SYNCS.ARRIVE.TRANS64` (A1TR expect_tx = tile bytes) → single
+  `UTMALDG.2D [UR8], [UR16]` issue.
+- **`?WAIT12_END_GROUP` usched on the UTMALDG is required** — changing it to
+  `?WAIT5` faults with CUDA 719 (illegal instruction), even though the
+  instruction encoding is otherwise identical.
+- The ptxas `@P0 ELECT P1` / `@P1 PLOP3` / `@P0 BRA.U.ANY` retry handshake is
+  **not** required (single issue works; verified by NOP-patching it out of the
+  ptxas cubin too).
+- consumer: tight `PHASECHK.TRANS64.TRYWAIT P0; @!P0 BRA poll` loop (the
+  loop-back must be the PHASECHK's own predicate — same rule as UBLKCP).
+- coords `{0,0}` and `{0,8}` verified: UR10 (URb+2) = dim1 offset,
+  UR11 (URb+3) = dim0 offset.

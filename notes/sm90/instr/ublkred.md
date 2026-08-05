@@ -16,7 +16,10 @@ destination modes:
 Operands: `UBLKRED.<dst>.S.<op>[.<type>] [URb], [URa], URc [, desc[URe]]`
 - `URb` — **destination** address (global or remote shared)
 - `URa` — **source** shared address (`Sa`, 32-bit `ISRC_A_SIZE=32`)
-- `URc` — **size** in bytes (G.S) / **mbarrier** address (S.S)
+- `URc` — **size in 16-byte (128-bit) units** (G.S), same convention as
+  `UBLKCP` (ptxas computes it from the byte count via `USHF.R.U32.HI
+  URc, URZ, 0x4, size` + `UPRMT URc, URc, 0x5410, URZ`; `URc=1` → 16 bytes,
+  `URc=2` → 32 bytes) / **mbarrier** address (S.S)
 - `desc[URe]` — optional cache-policy descriptor (`_desc` variant, `memdesc=1`)
 
 ## Variant overview
@@ -128,6 +131,35 @@ both op and type set, they add (e.g. MIN.S64 = `...86...`, MIN.F16.RN = `...88..
 PTX type → SIZE field: `.u32→U32(default), .s32→S32, .u64→U64, .s64→S64,
 .f16→F16.RN, .f32→F32.RN, .f64→F64.RN, .bf16→BF16.RN`. `.b32` bitwise ops print
 without a type suffix (encoded U32=0). f16/bf16 `.add` require PTX `.noftz`.
+
+## S2G semantics (hand-built SASS, verified on sm_120)
+
+`tests/asm_construct/test_ublkred.py` verifies all 8 U32 redOps element-wise
+with a hand-written `UBLKRED.G.S.<OP> [UR8], [UR10], UR11` (shared fill via
+STS at 0x800, pre-initialized global dst, `UTMACMDFLUSH` + `DEPBAR.LE SB0,0`
+for bulk-group completion — the exact UBLKCP.G.S store pattern):
+
+```
+dst[i] = dst[i] <redOp> src[i]        (element-wise, per element type)
+```
+
+Observed results (RTX 5090, CUDA 13.0 / driver 580.65, block=1):
+- `ADD` `0x20+0x10→0x30`; `MIN`/`MAX` standard; `AND`/`OR`/`XOR` bitwise
+  (`0x20&0x30=0x20`, `0x20|0x30=0x30`, `0x20^0x30=0x10`).
+- **INC** — the SOURCE element is the cap, classic atomic-inc:
+  `dst = (dst < src) ? dst + 1 : 0`  (dst==src and dst>src both give 0).
+- **DEC** — classic atomic-dec with source cap:
+  `dst = (dst == 0 || dst > src) ? src : dst - 1`.
+  Both match the PTX note "result in the range [0..x] where x is the source
+  value".
+- Size: `URc=1` reduces 16 bytes (4 U32), `URc=2` reduces 32 bytes (8 U32) —
+  16-byte units, not bytes.
+
+ptxas's own lowering (`red_probe` sm_120 cubin): `@P0 ELECT P1` →
+`UBLKRED.G.S.ADD [UR8], [UR5], UR4 &rd=0x2` (size precomputed /16) → a
+`@P1 PLOP3`/`@P0 BRA.U.ANY` retry handshake → `UTMACMDFLUSH &rd=0x0` →
+`DEPBAR.LE SB0, 0x0`.  The hand-built form skips the retry handshake and works
+identically (the bulk-group completion is what actually drains the op).
 
 ## Open questions
 - `F32.FTZ.RN` (sz=6) — which PTX qualifier emits the FTZ variant (not triggered;
