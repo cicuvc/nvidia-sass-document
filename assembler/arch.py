@@ -23,6 +23,7 @@ behaviour).  Top-level entry points (``assemble``/``assemble_kernel``/
 """
 
 from __future__ import annotations
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -47,6 +48,19 @@ ARCHES: dict[str, ArchConfig] = {
 DEFAULT_ARCH = "sm120"
 
 _active: str = DEFAULT_ARCH
+
+
+def _init_arch() -> None:
+    """Pick the process default arch from ASSEMBLER_ARCH when set (used by the
+    remote test harness on a non-default GPU, e.g. ASSEMBLER_ARCH=sm90 on
+    H20).  Invalid values fall back to the default."""
+    env = os.environ.get("ASSEMBLER_ARCH")
+    if env and env in ARCHES:
+        global _active
+        _active = env
+
+
+_init_arch()
 
 
 def current() -> ArchConfig:

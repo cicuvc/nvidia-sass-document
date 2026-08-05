@@ -34,7 +34,7 @@ hardcode touched or reviewed.
 - depcheck CFG mnemonic sets (BSSY/BSYNC/BREAK/BRX/JMX … both gens).
 - usched/opex/bracket encoding logic.
 
-## H20 verification (sm90, done)
+## Verified on H20 (sm90)
 - **ELF arch markers were the blocker**: `CUDA_ERROR_NO_BINARY_FOR_GPU` until
   three arch-specific ELF identifiers were fixed (values from nvcc):
   e_flags (sm90 0x005a055a), e_ident[EI_OSABI/ABIVERSION] (0x33/0x07), and
@@ -43,13 +43,31 @@ hardcode touched or reviewed.
   `DEFINED TABLES_x(a@attr,b)` arg resolution + negatable-predicate
   `Pnz@not` default.  These unlock LDG.E/STG.E and any instruction with the
   `DEFINED TABLES_*` SASS-only conditions.
-- **Verified on H20**: kernel load+launch, param base 0x210, default cdesc
+- **Key semantic difference — ULDC is synchronous on sm90.**  `ULDC`
+  (sm120's `LDCU`) is `INST_TYPE_COUPLED_MATH` with `dst_wr_sb=*7` (no
+  scoreboard) in sm90; `LDCU` on sm120 is `DECOUPLED_WR_SCBD` with an
+  encodable `dst_wr_sb`.  So a desc load must be waited on with **stall /
+  NOP** (or the natural latency of following instructions), NOT a `req` —
+  `req={0}` after `LDCU` waits SB0 which ULDC never writes, and the LDG can
+  fault ILLEGAL_ADDRESS (700) on a garbage descriptor.  Adding NOPs after
+  the ULDC clears the fault.  Test sources that load the cdesc and consume
+  it via `req` (the sm120 pattern) must switch to stall/NOP for sm90.
+- Verified on H20: kernel load+launch, param base 0x210, default cdesc
   c[0x0][0x208], LDG/STG, integer math, shared-memory roundtrip, ISETP+SEL
   predicate all pass.  sm90 LDG operand order is `Rd, desc[...]` (format
   order), matching cuobjdump — not the sm120 `desc[...], Rd` dialect.
-- Open: `@P0 IADD3` conditional execution misbehaved in one composite probe
-  (depcheck-caught bracket scoreboard issue, not arch-specific); ISETP+SEL
-  predicate path verified independently.
+
+## Test-suite status on H20 (ASSEMBLER_ARCH=sm90)
+101 tests: **61 pass / 40 fail**.  Failure buckets:
+- **sm120-only instructions** (expected): QMMA/OMMA (sm90 uses QGMMA),
+  tensor-map helpers, etc. — need arch-specific sources or isolation.
+- **ULDC-synchronous pattern** (see above): tests that `LDCU` the cdesc then
+  `req`-wait it fault on sm90; need stall/NOP adaptation.
+- **Timing/latency-sensitive**: mufu/ffma latency & throughput, depbar,
+  nanotrap, yield — H20 values differ from RTX 5090.
+- **Harness arch assumptions**: test_arch asserts the process default is
+  sm120, which is false under ASSEMBLER_ARCH=sm90.
+- Pre-existing on both GPUs: test_cache_desc.
 
 ## Remaining H20-open items
 - sm90-only/sm120-only instruction sets (QGMMA vs QMMA/OMMA, ULDC vs LDCU,
