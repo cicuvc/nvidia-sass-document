@@ -25,8 +25,8 @@ def build_kernel(op, src64=False, seed=1.5, N=128):
     src = ("    LDG.E R10, desc[{UR4,UR5}][{R6,R7}+0x4];[1:7:{0}:5:1]" if src64
            else "    LDG.E R10, desc[{UR4,UR5}][{R6,R7}];[1:7:{0}:5:1]")
     lines = ["#fn lat(buf<8>) {",
-             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:1]",
              src,
              "    IADD3 R18, R10, RZ, RZ;[7:7:{1}:5:1]",
              "    CS2R {R30,R31}, SR_CLOCKLO;[7:7:{}:5:0]",
@@ -101,8 +101,8 @@ if not uniform:
 # --- harness calibration: ALU ops must measure well below MUFU --------------
 def measure_alu(inst_fmt, N=256, seed=1.5):
     lines = ["#fn lat(buf<8>) {",
-             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
              "    LDC.64 {R6, R7}, #param(buf);[0:7:{}:1:0]",
+             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:1]",
              "    LDG.E R10, desc[{UR4,UR5}][{R6,R7}];[1:7:{0}:5:1]",
              "    IADD3 R18, R10, RZ, RZ;[7:7:{1}:5:1]",
              "    CS2R {R30,R31}, SR_CLOCKLO;[7:7:{}:5:0]",

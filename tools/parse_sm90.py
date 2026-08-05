@@ -65,30 +65,98 @@ def parse_kv_block(lines, start, end):
 # Modifier enum value-maps:  Name "str"=num , "str"=num ;
 # (multiple defs may share a physical line, separated by ';')
 # --------------------------------------------------------------------------
+def _split_enum_items(body: str) -> list[str]:
+    """Split an enum body on top-level commas (not inside parens/quotes)."""
+    items, cur, depth, quote = [], "", 0, None
+    for c in body:
+        if quote:
+            cur += c
+            if c == quote:
+                quote = None
+        elif c in "\"'":
+            quote = c
+            cur += c
+        elif c == "(":
+            depth += 1
+            cur += c
+        elif c == ")":
+            depth -= 1
+            cur += c
+        elif c == "," and depth == 0:
+            items.append(cur)
+            cur = ""
+        else:
+            cur += c
+    if cur.strip():
+        items.append(cur)
+    return items
+
+
+def _parse_enum_body(body: str) -> dict:
+    """Parse one enum statement body.  sm90 enum syntax includes:
+      Name = 5, Next,                   (bare names, implicit +1 increment)
+      "Quoted.Name.X" = 9,              (quoted names)
+      SR_MACHINE_ID_(0..3)=(24..27),    (range expansion)
+    Values that cannot be resolved stay None (as before)."""
+    vals: dict = {}
+    implicit = None
+    for item in _split_enum_items(body):
+        item = item.strip()
+        if not item:
+            continue
+        # range: NAME_(a..b)=(c..d) or NAME_(a..b)
+        rng = re.match(
+            r'"?([A-Za-z_][A-Za-z0-9_]*?)_\((\d+)\.\.(\d+)\)"?\s*'
+            r'(?:=\s*\((-?\d+)\.\.(-?\d+)\))?$', item)
+        if rng:
+            base = rng.group(1)
+            a0, a1 = int(rng.group(2)), int(rng.group(3))
+            v0 = int(rng.group(4)) if rng.group(4) is not None else None
+            for i, ai in enumerate(range(a0, a1 + 1)):
+                nm = f"{base}_{ai}"
+                if v0 is not None:
+                    vals[nm] = v0 + i
+                    implicit = v0 + i
+                else:
+                    vals[nm] = None
+            continue
+        eq = re.match(r'"([^"]+)"\s*(?:=\s*(-?[0-9a-fA-F_xX]+))?', item)
+        if not eq:
+            eq = re.match(r'([A-Za-z_][A-Za-z0-9_]*)\s*'
+                          r'(?:=\s*(-?[0-9a-fA-F_xX]+))?', item)
+        if not eq:
+            continue
+        nm, val = eq.group(1), eq.group(2)
+        if val is not None:
+            try:
+                v = int(val.replace("_", ""), 0)
+            except ValueError:
+                v = None
+            vals[nm] = v
+            if v is not None:
+                implicit = v
+        elif implicit is not None:
+            implicit += 1
+            vals[nm] = implicit
+        else:
+            vals[nm] = None
+    return vals
+
+
 def parse_enums(lines, start, end):
     enums = {}
-    def_re = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s+("?.*)$')
-    pair_re = re.compile(r'"([^"]*)"\s*(?:=\s*(-?(?:0[bx])?[0-9A-Fa-f_]+))?')
+    def_re = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s+(.*)$')
     blob = "\n".join(lines[start:end])
     # split on ';' but keep it simple: statements are ';'-terminated
     for stmt in blob.split(";"):
         stmt = stmt.strip()
-        if not stmt or '"' not in stmt:
+        if not stmt:
             continue
         m = def_re.match(stmt.replace("\n", " "))
         if not m:
             continue
         name, body = m.group(1), m.group(2)
-        vals = {}
-        for pm in pair_re.finditer(body):
-            mnem, val = pm.group(1), pm.group(2)
-            if val is None:
-                vals[mnem] = None
-            else:
-                try:
-                    vals[mnem] = int(val.replace("_", ""), 0)
-                except ValueError:
-                    vals[mnem] = val
+        vals = _parse_enum_body(body)
         if vals:
             enums[name] = vals
     return enums
