@@ -153,15 +153,27 @@ with/without `fence.proxy.tensormap`):
 | `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.IV` (no membars/DEPBAR) | **B** |
 | `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.IV` **before** the rewrite STG | **B** |
 
+PTX-level cross-check (modification of `cano.cu`, four fence combinations):
+
+| kernel variant | phase1 | phase2 |
+|---|---|---|
+| `release` + `acquire` (documented pair) | A | **B** |
+| no fences | A | A (stale) |
+| `acquire` only | A | **B** |
+| `release` only | A | A (stale) |
+
 Conclusions:
 - **Both** `CCTL.E.C.LDCU.IV.DEEP` and `UTMACCTL.IV` are required on sm_120;
   neither alone refreshes the cached descriptor. This is the Blackwell two-level
   descriptor cache (L2 LDCU + SM TMA cache).
 - The pair works in either order and even *before* the descriptor write: what
   matters is that the invalidations complete before the next `UTMALDG` re-fetch.
-  The membar/ERRBAR/CGAERRBAR/DEPBAR prefix is **not** needed for the
-  cache-refresh effect (it provides the PTX memory-model ordering, not the
-  descriptor-cache coherence).
+  The membar/ERRBAR/CGAERRBAR/DEPBAR prefix — and the PTX
+  `fence.proxy.tensormap.release` that emits it — are **not** needed for the
+  cache-refresh effect: `acquire` alone (DEPBAR+CCTL+UTMACCTL) suffices, while
+  `release` alone leaves the stale descriptor. The release fence provides the
+  PTX memory-model ordering guarantees (cross-proxy visibility), not the
+  descriptor-cache coherence.
 - `.IV`/`.IVALL` invalidate (work); `.PF` prefetches but does **not** make a
   rewritten descriptor visible.
 - `CCTL` depth must be `.DEEP`; `.SHALLOW` leaves the stale line in place.

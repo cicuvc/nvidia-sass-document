@@ -52,6 +52,7 @@ IVALL  = "    UTMACCTL.IVALL;[7:7:{3}:5:1]\n"
 
 CTL_NONE = ""
 CTL_FULL = MB + CCTL_D + IV
+CTL_PAIR_NOMBAR = CCTL_D + IV          # membars/DEPBAR not required
 CTL_CCTL = MB + CCTL_D
 CTL_IV   = MB + IV
 CTL_CCTL_IVALL = MB + CCTL_D + IVALL
@@ -198,6 +199,9 @@ classify("no-ctl", v, "A")
 
 v = run_variant("full (CCTL+IV)", CTL_FULL)
 classify("full (CCTL+IV)", v, "B")
+
+v = run_variant("CCTL+IV (no membars)", CTL_PAIR_NOMBAR)
+classify("CCTL+IV (no membars)", v, "B")
 
 v = run_variant("CCTL only", CTL_CCTL)
 classify("CCTL only", v, "A")
