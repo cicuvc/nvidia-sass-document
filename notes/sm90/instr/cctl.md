@@ -76,9 +76,30 @@ pin `src_rel_sb=7` (no read-scoreboard dependency), which is exactly the
 | op | opcode | target cache |
 |---|---|---|
 | **CCTL** | 0x98f/0x1d8f | generic/global data cache (L1/L2), + U/C/I |
+| `CCTL.*.LDCU.*` (sm_120 only) | 0x1540/0x340 | L2 **LDCU** (tensormap descriptor cache) |
 | `CCTLL` | — | L1 **local**-memory cache (`notes` TBD) |
 | `CCTLT` | — | texture cache (excluded) |
 | `UTMACCTL` | 0x19b9/0x9b9 | TMA descriptor cache (`utmacctl.md`) |
+
+### Blackwell (sm_120) LDCU variants
+The sm_120 spec adds a dedicated **LDCU** cache-control family
+(`cctl_c_ldcu_*`), targeting the L2-side tensormap descriptor cache. ptxas emits
+`CCTL.E.C.LDCU.IV.DEEP [URa]` as part of `fence.proxy.tensormap.acquire` on
+sm_120 (preceded by `DEPBAR {5..0}`, followed by `UTMACCTL.IV [URa]`); the
+sm_90 acquire emits only `DEPBAR + UTMACCTL.IV` — the LDCU form does not exist
+in sm_90. Empirically (RTX 5090) the CCTL.LDCU.IV.DEEP and UTMACCTL.IV pair is
+*both required and together sufficient* to make a same-address descriptor
+rewrite visible to the next `UTMALDG`; `.SHALLOW` and `.PF` do not work. See
+`utmacctl.md` for the full isolation matrix.
+
+Formats (sm_120):
+- `CCTL.E.C.LDCU.IV.DEEP [URa]` — `cctl_c_ldcu_va_`, opcode 0x1540 (lo64
+  `0x000…7540`); per-address invalidate, `.E` 64-bit address, depth
+  `SHALLOW`(0)/`DEEP`(1).
+- `CCTL.C.LDCU.IVALL` — `cctl_c_ldcu_ivall_`, opcode 0x340; whole-cache
+  invalidate of the LDCU (no address operand).
+- `CCTL.C.LDCU.*` const forms — `cctl_c_ldcu_const_bindless_` (0x1740) /
+  `cctl_c_ldcu_const_bound_` (0x1b40), address via constant-bank descriptor.
 
 ## Latency (from `sm_90_latencies.txt`)
 `CCTL` ∈ `mio_pipe`, `VQ_UNORDERED`. Decoupled read-scoreboard op, no register

@@ -11,6 +11,16 @@ the tensormap *proxy*. UTMACCTL is the SASS lowering of PTX
 **`fence.proxy.tensormap`** (acquire → `.IV`) and **`prefetch.tensormap`**
 (→ `.PF`).
 
+Empirically (sm_120a, RTX 5090, §"Empirical verification" below) the SM-side
+`UTMACCTL.IV` alone does **not** make a same-address descriptor rewrite visible:
+ptxas pairs it with **`CCTL.E.C.LDCU.IV.DEEP [URa]`** (Blackwell-only, see
+`cctl.md`), which invalidates the descriptor line in the **L2 LDCU** cache. The
+coherent model is therefore *two-level*: UTMACCTL.IV invalidates the SM-local TMA
+descriptor cache, CCTL.*.LDCU.IV invalidates the L2-side descriptor cache; both
+must be invalidated before a subsequent TMA op re-fetches the descriptor.
+On sm_90 ptxas emits **only** `DEPBAR + UTMACCTL.IV` for the acquire (no CCTL
+LDCU form exists in the sm_90 spec), implying Hopper has no L2 descriptor cache.
+
 Two encodings:
 - **0x19b9 (`utmacctl_URa_`)** — takes a uniform-register **descriptor address**
   `[URa]` (64-bit, `ISRC_A_SIZE=64`) and a `cop` modifier:
@@ -88,10 +98,18 @@ form's `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` ties it into the DEPBAR path.
 Decoder `tools/decode_utmacctl.py`: **2/2 empirical PASS** + 1 spec-derived
 (`UTMACCTL.IVALL`, 0x9b9, not emitted by stock PTX here).
 
+sm_120a (RTX 5090, CUDA 12.8): the same acquire additionally emits the
+Blackwell-only LDCU invalidate (see `cctl.md`):
+| Lo64 | Hi64 | Disassembly | source PTX |
+|---|---|---|---|
+| `0x0000000004007540` | `0x001e240009c08000` | `CCTL.E.C.LDCU.IV.DEEP [UR4]` | `fence.proxy.tensormap::generic.acquire.gpu [p],128` |
+| `0x00000000040079b9` | `0x0013e20008000000` | `UTMACCTL.IV [UR4]` | (same) |
+
 ### PTX→SASS mapping
 | PTX | SASS |
 |---|---|
-| `fence.proxy.tensormap::generic.acquire.{cta,cluster,gpu,sys} [p], 128` | **`UTMACCTL.IV [URa]`** (preceded by `DEPBAR {5..0}`) |
+| `fence.proxy.tensormap::generic.acquire.{cta,cluster,gpu,sys} [p], 128` (sm_90) | **`DEPBAR {5..0}` + `UTMACCTL.IV [URa]`** |
+| `fence.proxy.tensormap::generic.acquire.{cta,cluster,gpu,sys} [p], 128` (sm_120) | **`DEPBAR {5..0}` + `CCTL.E.C.LDCU.IV.DEEP [URa]` + `UTMACCTL.IV [URa]`** |
 | `prefetch.tensormap [p]` | **`UTMACCTL.PF [URa]`** |
 | `fence.proxy.tensormap::generic.release.<scope>` | **`MEMBAR.ALL.GPU` + `ERRBAR` + `CGAERRBAR`** (not UTMACCTL — the *release* side is a memory barrier, not a cache-control op) |
 | `tensormap.cp_fenceproxy…` | fused `ATOMG.E.EXCH.STRONG.GPU` (copy) + fence (no UTMACCTL in the tested form) |
@@ -99,11 +117,61 @@ Decoder `tools/decode_utmacctl.py`: **2/2 empirical PASS** + 1 spec-derived
 **Key finding:** only the **acquire** side of `fence.proxy.tensormap` lowers to
 `UTMACCTL.IV` (invalidate the stale cached descriptor before re-reading); the
 **release** side becomes a plain `MEMBAR.ALL.GPU`+`ERRBAR`/`CGAERRBAR` sequence.
-The `.IV` acquire is emitted **after** a `DEPBAR {5,4,3,2,1,0}` (drain all
-scoreboards) — coherence point ordering.
+On sm_120 the acquire adds `CCTL.E.C.LDCU.IV.DEEP` (L2-side descriptor
+invalidation) before the `UTMACCTL.IV`; both are emitted after a
+`DEPBAR {5,4,3,2,1,0}` (drain all scoreboards) — coherence point ordering.
 
 Corroborates `../arch/memory_model.md` ("fence.proxy.tensormap → UTMACCTL.IV"),
-now confirmed with the exact 0x19b9 encoding and the `.PF`/`.IVALL` siblings.
+now confirmed with the exact 0x19b9 encoding, the `.PF`/`.IVALL` siblings, and
+the Blackwell CCTL.LDCU pairing.
+
+## Empirical verification (sm_120a, RTX 5090, CUDA 12.8/driver 580)
+Two-phase experiment, one kernel, 32 threads, hand-assembled SASS mirroring the
+ptxas output of the canonical PTX kernel (`cano.cu` at repo root, which runs
+with/without `fence.proxy.tensormap`):
+
+1. phase 1: `UTMALDG.2D` with descriptor (points at buffer **A**), wait on
+   mbarrier (`SYNCS.PHASECHK.TRANS64.TRYWAIT`).
+2. elected thread rewrites descriptor words 0/1 to buffer **B** (exactly what
+   `tensormap.replace.tile.global_address` emits: one `STG.E.64`), then runs a
+   fence-instruction variant.
+3. phase 2: `UTMALDG.2D` again from the **same** descriptor address; read the
+   tile. **B** ⇒ descriptor update visible; **A** ⇒ stale cached descriptor.
+
+| variant (after the rewrite STG) | phase 2 result |
+|---|---|
+| none | **A** (stale) |
+| `MEMBAR.ALL.CTA/GPU` + `ERRBAR` + `CGAERRBAR` + `DEPBAR.ALL` | A (stale) |
+| … + `CCTL.E.C.LDCU.IV.DEEP [URa]` only | A (stale) |
+| … + `UTMACCTL.IV [URa]` only | A (stale) |
+| … + `UTMACCTL.PF [URa]` only | A (stale) |
+| … + `UTMACCTL.IVALL` only | A (stale) |
+| … + `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.IV` | **B** |
+| … + `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.IVALL` | **B** |
+| … + `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.PF` | A (stale) |
+| `CCTL.E.C.LDCU.IV.SHALLOW` + `UTMACCTL.IV` | A (stale) |
+| `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.IV` (no membars/DEPBAR) | **B** |
+| `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.IV` **before** the rewrite STG | **B** |
+
+Conclusions:
+- **Both** `CCTL.E.C.LDCU.IV.DEEP` and `UTMACCTL.IV` are required on sm_120;
+  neither alone refreshes the cached descriptor. This is the Blackwell two-level
+  descriptor cache (L2 LDCU + SM TMA cache).
+- The pair works in either order and even *before* the descriptor write: what
+  matters is that the invalidations complete before the next `UTMALDG` re-fetch.
+  The membar/ERRBAR/CGAERRBAR/DEPBAR prefix is **not** needed for the
+  cache-refresh effect (it provides the PTX memory-model ordering, not the
+  descriptor-cache coherence).
+- `.IV`/`.IVALL` invalidate (work); `.PF` prefetches but does **not** make a
+  rewritten descriptor visible.
+- `CCTL` depth must be `.DEEP`; `.SHALLOW` leaves the stale line in place.
+- The stale cache is keyed by descriptor *address*: a fresh descriptor address
+  (P2 copy of the map) loads B without any control op (earlier experiment).
+- The driver flushes the descriptor cache at kernel boundaries: two kernels
+  sharing one descriptor address see the host rewrite without UTMACCTL.
+- Cross-check with the canonical PTX kernel (`cano.cu`, `k_canonical<true>`):
+  ptxas's full acquire sequence reproduces phase2=B; `k_canonical<false>`
+  (no fences) reproduces stale A — matching the hand-assembled matrix.
 
 ## Open questions
 - What triggers the operandless **`UTMACCTL.IVALL`** (0x9b9) from PTX — likely a
@@ -111,5 +179,8 @@ now confirmed with the exact 0x19b9 encoding and the `.PF`/`.IVALL` siblings.
   reproduced from user PTX here.
 - The `.acquire` scope (`.cta/.cluster/.gpu/.sys`) does **not** change the SASS
   (`UTMACCTL.IV` identical for gpu/cta/sys) — scope has no instruction-level
-  field; ordering is enforced by the preceding `DEPBAR`.
-
+  field; ordering is enforced by the preceding `DEPBAR`. Same holds for the
+  sm_120 `CCTL.E.C.LDCU.IV.DEEP` prefix.
+- Whether sm_90's `DEPBAR + UTMACCTL.IV` (no CCTL) alone actually refreshes a
+  same-address descriptor inside one kernel is untestable on this GPU (RTX 5090
+  is sm_120); the sm_90 lowering suggests Hopper has only the SM-side cache.
