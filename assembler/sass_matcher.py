@@ -18,7 +18,7 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.UREG:      {"UniformRegister"},
     OperandKind.PRED:      {"Predicate"},
     OperandKind.UPRED:     {"UniformPredicate"},
-    OperandKind.IMM_U:     {"UImm", "SImm", "RSImm"},
+    OperandKind.IMM_U:     {"UImm", "SImm", "RSImm", "OPTIONAL_GSB"},
     OperandKind.IMM_S:     {"SImm", "RSImm", "UImm"},
     OperandKind.IMM_F32:   {"F32Imm", "F64Imm", "F16Imm"},
     OperandKind.SPECIAL_REG: {"SpecialRegister"},
@@ -41,7 +41,7 @@ SCHED_TYPES = {"REQ", "BITSET", "WR", "RD", "USCHED_INFO", "BATCH_T", "PM_PRED",
 SCHED_SLOT_NAMES = {"src_rel_sb", "dst_wr_sb", "req_bit_set", "req", "wr", "rd",
                     "pm_pred", "batch_t", "usched_info",
                     "reuse_src_a", "reuse_src_b", "reuse_src_c", "reuse_src_d"}
-COMPOSITE_TYPES = {"C", "DESC"}
+COMPOSITE_TYPES = {"C", "DESC", "GMMA"}
 
 
 class MatchError(Exception):
@@ -176,6 +176,10 @@ class SassMatcher:
                         f"modifier)")
                     return None
             elif want > 32:
+                # RZ as a wide operand means "none/empty" (e.g. HGMMA's
+                # second accumulator Rc=RZ encodes 0); allow it.
+                if int(op.value) == 255:
+                    continue
                 rv = int(op.value)
                 self._cond_errors.append(
                     f"{inst.mnemonic}: operand {op.value} is a single "
@@ -497,7 +501,8 @@ class SassMatcher:
 
         if first_type == "C" and op.kind == OperandKind.CONST_BANK:
             return self._match_const_bank(group, op, slot_map)
-        if first_type == "DESC" and op.kind == OperandKind.MEM_DESC:
+        if first_type in ("DESC", "GMMA") and op.kind in (
+                OperandKind.MEM_DESC, OperandKind.UREG):
             return self._match_mem_desc(group, op, slot_map)
         if op.kind == OperandKind.MEM_ADDR:
             return self._match_mem_addr(group, op, slot_map)
@@ -570,10 +575,10 @@ class SassMatcher:
                         slot_map: dict) -> bool:
         for s in group:
             st = s["type"]
-            if st == "DESC":
+            if st in ("DESC", "GMMA"):
                 slot_map[s["name"]] = 1
             elif st == "UniformRegister":
-                slot_map[s["name"]] = op.value  # UR from desc[UR]
+                slot_map[s["name"]] = op.value  # UR from desc[UR] / gdesc[UR]
             elif st in ("Register", "NonZeroRegister"):
                 slot_map[s["name"]] = op.addr_reg  # Ra from [Ra+offset]
             elif st in ("SImm", "UImm") and "offset" in s["name"].lower():
@@ -622,7 +627,7 @@ class SassMatcher:
             return v if isinstance(v, int) else None
         if st in ("Predicate", "UniformPredicate"):
             return v if isinstance(v, int) else None
-        if st in ("UImm", "SImm", "RSImm"):
+        if st in ("UImm", "SImm", "RSImm", "OPTIONAL_GSB"):
             return v if isinstance(v, int) else None
         if st in ("F32Imm", "F64Imm", "F16Imm"):
             import struct

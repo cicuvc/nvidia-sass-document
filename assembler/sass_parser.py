@@ -394,6 +394,9 @@ class Parser:
         # special register: SR_NAME[.SUB]
         if t.type == "IDENT":
             ident = self.pop().text
+            # HGMMA optional gsb operand: gsb0..gsb6 (OPTIONAL_GSB enum)
+            if re.fullmatch(r"gsb\d+", ident):
+                return Operand(OperandKind.IMM_U, int(ident[3:]))
             # FSWZADD swizzle pattern: 8-char P/N/Z string (e.g. NPPNNPPN)
             if re.fullmatch(r"[PNZ]{8}", ident):
                 pairs = {"PP": 0, "PN": 1, "NP": 2, "ZP": 3}
@@ -458,10 +461,10 @@ class Parser:
             if not self.skip("COMMA"):
                 break
         self.expect("RBRACE")
-        if len(regs) not in (2, 4):
+        if len(regs) not in (2, 4, 8):
             raise SyntaxError(
-                f"register group must list 2 (64-bit) or 4 (128-bit) "
-                f"registers, got {len(regs)}")
+                f"register group must list 2 (64-bit), 4 (128-bit) or "
+                f"8 (256-bit) registers, got {len(regs)}")
         all_rz = all(r == 255 for r in regs)
         if not all_rz:
             if 255 in regs:
