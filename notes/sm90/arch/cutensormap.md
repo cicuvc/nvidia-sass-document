@@ -22,7 +22,8 @@ All fields little-endian.  Words w0..w31 (each 4 bytes):
 |---|---|
 | w0..w1 | `globalAddress` (64-bit; w0 = low 32 bits) |
 | w2 | flags (bit table below) |
-| w3..w7 | `globalStrides[i] / 16` for i = 0..rank-2, one 32-bit word each |
+| w3..w6 | `globalStrides[i] / 16`, low 32 bits (i = 0..rank-2) |
+| w7 | high 4 bits of each `globalStrides[i] / 16`: `w7[4i+3:4i]` = `globalStrides[i] >> 36` (this is where the API's "< 2^40" lives) |
 | w8..w12 | `globalDim[i] - 1`, one 32-bit word each (w12 used by rank 5) |
 | w13 | `[15:0]` elementStrides[i]-1 packed 3 bits each (i = 0..rank-1, low = dim 0); `[23:16]` reserved (0); `[31:24]` boxDim[0]-1 |
 | w14 | boxDim[1..rank-1]-1 in bytes 0..rank-2 (8 bits each) |
@@ -122,9 +123,11 @@ The wide flag follows the same total-element rule as tiled
 ## Quirks and driver behavior
 
 - `globalStrides` are stored as `/16` in 32-bit words, so strides `≥ 2^36` wrap
-  silently (probed: stride = 2^36 → w3 = 0; no wide flag, no error).  The API
-  advertises `< 2^40`, but the descriptor field cannot represent that without
-  additional bits we did not find.
+  into w7: stride = 2^36 → `w3 = 0, w7 = 1`; the four 4-bit nibbles of w7 hold
+  `stride[i] >> 36` for i = 0..3 (rank 5 uses all four, rank 2 only the first;
+  the last `globalStrides` entry is ignored by the driver).  Strides ≥ 2^40 are
+  rejected (`rc != 0`).  This is also how the ptxas `tensormap.replace`
+  `.global_stride` lowering splits the 64-bit value.
 - w0/w1 hold the full 64-bit little-endian address.  In this sandbox, raw
   driver-API contexts (`cuCtxCreate`) are capped near 4 GB — `cuMemGetInfo`
   reports `total = 0xffffffff` and allocations beyond that fail — so driver
@@ -171,6 +174,43 @@ High address (64-bit split): address `0x7f4120000000` →
   diffs, all results re-decoded by the field model (71 tiled + im2col cases,
   0 mismatches).
 
+## `tensormap.replace` → SASS lowering
+
+PTX `tensormap.replace.tile.<field>{.global|.shared::cta}.b1024.{b32|b64}`
+(PTX ISA 8.3+, sm_90a/sm_100a/sm_120a) has **no dedicated SASS instruction**:
+ptxas expands it into plain global/shared loads, bit-field ALU, and stores on
+the descriptor words directly (verified sm_90a + sm_120a, CUDA 13.0).  The
+offsets/masks are exactly the bit layout above — a strong independent
+cross-check of this note:
+
+| PTX field | SASS lowering (sm_90a) | descriptor bits |
+|---|---|---|
+| `.global_address` (b64) | `STG.E.64 desc[UR4][R2.64], R4` | w0..w1 = new 64-bit address |
+| `.rank` | `LDG` w2, insert `new<<4` under mask `0x70`, `STG` | w2 [6:4] = new value (PTX passes rank-1) |
+| `.box_dim, ord` | `LDG` w13/w14, `new-1`, insert, `STG` | w13 byte3 (ord 0) / w14 byte ord-1 |
+| `.global_dim, ord` | `LDG` w8.., `new-1`, `STG` | w8+ord = dim-1 |
+| `.global_stride, ord` | `LDG` w7, `SHF` stride>>4, `STG` w3+ord (low), merge `stride>>36` into w7 [4·ord+3:4·ord] | stride/16 split across w3..w6 + w7 |
+| `.element_stride, ord` | `LDG` w13, `new-1`, insert under 3-bit mask shifted 3·ord, `STG` | w13 [3·ord+2:3·ord] |
+| `.elemtype` (imm) | `LDG` w2, insert hardware code, `STG` | w2 [10:7] (+ bit16 for tf32) |
+| `.interleave_layout` (imm) | `LDG` w2, set bit 11, `STG` | w2 [11] |
+| `.swizzle_mode` (imm) | `LDG` w2, set bits [14:13], `STG` | w2 [14:13] = value (1..3) |
+| `.fill_mode` (imm) | `LDG` w2, set bit 15, `STG` | w2 [15] (OOB fill) |
+| `.global_address.shared::cta` | `STS.64 [UR4], R2` | shared copy of w0..w1 |
+
+The PTX `.elemtype` immediate maps through ptxas's own table to the same
+hardware codes found by driver probing (note the PTX doc's warning that these
+are not the `CUtensorMapDataType` enum values): PTX 0..7 (u8..f32) → codes
+0..7; PTX 8 f32.ftz → 8; 9 f64 → 9; 10 bf16 → 10; 11 tf32 → 7+bit16; 12
+tf32.ftz → 8+bit16; 13 b4x16 → 11; 14 b4x16_p64 → 12; 15 b6x16_p32 → 13.
+Empirically running each variant on a live descriptor reproduces the driver
+encodings byte-for-byte (31/31 field checks).
+
+Architecture notes: `.elemtype` values 13..15 need sm_100a+; `.swizzle_mode`
+value 4 (96B) is sm_103a-only; `.swizzle_atomicity` is sm_100a+ (all three
+rejected by sm_90a ptxas).  Because the replace is just ordinary stores, the
+descriptor cache must be invalidated before reuse —
+`fence.proxy.tensormap` → `UTMACCTL.IV` (see `utmacctl.md`).
+
 ## Open questions
 
 - w18 semantics beyond the observed value table (0x10 / 0x100 / 0x200 / 0x400)
@@ -178,4 +218,3 @@ High address (64-bit split): address `0x7f4120000000` →
 - w16 for im2col + interleave: one sample (f16, il=16B, cpp 8, ppc 8) stored
   `0x400` (1024) instead of `cpp×ppc×elem` (128); the multiplier rule is
   unverified.
-- stride fields ≥ 2^36: where (if anywhere) the upper bits live.

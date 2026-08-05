@@ -15,7 +15,8 @@ The layout (all little-endian, 32-bit words w0..w31):
   tiled mode
   w0..w1    global address (64-bit)
   w2        flags (see below)
-  w3..w7    globalStrides[i] / 16          (i = 0..rank-2, 32-bit each)
+  w3..w6    globalStrides[i] / 16, low 32 bits   (i = 0..rank-2)
+  w7        globalStrides[i] >> 36, 4 bits each  (w7[4i+3:4i]; stride < 2^40)
   w8..w12   globalDim[i] - 1               (32-bit each; w12 used by rank 5)
   w13       bits[15:0]  elementStrides[i]-1 packed 3 bits each, i = 0..4
             bits[23:16] reserved (0)
@@ -118,7 +119,8 @@ class TiledDesc(Structure):
     _fields_ = [
         ("memoryPtr", c_uint64),
         ("flags", Flags),
-        ("gstride_div_16", c_uint32 * 5),
+        ("gstride_div_16", c_uint32 * 4),   # w3..w6 (low 32 bits of stride/16)
+        ("gstride_hi", c_uint32),           # w7 (4 high bits per stride)
         ("gshape_sub_1", c_uint32 * 5),
         ("sstride_3bits", c_uint16),      # w13 bits[15:0]
         ("pad", c_uint8),                 # w13 bits[23:16]
@@ -291,7 +293,9 @@ def cuTensorMapEncodeTiled(tmaDesc, dtype, rank, gaddr, gshape, gstride,
             desc.gshape_sub_1[i] = c_uint32(int(dims[i]) - 1)
             desc.sshape_sub_1[i] = c_uint8(int(box[i]) - 1)
         for i in range(max(0, rank - 1)):
-            desc.gstride_div_16[i] = c_uint32(int(strides[i]) >> 4)
+            sv = int(strides[i])
+            desc.gstride_div_16[i] = c_uint32((sv >> 4) & 0xFFFFFFFF)
+            desc.gstride_hi |= ((sv >> 36) & 0xF) << (4 * i)
 
         packed = 0
         for i in range(rank):

@@ -202,6 +202,14 @@ cases.append(("tiled il2 sw4", drv_tiled(6, 3, [16,16,16], [512,32,0],
               lambda buf: cuTensorMapEncodeTiled(
                   buf, 6, 3, ADDR, [16,16,16], [512,32,0], [16,8,16],
                   [1,1,1], interleave=2, swizzle=4)))
+cases.append(("tiled huge strides", drv_tiled(
+                  6, 4, [16,16,16,16],
+                  [1 << 36, (1 << 36) + 32, 1 << 37, 0],
+                  [8, 8, 8, 8], [1, 1, 1, 1]),
+              lambda buf: cuTensorMapEncodeTiled(
+                  buf, 6, 4, ADDR, [16,16,16,16],
+                  [1 << 36, (1 << 36) + 32, 1 << 37, 0],
+                  [8, 8, 8, 8], [1, 1, 1, 1])))
 cases.append(("i2c r3 corners", drv_i2c(3, [16,16,16], [256,32,0],
                                         [-100], [1000], 16, 64, [2,1,1]),
               lambda buf: cuTensorMapEncodeIm2col(
@@ -299,6 +307,88 @@ check("helper-desc UTMALDG row0", list(v[2:6]),
 v = run_tma(0, 8)
 check("helper-desc UTMALDG row0 @col8", list(v[2:6]),
       [0x000a0009, 0x000c000b, 0x000e000d, 0x0010000f])
+
+# --- tensormap.replace lowering (nvcc-gated) --------------------------------
+# PTX tensormap.replace has no dedicated SASS instruction: ptxas emits plain
+# LDG/STG + bit-field ALU on the descriptor words.  Run a handful of field
+# variants on a live descriptor and verify the bytes against the layout.
+import os, subprocess, textwrap
+_REPLACE_CU = textwrap.dedent(r"""
+    #include <cuda_runtime.h>
+    extern "C" {
+    __global__ void r_ga(unsigned long long* d, unsigned long long v) {
+        asm volatile("tensormap.replace.tile.global_address.global.b1024.b64 [%0], %1;"
+                     :: "l"(d), "l"(v) : "memory"); }
+    __global__ void r_rank(unsigned long long* d) {
+        asm volatile("tensormap.replace.tile.rank.global.b1024.b32 [%0], 3;"
+                     :: "l"(d) : "memory"); }
+    __global__ void r_boxdim0(unsigned long long* d, unsigned int v) {
+        asm volatile("tensormap.replace.tile.box_dim.global.b1024.b32 [%0], 0, %1;"
+                     :: "l"(d), "r"(v) : "memory"); }
+    __global__ void r_globaldim0(unsigned long long* d, unsigned int v) {
+        asm volatile("tensormap.replace.tile.global_dim.global.b1024.b32 [%0], 0, %1;"
+                     :: "l"(d), "r"(v) : "memory"); }
+    __global__ void r_gstride0(unsigned long long* d, unsigned long long v) {
+        asm volatile("tensormap.replace.tile.global_stride.global.b1024.b64 [%0], 0, %1;"
+                     :: "l"(d), "l"(v) : "memory"); }
+    __global__ void r_estr0(unsigned long long* d, unsigned int v) {
+        asm volatile("tensormap.replace.tile.element_stride.global.b1024.b32 [%0], 0, %1;"
+                     :: "l"(d), "r"(v) : "memory"); }
+    __global__ void r_elemtype9(unsigned long long* d) {
+        asm volatile("tensormap.replace.tile.elemtype.global.b1024.b32 [%0], 9;"
+                     :: "l"(d) : "memory"); }
+    __global__ void r_il(unsigned long long* d) {
+        asm volatile("tensormap.replace.tile.interleave_layout.global.b1024.b32 [%0], 1;"
+                     :: "l"(d) : "memory"); }
+    __global__ void r_swz2(unsigned long long* d) {
+        asm volatile("tensormap.replace.tile.swizzle_mode.global.b1024.b32 [%0], 2;"
+                     :: "l"(d) : "memory"); }
+    __global__ void r_fill(unsigned long long* d) {
+        asm volatile("tensormap.replace.tile.fill_mode.global.b1024.b32 [%0], 1;"
+                     :: "l"(d) : "memory"); }
+    }
+""")
+_CUB = Path("/tmp") / "tmap_replace_regr.cubin"
+_RC = subprocess.run(
+    ["/usr/local/cuda/bin/nvcc", "-arch=sm_120a", "-O3", "-cubin",
+     "-o", str(_CUB), "-x", "cu", "-"], input=_REPLACE_CU,
+    capture_output=True, text=True)
+if _RC.returncode != 0 or not _CUB.exists():
+    print("--- tensormap.replace checks SKIPPED (nvcc unavailable) ---")
+else:
+    rmod = CudaModule(_CUB.read_bytes())
+    rd = rmod.devmem_alloc(128)
+    def rrun(fn, args=()):
+        rmod.device_write(rd, bytes(buf0.raw))   # driver baseline descriptor
+        rmod.launch(fn, grid=(1,), block=(32,), args=[rd] + list(args))
+        rmod.synchronize()
+        return struct.unpack("<32I", rmod.device_read(rd, 128))
+    buf0 = ctypes.create_string_buffer(128)
+    _check(cuTensorMapEncodeTiled(
+        buf0, 6, 2, ADDR, [16, 16], [32, 0], [16, 8], [1, 1]))
+    w = rrun("r_ga", [0x123456789abcdef0])
+    check("replace.global_address w0", hex(w[0]), "0x9abcdef0")
+    check("replace.global_address w1", hex(w[1]), "0x12345678")
+    w = rrun("r_rank")
+    check("replace.rank -> w2[6:4]=3", hex(w[2]), "0x330")
+    w = rrun("r_boxdim0", [17])
+    check("replace.box_dim0 -> w13 byte3", hex(w[13]), "0x10000000")
+    w = rrun("r_globaldim0", [33])
+    check("replace.global_dim0 -> w8", hex(w[8]), "0x20")
+    w = rrun("r_gstride0", [1 << 36])
+    check("replace.global_stride0=2^36 w3", hex(w[3]), "0x0")
+    check("replace.global_stride0=2^36 w7", hex(w[7]), "0x1")
+    w = rrun("r_estr0", [5])
+    check("replace.element_stride0=5 w13&7", hex(w[13] & 7), "0x4")
+    w = rrun("r_elemtype9")
+    check("replace.elemtype=9 (f64) w2", hex(w[2]), "0x490")
+    w = rrun("r_il")
+    check("replace.interleave=1 bit11", hex(w[2] & 0x800), "0x800")
+    w = rrun("r_swz2")
+    check("replace.swizzle=2 bits[14:13]", hex(w[2] & 0x6000), "0x4000")
+    w = rrun("r_fill")
+    check("replace.fill_mode=1 bit15", hex(w[2] & 0x8000), "0x8000")
+    _CUB.unlink(missing_ok=True)
 
 print(f"\n=== tmap_helper: {'ALL PASS' if ok else 'FAILURES'} ({n} driver cases) ===")
 sys.exit(0 if ok else 1)
