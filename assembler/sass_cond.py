@@ -82,7 +82,7 @@ def tokenize(predicate: str) -> list[tuple[str, str]]:
             toks.append(("CONST", predicate[i + 1:j]))
             i = j
             continue
-        if c in "()+-*%<>!@,&":
+        if c in "()+-*%<>!@,&?:":
             toks.append(("OP", c))
             i += 1
             continue
@@ -181,6 +181,14 @@ class ConditionEvaluator:
 
     def _impl(self) -> int:
         left = self._or_expr()
+        if self._eat_op("?"):
+            # Ternary (sm90 size predicates use nested `a ? b : c`):
+            # non-zero condition picks the then-branch.
+            then = self._impl()
+            if not self._eat_op(":"):
+                raise ValueError("missing ':' in ternary predicate")
+            els = self._impl()
+            return then if left else els
         if self._eat_op("->"):
             right = self._or_expr()
             return 1 if (not left) or right else 0

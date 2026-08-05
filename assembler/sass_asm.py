@@ -91,10 +91,12 @@ def dump_instructions(insts, verbose=False) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="SM120 SASS assembler")
+    ap = argparse.ArgumentParser(description="SASS assembler (sm90/sm120)")
     ap.add_argument("input", type=str, help="Input .sass file")
     ap.add_argument("-o", "--output", type=str, default=None, help="Output .cubin path")
     ap.add_argument("-n", "--kernel-name", type=str, default="my_kernel", help="Kernel name")
+    ap.add_argument("--arch", type=str, default=None,
+                    help="Target arch: sm90 or sm120 (default: process arch)")
     ap.add_argument("--template", type=str, default=None, help="Minimal cubin template path (required for -o)")
     ap.add_argument("--dump-text", type=str, default=None, help="Dump raw instruction bytes to file (no ELF)")
     ap.add_argument("--dump", action="store_true", default=True, help="Dump parsed instructions")
@@ -169,9 +171,11 @@ def main() -> int:
                 for k, v in list(results[i].slot_map.items())[:8]:
                     print(f"         {k:20s} = {v}")
 
-    # Encode
-    db_path = Path(__file__).resolve().parent.parent / "sm120.json"
-    with open(db_path) as f:
+    # Encode — the ISA db and const-bank layout follow the selected arch.
+    from . import arch
+    if args.arch:
+        arch.set_arch(args.arch)
+    with open(arch.db_path()) as f:
         db = json.load(f)
     encoder = SassEncoder(db)
 

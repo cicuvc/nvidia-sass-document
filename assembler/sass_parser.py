@@ -3,17 +3,15 @@ import re
 from typing import Iterator
 
 from .operand import Operand, OperandKind, ParsedInstruction, Sched
+from . import arch
 
 # --- Token types ---
 from .operand import Operand, OperandKind, ParsedInstruction, Sched, ParamDecl, KernelDecl
 
-# Named const-bank slots per sm120 driver convention.  #spec_const(NAME)
-# resolves to a fixed c[bank][offset] slot.
+# Named const-bank slots, resolved per-arch (arch.ARCHES[*].default_cdesc):
 #   SLOT_DEFAULT_CDESC — the default cache descriptor the driver plants for
-#   every kernel at c[0x0][0x358]; used as desc[...] for global accesses.
-SPEC_CONST_MAP = {
-    "SLOT_DEFAULT_CDESC": (0, 0x358),
-}
+#   every kernel (sm90: c[0x0][0x208]; sm120: c[0x0][0x358]); used as
+#   desc[...] for global accesses.
 
 TOKENS = [
     ("NEWLINE", r"\n|\r\n?"),
@@ -537,14 +535,13 @@ class Parser:
         return Operand(OperandKind.PARAM_REF, name_t.text)
 
     def _parse_spec_const(self) -> Operand:
-        """#spec_const(NAME) → a fixed const-bank slot (sm120 driver
-        conventions).  E.g. SLOT_DEFAULT_CDESC = the default cache descriptor
-        the driver plants at c[0x0][0x358]."""
+        """#spec_const(NAME) → a fixed const-bank slot (per-arch driver
+        conventions, see assembler/arch.py)."""
         self.pop()  # #spec_const
         self.expect("LPAREN")
         name_t = self.expect("IDENT")
         self.expect("RPAREN")
-        slot = SPEC_CONST_MAP.get(name_t.text)
+        slot = arch.spec_const_map().get(name_t.text)
         if slot is None:
             raise SyntaxError(f"unknown #spec_const name {name_t.text!r}")
         return Operand.const_bank(*slot)
@@ -603,7 +600,8 @@ class Parser:
             self.pop()
         self.expect("FN_DIRECTIVE")
         name_t = self.expect("IDENT")
-        decl = KernelDecl(name=name_t.text)
+        decl = KernelDecl(name=name_t.text,
+                          param_base=arch.current().param_base)
 
         # parameters: (p1<4>, p2<8>, ...)
         self.expect("LPAREN")

@@ -8,6 +8,10 @@ from typing import Any, Optional
 from .operand import Operand, OperandKind, ParsedInstruction, Sched
 from .sass_cond import ConditionEvaluator
 
+# Cross-arch mnemonic aliases (resolved only if the target exists in the db):
+#   LDCU = sm_120's name for sm_90's ULDC (uniform load from const bank).
+_MNEMONIC_ALIASES = {"LDCU": "ULDC", "ULDC": "LDCU"}
+
 # --- Slot type → OperandKind compatibility ---
 TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.REG:       {"Register", "NonZeroRegister", "ZeroRegister"},
@@ -68,7 +72,14 @@ class SassMatcher:
 
     # ------------------------------------------------------------------
     def match(self, inst: ParsedInstruction) -> MatchResult:
-        candidates = self._by_mnemonic.get(inst.mnemonic.upper(), [])
+        mn = inst.mnemonic.upper()
+        candidates = self._by_mnemonic.get(mn, [])
+        if not candidates:
+            # cross-arch mnemonic aliases: LDCU is the sm_120 name of sm_90's
+            # ULDC.  Resolved only when the target mnemonic exists in this db.
+            alias = _MNEMONIC_ALIASES.get(mn)
+            if alias:
+                candidates = self._by_mnemonic.get(alias, [])
         if not candidates:
             raise MatchError(f"no variants for mnemonic {inst.mnemonic!r}")
 
@@ -876,7 +887,8 @@ class SassMatcher:
 def create_matcher(db_path: str = "") -> SassMatcher:
     from pathlib import Path
     if not db_path:
-        db_path = str(Path(__file__).resolve().parent.parent / "sm120.json")
+        from . import arch
+        db_path = str(arch.db_path())
     with open(db_path) as f:
         db = json.load(f)
     return SassMatcher(db)
