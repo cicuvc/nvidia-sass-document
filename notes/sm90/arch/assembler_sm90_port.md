@@ -52,6 +52,23 @@ hardcode touched or reviewed.
   fault ILLEGAL_ADDRESS (700) on a garbage descriptor.  Adding NOPs after
   the ULDC clears the fault.  Test sources that load the cdesc and consume
   it via `req` (the sm120 pattern) must switch to stall/NOP for sm90.
+
+### ULDC timing investigation (H20)
+Probed the minimal stall/yield that makes a following LDG see the descriptor:
+| ULDC bracket | result |
+|---|---|
+| yield=0, stall=0 | **ILLEGAL_ADDRESS** (desc not ready) |
+| yield=0, stall≥1 | pass |
+| yield=1, stall=0..7 | pass |
+| `[0:7:{}:7:1]` (nvcc's exact encoding) | pass, byte-identical to nvcc |
+
+So the synchronous ULDC needs either `yield=1` (lets the warp swap out while
+the uniform datapath writes UR4/UR5) or `stall≥1`.  `req` never helps because
+`dst_wr_sb=*7`.  A lone `yield=1` on the LDCU is NOT always sufficient in a
+longer kernel: if the LDG's `req` only waits the *address* scoreboard (LDC.64)
+and the ULDC sits earlier, the LDG can still issue before the desc lands —
+put the ULDC immediately before the consumer, or give the LDG extra stall.
+`sm120 LDCU` needs none of this (it is DECOUPLED and req-waits work).
 - Verified on H20: kernel load+launch, param base 0x210, default cdesc
   c[0x0][0x208], LDG/STG, integer math, shared-memory roundtrip, ISETP+SEL
   predicate all pass.  sm90 LDG operand order is `Rd, desc[...]` (format
