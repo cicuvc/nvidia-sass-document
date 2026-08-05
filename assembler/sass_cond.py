@@ -356,6 +356,12 @@ class ConditionEvaluator:
             return str(int(v, 0))
         if k == "IDENT":
             self._pos += 1
+            nxt = self._peek()
+            if nxt and nxt[0] == "OP" and nxt[1] == "@":
+                self._pos += 1
+                attr_t = self._peek()
+                self._pos += 1
+                return str(self._slot_attr(v, attr_t[1] if attr_t else ""))
             return str(self._slot(v))
         self._pos += 1
         return "0"

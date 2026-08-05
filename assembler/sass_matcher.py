@@ -679,6 +679,13 @@ class SassMatcher:
         for s in group:
             if s["name"] not in slot_map and s.get("default") is not None:
                 slot_map[s["name"]] = self._parse_default(s["default"], s["type"])
+                # A negatable predicate slot ([!]Predicate, e.g. sm90 LDG's
+                # Pnz) that was omitted defaults to PT with the negate bit
+                # CLEAR.  Without this, conditions like
+                # DEFINED TABLES_Pnz_0(Pnz@not,Pnz) fail because Pnz@not is
+                # missing from slot_map.
+                if s["type"] == "Predicate" and f"{s['name']}_not" not in slot_map:
+                    slot_map[f"{s['name']}_not"] = 0
 
     # ------------------------------------------------------------------
     # Modifier matching
