@@ -204,14 +204,17 @@ class SassEncoder:
         if target_val is None:
             return self._float_to_fp16(f32)
 
-        # nvcc evidence: when ofmt != BF16_V2, constants use BF16 format.
-        # The convertFloatType condition checks for BF16_V2, but the default
-        # (when false) is BF16 for most HFMA2 variants.
+        # nvcc evidence (HFMA2 ofmt=F16_V2 constant 0x0003 = fp16 1.78e-07,
+        # sm120 mini kernel): the convertFloatType condition is `X==BF16_*`,
+        # so X==target ⇒ the constant is BF16; otherwise FP16.  An
+        # unconditional `1==1` (F2I/FRND/...) means plain FP16.
         mod_val = sm.get(mod_name)
-        if mod_val == target_val:
+        if mod_name == "1":
             return self._float_to_fp16(f32)
-        else:
+        if mod_val == target_val:
             return self._float_to_bf16(f32)
+        else:
+            return self._float_to_fp16(f32)
 
     @staticmethod
     def _float_to_fp16(f: float) -> int:

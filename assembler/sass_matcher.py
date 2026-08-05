@@ -18,7 +18,7 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.UREG:      {"UniformRegister"},
     OperandKind.PRED:      {"Predicate"},
     OperandKind.UPRED:     {"UniformPredicate"},
-    OperandKind.IMM_U:     {"UImm", "SImm", "RSImm", "OPTIONAL_GSB"},
+    OperandKind.IMM_U:     {"UImm", "SImm", "RSImm", "OPTIONAL_GSB", "GSB0ONLY"},
     OperandKind.IMM_S:     {"SImm", "RSImm", "UImm"},
     OperandKind.IMM_F32:   {"F32Imm", "F64Imm", "F16Imm"},
     OperandKind.SPECIAL_REG: {"SpecialRegister"},
@@ -139,7 +139,8 @@ class SassMatcher:
         # 3. Match remaining modifiers
         enc_names = set()
         for f in variant.get("encoding", []):
-            for nm in re.findall(r"\b[A-Za-z_][A-Za-z0-9_.]*\b", f.get("rhs", "")):
+            for nm in re.findall(r"\b[A-Za-z_][A-Za-z0-9_.]*\b",
+                                 f.get("rhs", "")):
                 enc_names.add(nm)
         mod_map = self._match_modifiers(slots, inst.modifiers, consumed_mods, enc_names)
         if mod_map is None:
@@ -627,7 +628,7 @@ class SassMatcher:
             return v if isinstance(v, int) else None
         if st in ("Predicate", "UniformPredicate"):
             return v if isinstance(v, int) else None
-        if st in ("UImm", "SImm", "RSImm", "OPTIONAL_GSB"):
+        if st in ("UImm", "SImm", "RSImm", "OPTIONAL_GSB", "GSB0ONLY"):
             return v if isinstance(v, int) else None
         if st in ("F32Imm", "F64Imm", "F16Imm"):
             import struct
@@ -733,11 +734,19 @@ class SassMatcher:
                 if default is not None:
                     result[name] = self._parse_default(default, etype)
                 elif (not remaining and
-                        etype.startswith("ONLY")):
-                    # Width-constraint slot (ONLY64/ONLY256/ONLY32) with no
-                    # default: its value is implied by the operand width, not
-                    # by a user modifier.  With no modifiers left to consume
-                    # it is optional — skip instead of failing.
+                        "ONLY" in etype and any(c.isdigit() for c in etype)):
+                    # Width-constraint slot (ONLY64/ONLY256/ONLY32, U32ONLY,
+                    # S32ONLY) with no default: its value is implied by the
+                    # operand width, not by a user modifier.  Record the enum
+                    # value so the encoder's `*size` star field resolves
+                    # (IADD.64 encodes sz=*size=1).  Pure-letter flags like
+                    # UONLY/EONLY/XONLY are NOT width constraints and must not
+                    # be auto-set.
+                    for k, v in enum_vals.items():
+                        if isinstance(v, int) and not k.startswith("no") \
+                                and "INVALID" not in k:
+                            result[name] = v
+                            break
                     continue
                 else:
                     return None
@@ -758,6 +767,11 @@ class SassMatcher:
         # case-insensitively (same normalization used by _parse_default).
         upper_map = {k.upper(): v for k, v in enum_vals.items()
                      if isinstance(v, int)}
+        # value-less enums (RelOpt {REL: None}, ABSONLY {ABS: None}): a name
+        # match consumes the modifier, value = None (variant implied, no bits).
+        no_val = [k.upper() for k, v in enum_vals.items()
+                  if v is None and not k.startswith("no")
+                  and "INVALID" not in k.upper()]
         for i in range(len(remaining)):
             for k in range(1, min(4, len(remaining) - i) + 1):
                 cand = ".".join(remaining[i:i + k])
@@ -766,6 +780,10 @@ class SassMatcher:
                     new_remaining = list(remaining)
                     del new_remaining[i:i + k]
                     return val, new_remaining
+                if cand.upper() in no_val:
+                    new_remaining = list(remaining)
+                    del new_remaining[i:i + k]
+                    return None, new_remaining
         return None
 
     def _parse_default(self, default: str, etype: str) -> int:
@@ -882,18 +900,35 @@ class SassMatcher:
         score = 100
         if variant.get("is_alternate"):
             score -= 50
-        # Prefer variants where more modifier slots consumed a user modifier
+        # Prefer variants whose modifiers the user explicitly wrote; when the
+        # user wrote no modifier, prefer variants whose modifiers carry a
+        # default (plain `IMAD`/`UIMAD` → LO, not the optional-HI variant;
+        # `IMAD.U32` → plain imad, not imad_hi).
         mod_slots = [s for s in variant["format"]["slots"] if s["modifier"]
                      and s["type"] not in ("REUSE",)]
+        consumed = 0
         for s in mod_slots:
             etype = s["type"]
             enum_vals = self.db["enums"].get(etype, {})
             default = s.get("default")
             has_default = default is not None
-            # Prefer required slots (no default) that will consume a modifier
-            if not has_default:
-                score += 5
-        return score
+            if has_default and (etype in inst.modifiers
+                                or str(default).split("/")[0]
+                                .strip().strip('"') in inst.modifiers):
+                consumed += 1
+        if not inst.modifiers:
+            if inst.mnemonic.upper() == "IMAD":
+                # nvcc emits plain IMAD as LO (imad opcode 0x824); the HI
+                # variant is only reachable with an explicit .HI.
+                score += sum(1 for s in mod_slots
+                             if s.get("default") is not None)
+            else:
+                # Historical sm_120 behavior: a plain form picks the variant
+                # whose distinguishing modifier has NO default — UIMAD plain
+                # == HI, IADD.64's width slot is optional, etc.
+                score += sum(1 for s in mod_slots
+                             if s.get("default") is None)
+        return score + consumed * 5
 
 
 def create_matcher(db_path: str = "") -> SassMatcher:
