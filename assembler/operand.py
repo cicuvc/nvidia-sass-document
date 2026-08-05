@@ -3,6 +3,8 @@ import enum
 from dataclasses import dataclass, field
 from typing import Optional
 
+from . import arch
+
 
 class OperandKind(enum.Enum):
     REG = "REG"
@@ -42,7 +44,7 @@ class KernelDecl:
     params: list[ParamDecl] = field(default_factory=list)
     attributes: dict[str, str | int] = field(default_factory=dict)
     instructions: list[ParsedInstruction] = field(default_factory=list)
-    param_base: int = 0x380
+    param_base: int = field(default_factory=lambda: arch.current().param_base)
 
     def layout_params(self) -> None:
         off = 0

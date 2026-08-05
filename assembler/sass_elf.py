@@ -4,6 +4,8 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
+from . import arch
+
 MASK64 = (1 << 64) - 1
 
 SHT_NULL = 0
@@ -489,8 +491,9 @@ class CubinBuilder:
                 num_mbar = int(self._pragma_attrs.get("NUM_MBARRIERS", 0xffff))
                 buf += eiattr_hval(0x38, num_mbar)
         total_ps = sum(sz for _, _, sz in self._params)
+        param_base = arch.current().param_base
         buf += eiattr_hval(0x19, total_ps)  # CBANK_PARAM_SIZE
-        buf += eiattr_param_cbank(sym_c0, 0x380, total_ps)  # PARAM_CBANK
+        buf += eiattr_param_cbank(sym_c0, param_base, total_ps)  # PARAM_CBANK
         buf += eiattr_sval(0x36, 0)  # SW_WAR
         sec(f".nv.info.{mn}", SHT_CUDA_INFO, content=buf,
             flags=SHF_INFO_LINK)
@@ -534,7 +537,7 @@ class CubinBuilder:
                 flags=SHF_WRITE | SHF_ALLOC | SHF_INFO_LINK, align=4, nobits=True)
 
         # 14: .nv.constant0._Z<name>
-        c0_size = 0x380 + total_ps
+        c0_size = arch.current().param_base + total_ps
         sec(f".nv.constant0.{mn}", SHT_PROGBITS, content=b"\x00" * c0_size,
             flags=SHF_ALLOC | SHF_INFO_LINK)
 
