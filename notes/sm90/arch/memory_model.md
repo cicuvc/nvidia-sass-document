@@ -89,3 +89,49 @@ SP2, E, CCTL/CCTLT sub-ops, atomic-op set, CAS-as-own-opcode). The main
 puts VC below GPU, and the two scope fields use different numbering; (2) `PF1_5`
 and `RSLB` sub-ops are not in sm_90. Cache-geometry and PTX-lowering statements
 are out of scope for these files and left as probe items.
+
+## MEM_SCBD / MEM_SCBD_TYPE vs VQ / INST_TYPE / MIO (all 1167 sm_90 CLASSes)
+
+`MEM_SCBD`/`MEM_SCBD_TYPE` are the **memory-consistency role** annotations —
+where the instruction sits in barrier/ordering propagation — and are largely
+orthogonal to the execution-side attributes:
+
+| attribute | dimension | key values |
+|-----------|-----------|------------|
+| `INSTRUCTION_TYPE` | dependency semantics ("how is a result awaited") | COUPLED_MATH (fixed latency, no scoreboard), DECOUPLED_* (variable latency, `wr/rd/req`), COUPLED_EMULATABLE (tensor) |
+| `VIRTUAL_QUEUE` | execution queue ("where does it complete") | VQ_AGU/MUFU/TEX/CBU/ATOM_UNORDERED/…, absent for COUPLED_MATH |
+| `MIO` (mio_pipe) | physical path ("which unit") | all memory + MUFU/TEX/atomic/conversion VQs feed the shared per-SM LSU/MIO |
+| `MEM_SCBD` | ordering role | NONE / NON_BARRIER_INT_INST / SOURCE_WR / SOURCE_RD / SINK / SOURCE_SINK_WR |
+| `MEM_SCBD_TYPE` | ordering class | BARRIER_INST (default) / MEM_INST / BB_ENDING_INST / ALL |
+
+**`MEM_SCBD` mapping (empirical):**
+- `NON_BARRIER_INT_INST` (158) — instructions that interact with the memory
+  system but are **not** barriers, and therefore must be tracked by barrier
+  propagation: **all atomics** (`ATOM/ATOMG/ATOMS/RED/REDG/REDAS/SUATOM`),
+  **memory accesses** (`LD/LDG/LDS/LDSM/ST/STG/STS/STSM`), and **control flow**
+  (`BPT/BRA/BREAK/BRX/BRXU/CALL/RET/EXIT/JMP/JMX/KILL`).
+- `SOURCE_WR` (2) = `FENCE.S/.G`; `SOURCE_RD` (1) = `UTMACMDFLUSH`; `SOURCE_SINK_WR`
+  (9) = `SYNCS` (mbarrier exchange/arrive).
+- `SINK` (18) = `MEMBAR` (+async/tma), TMA ops (`UTMALDG/UTMASTG/UTMAPF/UTMAREDG`),
+  `WARPGROUP` (arrive/depbar/wait) and `UMMA` variants.
+
+**`MEM_SCBD_TYPE` mapping:** `MEM_INST` (105) = the real memory ops, appearing
+**only** in memory VQs (VQ_AGU: LDS/STS/ATOMS/REDG; VQ_AGU_UNORDERED_WR: LDG/LDL;
+VQ_ATOM_UNORDERED: ATOM); `BB_ENDING_INST` (53) = **all** in VQ_CBU (control
+flow); `ALL` = FENCE.S/.G (+ some SYNCS); everything else defaults to
+`BARRIER_INST` (**not** "is a barrier" — it is the *default* bucket covering
+even pure math).
+
+**Cross-attribute invariants:**
+- Non-default `MEM_SCBD` ⇒ `DECOUPLED_*` (ordering-relevant ops are variable
+  latency) and ⇒ a VQ (the DECOUPLED⇒VQ rule). `COUPLED_MATH` is always
+  `MEM_SCBD=NONE` + `BARRIER_INST`.
+- `MEM_SCBD_TYPE=MEM_INST` ⇒ VQ ∈ {AGU, AGU_UNORDERED_WR, ATOM_UNORDERED} ⇒
+  mio_pipe (these are the memory-access VQs feeding the shared LSU/MIO).
+- `BB_ENDING_INST` ⇔ VQ_CBU ⇔ cbu_pipe: control-flow classification is a
+  one-to-one with the branch unit.
+
+So: `INSTRUCTION_TYPE` = dependency semantics, `VQ` = completion queue,
+`MIO/pipe` = physical unit, `MEM_SCBD(_TYPE)` = ordering/consistency role —
+four orthogonal labels; the only strong couplings are DECOUPLED⇒VQ and the
+MEM_INST/BB_ENDING⇒(memory/CBU VQ) classification.
