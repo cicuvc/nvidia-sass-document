@@ -76,10 +76,26 @@ _SRC_SIZE_KEY = {"Ra": "ISRC_A_SIZE", "Rb": "ISRC_B_SIZE", "Rc": "ISRC_C_SIZE",
 # address slots (read at issue, not late) for memory/DECOUPLED-RD instructions
 _ADDR_SLOTS = {"Ra", "Ra_URb", "Ra_URc", "URa", "URb", "URc"}
 
-# branch mnemonics for CFG edge construction
-_BRANCH_MN = {"BRA", "BRX", "BSSY", "BSYNC", "JMP", "JMC"}
-_UNCOND_BRANCH = {"BRA", "BRX", "JMP", "JMC"}   # no fall-through when unpredicated
-_INDIRECT = {"BRX", "JMP"}                       # conservative any-successor
+# CFG edge construction.
+#
+# Block-end determination comes from the ISA spec, not a hand-picked list:
+#   MEM_SCBD_TYPE == "BB_ENDING_INST"  (BRA/JMP/BRX/BRXU/JMX/JMXU, CALL, RET,
+#                                       EXIT, KILL, BREAK, BPT)
+#   BRANCH_TYPE in {BRT_RETURN, BRT_BRANCHOUT}   (RET/RTT, EXIT/KILL)
+#   (RTT is BRT_RETURN but its MEM_SCBD_TYPE is BARRIER_INST — covered by the
+#   BRANCH_TYPE half; see notes/sm90/arch/memory_model.md.)
+# BSSY/BSYNC/BREAK are the break-barrier family: they do NOT end a basic block
+# in the memory-consistency sense (BARRIER_INST) but still drive CFG edges
+# (BSSY records a target, BSYNC/BREAK jump to it), so they are kept explicit.
+_BSSY_MN = {"BSSY", "BSYNC", "BREAK"}
+_INDIRECT = {"BRX", "BRXU", "JMP", "JMX", "JMXU"}   # conservative any-successor
+_BRT_END = {"BRT_RETURN", "BRT_BRANCHOUT"}           # no successor edge
+
+
+def _is_block_ender(info) -> bool:
+    return (info is not None
+            and (info.mem_scbd_type == "BB_ENDING_INST"
+                 or info.branch_type in _BRT_END))
 
 REG = "R"
 UREG = "UR"
@@ -130,6 +146,8 @@ class InstrInfo:
     depbar_targets: list = field(default_factory=list)  # (sb, cnt_or_None)
     branch: dict = field(default_factory=dict)    # CFG edge info
     stall: int = 1
+    mem_scbd_type: str = "BARRIER_INST"   # from PROPERTIES (BB_ENDING_INST etc.)
+    branch_type: str = ""                 # from PROPERTIES (BRT_* or "")
 
 
 # --------------------------------------------------------------------------
@@ -158,9 +176,12 @@ def classify(inst_type: str) -> int:
 def extract_instr(inst, match, db: dict) -> InstrInfo:
     variant = match.variant
     slot_map = match.slot_map
-    cls = classify(variant["properties"].get("INSTRUCTION_TYPE", ""))
+    props = variant.get("properties") or {}
+    cls = classify(props.get("INSTRUCTION_TYPE", ""))
     info = InstrInfo(idx=0, mnemonic=inst.mnemonic, cls=cls)
     info.predicated = inst.pred is not None
+    info.mem_scbd_type = props.get("MEM_SCBD_TYPE", "BARRIER_INST")
+    info.branch_type = props.get("BRANCH_TYPE", "")
 
     # dest width (bits) from IDEST_SIZE; None -> 32
     idest = _eval_size(db, variant, slot_map, "IDEST_SIZE")
@@ -255,6 +276,11 @@ def build_cfg(insts, infos, addrs):
     """insts/results/addrs are aligned lists (label entries have info=None).
 
     Returns (blocks, succ) where blocks = list of instr-index lists, succ = {b: [b2]}.
+
+    Block ends come from the ISA spec (BB_ENDING_INST / BRANCH_TYPE=BRT_RETURN
+    | BRT_BRANCHOUT), not a hand-picked mnemonic list — so CALL/RET/RTT/EXIT/
+    KILL/BPT/BREAK/BRXU/JMX/JMXU all terminate blocks correctly.  BSSY/BSYNC
+    are the break-barrier family and drive edges without ending blocks.
     """
     n = len(insts)
     # leaders: instr 0, every branch fall-through, every resolved branch target
@@ -269,17 +295,17 @@ def build_cfg(insts, infos, addrs):
         if info is None:
             continue
         mn = info.mnemonic
-        if mn == "DEPBAR" or mn not in _BRANCH_MN:
+        is_bssy_fam = mn in _BSSY_MN
+        if not (is_bssy_fam or _is_block_ender(info)):
             continue
-        # resolve target from operands (labels already -> relative IMM_S)
+        # resolve target from operands (labels already -> relative IMM_S);
+        # BSYNC/BREAK take it from the BSSY stack instead.
         tgt = None
-        barreg = None
         for op in insts[i].operands:
             from .operand import OperandKind
             if op.kind == OperandKind.IMM_S:
                 target_addr = addrs[i] + 16 + op.value
                 tgt = target_addr // 16
-        # BSSY: barReg + target (linear fall-through; BSYNC jumps to target)
         if mn == "BSSY":
             bssy_stack.append((insts[i].pred, tgt))
             ft[i] = True
@@ -287,10 +313,18 @@ def build_cfg(insts, infos, addrs):
             if bssy_stack:
                 _, tgt = bssy_stack.pop()
             ft[i] = False
+        elif mn == "BREAK":
+            if bssy_stack:
+                _, tgt = bssy_stack[-1]   # peek — BSYNC still needs it
+            ft[i] = False
+        elif info.branch_type == "BRT_CALL":
+            ft[i] = True                   # return point = next instruction
+        elif info.branch_type in _BRT_END:
+            ft[i] = False                  # RET/RTT/EXIT/KILL: no successor
         elif mn in _INDIRECT:
-            tgt = None
+            tgt = None                     # register target: any-successor
             ft[i] = not info.predicated
-        else:  # BRA (JMC)
+        else:                              # BRT_BRANCH (BRA/JMP/JMC)
             ft[i] = (info.predicated) or mn == "JMC"
         if tgt is not None and tgt < n:
             is_leader[tgt] = True
@@ -334,9 +368,7 @@ def build_cfg(insts, infos, addrs):
                 nxt = j
         if nxt != i:
             continue  # only the terminal instruction adds edges
-        if mn == "DEPBAR" or mn not in _BRANCH_MN:
-            if i + 1 < n and inst_block[i + 1] == b:
-                continue  # not terminal
+        if not (_is_block_ender(info) or mn in _BSSY_MN):
             if i + 1 < n:
                 succ[b].append(inst_block[i + 1])
             continue
@@ -344,13 +376,19 @@ def build_cfg(insts, infos, addrs):
             if i + 1 < n:
                 succ[b].append(inst_block[i + 1])
             continue
-        if mn == "BSYNC":
+        if mn in ("BSYNC", "BREAK"):
             t = targets.get(i)
             if t:
                 succ[b].append(inst_block[t[0]])
             continue
+        if info.branch_type == "BRT_CALL":
+            if i + 1 < n:
+                succ[b].append(inst_block[i + 1])   # return point only
+            continue
+        if info.branch_type in _BRT_END:
+            continue                                 # RET/EXIT: no successor
         if targets.get(i) is None:
-            succ[b] = list(range(len(blocks)))   # any-successor (BRX/JMP)
+            succ[b] = list(range(len(blocks)))   # any-successor (BRX/JMX)
             continue
         for t in targets[i]:
             if t < n:

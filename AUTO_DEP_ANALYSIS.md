@@ -476,6 +476,35 @@ edges).  Unknown/indirect targets (`BRX`) → edge to a conservative
 "any successor" approximation or reject with a diagnostic (V2 scope
 decision; `BRX` jump tables are rare in hand-written kernels).
 
+**Block-terminator determination is spec-driven, not a hand-picked
+mnemonic list.**  An instruction ends a block iff
+`MEM_SCBD_TYPE == "BB_ENDING_INST"` **or** `BRANCH_TYPE ∈
+{BRT_RETURN, BRT_BRANCHOUT}` (the second clause catches `RTT`, which is
+`BRT_RETURN` but carries the default `BARRIER_INST` MEM_SCBD_TYPE).
+This covers `BRA/JMP/BRX/BRXU/JMX/JMXU`, `CALL`, `RET`, `RTT`, `EXIT`,
+`KILL`, `BREAK`, `BPT` — including the uniform variants.  Both attributes
+are read per-variant from `sm120.json` `properties` in `extract_instr`.
+
+Edge rules:
+- `BRT_CALL` (`CALL`): successor = return point (next instruction); the
+  callee body is not modelled (its claims are not propagated).
+- `BRT_RETURN` / `BRT_BRANCHOUT` (`RET/RTT/EXIT/KILL`) and `BPT`: **no**
+  successor edge (block terminates).
+- `BRT_BRANCH` (`BRA/JMP/BRX/JMX`): target edge; fall-through only when
+  predicated (`@P0`).  Indirect forms (`BRX/BRXU/JMP/JMX/JMXU`) get the
+  conservative any-successor edge.
+- Break-barrier family (`BSSY/BSYNC/BREAK`): these are `BARRIER_INST`
+  (they do not end a block in the memory-consistency sense) but still
+  drive edges.  `BSSY` records its target; `BREAK` **peeks** that target
+  (branch out of the loop) without popping; `BSYNC` **pops** it
+  (reconvergence).  All three remain explicit in `_BSSY_MN`.
+
+(Previously the terminator set was hard-coded as `{BRA, BRX, BSSY,
+BSYNC, JMP, JMC}`, which silently treated `CALL/RET/EXIT/KILL/BPT/
+BREAK` as non-terminating — `EXIT` got a bogus fall-through successor and
+`BREAK` did not join the `BSSY` target.  Fixed in the spec-driven rewrite;
+see `tests/asm_construct/test_depcheck.py` §13.)
+
 ### 8.2 Dataflow — product lattice (identity × count)
 
 - **Identity lattice** (claims).  Claim ids are global (instruction index
