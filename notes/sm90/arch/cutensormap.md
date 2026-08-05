@@ -125,11 +125,15 @@ The wide flag follows the same total-element rule as tiled
   silently (probed: stride = 2^36 → w3 = 0; no wide flag, no error).  The API
   advertises `< 2^40`, but the descriptor field cannot represent that without
   additional bits we did not find.
-- w1 (high address word) was always 0 in our probes: the test device exposes
-  only 4 GB of memory, so all `cuMemAlloc` pointers stay below 2^32.  The
-  64-bit address split (w0 low / w1 high) and
-  `cuTensorMapReplaceAddress` writing w0 are confirmed; the high word update
-  path is unverified.
+- w0/w1 hold the full 64-bit little-endian address.  In this sandbox, raw
+  driver-API contexts (`cuCtxCreate`) are capped near 4 GB — `cuMemGetInfo`
+  reports `total = 0xffffffff` and allocations beyond that fail — so driver
+  pointers never set w1.  The split was verified with a runtime-allocated
+  pointer on the same (32 GB) device: address `0x7f4120000000` →
+  `w0 = 0x20000000, w1 = 0x00007f41`, and `cuTensorMapReplaceAddress` updates
+  **both** words.  (Initial confusion about "4 GB cards" came from binding the
+  legacy 32-bit `cuDeviceTotalMem` symbol instead of `cuDeviceTotalMem_v2`,
+  which reports the full 31.4 GB.)
 - boxDim[0]-1 and boxDim[1..4]-1 live in 8-bit fields (w13 byte 3, w14), so
   boxDim[0] ≤ 256 and boxDim[i≥1] ≤ 256 (driver rejects box0 = 512 for u8).
 - `cuTensorMapEncodeIm2col` reorders multi-dim strides internally; pass them
@@ -151,6 +155,9 @@ f64 → `00000490`, bf16 → `00000510`, tf32 → `00010390`,
 Swizzle sweep: 32B → `00002310` + w18 `00000100`; 64B → `00004310` + `00000200`;
 128B → `00006310` + `00000400`; 128B_ATOM_32B → `00086310` + `00000400`.
 Wide: dim0 = 4096 → `00200310`.
+High address (64-bit split): address `0x7f4120000000` →
+`w0 = 20000000, w1 = 00007f41`; `cuTensorMapReplaceAddress` to
+`0x7f40e0000000` → `w0 = e0000000, w1 = 00007f40`.
 
 ## Tooling
 
@@ -172,4 +179,3 @@ Wide: dim0 = 4096 → `00200310`.
   `0x400` (1024) instead of `cpp×ppc×elem` (128); the multiplier rule is
   unverified.
 - stride fields ≥ 2^36: where (if anywhere) the upper bits live.
-- w1 high-address update via cuTensorMapReplaceAddress (needs a >4 GB device).

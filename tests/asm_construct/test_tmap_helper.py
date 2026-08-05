@@ -20,13 +20,6 @@ def check(name, got, want):
     ok &= good
     print(f"{'ok ' if good else 'FAIL'} {name:<58} {got} (exp {want})")
 
-try:
-    _ = CudaModule(assemble("#fn k() { EXIT;[7:7:{}:5:0] }"))
-    HAVE_GPU = True
-except RuntimeError:
-    HAVE_GPU = False
-    print("--- no CUDA device; driver-comparison and GPU checks SKIPPED ---")
-
 # --- offline: hardcoded descriptor words (from probe evidence) ------------
 buf = ctypes.create_string_buffer(128)
 _ = cuTensorMapEncodeTiled(
@@ -43,6 +36,74 @@ _ = cuTensorMapEncodeTiled(
     buf, 6, 3, 0x0BE00000, [16, 16, 256], [32, 16, 0], [16, 8, 8], [1, 1, 1])
 w = struct.unpack("<32I", buf.raw)
 check("helper wide bit (tot 65536)", hex(w[2]), "0x200320")
+
+# --- 64-bit address split via subprocess ------------------------------------
+# Raw driver-API (cuCtxCreate) contexts in this sandbox are capped near 4 GB
+# and mixing cudart's primary context into the runner process breaks the
+# runner's later secondary-context creation, so this check runs in a fresh
+# interpreter: cudart hands out a >4 GB pointer, the driver API encodes a
+# descriptor with it, and w0/w1 must split the 64-bit address.
+import os, subprocess
+_hi_script = r'''
+import ctypes, os, struct, sys
+sys.path.insert(0, os.environ["TMAP_REPO"])
+from assembler.runner import _cuda, _check
+lib = _cuda()
+_check(lib.cuInit(0))
+rt = ctypes.CDLL("libcudart.so.12")
+rt.cudaMalloc.restype = ctypes.c_int
+rt.cudaMalloc.argtypes = [ctypes.POINTER(ctypes.c_void_p), ctypes.c_size_t]
+hp = ctypes.c_void_p()
+if rt.cudaMalloc(ctypes.byref(hp), 1 << 30) != 0 or (hp.value or 0) < (1 << 32):
+    print("SKIP"); sys.exit(0)
+lib.cuTensorMapEncodeTiled.restype = ctypes.c_int
+lib.cuTensorMapEncodeTiled.argtypes = [
+    ctypes.c_void_p, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p,
+    ctypes.POINTER(ctypes.c_uint64), ctypes.POINTER(ctypes.c_uint64),
+    ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_uint32),
+    ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int]
+lib.cuTensorMapReplaceAddress.restype = ctypes.c_int
+lib.cuTensorMapReplaceAddress.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+d = (ctypes.c_uint64 * 2)(16, 16)
+s = (ctypes.c_uint64 * 2)(32, 0)
+b = (ctypes.c_uint32 * 2)(16, 8)
+e = (ctypes.c_uint32 * 2)(1, 1)
+buf = ctypes.create_string_buffer(128)
+_check(lib.cuTensorMapEncodeTiled(ctypes.cast(buf, ctypes.c_void_p), 6, 2,
+                                  ctypes.c_void_p(hp.value), d, s, b, e,
+                                  0, 0, 0, 0))
+w = struct.unpack("<32I", buf.raw)
+hp2 = ctypes.c_void_p()
+if rt.cudaMalloc(ctypes.byref(hp2), 1 << 30) != 0 or (hp2.value or 0) < (1 << 32):
+    print("SKIP"); sys.exit(0)
+_check(lib.cuTensorMapReplaceAddress(ctypes.cast(buf, ctypes.c_void_p),
+                                     ctypes.c_void_p(hp2.value)))
+w2 = struct.unpack("<32I", buf.raw)
+print("RESULT %x %x %x %x %x %x %x %x" % (
+    hp.value & 0xffffffff, hp.value >> 32, w[0], w[1],
+    hp2.value & 0xffffffff, hp2.value >> 32, w2[0], w2[1]))
+'''
+_env = dict(os.environ)
+_env["TMAP_REPO"] = str(Path(__file__).resolve().parents[2])
+_r = subprocess.run([sys.executable, "-c", _hi_script],
+                    capture_output=True, text=True, env=_env)
+_hi = _r.stdout.strip().split()
+if _hi and _hi[0] == "RESULT":
+    lo1, hi1, w0, w1, lo2, hi2, rw0, rw1 = (int(x, 16) for x in _hi[1:9])
+    check("w0 = low32(high addr)", hex(w0), hex(lo1))
+    check("w1 = high32(high addr)", hex(w1), hex(hi1))
+    check("replace w0 = low32(addr2)", hex(rw0), hex(lo2))
+    check("replace w1 = high32(addr2)", hex(rw1), hex(hi2))
+else:
+    print("--- high-address check SKIPPED ---")
+
+# --- GPU availability probe (creates the shared runner context) ------------
+try:
+    _ = CudaModule(assemble("#fn k() { EXIT;[7:7:{}:5:0] }"))
+    HAVE_GPU = True
+except RuntimeError:
+    HAVE_GPU = False
+    print("--- no CUDA device; driver-comparison and GPU checks SKIPPED ---")
 
 if not HAVE_GPU:
     sys.exit(0 if ok else 1)
