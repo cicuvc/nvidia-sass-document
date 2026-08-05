@@ -34,18 +34,28 @@ hardcode touched or reviewed.
 - depcheck CFG mnemonic sets (BSSY/BSYNC/BREAK/BRX/JMX … both gens).
 - usched/opex/bracket encoding logic.
 
-## Open items (H800 verification)
-- **`minimal.cubin` template** (`sass_elf.py` note_nv_tkinfo/cuver read fixed
-  byte offsets 0x4b8/0x55c from it) — it is the sm120 template; the toolkit
-  note bytes may or may not be accepted on Hopper.  Highest-risk item.
-- **`.nv.compat`** content (`TCGEN05_MMA=5`) is Blackwell-flavoured; nvcc sm90
-  cubins don't even carry a compat section, so the driver likely ignores it —
-  confirm on H800.
-- **No `EIATTR_TARGET_INFO`** in the generated cubin — arch is implied; verify
-  `cuModuleLoadData` accepts the minimal cubin on H800 (see main audit).
+## H20 verification (sm90, done)
+- **ELF arch markers were the blocker**: `CUDA_ERROR_NO_BINARY_FOR_GPU` until
+  three arch-specific ELF identifiers were fixed (values from nvcc):
+  e_flags (sm90 0x005a055a), e_ident[EI_OSABI/ABIVERSION] (0x33/0x07), and
+  the `.note.nv.tkinfo/.cuver/.nv.compat` sections are sm120-only.
+- **ConditionEvaluator/matcher sm90 fixes**: ternary `?:`, and
+  `DEFINED TABLES_x(a@attr,b)` arg resolution + negatable-predicate
+  `Pnz@not` default.  These unlock LDG.E/STG.E and any instruction with the
+  `DEFINED TABLES_*` SASS-only conditions.
+- **Verified on H20**: kernel load+launch, param base 0x210, default cdesc
+  c[0x0][0x208], LDG/STG, integer math, shared-memory roundtrip, ISETP+SEL
+  predicate all pass.  sm90 LDG operand order is `Rd, desc[...]` (format
+  order), matching cuobjdump — not the sm120 `desc[...], Rd` dialect.
+- Open: `@P0 IADD3` conditional execution misbehaved in one composite probe
+  (depcheck-caught bracket scoreboard issue, not arch-specific); ISETP+SEL
+  predicate path verified independently.
+
+## Remaining H20-open items
 - sm90-only/sm120-only instruction sets (QGMMA vs QMMA/OMMA, ULDC vs LDCU,
   …) — db switch handles encoding; test sources using sm120-only ops must be
   rewritten for Hopper.
+- `.nv.compat` TCGEN05 flavour — moot now (sm90 emits no compat section).
 
 ## Tests
 `tests/asm_construct/test_arch.py` — arch switching, layouts, aliases,
