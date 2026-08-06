@@ -21,21 +21,69 @@ minimal `.reuse` hits), all-storm block scaling:
 
 Aggregate is pinned at **~0.64 warp-FFMA/cyc/SMSP independent of warp
 count** → not issue-limited (scheduler could do 1.0), not pipe-latency
-(ILP=8 ≫ FFMA latency) — the limit is operand delivery: 0.64 × 384 B =
-**~246 B/cyc/SMSP of RF reads ≈ a ~256 B/cyc/SMSP budget** (write side
-0.64×128 = 82 B/cyc). This caps naive FFMA code at **64% of the FP32
-issue peak** (128 FMA/cyc/SM).
+(ILP=8 ≫ FFMA latency) — the limit is operand delivery. Naively this
+looks like a flat ~2-reads/cyc budget (0.64 × 3 reads ≈ 1.9), but the
+controlled-parity experiment below shows the real structure is **2 banks
+× 2R** and the storm's 0.64 is explained by parity conflicts in ptxas's
+register allocation, not a flat cap.
 
 Reference point — cuBLAS SGEMM 8192³ (torch): 39.4 TFLOPS @1635 MHz =
 105 FMA/cyc/SM = 0.82 FFMA/cyc/SMSP. cuBLAS beats the storm by register
 blocking: high operand-reuse ratios (`.reuse` flags, repeated operands)
-reduce fresh RF reads per FMA. So the ~256 B/cyc read budget is a real
+reduce fresh RF reads per FMA. So the RF read structure is a real
 scheduling constraint for ptxas, not just a microbenchmark curiosity.
 
-Caveat: the same storm source compiled in two different cubins measured
-1.56 and 2.04 cyc/FFMA — register-number (bank) assignment luck changes
-the rate by ~30%, i.e. RF **bank** conflicts are a second-order effect on
-top of the port budget (not yet isolated with controlled parities).
+## RF structure: 2 banks by register-number parity, 2R per bank (proven)
+
+Controlled hand-written-SASS FFMA storms (512 independent-chain FFMAs,
+16 accumulators, one warp, stall=1 → ~2.1-2.4 cyc/op issue floor;
+`tests/rf_bank_probe.py`, H800). Sources' register-number parity fully
+controlled; `.reuse` flags set via the sched-bracket batch field
+(bit0=srcA, bit1=srcB, bit2=srcC):
+
+| kernel | reads (E=even bank, O=odd) | cyc/op | verdict |
+|---|---|---|---|
+| NOP baseline | — | 2.44 | floor |
+| `eee` / `ooo` | 3 on one parity | **3.11** | conflict, +1 cyc |
+| `eeo` / `eoe` / `oee` | 2+1 split | 2.11 | **no conflict** |
+| `eee` + `.reuse` srcA | 2E (A from cache) | 2.11 | conflict gone |
+| `eee` + `.reuse` srcB | 2E | 2.11 | conflict gone |
+| `eee` + reuse A+B / A+B+C | ≤1E | 2.43 | = baseline |
+
+Verdicts on the folklore claim "2 banks split by register parity, 2R1W
+each":
+
+- **2 banks by register-number LSB parity — CONFIRMED.** `eee` ≡ `ooo`
+  (3.11), and every 2-even-1-odd permutation is conflict-free, so the
+  bank selector is the register number's low bit, not operand slot or
+  register range.
+- **2 reads per bank per instruction — CONFIRMED.** 2 same-parity reads
+  are free; the 3rd costs exactly ~+1 cyc (the operand collector
+  pipelines the extra read). A flat-2R-total model is REJECTED: it
+  predicts `eeo` = `eee`, measured 2.11 vs 3.11. (Total RF read
+  capacity is thus 2 banks × 2R × 128 B = 1024 B/cyc/SM, not ~512.)
+- **1W per bank — not observable at instruction level.** One warp
+  issues ≤1 instr/cyc/SMSP so ≤1 write/cyc total; a per-bank write cap
+  can never bind. Nothing measured contradicts it.
+- **`.reuse` bypasses RF read ports — CONFIRMED.** One reuse flag
+  removes one bank read (eee+rA behaves exactly like a native 2-read
+  pattern); two/three flags drop to baseline. The reuse cache is fed by
+  that operand slot's previous read and does not consume a port.
+
+This also corrects the "second-order effect" caveat above: the 1.56 vs
+2.04 cyc/FFMA compile-luck spread *is* the parity-conflict effect, and
+it is first-order for 3-fresh-read code. ptxas mitigates by assigning
+parities 2:1 across each instruction's sources and inserting `.reuse`;
+hand-scheduled SASS must do the same.
+
+Assembler quirks found building the probe (arch=sm90, for the manual):
+`[7:7:{}:0:0]` is an illegal opex combo for FFMA (stall=0 requires
+yield=1, which poisons throughput — 33 cyc/op); reuse flags require
+stall≥1; `IMAD.SHL.U32` mis-matches to `IMAD.HI.U32` (matcher bug, use
+plain `IMAD`); `IADD3.X` adds **both** carry-in predicates (PT is 1 —
+clear a predicate with `PLOP3.LUT P1,PT,PT,PT,PT,0x0` for 64-bit adds);
+consumers of `LDC` results must wait its scoreboard (`{0}` req bit)
+since `check_deps=False` inserts nothing.
 
 ## HGMMA accumulator RMW arbitrates the same RF ports
 
