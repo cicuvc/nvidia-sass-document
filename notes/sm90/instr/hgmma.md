@@ -29,6 +29,42 @@ via TMA (UTMALDG) or LDSM, then consumed asynchronously by HGMMA.
 
 Also see `../arch/wgmma.md` for collector model and subcore partitioning.
 
+## The `gdesc[UR]` operand is 128 bits: two raw PTX descriptors (verified)
+
+For the dense SS form (`hgmma_URa_Rc_`, one visible `gdesc[URn]` operand for
+**both** smem operands), the encoded UR index names a group of **four
+consecutive uniform registers** (URn..URn+3, 128 bits total):
+
+| URs | content |
+|-----|---------|
+| `{URn, URn+1}` | raw PTX 64-bit shared-memory matrix descriptor of **A** |
+| `{URn+2, URn+3}` | raw PTX 64-bit shared-memory matrix descriptor of **B** |
+
+Verified bit-exact (sm_120, 2026-08): the ptxas uniform-datapath chain that
+fills these registers
+
+```
+S2UR URb, SR_CgaCtaId            ; cluster rank (0 without clusters)
+UMOV URa, <tile byte offset>     ; e.g. 0x400
+ULEA URa, URb, URa, 0x18         ; += rank << 24
+ULOP3.LUT URa, URa, 0x3FFF0, ... ; &= 0x3FFF0
+USHF.R.U64 URa, URa, 0x4, UR63   ; >>= 4   (32-bit LSR semantics, pair NOT shifted)
+ULOP3.LUT URa, URa, <or-mask>, ..., 0xFC ; |= LBO field bits
+UMOV URa+1, 0x8                  ; high word: stride-dim field = 8 (128 B)
+```
+
+produces exactly the C++-side PTX descriptor value
+`0x400000 | ((__cvta_generic_to_shared(ptr) & 0x3FFF0) >> 4)` in the low word,
+with the OR-mask contributing leading-dimension-offset field bits (observed:
+bit 22 → LBO 1024 B for A, bit 20 → LBO 256 B for B) and the high word
+carrying the stride-dimension-offset field (0x8 → 128 B). Replicating the
+chain in hand-written SASS on sm_120 matched `make_desc()` bit-for-bit for
+both the A and B pairs. So the hardware consumes the PTX matrix-descriptor
+format unmodified — there is no SASS-level repacking, and hand-written
+kernels can load the four URs directly (as our assembler experiments did).
+Note the RS form (`hgmma_Ra_URb_Rc_`) uses only the single B descriptor pair.
+
+
 ## Variant overview
 
 HGMMA has **6 encoding variants** (3 addressing modes × dense/sparse):
