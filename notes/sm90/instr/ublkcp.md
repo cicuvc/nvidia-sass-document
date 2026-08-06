@@ -147,21 +147,47 @@ kernel (`multicast.cu`, `__cluster_dims__(2,1,1)`):
   For mask `0x3` (CTAs 0+1) and 512 bytes: `URc = 0x30020`.  (Non-multicast
   512-byte copies use plain `URc = 0x20`.)
 - **mbarrier is implicit and per-destination-CTA:** the SASS has no mbar
-  operand; ptxas places each CTA's mbarrier at the *same CTA-relative shared
-  offset* (`cga*0x800 + 0x600`) and the complete-tx arrives there in every
+  operand; **the mbarrier address is carried in the HIGH word of the
+  destination register pair**: `UBLKCP.S.G {URb, URb+1}, ...` uses
+  `URb` = shared destination and `URb+1` = the completion mbarrier.  ptxas
+  deliberately computes `URb+1 = cga*0x800 + 0x600` (each CTA's mbarrier at
+  the same CTA-relative offset); the complete-tx arrives there in every
   receiving CTA (PTX: "the mbarrier signal is also multicast to the same
-  CTA-relative offset as `mbar`").
+  CTA-relative offset as `mbar`").  A "clean" `{dest, 0}` pair copies the
+  data but completes an uninitialized mbarrier at shared offset 0 — observed
+  as a hang (poll never completes) or 715 in cluster mode.
 - **Cluster sync:** `UCGABAR_ARV` + `UCGABAR_WAIT` (barrier.cluster) before the
   copy so every CTA's mbarrier init is visible; each CTA then spins on its own
   mbarrier (`SYNCS.PHASECHK.TRANS64.TRYWAIT`).
-- **sm_120 status (pending GPU):** ptxas has no sm_120 lowering for
-  `.multicast::cluster` (the PTX doc lists only sm_90a/sm_100f/a/sm_103f/a/
-  sm_110f/a as optimized targets; sm_120 gets downgraded to LDG + dshmem), but
-  the sm_120 *SASS* spec still carries the `MULTICAST` bit [75] and the
-  `UBLKCP.S.G.MULTICAST` encoding assembles identically to sm_90.  Whether the
-  Blackwell TMA engine honors it is the open question — the probe is
-  `tests/asm_construct/test_ublkcp_multicast.py` (needs a cluster launch; see
-  below).
+- **sm_120 status — MULTICAST does NOT work (verified RTX 5090):**
+  `UBLKCP.S.G.MULTICAST` faults **CUDA_ERROR_ILLEGAL_INSTRUCTION (715)** on
+  Blackwell in every issue mode (whole-warp / elected-only / non-elected),
+  while plain `UBLKCP.S.G` works both single-CTA and in a 2-CTA cluster
+  launch.  ptxas has no sm_120 lowering for `.multicast::cluster` (the PTX doc
+  lists only sm_90a/sm_100f/a/sm_103f/a/sm_110f/a as optimized targets; sm_120
+  gets downgraded to LDG + dshmem) — consistent with the SASS bit being
+  rejected by the Blackwell TMA engine.  The probe is
+  `tests/asm_construct/test_ublkcp_multicast.py` (asserts plain works and
+  multicast is rejected).
+
+### Issue mode (whole warp, not one elected thread)
+ptxas emits `UBLKCP` **unpredicated** — the whole warp executes it.  Verified
+on sm_120 with the fixed mbar-in-high-word convention:
+
+| issue mode | result |
+|---|---|
+| whole warp (no predicate) | copy lands, mbar completes |
+| `@!P1` (31 threads) | copy lands, mbar completes |
+| `@P1` (elected thread only, 1 thread) | **hang** — no completion |
+
+So UBLKCP is a warp-collective instruction: a single elected thread's issue is
+dropped.  Only the mbarrier init/expect_tx are gated on the elected thread.
+
+### Scoreboard note
+The UBLKCP must wait on the source-address producer's scoreboard: ptxas pairs
+`LDCU.64 {UR10,UR11}, c[0x0][0x380] &wr=0x3` with `UBLKCP ... &req={3}`.
+Using the wrong `req`/`rd` bracket lets the copy issue with a stale uniform
+source address → CUDA_ERROR_LAUNCH_FAILED / ILLEGAL_ADDRESS.
 
 ### Cluster launch support (assembler)
 Launching a cluster kernel needs two pieces now in the toolchain:
