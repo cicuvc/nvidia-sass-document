@@ -15,8 +15,11 @@ from assembler import assemble, assemble_flat, CudaModule
 #   + the 32-bit URb/imm offset, truncated to 64 bits.
 #   * constSize (0..16, validated by CONDITIONS) has NO observable effect:
 #     K=0, 5, 16 all produce the same result.
-#   * UPu is never asserted (all probes: carry, 32/64-bit overflow, low bits,
-#     zero inputs).
+#   * UPu output: NOT probed here.  Reading it requires UISETP->PLOP3
+#     materialization, and the uniform-predicate write->read path is not
+#     scoreboard-synchronized in hand-assembled SASS (observed
+#     nondeterministic); the earlier "@UP0 MOV32I" probe read the guard field
+#     as regular P0 (stale), so "UPu never asserted" was an artifact.
 # The 64-bit URa pair is fully shifted (hi word participates).
 #
 # Fields: URb -> [39:32], URa -> [31:24], URd -> [23:16], UPu -> [83:81],
@@ -67,10 +70,7 @@ def kernel(imm=None, K=5):
     UMOV UR15, UR13;[7:7:{{}}:5:1]
     IADD3 R2, PT, PT, RZ, UR14, RZ;[7:7:{{}}:8:1]
     IADD3 R3, PT, PT, RZ, UR15, RZ;[7:7:{{}}:8:1]
-    @UP0 MOV32I R9, 0x11111111;[7:7:{{}}:5:1]
-    @!UP0 MOV32I R9, 0x22222222;[7:7:{{}}:5:1]
 {FILL}{FILL}    STG.E.64 desc[{{UR4,UR5}}][{{R6,R7}}+0x0], {{R2,R3}};[7:7:{{0,1}}:1:0]
-    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x8], R9;[7:7:{{0,1}}:1:0]
     EXIT;[7:7:{{}}:5:0]
 }}"""
 
@@ -89,11 +89,11 @@ def run_kernel(src, base, off):
     mod.launch("uclea_test", grid=(1,), block=(1,),
                args=[base & 0xFFFFFFFFFFFFFFFF, off & 0xFFFFFFFFFFFFFFFF, d])
     mod.synchronize()
-    res, up = struct.unpack("<QI", mod.device_read(d, 12))
+    res = struct.unpack("<Q", mod.device_read(d, 8))[0]
     mod.devmem_free(d)
-    return res, up
+    return res
 
-# URb-form: (URa << 6) + URb, constSize irrelevant, UPu never asserted.
+# URb-form: (URa << 6) + URb, constSize irrelevant.
 cases = [
     (0x12345678, 0x123, 5, "base+off, K=5"),
     (0x100000001, 0x0, 5, "hi word participates"),
@@ -105,18 +105,18 @@ cases = [
     (0x12345678, 0x123, 16, "K=16 same as K=5"),
 ]
 for base, off, K, lab in cases:
-    res, up = run_kernel(kernel(K=K), base, off)
+    res = run_kernel(kernel(K=K), base, off)
     exp = ((base << 6) + off) & 0xFFFFFFFFFFFFFFFF
-    good = res == exp and up == 0x22222222
+    good = res == exp
     ok &= good
-    print(f"{'ok ' if good else 'FAIL'} {lab:24s} -> 0x{res:016X} (exp 0x{exp:016X}) upu={'SET' if up==0x11111111 else 'clear'}")
+    print(f"{'ok ' if good else 'FAIL'} {lab:24s} -> 0x{res:016X} (exp 0x{exp:016X})")
 
 # imm16-form.
-res, up = run_kernel(kernel(imm=0x123), 0x12345678, 0)
+res = run_kernel(kernel(imm=0x123), 0x12345678, 0)
 exp = ((0x12345678 << 6) + 0x123) & 0xFFFFFFFFFFFFFFFF
-good = res == exp and up == 0x22222222
+good = res == exp
 ok &= good
-print(f"{'ok ' if good else 'FAIL'} imm16 0x123            -> 0x{res:016X} (exp 0x{exp:016X}) upu={'SET' if up==0x11111111 else 'clear'}")
+print(f"{'ok ' if good else 'FAIL'} imm16 0x123            -> 0x{res:016X} (exp 0x{exp:016X})")
 
 print("\n=== UCLEA semantic verification: ALL OK ===" if ok else "\n=== UCLEA FAILURES ===")
 sys.exit(0 if ok else 1)

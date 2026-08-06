@@ -220,3 +220,4 @@ class ParsedInstruction:
     line: int = 0          # source line number (for diagnostics)
     pred: Optional[int] = None  # guard predicate P0-P6 (None = PT/always)
     pred_not: bool = False      # True = @!Px
+    pred_uniform: bool = False  # True = @UPx / @!UPx (uniform predicate)

@@ -129,6 +129,29 @@ class SassMatcher:
         if inst.pred_not:
             slot_map[f"{pred_slot}_not"] = 1
 
+        # Uniform-datapath instructions guard on a UniformPredicate slot
+        # (UPg); a regular @Px guard on them is a semantic error even though
+        # the bits encode identically (predicate field [15:12] is the same
+        # width).  Likewise a uniform @UPx on a regular-Pg instruction is
+        # wrong.  The predicate *slot type* is the discriminator (not the
+        # pipe: e.g. VOTEU is udp_pipe yet takes a regular Pg input, and
+        # SYNCS has both Pg and UPg variants).
+        if (inst.pred is not None or inst.pred_not) and \
+                inst.pred_uniform != (pred_slot == "UPg"):
+            def _pname(uniform: bool) -> str:
+                u = "U" if uniform else ""
+                n = f"{u}PT" if inst.pred == 7 else f"{u}P{inst.pred}"
+                return f"!{n}" if inst.pred_not else n
+            if pred_slot == "UPg":
+                self._cond_errors.append(
+                    f"{inst.mnemonic}: uniform-datapath instruction requires "
+                    f"a uniform predicate (@UPx), got @{_pname(inst.pred_uniform)}")
+            else:
+                self._cond_errors.append(
+                    f"{inst.mnemonic}: non-uniform instruction does not take "
+                    f"a uniform predicate (@UPx); use @{_pname(False)}")
+            return None
+
         # Figure out which modifier slots were consumed by operand matching
         consumed_mods = set()
         for grp in op_groups:

@@ -165,6 +165,7 @@ class Parser:
         operands: list[Operand] = []
         pred = None
         pred_not = False
+        pred_uniform = False
         # optional predicate prefix: @[!]Px
         if self.peek() and self.peek().type == "EXCLAM":
             self.pop()
@@ -172,6 +173,7 @@ class Parser:
         if self.peek() and self.peek().type in ("PRED", "UPRED"):
             t = self.pop()
             if t.type == "UPRED":
+                pred_uniform = True
                 val = 7 if t.text.upper() == "UPT" else int(t.text[2:])
             else:
                 val = 7 if t.text.upper() == "PT" else int(t.text[1:])
@@ -233,7 +235,10 @@ class Parser:
         sched = Sched.parse(bracket)
 
         line = self._cur_line
-        return ParsedInstruction(mnemonic=mnemonic, modifiers=modifiers, operands=operands, sched=sched, pred=pred, pred_not=pred_not, line=line)
+        return ParsedInstruction(mnemonic=mnemonic, modifiers=modifiers,
+                                 operands=operands, sched=sched, pred=pred,
+                                 pred_not=pred_not, pred_uniform=pred_uniform,
+                                 line=line)
 
     def _parse_operands(self) -> list[Operand]:
         ops: list[Operand] = []
