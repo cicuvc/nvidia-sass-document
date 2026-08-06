@@ -115,8 +115,11 @@ illegal combination raises `EncodeError: ILLEGAL_INSTR_ENCODING_SASS_ONLY_ERROR`
 ## 4. Register groups (the most important gotcha)
 
 **Every 64-bit or 128-bit operand must list ALL its registers explicitly:**
-`{Ra,Rb}` for 64-bit, `{Ra,Rb,Rc,Rd}` for 128-bit.  Legacy/implicit forms are
-rejected by the matcher:
+`{Ra,Rb}` for 64-bit, `{Ra,Rb,Rc,Rd}` for 128-bit. Wide MMA accumulator
+operands list the full group too: 8 registers for `HGMMA.64x16x16`, and
+16/32/64/128 registers for the larger `HGMMA.64xNx16` shapes (e.g.
+`{R24,…,R55}` for `64x64x16`). Legacy/implicit forms are rejected by the
+matcher:
 
 - `MOV.64 R0` ✗ → `MOV.64 {R0,R1}` ✓
 - `LDC.64 R6` ✗ → `LDC.64 {R6,R7}` ✓

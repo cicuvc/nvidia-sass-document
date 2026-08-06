@@ -461,10 +461,11 @@ class Parser:
             if not self.skip("COMMA"):
                 break
         self.expect("RBRACE")
-        if len(regs) not in (2, 4, 8):
+        if len(regs) not in (2, 4, 8, 16, 32, 64, 128):
             raise SyntaxError(
-                f"register group must list 2 (64-bit), 4 (128-bit) or "
-                f"8 (256-bit) registers, got {len(regs)}")
+                f"register group must list 2 (64-bit), 4 (128-bit), "
+                f"8 (256-bit) or 16/32/64/128 (wide MMA accumulator) "
+                f"registers, got {len(regs)}")
         all_rz = all(r == 255 for r in regs)
         if not all_rz:
             if 255 in regs:
