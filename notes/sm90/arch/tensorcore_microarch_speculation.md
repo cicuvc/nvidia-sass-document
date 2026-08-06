@@ -68,6 +68,22 @@ Caveat: async issue + the GMMA-scoreboard-hidden completion would mask fill/drai
 and a wider N also costs more passes in a dot-product tree — so a latency-vs-N
 slope would not cleanly separate the two hypotheses.
 
+## H20/H800 empirical update (2026-08, see `wgmma.md` Rounds 4-5)
+Chained-mma throughput on H20 is **MAC-bound at the chip's dense TC peak**:
+identical 32.4 cyc/MMA for bf16 k16 f32-acc, f16 k16 f16-acc (half the
+accumulator registers), and fp8 k32 (exactly 2× MACs at exactly 2× MAC/cyc)
+⇒ sustained rate = 506 fp16 MAC/cyc/SM ≈ 1011 fp8 MAC/cyc/SM, ~100% of
+H20's spec peak (148/296 TFLOPS). Accumulator-writeback bandwidth does NOT
+limit sustained throughput (f16-acc not faster). On H800 (full Hopper TC,
+cuBLAS-measured ~2286 MAC/cyc/SM ≈ 4× H20 per SM) the same chains are
+instead bound by the **smem operand-delivery path at ~112 B/cyc/SM** for
+n8..n64; only n128 flips to MAC-bound (~1944 MAC/cyc/SM). Completion
+latency t(1) is identical on both chips (~57 cyc n16) → dominated by fixed
+pipeline/operand/writeback terms, not array speed. The exact-2× fp8/fp16
+MAC-rate scaling on H20 and the bytes-vs-MACs limiter split on H800 are
+both consistent with the widened-dot-product position (a systolic array
+would not obviously quarter-and-share this way), but neither is decisive.
+
 ## Bottom line
 Best guess: **Hopper = widened, asynchronous dot-product/4-way-FMA (Ampere
 lineage); systolic array (if real) is a Blackwell introduction, with TMEM as its

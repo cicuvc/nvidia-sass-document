@@ -1,7 +1,9 @@
-// A/B: identical 64-MMA bf16 n16 chain, with/without __syncthreads before it.
-// Records both SR_CLOCKLO cycles and %globaltimer ns.
+// Data-dependence probe: same 64-MMA n16 chain, smem fill pattern as param.
 #include <cuda.h>
 #include <cstdint>
+static __device__ __forceinline__ uint32_t gt_lo() {
+    uint32_t v; asm volatile("mov.u32 %0, %%globaltimer_lo;" : "=r"(v)); return v;
+}
 
 #define KCHAIN 64
 
@@ -10,12 +12,14 @@ static __device__ __forceinline__ uint64_t make_desc(const void* p) {
     return 0x400000ull | ((uint64_t)((a & 0x3FFF0u) >> 4));
 }
 
-static __device__ __forceinline__ uint32_t gt_lo() {
-    uint32_t v; asm volatile("mov.u32 %0, %%globaltimer_lo;" : "=r"(v)); return v;
-}
-
-static __device__ __forceinline__ void run_chain(float* out) {
+extern "C" __global__ void __launch_bounds__(128)
+chain_fill(float* out, uint32_t fill, uint32_t do_fill) {
     __shared__ __align__(1024) uint8_t smem[16384];
+    if (do_fill) {
+        uint32_t* s = (uint32_t*)smem;
+        for (int i = threadIdx.x; i < 16384 / 4; i += 128) s[i] = fill;
+        __syncthreads();
+    }
     uint64_t da = make_desc(smem + 0x400), db = make_desc(smem + 0xC00);
     float d[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     asm volatile("wgmma.fence.sync.aligned;" ::: "memory");
@@ -41,9 +45,3 @@ static __device__ __forceinline__ void run_chain(float* out) {
     out[tid * 16 + 11] = __uint_as_float(g0);
     out[tid * 16 + 12] = __uint_as_float(g2);
 }
-
-extern "C" __global__ void __launch_bounds__(128)
-chain_nobar(float* out) { run_chain(out); }
-
-extern "C" __global__ void __launch_bounds__(128)
-chain_bar(float* out) { __syncthreads(); run_chain(out); }

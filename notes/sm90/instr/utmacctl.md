@@ -127,7 +127,7 @@ the Blackwell CCTL.LDCU pairing.
 
 ## Empirical verification (sm_120a, RTX 5090, CUDA 12.8/driver 580)
 Two-phase experiment, one kernel, 32 threads, hand-assembled SASS mirroring the
-ptxas output of the canonical PTX kernel (`cano.cu` at repo root, which runs
+ptxas output of the canonical PTX kernel (`tests/cano.cu`, which runs
 with/without `fence.proxy.tensormap`):
 
 1. phase 1: `UTMALDG.2D` with descriptor (points at buffer **A**), wait on
@@ -153,7 +153,7 @@ with/without `fence.proxy.tensormap`):
 | `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.IV` (no membars/DEPBAR) | **B** |
 | `CCTL.E.C.LDCU.IV.DEEP` + `UTMACCTL.IV` **before** the rewrite STG | **B** |
 
-PTX-level cross-check (modification of `cano.cu`, four fence combinations):
+PTX-level cross-check (modification of `tests/cano.cu`, four fence combinations):
 
 | kernel variant | phase1 | phase2 |
 |---|---|---|
@@ -181,7 +181,7 @@ Conclusions:
   (P2 copy of the map) loads B without any control op (earlier experiment).
 - The driver flushes the descriptor cache at kernel boundaries: two kernels
   sharing one descriptor address see the host rewrite without UTMACCTL.
-- Cross-check with the canonical PTX kernel (`cano.cu`, `k_canonical<true>`):
+- Cross-check with the canonical PTX kernel (`tests/cano.cu`, `k_canonical<true>`):
   ptxas's full acquire sequence reproduces phase2=B; `k_canonical<false>`
   (no fences) reproduces stale A — matching the hand-assembled matrix.
 
