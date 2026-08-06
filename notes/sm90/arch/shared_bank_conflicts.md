@@ -177,191 +177,186 @@ All-or-nothing. **Stores never merge** (floor 4).
 
 ---
 
-## 4. cp.async / LDGSTS
+## 4. cp.async / LDGSTS — full execution model
 
-`harness_cpasync.cu`. Bank-conflictable side is the **shared write** (dst
-pattern). Sizes: 4 B (`LDGSTS.E`), 8 B (`LDGSTS.E.64`), 16 B (`LDGSTS.E.128`).
+Harness: `l1tex/probe.cu` (per-lane src/dst byte offsets via `__grid_constant__`,
+size 4/8/16, active mask, one warp per launch, fresh 8 MB src per launch),
+driver `l1tex/drv.py`, reference simulator `l1tex/model.py` (`simulate(goff,
+soff, size, mask)`), regressions `l1tex/regress.py` (4 B, 64 cases) and
+`l1tex/regress816.py` (8 B/16 B, 24 cases). Random datasets: `l1tex/data4.jsonl`
+(400×, 4 B scattered), `data_coal.jsonl` (60×, 4 B dst=coalesced),
+`data8/16.jsonl`, `data8/16_coal.jsonl` (60× each).
 
-### 4.1 LSU partitioning — same as STS, but NO coalescing
+**Scope.** All formulas below are verified for **isolated single-warp
+execution**, which is bit-exact reproducible. Under multi-warp cp.async
+interference (`probe_mw.cu`): wavefront/sector counters stay exactly additive
+and undisturbed, but `SharedConf`/`GlobalConf`/`TWf`/`TSetAcc`/`TagConf` are
+disturbed even on disjoint memory. Offsets must be size-aligned (misaligned
+cp.async faults).
 
-| size | SASS | lane-group | floor |
+### 4.1 LSU partitioning — lane groups, NO coalescing
+
+| size | SASS | lane-group | #groups |
 |---:|---|---|:---:|
 | 4 B | LDGSTS.E | whole warp | 1 |
 | 8 B | LDGSTS.E.64 | half-warps {0-15}{16-31} | 2 |
-| 16 B | LDGSTS.E.128 | quarter-warps {0-7}{8-15}{16-23}{24-31} | 4 |
+| 16 B | LDGSTS.E.128 | quarter-warps {0-7}…{24-31} | 4 |
 
-**No same-word coalescing:** each lane is an independent copy descriptor. Multiple
-lanes writing the same word counts as multiple distinct writes.
+**No same-word/same-sector coalescing:** identical addresses do NOT merge
+(verified with all-32-lane broadcast probes at every size). Each lane is an
+independent copy descriptor; the lane group is the unit of data-stage
+formation (read formation and conflict history do not cross group boundaries).
 
-| pattern (16B) | cp.async Wf | STS Wf | why |
-|---|---|:---:|:---:|---|
-| broadcast | **32** | 4 | 32 independent writes, no coalesce |
-| consecutive | 4 | 4 | distinct words, same cost |
-| pairshare / quad / oct | 8/16/32 | 2 | ×(lanes sharing) |
+### 4.2 T-stage (verified exact: 400/400 random 4 B, 60/60 8 B, 60/60 16 B)
 
-### 4.2 Complete pipeline model
+- `tags` = distinct 128 B lines touched (lane-appearance order).
+- Tag bank: `bank(l) = (l ^ l>>2 ^ l>>4 ^ l>>6 ^ l>>8) & 3` — i.e.
+  `bank bit0 = l0^l2^l4^l6^l8`, `bit1 = l1^l3^l5^l7^l9`. Validated for lines
+  0–511 (64 KB span); the shorter 3-shift form is identical below line 256,
+  which is why the old hash (never validated ≥ line 128) broke exactly on the
+  16 B datasets whose patterns reach line 511. Hardware re-verified with
+  bank-skew K-sweeps built entirely from lines 256–511 (K8/K12/K16 exact).
+  Behavior for lines ≥ 1024 (bits 10+) is untested — the chain may keep
+  folding (`l>>12`, …).
+- Tags pack greedily in appearance order into tag wavefronts, one tag per bank
+  per wavefront; `TWf` = number of tag wavefronts (= max tag-bank load).
+- `TagConf = TWf − 1`; `TSetAcc = #tags`; `TReq = 1`.
+- `Sectors` = distinct 32 B sectors touched (union over lanes).
+- The old "16 B T-stage gap (6/60 off ±1–3)" was entirely this hash artifact:
+  with the extended hash, `TWf` is exact on all 60 scattered + 60 coalesced
+  16 B patterns, and all regressions pass (4 B 64/64, 8 B+16 B 24/24).
 
-```
-LSU partition  →  T-stage (tag array)  →  Fill (on miss)  →  Data-stage (data array)
-  (warp groups)     (4 banks, 1/cycle)    (per 32 B sector)   (32 banks, 128 B/wf)
-```
+### 4.3 Data stage — read side (L1 data-array banks)
 
-#### Step 1 — LSU partitioning
+Per lane group, **read passes** form by greedy bank arbitration:
+`read_bank(t) = (src_byte/4 + k) % 32`, `k = 0..size/4−1` (a lane occupies
+`size/4` consecutive banks atomically). Scan order is **(twf, lane)
+lexicographic** — NOT pure lane order (verified via composition kernels).
+Each pass serves ≤1 word per bank. `R` = number of read passes.
 
-cp.async size determines lane-group boundaries (§4.1). No transaction coalescing.
+**Read conflicts.** Per bank (scoped to the group), remember the set of twfs
+served by earlier passes. A pass `i > 0` conflicts once per **distinct twf**
+that some lane's bank already served (`SharedConf` read component). Per-pass
+multi-lane hits on the same twf count once; different twfs count each.
 
-#### Step 2 — T-stage (4-bank tag array)
+Exemption (4 B only): the LAST read pass is free if it is a single lane
+hitting only the final twf (`TWf ≥ 2`), the word is first-time on its bank,
+and `R−1 ≤ 2·TWf` (rides the final twf's data drain).
 
-Each LSU transaction's global addresses are decomposed into cache-line tags
-(128 B line, 1 tag each). The 4-bank tag array resolves 1 lookup/bank/cycle. If
-tags from different cache lines conflict in the 4-bank array, the LSU transaction
-is **split into multiple TAG transactions** (one per non-conflicting tag batch).
+**Read side is dst-invariant** (verified: same src with 4 different dst
+patterns → identical read-conflict counts; ±1 deltas trace to the write side).
 
-| metric | formula |
-|---|---|
-| `TstageWf` | `= ceil(#cache_lines / 4)` |
-| `TagConflict` | `= max(0, TstageWf − 1)` |
+**Hit vs miss dichotomy (verified).** Warm the pattern's sectors, then re-run
+the identical cp.async and subtract the cold execution's counters:
 
-#### Step 3 — Fill (on miss)
+- **L1-hit path** (`SecHit = Sectors`): `SharedConf = R − #groups` **exactly**
+  (4 B 25/25 kernel corpus, 8 B/16 B 16/16 random). Every read pass beyond
+  each group's first costs exactly one conflict, pattern-independent. This is
+  the old floor formula `SharedWf − max(#groups, TstageWf)` with
+  `TstageWf = 1` (lookups hit).
+- **L1-miss path** (fresh src): the twf-history rule above applies, but some
+  predicted hits are **suppressed** (miss-stream absorption; mechanism below).
+  Structured sweeps have zero suppression (hit rule exact, e.g. A32's 28 = all
+  its actual hits); random scattered patterns suppress up to ~30 % of hits.
+- **LDG-warmed lines do NOT produce LDGSTS hits** (`SecHit = 0` after an LDG
+  warm of every touched sector); LDGSTS-warmed lines DO hit for a later
+  LDGSTS. LDGSTS lookups appear to consult different L1 state than LDG
+  allocations (eviction class or fill path), so in practice cp.async.ca source
+  reads are effectively always on the miss path unless a prior cp.async
+  fetched the same lines.
 
-If a tag lookup misses, an MSHR is allocated and the cache line is filled from L2
-in 32 B sectors. Unaccessed sectors within a line may be skipped (consistent with
-sector-granularity `Sectors` accounting).
+Accuracy (miss path): structured sweeps exact at all sizes; random scattered
+src, dst=coal: 4 B 47/60, 8 B 17/60, 16 B 7/60 — all misses are small
+over-predictions from suppression. Suppression is absent on the hit path, so
+it is a miss-stream phenomenon: re-served banks whose sectors are still in
+flight appear to be satisfied without a new data-array access. Exact trigger
+(sector arrival order/rate vs pass issue cycle) **not yet isolated**.
 
-The fill does **not** increase `SharedWf` over the shared-write-only cost. Whether
-the fill is genuinely free (dual-row write broadcasting to L1+shared rows in the
-same bank cycle), uses a separate write port, or has a cost invisible to the
-shared counters is **not determined**. The key fact: `SharedWf` is unchanged by
-the presence of a fill.
+### 4.4 Data stage — write side (shared-memory banks)
 
-#### Step 4 — Data-stage (32-bank data array)
+Write passes form **per lane group** (whole warp / half / quarter, same
+groups as the read side) by lane-greedy arbitration on
+`write_bank(t) = (dst_byte/4 + k) % 32` — verified with dst-pairing probes
+(8 B: 16 contiguous lanes on banks {0,1} + 16 on {2,3} give 32 write
+wavefronts, NOT 16; alternating lanes pair and give 16; 16 B: quarter
+blocks behave the same). Lanes pair only within their own group; there is
+no cross-group write merging.
 
-Each tag transaction enters the data stage. The hardware determines the data-array
-bank-conflict profile of the combined **L1 read + shared write** for that tag
-transaction. **L1-read bank conflicts are resolved FIRST** (verified: §4.3
-split-order test). After the read split, shared-write conflicts are resolved
-within each read-split group.
+Passes issue **FIFO riding the read wavefronts**: pass `j` issues at
+`c = max(maxread_j, prev+1)` where `maxread_j` = read cycle of its last
+lane. At **4 B only**, a pass delayed inside the read phase
+(`maxread < c < R`) pays a +1-cycle penalty.
+`SharedWf = max(R, last_write_cycle + 1)`.
 
-Each resulting **data transaction** performs one conflict-free 128 B pass (one
-word to each of the 32 banks).
+R=1 probes (coalesced src, k lanes to one dst bank): `SharedWf = k`
+(per-bank chain serializes 1/cycle; two hot banks drain in parallel — chain
+lengths combine by max), `SharedConf = k−1` = number of deferred writes.
 
-> `SharedWf = Σ(data_txs)` across all tag and LSU transactions.
-> `SharedConflict = GlobalConflict = Σ(data_txs − 1)` (cp.async fuses counters).
+A write pass whose banks are all free in the current read wavefront rides it
+for free — this is why dst=coal adds **zero** wavefronts (`SharedWf = R`).
 
-#### Sector-overflow misalignment
+Accuracy: 4 B regress 64/64, dst sweeps exact at 8 B/16 B; **dst=coal random
+60/60 at all sizes** (per-group formation fixed the old 8 B/16 B "−1 merge"
+cases — they were write-side, not read-side). Random scattered dst: 4 B
+196/400 (residual ±1, symmetric), 8 B 5/60, 16 B 25/60.
 
-If the source base address is not sector-aligned (512 B), the warp load may span
-1 extra sector (17 instead of 16), forcing `TstageWf=2`. The 2nd T-wavefront
-delivers the overflow sector → 1 extra shared write pass → `SharedWf += 1`.
+**Open — co-issue schedule on scattered dst.** The FIFO `max(mr,prev+1)`
+rule under-predicts 8 B/16 B by up to +7. Variants tried (2026-08-06): a
+global "delayed-in-read-phase" +1 penalty for all sizes fits random 8 B
+(26/60) but breaks the structured coal/dst sweeps (+1 ghost wavefront when
+group A's second write rides group B's read); a group-scoped penalty
+(`c ≤ group_read_end`) keeps structured exact but fits random poorly
+(8/60). No single rule fits both ⇒ the true schedule likely gates writes on
+fill/sector arrival, not just read-pass indices — the same missing
+timing ingredient as the read-side suppression (§4.10). Interim: 4 B
+penalty retained (64/64 + 196/400); 8 B/16 B scattered-dst SharedWf has a
+bounded (+1..+7) error.
 
-| src base alignment | TstageWf | SharedWf |
-|---|---|:---:|
-| aligned (addr%512=0) | 1 | 4 |
-| misaligned (addr%512=4) | 2 | 5 |
+### 4.5 Conflict-counter composition
 
-### 4.3 Data-transaction split order — L1-read FIRST (verified)
+- `SharedConf` = read-side hits (§4.3) + write-side deferrals (§4.4).
+- `GlobalConf` tracks the read-side portion (4 B: `= SharedConf` when
+  read_conf > 0 else 0; this fusion rule is approximate on scattered dst).
+- On dst sweeps at 8 B/16 B, write-side conflicts appear in `SharedConf`
+  with `GlobalConf = 0`.
 
-Test: 8-thread predicated 16 B cp.async, one tag transaction. L1 read has 3-way
-conflict (threads {0,1,2} on bank 0); shared write has 3-way conflict (threads
-{0,1,3} on bank 4). Overlap = {0,1}. Both sides conflicted, overlapping subsets.
+### 4.6 Structured sweep tables (all exact vs model)
 
-Measured: **`SharedWf=3, SharedConflict=GlobalConflict=2`**.
+4 B (dst=coal): `SharedWf = R`, `SharedConf` = hit rule; src stride
+s∈{1,2,3,4,5,8,16,31,32,33,64} all exact; broadcast: R=32, conf=31.
+
+8 B (dst=coal): coal: SWf=2, conf=0; src*2: 4/2; src*4: 8/6; src*8: 16/12;
+src*16/32: 32/24; broadcast: 32/30. dst sweeps: dst*2: 4/2; dst*4: 8/6;
+dst*8: 16/14; dstBcast: 32/30.
+
+16 B (dst=coal): coal: SWf=4, conf=0; src*2: 8/4; src*4: 16/12; src*8/16/32:
+32/24; broadcast: 32/28. dst sweeps: dst*2: 8/4; dst*4: 16/12; dst*8: 32/28;
+dstBcast: 32/28.
+
+On these structured patterns the hit rule reduces to
+`SharedConf = SharedWf − max(TWf, #groups)` (every pass beyond the group's
+first `max(TWf, #groups)` wavefronts conflicts). This formula does NOT
+generalize to sparse random patterns (see §4.3).
+
+### 4.7 Data-transaction split order — L1-read FIRST (verified)
+
+Test: 8-thread predicated 16 B cp.async, one tag transaction. L1 read has
+3-way conflict (threads {0,1,2} on bank 0); shared write has 3-way conflict
+(threads {0,1,3} on bank 4). Overlap = {0,1}.
+
+Measured: **`SharedWf=3, SharedConf=GlobalConf=2`**.
 
 - **L1-read-first:** 3-way read split → 3 data txs. Overlapping write conflict
-  {0,1,3} lands in different read-split groups → no further splits. shW=3. ✓
-- **Write-first:** would split writes → 4 groups (w=3 + rest); read conflict on
-  thread 2 is fully resolved within `rest` → shW=4. ✗
+  {0,1,3} lands in different read-split groups → no further splits. ✓
+- **Write-first:** would give shW=4. ✗
 
-**Conclusion:** the data stage resolves L1-read bank conflicts first, then shared
-write conflicts within each read-split group.
+### 4.8 Sector-overflow misalignment
 
-### 4.4 Key formulas (16 B cp.async)
+If the source base is not sector-aligned (512 B), a warp load may span 1 extra
+sector (17 instead of 16), forcing `TWf=2`; the 2nd tag wavefront delivers the
+overflow sector → 1 extra shared pass → `SharedWf += 1`.
 
-| quantity | formula | scope |
-|---|---|---|
-| `TstageWf` | `ceil(#cache_lines / 4)` | source side |
-| `TagConflict` | `max(0, TstageWf−1)` | tag pipeline, additive to bank conflicts |
-| `SharedWf` | `TstageWf × passes_per_T` | the actual shared-write wavefront cost |
-| `SharedConflict` | `SharedWf − max(quarter_floor, TstageWf)` | **=** `GlobalConflict` (fused for cp.async) |
-
-Where `passes_per_T` = number of data-array passes needed to write one T-wavefront's
-data through the shared destination (depends on dst bank-conflict profile).
-
-For ideal (coalesced src, conflict-free dst): `TstageWf=1, passes_per_T=4`
-→ `SharedWf=4, SharedConflict=0`.
-
-### 4.5 Source-stride sweep (16 B, conflict-free consecutive dst)
-
-| src stride (bytes) | TstageWf | SharedWf | SharedConflict | TagConflict |
-|---|---:|---:|:---:|:---:|:---:
-| 16 (coalesced) | 1 | 4 | 0 | 0 |
-| 32 | 2 | 8 | 4 | 1 |
-| 64 | 4 | 16 | 12 | 3 |
-| 128 (Zhihu k2) | 8 | 32 | 24 | 7 |
-| 256 | 8 | 32 | 24 | 7 |
-
-Relationships: `SharedConflict = GlobalConflict` (cp.async fusion) across all rows.
-`SharedWf = TstageWf × 4` (conflict-free dst, quarter floor).
-
-### 4.6 Worked examples — the two Zhihu kernels
-
-Both kernels use 16 B `cp.async.ca` (`LDGSTS.E.LTC128B.128`).
-
-#### Kernel 2 — scattered source, consecutive dst
-
-| | value | breakdown |
-|---|---|:---|
-| Source | `d_ptr + tid*32` (stride 128 B) | 32 distinct cache lines |
-| Dst | `smem + 4*tid` (consecutive) | conflict-free |
-| TstageWf | 8 | 32 lines ÷ 4 tag banks |
-| SharedWf | 32 | 8 × 4 quarter floor |
-| SharedConflict | **24** | L1 read bank conflict: all lanes→banks {0,1,2,3}, each T-wavefront has 4 distinct words per bank → 3-way → 8×3=24 |
-| TagConflict | **7** | TstageWf−1, additive |
-
-**Root cause:** source stride is a multiple of 32 words → every lane maps to banks
-{0,1,2,3} on the L1 read. Even though the shared destination never conflicts, the
-L1 read bank conflicts are charged to `SharedConflict` (cp.async fusion).
-
-#### Kernel 3 — coalesced source, scattered dst
-
-| | value | breakdown |
-|---|---|:---|
-| Source | `d_ptr + tid*4` (coalesced) | 4 cache lines |
-| Dst | `smem + 32*tid` (stride 128 B) | heavily conflicted |
-| TstageWf | 1 | 4 lines ÷ 4 tag banks |
-| SharedWf | 32 | 4 quarters × 8 writes/bank/quarter |
-| SharedConflict | **28** | shared write bank conflict: all lanes→banks {0,1,2,3}, 8 writes/bank/quarter → 7-way per quarter × 4 = 28 |
-| TagConflict | **0** | TstageWf=1 |
-
-**Root cause:** destination stride is a multiple of 32 words → every lane writes
-to banks {0,1,2,3} on the shared write. L1 read is conflict-free (coalesced
-source), so `GlobalConflict=0` but `SharedConflict=28`.
-
-#### Comparative penalties
-
-| | SharedConflict | TagConflict | **total overhead** |
-|---|---|:---:|:---:|:---:|
-| kernel 2 | 24 | 7 | **31** |
-| kernel 3 | 28 | 0 | **28** |
-
-Kernel 2 has **more** total penalty despite fewer bank conflicts, because the 7
-tag serializations more than offset the clean-dst advantage.
-
-### 4.7 The `+tid*4` fix
-
-Adding `+tid*4` (4-word offset) to either source or destination rotates the base
-address by `(4t)%32 = 4t`, which within each quarter maps all 8 threads to 8
-distinct banks (for each of the 4 k values). Across k=0..3, every bank receives
-exactly 1 write per quarter → conflict-free.
-
-- **kernel 2 + `tid*4` on source** (`k2fix`): `GlobalConflict=0` (L1 read banks spread), `TagConflict=8` (scattered sectors remain).
-- **kernel 3 + reverse dst** (`smem + 4*(31−tid)` = `−4t` rotation): `SharedConflict=0, SharedWf=4`.
-- **Predicated 8-thread variant** (both sides +4t): `GlobalConflict=0, SharedConflict=0`.
-
-The root cause of both kernels' conflicts is **stride ≡ 0 (mod 32 words).**
-Breaking that alignment with `+4t` distributes across all banks.
-
-### 4.8 ca vs cg (bypass L1)
+### 4.9 ca vs cg (bypass L1)
 
 - `cp.async.ca` (default): all counters above; clean model.
 - `cp.async.cg` (16 B only, bypass L1): standard counters read **0**; shared
@@ -369,13 +364,94 @@ Breaking that alignment with `+4t` distributes across all banks.
   is **0 for every tested pattern** and the wavefront sub-counter does not follow
   the group model. The bypass path stages global→L2→shared differently. **Open.**
 
-### 4.9 Open questions
+### 4.10 Open questions
 
-- cg/bypass true shared-bank behavior (counter granularity unclear).
-- Exact crossbar swizzle set that permits the v2/v4 load merge (butterfly/Beneš
-  topology).
-- v4 cp.async (`LDGSTS.128`) full characterization (only 16 B covered here).
-
+- **Miss-path conflict suppression:** on the miss path some twf-history hits
+  are not counted; hit path counts everything (`R − #groups`). Suppression =
+  miss-stream absorption of in-flight re-reads; the precise arrival-vs-issue
+  timing rule is not isolated. Dominant error source on random patterns.
+  **Candidate mechanisms (2026-08, ranked):**
+  - **H-I: return-buffer residency.** Miss data lands in a small LSU-internal
+    return buffer (FIFO or a small cache with unknown replacement policy)
+    before consumption. A multi-lane pass completes only when ALL its lanes'
+    sectors arrived; early data idles in the buffer during the wait, and
+    re-serves issued during that window are served from the buffer → free.
+    Explains: single-lane chains suppress nothing (consumed immediately),
+    random multi-lane passes suppress (arrival skew), hit path suppresses
+    nothing (data already in array), dst-invariance.
+  - **H-B: fill-stream scheduling.** The miss-path data stage is driven by the
+    physical fill stream; logical passes that re-serve banks/sectors the
+    stream has not reached yet merely wait (free); re-serving data the stream
+    already passed requires an array re-read (conflict). Suppression =
+    order-mismatch between logical passes and physical arrival order.
+  - **H-A: MSHR merge accounting.** Re-serves of still-in-flight sectors merge
+    into outstanding MSHRs (free); only landed re-reads count. Narrow window,
+    weaker than H-I.
+  - **H-D: per-bank-group sector staging buffer** (fixed depth; window counted
+    in sectors, not cycles).
+  - Ruled out: dual-row SRAM write on bank match (12/12 no diff), bank
+    swizzle (sequential `word%32` fits 400/400), dst-pattern interference
+    (dst-invariance), hit/miss equivalence (disproven — they differ).
+  - **Discriminating experiment (H-I/H-B):** p0 = {lane A early sector,
+    lane B sector ~6 twfs late}, p1 = re-serve of A's bank+twf. If A's
+    re-serve is free while p0 is gated on B → buffer/stream ride confirmed;
+    if it counts → strict sequential completion (H-I/H-B dead).
+  - **Experiment results (2026-08):**
+    - Gate probe DONE: re-serve of an already-served early sector counts
+      (conf=1) even when its pass is gated ~6 twfs late → H-I pipelined
+      buffer-ride form DEAD; re-serve after consumption always costs.
+    - Dual-row-write probe DONE: dst bank aligned vs shifted vs src bank:
+      12/12 identical → no bank-match write merge.
+    - Current best suppression rule: hit free iff the HIT LANE'S OWN sector
+      is still in flight at its pass index (per-lane arrival, distinct-twf
+      counting): corpus 20/25 + coal60 42/60 — still worse than the §4.3
+      exemption rule (24/25 + 47/60); arrival order/rate model unphysical
+      (rho≈16 fits best). Pass issue timing (gating feedback into pass
+      cycles) is the missing ingredient for a causal model.
+  - **Suppression deep-dive (2026-08-06, ~40 probes, NEGATIVE results):**
+    - Delivery-timing model families all fit WORSE than the §4.3 exemption
+      rule: twf-order delivery (23/25+11/60), pass-request-order delivery
+      (20/25+37/60+d4 15/200), own-sector-in-flight (20/25+42/60),
+      T-stage concurrency windows {i−1,i}/{i−1} (corpus 2/25 — artifact).
+    - Delta-debugged minimal suppression case saved to
+      `l1tex/mincase32.json` (9 lanes, R=4, TWf=3, Sectors=7; model
+      predicts 4 hits, measured SharedConf=3 → exactly one free hit).
+    - Attribution: the free hit is lane7 (bank4, twf0, hit@pass1, line12
+      with tag-bank 3). Line-specific (line12 tb3 free, line11 tb1 /
+      line8 tb2 same twf0 counted), sector-insensitive within line
+      (sec48/sec49 both free), NOT first-touch-of-line (pre-touching
+      line12 @p0 with same sector keeps it free), NOT same-word
+      (same word as bank's first serve COUNTS), window = pass1 only
+      (deferring the hit to pass2/3 makes it count).
+    - HYPERSENSITIVE: removing ANY of the other 3 hit lanes makes all
+      remaining hits count; an isolated single-hit replica (any bank,
+      TWf 1..7, 2..16 sectors) ALWAYS counts. Suppression strength grows
+      with pattern complexity (a 11-lane probe showed gap 4 = 4 free hits
+      of 7). No local per-hit rule fits; consistent with a global
+      queue/MSHR-occupancy effect depending on the whole fill stream.
+    - Counter forensics: conflicts are `cmd_read` (write side clean),
+      SecHit=0, TotalWf/ShAllWf invariant across variants (they include
+      write wavefronts: TotalWf = ShAllWf + LgdsWf).
+    - Also observed: a bank serving the same twf TWICE before a hit may
+      charge 2 conflicts for that hit (S3 probe: 1 hit but conf=2) —
+      per-serve-occurrence accounting, needs confirmation.
+    - Status: miss-path suppression UNMODELED; exemption rule remains
+      best-effort. Recommend: statistical correction term or bounded
+      error on scattered patterns; hit-path (warm) formula R−#groups is
+      exact and unaffected.
+- **Write/read wavefront co-issue schedule** on scattered dst (4 B ±1
+  residual; 8 B/16 B larger); data-arrival gating suspected, unproven.
+- 16 B T-stage: 6/60 random cases off by ±1–3 (tag model small gap).
+- `SharedWf` occasional −1 at 8 B/16 B dst=coal: sparse passes of adjacent
+  groups may merge.
+- Tag-bank hash validity for lines ≥ 128.
+- Why LDG-allocated lines are invisible to LDGSTS lookups (fill-state or
+  eviction-class difference); whether LDGSTS hits exist for mixed LDG→LDGSTS
+  producer-consumer code (relevant for real kernels that LDG-warm then
+  cp.async).
+- cg/bypass true shared-bank behavior.
+- `ShAllWf`/`TotalWf`/`LgdsWf` composition (≈SharedWf+const with anomalies);
+  `Inst`=2 per single LDGSTS.
 ---
 
 ## 5. L1 + shared interaction — serialization, not bank conflict

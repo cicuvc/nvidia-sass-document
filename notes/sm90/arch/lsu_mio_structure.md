@@ -93,9 +93,36 @@ Global store *completion* is ~400–800 cyc, yet the read-SB WAR adds only ~11 c
   a cross-SM persistent-flood attempt (`readsb_xsm.cu`) hung and is unresolved.
 
 **Practical model to use downstream:** treat a store's source registers as read
-~6–12 cyc after issue at an LSU-internal latch; the register frees then and the
-store completes asynchronously from the latched copy (fire-and-forget, no
-completion scoreboard). Do **not** model the register as held to completion.
+~6–12 cyc after issue at an LSU-internal latch **when the queue is light**; the
+register frees then and the store completes asynchronously from the latched copy
+(fire-and-forget, no completion scoreboard). Do **not** model the register as
+held to completion. **But under a deep queue the latch slides arbitrarily late**
+— see below.
+
+## Deep-queue confirmation of (b) — the latch waits for the arbiter (2026-08)
+
+A wgmma experiment accidentally became a clean (a)-vs-(b) discriminator
+(wgmma.md Round 3, exp11v3): 64 back-to-back `STG.E.128`s (8 accumulator
+groups × 8) issued with **no `rd_sb`** (`[7:7:{}:4:0]`), followed immediately
+by `MOV32I` rewrites of all source registers. Result: the **last store group
+(deepest in the queue) stored the rewritten value** (2000.0 exactly, 128/128
+threads), while earlier groups stored the correct old values. Padding 100 cyc
+of NOPs between the last store and the rewrite did **not** help — the last
+group's data sample lagged its issue by **hundreds of cycles**, bounded below
+by the drain time of ~56 queued 16 B/thread stores.
+
+- This is **decisive for (b) over (a)**: a pre-enqueue/issue-stage latch (a)
+  cannot depend on how many requests are queued ahead of the store. The source
+  register is read only when the arbiter/LSU accepts the request, and that
+  acceptance is rate-limited by the memory path, so the hold time scales with
+  queue depth (from ~5–11 cyc when light to ≥100s of cycles when deep).
+- It also validates the codegen economy: ptxas's fixed `stall=6` dead-reckoning
+  is safe only because real code rarely floods the LSU with 64 unrestricted
+  stores; the `rd_sb` backstop (plus `DEPBAR.LE SBn`) is what actually covers
+  deep-queue cases. Hand-written SASS without it silently corrupts — this
+  artifact produced three phantom tensor-core findings (see wgmma.md Round 2
+  retractions: "commit capacity ~35", "retired accumulator", "back-to-back
+  commit loss").
 
 ## Q1 (MIO in-order vs reorder) — resolved with caveat
 The MP litmus (Message-Passing: `D=1 ; F=1 // rf=F; rd=D`) tests whether two
