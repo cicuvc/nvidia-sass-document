@@ -666,8 +666,13 @@ class Parser:
         attr_name = name_t.text
         if self.peek() and self.peek().type == "LPAREN":
             self.pop()
-            val_t = self.expect("NUMBER", "HEX")
-            decl.attributes[attr_name] = int(val_t.text, 0)
+            vals = [self.expect("NUMBER", "HEX")]
+            while self.peek() and self.peek().type == "COMMA":
+                self.pop()
+                vals.append(self.expect("NUMBER", "HEX"))
+            decl.attributes[attr_name] = (
+                int(vals[0].text, 0) if len(vals) == 1
+                else ",".join(v.text for v in vals))
             self.expect("RPAREN")
 
     def _resolve_params(self, inst: ParsedInstruction, decl: KernelDecl) -> None:

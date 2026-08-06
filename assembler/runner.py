@@ -176,7 +176,8 @@ class CudaModule:
                   args: list | None = None,
                   shared_mem: int = 0,
                   stream: int = 0,
-                  programmatic_serialization: bool = False) -> None:
+                  programmatic_serialization: bool = False,
+                  cluster_dims: tuple[int, int, int] | None = None) -> None:
         """Launch a kernel through ``cuLaunchKernelEx``.
 
         ``programmatic_serialization`` sets
@@ -184,54 +185,74 @@ class CudaModule:
         the kernel may overlap with the previous kernel on the same stream,
         resolving its stream dependency programmatically via
         ``griddepcontrol`` (SASS ACQBULK / PREEXIT).
+
+        ``cluster_dims`` sets ``CU_LAUNCH_ATTRIBUTE_CLUSTER_DIMENSION``
+        (x, y, z) — the kernel must carry the cluster EIATTRs
+        (``#pragma CLUSTER(x,y,z)``) or the launch fails with
+        CUDA_ERROR_INVALID_VALUE.
         """
         f = self.func(func_name)
         raw_args = self._kernel_param_array(args)
         gx, gy, gz = _pad3(grid)
         bx, by, bz = _pad3(block)
 
-        attrs = None
-        num_attrs = 0
+        if not (programmatic_serialization or cluster_dims):
+            self.launch(func_name, grid=grid, block=block, args=args,
+                        shared_mem=shared_mem, stream=stream)
+            return
+
+        # CUDA 12/13 driver launch-attribute layout:
+        #   CUlaunchAttribute { CUlaunchAttributeID id; char pad[4];
+        #                       CUlaunchAttributeValue value; }  (value = 64B)
+        class AttrVal(ctypes.Union):
+            _fields_ = [("pad", ctypes.c_ubyte * 64)]
+
+        class LaunchAttr(ctypes.Structure):
+            _fields_ = [("id", ctypes.c_int),
+                        ("pad", ctypes.c_ubyte * 4),
+                        ("value", AttrVal)]
+
+        attrs = []
         if programmatic_serialization:
-            # CU_LAUNCH_ATTRIBUTE_PROGRAMMATIC_STREAM_SERIALIZATION == 6
-            # (CUDA 12/13 driver); value is a 64-byte union, first member an int.
-            class AttrVal(ctypes.Union):
-                _fields_ = [("pad", ctypes.c_ubyte * 64)]
-
-            class LaunchAttr(ctypes.Structure):
-                _fields_ = [("id", ctypes.c_int),
-                            ("pad", ctypes.c_ubyte * 4),
-                            ("value", AttrVal)]
-
+            # CU_LAUNCH_ATTRIBUTE_PROGRAMMATIC_STREAM_SERIALIZATION == 6;
+            # value is a 64-byte union, first member an int.
             attr = LaunchAttr()
             attr.id = 6
             ctypes.memset(ctypes.byref(attr.value), 0,
                           ctypes.sizeof(attr.value))
             ctypes.cast(ctypes.pointer(attr.value),
                         ctypes.POINTER(ctypes.c_int))[0] = 1
-            attrs = ctypes.cast(ctypes.pointer(attr),
-                                ctypes.POINTER(LaunchAttr))
+            attrs.append(attr)
+        if cluster_dims is not None:
+            # CU_LAUNCH_ATTRIBUTE_CLUSTER_DIMENSION == 4; value is CUdim3
+            # (3 x u32: x, y, z).
+            attr = LaunchAttr()
+            attr.id = 4
+            ctypes.memset(ctypes.byref(attr.value), 0,
+                          ctypes.sizeof(attr.value))
+            dims = (ctypes.c_uint * 3)(*cluster_dims)
+            ctypes.memmove(ctypes.byref(attr.value), ctypes.byref(dims),
+                           12)
+            attrs.append(attr)
 
-            class LaunchConfig(ctypes.Structure):
-                _fields_ = [("gridDimX", ctypes.c_uint),
-                            ("gridDimY", ctypes.c_uint),
-                            ("gridDimZ", ctypes.c_uint),
-                            ("blockDimX", ctypes.c_uint),
-                            ("blockDimY", ctypes.c_uint),
-                            ("blockDimZ", ctypes.c_uint),
-                            ("sharedMemBytes", ctypes.c_uint),
-                            ("hStream", ctypes.c_void_p),
-                            ("attrs", ctypes.POINTER(LaunchAttr)),
-                            ("numAttrs", ctypes.c_uint)]
+        Arr = LaunchAttr * len(attrs)
+        attr_arr = Arr(*attrs)
 
-            cfg = LaunchConfig(gx, gy, gz, bx, by, bz, shared_mem,
-                               ctypes.c_void_p(stream), attrs, 1)
-            _check(_cuda().cuLaunchKernelEx(
-                ctypes.byref(cfg), f, raw_args, None))
-            return
+        class LaunchConfig(ctypes.Structure):
+            _fields_ = [("gridDimX", ctypes.c_uint),
+                        ("gridDimY", ctypes.c_uint),
+                        ("gridDimZ", ctypes.c_uint),
+                        ("blockDimX", ctypes.c_uint),
+                        ("blockDimY", ctypes.c_uint),
+                        ("blockDimZ", ctypes.c_uint),
+                        ("sharedMemBytes", ctypes.c_uint),
+                        ("hStream", ctypes.c_void_p),
+                        ("attrs", ctypes.POINTER(LaunchAttr)),
+                        ("numAttrs", ctypes.c_uint)]
 
-        self.launch(func_name, grid=grid, block=block, args=args,
-                    shared_mem=shared_mem, stream=stream)
+        cfg = LaunchConfig(gx, gy, gz, bx, by, bz, shared_mem,
+                           ctypes.c_void_p(stream), attr_arr, len(attrs))
+        _check(_cuda().cuLaunchKernelEx(ctypes.byref(cfg), f, raw_args, None))
 
     def _kernel_param_array(self, args):
         """kernelParams convention: array of pointers to each argument value.

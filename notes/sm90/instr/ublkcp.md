@@ -5,9 +5,11 @@
 ## Semantics
 UBLKCP is the **non-tensor** bulk-copy engine op — the SASS lowering of PTX
 `cp.async.bulk` (contiguous byte copy), as opposed to `UTMALDG`/`UTMASTG` which
-handle the *tensor* (`cp.async.bulk.tensor`) tiled copies. One elected thread on
-the uniform datapath fires an asynchronous bulk transfer between global and
-shared memory; completion is signalled either through an **mbarrier tx-count**
+handle the *tensor* (`cp.async.bulk.tensor`) tiled copies. The whole warp issues
+the instruction on the uniform datapath (ptxas emits it unpredicated; the
+elected-thread gating is only for the mbarrier init/expect_tx). The transfer
+runs asynchronously between global and shared memory; completion is signalled
+either through an **mbarrier tx-count**
 (load direction, `.S.G`) or the **bulk-async-group** counted scoreboard (store
 direction, `.G.S`, via `UTMACMDFLUSH` + `DEPBAR.LE`), exactly like the tensor
 TMA path (`../arch/tma_mbarrier.md`).
@@ -123,15 +125,53 @@ Decoder `tools/decode_ublkcp.py`: **3/3 PASS**.
 ### PTX→SASS mapping
 | PTX | SASS |
 |---|---|
-| `cp.async.bulk.shared::cluster.global.mbarrier::complete_tx::bytes [s],[g],n,[bar]` | `UBLKCP.S.G [URb],[URa],URc` (URc = mbarrier) |
-| `…global…multicast::cluster … , mask` | `UBLKCP.S.G.MULTICAST` (URc = CTA mask) |
+| `cp.async.bulk.shared::cluster.global.mbarrier::complete_tx::bytes [s],[g],n,[bar]` | `UBLKCP.S.G [URb],[URa],URc` (URc = size/16) |
+| `…global…multicast::cluster … , mask` | `UBLKCP.S.G.MULTICAST` (URc = `(mask<<16) | size/16`) |
 | `cp.async.bulk.global.shared::cta.bulk_group [g],[s],n` | `UBLKCP.G.S` + `UTMACMDFLUSH` + `DEPBAR.LE SB0,0` |
 | `cp.async.bulk.commit_group` | `UTMACMDFLUSH` |
 | `cp.async.bulk.wait_group.read 0` | `DEPBAR.LE SB0, 0x0` |
 
-The load path is preceded by `SYNCS.EXCH.64` (mbarrier.init) +
-`SYNCS.ARRIVE.TRANS64` (arrive.expect_tx) and issued under `@P0 ELECT P1` (single
-elected thread), identical framing to `UTMALDG` (`../arch/tma_mbarrier.md`).
+The load path is framed by `SYNCS.EXCH.64` (mbarrier.init) +
+`SYNCS.ARRIVE.TRANS64[.RED]` (arrive.expect_tx).  **The UBLKCP itself is issued
+unpredicated by every thread** (CUDA 12.8 ptxas sm_90a: plain and multicast
+forms both appear with no predicate in the warp — the uniform datapath dedups);
+only the mbarrier init/expect_tx are gated on the elected thread (`@P1` /
+`@P0 ELECT P1`), like `UTMALDG` (`../arch/tma_mbarrier.md`).
+
+### Multicast / cluster (`.MULTICAST`, bit [75])
+`UBLKCP.S.G.MULTICAST` delivers one global read to the shared memory of several
+CTAs in a cluster.  From the sm_90a ptxas lowering of the canonical multicast
+kernel (`multicast.cu`, `__cluster_dims__(2,1,1)`):
+
+- **ctaMask rides in `URc` high bits:** `URc = (ctaMask << 16) | (bytes/16)`.
+  For mask `0x3` (CTAs 0+1) and 512 bytes: `URc = 0x30020`.  (Non-multicast
+  512-byte copies use plain `URc = 0x20`.)
+- **mbarrier is implicit and per-destination-CTA:** the SASS has no mbar
+  operand; ptxas places each CTA's mbarrier at the *same CTA-relative shared
+  offset* (`cga*0x800 + 0x600`) and the complete-tx arrives there in every
+  receiving CTA (PTX: "the mbarrier signal is also multicast to the same
+  CTA-relative offset as `mbar`").
+- **Cluster sync:** `UCGABAR_ARV` + `UCGABAR_WAIT` (barrier.cluster) before the
+  copy so every CTA's mbarrier init is visible; each CTA then spins on its own
+  mbarrier (`SYNCS.PHASECHK.TRANS64.TRYWAIT`).
+- **sm_120 status (pending GPU):** ptxas has no sm_120 lowering for
+  `.multicast::cluster` (the PTX doc lists only sm_90a/sm_100f/a/sm_103f/a/
+  sm_110f/a as optimized targets; sm_120 gets downgraded to LDG + dshmem), but
+  the sm_120 *SASS* spec still carries the `MULTICAST` bit [75] and the
+  `UBLKCP.S.G.MULTICAST` encoding assembles identically to sm_90.  Whether the
+  Blackwell TMA engine honors it is the open question — the probe is
+  `tests/asm_construct/test_ublkcp_multicast.py` (needs a cluster launch; see
+  below).
+
+### Cluster launch support (assembler)
+Launching a cluster kernel needs two pieces now in the toolchain:
+- **EIATTRs** (`#pragma CLUSTER(x,y,z)` in `assemble_kernel`): emits
+  `EIATTR_CTA_PER_CLUSTER` (0x3d, payload = 3×u32 cluster dims, byte-identical
+  to ptxas) and `EIATTR_EXPLICIT_CLUSTER` (0x3e, empty fmt=1 marker) into the
+  per-kernel `.nv.info` — see `assembler/sass_elf.py`.
+- **Launch attribute:** `CudaModule.launch_ex(..., cluster_dims=(x,y,z))` passes
+  `CU_LAUNCH_ATTRIBUTE_CLUSTER_DIMENSION` (4) through `cuLaunchKernelEx`
+  (`assembler/runner.py`).
 
 ## `multimem.cp.async.bulk` → the *same* `UBLKCP.G.S`
 PTX **`multimem.cp.async.bulk`** (async bulk copy shared→**multimem** global, i.e.

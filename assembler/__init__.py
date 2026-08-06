@@ -193,6 +193,9 @@ def assemble_kernel(source: str, *, check_deps: bool = True,
             cb.set_shared_mem(int(k.attributes["SHARED"]))
         if "SHADER_TYPE" in k.attributes:
             cb.set_shader_type(int(k.attributes["SHADER_TYPE"]))
+        if "CLUSTER" in k.attributes:
+            dims = tuple(int(v, 0) for v in k.attributes["CLUSTER"].split(","))
+            cb.set_cluster_dims(dims)
         for attr_name, attr_val in k.attributes.items():
             if attr_name.startswith("MBARRIER_") or attr_name == "NUM_MBARRIERS":
                 cb.set_pragma(attr_name, str(attr_val))

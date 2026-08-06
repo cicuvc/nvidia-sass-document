@@ -177,6 +177,24 @@ def eiattr_shader_type(func_sym: int, shader_type: int) -> bytes:
     return struct.pack("<BBHII", 4, 0x49, 8, func_sym, shader_type)
 
 
+def eiattr_cluster_dims(x: int, y: int, z: int) -> bytes:
+    """EIATTR_CTA_PER_CLUSTER (0x3d) — cluster dimensions (x, y, z) as 3 u32.
+
+    Matches ptxas output for ``__cluster_dims__(x,y,z)`` kernels: the record
+    is emitted in the per-kernel ``.nv.info.<kernel>`` section (no function
+    symbol prefix) with payload (x, y, z).  Must be paired with
+    ``eiattr_explicit_cluster()`` (EIATTR_EXPLICIT_CLUSTER 0x3e), an empty
+    fmt=1 marker that flags the kernel as an explicitly cluster-capable
+    launch.
+    """
+    return struct.pack("<BBHIII", 4, 0x3d, 12, x, y, z)
+
+
+def eiattr_explicit_cluster() -> bytes:
+    """EIATTR_EXPLICIT_CLUSTER (0x3e) — empty fmt=1 marker (from ptxas)."""
+    return b"\x01\x3e\x00\x00"
+
+
 def eiattr_kparam(ordinal: int, offset: int, size: int) -> bytes:
     # EIATTR_KPARAM_INFO size code (bits 16-31, probed from nvcc): the 16-bit
     # code is (size << 2) | 1, e.g. 4 -> 0x0011, 8 -> 0x0021, 16 -> 0x0041,
@@ -223,6 +241,7 @@ class CubinBuilder:
         self._params: list[tuple[int, int, int]] = []
         self._pragma_attrs: dict[str, str] = {}
         self._shared_mem = 0
+        self._cluster_dims: tuple[int, int, int] | None = None
 
     def set_code(self, instructions: list[tuple[int, int]],
                  kernel_name: str = "my_kernel") -> None:
@@ -242,6 +261,12 @@ class CubinBuilder:
         """Static shared-memory size (bytes) → .nv.shared.<kernel> NOBITS
         section so the driver allocates the CTA shared window."""
         self._shared_mem = size
+
+    def set_cluster_dims(self, dims: tuple[int, int, int] | None) -> None:
+        """Cluster dimensions (x, y, z) → EIATTR_CTA_PER_CLUSTER + EXPLICIT
+        cluster marker, so the driver accepts a cuLaunchKernelEx cluster
+        launch for this kernel."""
+        self._cluster_dims = dims
 
     def set_pragma(self, key: str, value: str) -> None:
         self._pragma_attrs[key] = value
@@ -491,6 +516,9 @@ class CubinBuilder:
                 # NUM_MBARRIERS — 0xffff if unknown (no CFG), override via #pragma
                 num_mbar = int(self._pragma_attrs.get("NUM_MBARRIERS", 0xffff))
                 buf += eiattr_hval(0x38, num_mbar)
+        if self._cluster_dims is not None:
+            buf += eiattr_cluster_dims(*self._cluster_dims)
+            buf += eiattr_explicit_cluster()
         total_ps = sum(sz for _, _, sz in self._params)
         param_base = arch.current().param_base
         buf += eiattr_hval(0x19, total_ps)  # CBANK_PARAM_SIZE
