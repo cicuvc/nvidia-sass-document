@@ -464,8 +464,16 @@ class CubinBuilder:
                               STB_GLOBAL, STT_NOTYPE, 0, value=0x40)
         sym_cg = symtab.add(strtab.add(".nv.callgraph"),
                             STB_LOCAL, STT_SECTION, 0)
+        # st_other bit 4 = STO_ENTRY (cuobjdump -symbols prints 0x10 as
+        # STO_ENTRY): marks the symbol as a kernel entry point.  Without it
+        # the cubin loads and runs normally, but ncu's counter-enabled replay
+        # launch fails with "LaunchFailed" for kernels that touch memory.
+        # Verified on sm_120 as a flag bit, not an index: any value with 0x10
+        # set passes (0x11/0x30/0x90), values without it fail (0x01/0x20).
+        # regcount/st_size are irrelevant.
         sym_func = symtab.add(strtab.add(mn), STB_GLOBAL, STT_FUNC, 0,
-                              size=len(self._instructions) * 16)
+                              size=len(self._instructions) * 16,
+                              other=0x10)
         sym_c0 = symtab.add(strtab.add(f".nv.constant0.{mn}"),
                             STB_LOCAL, STT_SECTION, 0)
 

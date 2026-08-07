@@ -253,3 +253,10 @@ out = mod.device_read(d, 128)
     included in the message); `EncodeError` = matched but the encoding
     failed a `CONDITIONS`/`TABLES_*` legality check.  Both carry enough
     context to act on.
+11. **ncu profiling needs `STO_ENTRY` on the kernel symbol**: `st_other` bit 4
+    (`0x10`, printed by `cuobjdump -symbols` as `STO_ENTRY`) marks the symbol
+    as a kernel entry point.  ptxas sets it; the assembler does too now.
+    Without it the cubin loads and runs normally, but ncu's counter-enabled
+    replay fails with `LaunchFailed` for kernels that touch memory.  It is a
+    flag bit, not a section/symbol index (verified on sm_120: any value with
+    `0x10` set passes; regcount and `st_size` are not involved).
