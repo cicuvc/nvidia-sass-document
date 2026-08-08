@@ -692,3 +692,45 @@ open/ioctl/mmap + doorbell/GPFIFO 陷阱，把 context 阶段与 launch 阶段�
 **结论**：driver 的 bank ring（实测至少容纳 300+ 连续 launch）**足够**——
 每 launch 独立槽 +0x10000 轮换，参数互不覆盖。真正的限制不是 bank 大小，
 而是 UVM 层对"同一物理页内多次独立 kernel 写"的缓存合并（本环境驱动 bug）。
+
+## Phase 12 补充（bank ring = 8 槽，何时分配/覆盖？— 决定性实验）
+
+**问题**：多 launch 并发/排队时 bank 参数区够不够？是否覆盖？
+**实验**（ringtest3：24 个 launch + 慢 kernel spin，tracer 抓 bank 描述符）：
+
+1. **bank ring 恰好 8 槽**：24 launch 只有 8 个唯一槽
+   （0x21b2280000..0x21b22f0000），第 9 个 launch 回绕复用第 1 槽。
+2. **即使回绕 + 慢 kernel（spin 500万周期，多 kernel 同时驻留），24/24 参数全对**。
+   → **覆盖不发生**。原因：GPU 按 stream 顺序串行执行；第 1 个 kernel 执行完
+   才轮到第 9 个（复用槽 1），此时槽 1 参数已被第 9 个 launch 重写为它自己的。
+   每个 kernel 执行时读到的是"当前槽的最新参数"，恰好是它自己的（因为顺序执行）。
+3. **bank 分配时机**：所有 bank 内存（staging 0x7f.. + GPU 低 VA 双重映射）
+   在 **context 创建时**由 libcuda 分配好（8 槽池）；launch 提交阶段 **0 个 ioctl**，
+   纯用户态写参数 + 轮换描述符。bank 描述符逐 launch +0x10000 递增轮换，回绕 8 槽。
+4. **真正限制不是 ring 大小**：只要 GPU 执行顺序与提交顺序一致（同 stream），
+   8 槽 ring 对任意数量 launch 都够。跨 stream 并发（真正并行）时若 >8 个 kernel
+   同时执行且参数未读，理论上有覆盖风险——但实测（mlt17 2 stream）未复现。
+
+**补充：ring 大小与 mlt32/33（64/300 launch 成功）一致**——都验证了 bank 不是瓶颈。
+**之前 multilaunch 64 CORRUPTED 的根因**：dout+i*16（64B 页内非对齐）触发 UVM
+写合并 bug，与 bank ring 无关（4KB 对齐时全 OK）。
+
+## Phase 12 补充（跨 stream 并发：bank 动态扩展，非 8 槽复用 — 决定性）
+
+**ringtest4（24 并发 stream，每 stream 一个慢 kernel，真正并行）**：
+- **24 个 launch 用 24 个唯一 bank**（0x5fe580000, 0x5f7200000, 0x5f7280000, ...，
+  +0x80000 递增），**不是同 stream 的 8 槽回绕**。
+- 24/24 参数全对。
+
+**对比结论**：
+- **同 stream**（串行）：8 槽 ring 轮换（+0x10000/launch），回绕复用。安全因为
+  GPU 串行执行，每 kernel 执行时读当前槽（即它自己的参数）。
+- **跨 stream**（并行）：driver 检测并发后**动态分配独立 bank**（每 launch 一个），
+  不再复用 8 槽。无覆盖。
+
+**"预分配 cmem 够不够大"最终答案**：
+1. context 创建时 libcuda 预分配 8 槽 bank 池（launch 提交 0 ioctl，纯用户态）。
+2. 同 stream 8 槽轮换足够（串行）；跨 stream 自动扩展独立 bank。
+3. driver 通过"串行复用 + 并行扩展"保证任意 launch 模式参数正确。
+   → bank 大小不是瓶颈；真正的坑是 UVM 页内非对齐连续写（驱动写合并 bug，与
+   bank 无关）。
