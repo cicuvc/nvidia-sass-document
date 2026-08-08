@@ -1,0 +1,20 @@
+# core dumps
+core
+
+# compiled artifacts (regenerable via make)
+libnvtrace.so
+target/vecadd
+target/qmdprobe
+target/regprobe
+target/injectprobe
+target/construct
+target/cblaunch
+target/cbank120
+target/cbank120_sweep
+target/probe_lowva
+target/regs/
+*.cubin
+
+# Python
+__pycache__/
+*.pyc
