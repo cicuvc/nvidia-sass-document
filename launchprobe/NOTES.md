@@ -660,3 +660,14 @@ open/ioctl/mmap + doorbell/GPFIFO 陷阱，把 context 阶段与 launch 阶段�
 - **SM 常量路径可读内存的候选全部排除**：UVM arena（截断）、低 VA mmap+register
   （LDC 返回 0）、pushbuffer 段（CPU 写 GPU 不见）。只剩 driver bank = GSP 预分配
   sysmem。方案 B（RM ioctl 复刻）是唯一出路。
+
+## Phase 12 补充（决定性实验：cudaMalloc 低38位别名）
+
+- cudaMalloc 显存 VA=0x7f459b000000，低 38 位别名 = 0x59b000000。
+  **GPU 直接 LDG 该别名 → illegal access**（UVM 下显存只在全 64 位地址可见，
+  无低 38 位别名映射）。→ QMD 描述符无法用 cudaMalloc 显存。
+- **最终结论**：SM 常量路径（LDC c[0x0]）可读内存 = **仅 driver bank**（GSP-RM
+  预分配、属性特殊的 sysmem）。用户态所有分配路径（cudaMalloc/cudaHostAlloc/
+  cudaHostRegister/mmap/pushbuffer 段）全部排除。
+- 方案 B（RM ioctl 复刻 GSP sysmem 分配 + 正确内存属性）是"手动分配 cmem"的
+  唯一路径，需逆向 NV_MEMORY_ALLOCATION_PARAMS 属性位（libcuda 闭源，反汇编）。
