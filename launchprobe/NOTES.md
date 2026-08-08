@@ -671,3 +671,24 @@ open/ioctl/mmap + doorbell/GPFIFO 陷阱，把 context 阶段与 launch 阶段�
   cudaHostRegister/mmap/pushbuffer 段）全部排除。
 - 方案 B（RM ioctl 复刻 GSP sysmem 分配 + 正确内存属性）是"手动分配 cmem"的
   唯一路径，需逆向 NV_MEMORY_ALLOCATION_PARAMS 属性位（libcuda 闭源，反汇编）。
+
+## Phase 12 补充（bank ring 容量实测 — 回答"多 launch 并发时 cmem 够不够"）
+
+问题：同 stream 连续 launch 多个 kernel（异步排队），预分配 cmem 够用吗？
+实测（target 实验，RTX 5090）：
+
+1. **独立 buffer 模式（正常用法）**：N=64 个独立 cudaMalloc buffer 连续 launch
+   同一 stream，64/64 kernel 参数全对。→ **bank ring 足够大，逐 launch 轮换独立槽**。
+2. **大 buffer 页对齐偏移**：N=300 个 launch 写同一个 4096B 分配内的 4KB 步长偏移，
+   300/300 参数全对。→ bank 描述符逐 launch +0x10000 轮换，互不覆盖。
+3. **同页非对齐偏移（dout vs dout+16）**：第二次 launch 写 dout+16 失败（0）。
+   ⚠️ 这是**环境/驱动 UVM 写合并 bug**，与 bank 大小无关：
+   - 同地址两次 launch OK（覆盖写正常）
+   - 两个独立分配 OK
+   - 中间插入真实 cudaMemcpy 后修复（缓存 flush）
+   - 加第三条 STG（out[4]）后修复（强制写合并拆分）
+   结论：**非页对齐偏移 + 快速连续 launch 触发 UVM 缓存问题**，页对齐/独立分配不受影响。
+
+**结论**：driver 的 bank ring（实测至少容纳 300+ 连续 launch）**足够**——
+每 launch 独立槽 +0x10000 轮换，参数互不覆盖。真正的限制不是 bank 大小，
+而是 UVM 层对"同一物理页内多次独立 kernel 写"的缓存合并（本环境驱动 bug）。

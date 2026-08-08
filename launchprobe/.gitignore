@@ -13,6 +13,8 @@ target/cbank120
 target/cbank120_sweep
 target/probe_lowva
 target/ctxprobe
+target/multilaunch
+target/probe_params
 target/regs/
 *.cubin
 
