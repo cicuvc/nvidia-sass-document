@@ -21,3 +21,4 @@ target/regs/
 # Python
 __pycache__/
 *.pyc
+target/lowread

@@ -734,3 +734,36 @@ open/ioctl/mmap + doorbell/GPFIFO 陷阱，把 context 阶段与 launch 阶段�
 3. driver 通过"串行复用 + 并行扩展"保证任意 launch 模式参数正确。
    → bank 大小不是瓶颈；真正的坑是 UVM 页内非对齐连续写（驱动写合并 bug，与
    bank 无关）。
+
+## Phase 12 补充（GPU 低地址区域的 LDG vs LDC 可读性 — 决定性）
+
+问题：GPU 低地址区域（<2^38）在 kernel 中可读吗？能否用作 cmem？
+实验（lowread/lowmap/ldc_ldg + probe_lowva）：
+
+### LDG（普通全局读）可读的低地址（driver 经 nvidia fd mmap 暴露）
+| 区域 | CPU 可写 | GPU LDG 读 CPU 值 |
+|---|---|---|
+| GPFIFO ring 0x200400000 | ✓ | ✓ cafe0000 |
+| pushbuffer 0x200600000 | ✓ | ✓ cafe0001 |
+| channelA/B 0x2072/0x2074 | ✓ | ✓ |
+| uvm-low 0x207600000 | ✓ | ✓ |
+→ **这些 rw-s 低地址在 GPU 页表有映射，LDG 可读，CPU 写可见**。
+
+### LDG 不可读 / CPU 不可写的低地址（GSP 私有）
+| 区域 | LDG | 说明 |
+|---|---|---|
+| QMD ring 0x207a0xxxx | ✗ illegal access | GSP 私有 |
+| completion sema 0x207237fxx | ✗ | GSP 私有 |
+| driver bank GPU VA 0x..280000 | ✗ illegal access | **仅常量路径可见** |
+
+### LDC（常量路径）对比
+- pushbuffer 段：LDG 读到 CPU 写的 0xDEADBEEF ✓，但作为 bank（QMD 描述符指向）
+  时 LDC c[0x0] 读到 0 → **LDC 不用普通内存**。
+- driver bank：LDC 可读（方案 D 验证），但 LDG illegal access。
+
+### 结论
+1. **c[0x0] 常量域 = GSP 管理的独立存储域**，与全局内存（LDG）隔离。
+2. 低地址普通内存（pushbuffer 等）即使 LDG 可读、描述符可编码（<2^38），
+   **LDC 常量路径也不认**（读 0）。
+3. **手动分配 cmem = 分配"常量域"内存**，不是普通 GPU 内存。这只有 GSP 能提供，
+   用户态无 API。→ 方案 B（逆向 GSP 固件）是唯一路径，且 LDC 要求比想象更严格。
