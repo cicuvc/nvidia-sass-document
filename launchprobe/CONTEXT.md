@@ -24,6 +24,16 @@
   （`CB_KERNEL=demo2` 5/5 过，demo2 = a*b−tid；A/B 多组值全过）。
 - 遗留：真正的"无 driver 参与"常量供应（方案 B，RM ioctl 申请 SM 常量域 sysmem）
   未做，工作量较大；机制层（QMD/GPFIFO/注入/代码提取/参数复用）已全用户态手动。
+- **Phase 12 进行中（2026-08-08 晚）**：追踪 cmem 分配链。初测结论（见 NOTES.md
+  Phase 12）：**bank 不是用户态分配的**——context 阶段 412 ioctl，launch 阶段仅 1 个
+  RM_ALLOC(hClass=0x40)，无 bank VA 回填的 MAP_MEMORY。bank 是 GSP-RM 内部
+  per-channel 资源（2MB 对齐，逐 launch 轮换，staging↔GPU VA 同物理页）。
+  **SM 常量路径可读候选全部排除**：UVM arena（截断）、低 VA mmap+register、
+  pushbuffer 段（CPU 写 GPU 不见）。只剩 driver bank = GSP 预分配 sysmem。
+  **方案 B（RM ioctl 复刻 GSP sysmem 分配）是唯一出路**。
+  待做：定位 bank 池具体 ioctl、试 RM_ALLOC_MEMORY+MAP_MEMORY_DMA 分配低 GPU VA
+  sysmem 验证 SM 常量可读。新工具：`target/ctxprobe.cu`（context→launch 全 ioctl
+  追踪）；nvtrace 增强（RM_ALLOC 内存类 dump memParams）。
 
 ## 2. 环境与运行方式
 

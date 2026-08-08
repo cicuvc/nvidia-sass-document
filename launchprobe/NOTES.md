@@ -596,3 +596,67 @@ bank）。"换 cubin" = ref launch 换成对应 kernel + 注入代码指针换�
 - 参数经 ref launch 供应，是否算"全用户态手动构造"见仁见智；机制层（QMD/GPFIFO/
   注入/代码提取）全是用户态手动。真正的从零 = 方案 B 完成。
 - construct.cu（Phase 10）现在 FAIL，需更新其文档或改用 cblaunch 方案。
+
+---
+
+# Phase 12 — cmem 分配链逆向（context creation 追踪，2026-08-08 晚）
+
+目标：回答"正常 launch 路径 driver 怎么分配 constant memory (c[0x0])"。
+方法：`target/ctxprobe.cu`（cuInit→context→1 launch）全程 LD_PRELOAD 追踪
+open/ioctl/mmap + doorbell/GPFIFO 陷阱，把 context 阶段与 launch 阶段分开。
+
+## 结论：cmem 不是"用户态分配"的，是 GSP-RM 内部 per-channel 资源
+
+1. **用户态 ioctl 层看不到 bank 分配**：context 阶段 412 个 ioctl（RM_ALLOC 107、
+   RM_CONTROL 236、RM_MAP_MEMORY 28、legacy 4 等），launch 阶段只有 **1 个**
+   RM_ALLOC（hClass=0x40 NV01 内存，hObject=0x5c000087，paramsVA 用户态结构），
+   **无对应 MAP_MEMORY 回填 bank VA**。bank 的 GPU VA 完全由 GSP-RM 内部管理。
+2. **bank 是 per-launch 轮换的 2MB 对齐区**：QMD 描述符解析 bank VA 每次运行不同
+   （0xf86280000 / 0x3fa280000 / 0x2da2280000），低 28 位稳定在 0xa280000 家族，
+   逐 launch 轮换。bank 与 staging 低 32 位相同（同一物理页两映射）。
+3. **bank 描述符结构（实测 0268 段）**：
+   - +0xa8 = `0xb688a000` → bank VA 0x2da2280000（desc<<6）
+   - +0xac = `0x020001fe`（mask，aperture/valid 位）
+   - +0xb0 = `0xb6880400` → 0x2da2010000（第二槽）
+   - +0xd0 = +0xa8 | 0xc
+   - +0xe0 = `0xb6880000` → 0x2da2000000（base，另一份）
+   - +0xe4 = `0x800001fe`
+4. **bank 内容由 driver 每次 launch 用小 DMA 传 staging**：
+   - 896B bank 镜像 → 0x7f..a2280000
+   - 参数（LOAD_INLINE 2-4 dword）→ 0x7f..a2280380
+   - bank staging 与 GPU VA 低 32 位相同（0xa2280000），确认同一物理页。
+5. **launch 无 bank 相关显式寄存器写**：mmio_w 只有 GPFIFO entry 写 + GPPut +
+   doorbell，无 bank 配置。bank 完全是 QMD 描述符引用的既存 GPU 内存。
+
+## 对"手动分配 cmem"的意义
+
+- 用户态 API（cudaHostAlloc/cudaMalloc/cudaHostRegister/mmap+register）**给不出**
+  SM 常量路径可读的映射（Phase 11 已排除低 VA + UVM）。
+- driver 的 bank 是 GSP-RM 预分配的 GPU 可访问 sysmem（0x..a2xx0000 区），
+  用户态只有 QMD 描述符引用，没有分配/映射的 ioctl 可见。
+- 真正的"从零手动分配"需要复刻 RM 的 sysmem 池（方案 B）：`RM_ALLOC_MEMORY`
+  (0x5D) + `RM_MAP_MEMORY_DMA` (0x51)，带正确的内存属性使 SM 常量路径可读。
+  目前未观察到 driver 走这些 ioctl 分 bank（可能用 GPU fd 上的 0x27 legacy
+  或 RM_ALLOC hClass=0x40 池），需进一步对 bank 分配做针对性追踪。
+
+## 待做
+- 定位 bank 池的具体 ioctl：对比多次 launch，抓 hClass=0x40/0x3e 分配与
+  bank VA 的对应关系（可能需要 hook paramsVA 指向的 NV_MEMORY_ALLOCATION_PARAMS）。
+- 尝试直接调 RM_ALLOC_MEMORY + MAP_MEMORY_DMA 分配一块低 GPU VA sysmem，
+  验证 SM 常量路径可读性（方案 B 的 bring-up）。
+
+## Phase 12 补充（pushbuffer 段作为 bank 的实验，2026-08-08 晚）
+
+- **pushbuffer 段（0x200600000-0x203600000，/dev/nvidiactl rw-s，CPU 可写）尝试作
+  bank**：CPU 写 0x200700000+0x380 成功且读回正确（0x123456789abcdef0,7,9），但
+  **SM 常量路径读到 0**（demo kernel LDC c[0x0][0x380] 返回 0，STG 到 0 → illegal
+  access）。→ CPU 写 nvidiactl 映射 ≠ GPU 侧可见，pushbuffer 段不可作 bank。
+- **driver bank 只读 probe**（PB_BANK_VA=driver bank，PB_NO_WRITE=1，真实 demo
+  kernel）：kernel 启动、读到 desc/参数、STG 尝试（stale 指针→illegal access）。
+  → 确认 **SM 常量路径确实只读 driver bank（GSP 预分配 sysmem）**。
+- **关键教训**：probe 之前 demo_clone 报 illegal instruction 是 **QMD regcount 欠配**
+  （用了 8，demo 需 10）→ 寄存器窗口钳制 → R8+ 访问 illegal instruction。
+  **必须从 cubin meta 读 regcount 填 QMD +0x8c**（与 cblaunch 一致）。
+- **SM 常量路径可读内存的候选全部排除**：UVM arena（截断）、低 VA mmap+register
+  （LDC 返回 0）、pushbuffer 段（CPU 写 GPU 不见）。只剩 driver bank = GSP 预分配
+  sysmem。方案 B（RM ioctl 复刻）是唯一出路。

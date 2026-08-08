@@ -37,7 +37,7 @@ int main(){
     CK(cudaMemset(probe_out,0,256));
     uint64_t probe_out_va=(uint64_t)probe_out;
 
-    char cmd[512]; snprintf(cmd,sizeof cmd,"python3 tools/gen_demo_clone_kernel.py > /tmp/param_read.bin",probe_out_va);
+    char cmd[512]; snprintf(cmd,sizeof cmd,"python3 tools/extract_cubin.py target/demo_kernel.cubin demo /tmp/param_read.bin",probe_out_va);
     if(system(cmd)!=0){fprintf(stderr,"gen fail\n");return 1;}
     uint8_t *arena; CK(cudaHostAlloc((void**)&arena,1<<20,cudaHostAllocDefault));
     memset(arena,0,1<<20);
@@ -46,7 +46,7 @@ int main(){
     volatile uint32_t *rep_sema=(volatile uint32_t*)(arena+0x2000);
     uint64_t rep_sema_va=(uint64_t)arena+0x2000;
 
-    // low-VA bank (or UVM arena if PB_BANK_UVM set)
+    // low-VA bank (or UVM arena if PB_BANK_UVM set; PB_BANK_VA = explicit VA)
     uint64_t cb_va=0x200000;
     const char *bvenv=getenv("PB_BANK_VA");
     if (bvenv) cb_va=strtoull(bvenv,NULL,0);
@@ -55,7 +55,10 @@ int main(){
         // bank lives in the same UVM arena as code (Phase 10 construct style)
         cb_va=(uint64_t)arena;
         bank=arena;
-    } else if (!bvenv) {
+    } else if (bvenv) {
+        // explicit low VA: assume CPU-writable (e.g. pushbuffer nvidiactl map)
+        bank=(uint8_t*)(uintptr_t)cb_va;
+    } else {
         void*bm=mmap((void*)(uintptr_t)cb_va,0x4000,PROT_READ|PROT_WRITE,
                      MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED_NOREPLACE,-1,0);
         if(bm==MAP_FAILED){perror("mmap");return 1;}
@@ -63,7 +66,7 @@ int main(){
         CK(cudaHostRegister(bm,0x4000,0));
         bank=(uint8_t*)bm;
     }
-    if (bank) {
+    if (bank && !getenv("PB_NO_WRITE")) {
         memset(bank,0,0x4000);
         *(uint32_t*)(bank+0x358)=0;
         *(uint32_t*)(bank+0x37c)=0x00fffdc0u;
@@ -82,10 +85,13 @@ int main(){
     q[0x40/4]=2;
     q[0x50/4]=1;
     q[0x80/4]=(uint32_t)(code_va>>4);
-    uint32_t alloc84=0x120u;
+    int regcount=16;
+    { FILE*mf=fopen("/tmp/param_read.bin.meta","r");
+      if(mf){ fscanf(mf,"regcount=%d",&regcount); fclose(mf); } }
+    uint32_t alloc84=0x100u+4u*(uint32_t)regcount;
     q[0x84/4]=(alloc84<<16)|(uint32_t)((code_va>>36)&0xffff);
     q[0x88/4]=0x00010001;
-    q[0x8c/4]=0x00000801;
+    q[0x8c/4]=1|((uint32_t)regcount<<8);
     q[0x9c/4]=1;q[0xa0/4]=1;q[0xa4/4]=1;
     q[0xa8/4]=(uint32_t)(cb_va>>6); q[0xac/4]=0x020001fe;
     q[0xb0/4]=(uint32_t)(cb_va>>6); q[0xb4/4]=0x048001fe;

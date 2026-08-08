@@ -26,6 +26,12 @@ target/construct: target/construct.cu
 target/cblaunch: target/cblaunch.cu target/demo_kernel.cu target/demo2_kernel.cu
 	$(NVCC) -arch=sm_120 -O2 -o $@ target/cblaunch.cu
 
+target/probe_lowva: target/probe_lowva.cu
+	$(NVCC) -arch=sm_120 -O2 -o $@ $<
+
+target/ctxprobe: target/ctxprobe.cu
+	$(NVCC) -arch=sm_120 -O2 -o $@ $<
+
 target/demo_kernel.cubin: target/demo_kernel.cu
 	$(NVCC) -arch=sm_120 -O2 -cubin -o $@ $<
 
@@ -33,6 +39,6 @@ target/demo2_kernel.cubin: target/demo2_kernel.cu
 	$(NVCC) -arch=sm_120 -O2 -cubin -o $@ $<
 
 clean:
-	rm -f libnvtrace.so target/vecadd target/qmdprobe target/regprobe target/injectprobe target/construct target/cblaunch target/demo_kernel.cubin target/demo2_kernel.cubin
+	rm -f libnvtrace.so target/vecadd target/qmdprobe target/regprobe target/injectprobe target/construct target/cblaunch target/demo_kernel.cubin target/demo2_kernel.cubin target/probe_lowva target/ctxprobe
 
 .PHONY: all clean

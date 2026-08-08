@@ -323,9 +323,22 @@ static void decode_rm_arg(unsigned int nr, void *arg, size_t argsz, char *out, s
             char ch[512]; ch[0] = 0;
             if (is_channel_class(a->hClass))
                 decode_channel_params(a->params, ch, sizeof(ch));
-            snprintf(out, outsz, ",\"hClient\":\"0x%x\",\"hParent\":\"0x%x\",\"hObject\":\"0x%x\",\"hClass\":\"0x%x\",\"status\":\"0x%x\",\"paramsVA\":\"0x%llx\"%s",
+            // memory-class allocs: dump the NV_MEMORY_ALLOCATION_PARAMS struct
+            // at paramsVA (fields: version,owner,size,attr,attr2,flags,addr,limit
+            // — libcuda-private layout; dump raw dwords for now).
+            char mem[512]; mem[0] = 0;
+            uint32_t hc = a->hClass & 0xff;
+            if ((hc == 0x3e || hc == 0x40 || hc == 0x41) && a->params) {
+                const uint8_t *p = (const uint8_t *)(uintptr_t)a->params;
+                uint32_t dw[8];
+                memcpy(dw, p, sizeof(dw));
+                snprintf(mem, sizeof(mem),
+                         ",\"memParams\":[%08x,%08x,%08x,%08x,%08x,%08x,%08x,%08x]",
+                         dw[0], dw[1], dw[2], dw[3], dw[4], dw[5], dw[6], dw[7]);
+            }
+            snprintf(out, outsz, ",\"hClient\":\"0x%x\",\"hParent\":\"0x%x\",\"hObject\":\"0x%x\",\"hClass\":\"0x%x\",\"status\":\"0x%x\",\"paramsVA\":\"0x%llx\"%s%s",
                      a->hClient, a->hParent, a->hObject, a->hClass, a->status,
-                     (unsigned long long)a->params, ch);
+                     (unsigned long long)a->params, ch, mem);
             return;
         }
         case NV_ESC_RM_FREE: {
