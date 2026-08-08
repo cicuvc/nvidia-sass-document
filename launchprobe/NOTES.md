@@ -767,3 +767,50 @@ open/ioctl/mmap + doorbell/GPFIFO 陷阱，把 context 阶段与 launch 阶段�
    **LDC 常量路径也不认**（读 0）。
 3. **手动分配 cmem = 分配"常量域"内存**，不是普通 GPU 内存。这只有 GSP 能提供，
    用户态无 API。→ 方案 B（逆向 GSP 固件）是唯一路径，且 LDC 要求比想象更严格。
+
+## Phase 12 补充（GSP 逆向可行性评估，2026-08-08 晚）
+
+**资源现状**：
+- GSP 固件 `/lib/firmware/nvidia/580.65.06/gsp_ga10x.bin`：74MB ELF，
+  **RISC-V 64 位，未完全剥离**（含 18440 个可读字符串），结构 = 外层签名容器 +
+  11 个内层 ELF（分段加载，每段 ~184KB，无符号/无 DWARF）。
+- 关键字符串线索：`NvosRootMemoryAllocate(partition,size,alignment,accessMode)`、
+  `NvosRootMemoryOnline(node,base,size,partitionMask)`、`KernelAllocateAddressSpace`、
+  `KernelAddressSpaceMapContiguous`、`findAperture(apertureId)`、
+  `RMIMPDynamicMempoolAllocation`（疑为参数/bank 池！）、
+  `Graphics SM Warp Exception: Invalid Constant Address LDC`（常量检查逻辑）。
+- capstone 5.0.9 支持 RISC-V64 反汇编（已验证 auipc/lb 正确）。
+- 无符号表/无调试信息 → 需字符串交叉引用 + open driver 源码（RM 接口）作参考。
+
+**可行方案路线（按成本/收益）**：
+1. **[推荐] 字符串引导的动态池定位**：grep 固件里 `RMIMPDynamicMempoolAllocation`/
+   `NvosRootMemoryAllocate` 的**交叉引用**（RISC-V auipc+ld 指令访问字符串地址），
+   反汇编其调用点 → 找到 bank 池/参数区的分配函数 → 逆向参数结构。
+   可行性高：字符串唯一、引用可定位；固件无符号但字符串是天然锚点。
+2. **host↔GSP xfer 协议对照**：GSP 固件处理 NV_ESC_RM_ALLOC_MEMORY 等命令，
+   open driver 的 `nvidia/gpu/gsp/*.h`（host 侧）给了命令格式，固件侧反汇编
+   对照处理函数，可反推 NV_MEMORY_ALLOCATION_PARAMS 布局。工作量中等。
+3. **[备选] 动态黑盒**：不改固件，通过大量 launch 变体（不同 regcount/参数大小/
+   对齐）观察 QMD bank 描述符与参数区行为，统计推断 bank 池的分配规则。
+   已部分做过（8 槽 ring / 跨 stream 扩展），可继续穷举。
+
+**关键判断**：GSP 逆向可行，但投入大（无符号 RISC-V + 闭源结构）。当前 Phase 11
+目标已达成（方案 D：复用 driver bank）。方案 B 的收益 = "真·从零手动分配 cmem"，
+适合作为独立的长期逆向课题，不建议阻塞当前进度。
+
+## Phase 12 补充（GSP 逆向验证：字符串引导可行）
+
+已实测验证 "字符串引导逆向" 可行性：
+- 用 RISC-V auipc+load 扫描 boot 段，**成功定位** `NvosRootMemoryAllocate`
+  字符串的引用指令（boot+0x724: auipc x14 -> 0x40c4）。
+- 说明：字符串是天然锚点，可反向定位分配函数；boot 区代码/数据混杂需人工
+  分辨（capstone 在数据处中断），但锚点足够。
+
+**GSP 逆向三大现实约束**（都已确认）：
+1. 11 个内层 ELF，无符号表、无 DWARF、无重定位（纯代码段）。
+2. 字符串 18440 个可读，是主要锚点；boot 区地址=文件偏移（位置无关），
+   内层 ELF 加载到 0xffffffff92fff000 等高地址（重定位后）。
+3. open driver 源码**无 GSP 接口头文件**（闭源部分），无法直接对照协议。
+
+**结论**：GSP 逆向技术上可行（字符串 + RISC-V 反汇编 + 动态行为三重交叉），
+但投入大。适合作为独立长期课题；Phase 11 已达成（方案 D），不必阻塞。
