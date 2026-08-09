@@ -30,6 +30,24 @@ TIMING_SENSITIVE = {
     "test_depbar",
     "test_mufu",
     "test_cache_desc",          # cuStreamSetAttribute access-policy window
+    "test_udp_int_forward",     # pipe-forwarding boundary sweep (issue-gap sensitive)
+    "test_subcore_yield",       # subcore mapping + yield scheduler probe (cycles)
+    "test_int_fma_forward",     # int/fmalighter GPR forwarding boundary sweep
+    "test_int_cbu_forward",     # int->cbu (NANOSLEEP) forwarding, one launch per S
+    "test_int_cbu_pred_forward",  # ISETP P0 -> @P0 BRA predicate forwarding sweep
+    "test_udp_fma_forward",     # udp->fmalighter (FFMA RRU) forwarding sweep
+    "test_int_mio_forward",     # int->mio (LDG address/AGU) forwarding sweep
+    "test_fmal_mio_forward",    # fmal->mio (LDG address/AGU) forwarding sweep
+    "test_mio_int_fma_forward", # mio(MUFU)->int/fmal, no scoreboard req
+    "test_fp16_int_fma_forward",  # fp16(HADD2)->int/fmal forwarding sweep
+    "test_udp_fe_forward",      # udp->fe (DEPBAR count) forwarding sweep
+    "test_int_fp16_forward",    # int/fmal/fp16 -> fp16 forwarding sweep
+    "test_fp16_mio_forward",    # fp16 -> mio (MUFU) forwarding sweep
+    "test_fp16_cbu_forward",    # fp16 -> cbu (NANOSLEEP) forwarding sweep
+    "test_cbu_forward",         # cbu(BMOV) -> int / mio forwarding sweep
+    "test_udp_udp_mio_forward", # udp->udp / udp->mio(UR addr) forwarding sweep
+    "test_mio_fp16_forward",    # mio(MUFU) -> fp16 forwarding sweep
+    "test_pred_forward",        # HSETP2 P0 -> @P0 BRA predicate sweep
 }
 
 

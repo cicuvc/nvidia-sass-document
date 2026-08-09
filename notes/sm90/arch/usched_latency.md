@@ -271,8 +271,14 @@ Derived conditionals:
 
 So **transN (bit4=1) almost always marks an independent successor** — the warp
 keeps issuing back-to-back (throughput case, `eff_stall` ≈ 1–2, encoded `W1/W2`
-= 17/18). **`WnEG` (bit4=0) / `DRAIN`** appear at dependency stalls and group
+= 17/18).  **`WnEG` (bit4=0) / `DRAIN`** appear at dependency stalls and group
 boundaries, where yielding to another warp during the wait is useful.
+
+The "switch to another warp" behavior behind this polarity is directly
+verified in `subcore_scheduler.md`: on a shared subcore a WnEG warp yields its
+issue slots to a co-resident transN warp (~2× finish-time skew), while a
+single warp's WnEG NOPs are ~1 cyc/op slower than transN NOPs (nothing to
+switch to — the slot is wasted).
 
 This reframes the common "MSB is a yield bit that makes the scheduler switch
 warps": the flip bit is bit4, but it is **`bit4=0` (`WnEG`/DRAIN) that is the
@@ -319,10 +325,13 @@ pairs each producer with its downstream consumer/writer.
 - Whether the integer forwarding is a true bypass vs merely a conservative table
   entry (the two are indistinguishable from stalls alone: `IMAD` tabulates 6 but
   behaves as 4). A controlled latency microbenchmark would separate them.
-- `udp` (uniform datapath) forwarding is still undetermined — the cuBLAS signal
-  (overlap 2) rests on only 379 samples. A uniform-register serial chain
-  (`UIADD3`/`ULOP3`/`UMOV` via `ULDC` params) would settle it, analogous to the
-  `tests/hfp16_test.cu` approach.
+- `udp` (uniform datapath) forwarding was undetermined on sm90 (the cuBLAS
+  signal, overlap 2, rested on only 379 samples).  **Resolved for sm120**
+  (`pipe_forwarding.md` + `tests/asm_construct/test_udp_int_forward.py`):
+  a udp→int transfer (`UIADD3→MOV/IADD3.RUR`) is fresh at stall ≥3 (~3.4 cyc
+  real gap) and stale at stall ≤2 — so the uniform datapath *does* forward to
+  the int pipe, with `overlap ≈ L−minG = 12−3 = 9`.  The hazard is real but
+  the required stall is far below the tabulated 12.
 - Distance>1 scheduling (stall spread across intervening independent instrs) is
   not modelled here — only the adjacent (distance-0) case is measured.
 - `DRAIN` vs `WnEG` differentiation at group boundaries (both bit4=0): what makes
