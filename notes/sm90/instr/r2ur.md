@@ -18,12 +18,49 @@ per-thread datapath to the uniform datapath. Unlike the fast decoupled uniform o
   speculation from the `ORONLY` name and is not supported by silicon behavior.
 - **`R2UR.FILL/BROADCAST`** (sm_120 nonconformity variants, `NONCONFORMITY_FILL_BROADCAST`
   [87:86]: FILL=1, BROADCAST=2) — behave identically to the plain form in every configuration
-  probed (uniform/divergent source, full/partial mask, no faults).
+  probed (uniform/divergent source, full/partial predicated mask, true branch divergence, no
+  faults).
 
-`Pu`[83:81] is a destination predicate (default PT, hidden in the noOR form). It read back **0**
-via deterministic `P2R` readback in all probed cases (uniform/divergent source, full/partial
-mask) — its role is unresolved (possibly a nonconformity/divergence status that only fires in
-non-converged execution, or a no-op on this silicon). Sibling of the other GPR→uniform paths:
+`Pu`[83:81] is a destination predicate (default PT, hidden in the noOR form). **RESOLVED on
+sm_120 silicon: it is a per-lane (non-uniform) nonconformity mask — every *active* lane whose
+`Ra` differs from the captured uniform value (first active lane's `Ra`) gets `Pu=1`; all other
+lanes — the elected lane, equal-valued lanes, and inactive/predicated-off lanes — are
+**preserved** (Pu is write-1-only, never clears 0).** Evidence:
+- divergent source, full mask, P0 pre-set 0: `Pu = (0, 1×31)` — elected lane 0 (value == captured)
+  untouched; the 31 differing lanes written 1.
+- same with P0 pre-set 1: `Pu = (1×32)` — the elected lane *keeps* its 1 (never cleared); the
+  differ lanes would be written 1 anyway. This rules out a full pred-file write.
+- value `(laneid&8) ? 0xAA : 0x55`, full mask, P0 pre-set 0: `Pu = 0×8, 1×8, 0×8, 1×8` —
+  lanes 0..7 and 16..23 carry the captured 0x55 → preserved 0; lanes 8..15/24..31 carry 0xAA →
+  written 1. Exactly the "differs-from-captured" mask.
+- predicated partial mask (lanes ≥8), divergent source, P0 pre-set 1: lanes 0..7 (inactive,
+  preserved 1), lane 8 (elected, preserved 1), lanes 9..31 (written 1) — all 1.
+- guard fully off (`@P1` with P1=0 for all lanes), P0 pre-set 1: nothing written, all lanes keep 1.
+- true divergence (R2UR on a branch path, mask 0..15 while lanes 16..31 run a different PC):
+  same behavior — lane 0 preserved, lanes 1..15 written 1, lanes outside the mask untouched.
+- `.OR`, `.FILL`, `.BROADCAST` (and `.OR.FILL`) all produce identical Pu patterns.
+
+The earlier "Pu always reads 0" observation (test_r2ur.py v1) is explained: a **uniform** readback
+collapses the predicate to the *elected lane's* bit, which is never written — it stays at its
+initial 0. Pu must be read **per-lane** (e.g. `P2R R3, PR, RZ, 0x1` then a per-lane store) to be
+seen.
+
+**Stall note**: R2UR has no write scoreboard (`dst_wr_sb` pinned 0x7) and is coupled, so any
+consumer of its outputs must pad statically. Pu RAW latency measured by static-stall sweep
+(divergent source, P0 pre-set 0, per-lane P2R readback):
+- `WAIT1..3_END_GROUP` (usched 1..3, zero filler) → **stale** (reads the old P0 value, all 0);
+- `WAIT4`/`WAIT5_END_GROUP` → correct with zero filler — Pu lands at ~4–5 static cycles;
+- `usched=0` = `OFF_DECK_DRAIN` (warp stops issuing until the pipeline drains) → always
+  correct, which is why an earlier "stall=0 always reads right" sweep was misleading;
+- one dependent `IADD3` filler (~5+ cycles) after WAIT1..3 also suffices.
+**The `yield` flavor (transn, usched 17..27 — the bracket's 5th field) does not change the
+timing**: `trans1..3` are equally stale, `trans4..7` settle, at zero filler. It is only a
+scheduling/convergence hint (0x10 bit in the 5-bit usched field; ptxas uses the trans forms at
+block ends). `usched=16` (yield=0/stall=0) is a **gap** in `USCHED_INFO`/`TABLES_opex_*` — the
+assembler rejects it with `ILLEGAL_INSTR_ENCODING_SASS_ONLY_ERROR`.
+The URd result takes the full 13–15 cycle coupled latency (Latency section) — when consuming
+both outputs, pad for URd. ptxas emits R2UR with the WAIT5 schedule (see verified encodings).
+Sibling of the other GPR→uniform paths:
 `REDUX` (full ADD/MIN/MAX/AND/OR/XOR reductions), `S2UR` (special reg → uniform), `UP2UR`
 (predicate → uniform).
 
@@ -86,8 +123,9 @@ Decoder: `tools/decode_r2ur.py` (real vectors + `.OR` round-trips pass).
   predicate `@P0`.
 
 ## Open questions
-- `Pu` destination predicate: consistently 0 in every probed case — does it ever set?
-  (Speculative: a nonconformity/divergence status for non-converged execution.)
-- `.OR`/`.FILL`/`.BROADCAST` all behave identically under converged execution; whether the
-  variants differ under true thread divergence (different PCs, not just predicate masks)
-  is untested — constructing that needs a branch/reconvergence setup.
+- Pu semantics are resolved for converged and branch-diverged execution (per-lane
+  write-1-only nonconformity mask, see above). Remaining: is the write-1 set computed with
+  full 32-bit equality on `Ra` (probed), and is there any scenario on sm_90 (untested here —
+  all probes on sm_120/RTX 5090) where Pu differs? Also untested: sm_90 silicon itself,
+  and whether the `.OR`/`.FILL`/`.BROADCAST` encodings diverge under mixed-PC warp states
+  that cannot be produced with plain `BRA`/`BSSY` reconvergence (e.g. `BREAK`-peeled lanes).
