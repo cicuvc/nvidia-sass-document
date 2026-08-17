@@ -1,7 +1,0 @@
-[ RUN      ] semu-subcore/subcore_warp_mapping_stable
-[       OK ] semu-subcore/subcore_warp_mapping_stable
-[ RUN      ] semu-subcore/subcore_program_order_per_subcore
-[       OK ] semu-subcore/subcore_program_order_per_subcore
-[ RUN      ] semu-subcore/subcore_trace_keeps_subcores_separate
-[       OK ] semu-subcore/subcore_trace_keeps_subcores_separate
-[  PASSED  ] all semu subcore tests

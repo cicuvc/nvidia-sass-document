@@ -1,9 +1,0 @@
-[ RUN      ] semu-decoder/decoder_known_words_unique
-[       OK ] semu-decoder/decoder_known_words_unique
-[ RUN      ] semu-decoder/decoder_batch_all_unique_via_corpus_words
-[       OK ] semu-decoder/decoder_batch_all_unique_via_corpus_words
-[ RUN      ] semu-decoder/decoder_illegal_unknown_opcode
-[       OK ] semu-decoder/decoder_illegal_unknown_opcode
-[ RUN      ] semu-decoder/decoder_candidates_opcode_index
-[       OK ] semu-decoder/decoder_candidates_opcode_index
-[  PASSED  ] all semu decoder tests

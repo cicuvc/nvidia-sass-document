@@ -1,9 +1,0 @@
-[ RUN      ] semu-l2/l2_same_sector_cross_sm
-[       OK ] semu-l2/l2_same_sector_cross_sm
-[ RUN      ] semu-l2/l2_different_sector_no_interaction
-[       OK ] semu-l2/l2_different_sector_no_interaction
-[ RUN      ] semu-l2/l2_wide_access_multiple_sectors
-[       OK ] semu-l2/l2_wide_access_multiple_sectors
-[ RUN      ] semu-l2/l2_seed_replay_deterministic
-[       OK ] semu-l2/l2_seed_replay_deterministic
-[  PASSED  ] all semu l2 tests

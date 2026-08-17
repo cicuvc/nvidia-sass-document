@@ -43,3 +43,6 @@ semu_corpus.json
 *.swp
 .DS_Store
 .vscode/
+
+# repo-root build tree (stray cmake output)
+build/

@@ -1,8 +1,0 @@
-GF2: C++==Python 840/840
-GF2-near: C++==Python 365/365
-token: C++==Python 216/216
-random: C++==Python 520/520
-random 4 B: GPU-exact 176/400 MAE 0.7375
-random 8 B: GPU-exact 19/60 MAE 1.1667
-random 16 B: GPU-exact 32/60 MAE 0.8167
-TOTAL C++==Python: 1941/1941
