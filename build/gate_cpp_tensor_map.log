@@ -1,0 +1,13 @@
+[ RUN      ] semu-tensor-map/tensor_map_parse_tiled_2d
+[       OK ] semu-tensor-map/tensor_map_parse_tiled_2d
+[ RUN      ] semu-tensor-map/tensor_map_parse_rank5
+[       OK ] semu-tensor-map/tensor_map_parse_rank5
+[ RUN      ] semu-tensor-map/tensor_map_expand_2d_coords
+[       OK ] semu-tensor-map/tensor_map_expand_2d_coords
+[ RUN      ] semu-tensor-map/tensor_map_expand_3d
+[       OK ] semu-tensor-map/tensor_map_expand_3d
+[ RUN      ] semu-tensor-map/tensor_map_swizzle_approximate
+[       OK ] semu-tensor-map/tensor_map_swizzle_approximate
+[ RUN      ] semu-tensor-map/tensor_map_im2col_decode_only
+[       OK ] semu-tensor-map/tensor_map_im2col_decode_only
+[  PASSED  ] all tensor-map tests

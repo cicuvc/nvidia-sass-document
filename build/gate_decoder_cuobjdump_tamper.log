@@ -1,0 +1,5 @@
+  tamper[register]: gate exit=1 (ok)
+  tamper[modifier]: gate exit=1 (ok)
+  tamper[branch-target]: gate exit=1 (ok)
+  tamper[extra-operand]: gate exit=1 (ok)
+OK: all 4 tamper classes rejected by the cuobjdump gate

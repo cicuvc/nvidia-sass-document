@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/cicuvc/cs/projects/nvidia-sass-document/build/cmake_install.cmake",
+		"/home/cicuvc/cs/projects/nvidia-sass-document/build/src/cmake_install.cmake",
+		"/home/cicuvc/cs/projects/nvidia-sass-document/build/cli/cmake_install.cmake",
+		"/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

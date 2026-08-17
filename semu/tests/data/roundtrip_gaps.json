@@ -1,0 +1,1042 @@
+[
+ {
+  "variant_class": "ald_PHYS_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ald_UR__LOGICAL_URa_default",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ald_UR__PATCH_URa_P_RbRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ald__PATCH_RaNonRZOffset_P_RbRZ",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ast_PHYS_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ast_UR__LOGICAL_URa",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ast_UR__PATCH_RaRZ_URa",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ast__LOGICAL_RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ast__PATCH_RaNonRZOffset",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ast__PATCH_RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atom_arrive__Ra32_arrive",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atom_arrive__Ra32_popcinc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atom_arrive__Ra64_arrive",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atom_arrive__Ra64_popcinc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atom_arrive__RaRZ_arrive",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atom_arrive__RaRZ_popcinc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atom_fp_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atom_int_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atomg_fp_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "atomg_int_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "bar__RED_IR_optionalCount_IR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "bar__RED_dfrBlk_IR_optionalCount_IR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "bar__SYNC_IR_optionalCount_IR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "bar__SYNC_dfrBlk_IR_optionalCount_IR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "bmov_clear__Rd",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "bmov_clear_bd__Bd",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "bmov_dst64__I",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "bmov_dst64__R",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "bmov_dst64__UR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "bmov_pquad__RIR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "bmov_pquad__RRR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "bmov_pquad__RUR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "bmov_pquad_bar__RBR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "cctl__sUROffset",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl__sUROffset_pf2",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl__sUROffset_pf2_q",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl__sUROffset_rml2",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl__uUROffset",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl__uUROffset_pf2",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl__uUROffset_pf2_q",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl__uUROffset_rml2",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl_c_ldc_const_bindless_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctl_c_ldcu_const_bindless_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctll__Ra_RZ_UR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctll__Ra_nonRz_UR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "cctlt__URb",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "depbar__LE",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "depbar__noLE",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "depbar_ur_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "dfma__RsIR_RIR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "elect_noURa_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_4b_upconvert_scale__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_8b_upconvert_scale__RIR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "f2fp_8b_upconvert_scale__RRI",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "f2fp_8b_upconvert_scale__RRR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "f2fp_8b_upconvert_scale__RRU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "f2fp_8b_upconvert_scale__RUR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "f2fp_f16_to_4b_downconvert__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_f16_to_8b_downconvert__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_f16_to_mx8_downconvert_scale__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_f32_to_4b_downconvert__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_f32_to_8b_downconvert__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_f32_to_mx8_downconvert_scale__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_merge_c__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2fp_merge_c_default_dst_src__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2i__IU_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2i__Rb_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2i__URb_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2i_swap__IU_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2i_swap__Rb_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2i_swap__URb_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "f2ip__RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ffma__RRI_RRI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "footprint_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "footprint_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "footprint_scr_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "footprint_scr_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "footprint_scr_uniform_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "footprint_uniform_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "frnd__f32_I",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "frnd__f32_R",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "frnd__f32_URb",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "frnd_swap__f32_I",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "frnd_swap__f32_R",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "frnd_swap__f32_URb",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "fswzadd_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "hadd2_32i_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "hadd2_32i_fixed_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "hfma2_32i_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "hfma2_32i_fixed_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "hmma_sparse_indexedRF_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "hmma_x8_indexedRF_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "hmul2_32i_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "hmul2_32i_fixed_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "i2f__IS_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "imad_x__RRU_RRU",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "imad_x_pseudo__RRU_RRU",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ipa_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ipa_offset__IPA_Ib",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ipa_offset__IPA_Rb",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ipa_ur_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ipa_ur_offset__IPA_URa_Ib",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ipa_ur_offset__IPA_URa_Rb",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "jmxu_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "jmxu_rel_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ld_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldc__RaNonRZ",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ldc_ur__URRzI",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldc_ur__URnonRzI",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldcu_256_const_RCxR_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldcu_const_RCxR_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldg_256_rml2_uniform__Ra32",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldg_256_rml2_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldg_256_rml2_uniform__RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldg_256_uniform__Ra32",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldg_256_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldg_256_uniform__RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldg_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgmc_fp__Ra32",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgmc_fp__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgmc_fp__RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgmc_int__Ra32",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgmc_int__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgmc_int__RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgsts__RR32U",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgsts__RR64U",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgsts__RUR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgsts__desc_RRU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgsts_memdesc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgsts_no_ra__RRU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldgsts_no_ra__RUR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ldl_uniform_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ldtram_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "mov_indexedRF_IRFd__Ib",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "mov_indexedRF_IRFd__Rb",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "mov_indexedRF_Rd_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "p2r__RRR_RRR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "p2r__RUR_RUR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "p2r__RuIR_RIR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "p2r_simple_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "qspc_urb_PuOnly__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "qspc_urb_RdOnly__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "qspc_urb__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "r2p__RIR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "r2p__RRR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "r2p__RUR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "redas_64__RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "redas__Ra32",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "redg_fp_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "redg_int_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "rpcmov_dstPc64__Imm",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "rpcmov_dstPc64__URb",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "rpcmov_dstPc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "rpcmov_dstPc_URb_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "rpcmov_dstPc_imm_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "rpcmov_srcPc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "st_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "stas_64__RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "stas__Ra32",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "stg_256_uniform__Ra32",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "stg_256_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "stg_256_uniform__RaRZ",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "stg_uniform__Ra64",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "stl_uniform_",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "suatom_cas_r_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "suatom_r_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "suld_d_r_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "suld_p_r_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "suquery_r_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "suquery_reg_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "suquery_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "sured_r_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "sust_d_r_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "sust_p_r_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tex_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tex_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tex_scr_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tex_scr_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tex_scr_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tex_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld4_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld4_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld4_scr_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld4_scr_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld4_scr_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld4_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld_scr_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld_scr_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld_scr_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tld_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tmml_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tmml_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "tmml_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ttuclose_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ttuld__close",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ttuld__no_close",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ttust_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "txd_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "txd_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "txd_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "txq_b_noConst_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "txq_b_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "txq_urc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ublkcp_desc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ublkcp_desc_one_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ublkpf__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ublkpf_one__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ublkred_desc_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ublkred_desc_one_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "uf2fp_f16_to_8b_downconvert__URURI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uf2fp_f32_to_8b_downconvert__URURI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uf2fp_merge_c__URURI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uf2fp_merge_c_default_dst_src__URURI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uf2i__IU_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uf2i__URb_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uf2i_swap__IU_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uf2i_swap__URb_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uf2ip__URIUR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uffma__URURI_URURI",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ufrnd__f32_I",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ufrnd__f32_URb",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ufrnd_swap__f32_I",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ufrnd_swap__f32_URb",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "ugetnextworkid_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ugetnextworkid_one_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ui2f__IS_32b",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uiadd3_64__URURUR_URURUR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "uiadd3_64__URsIUR_RIR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "uiadd3_64_x__URURUR_URURUR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "uiadd3_64_x__URsIUR_RIR",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "uimad__URURUR_URURUR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uimad__URsIUR_URIUR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uimad_x__URURUR_URURUR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "uimad_x__URsIUR_URIUR",
+  "kind": "bits-differ"
+ },
+ {
+  "variant_class": "umemsets_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "up2ur__Imm",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "up2ur__URb",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "up2ur_simple_",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ur2up__Imm",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "ur2up__URb",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaldg_URc__UUU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaldg_URc__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaldg_URc_one__UUU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaldg_URc_one__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaldg__UUU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaldg__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaldg_one__UUU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaldg_one__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmapf_URc__UUU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmapf_URc__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmapf_URc_one__UUU",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmapf_URc_one__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmapf__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmapf_one__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaredg__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmaredg_one__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmastg__UUU_desc",
+  "kind": "matcher"
+ },
+ {
+  "variant_class": "utmastg_one__UUU_desc",
+  "kind": "matcher"
+ }
+]

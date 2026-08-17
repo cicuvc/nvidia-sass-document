@@ -68,7 +68,7 @@ def parse_kv_block(lines, start, end):
 # --------------------------------------------------------------------------
 def parse_enums(lines, start, end):
     enums = {}
-    def_re = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s+("?.*)$')
+    def_re = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_.]*)\s+("?.*)$')
     pair_re = re.compile(r'"([^"]*)"\s*(?:=\s*(-?(?:0[bx])?[0-9A-Fa-f_]+))?')
     blob = "\n".join(lines[start:end])
     for stmt in blob.split(";"):
@@ -275,7 +275,7 @@ SUBSECTIONS = ["FORMAT", "CONDITIONS", "PROPERTIES", "PREDICATES", "OPCODES", "E
 
 SLOT_RE = re.compile(
     r"(/)?"                              # modifier marker
-    r"([A-Za-z_][A-Za-z0-9_]*)"          # Type
+    r"([A-Za-z_][A-Za-z0-9_.]*)"         # Type (dots allowed: F64.F32ONLY)
     r"(?:\(([^)]*)\))?"                  # (default)
     r"\*?"                               # optional *
     r":([A-Za-z_][A-Za-z0-9_.]*)"        # :name

@@ -109,6 +109,87 @@ def tokenize(predicate: str) -> list[tuple[str, str]]:
     return toks
 
 
+def _tokenize_checked(predicate: str) -> tuple[list[tuple[str, str]], bool]:
+    """Like tokenize(), but reports whether any character was unclassifiable
+    (mirrors the C++ tokenizer's had_unknown_char_ flag)."""
+    toks: list[tuple[str, str]] = []
+    i, n = 0, len(predicate)
+    had_unknown = False
+    while i < n:
+        c = predicate[i]
+        if c.isspace():
+            i += 1
+            continue
+        if c == "`":  # enum literal `Type@Value ; Value = "quoted" or bareword
+            j = i + 1
+            while j < n and (predicate[j].isalnum() or predicate[j] == "_"):
+                j += 1
+            typ = predicate[i + 1:j]
+            if j < n and predicate[j] == "@":
+                j += 1
+            if j < n and predicate[j] == '"':
+                j += 1
+                start = j
+                while j < n and predicate[j] != '"':
+                    j += 1
+                val = predicate[start:j]
+                if j < n:
+                    j += 1  # closing quote
+            else:
+                start = j
+                while j < n and (predicate[j].isalnum() or predicate[j] in "_."):
+                    j += 1
+                val = predicate[start:j]
+            toks.append(("ENUM", f"{typ}@{val}"))
+            i = j
+            continue
+        two = predicate[i:i + 2]
+        if two in ("==", "!=", "<=", ">=", "&&", "||", "->", "<<", ">>"):
+            toks.append(("OP", two))
+            i += 2
+            continue
+        if c == "%" and i + 1 < n and (predicate[i + 1].isalnum() or predicate[i + 1] == "_"):
+            j = i + 1
+            while j < n and (predicate[j].isalnum() or predicate[j] == "_"):
+                j += 1
+            toks.append(("PARAM", predicate[i + 1:j]))
+            i = j
+            continue
+        if c == "$" and i + 1 < n and (predicate[i + 1].isalnum() or predicate[i + 1] == "_"):
+            j = i + 1
+            while j < n and (predicate[j].isalnum() or predicate[j] == "_"):
+                j += 1
+            toks.append(("CONST", predicate[i + 1:j]))
+            i = j
+            continue
+        if c in "()+-*%<>!@,&?:":
+            toks.append(("OP", c))
+            i += 1
+            continue
+        if c.isdigit() or (c == "-" and i + 1 < n and predicate[i + 1].isdigit()):
+            if predicate[i:i + 2].lower() == "0x":
+                j = i + 2
+                while j < n and predicate[j] in "0123456789abcdefABCDEF":
+                    j += 1
+            else:
+                j = i + 1
+                while j < n and predicate[j].isdigit():
+                    j += 1
+            toks.append(("NUM", predicate[i:j]))
+            i = j
+            continue
+        if c.isalpha() or c == "_":
+            j = i + 1
+            while j < n and (predicate[j].isalnum() or predicate[j] == "_"):
+                j += 1
+            toks.append(("IDENT", predicate[i:j]))
+            i = j
+            continue
+        had_unknown = True
+        i += 1  # unknown char — skip
+    return toks, had_unknown
+
+
 class ConditionError(Exception):
     """Raised when a condition's encoding fails (message from the spec)."""
 
@@ -136,6 +217,24 @@ class ConditionEvaluator:
             return bool(self._impl())
         except Exception:
             return True
+
+    def evaluate_tristate(self, predicate: str) -> Optional[bool]:
+        """Three-state predicate evaluation (GAP-09): True/False when the
+        predicate fully tokenizes (no unknown character) and fully parses with
+        all tokens consumed; None when the tokenizer or grammar hit something
+        unsupported.  Mirrors the C++ ExprEvaluator::eval_bool_tristate."""
+        toks, had_unknown = _tokenize_checked(predicate)
+        if had_unknown:
+            return None
+        self._toks = toks
+        self._pos = 0
+        try:
+            v = self._impl()
+        except Exception:
+            return None
+        if self._pos != len(self._toks):
+            return None  # tokens left unconsumed: grammar gap
+        return bool(v)
 
     def check_variant(self, variant: dict) -> list[tuple[str, str]]:
         """Return [(error_type, message), ...] for every FALSE condition."""
@@ -295,6 +394,13 @@ class ConditionEvaluator:
             return self._slot_attr(v, attr_t[1] if attr_t else "")
         if k == "IDENT":
             self._pos += 1
+            # bare table name used as a value: TABLES_x(arg,...) yields the
+            # matching row's `out` (mirrors the C++ evaluator; found in ATOMG
+            # SAFEADD conditions).
+            nxt2 = self._peek()
+            if nxt2 and nxt2[0] == "OP" and nxt2[1] == "(" and \
+                    v in self.db.get("tables", {}):
+                return self._table_value(v)
             return self._slot(v)
         if k == "PARAM":
             self._pos += 1
@@ -334,6 +440,28 @@ class ConditionEvaluator:
         for row in table.get("rows", []):
             if list(row.get("in", [])) == args:
                 return 1
+        return 0
+
+    def _table_value(self, table_name: str) -> int:
+        """Bare table name as a value: TABLES_x(arg,...) -> matching row's
+        `out`.  The table name token is already consumed; parse args and look
+        up the row (mirrors the C++ evaluator)."""
+        self._eat_op("(")
+        args: list[str] = []
+        while True:
+            args.append(self._resolve_arg())
+            if not self._eat_op(","):
+                break
+        self._eat_op(")")
+        table = self.db.get("tables", {}).get(table_name)
+        if not table:
+            return 0
+        for row in table.get("rows", []):
+            if list(row.get("in", [])) == args:
+                try:
+                    return int(row["out"], 0)
+                except (ValueError, TypeError):
+                    return 0
         return 0
 
     def _resolve_arg(self) -> str:

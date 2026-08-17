@@ -5,6 +5,14 @@ sm120.json
 
 # Compiled test binaries (regenerable: nvcc -cubin)
 *.cubin
+# Reviewed sm120 fixture cubins for the cuobjdump vector gate (GAP-05/11):
+# committed so the fixture is reproducible from repo content on any machine,
+# even without the exact CUDA toolchain that produced them.
+!tests/pmtrig_test.cubin
+!tests/tma_global.cubin
+!tests/tma_min.cubin
+!tests/tma_simple.cubin
+!tests/tma_test.cubin
 
 # Compiled test executables (no extension, regenerable: nvcc -o)
 tests/errbar_fault_patch/patcher
@@ -20,6 +28,16 @@ tests/errbar_fault_patch/sidechan
 # Python
 __pycache__/
 *.pyc
+
+# semu build trees
+semu/build/
+semu/build-*/
+
+# semu dev artifacts: core dumps, editor caches, generated corpus
+semu/core
+semu/core.*
+semu/.cache/
+semu_corpus.json
 
 # Editor / OS
 *.swp

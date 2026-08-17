@@ -1,0 +1,3618 @@
+{
+ "meta": {
+  "generator": "semu/tools/extract_cuobj_vectors.py",
+  "arch": "sm_120",
+  "cuobjdump": "/usr/local/cuda/bin/cuobjdump (CUDA 13.x)",
+  "sources": [
+   "pmtrig_test.cubin",
+   "tma_global.cubin",
+   "tma_min.cubin",
+   "tma_test.cubin",
+   "vecmix.cubin",
+   "vecmix2.cubin"
+  ],
+  "count": 450
+ },
+ "vectors": [
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 0,
+   "text": "LDC R1, c[0x0][0x37c]                        &wr=0x0                  ?trans1;",
+   "lo": 245195371281282,
+   "hi": 3978033069295616
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 16,
+   "text": "S2R R7, SR_TID.X                             &wr=0x1                  ?trans1;",
+   "lo": 489753,
+   "hi": 4048401813479680
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 32,
+   "text": "BSSY.RECONVERGENT B0, 0x1d0                                           ?trans1;",
+   "lo": 1786706426181,
+   "hi": 4470614337257984
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 48,
+   "text": "ISETP.NE.AND P0, PT, R7, RZ, PT              &req={1}                 ?WAIT13_END_GROUP;",
+   "lo": 1095334130188,
+   "hi": 13469017506337392
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 64,
+   "text": "@P0 BRA 0x1c0                                                             ?trans5;",
+   "lo": 6031687,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 80,
+   "text": "S2UR UR8, SR_CgaCtaId                        &wr=0x1                  ?trans1;",
+   "lo": 555459,
+   "hi": 4048401813506048
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 96,
+   "text": "UMOV UR6, 0x400                                                       ?trans1;",
+   "lo": 4398046935170,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 112,
+   "text": "UMOV UR4, 0x200                                                       ?trans1;",
+   "lo": 2199023548546,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 128,
+   "text": "UIADD3 UR7, UPT, UPT, UR6, 0x200, URZ                                 ?trans1;",
+   "lo": 2199124408464,
+   "hi": 4470614546964735
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 144,
+   "text": "UIADD3 UR4, UPT, UPT, -UR4, 0x100000, URZ                             ?WAIT4_END_GROUP;",
+   "lo": 4503599694772368,
+   "hi": 4442027244642815
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 160,
+   "text": "USHF.L.U32 UR5, UR4, 0xb, URZ                                         ?trans1;",
+   "lo": 47312107673,
+   "hi": 4470614412756735
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 176,
+   "text": "USHF.L.U32 UR4, UR4, 0x1, URZ                                         ?trans1;",
+   "lo": 4362369177,
+   "hi": 4470614412756735
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 192,
+   "text": "PLOP3.LUT P0, PT, PT, PT, PT, 0x80, 0x8                               ?trans1;",
+   "lo": 555036,
+   "hi": 4470614344659056
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 208,
+   "text": "UMOV UR10, URZ                                                        ?trans1;",
+   "lo": 1095217347714,
+   "hi": 4470614412754944
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 224,
+   "text": "UMOV UR11, URZ                                                        ?trans1;",
+   "lo": 1095217413250,
+   "hi": 4470614412754944
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 240,
+   "text": "ULEA UR9, UR8, UR7, 0x18                     &req={1}                 ?trans1;",
+   "lo": 30199607953,
+   "hi": 13477813794291967
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 256,
+   "text": "ULEA UR8, UR8, UR6, 0x18                                              ?trans1;",
+   "lo": 25904575121,
+   "hi": 4470614539550975
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 272,
+   "text": "FENCE.VIEW.ASYNC.S                           &wr=0x1                  ?trans10;",
+   "lo": 29638,
+   "hi": 4068193022771200
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 288,
+   "text": "SYNCS.EXCH.64 URZ, [UR9], UR4                &req={1} &rd=0x1 &wr=0x2 ?trans2;",
+   "lo": 17347605938,
+   "hi": 9750469249335552
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 304,
+   "text": "MEMBAR.ALL.CTA                               &req={2}                 ?trans6;",
+   "lo": 31122,
+   "hi": 22496007904329728
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 320,
+   "text": "FENCE.VIEW.ASYNC.S                           &wr=0x2                  ?trans1;",
+   "lo": 29638,
+   "hi": 4118770557648896
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 336,
+   "text": "LDCU.64 UR4, c[0x0][0x348]                   &req={1} &wr=0x1         ?trans1;",
+   "lo": 115452999399340,
+   "hi": 13055601202432512
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 352,
+   "text": "NOP                                                                   ?trans1;",
+   "lo": 31000,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 368,
+   "text": "@P0 ELECT P1, URZ, PT                            &req={2}                 ?trans1;",
+   "lo": 16713775,
+   "hi": 22485012846870528
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 384,
+   "text": "UTMALDG.2D [UR8], [UR4]                      &req={1} &rd=0x3         ?WAIT12_END_GROUP;",
+   "lo": 34426877364,
+   "hi": 11215018737565696
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 400,
+   "text": "@P1 PLOP3.LUT P0, PT, P1, PT, PT, 0x8, 0x80                               ?trans2;",
+   "lo": 8394780,
+   "hi": 4472813317579120
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 416,
+   "text": "PLOP3.LUT P1, PT, PT, PT, PT, 0x8, 0x80                               ?WAIT11_END_GROUP;",
+   "lo": 8419356,
+   "hi": 4457420205252976
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 432,
+   "text": "@P0 BRA.U.ANY 0x170                              &req={3}                 ?trans5;",
+   "lo": 18446744060840118599,
+   "hi": 40508207450554367
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 448,
+   "text": "BSYNC.RECONVERGENT B0                                                 ?trans5;",
+   "lo": 31041,
+   "hi": 4479410430280192
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 464,
+   "text": "S2UR UR5, SR_CgaCtaId                        &wr=0x1                  ?trans1;",
+   "lo": 358851,
+   "hi": 4048401813506048
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 480,
+   "text": "UMOV UR4, 0x400                                                       ?trans1;",
+   "lo": 4398046804098,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 496,
+   "text": "HFMA2 R0, -RZ, RZ, 0, 1.52587890625e-05                               ?trans1;",
+   "lo": 1103789847601,
+   "hi": 4470614278537727
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 512,
+   "text": "UIADD3 UR4, UPT, UPT, UR4, 0x200, URZ                                 ?WAIT4_END_GROUP;",
+   "lo": 2199090657424,
+   "hi": 4442027244642559
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 528,
+   "text": "ULEA UR4, UR5, UR4, 0x18                     &req={1}                 ?WAIT9_END_GROUP;",
+   "lo": 17264046737,
+   "hi": 13460221608247551
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 544,
+   "text": "SYNCS.ARRIVE.TRANS64 RZ, [UR4], R0           &rd=0x1                  ?trans3;",
+   "lo": 4294932903,
+   "hi": 1097312738738180
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 560,
+   "text": "SYNCS.PHASECHK.TRANS64.TRYWAIT P0, [UR4], RZ &wr=0x2                  ?trans2;",
+   "lo": 1099494880679,
+   "hi": 4120969715126532
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 576,
+   "text": "@!P0 BRA 0x230                                    &req={2}                 ?trans5;",
+   "lo": 18446744056545970503,
+   "hi": 22493808940023807
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 592,
+   "text": "BAR.SYNC.DEFER_BLOCKING 0x0                                           ?trans1;",
+   "lo": 31517,
+   "hi": 4470614278602752
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 608,
+   "text": "ISETP.GT.U32.AND P0, PT, R7, 0xf, PT                                  ?WAIT13_END_GROUP;",
+   "lo": 64541980684,
+   "hi": 4461818251591792
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 624,
+   "text": "@P0 EXIT                                                                  ?trans5;",
+   "lo": 2381,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 640,
+   "text": "S2UR UR5, SR_CgaCtaId                        &wr=0x2                  ?trans1;",
+   "lo": 358851,
+   "hi": 4118770557683712
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 656,
+   "text": "UMOV UR4, 0x400                                                       ?WAIT7_END_GROUP;",
+   "lo": 4398046804098,
+   "hi": 4448624045981696
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 672,
+   "text": "LDC.64 R2, c[0x0][0x400]                     &wr=0x3                  ?trans1;",
+   "lo": 281479255063426,
+   "hi": 4189139301829120
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 688,
+   "text": "ULEA UR4, UR5, UR4, 0x18                     &req={2}                 ?WAIT6_END_GROUP;",
+   "lo": 17264046737,
+   "hi": 22460823793221887
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 704,
+   "text": "IADD3 R0, PT, PT, R7.reuse, UR4, R7          &req={1}                 ?trans1;",
+   "lo": 17297341456,
+   "hi": 301708189953417223
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 720,
+   "text": "IMAD.WIDE.U32 R2, R7, 0x2, R2                &req={3}                 ?WAIT4_END_GROUP;",
+   "lo": 8707536933,
+   "hi": 40470824121925634
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 736,
+   "text": "LDS.U16 R5, [R0]                             &wr=0x1                  ?trans1;",
+   "lo": 358788,
+   "hi": 4048401813472256
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 752,
+   "text": "LDCU.64 UR4, c[0x0][0x358]                   &wr=0x1                  ?trans3;",
+   "lo": 117652022654892,
+   "hi": 4052799994202624
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 768,
+   "text": "STG.E.U16 desc[UR4][R2.64], R5               &req={1}                 ?trans1;",
+   "lo": 21508422022,
+   "hi": 13477813735658756
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 784,
+   "text": "EXIT                                                                  ?trans5;",
+   "lo": 31053,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 800,
+   "text": "BRA 0x320;",
+   "lo": 18446744056546228551,
+   "hi": 4433230942175231
+  },
+  {
+   "cubin": "tma_min.cubin",
+   "kernel": "_Z7tma_min11CUtensorMapPt",
+   "pc": 816,
+   "text": "NOP;",
+   "lo": 31000,
+   "hi": 4433230883192832
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 16,
+   "text": "S2R R9, SR_TID.X                             &wr=0x1                  ?trans1;",
+   "lo": 620825,
+   "hi": 4048401813479680
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 48,
+   "text": "ISETP.NE.AND P0, PT, R9, RZ, PT              &req={1}                 ?WAIT13_END_GROUP;",
+   "lo": 1095367684620,
+   "hi": 13469017506337392
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 128,
+   "text": "UIADD3 UR7, UPT, UPT, UR6, 0x100, URZ                                 ?trans1;",
+   "lo": 1099612780688,
+   "hi": 4470614546964735
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 336,
+   "text": "LDCU.64 UR4, c[0x0][0x380]                   &req={1} &wr=0x1         ?trans1;",
+   "lo": 123149580793772,
+   "hi": 13055601202432512
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 512,
+   "text": "UIADD3 UR4, UPT, UPT, UR4, 0x100, URZ                                 ?WAIT4_END_GROUP;",
+   "lo": 1099579029648,
+   "hi": 4442027244642559
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 608,
+   "text": "ISETP.GT.U32.AND P0, PT, R9, 0xf, PT                                  ?WAIT13_END_GROUP;",
+   "lo": 64575535116,
+   "hi": 4461818251591792
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 672,
+   "text": "LDC.64 R2, c[0x0][0x388]                     &wr=0x3                  ?trans1;",
+   "lo": 248493906230146,
+   "hi": 4189139301829120
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 704,
+   "text": "IADD3 R0, PT, PT, R9.reuse, UR4, R9          &req={1}                 ?trans1;",
+   "lo": 17330895888,
+   "hi": 301708189953417225
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 720,
+   "text": "IMAD.WIDE.U32 R2, R9, 0x2, R2                &req={3}                 ?WAIT4_END_GROUP;",
+   "lo": 8741091365,
+   "hi": 40470824121925634
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 768,
+   "text": "LDS.U16 R7, [R0+0x20]                        &wr=0x2                  ?trans4;",
+   "lo": 35184372578692,
+   "hi": 4125367627416576
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 784,
+   "text": "STG.E.U16 desc[UR4][R2.64], R5               &req={1}                 ?trans4;",
+   "lo": 21508422022,
+   "hi": 13484410805425412
+  },
+  {
+   "cubin": "tma_global.cubin",
+   "kernel": "_Z10tma_globalPK14CUtensorMap_stPv",
+   "pc": 800,
+   "text": "STG.E.U16 desc[UR4][R2.64+0x20], R7          &req={2}                 ?trans1;",
+   "lo": 35214470445446,
+   "hi": 22485012990399748
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 16,
+   "text": "S2R R0, SR_TID.X                                &wr=0x1                  ?trans1;",
+   "lo": 31001,
+   "hi": 4048401813479680
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 32,
+   "text": "BSSY.RECONVERGENT B0, 0x280                                              ?trans1;",
+   "lo": 2542620670277,
+   "hi": 4470614337257984
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 48,
+   "text": "ISETP.NE.AND P1, PT, R0, RZ, PT                 &req={1}                 ?WAIT13_END_GROUP;",
+   "lo": 1095216689676,
+   "hi": 13469017506468464
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 64,
+   "text": "@P1 BRA 0x210                                                                ?trans5;",
+   "lo": 7346503,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 128,
+   "text": "UIADD3 UR4, UPT, UPT, UR6, 0x100, URZ                                    ?trans1;",
+   "lo": 1099612584080,
+   "hi": 4470614546964735
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 160,
+   "text": "UMOV UR11, URZ                                                           ?trans2;",
+   "lo": 1095217413250,
+   "hi": 4472813436010496
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 176,
+   "text": "ULEA UR4, UR8, UR4, 0x18                        &req={1}                 ?trans1;",
+   "lo": 17314378385,
+   "hi": 13477813794291967
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 192,
+   "text": "ULEA UR8, UR8, UR6, 0x18                                                 ?WAIT5_END_GROUP;",
+   "lo": 25904575121,
+   "hi": 4444226260484351
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 208,
+   "text": "MOV R2, UR4                                                              ?trans1;",
+   "lo": 17180032002,
+   "hi": 4470614412758784
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 224,
+   "text": "UMOV UR4, 0x20                                                           ?trans2;",
+   "lo": 137439246466,
+   "hi": 4472813301792768
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 288,
+   "text": "R2UR UR9, R2                                                             ?trans1;",
+   "lo": 34173642,
+   "hi": 4470614279454720
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 304,
+   "text": "FENCE.VIEW.ASYNC.S                              &wr=0x1                  ?WAIT12_END_GROUP;",
+   "lo": 29638,
+   "hi": 4037406697193472
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 400,
+   "text": "@P0 ELECT P2, URZ, PT                               &req={2}                 ?trans1;",
+   "lo": 16713775,
+   "hi": 22485012847001600
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 432,
+   "text": "@P2 PLOP3.LUT P0, PT, P2, PT, PT, 0x8, 0x80                                  ?trans2;",
+   "lo": 8398876,
+   "hi": 4472813325967728
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 448,
+   "text": "PLOP3.LUT P2, PT, PT, PT, PT, 0x8, 0x80                                  ?WAIT11_END_GROUP;",
+   "lo": 8419356,
+   "hi": 4457420205384048
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 480,
+   "text": "HFMA2 R3, -RZ, RZ, 0, 1.52587890625e-05                                  ?WAIT4_END_GROUP;",
+   "lo": 1103790044209,
+   "hi": 4442026976215551
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 496,
+   "text": "SYNCS.ARRIVE.TRANS64 RZ, [R2+URZ], R3           &rd=0x1                  ?trans1;",
+   "lo": 12935199143,
+   "hi": 1092914692227327
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 512,
+   "text": "BRA 0x270                                                                ?trans5;",
+   "lo": 1603911,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 544,
+   "text": "UMOV UR4, 0x400                                                          ?trans2;",
+   "lo": 4398046804098,
+   "hi": 4472813301792768
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 576,
+   "text": "ULEA UR4, UR5, UR4, 0x18                        &req={1}                 ?WAIT6_END_GROUP;",
+   "lo": 17264046737,
+   "hi": 13453624538480895
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 592,
+   "text": "MOV R2, UR4                                                              ?WAIT4_END_GROUP;",
+   "lo": 17180032002,
+   "hi": 4442027110436608
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 608,
+   "text": "SYNCS.ARRIVE.TRANS64.A1T0 RZ, [R2+URZ], RZ      &rd=0x2                  ?trans3;",
+   "lo": 1095266957735,
+   "hi": 1660262693208319
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 640,
+   "text": "BSSY.RECONVERGENT B0, 0x2c0                                              ?trans1;",
+   "lo": 206158461253,
+   "hi": 4470614337257984
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 656,
+   "text": "SYNCS.PHASECHK.TRANS64.TRYWAIT P0, [R2+URZ], RZ &wr=0x3                  ?trans2;",
+   "lo": 1095250245031,
+   "hi": 4191338459304447
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 672,
+   "text": "@!P0 BRA 0x290                                       &req={3}                 ?trans5;",
+   "lo": 18446744056545970503,
+   "hi": 40508207449505791
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 720,
+   "text": "ISETP.GT.U32.AND P0, PT, R0, 0xf, PT                                     ?WAIT5_END_GROUP;",
+   "lo": 64424540172,
+   "hi": 4444226065547376
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 736,
+   "text": "LDCU.64 UR6, c[0x0][0x358]                      &wr=0x3                  ?trans1;",
+   "lo": 117652022785964,
+   "hi": 4189139436046848
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 752,
+   "text": "BSSY.RECONVERGENT B0, 0x7c0                                              ?trans4;",
+   "lo": 5222680262981,
+   "hi": 4477211407024640
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 768,
+   "text": "@P1 BRA 0x7b0                                                                ?trans5;",
+   "lo": 17182497095,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 784,
+   "text": "LDC.64 R12, c[0x0][0x388]                       &wr=0x4                  ?trans8;",
+   "lo": 248493906885506,
+   "hi": 4274901208795648
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 800,
+   "text": "LDC.64 R2, c[0x0][0x500]                        &req={2,1} &wr=0x4       ?trans8;",
+   "lo": 351847999241090,
+   "hi": 31296498973018624
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 816,
+   "text": "LDC.64 R14, c[0x0][0x390]                       &wr=0x1                  ?trans8;",
+   "lo": 250692930272130,
+   "hi": 4063794976262656
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 832,
+   "text": "LDC.64 R16, c[0x0][0x398]                       &wr=0x2                  ?trans8;",
+   "lo": 252891953658754,
+   "hi": 4134163720440320
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 848,
+   "text": "LDC.64 R18, c[0x0][0x3a0]                       &wr=0x5                  ?trans1;",
+   "lo": 255090977045378,
+   "hi": 4329876790184448
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 864,
+   "text": "STG.E desc[UR6][R2.64+0x104], R12               &req={4,3}               ?trans4;",
+   "lo": 285924596414854,
+   "hi": 112563602607577350
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 880,
+   "text": "STG.E desc[UR6][R2.64+0x108], R13               &rd=0x3                  ?trans3;",
+   "lo": 290326937893254,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 896,
+   "text": "LDC.64 R22, c[0x0][0x3a8]                       &wr=0x4                  ?trans1;",
+   "lo": 257290000563074,
+   "hi": 4259508046006784
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 912,
+   "text": "STG.E desc[UR6][R2.64+0x10c], R14               &req={1}                 ?trans4;",
+   "lo": 294729279371654,
+   "hi": 13484410805426438
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 928,
+   "text": "STG.E desc[UR6][R2.64+0x110], R15                                        ?trans3;",
+   "lo": 299131620850054,
+   "hi": 4475012527429894
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 944,
+   "text": "LDC.64 R24, c[0x0][0x3b0]                       &wr=0x1                  ?trans1;",
+   "lo": 259489023949698,
+   "hi": 4048401813473792
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 960,
+   "text": "STG.E desc[UR6][R2.64+0x114], R16               &req={2}                 ?trans4;",
+   "lo": 303533962328454,
+   "hi": 22491610060167430
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 976,
+   "text": "STG.E desc[UR6][R2.64+0x118], R17               &rd=0x2                  ?trans3;",
+   "lo": 307936303806854,
+   "hi": 1660262760323334
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 992,
+   "text": "LDC.64 R26, c[0x0][0x3b8]                       &wr=0x0                  ?trans1;",
+   "lo": 261688047336322,
+   "hi": 3978033069296128
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1008,
+   "text": "STG.E desc[UR6][R2.64+0x11c], R18               &req={5}                 ?trans4;",
+   "lo": 312338645285254,
+   "hi": 148592399626541318
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1024,
+   "text": "STG.E desc[UR6][R2.64+0x120], R19               &rd=0x5                  ?trans3;",
+   "lo": 316740986763654,
+   "hi": 3349112620587270
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1040,
+   "text": "LDC.64 R28, c[0x0][0x3c0]                       &wr=0x2                  ?trans1;",
+   "lo": 263887070722946,
+   "hi": 4118770557651456
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1056,
+   "text": "STG.E desc[UR6][R2.64+0x124], R22               &req={4}                 ?trans4;",
+   "lo": 321151918176646,
+   "hi": 76534805588613382
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1072,
+   "text": "STG.E desc[UR6][R2.64+0x128], R23               &rd=0x4                  ?trans3;",
+   "lo": 325554259655046,
+   "hi": 2786162667165958
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1088,
+   "text": "LDC.64 R4, c[0x0][0x3c8]                        &wr=0x3                  ?trans1;",
+   "lo": 266086092405634,
+   "hi": 4189139301829120
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1104,
+   "text": "STG.E desc[UR6][R2.64+0x12c], R24               &req={1}                 ?trans4;",
+   "lo": 329956601133446,
+   "hi": 13484410805426438
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1120,
+   "text": "STG.E desc[UR6][R2.64+0x130], R25               &rd=0x1                  ?trans3;",
+   "lo": 334358942611846,
+   "hi": 1097312806902022
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1136,
+   "text": "LDC.64 R6, c[0x0][0x3d0]                        &wr=0x1                  ?trans1;",
+   "lo": 268285115792258,
+   "hi": 4048401813473792
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1152,
+   "text": "STG.E desc[UR6][R2.64+0x134], R26               &req={0}                 ?trans4;",
+   "lo": 338761284090246,
+   "hi": 8980811178055942
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1168,
+   "text": "STG.E desc[UR6][R2.64+0x138], R27               &rd=0x0                  ?trans3;",
+   "lo": 343163625568646,
+   "hi": 534362853480710
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1184,
+   "text": "LDC.64 R8, c[0x0][0x3d8]                        &wr=0x0                  ?trans1;",
+   "lo": 270484139178882,
+   "hi": 3978033069296128
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1200,
+   "text": "STG.E desc[UR6][R2.64+0x13c], R28               &req={2}                 ?trans4;",
+   "lo": 347565967047046,
+   "hi": 22491610060167430
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1216,
+   "text": "STG.E desc[UR6][R2.64+0x140], R29               &rd=0x2                  ?trans3;",
+   "lo": 351968308525446,
+   "hi": 1660262760323334
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1232,
+   "text": "LDC.64 R10, c[0x0][0x3e0]                       &wr=0x2                  ?trans1;",
+   "lo": 272683162565506,
+   "hi": 4118770557651456
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1248,
+   "text": "STG.E desc[UR6][R2.64+0x148], R5                &req={3} &rd=0x3         ?trans4;",
+   "lo": 360661322332550,
+   "hi": 38254208755964166
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1264,
+   "text": "STG.E desc[UR6][R2.64+0x144], R4                &rd=0x0                  ?trans3;",
+   "lo": 356258980854150,
+   "hi": 534362853480710
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1280,
+   "text": "LDC.64 R12, c[0x0][0x3e8]                       &wr=0x3                  ?trans1;",
+   "lo": 274882185952130,
+   "hi": 4189139301829120
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1296,
+   "text": "STG.E desc[UR6][R2.64+0x14c], R6                &req={1} &rd=0x1         ?trans4;",
+   "lo": 365063663810950,
+   "hi": 10106711084898566
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1312,
+   "text": "STG.E desc[UR6][R2.64+0x150], R7                &rd=0x1                  ?trans3;",
+   "lo": 369466005289350,
+   "hi": 1097312806902022
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1328,
+   "text": "LDC.64 R16, c[0x0][0x3f0]                       &wr=0x1                  ?trans1;",
+   "lo": 277081209469826,
+   "hi": 4048401813473792
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1344,
+   "text": "STG.E desc[UR6][R2.64+0x154], R8                &req={0} &rd=0x0         ?trans4;",
+   "lo": 373868346767750,
+   "hi": 5040161504106758
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1360,
+   "text": "STG.E desc[UR6][R2.64+0x158], R9                &rd=0x0                  ?trans3;",
+   "lo": 378270688246150,
+   "hi": 534362853480710
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1376,
+   "text": "LDC.64 R14, c[0x0][0x3f8]                       &wr=0x0                  ?trans1;",
+   "lo": 279280232594306,
+   "hi": 3978033069296128
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1392,
+   "text": "STG.E desc[UR6][R2.64+0x15c], R10               &req={2} &rd=0x2         ?trans4;",
+   "lo": 382673029724550,
+   "hi": 19676860293060870
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1408,
+   "text": "STG.E desc[UR6][R2.64+0x160], R11               &rd=0x2                  ?trans3;",
+   "lo": 387075371202950,
+   "hi": 1660262760323334
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1424,
+   "text": "LDC.64 R20, c[0x0][0x400]                       &wr=0x2                  ?trans1;",
+   "lo": 281479256243074,
+   "hi": 4118770557651456
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1440,
+   "text": "STG.E desc[UR6][R2.64+0x164], R12               &req={3} &rd=0x3         ?trans4;",
+   "lo": 391477712681350,
+   "hi": 38254208755964166
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1456,
+   "text": "STG.E desc[UR6][R2.64+0x168], R13               &rd=0x3                  ?trans3;",
+   "lo": 395880054159750,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1472,
+   "text": "LDC.64 R18, c[0x0][0x408]                       &req={5} &wr=0x5         ?trans1;",
+   "lo": 283678279367554,
+   "hi": 148445064866040320
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1488,
+   "text": "STG.E desc[UR6][R2.64+0x16c], R16               &req={1} &rd=0x3         ?trans4;",
+   "lo": 400290985572742,
+   "hi": 11232610991741190
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1504,
+   "text": "STG.E desc[UR6][R2.64+0x170], R17               &rd=0x3                  ?trans3;",
+   "lo": 404693327051142,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1520,
+   "text": "LDC.64 R22, c[0x0][0x410]                       &req={4} &wr=0x1         ?trans1;",
+   "lo": 285877302885250,
+   "hi": 76105995851401728
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1536,
+   "text": "STG.E desc[UR6][R2.64+0x174], R14               &req={0} &rd=0x3         ?trans4;",
+   "lo": 409078488660358,
+   "hi": 6729011364370694
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1552,
+   "text": "STG.E desc[UR6][R2.64+0x178], R15               &rd=0x3                  ?trans3;",
+   "lo": 413480830138758,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1568,
+   "text": "LDC.64 R24, c[0x0][0x418]                       &wr=0x0                  ?trans1;",
+   "lo": 288076326271874,
+   "hi": 3978033069296128
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1584,
+   "text": "STG.E desc[UR6][R2.64+0x17c], R20               &req={2} &rd=0x3         ?trans4;",
+   "lo": 417900351486342,
+   "hi": 20239810246482182
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1600,
+   "text": "STG.E desc[UR6][R2.64+0x180], R21               &rd=0x3                  ?trans3;",
+   "lo": 422302692964742,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1616,
+   "text": "LDC.64 R26, c[0x0][0x420]                       &wr=0x2                  ?trans1;",
+   "lo": 290275349658498,
+   "hi": 4118770557651456
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1632,
+   "text": "STG.E desc[UR6][R2.64+0x184], R18               &req={5} &rd=0x3         ?trans4;",
+   "lo": 426687854573958,
+   "hi": 146340599812856070
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1648,
+   "text": "STG.E desc[UR6][R2.64+0x188], R19               &rd=0x3                  ?trans3;",
+   "lo": 431090196052358,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1664,
+   "text": "LDC.64 R28, c[0x0][0x428]                       &wr=0x4                  ?trans1;",
+   "lo": 292474373045122,
+   "hi": 4259508046006784
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1680,
+   "text": "STG.E desc[UR6][R2.64+0x18c], R22               &req={1} &rd=0x3         ?trans4;",
+   "lo": 435501127465350,
+   "hi": 11232610991741190
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1696,
+   "text": "STG.E desc[UR6][R2.64+0x190], R23               &rd=0x3                  ?trans3;",
+   "lo": 439903468943750,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1712,
+   "text": "LDC.64 R30, c[0x0][0x430]                       &wr=0x1                  ?trans1;",
+   "lo": 294673396431746,
+   "hi": 4048401813473792
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1728,
+   "text": "STG.E desc[UR6][R2.64+0x194], R24               &req={0} &rd=0x3         ?trans4;",
+   "lo": 444305810422150,
+   "hi": 6729011364370694
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1744,
+   "text": "STG.E desc[UR6][R2.64+0x198], R25               &rd=0x3                  ?trans3;",
+   "lo": 448708151900550,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1760,
+   "text": "LDC.64 R32, c[0x0][0x438]                       &wr=0x0                  ?trans1;",
+   "lo": 296872419818370,
+   "hi": 3978033069296128
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1776,
+   "text": "STG.E desc[UR6][R2.64+0x19c], R26               &req={2} &rd=0x3         ?trans4;",
+   "lo": 453110493378950,
+   "hi": 20239810246482182
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1792,
+   "text": "STG.E desc[UR6][R2.64+0x1a0], R27               &rd=0x3                  ?trans3;",
+   "lo": 457512834857350,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1808,
+   "text": "LDC R5, c[0x0][0x384]                           &wr=0x2                  ?trans1;",
+   "lo": 247394394798978,
+   "hi": 4118770557650944
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1824,
+   "text": "STG.E desc[UR6][R2.64+0x1a4], R28               &req={4} &rd=0x3         ?trans4;",
+   "lo": 461915176335750,
+   "hi": 74283005774928134
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1840,
+   "text": "STG.E desc[UR6][R2.64+0x1a8], R29               &rd=0x3                  ?trans3;",
+   "lo": 466317517814150,
+   "hi": 2223212713744646
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1856,
+   "text": "LDC R35, c[0x0][0x440]                          &wr=0x4                  ?trans1;",
+   "lo": 299071443270530,
+   "hi": 4259508046006272
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1872,
+   "text": "STG.E desc[UR6][R2.64+0x1ac], R30               &req={1} &rd=0x3         ?trans4;",
+   "lo": 470719859292550,
+   "hi": 11232610991741190
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1888,
+   "text": "STG.E desc[UR6][R2.64+0x1b0], R31               &rd=0x3                  ?trans4;",
+   "lo": 475122200770950,
+   "hi": 2225411737000198
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1904,
+   "text": "STG.E desc[UR6][R2.64+0x1b4], R32               &req={0} &rd=0x3         ?trans4;",
+   "lo": 479524542249350,
+   "hi": 6729011364370694
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1920,
+   "text": "STG.E desc[UR6][R2.64+0x1b8], R33               &rd=0x3                  ?trans4;",
+   "lo": 483926883727750,
+   "hi": 2225411737000198
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1936,
+   "text": "STG.E desc[UR6][R2.64+0x100], R5                &req={2} &rd=0x3         ?trans4;",
+   "lo": 281496485132678,
+   "hi": 20239810246482182
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1952,
+   "text": "STG.E desc[UR6][R2.64+0x1bc], R35               &req={4} &rd=0x3         ?trans2;",
+   "lo": 488333520173446,
+   "hi": 74278607728417030
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 1968,
+   "text": "BSYNC.RECONVERGENT B0                           &req={3}                 ?trans5;",
+   "lo": 31041,
+   "hi": 40508207449244160
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2000,
+   "text": "S2UR UR5, SR_CgaCtaId                           &wr=0x3                  ?trans1;",
+   "lo": 358851,
+   "hi": 4189139301861376
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2032,
+   "text": "LDC.64 R2, c[0x0][0x500]                        &req={2,1} &wr=0x1       ?trans1;",
+   "lo": 351847999241090,
+   "hi": 31069999577696768
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2048,
+   "text": "ULEA UR4, UR5, UR4, 0x18                        &req={3}                 ?WAIT6_END_GROUP;",
+   "lo": 17264046737,
+   "hi": 40475222302703871
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2064,
+   "text": "IADD3 R4, PT, PT, R0.reuse, UR4, R0                                      ?trans1;",
+   "lo": 17180163088,
+   "hi": 292700990698676224
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2080,
+   "text": "IMAD.WIDE.U32 R2, R0, 0x2, R2                   &req={1}                 ?WAIT4_END_GROUP;",
+   "lo": 8590096421,
+   "hi": 13449226357702658
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2096,
+   "text": "LDS.U16 R5, [R4]                                &wr=0x1                  ?trans4;",
+   "lo": 67467652,
+   "hi": 4054998883238912
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2112,
+   "text": "LDS.U16 R7, [R4+0x20]                           &wr=0x2                  ?trans4;",
+   "lo": 35184439687556,
+   "hi": 4125367627416576
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2128,
+   "text": "STG.E.U16 desc[UR6][R2.64], R5                  &req={1}                 ?trans4;",
+   "lo": 21508422022,
+   "hi": 13484410805425414
+  },
+  {
+   "cubin": "tma_test.cubin",
+   "kernel": "_Z8tma_load14CUtensorMap_st5ProbePv",
+   "pc": 2144,
+   "text": "STG.E.U16 desc[UR6][R2.64+0x20], R7             &req={2}                 ?trans1;",
+   "lo": 35214470445446,
+   "hi": 22485012990399750
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z11pmtrig_manyv",
+   "pc": 16,
+   "text": "PMTRIG 0x1                                ?trans1;",
+   "lo": 4294998017,
+   "hi": 4470614337257472
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z11pmtrig_manyv",
+   "pc": 32,
+   "text": "PMTRIG 0x2                                ?trans1;",
+   "lo": 8589965313,
+   "hi": 4470614337257472
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z11pmtrig_manyv",
+   "pc": 48,
+   "text": "PMTRIG 0x4                                ?trans1;",
+   "lo": 17179899905,
+   "hi": 4470614337257472
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z11pmtrig_manyv",
+   "pc": 64,
+   "text": "PMTRIG 0x8                                ?trans1;",
+   "lo": 34359769089,
+   "hi": 4470614337257472
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z17pmtrig_predicatedi",
+   "pc": 16,
+   "text": "LDCU UR4, c[0x0][0x380]          &wr=0x1  ?trans2;",
+   "lo": 123149580793772,
+   "hi": 4050600970946560
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z17pmtrig_predicatedi",
+   "pc": 32,
+   "text": "ISETP.NE.AND P0, PT, RZ, UR4, PT &req={1} ?WAIT13_END_GROUP;",
+   "lo": 21458091020,
+   "hi": 13469017640555120
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z17pmtrig_predicatedi",
+   "pc": 48,
+   "text": "@!P0 EXIT                                      ?trans5;",
+   "lo": 35149,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z18pmtrig_mask_0xffffv",
+   "pc": 16,
+   "text": "PMTRIG 0xffff                             ?trans1;",
+   "lo": 281470681774081,
+   "hi": 4470614337257472
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z15pmtrig_mask_0x5v",
+   "pc": 16,
+   "text": "PMTRIG 0x5                                ?trans1;",
+   "lo": 21474867201,
+   "hi": 4470614337257472
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z11pmtrig_ev15v",
+   "pc": 16,
+   "text": "PMTRIG 0x8000                             ?trans1;",
+   "lo": 140737488386049,
+   "hi": 4470614337257472
+  },
+  {
+   "cubin": "pmtrig_test.cubin",
+   "kernel": "_Z10pmtrig_ev4v",
+   "pc": 16,
+   "text": "PMTRIG 0x10                               ?trans1;",
+   "lo": 68719507457,
+   "hi": 4470614337257472
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 0,
+   "text": "LDC R1, c[0x0][0x37c]                                                    ?trans1;",
+   "lo": 245195371281282,
+   "hi": 4470614278539264
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 16,
+   "text": "S2R R9, SR_TID.X                                &wr=0x0                  ?trans7;",
+   "lo": 620825,
+   "hi": 3991227208835328
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 32,
+   "text": "LDC.64 R2, c[0x0][0x380]                        &wr=0x0                  ?trans1;",
+   "lo": 246294882974594,
+   "hi": 3978033069296128
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 48,
+   "text": "LDCU.64 UR4, c[0x0][0x358]                      &wr=0x1                  ?trans7;",
+   "lo": 117652022654892,
+   "hi": 4061596087224832
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 64,
+   "text": "LDC.64 R4, c[0x0][0x388]                        &wr=0x2                  ?trans1;",
+   "lo": 248493906361218,
+   "hi": 4118770557651456
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 80,
+   "text": "IMAD.WIDE.U32 R2, R9, 0x4, R2                   &req={0}                 ?WAIT6_END_GROUP;",
+   "lo": 17331025957,
+   "hi": 8950024776843266
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 96,
+   "text": "LDG.E R2, desc[UR4][R2.64]                      &req={1} &wr=0x3         ?trans1;",
+   "lo": 17213585793,
+   "hi": 13196338759866624
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 112,
+   "text": "HFMA2 R11, -RZ, RZ, 0, 1.78813934326171875e-07                           ?trans2;",
+   "lo": 17163842609,
+   "hi": 4472813301793279
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 128,
+   "text": "IMAD.WIDE.U32 R4, R9, 0x4, R4                   &req={2}                 ?trans1;",
+   "lo": 17331157029,
+   "hi": 22485012914765828
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 144,
+   "text": "ISETP.GT.AND P0, PT, R2.reuse, RZ, PT           &req={3}                 ?trans1;",
+   "lo": 1095250244108,
+   "hi": 328729787515290224
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 160,
+   "text": "LOP3.LUT R7, R2, 0xff, RZ, 0x3c, !PT                                     ?WAIT12_END_GROUP;",
+   "lo": 1095250704402,
+   "hi": 4459619289021695
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 176,
+   "text": "@P0 IMAD R7, R2, R11, 0x7                                                    ?WAIT5_END_GROUP;",
+   "lo": 30098785316,
+   "hi": 4444226126217739
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k2PKiPii",
+   "pc": 192,
+   "text": "STG.E desc[UR4][R4.64], R7                                               ?trans1;",
+   "lo": 30131911046,
+   "hi": 4470614480918788
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 16,
+   "text": "S2R R0, SR_TID.X                                &wr=0x1                  ?trans7;",
+   "lo": 31001,
+   "hi": 4061595953012992
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 32,
+   "text": "S2UR UR4, SR_CTAID.X                            &wr=0x1                  ?trans1;",
+   "lo": 293315,
+   "hi": 4048401813480704
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 48,
+   "text": "LDCU UR5, c[0x0][0x398]                         &wr=0x2                  ?trans7;",
+   "lo": 126448115742636,
+   "hi": 4131964831401984
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 64,
+   "text": "LDC R3, c[0x0][0x360]                           &wr=0x1                  ?trans2;",
+   "lo": 237498790017922,
+   "hi": 4050600836728832
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 80,
+   "text": "IMAD R3, R3, UR4, R0                            &req={1}                 ?WAIT5_END_GROUP;",
+   "lo": 17230429220,
+   "hi": 13451425515176448
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 96,
+   "text": "ISETP.GE.AND P0, PT, R3, UR5, PT                &req={2}                 ?WAIT13_END_GROUP;",
+   "lo": 21525199884,
+   "hi": 22476216895300208
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 112,
+   "text": "@P0 EXIT                                            &req={0}                 ?trans5;",
+   "lo": 2381,
+   "hi": 8983010057650176
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 128,
+   "text": "LDC.64 R6, c[0x0][0x380]                        &wr=0x0                  ?trans1;",
+   "lo": 246294883236738,
+   "hi": 3978033069296128
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 160,
+   "text": "LDC.64 R8, c[0x0][0x388]                        &wr=0x2                  ?trans1;",
+   "lo": 248493906623362,
+   "hi": 4118770557651456
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 176,
+   "text": "IMAD.WIDE R6, R3, 0x4, R6                       &req={0}                 ?WAIT5_END_GROUP;",
+   "lo": 17230624805,
+   "hi": 8947825753588230
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 192,
+   "text": "LDG.E R4, desc[UR4][R6.64]                      &req={1} &rd=0x0 &wr=0x3 ?trans1;",
+   "lo": 17280825729,
+   "hi": 9255689085917440
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 208,
+   "text": "IMAD.WIDE R8, R3, 0x4, R8                       &req={2}                 ?WAIT5_END_GROUP;",
+   "lo": 17230755877,
+   "hi": 22458624635699720
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 224,
+   "text": "LDG.E R5, desc[UR4][R8.64]                      &rd=0x1 &wr=0x5          ?trans1;",
+   "lo": 17314445697,
+   "hi": 952177272953088
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 240,
+   "text": "BSSY.RECONVERGENT B0, 0x820                                              ?trans1;",
+   "lo": 7834020378949,
+   "hi": 4470614337257984
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 256,
+   "text": "SHF.R.S32.HI R6, RZ, 0x1f, R3                   &req={0}                 ?trans1;",
+   "lo": 137422600217,
+   "hi": 8974213905978371
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 272,
+   "text": "FMUL R0, R4.reuse, 0.63661974668502807617       &req={3}                 ?trans1;",
+   "lo": 4549472914700793888,
+   "hi": 328729787453407232
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 288,
+   "text": "FSETP.GE.AND P0, PT, |R4|, 105615, PT                                    ?WAIT5_END_GROUP;",
+   "lo": 5174151637043804171,
+   "hi": 4444226065555968
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 304,
+   "text": "F2I.NTZ R0, R0                                  &wr=0x0                  ?trans2;",
+   "lo": 29445,
+   "hi": 3980232094658816
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 320,
+   "text": "I2FP.F32.S32 R11, R0                            &req={0}                 ?WAIT5_END_GROUP;",
+   "lo": 750149,
+   "hi": 8947825628943360
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 336,
+   "text": "FFMA R2, R11, -1.5707962512969970703, R4                                 ?WAIT4_END_GROUP;",
+   "lo": 13819594360725076003,
+   "hi": 4442026976215044
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 352,
+   "text": "FFMA R2, R11, -7.5497894158615963534e-08, R2                             ?WAIT4_END_GROUP;",
+   "lo": 12943945009761253411,
+   "hi": 4442026976215042
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 368,
+   "text": "FFMA R2, R11, -5.3903029534742383927e-15, R2                             ?trans1;",
+   "lo": 12088282370713745443,
+   "hi": 4470614278537218
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 384,
+   "text": "@!P0 BRA 0x810                                       &req={1}                 ?trans6;",
+   "lo": 17190390087,
+   "hi": 13488808708276224
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 400,
+   "text": "FSETP.NEU.AND P0, PT, |R4|, +INF , PT                                    ?WAIT13_END_GROUP;",
+   "lo": 9187343239902951435,
+   "hi": 4461818251629056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 416,
+   "text": "@!P0 FMUL R2, RZ, R4                                                          ?trans1;",
+   "lo": 21458223648,
+   "hi": 4470614282731520
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 432,
+   "text": "@!P0 MOV R0, RZ                                                               ?trans1;",
+   "lo": 1095216693762,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 448,
+   "text": "@!P0 BRA 0x810                                                                ?trans6;",
+   "lo": 17189341511,
+   "hi": 4481609453535232
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 464,
+   "text": "LDCU.64 UR6, c[0x4][URZ]                        &wr=0x0                  ?trans1;",
+   "lo": 72057598316541868,
+   "hi": 3978033203513856
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 480,
+   "text": "IMAD.SHL.U32 R0, R4, 0x100, RZ                                           ?trans2;",
+   "lo": 1099578767396,
+   "hi": 4472813428539647
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 496,
+   "text": "HFMA2 R2, -RZ, RZ, 0, 0                                                  ?trans1;",
+   "lo": 4278350897,
+   "hi": 4470614278537727
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 512,
+   "text": "MOV.64 R8, RZ                                                            ?trans2;",
+   "lo": 1095217213954,
+   "hi": 4472813301862144
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 528,
+   "text": "MOV.64 R12, RZ                                                           ?WAIT3_END_GROUP;",
+   "lo": 1095217476098,
+   "hi": 4439827953028864
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 544,
+   "text": "LOP3.LUT R7, R0, 0x80000000, RZ, 0xfc, !PT                               ?trans1;",
+   "lo": 9223372036855265298,
+   "hi": 4470614405348607
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 560,
+   "text": "MOV.64 R10, UR6                                 &req={0}                 ?WAIT8_END_GROUP;",
+   "lo": 25770490882,
+   "hi": 8954422830894848
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 576,
+   "text": "LDG.E.CONSTANT R0, desc[UR4][R10.64]            &rd=0x0 &wr=0x2          ?trans1;",
+   "lo": 17347672449,
+   "hi": 178121087031552
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 592,
+   "text": "IADD3 R2, PT, PT, R2, 0x1, RZ                                            ?trans1;",
+   "lo": 4328683536,
+   "hi": 4470614412747007
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 608,
+   "text": "ISETP.EQ.AND P1, PT, R12.reuse, RZ, PT                                   ?trans1;",
+   "lo": 1095418016268,
+   "hi": 292700990496449136
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 624,
+   "text": "ISETP.EQ.AND P2, PT, R12.reuse, 0x4, PT                                  ?trans1;",
+   "lo": 17381226508,
+   "hi": 292700990496580208
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 640,
+   "text": "ISETP.EQ.AND P3, PT, R12.reuse, 0x8, PT                                  ?trans1;",
+   "lo": 34561095692,
+   "hi": 292700990496711280
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 656,
+   "text": "ISETP.EQ.AND P4, PT, R12.reuse, 0xc, PT                                  ?trans1;",
+   "lo": 51740964876,
+   "hi": 292700990496842352
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 672,
+   "text": "ISETP.EQ.AND P5, PT, R12.reuse, 0x10, PT                                 ?trans1;",
+   "lo": 68920834060,
+   "hi": 292700990496973424
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 688,
+   "text": "ISETP.EQ.AND P6, PT, R12, 0x14, PT                                       ?trans1;",
+   "lo": 86100703244,
+   "hi": 4470614345392752
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 704,
+   "text": "ISETP.NE.AND P0, PT, R2, 0x6, PT                                         ?trans1;",
+   "lo": 25803388940,
+   "hi": 4470614344618608
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 720,
+   "text": "IADD.64 R12, R12, 0x4                                                    ?trans2;",
+   "lo": 17382012981,
+   "hi": 4472813428539904
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 736,
+   "text": "IADD.64 R10, R10, 0x4                           &req={0}                 ?WAIT2_END_GROUP;",
+   "lo": 17348327477,
+   "hi": 8941228683821568
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 752,
+   "text": "IMAD.WIDE.U32 R8, R0, R7, R8                    &req={2}                 ?WAIT3_END_GROUP;",
+   "lo": 30065324581,
+   "hi": 22454226589188104
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 768,
+   "text": "@P1 MOV R14, R8.reuse                                                        ?trans1;",
+   "lo": 34360660482,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 784,
+   "text": "@P2 MOV R15, R8.reuse                                                        ?trans1;",
+   "lo": 34360730114,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 800,
+   "text": "@P3 MOV R16, R8.reuse                                                        ?trans1;",
+   "lo": 34360799746,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 816,
+   "text": "@P4 MOV R17, R8.reuse                                                        ?trans1;",
+   "lo": 34360869378,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 832,
+   "text": "@P5 MOV R18, R8.reuse                                                        ?trans1;",
+   "lo": 34360939010,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 848,
+   "text": "@P6 MOV R19, R8                                                              ?trans1;",
+   "lo": 34361008642,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 864,
+   "text": "MOV R8, R9                                                               ?trans1;",
+   "lo": 38655259138,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 880,
+   "text": "MOV R9, RZ                                                               ?trans1;",
+   "lo": 1095217279490,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 896,
+   "text": "@P0 BRA 0x240                                                                ?trans6;",
+   "lo": 18446744056540956999,
+   "hi": 4481609453797375
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 912,
+   "text": "SHF.R.U32.HI R0, RZ, 0x17, R4                                            ?trans1;",
+   "lo": 103062468633,
+   "hi": 4470614278608388
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 928,
+   "text": "BSSY.RECONVERGENT B1, 0x680                                              ?trans3;",
+   "lo": 3092376549701,
+   "hi": 4475012383769088
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 944,
+   "text": "LOP3.LUT R2, R0.reuse, 0xe0, RZ, 0xc0, !PT                               ?trans2;",
+   "lo": 962072836114,
+   "hi": 292703189580300543
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 960,
+   "text": "LOP3.LUT P5, RZ, R0, 0x1f, RZ, 0xc0, !PT                                 ?trans2;",
+   "lo": 133160728594,
+   "hi": 4472813428326655
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 976,
+   "text": "IADD3 R2, PT, PT, R2, -0x80, RZ                                          ?WAIT4_END_GROUP;",
+   "lo": 18446743523987453968,
+   "hi": 4442027110424831
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 992,
+   "text": "SHF.R.U32.HI R2, RZ, 0x5, R2                                             ?WAIT5_END_GROUP;",
+   "lo": 25753188377,
+   "hi": 4444225999541762
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1008,
+   "text": "IMAD.U32 R10, R2, -0x4, RZ                                               ?WAIT5_END_GROUP;",
+   "lo": 18446744056563922980,
+   "hi": 4444226126217471
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1024,
+   "text": "ISETP.EQ.AND P2, PT, R10.reuse, -0x18, PT                                ?trans1;",
+   "lo": 18446743970798139404,
+   "hi": 292700990496580208
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1040,
+   "text": "ISETP.EQ.AND P3, PT, R10.reuse, -0x14, PT                                ?trans1;",
+   "lo": 18446743987978008588,
+   "hi": 292700990496711280
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1056,
+   "text": "ISETP.EQ.AND P1, PT, R10.reuse, -0x10, PT                                ?trans1;",
+   "lo": 18446744005157877772,
+   "hi": 292700990496449136
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1072,
+   "text": "ISETP.EQ.AND P0, PT, R10.reuse, -0xc, PT                                 ?trans1;",
+   "lo": 18446744022337746956,
+   "hi": 292700990496318064
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1088,
+   "text": "ISETP.EQ.AND P6, PT, R10.reuse, -0x4, PT                                 ?trans1;",
+   "lo": 18446744056697485324,
+   "hi": 292700990497104496
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1104,
+   "text": "ISETP.EQ.AND P4, PT, R10, RZ, PT                                         ?WAIT8_END_GROUP;",
+   "lo": 1095384461836,
+   "hi": 4450823135830640
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1120,
+   "text": "@P2 MOV R2, R14.reuse                                                        ?trans1;",
+   "lo": 60129681922,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1136,
+   "text": "ISETP.EQ.AND P2, PT, R10.reuse, -0x8, PT                                 ?trans1;",
+   "lo": 18446744039517616140,
+   "hi": 292700990496580208
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1152,
+   "text": "@P3 MOV R7, R14                                                              ?trans1;",
+   "lo": 60130013698,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1168,
+   "text": "@P3 MOV R2, R15.reuse                                                        ?trans1;",
+   "lo": 64424653314,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1184,
+   "text": "ISETP.EQ.AND P3, PT, R10, 0x4, PT                                        ?trans1;",
+   "lo": 17347672076,
+   "hi": 4470614344999536
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1200,
+   "text": "@P1 MOV R7, R15                                                              ?trans1;",
+   "lo": 64424972802,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1216,
+   "text": "@P1 MOV R2, R16.reuse                                                        ?trans1;",
+   "lo": 68719612418,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1232,
+   "text": "@P0 MOV R7, R16                                                              ?trans1;",
+   "lo": 68719936002,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1248,
+   "text": "@P0 MOV R2, R17                                                              ?WAIT6_END_GROUP;",
+   "lo": 73014575618,
+   "hi": 4446425022729984
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1264,
+   "text": "@P2 MOV R7, R17                                                              ?trans1;",
+   "lo": 73014911490,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1280,
+   "text": "@P2 MOV R2, R18.reuse                                                        ?trans1;",
+   "lo": 77309551106,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1296,
+   "text": "@P6 MOV R7, R18                                                              ?trans1;",
+   "lo": 77309895170,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1312,
+   "text": "@P6 MOV R2, R19.reuse                                                        ?trans1;",
+   "lo": 81604534786,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1328,
+   "text": "@P4 MOV R7, R19                                                              ?trans1;",
+   "lo": 81604854274,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1344,
+   "text": "@P4 MOV R2, R8.reuse                                                         ?trans1;",
+   "lo": 34359886338,
+   "hi": 580931366581964544
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1360,
+   "text": "@P3 MOV R7, R8                                                               ?trans1;",
+   "lo": 34360209922,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1376,
+   "text": "@!P5 BRA 0x670                                                                ?trans6;",
+   "lo": 4249927,
+   "hi": 4481609453535232
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1392,
+   "text": "@P1 MOV R9, R14                                                              ?trans1;",
+   "lo": 60130136578,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1408,
+   "text": "@P0 MOV R9, R15                                                              ?trans1;",
+   "lo": 64425099778,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1424,
+   "text": "ISETP.EQ.AND P0, PT, R10, 0x8, PT                                        ?trans1;",
+   "lo": 34527541260,
+   "hi": 4470614344606320
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1440,
+   "text": "LOP3.LUT R0, R0, 0x1f, RZ, 0xc0, !PT                                     ?trans1;",
+   "lo": 133144016914,
+   "hi": 4470614405333247
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1456,
+   "text": "@P2 MOV R9, R16                                                              ?trans1;",
+   "lo": 68720075266,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1472,
+   "text": "@P6 MOV R9, R17                                                              ?trans1;",
+   "lo": 73015058946,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1488,
+   "text": "@P4 MOV R9, R18                                                              ?trans1;",
+   "lo": 77310018050,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1504,
+   "text": "@P3 MOV R9, R19                                                              ?trans1;",
+   "lo": 81604981250,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1520,
+   "text": "IADD3 R10, PT, PT, -R0, 0x20, RZ                                         ?trans2;",
+   "lo": 137439639568,
+   "hi": 4472813436002815
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1536,
+   "text": "SHF.L.U32 R2, R2, R0, RZ                                                 ?WAIT2_END_GROUP;",
+   "lo": 33714713,
+   "hi": 4437628929705727
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1552,
+   "text": "SHF.L.U32 R0, R7, R0, RZ                                                 ?trans2;",
+   "lo": 117469721,
+   "hi": 4472813301794559
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1568,
+   "text": "SHF.R.U32.HI R7, RZ, R10, R7                                             ?trans1;",
+   "lo": 47228351001,
+   "hi": 4470614278608391
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1584,
+   "text": "@P0 MOV R9, R8                                                               ?WAIT3_END_GROUP;",
+   "lo": 34360328706,
+   "hi": 4439827952963328
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1600,
+   "text": "IADD3 R2, PT, PT, R2, R7, RZ                                             ?trans2;",
+   "lo": 30098485776,
+   "hi": 4472813436002559
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1616,
+   "text": "SHF.R.U32.HI R9, RZ, R10, R9                                             ?WAIT4_END_GROUP;",
+   "lo": 47228482073,
+   "hi": 4442026976286217
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1632,
+   "text": "IADD3 R7, PT, PT, R0, R9, RZ                                             ?WAIT7_END_GROUP;",
+   "lo": 38655193616,
+   "hi": 4448624180191487
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1648,
+   "text": "BSYNC.RECONVERGENT B1                                                    ?trans5;",
+   "lo": 96577,
+   "hi": 4479410430280192
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1664,
+   "text": "IMAD.SHL.U32 R13, R2, 0x4, RZ                                            ?trans1;",
+   "lo": 17214306340,
+   "hi": 4470614405284095
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1680,
+   "text": "ISETP.GE.AND P0, PT, R4, RZ, PT                                          ?trans1;",
+   "lo": 1095283798540,
+   "hi": 4470614344622704
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1696,
+   "text": "IMAD.SHL.U32 R10, R7.reuse, 0x4, RZ                                      ?trans1;",
+   "lo": 17297995812,
+   "hi": 292700990556995839
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1712,
+   "text": "SHF.L.U32.HI R7, R7, 0x2, R2                                             ?trans1;",
+   "lo": 8707864601,
+   "hi": 4470614278604290
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1728,
+   "text": "UMOV.64 UR6, 0x3bf921fb54442d19                                          ?trans1;",
+   "lo": 18110174962047677570,
+   "hi": 4470614416685345
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1744,
+   "text": "SHF.R.S32.HI R0, RZ, 0x1f, R13                                           ?WAIT4_END_GROUP;",
+   "lo": 137422207001,
+   "hi": 4442026976285709
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1760,
+   "text": "LOP3.LUT R10, R0.reuse, R10, RZ, 0x3c, !PT                               ?trans2;",
+   "lo": 42950357522,
+   "hi": 292703189580266751
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1776,
+   "text": "LOP3.LUT R11, R0, R7, RZ, 0x3c, !PT                                      ?trans2;",
+   "lo": 30065521170,
+   "hi": 4472813428555007
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1792,
+   "text": "SHF.R.U32.HI R0, RZ, 0x1e, R2                                            ?trans2;",
+   "lo": 133127239705,
+   "hi": 4472813301863938
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1808,
+   "text": "I2F.F64.S64 R8, R10                             &wr=0x0                  ?trans1;",
+   "lo": 42950226706,
+   "hi": 3978033072446464
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1824,
+   "text": "LOP3.LUT R7, R7, R4, RZ, 0x3c, !PT                                       ?trans2;",
+   "lo": 17297797650,
+   "hi": 4472813428555007
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1840,
+   "text": "LEA.HI R0, R13, R0, RZ, 0x1                                              ?WAIT3_END_GROUP;",
+   "lo": 218133009,
+   "hi": 4439828079773951
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1856,
+   "text": "ISETP.GE.AND P1, PT, R7, RZ, PT                                          ?trans1;",
+   "lo": 1095334130188,
+   "hi": 4470614344753776
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1872,
+   "text": "IADD3 R2, PT, PT, -R0, RZ, RZ                                            ?WAIT5_END_GROUP;",
+   "lo": 1095216820752,
+   "hi": 4444226133680639
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1888,
+   "text": "@!P0 MOV R0, R2                                                               ?WAIT15_END_GROUP;",
+   "lo": 8589967874,
+   "hi": 4466216232029952
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1904,
+   "text": "NOP                                                                      ?WAIT7_END_GROUP;",
+   "lo": 31000,
+   "hi": 4448624045981696
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1920,
+   "text": "NOP                                                                      ?WAIT15_END_GROUP;",
+   "lo": 31000,
+   "hi": 4466216232026112
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1952,
+   "text": "DMUL R8, R8, UR6                                &req={0} &wr=0x0         ?WAIT15_END_GROUP;",
+   "lo": 25904577576,
+   "hi": 8477234784370688
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 1968,
+   "text": "NOP                                                                      ?WAIT4_END_GROUP;",
+   "lo": 31000,
+   "hi": 4442026976215040
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2032,
+   "text": "F2F.F32.F64 R8, R8                              &req={0} &wr=0x0         ?trans2;",
+   "lo": 34360292112,
+   "hi": 8483831723069440
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2048,
+   "text": "FSEL R2, -R8, R8, !P1                           &req={0}                 ?WAIT7_END_GROUP;",
+   "lo": 34494116360,
+   "hi": 8952223748849920
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2080,
+   "text": "LOP3.LUT R9, R0, 0x1, RZ, 0xc0, !PT                                      ?trans1;",
+   "lo": 4295587858,
+   "hi": 4470614405333247
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2096,
+   "text": "HFMA2 R8, -RZ, RZ, 0.487060546875, -0.0625                               ?trans2;",
+   "lo": 4020496212637021233,
+   "hi": 4472813301793279
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2112,
+   "text": "FMUL R7, R2, R2                                                          ?trans1;",
+   "lo": 8623976992,
+   "hi": 4470614282731520
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2128,
+   "text": "MOV R10, 0x3d2aaabb                                                      ?trans1;",
+   "lo": 4407522905471744002,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2144,
+   "text": "LOP3.LUT P1, RZ, R0, 0x2, RZ, 0xc0, !PT                                  ?trans1;",
+   "lo": 8606677010,
+   "hi": 4470614404546815
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2160,
+   "text": "BSSY.RECONVERGENT B0, 0xa30                                              ?trans1;",
+   "lo": 1855425902917,
+   "hi": 4470614337257984
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2176,
+   "text": "ISETP.NE.U32.AND P0, PT, R9, 0x1, PT                                     ?trans1;",
+   "lo": 4445992972,
+   "hi": 4470614344618096
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2192,
+   "text": "FFMA R8, R7, R8, -0.0013887860113754868507                               ?trans1;",
+   "lo": 13453949651422573603,
+   "hi": 4470614278537224
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2208,
+   "text": "MOV R9, 0x3effffff                                                       ?WAIT3_END_GROUP;",
+   "lo": 4539628420095113218,
+   "hi": 4439827952963328
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2224,
+   "text": "FSEL R0, R2, 1, P0                                                       ?trans1;",
+   "lo": 4575657221442009096,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2240,
+   "text": "IADD3 R2, PT, PT, R5, 0x1800000, RZ             &req={5}                 ?trans1;",
+   "lo": 108086391140939792,
+   "hi": 148585802488602879
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2256,
+   "text": "FSEL R8, R8, -0.00019574658654164522886, !P0                             ?trans1;",
+   "lo": 13352400295096252424,
+   "hi": 4470614345646080
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2272,
+   "text": "FSEL R10, R10, 0.0083327032625675201416, !P0                             ?trans1;",
+   "lo": 4325854656556857352,
+   "hi": 4470614345646080
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2288,
+   "text": "FSEL R9, -R9, -0.16666662693023681641, !P0                               ?trans1;",
+   "lo": 13702952454910998536,
+   "hi": 4470614345646336
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2304,
+   "text": "LOP3.LUT R2, R2, 0x7f800000, RZ, 0xc0, !PT                               ?WAIT3_END_GROUP;",
+   "lo": 9187343239869528082,
+   "hi": 4439828079755519
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2320,
+   "text": "FFMA R8, R7.reuse, R8, R10                                               ?trans2;",
+   "lo": 34477732387,
+   "hi": 292703189453504522
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2336,
+   "text": "ISETP.GT.U32.AND P0, PT, R2, 0x1ffffff, PT                               ?trans2;",
+   "lo": 144115183814473740,
+   "hi": 4472813367869552
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2352,
+   "text": "FFMA R8, R7.reuse, R8, R9                                                ?trans1;",
+   "lo": 34477732387,
+   "hi": 292700990430248969
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2368,
+   "text": "FFMA R7, R7, R0, RZ                                                      ?WAIT4_END_GROUP;",
+   "lo": 117928483,
+   "hi": 4442026976215295
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2384,
+   "text": "FFMA R7, R7, R8, R0                                                      ?trans1;",
+   "lo": 34477666851,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2400,
+   "text": "FFMA R0, R4, R5, 1                                                       ?WAIT3_END_GROUP;",
+   "lo": 4575657221475562531,
+   "hi": 4439827952959493
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2416,
+   "text": "@P1 FADD R7, RZ, -R7                                                         ?WAIT4_END_GROUP;",
+   "lo": 9223372071198200353,
+   "hi": 4442026976215040
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2432,
+   "text": "FADD R7, R7, R0                                                          ?trans1;",
+   "lo": 117928481,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2448,
+   "text": "@P0 BRA 0x9e0                                                                ?trans6;",
+   "lo": 1050951,
+   "hi": 4481609453535232
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2464,
+   "text": "MOV R12, 0x9c0                                                           ?WAIT7_END_GROUP;",
+   "lo": 10720239187970,
+   "hi": 4448624045985536
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2480,
+   "text": "CALL.REL.NOINC 0xae0                                                     ?trans5;",
+   "lo": 4749636,
+   "hi": 4479410434473984
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2496,
+   "text": "MOV R0, R5                                                               ?trans1;",
+   "lo": 21474865666,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2512,
+   "text": "BRA 0xa20                                                                ?trans6;",
+   "lo": 1079623,
+   "hi": 4481609453535232
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2528,
+   "text": "MUFU.RCP R0, R5                                 &wr=0x0                  ?trans2;",
+   "lo": 21474865928,
+   "hi": 3980232092553216
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2544,
+   "text": "FFMA R2, R5, R0, -1                             &req={0}                 ?WAIT4_END_GROUP;",
+   "lo": 13799029258347246627,
+   "hi": 8945626603585536
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2560,
+   "text": "FADD.FTZ R9, -R2, -RZ                                                    ?WAIT4_END_GROUP;",
+   "lo": 9223373132105609761,
+   "hi": 4442026976280832
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2576,
+   "text": "FFMA R0, R0, R9, R0                                                      ?WAIT7_END_GROUP;",
+   "lo": 38654734883,
+   "hi": 4448624045981696
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2608,
+   "text": "BREV R4, R4                                     &wr=0x0                  ?trans1;",
+   "lo": 17180160769,
+   "hi": 3978033069293568
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2624,
+   "text": "LDCU.64 UR6, c[0x0][0x390]                      &wr=0x1                  ?trans1;",
+   "lo": 125348604180396,
+   "hi": 4048401947691520
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2640,
+   "text": "FADD R0, R7, -R0                                                         ?trans1;",
+   "lo": 9223372036972245537,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2656,
+   "text": "FLO.U32.SH R2, R4                               &req={0} &wr=0x0         ?trans2;",
+   "lo": 17180029696,
+   "hi": 8483831720838144
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2672,
+   "text": "IADD3 R5, PT, PT, R2, 0x1, RZ                   &req={0}                 ?trans2;",
+   "lo": 4328880144,
+   "hi": 8976413063373055
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2688,
+   "text": "LEA R2, P0, R3.reuse, UR6, 0x2                  &req={1}                 ?trans2;",
+   "lo": 25820298257,
+   "hi": 301710388968296703
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2704,
+   "text": "I2FP.F32.S32 R5, R5                                                      ?trans2;",
+   "lo": 21475193413,
+   "hi": 4472813303895040
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2720,
+   "text": "LEA.HI.X R3, R3, UR7, R6, 0x2, P0                                        ?WAIT3_END_GROUP;",
+   "lo": 30115331089,
+   "hi": 4439828088165382
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2736,
+   "text": "FADD R5, R0, R5                                                          ?WAIT5_END_GROUP;",
+   "lo": 21475193377,
+   "hi": 4444225999470592
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2752,
+   "text": "STG.E desc[UR4][R2.64], R5                                               ?trans1;",
+   "lo": 21508422022,
+   "hi": 4470614480918788
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2784,
+   "text": "IMAD.SHL.U32 R0, R5, 0x2, RZ                                             ?trans1;",
+   "lo": 8673851428,
+   "hi": 4470614405284095
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2800,
+   "text": "BSSY.RECONVERGENT B1, 0xe10                                              ?trans4;",
+   "lo": 3367254456645,
+   "hi": 4477211407024640
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2816,
+   "text": "SHF.R.U32.HI R2, RZ, 0x18, R0                                            ?trans1;",
+   "lo": 107357567001,
+   "hi": 4470614278608384
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2832,
+   "text": "MOV R0, R5                                                               ?WAIT4_END_GROUP;",
+   "lo": 21474865666,
+   "hi": 4442026976218880
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2848,
+   "text": "ISETP.NE.U32.AND P0, PT, R2, RZ, PT                                      ?WAIT13_END_GROUP;",
+   "lo": 1095250244108,
+   "hi": 4461818251595888
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2864,
+   "text": "@P0 BRA 0xbe0                                                                ?trans5;",
+   "lo": 2623815,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2880,
+   "text": "IMAD.SHL.U32 R2, R0, 0x2, RZ                                             ?WAIT5_END_GROUP;",
+   "lo": 8590096420,
+   "hi": 4444226126217471
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2896,
+   "text": "ISETP.NE.AND P0, PT, R2, RZ, PT                                          ?WAIT13_END_GROUP;",
+   "lo": 1095250244108,
+   "hi": 4461818251596400
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2912,
+   "text": "@P0 FFMA R8, R0, 1.84467440737095516160e+19, RZ                              ?trans1;",
+   "lo": 6881500230622644259,
+   "hi": 4470614278537471
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2928,
+   "text": "@!P0 MUFU.RCP R5, R0                                                          ?trans3;",
+   "lo": 361224,
+   "hi": 4475012325052416
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2944,
+   "text": "@P0 MUFU.RCP R9, R8                                 &wr=0x0                  ?trans2;",
+   "lo": 34360328968,
+   "hi": 3980232092553216
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2960,
+   "text": "@P0 FFMA R2, R8, R9, -1                             &req={0}                 ?WAIT4_END_GROUP;",
+   "lo": 13799029258397549603,
+   "hi": 8945626603585545
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2976,
+   "text": "@P0 FADD.FTZ R2, -R2, -RZ                                                    ?WAIT4_END_GROUP;",
+   "lo": 9223373132105122337,
+   "hi": 4442026976280832
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 2992,
+   "text": "@P0 FFMA R2, R9, R2, R9                                                      ?WAIT4_END_GROUP;",
+   "lo": 8741061155,
+   "hi": 4442026976215049
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3008,
+   "text": "@P0 FFMA R5, R2, 1.84467440737095516160e+19, RZ                              ?trans1;",
+   "lo": 6881500230656002083,
+   "hi": 4470614278537471
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3024,
+   "text": "BRA 0xe00                                                                ?trans6;",
+   "lo": 8943943,
+   "hi": 4481609453535232
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3040,
+   "text": "IADD3 R5, PT, PT, R2, -0xfd, RZ                                          ?WAIT5_END_GROUP;",
+   "lo": 18446742987116738576,
+   "hi": 4444226133680383
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3056,
+   "text": "ISETP.GT.U32.AND P0, PT, R5, 0x1, PT                                     ?WAIT13_END_GROUP;",
+   "lo": 4378884108,
+   "hi": 4461818251591792
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3072,
+   "text": "@P0 BRA 0xdf0                                                                ?trans5;",
+   "lo": 7866695,
+   "hi": 4479410430279680
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3088,
+   "text": "LOP3.LUT R8, R0, 0x7fffff, RZ, 0xc0, !PT                                 ?trans1;",
+   "lo": 36028792724551698,
+   "hi": 4470614405333247
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3104,
+   "text": "HFMA2 R14, -RZ, RZ, 0, 1.78813934326171875e-07                           ?WAIT3_END_GROUP;",
+   "lo": 17164039217,
+   "hi": 4439827952959999
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3120,
+   "text": "LOP3.LUT R8, R8, 0x3f800000, RZ, 0xfc, !PT                               ?trans2;",
+   "lo": 4575657221543196690,
+   "hi": 4472813428604159
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3136,
+   "text": "SHF.L.U32 R13, R14, R5, RZ                                               ?trans2;",
+   "lo": 21710598681,
+   "hi": 4472813301794559
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3152,
+   "text": "MUFU.RCP R9, R8                                 &wr=0x0                  ?trans2;",
+   "lo": 34360357640,
+   "hi": 3980232092553216
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3168,
+   "text": "FFMA R10, R8, R9, -1                            &req={0}                 ?WAIT4_END_GROUP;",
+   "lo": 13799029258398102563,
+   "hi": 8945626603585545
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3184,
+   "text": "FADD.FTZ R10, -R10, -RZ                                                  ?WAIT4_END_GROUP;",
+   "lo": 9223373132239893025,
+   "hi": 4442026976280832
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3200,
+   "text": "FFMA.RM R11, R9.reuse, R10.reuse, R9.reuse                               ?trans1;",
+   "lo": 43101418019,
+   "hi": 2022083247340535817
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3216,
+   "text": "FFMA.RP R10, R9, R10, R9                                                 ?WAIT5_END_GROUP;",
+   "lo": 43101352483,
+   "hi": 4444225999503369
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3232,
+   "text": "FSETP.NEU.FTZ.AND P0, PT, R11.reuse, R10, PT                             ?trans1;",
+   "lo": 43134251531,
+   "hi": 292700990496428032
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3248,
+   "text": "LOP3.LUT R11, R11, 0x7fffff, RZ, 0xc0, !PT                               ?WAIT4_END_GROUP;",
+   "lo": 36028792909297682,
+   "hi": 4442027103011071
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3264,
+   "text": "LOP3.LUT R10, R11, 0x800000, RZ, 0xfc, !PT                               ?trans1;",
+   "lo": 36028797204199442,
+   "hi": 4470614405348607
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3280,
+   "text": "SEL R9, RZ, 0xffffffff, !P0                                              ?WAIT3_END_GROUP;",
+   "lo": 18446744073693394951,
+   "hi": 4439828020068352
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3296,
+   "text": "LOP3.LUT R8, R13, R10, RZ, 0xc0, !PT                                     ?trans2;",
+   "lo": 43168330258,
+   "hi": 4472813428588799
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3312,
+   "text": "IADD3 R9, PT, PT, -R9, RZ, RZ                                            ?trans2;",
+   "lo": 1095368274448,
+   "hi": 4472813436002815
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3328,
+   "text": "SHF.R.U32.HI R8, RZ, R5.reuse, R8                                        ?trans2;",
+   "lo": 25753580057,
+   "hi": 580933565605287432
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3344,
+   "text": "LOP3.LUT P1, RZ, R9, R5, R10, 0xf8, !PT                                  ?trans2;",
+   "lo": 21642572306,
+   "hi": 4472813427816458
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3360,
+   "text": "LOP3.LUT P0, RZ, R8.reuse, 0x1, RZ, 0xc0, !PT                            ?trans2;",
+   "lo": 4445927442,
+   "hi": 292703189579383039
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3376,
+   "text": "LOP3.LUT P2, RZ, R8, 0x2, RZ, 0xc0, !PT                                  ?WAIT4_END_GROUP;",
+   "lo": 8740894738,
+   "hi": 4442027102355711
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3392,
+   "text": "PLOP3.LUT P0, PT, P0, P1, P2, 0xe0, 0x0                                  ?trans2;",
+   "lo": 30748,
+   "hi": 4472813309148192
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3408,
+   "text": "LOP3.LUT P1, RZ, R0, 0x7fffff, RZ, 0xc0, !PT                             ?WAIT3_END_GROUP;",
+   "lo": 36028792740739090,
+   "hi": 4439828078969087
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3424,
+   "text": "SEL R5, RZ, 0x1, !P0                                                     ?WAIT5_END_GROUP;",
+   "lo": 8573515783,
+   "hi": 4444226066579456
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3440,
+   "text": "IADD3 R5, PT, PT, -R5, RZ, RZ                                            ?WAIT5_END_GROUP;",
+   "lo": 1095300903440,
+   "hi": 4444226133680639
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3456,
+   "text": "ISETP.GE.AND P0, PT, R5, RZ, PT                                          ?trans1;",
+   "lo": 1095300575756,
+   "hi": 4470614344622704
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3472,
+   "text": "IADD3 R5, PT, PT, R2, -0xfc, RZ                                          ?WAIT4_END_GROUP;",
+   "lo": 18446742991411705872,
+   "hi": 4442027110424831
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3488,
+   "text": "SHF.R.U32.HI R5, RZ, R5, R10                                             ?WAIT8_END_GROUP;",
+   "lo": 25753383449,
+   "hi": 4450823069308426
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3504,
+   "text": "@!P0 IADD3 R5, PT, PT, R5, 0x1, RZ                                            ?WAIT5_END_GROUP;",
+   "lo": 4379215888,
+   "hi": 4444226133680383
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3520,
+   "text": "@!P1 IMAD.SHL.U32 R5, R5, 0x2, RZ                                             ?WAIT5_END_GROUP;",
+   "lo": 8674187300,
+   "hi": 4444226126217471
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3536,
+   "text": "LOP3.LUT R5, R5, 0x80000000, R0, 0xf8, !PT                               ?trans1;",
+   "lo": 9223372036939020306,
+   "hi": 4470614405347328
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3552,
+   "text": "BRA 0xe00                                                                ?trans6;",
+   "lo": 293191,
+   "hi": 4481609453535232
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3568,
+   "text": "MUFU.RCP R5, R0                                 &rd=0x0 &wr=0x1          ?trans2;",
+   "lo": 357128,
+   "hi": 109951162781696
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3600,
+   "text": "MOV R8, R12                                                              ?trans1;",
+   "lo": 51540161026,
+   "hi": 4470614278541056
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3616,
+   "text": "HFMA2 R9, -RZ, RZ, 0, 0                                                  ?WAIT4_END_GROUP;",
+   "lo": 4278809649,
+   "hi": 4442026976215551
+  },
+  {
+   "cubin": "vecmix.cubin",
+   "kernel": "_Z2k1PKfS0_Pfi",
+   "pc": 3632,
+   "text": "RET.REL.NODEC R8 0x0                            &req={1,0}               ?trans5;",
+   "lo": 18446744005131663696,
+   "hi": 17990209316847615
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k5PKjPj",
+   "pc": 112,
+   "text": "UMOV UR6, 0x1234                                    ?trans1;",
+   "lo": 20014548023426,
+   "hi": 4470614278537216
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k5PKjPj",
+   "pc": 144,
+   "text": "MOV R7, UR6                                         ?trans1;",
+   "lo": 25770294274,
+   "hi": 4470614412758784
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k5PKjPj",
+   "pc": 160,
+   "text": "BREV R0, R2                        &req={3} &wr=0x0 ?trans4;",
+   "lo": 8589964033,
+   "hi": 40013427158024192
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k5PKjPj",
+   "pc": 176,
+   "text": "PRMT R7, R2, R7, 0x44332211                         ?WAIT4_END_GROUP;",
+   "lo": 4914309074835174422,
+   "hi": 4442026976215047
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k5PKjPj",
+   "pc": 192,
+   "text": "LOP3.LUT R7, R0, R7, RZ, 0x3c, !PT &req={0}         ?WAIT5_END_GROUP;",
+   "lo": 30065259026,
+   "hi": 8947825753603327
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 16,
+   "text": "S2R R6, SR_TID.X                   &wr=0x0          ?trans7;",
+   "lo": 424217,
+   "hi": 3991227208835328
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 48,
+   "text": "LDCU.64 UR4, c[0x0][0x358]         &wr=0x1          ?trans1;",
+   "lo": 117652022654892,
+   "hi": 4048401947691520
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 64,
+   "text": "IMAD.WIDE.U32 R2, R6, 0x8, R2      &req={0}         ?WAIT5_END_GROUP;",
+   "lo": 34460563493,
+   "hi": 8947825753587714
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 80,
+   "text": "LDG.E.64 R4, desc[UR4][R2.64]      &req={1} &wr=0x2 ?trans1;",
+   "lo": 17213716865,
+   "hi": 13125970015689472
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 96,
+   "text": "HFMA2 R7, -RZ, RZ, 0, 0                             ?WAIT3_END_GROUP;",
+   "lo": 4278678577,
+   "hi": 4439827952959999
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 112,
+   "text": "IMAD.WIDE.U32 R6, R4, 0x3, R6      &req={2}         ?WAIT4_END_GROUP;",
+   "lo": 12952434725,
+   "hi": 22456425612443654
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 128,
+   "text": "IMAD R5, R5, 0x3, RZ                                ?WAIT5_END_GROUP;",
+   "lo": 12969146404,
+   "hi": 4444226126217983
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 144,
+   "text": "IADD3 R5, PT, PT, R7, R5, RZ                        ?WAIT4_END_GROUP;",
+   "lo": 21592633872,
+   "hi": 4442027110424831
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 160,
+   "text": "SHF.R.S64 R6, R6, 0x2, R5.reuse                     ?trans2;",
+   "lo": 8691021849,
+   "hi": 1157394317908643845
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 176,
+   "text": "SHF.R.S32.HI R7, RZ, 0x2, R5                        ?WAIT5_END_GROUP;",
+   "lo": 12868614169,
+   "hi": 4444225999541253
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k4Pxi",
+   "pc": 192,
+   "text": "STG.E.64 desc[UR4][R2.64], R6                       ?trans1;",
+   "lo": 25803389318,
+   "hi": 4470614480919300
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 16,
+   "text": "S2R R11, SR_TID.X                  &wr=0x0          ?trans7;",
+   "lo": 751897,
+   "hi": 3991227208835328
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 64,
+   "text": "LDC.64 R4, c[0x0][0x388]           &wr=0x2          ?trans8;",
+   "lo": 248493906361218,
+   "hi": 4134163720440320
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 80,
+   "text": "LDC.64 R6, c[0x0][0x390]           &wr=0x3          ?trans1;",
+   "lo": 250692929747842,
+   "hi": 4189139301829120
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 96,
+   "text": "IMAD.WIDE.U32 R2, R11, 0x2, R2     &req={0}         ?WAIT6_END_GROUP;",
+   "lo": 8774645797,
+   "hi": 8950024776843266
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 112,
+   "text": "LDG.E.U16 R2, desc[UR4][R2.64]     &req={1} &wr=0x4 ?trans1;",
+   "lo": 17213585793,
+   "hi": 13266707504043264
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 128,
+   "text": "IMAD.WIDE.U32 R4, R11, 0x2, R4     &req={2}         ?WAIT6_END_GROUP;",
+   "lo": 8774776869,
+   "hi": 22460823658954756
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 144,
+   "text": "LDG.E.U16 R5, desc[UR4][R4.64]     &wr=0x2          ?trans1;",
+   "lo": 17247336833,
+   "hi": 4118770760946944
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 160,
+   "text": "IMAD.WIDE.U32 R6, R11, 0x2, R6     &req={3}         ?WAIT4_END_GROUP;",
+   "lo": 8774907941,
+   "hi": 40470824121925638
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 176,
+   "text": "HADD2.F32 R0, -RZ, R2.H0_H0        &req={4}         ?WAIT5_END_GROUP;",
+   "lo": 2305843022081847856,
+   "hi": 76501820037415168
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 192,
+   "text": "FMUL R0, R0, 2.5                                    ?trans1;",
+   "lo": 4620693217682159648,
+   "hi": 4470614282731520
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 208,
+   "text": "HADD2 R5, R5.H0_H0, R2.H0_H0       &req={2}         ?WAIT5_END_GROUP;",
+   "lo": 2305843017887871536,
+   "hi": 22458624508954624
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 224,
+   "text": "F2I.NTZ R0, R0                     &wr=0x0          ?trans1;",
+   "lo": 29445,
+   "hi": 3978033071403264
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 240,
+   "text": "STG.E.U16 desc[UR4][R6.64+0x2], R5                  ?trans1;",
+   "lo": 2220598786438,
+   "hi": 4470614480917764
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 256,
+   "text": "I2F.F16 R9, R0                     &req={0} &wr=0x0 ?trans3;",
+   "lo": 619270,
+   "hi": 8486030745275392
+  },
+  {
+   "cubin": "vecmix2.cubin",
+   "kernel": "_Z2k3PK6__halfS1_PS_i",
+   "pc": 272,
+   "text": "STG.E.U16 desc[UR4][R6.64], R9     &req={0}         ?trans1;",
+   "lo": 38755400070,
+   "hi": 8974214108288260
+  }
+ ]
+}

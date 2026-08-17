@@ -274,6 +274,38 @@ flight appear to be satisfied without a new data-array access. Exact trigger
 
 ### 4.4 Data stage — write side (shared-memory banks)
 
+**Width generalization update (2026-08-15).** Structured 8 B/16 B sweeps keep
+the fixed per-half/per-quarter-warp write formation described below; allowing
+the 4 B dynamic repacker to cross those visible group formations overcounts
+them by 1--4 wavefronts.  For scattered traffic, however, the keeper/rank
+dynamic schedule is materially better at 8 B.  At 16 B the static formation
+remains a lower bound and the schedule saturates at one wavefront per active
+lane.  The resulting hybrid scores 24/60 scattered 8 B and 32/60 scattered
+16 B (previous code in the current checkout: 5/60 and 25/60), while retaining
+all 24 structured `regress816` cases.  This is a predictive improvement, not
+yet a closed mechanism: the remaining residuals require group-local
+keeper-eviction/repacking probes.
+
+For 4 B, a gate audit corrected an earlier reporting error: the underlying
+dynamic v68 candidate was 47/47 on `probe_all`, but v73's broad structured
+fallback made the final model 39/47.  The refined boundary keeps the original
+low-delta rule for full warps with 32 unique source addresses, and also admits
+repeated-source rows only when one address sequence is low-delta (at most four
+distinct adjacent deltas) while the other is genuinely scattered (more than
+four).  The eight affected probe families have only 2--3 source-delta classes;
+the recovered bulk rows have 24--31.  This restores 209/400 while retaining
+40/40 canonical probes, the real 47/47 family gate, and 64/64 regress.
+
+Live `probe_bulk --size` checks also reject treating T-stage serialization as
+an additive wide-access correction.  At the same TWf, both signs occur: 8 B
+TWf=9 includes residuals +3 and -2; 16 B TWf=10 includes +5 and -2.  Low TWf
+does not remove the ambiguity (8 B TWf=2 reaches +4, 16 B TWf=3 reaches -2).
+Running the dynamic scheduler independently per half/quarter and summing gives
+27/60 at 8 B but only 18/60 at 16 B, versus the promoted hybrid's 24/60 and
+32/60.  Thus the missing rule is not simple group serialization: formation is
+group-local, while keeper eviction/drain/repacking must share some cross-group
+state.  No dataset-only selector from this experiment is promoted.
+
 Write passes form **per lane group** (whole warp / half / quarter, same
 groups as the read side) by lane-greedy arbitration on
 `write_bank(t) = (dst_byte/4 + k) % 32` — verified with dst-pairing probes
@@ -300,17 +332,229 @@ Accuracy: 4 B regress 64/64, dst sweeps exact at 8 B/16 B; **dst=coal random
 cases — they were write-side, not read-side). Random scattered dst: 4 B
 196/400 (residual ±1, symmetric), 8 B 5/60, 16 B 25/60.
 
-**Open — co-issue schedule on scattered dst.** The FIFO `max(mr,prev+1)`
-rule under-predicts 8 B/16 B by up to +7. Variants tried (2026-08-06): a
-global "delayed-in-read-phase" +1 penalty for all sizes fits random 8 B
-(26/60) but breaks the structured coal/dst sweeps (+1 ghost wavefront when
-group A's second write rides group B's read); a group-scoped penalty
-(`c ≤ group_read_end`) keeps structured exact but fits random poorly
-(8/60). No single rule fits both ⇒ the true schedule likely gates writes on
-fill/sector arrival, not just read-pass indices — the same missing
-timing ingredient as the read-side suppression (§4.10). Interim: 4 B
-penalty retained (64/64 + 196/400); 8 B/16 B scattered-dst SharedWf has a
-bounded (+1..+7) error.
+**Hit path (CORRECTED 2026-08-13, clean measurement):** `SharedWf` on an
+L1 hit is **identical to the cold miss path — 400/400 on data4 (4 B),
+60/60 (8 B), 60/60 (16 B)**, measured with warm=1 (LDG preheat), which
+pollutes zero `op_ldgsts` counters, and confirmed with zero L2 refetch
+(`m_xbar2l1tex` sectors = 0 for the hitting cp.async). The write side is
+NOT absorbed into read wavefronts; the full write schedule runs exactly as
+on a miss. Since the hit path involves no L2 traffic at all, the extra
+write wavefronts beyond `max(R, W_schedule)` **cannot** be latency/return
+driven — the data-stage formation is a **pure structural function of
+(goff, soff, size, mask)**, reopening the exact-rule search (the clean
+warm=1 hit path is the ideal testbed: no arrival timing confounds).
+
+The earlier "hit-exec SharedWf = R, 400/400" claim was a **subtraction
+artifact**: warm=2 runs contain two cp.asyncs, and
+`warm2_total − cold == R` (400/400) is arithmetically identical to
+`preheat_only == R` — verified directly with the new cg=3 preheat-only
+mode (400/400). The preheat takes R wavefronts simply because its dst is
+the conflict-free scratch (W=1 → `max(R, 1) = R`). Both decompositions
+imply the main-on-hit equals cold. warm=4 (cp.async fill + LDG touch
+before the main cp.async) behaves exactly like warm=2 (400/400) — no
+fill-provenance line state. cp.async never reads the lgds data banks:
+`LgdsWf` contribution of a cp.async is 1 on miss AND on hit (400/400);
+data movement is counted only as `mem_shared` wavefronts.
+
+**Hit-path conflicts are NOT `R − #groups`** (clean warm=1: 41/400 at
+4 B, 4/60 at 8 B, 1/60 at 16 B) and not cold either (99/400 equal at 4 B,
+mostly cold + 0..+5 — consistent with miss-path suppression making cold
+smaller); also ≠ unsuppressed read_conf + write_conf (75/400). Hit-path
+conflict accounting is UNMODELED.
+
+**Extra-ride rule — progress on the clean testbed (2026-08-13, ~200
+synthetic probes, `ride_probe.py` + `ride_grid.json`).** With L2 timing
+removed (warm=1), the base schedule is `SharedWf = R + W − 1` (one write
+pass overlaps per group); extra rides beyond that are gated:
+
+- **Ride-gate grid** (R=2 canvas: lane31 re-reads word k of lane k;
+  single write-bank conflict pair (a→b); 182-pattern sweep): the spilled
+  write lane rides the next wavefront IFF the write conflict does NOT
+  involve lane k (the "read-conflict keeper" whose read bank is re-served
+  in the later read pass). Consistent with a **keeper-write replay**: at
+  a re-serve wavefront, the keeper lane's write bank is re-occupied, and
+  pending writes colliding with it are deferred.
+- **E-series (class-A/class-B timing)**: a write pass containing a lane
+  read at cycle c tends to issue at c (riding its own read wavefront),
+  but if that lane's write bank was written at c−1 (WAW-1) the write is
+  deferred (E2 vs E3 discriminator). Spilled 1-lane passes with mr=0 ride
+  freely into later wavefronts whose write-set (+ keeper replays) leaves
+  their bank free; multiple disjoint spill passes can share one wavefront
+  (E8). Skip-ahead issue happens (wr1 before wr0 when wr0 isn't ready).
+- A consolidated simulator (static write passes; class-A at c=mr with
+  fresh-bank gate variants; class-B FIFO-skip with keeper-replay bank
+  occupancy) reaches only ~98/400 — the rule is **not closed**. Simple
+  cycle-packing variants all lose to the current model (196/400), which
+  stays in model.py unchanged. The puzzle is now known to be structural
+  and timing-free; the remaining degrees of freedom are the exact
+  class-A deferral conditions and how keeper replays interact with
+  multi-conflict read formations on random patterns.
+
+**Write-schedule model v68 (2026-08-14 pm — supersedes the static-wave
+line v11/v22/v36/v49 for the warm=1 testbed).** Verified ground truth:
+40/40 canonical probes (`test_dyn.py`), 47/47 probe families
+(`probe_all.py`), 51/52 ride families R/T/U/V/W/X/Y/Z/AA
+(`ride_probe2*.py`, only Z3 off by one), 130/400 on
+`data4_ldgsts_warmldg.jsonl` (v49 static: 112/400; old `model.py`
+196/400 remains the bulk leader but is probe-invalid). The model
+(`simulate_v68` in `sched_sim.py`):
+
+- **Rank structure**: per (lane group, global address), occurrences
+  sorted by (read cycle, lane): first = rank0 (keeper), rest rank≥1.
+- **First passes**: rank0 lanes write in a greedy bank-conflict-free
+  pass at cycle = their read-batch index `rc` (from the verified read
+  formation). Confirmed: read batches do NOT split across lines
+  (W1: 2 lines, 1 batch, 1 write wavefront; K1: 32 lines, 1 wavefront).
+- **Same-word WAW (corrected 2026-08-15)**: same-word and different-word
+  same-bank collisions have the same scheduling result: keep the earlier
+  packed lane and defer the later lane. AC transformations of idx54/42/205
+  preserved write banks while changing WAW count from zero through complete
+  per-bank collapse; SharedWf and SharedConf were invariant. The earlier
+  "later wins / evict earlier" rule was a simulator overconstraint and was
+  exactly the source of idx205's 19-vs-18 error.
+- **Deferred rank0 pool**: losers drain greedily from cycle
+  `R0 = max rank0 rc + 1` — they do NOT merge into later first-pass
+  cycles (Z0: 9-lane pass + 8 replays, batch1 16 lanes → 10, not 2).
+  But replay drains DO merge across batches once the pool opens
+  (W4: four 8-lane single-bank batches → 11, not 32).
+- **Rank≥1 lanes** (data buffered from the keeper's read; no re-read of
+  the data array): eligible on ANY cycle ≥ max(arrival, keeper written
+  + 1), including cycles before R0 (H6c) — arrival = rc, or rc+1 when
+  the H-Y floor fires (lane doesn't write its keeper's bank AND some
+  rank0 non-keeper lane writes its bank: R0/R9/R10).
+- **Keeper-bank gate**: a rank≥1 lane may not share a wavefront with a
+  lane writing its keeper's bank (symmetric eviction + re-pack
+  fixpoint). G chains, N1/N4/N11, Y3/Y4.
+- **Same-global-address exclusion**: rank≥1 lanes of one address write
+  in distinct cycles (E6, F4).
+- **RB port rule (AB5 refinement, 2026-08-15)**: at a re-read cycle c>0,
+  candidates whose write bank ∈ RB[c] are blocked unless the bank is the
+  lane's own read bank (flow-through). For rank0 the nonself block is
+  unconditional: AB5 uses a clean batch0 and cross-writes fresh words, so it
+  has neither a pending deferral nor WAW, yet measures SharedWf=3 and
+  SharedConf=1 (v68-before-AB5 predicted 2). The no-pending exemption remains
+  only for rank≥1 (X1/W5/Z2/R11). This preserves 40/40 and raises clean 4B
+  bulk from 127/400 to 130/400.
+
+Rejected this round: blanket batch-member RB block (v66, 133/400 but 8
+ride families fail by +1), blanket self-exemption (v67, 110/400),
+any-pending gate (v71, 125/400), early deferral eligibility (v65,
+78/400), pure per-batch serial sum (matches idx54=8 but W4=32 ≠ 11),
+sector-bandwidth return gating (K1: 32 sectors, SharedWf=1).
+
+**v73 closure of the three directional ±1 cases (2026-08-15).** AC/AD/AE
+probes (`ride_probe31.py`..`ride_probe33.py`) add per-word WAW transforms,
+same-bank multiword cases, tag/rank transforms, lane deletion, and active-lane
+density sweeps. The resulting additions are:
+
+- Cross-TWF rank0 ordering: a nonself rank0 write cannot pass an older
+  deferred write on its bank during the first-pass phase. Compare a baseline
+  schedule with the fully ordered schedule; at most one otherwise
+  unabsorbable bubble is visible. This closes idx54 7→8 and idx42 12→13.
+  TWf=1 has no cross-wave ordering penalty; changing only idx205's source
+  tags to TWf=9 supplies the positive discriminator.
+- Same-word eviction is removed, closing idx205 19→18. Its SharedWf/SConf
+  stay 18/15 for fresh words, original WAWs, and per-bank all-same-word.
+- Full-warp sparse-bank requests (≤18 destination banks) retain the measured
+  static formation upper bound when it exceeds the dynamic schedule. Partial
+  warps always use dynamic scheduling (AE: 13..20 active lanes). Regular
+  affine/low-delta full-warp sweeps retain the established static path.
+
+The promoted 4-B model is 40/40 canonical probes, 47/47 families, 64/64
+regress, regress816 ALL OK, and 209/400 clean-hit bulk (old static 196/400,
+v68-after-AB5 130/400). idx54/42/205 now predict and measure 8/13/18.
+
+The old idx54 return-path lead is
+resolved: across all 400 rows, `warmldg.LgdsWf = cold_LDG.LgdsWf + 1`
+exactly; 13 is the LDG preheat's miss-path counter plus the constant LDGSTS
+contribution, not a cp.async return-arrival clock. Arrival=return-cycle v68
+is therefore rejected. LDG miss-path LgdsReadWf formation remains a separate
+secondary problem. Z3 (26 vs 25) is still off by one.
+
+**warm=1 caveat (2026-08-13):** the LDG preheat was silently
+compiler-eliminated until this date (`v` was dead after `sa += (v & 0)`;
+nvcc dropped the whole block — verify SASS!). Fixed by storing the
+preheat result to a shared scratch slot (`smem[2048 + t]`), which also
+forces completion before the main access issues. All pre-2026-08-13
+warm=1 results are void. LDG-allocated lines ARE visible to both LDG and
+LDGSTS lookups (SecHit = Sectors, SecMiss = 0, 400/400); the old
+"invisible lines" observation was this artifact. The preheat is
+size-matched (v2/v4 for 8 B/16 B) so all touched sectors are warm.
+
+**LDG (plain global loads) vs LDGSTS — circuit reuse (2026-08-13):**
+same patterns, same warp, cg=2 LDG mode in probe.cu:
+- **T-stage fully shared**: TReq/TSetAcc/TagConf/TWf/Sectors identical to
+  the LDGSTS model and to LDGSTS hardware counters — 400/400 cold and
+  hit (4 B), 60/60 (8 B/16 B).
+- **LDG hit data path**: `LgdsReadWf = R` **with same-address broadcast
+  merge** (lanes reading the identical word ride free in the same pass;
+  per-group greedy bank arbitration otherwise) — exact 400/400 (4 B),
+  60/60 (8 B), 60/60 (16 B). SecHit = Sectors, SecMiss = 0.
+- **LDG miss data path**: `LgdsReadWf ≠ R` (mostly > R, ≈ TWf + extras)
+  — UNMODELED, but perfectly reproducible across runs (deterministic).
+- Unlike LDGSTS, plain LDG hits DO read the L1 data banks with the
+  bank-arbitrated read formation; LDGSTS hit/miss data movement goes
+  straight into shared-mem wavefronts (write-schedule driven).
+
+**Cold path — co-issue/absorption on scattered dst (2026-08-13).** Cold
+`SharedWf = R + W_eff − rides`, `rides ≈ #groups`, where the effective
+write wavefronts `W_eff` are *fewer* than the lane-greedy W on scattered
+dst (hardware absorbs extra writes). Findings from ~30 dedicated probes:
+
+- **Window (truncation) probes V1/V2** (fixed W=2, one 1-lane extra,
+  read phase swept R=1..13, extra eligible from c0 or c3): the extra
+  **never rides** at any window length ⇒ the simple FIFO co-issue model
+  (ride at first eligible cycle) is dead.
+- **P2 anomaly** (R=2, 2-lane extra whose lane set and banks *exactly
+  equal* the last read pass): the extra DOES ride (SWf=2=R). T2/T3
+  variants (same extra, read passes larger so no exact match) do not.
+- **idx1 prefix sweep** (pre0..pre11, W verified per-prefix via
+  coalesced-src runs): extra absorption ext = 0,0,0,0,1,0,0,1,2,3,3,4 for
+  R = 1..12 — grows roughly with R, and cases exist (pre4 vs pre9 w2)
+  where *identical* local eligibility (same mr, same banks, one full read
+  pass after) rides in one pattern and not the other.
+- **Hit==cold wavefront identity (2026-08-13, see "Hit path" above)
+  REFUTES the latency-gating interpretation**: the warm=1 hit path has no
+  L2 traffic yet produces byte-identical `SharedWf` (400/400). The
+  absorption extras must therefore be a structural function of the
+  pattern (queue/position effects, not sector-return timing). The
+  pre4/pre9 contradiction needs a structural explanation after all.
+- On data4 the over-absorption beyond `R + W − #groups` is 0 on 192/400,
+  1 on 134/400, 2 on 40/400, ≥3 on 34/400, with average growing ~linearly
+  in R — consistent with a latency effect, not fittable by any f(R) table
+  (per-R mode table overfits: 208/400 but modes are noise).
+
+Accuracy status: 4 B regress 64/64, dst sweeps exact at 8 B/16 B; dst=coal
+random 60/60 at all sizes; random scattered dst: 4 B 196/400 (FIFO K=1
+ride model retained as best-effort; null model `R+W−#groups` = 192/400),
+8 B 15/60, 16 B 25/60 with bounded error. Exact SharedWf on scattered dst
+is now known to be a **structural** (timing-free) function — hit==cold
+identity (2026-08-13) — but the rule is not yet found; the warm=1 hit
+path is the clean testbed.
+
+**Deferred-age discriminator update (2026-08-15).**  AF
+(`ride_probe34.py`) first showed that keeper admission/eviction is local to
+the architectural half/quarter: remote keeper-destination swaps leave
+hardware unchanged.  AG (`ride_probe35.py`) then shifted complete 128-byte
+source lines while preserving equality/keeper/write topology; idx12/idx20
+were invariant across changing TWf/TagConf, rejecting a T-arrival FIFO.
+
+AH (`ride_probe36.py`) changes the write-side topology directly.  Its paired
+cases exchange destinations of cross-group non-keepers, while assertions hold
+source equality classes, keeper identity, every keeper destination-bank edge,
+and the complete destination-bank multiset fixed.  Hardware changes at 8 B
+(idx9 26->24, idx26 21->26, idx22 20->19, idx47 11->12) and at 16 B (two
+idx54 swaps, both 23->24), despite identical TWf/TagConf.  Thus shared drain
+and repack depend on destination-bank ownership/age derived from group-local
+equality/keeper topology, not tag arrival order.
+
+`simulate_v68` now provides explicit deferred-age/repack state: first-deferral
+age persists for RB/bank losers, packing losers and evicted equality
+followers, and older cohorts are visited first during repack.  `model.py`
+enables it for scattered 8 B/16 B.  This first version does not improve the
+aggregate wide fit, so the narrow shared-drain correction remains.  Current
+scores are 4 B 209/400, 8 B 25/60, 16 B 33/60; `test_dyn` is 40/40,
+`probe_all` 47/47, `regress` 64/64, and `regress816` all green.
 
 ### 4.5 Conflict-counter composition
 
@@ -367,9 +611,11 @@ overflow sector → 1 extra shared pass → `SharedWf += 1`.
 ### 4.10 Open questions
 
 - **Miss-path conflict suppression:** on the miss path some twf-history hits
-  are not counted; hit path counts everything (`R − #groups`). Suppression =
-  miss-stream absorption of in-flight re-reads; the precise arrival-vs-issue
-  timing rule is not isolated. Dominant error source on random patterns.
+  are not counted. (The old "hit path counts everything (`R − #groups`)"
+  claim was a warm=2 subtraction artifact — corrected 2026-08-13, §4.4;
+  hit-path conflicts are unmodeled but larger than miss-path on average,
+  consistent with suppression being a miss-only effect.) Dominant error
+  source on random patterns.
   **Candidate mechanisms (2026-08, ranked):**
   - **H-I: return-buffer residency.** Miss data lands in a small LSU-internal
     return buffer (FIFO or a small cache with unknown replacement policy)
@@ -437,18 +683,23 @@ overflow sector → 1 extra shared pass → `SharedWf += 1`.
       per-serve-occurrence accounting, needs confirmation.
     - Status: miss-path suppression UNMODELED; exemption rule remains
       best-effort. Recommend: statistical correction term or bounded
-      error on scattered patterns; hit-path (warm) formula R−#groups is
-      exact and unaffected.
+      error on scattered patterns. NOTE (2026-08-13): the old "hit path
+      counts everything (R−#groups)" claim was a warm=2 subtraction
+      artifact — clean warm=1 hit-path SharedConf is unmodeled too
+      (§4.4), though ≥ cold in ~75% of cases (consistent with miss-path
+      suppression).
 - **Write/read wavefront co-issue schedule** on scattered dst (4 B ±1
   residual; 8 B/16 B larger); data-arrival gating suspected, unproven.
 - 16 B T-stage: 6/60 random cases off by ±1–3 (tag model small gap).
 - `SharedWf` occasional −1 at 8 B/16 B dst=coal: sparse passes of adjacent
   groups may merge.
 - Tag-bank hash validity for lines ≥ 128.
-- Why LDG-allocated lines are invisible to LDGSTS lookups (fill-state or
-  eviction-class difference); whether LDGSTS hits exist for mixed LDG→LDGSTS
-  producer-consumer code (relevant for real kernels that LDG-warm then
-  cp.async).
+- ~~Why LDG-allocated lines are invisible to LDGSTS lookups~~ **RESOLVED
+  (2026-08-13)**: they were never invisible — the warm=1 LDG preheat was
+  compiler-eliminated (dead `v`), so no warming ever happened. Fixed
+  probe shows LDG-allocated lines hit fine for both LDG and LDGSTS
+  (SecHit = Sectors, zero L2 refetch). Lesson: always verify preheat
+  instructions survive in SASS.
 - cg/bypass true shared-bank behavior.
 - `ShAllWf`/`TotalWf`/`LgdsWf` composition (≈SharedWf+const with anomalies);
   `Inst`=2 per single LDGSTS.

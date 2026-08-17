@@ -1,0 +1,4 @@
+LDGSTS corpus: base C++==Python 520/520
+  pure counts == hardware meas: TWf 520/520, TagConf 520/520, TSetAcc 520/520, Sectors 520/520
+  confidence-label checks passed on 520 rows
+profiler schema (v1.0) compatibility OK; report deterministic

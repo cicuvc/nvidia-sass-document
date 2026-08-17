@@ -65,16 +65,39 @@ Exact model (`shared_bank_conflicts.md` §4; 4B 400/400, 8B 60/60, 16B 60/60):
 - Structured patterns: zero suppression — per-(bank, tag-wavefront) re-serve
   history rule is exact (64/64 4B regress, 24/24 8B+16B regress).
 
-## 4. Hit/miss dichotomy — ESTABLISHED (one of the main results)
+## 4. Hit/miss dichotomy — CORRECTED 2026-08-13 (clean measurements)
 
-- **L1-hit path** (sectors preheated by a prior LDGSTS to the same lines):
-  `SharedConf = R − #groups` **exactly**, pattern-independent (4B corpus
-  25/25, 8B/16B 16/16). Every read pass beyond the group's first costs one
-  conflict.
-- **LDG-preheated lines do NOT hit for LDGSTS** (SecHit stays 0);
-  LDGSTS-preheated lines DO hit. The bypass/allocate state is path-specific.
-- Therefore `cp.async.ca` is effectively always on the miss path unless the
-  same lines were fetched by an earlier cp.async.
+- **cp.async `SharedWf` is hit/miss-invariant**: on an L1 hit the shared
+  write wavefronts are **byte-identical to the cold miss path** (400/400
+  4B, 60/60 8B, 60/60 16B), measured with warm=1 (LDG preheat, zero
+  op_ldgsts pollution) and zero L2 refetch (xbar sectors = 0). The write
+  side is NOT absorbed into read wavefronts on hits.
+- The earlier "hit-path `SharedWf = R` / `SharedConf = R − #groups`"
+  results were **subtraction artifacts** of warm=2 (two cp.asyncs per
+  run): `warm2 − cold == R` ⟺ `preheat-only == R`, and the preheat takes
+  R wavefronts only because its scratch dst is conflict-free (W=1).
+  Verified directly with the new cg=3 preheat-only probe mode (400/400).
+- **No fill-provenance line state**: warm=4 (cp.async fill + LDG touch,
+  then main cp.async) ≡ warm=2 (400/400).
+- **cp.async never reads the lgds data banks**: LgdsWf contribution = 1
+  on both miss and hit (400/400); data movement shows only as
+  `mem_shared` wavefronts.
+- **LDG-preheated lines DO hit** for both LDG and LDGSTS (SecHit =
+  Sectors, SecMiss = 0, 400/400). The old "LDG lines invisible to
+  LDGSTS" claim came from the warm=1 preheat being **silently
+  compiler-eliminated** (dead result register) — fixed by storing the
+  preheat value to a shared scratch slot; always check SASS.
+- **Hit-path SharedConf is unmodeled** (≠ R−#groups, ≠ cold, ≠
+  unsuppressed read+write; ≈ cold + 0..+5).
+- **Consequence**: since hits involve no L2 traffic yet produce identical
+  wavefronts, the scattered-dst extra write wavefronts are **structural,
+  not latency-driven** — the exact-rule search is reopened with the
+  warm=1 hit path as a timing-free testbed.
+- **Plain LDG circuit reuse**: the T-stage is fully shared with LDGSTS
+  (all tag counters identical, 400/400 cold+hit). LDG hits read the L1
+  data banks: `LgdsReadWf = R` with **same-address broadcast merge**
+  (400/400 4B, 60/60 8B/16B). LDG miss-path `LgdsReadWf` is unmodeled
+  (≈ TWf + extras) but exactly reproducible.
 
 ## 5. Two data movers into shared memory — ESTABLISHED
 
@@ -99,8 +122,9 @@ Exact model (`shared_bank_conflicts.md` §4; 4B 400/400, 8B 60/60, 16B 60/60):
 3. **Fill bypass to the data stage**: miss data likely services the waiting
    access directly from the fill/return path without a data-array read —
    the simplest explanation for free re-serves.
-4. **LDG vs LDGSTS allocate different L1 states** (§4) → separate tag-state
-   bits or separate fill destinations for the bypass path.
+4. ~~LDG vs LDGSTS allocate different L1 states~~ **DISPROVEN 2026-08-13**:
+   LDG-allocated lines hit normally for both LDG and LDGSTS; the apparent
+   difference was a compiler-eliminated preheat (§4).
 5. **Shared SRAM is 1R+1W ported**: write chains and read passes timeshare
    (dual-row-write conjecture disproven experimentally; sequential bank map
    fits 400/400).
@@ -118,15 +142,36 @@ Exact model (`shared_bank_conflicts.md` §4; 4B 400/400, 8B 60/60, 16B 60/60):
 
 - Exact trigger of miss-path conflict suppression (see §6.2; best-effort
   heuristic in `shared_bank_conflicts.md` §4.3 exemption rule; recommend a
-  bounded error term on scattered patterns — the hit-path formula is exact
-  and unaffected).
-- Write/read wavefront co-issue schedule on scattered dst (4B ±1 residual;
-  8B +1..+5, 16B +1..+7 under-prediction; global vs group-scoped delay
-  penalties each fit only half the evidence — likely gated on fill arrival,
-  the same missing timing ingredient as §6.2).
+  bounded error term on scattered patterns — hit-path conflicts are now
+  known to be unmodeled too, §4).
+- Scattered-dst extra write wavefronts (2026-08-14 pm update): the
+  write side is now modeled as rank0 first passes at read-batch cycles
+  + a deferred pool draining from cycle R0 + rank≥1 (buffered) lanes
+  eligible from their H-Y-floored arrival on any cycle, with per-word
+  WAW eviction (later lane wins), keeper-bank gating, and an
+  RB read-port block (`simulate_v68`,
+  `shared_bank_conflicts.md` §4.4). Verified: 40/40 probes, 47/47
+  families, 51/52 ride families, 130/400 clean 4B bulk (v49 static:
+  112; `model.py` 196/400 remains the bulk leader but is probe-invalid
+  — its FIFO+penalty wins are coincidental). Key structural facts
+  established: read batches don't split across lines; deferred replays
+  merge across batches after R0 (W4=11) but never into first-pass
+  cycles (Z0=10); rank≥1 lanes mix into any cycle unless a packed lane
+  writes their keeper's bank. AB5 further shows that rank0 nonself writes
+  are RB-blocked even with clean batch0/no pending/no WAW; only rank≥1 keeps
+  the no-pending exemption. Still open: the ±1–2 residual on random
+  multi-batch patterns (idx54/42/205 remain +1/+1/−1, with SharedConf
+  6/9/15), Z3 off-by-one, 8B/16B write-schedule generalization
+  (v68: 9/60, 28/60 — untouched).
+- LDG miss-path `LgdsReadWf` formation (≈ TWf + extras, deterministic but
+  unmodeled). This is independent of cp.async SharedWf arrival timing: all
+  400 rows satisfy `warmldg.LgdsWf = cold_LDG.LgdsWf + 1`, resolving idx54's
+  13 as preheat miss-path pollution and rejecting arrival=return cycle.
+  LDGSTS hit-path SharedConf formation is also open.
 - MIO queue ordering guarantees; store-buffer drain behavior
   (`lsu_mio_structure.md` Q1/Q2).
 - Tag-bank hash for lines ≥ 1024 (bits 10+; validated only to line 511).
-- Why LDG-allocated lines are invisible to LDGSTS lookups.
+- ~~Why LDG-allocated lines are invisible to LDGSTS lookups~~ RESOLVED
+  2026-08-13 (compiler-eliminated preheat artifact; they hit fine).
 - `cg`/bypass path behavior (all results above are `ca`).
 - `Inst=2` (smsp__inst_executed_op_ldgsts) — LDGSTS replays/second issue?

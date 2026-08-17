@@ -1,0 +1,328 @@
+{
+  "meta": {
+    "schema_version": "1.0",
+    "generator": "semu (nvidia-sass-document)",
+    "description": "Canonical profiler report schema (SIM_PLAN Phase 8).  Validators must check presence + type + enum of every REQUIRED field and tolerate unknown extra fields (forward compatibility: a producer may add fields without breaking older validators; a missing REQUIRED field always fails)."
+  },
+  "required": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "kernel": {
+      "type": "string"
+    },
+    "simulated_sm_count": {
+      "type": "integer"
+    },
+    "aggregate": {
+      "type": "array",
+      "items": "aggregate_entry"
+    },
+    "l1tex": {
+      "type": "object"
+    },
+    "l2": {
+      "type": "object"
+    }
+  },
+  "defs": {
+    "aggregate_entry": {
+      "kernel": {
+        "type": "string"
+      },
+      "pc": {
+        "type": "integer"
+      },
+      "mnemonic": {
+        "type": "string"
+      },
+      "variant": {
+        "type": "string"
+      },
+      "space": {
+        "type": "string",
+        "enum": [
+          "shared",
+          "global",
+          "constant",
+          "local",
+          "ldgsts"
+        ]
+      },
+      "events": {
+        "type": "integer"
+      },
+      "shared_passes": {
+        "type": "integer"
+      },
+      "shared_conflicts": {
+        "type": "integer"
+      },
+      "shared_broadcasts": {
+        "type": "integer"
+      },
+      "lane_requested_bytes": {
+        "type": "integer"
+      },
+      "unique_useful_bytes": {
+        "type": "integer"
+      },
+      "duplicate_reuse_bytes": {
+        "type": "integer"
+      },
+      "sector_fetch_bytes": {
+        "type": "integer"
+      },
+      "sector_overfetch_bytes": {
+        "type": "integer"
+      },
+      "line_fill_bytes": {
+        "type": "integer"
+      },
+      "line_overfetch_bytes": {
+        "type": "integer"
+      },
+      "data_bank_passes": {
+        "type": "integer"
+      },
+      "data_bank_conflicts": {
+        "type": "integer"
+      },
+      "tag_bank_passes": {
+        "type": "integer"
+      },
+      "ldgsts_shared_wf": {
+        "type": "integer"
+      },
+      "ldgsts_shared_conf": {
+        "type": "integer"
+      },
+      "ldgsts_global_conf": {
+        "type": "integer"
+      },
+      "ldgsts_twf": {
+        "type": "integer"
+      },
+      "ldgsts_tag_conf": {
+        "type": "integer"
+      },
+      "ldgsts_tset_acc": {
+        "type": "integer"
+      },
+      "ldgsts_sectors": {
+        "type": "integer"
+      },
+      "prediction_unavailable_events": {
+        "type": "integer"
+      },
+      "confidence": {
+        "type": "string",
+        "enum": [
+          "",
+          "exact-architectural",
+          "exact-empirical",
+          "approximate",
+          "unsupported"
+        ]
+      },
+      "ldgsts_count_confidence": {
+        "type": "string",
+        "enum": [
+          "",
+          "exact-architectural",
+          "exact-empirical",
+          "approximate",
+          "unsupported"
+        ]
+      },
+      "ldgsts_conflict_confidence": {
+        "type": "string",
+        "enum": [
+          "",
+          "exact-architectural",
+          "exact-empirical",
+          "approximate",
+          "unsupported"
+        ]
+      },
+      "ldgsts_applicability": {
+        "type": "string"
+      },
+      "ldgsts_model_version": {
+        "type": "string",
+        "enum": [
+          "",
+          "unified-v1"
+        ]
+      },
+      "cache_policy": {
+        "type": "string",
+        "enum": [
+          "",
+          "default",
+          "cg"
+        ]
+      }
+    },
+    "sm_entry": {
+      "sm_id": {
+        "type": "integer"
+      },
+      "hierarchy_version": {
+        "type": "string",
+        "enum": [
+          "l1tex-hierarchy-v1"
+        ]
+      },
+      "subcore_mapper": {
+        "type": "string",
+        "enum": [
+          "warp%4"
+        ]
+      },
+      "arbitration": {
+        "type": "string",
+        "enum": [
+          "issue-tick-round-robin"
+        ]
+      },
+      "event_count": {
+        "type": "integer"
+      },
+      "sectors": {
+        "type": "array",
+        "items": "integer"
+      },
+      "lines": {
+        "type": "array",
+        "items": "integer"
+      },
+      "subcores": {
+        "type": "array",
+        "items": "subcore_entry"
+      }
+    },
+    "subcore_entry": {
+      "subcore_id": {
+        "type": "integer"
+      },
+      "request_count": {
+        "type": "integer"
+      },
+      "first_tick": {
+        "type": "integer"
+      },
+      "last_tick": {
+        "type": "integer"
+      },
+      "misses": {
+        "type": "integer"
+      },
+      "bypasses": {
+        "type": "integer"
+      },
+      "prediction_unavailable": {
+        "type": "integer"
+      },
+      "sectors": {
+        "type": "array",
+        "items": "integer"
+      },
+      "lines": {
+        "type": "array",
+        "items": "integer"
+      },
+      "miss_reasons": {
+        "type": "array",
+        "items": "string"
+      },
+      "bypass_reasons": {
+        "type": "array",
+        "items": "string"
+      },
+      "prediction_unavailable_reasons": {
+        "type": "array",
+        "items": "string"
+      }
+    },
+    "l2_entry": {
+      "request_count": {
+        "type": "integer"
+      },
+      "completion_count": {
+        "type": "integer"
+      },
+      "sectors": {
+        "type": "array",
+        "items": "integer"
+      },
+      "lines": {
+        "type": "array",
+        "items": "integer"
+      },
+      "requests_per_sm": {
+        "type": "object"
+      },
+      "cross_sm_sector_contention": {
+        "type": "integer"
+      },
+      "completion_edges": {
+        "type": "integer"
+      },
+      "orphan_completions": {
+        "type": "integer"
+      },
+      "duplicate_completions": {
+        "type": "integer"
+      },
+      "duplicate_requests": {
+        "type": "integer"
+      },
+      "atomic_requests": {
+        "type": "integer"
+      },
+      "atomic_serialization_chains": {
+        "type": "integer"
+      },
+      "atomic_serialization_edges": {
+        "type": "integer"
+      },
+      "atomic_serialization_edges_list": {
+        "type": "array",
+        "items": "atomic_edge"
+      },
+      "confidence": {
+        "type": "string",
+        "enum": [
+          "exact-architectural",
+          "exact-empirical",
+          "approximate",
+          "unsupported"
+        ]
+      },
+      "unsupported": {
+        "type": "string"
+      }
+    },
+    "atomic_edge": {
+      "from_request_id": {
+        "type": "integer"
+      },
+      "to_request_id": {
+        "type": "integer"
+      },
+      "sector": {
+        "type": "integer"
+      },
+      "from_seq": {
+        "type": "integer"
+      },
+      "to_seq": {
+        "type": "integer"
+      }
+    }
+  }
+}

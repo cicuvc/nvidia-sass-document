@@ -92,6 +92,11 @@ class SassEncoder:
         name = field["name"]
 
         if rk == "slot":
+            # A slot field whose RHS is `Sb convertFloatType(...)` is the
+            # complex slot_attr form (fp16/bf16 immediate conversion), not a
+            # plain slot reference -- route it through _resolve_slot_attr.
+            if "convertFloatType" in rhs:
+                return self._resolve_slot_attr(rhs, sm)
             return self._resolve_slot(rhs, sm)
 
         if rk == "slot_attr":
@@ -115,6 +120,10 @@ class SassEncoder:
 
         if rk == "star_slot":
             slot_name = rhs[1:] if rhs.startswith("*") else rhs
+            # *TABLES_x(arg,...): evaluate the table function like a plain
+            # table_fn field (LDGMC/UBLKCP's mem discriminator).
+            if "(" in slot_name and slot_name.endswith(")"):
+                return self._eval_table_fn(slot_name, sm)
             # If the slot name looks like a number, treat it as a literal
             try:
                 return int(slot_name, 0)

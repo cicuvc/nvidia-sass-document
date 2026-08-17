@@ -1,0 +1,308 @@
+[
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/status.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/status.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/status.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/status.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/fault.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/fault.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/fault.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/fault.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/word.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/word.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/word.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/word.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/capability.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/capability.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/capability.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/capability.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/version.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/version.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/version.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/version.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/memory.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/memory.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/memory.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/memory.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/context.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/context.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/context.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/context.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/cluster.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/cluster.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/cluster.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/cluster.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/interpreter.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/interpreter.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/interpreter.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/interpreter.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/debugger.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/debugger.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/debugger.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/debugger.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/tensor_map.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/tensor_map.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/tensor_map.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/tensor_map.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -Wno-pedantic -o src/CMakeFiles/semu_core.dir/tensor.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/tensor.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/tensor.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/tensor.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/mbarrier.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/mbarrier.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/mbarrier.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/mbarrier.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -frounding-math -o src/CMakeFiles/semu_core.dir/fp.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/fp.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/fp.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/fp.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/fast_fp.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/fast_fp.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/fast_fp.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/fast_fp.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/memory_service.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/memory_service.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/memory_service.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/memory_service.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/l1tex_model.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/l1tex_model.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/l1tex_model.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/l1tex_model.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/shared_bank.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/shared_bank.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/shared_bank.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/shared_bank.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/global_model.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/global_model.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/global_model.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/global_model.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/profiler.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/profiler.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/profiler.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/profiler.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/subcore_scheduler.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/subcore_scheduler.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/subcore_scheduler.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/subcore_scheduler.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/l2_events.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/l2_events.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/l2_events.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/l2_events.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/hb_clock.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/hb_clock.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/hb_clock.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/hb_clock.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/race_detector.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/race_detector.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/race_detector.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/race_detector.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/decoder/expr.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/decoder/expr.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/decoder/expr.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/decoder/expr.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/decoder/decoder.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/decoder/decoder.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/decoder/decoder.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/decoder/decoder.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/decoder/render.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/decoder/render.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/decoder/render.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/decoder/render.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/cubin/loader.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/src/cubin/loader.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/cubin/loader.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/cubin/loader.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/__/generated/capability_data.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/generated/capability_data.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/generated/capability_data.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/__/generated/capability_data.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o src/CMakeFiles/semu_core.dir/__/generated/isa_data.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/generated/isa_data.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/generated/isa_data.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/src/CMakeFiles/semu_core.dir/__/generated/isa_data.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o cli/CMakeFiles/semu.dir/main.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/cli/main.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/cli/main.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/cli/CMakeFiles/semu.dir/main.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_core.dir/test_core.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_core.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_core.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_core.dir/test_core.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_decoder.dir/test_decoder.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_decoder.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_decoder.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_decoder.dir/test_decoder.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_cubin.dir/test_cubin.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_cubin.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_cubin.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_cubin.dir/test_cubin.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_memory.dir/test_memory.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_memory.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_memory.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_memory.dir/test_memory.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_cluster.dir/test_cluster.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_cluster.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_cluster.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_cluster.dir/test_cluster.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_interp.dir/test_interp.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_interp.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_interp.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_interp.dir/test_interp.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_fp.dir/test_fp.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_fp.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_fp.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_fp.dir/test_fp.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_l1tex.dir/test_l1tex.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_l1tex.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_l1tex.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_l1tex.dir/test_l1tex.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_shared_bank.dir/test_shared_bank.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_shared_bank.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_shared_bank.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_shared_bank.dir/test_shared_bank.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_global.dir/test_global.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_global.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_global.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_global.dir/test_global.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_profiler.dir/test_profiler.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_profiler.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_profiler.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_profiler.dir/test_profiler.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_subcore.dir/test_subcore.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_subcore.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_subcore.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_subcore.dir/test_subcore.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_l2.dir/test_l2.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_l2.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_l2.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_l2.dir/test_l2.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_race.dir/test_race.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_race.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_race.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_race.dir/test_race.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_debugger.dir/test_debugger.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_debugger.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_debugger.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_debugger.dir/test_debugger.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_tensor_map.dir/test_tensor_map.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_tensor_map.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_tensor_map.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_tensor_map.dir/test_tensor_map.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -Wno-pedantic -o tests/CMakeFiles/semu_test_tensor.dir/test_tensor.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_tensor.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_tensor.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_tensor.dir/test_tensor.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_test_mbarrier.dir/test_mbarrier.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_mbarrier.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/test_mbarrier.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_test_mbarrier.dir/test_mbarrier.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_bench_fast_interp.dir/bench_fast_interp.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/bench_fast_interp.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tests/bench_fast_interp.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_bench_fast_interp.dir/bench_fast_interp.cpp.o"
+},
+{
+  "directory": "/home/cicuvc/cs/projects/nvidia-sass-document/build",
+  "command": "/usr/bin/c++ -DSEMU_BUILD_TYPE=\\\"Debug\\\" -DSEMU_CXX_COMPILER=\\\"GNU-12.2.0\\\" -DSEMU_GPU_DIFFERENTIAL=0 -DSEMU_SANITIZERS=0 -DSEMU_VERSION_MAJOR=0 -DSEMU_VERSION_MINOR=1 -DSEMU_VERSION_PATCH=0 -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../include -I/home/cicuvc/cs/projects/nvidia-sass-document/semu/src/../generated -g -std=c++20 -Wall -Wextra -Wpedantic -Werror -o tests/CMakeFiles/semu_l1tex_cli.dir/__/tools/l1tex_cli.cpp.o -c /home/cicuvc/cs/projects/nvidia-sass-document/semu/tools/l1tex_cli.cpp",
+  "file": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/tools/l1tex_cli.cpp",
+  "output": "/home/cicuvc/cs/projects/nvidia-sass-document/build/tests/CMakeFiles/semu_l1tex_cli.dir/__/tools/l1tex_cli.cpp.o"
+}
+]

@@ -1,0 +1,18 @@
+cli: --version
+  ok  version
+cli: capability manifest
+  ok  summary
+  ok  full
+cli: invalid command line
+  ok  unknown command
+  ok  no args
+  ok  bad capability option
+cli: module argument validation
+  ok  missing module
+  ok  empty module
+  ok  missing arg
+cli: debug REPL help golden (Phase 7 round 3)
+  ok  mem scope help has no --lane
+  ok  mem usage (stderr) has no --lane
+  ok  conds help keeps lane mask
+  ok  --lane appears only on the conds line
