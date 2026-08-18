@@ -115,5 +115,5 @@ SIM_PLAN.md 第 8 节进度表。Phase 5.5 快速解释器（fast FP semantics�
   热点 profile），结果记录到 `benchmarks/record.json`，不设硬性 SLA。
 - **公共 API compile tests**：`tests/compile_api_test.cpp` + 每个公共头文件
   的独立编译检查（`ctest -R api_compile` + header-object checks）。
-- **验证门禁**：`tools/run_semu_cpu_gate.sh`（33 项 CPU 门禁，含 mock
+- **验证门禁**：`tools/run_semu_cpu_gate.sh`（35 项 CPU 门禁，含 mock
   backend / api_compile）。

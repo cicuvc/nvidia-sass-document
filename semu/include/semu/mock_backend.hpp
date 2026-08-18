@@ -18,8 +18,9 @@
 //   - the FROZEN decode-only boundary decides first: the TMA family
 //     (UTMALDG / UTMASTG / UTMAREDG) is decode-only by Phase 10 waiver, and
 //     the non-dense tensor alternatives (sparse / rowcol / scale HMMA/QMMA/
-//     OMMA, F16 accumulator) are decode-only per the capability manifest —
-//     both fault even though the interpreter has functional-looking handlers;
+//     OMMA/MXQMMA, F16 accumulator) are decode-only per the capability
+//     manifest — both fault even though the interpreter has
+//     functional-looking handlers;
 //   - the reference interpreter (`interpreter_handles()`) is the runtime
 //     authority for everything else: an instruction family it cannot execute
 //     is not lowerable anywhere -> decode-only fault;

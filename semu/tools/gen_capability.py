@@ -50,6 +50,20 @@ DEFAULT_DECODEONLY_CLASSES = {
     "qmma_sp_scale_", "omma_sp_scale_",
 }
 
+# Phase 10 manifest notes (machine-readable, printed by `semu capability
+# --full`).  The CapabilityState enum alone cannot express the evidence class
+# of the functional tensor rows, so the waiver/skip markers live in the note
+# field:
+#   - omma_scale_ (functional): bit-exact CPU-only differential (semu==model),
+#     GPU triple-party evidence waived by user instruction (Phase 9 tensor GPU
+#     differential) — must NOT be described as "GPU validated".
+#   - qmma_ (functional): the dense class spans srcFmts; only e4m3/e5m2 carry
+#     GPU differential evidence, e3m2/e2m3 are user-skip (CPU-only bit-exact).
+DEFAULT_CLASS_NOTES = {
+    "omma_scale_": "gpu_waiver:OMMA",
+    "qmma_": "user_skip:e3m2,e2m3",
+}
+
 REFERENCE_PLATFORM = (
     "NVIDIA RTX 5090 (GB202, sm_120); CUDA 13.0 (launchprobe), "
     "CUDA 13.1 (repo sm90/sm100 toolchain); driver 580.65.06"
@@ -87,6 +101,7 @@ def build_rows(db: dict, mnemonic_states: dict):
         st = DEFAULT_CLASS_STATES.get(v["class"], st)
         if v["class"] in DEFAULT_DECODEONLY_CLASSES:
             st = "kDecodeOnly"
+        note = DEFAULT_CLASS_NOTES.get(v["class"], note)
         rows.append({
             "mnemonic": v["mnemonic"],
             "variant_class": v["class"],

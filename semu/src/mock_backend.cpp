@@ -35,8 +35,8 @@ CapabilityState manifest_state(const DecodedInstruction& inst) {
 // frozen as capability (decode-only, must not be described as GPU validated).
 //   - TMA (UTMALDG / UTMASTG / UTMAREDG): decode-only (manifest marks every
 //     variant kDecodeOnly).
-//   - non-dense tensor alternatives (sparse / rowcol / scale HMMA/QMMA/OMMA,
-//     F16 accumulator): decode-only (manifest per-variant).
+//   - non-dense tensor alternatives (sparse / rowcol / scale HMMA/QMMA/OMMA/
+//     MXQMMA, F16 accumulator): decode-only (manifest per-variant).
 // The dense F32-accumulator HMMA/QMMA/OMMA shapes ARE functional (OMMA carries
 // the documented gpu_waiver: CPU-only differential evidence).
 bool frozen_decode_only(const DecodedInstruction& inst) {
@@ -44,7 +44,10 @@ bool frozen_decode_only(const DecodedInstruction& inst) {
     if (m == "UTMALDG" || m == "UTMASTG" || m == "UTMAREDG") {
         return true;  // TMA family: decode-only, not frozen
     }
-    if (m == "HMMA" || m == "QMMA" || m == "OMMA") {
+    // MXQMMA is scale-only (every variant is mxqmma_scale_): the explicit
+    // tensor boundary covers it so it faults with the other non-dense
+    // alternatives instead of falling through to the generic handler path.
+    if (m == "HMMA" || m == "QMMA" || m == "OMMA" || m == "MXQMMA") {
         const CapabilityState st = manifest_state(inst);
         return !(st == CapabilityState::kFunctional ||
                  st == CapabilityState::kProfiled);

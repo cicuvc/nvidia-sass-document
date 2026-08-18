@@ -164,7 +164,7 @@ distorted.
 
 ## 7. Testing a CPU-only machine
 
-`tools/run_semu_cpu_gate.sh` runs the full CPU gate (33 CTest-equivalents plus
+`tools/run_semu_cpu_gate.sh` runs the full CPU gate (35 CTest-equivalents plus
 the fuzz / l1tex / LDGSTS / tensor oracles):
 
 ```bash

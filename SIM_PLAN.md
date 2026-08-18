@@ -2138,13 +2138,13 @@ Phase 10 冻结的是**接口与 gate 语义**，不冻结仍未闭合的**指�
      `hmma_model_sha256`。
 - **验证**：
   - 全量 CPU CTest 三树：`tools/run_semu_cpu_gate.sh` **35/35**（Debug / ASan /
-    TSan 各自 35/35；原 33 项 + `mock_backend` 9 项 + `api_compile` 6 项）。
+    TSan 各自 35/35；原 33 项 + `mock_backend` 11 项 + `api_compile` 7 项）。
   - fuzz **gpu=False** n=40 + mutation **108/108** 0 errors。
   - l1tex_oracle **C++==Python 1941/1941**；LDGSTS corpus **520/520** + 纯计数
     TWf/TagConf/TSetAcc/Sectors == hardware meas 520/520。
   - tensor differential（CPU）全绿；**tensor GPU differential 54/54 checked
     PASS 0 hard failures**（5090/CUDA 13.1，report 已带新 provenance）。
-  - mock backend 9 项全过、api_compile 6 项全过、30 头文件独立编译全过。
+  - mock backend 11 项全过、api_compile 7 项全过、30 头文件独立编译全过。
   - benchmark 记录写入 `semu/benchmarks/record.json`。
   - `sim.py` 未修改（仓库无该文件）。
 - **退出条件确认**：加 JIT backend 无需改 cubin loader / public launch API /
@@ -2265,7 +2265,7 @@ LDGSTS 初始分级：
 | 7 | Done (2026-08-16) | - | control + memory + compute subset | unchanged | 25 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 (0 err) + l1tex C++==Python 1941/1941 | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起；l1tex 为 frozen-corpus 门禁 1941/1941，GPU 采样属 corpus 采集流程不另行重跑） | debugger UX |
 | 8 | Done (2026-08-16) | - | unchanged | memory subset (shared/global/ldgsts/l1tex/l2) | 29 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS corpus C++==Python 520/520 + pure counts == HW 520/520 + codex 复验 8 项修复（2B+4H+2M） | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起） | LDGSTS SharedConf/GlobalConf 为定义性 approximate；scattered 8/16B、miss-path suppression；`.cg` bypass 仅 profiler model confidence unsupported（功能已实现） |
 | 9 | In progress (tensor core GPU-verified) | - | tensor/TMA subset | tensor/TMA | 33 CTest (含 tensor/tensor_map/mbarrier) + tensor_differential CPU gate + fuzz/mutation/l1tex 全绿 | **tensor GPU differential 54/54 checked PASS 0 hard failures**（2026-08-18，5090/CUDA 13.1；semu==model 逐 word；51/54 模型==GPU==semu 三方一致 + 3 条 E5M2 inf/NaN 符号约定差异为 GPU-only warning）；`semu_test_tensor` 全过 | 24 user-skip（e3m2/e2m3/omma，无 GPU 验证、不得描述为 GPU validated）；TMA 3 decode-only 不冻结；`.cg` bypass 仅 profiler model confidence unsupported（功能已实现） |
-| 10 | Done (2026-08-18) | full supported set | tracked | tracked | **35 CTest 三树（Debug/ASan/TSan）全绿** + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS 520/520 + tensor_differential + mock backend 9 项 + api_compile 6 项 | GPU differential 可选（5090 在，tensor GPU 54/54 checked PASS 0 hard failures 已补跑，report 带 git_dirty/source-tree digest/脚本 SHA-256 新 provenance） | JIT follow-up（接口已冻结，不实现 JIT）；TMA decode-only 不冻结；OMMA functional+gpu_waiver；e3m2/e2m3/omma user-skip 不得写 GPU validated |
+| 10 | Done (2026-08-18) | full supported set | tracked | tracked | **35 CTest 三树（Debug/ASan/TSan）全绿** + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS 520/520 + tensor_differential + mock backend 11 项 + api_compile 7 项 | GPU differential 可选（5090 在，tensor GPU 54/54 checked PASS 0 hard failures 已补跑，report 带 git_dirty/source-tree digest/脚本 SHA-256 新 provenance） | JIT follow-up（接口已冻结，不实现 JIT）；TMA decode-only 不冻结；OMMA functional+gpu_waiver；e3m2/e2m3/omma user-skip 不得写 GPU validated |
 
 每个未解决行为应记录：关联 mnemonic/PC、硬件与软件版本、最小复现、观察结果、当前假设、反例、置信度和下一验证实验。
 

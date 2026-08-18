@@ -493,7 +493,10 @@ int main(int argc, char** argv) {
                git_head() + "\",\"build\":\"" + semu::build_mode() +
                "\",\"grid_x\":" + std::to_string(grid_x) +
                ",\"block_x\":" + std::to_string(block_x) +
+               ",\"body\":" + std::to_string(body) +
                ",\"dynamic_instructions\":" + std::to_string(dyn) +
+               ",\"note\":\"scaling is super-linear (parallel worker "
+               "cache/warmth effect); NOT evidence of linear scaling\"" +
                ",\"workers\":[";
         for (std::size_t i = 0; i < wc.size(); ++i) {
             if (i) rec += ",";

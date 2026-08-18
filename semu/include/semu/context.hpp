@@ -291,6 +291,15 @@ public:
 // Phase 10 reserved async / TMA extension points (VERSIONED, documentation
 // only — NOT implemented, NOT part of kRuntimeServicesVersion surface yet).
 //
+// The forward declaration below turns the pure-comment reservation into a
+// real (compile-time) part of the frozen header surface: backends and tests
+// can reference the `IRuntimeServicesV2` type (e.g. a capability query /
+// safe_downcast check) even though no implementation exists yet.  The
+// concrete ABI lands in a future phase and MUST be declared here, never as
+// new purely-virtual methods on IRuntimeServices itself (that would break
+// every existing implementor).
+struct IRuntimeServicesV2;
+//
 // When a future phase moves TMA from decode-only to functional it MUST add
 // these as members of a NEW versioned extension interface (e.g.
 // `IRuntimeServicesV2 : IRuntimeServices` or a standalone
