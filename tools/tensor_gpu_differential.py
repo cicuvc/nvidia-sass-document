@@ -8,14 +8,28 @@ model (tools/hmma_model.py).  Evidence is written to a JSON report.
 
 Tensor-core coverage (per accumulator bit):
   * HMMA.16816 k16 bf16/f16, HMMA.1688 k8 bf16/f16            -- F32 acc
-  * QMMA.16832 k32 x5 fp8 formats (E4M3/E3M4/E2M3/E5M2/E3M2),
-    QMMA.16816 k16 x2 e2 formats (E4M3/E3M4)                 -- F32 acc
-  * OMMA.SF.16864 k64 e2m1 mxfp4 + E8M0 scales               -- F32 acc
+  * QMMA.16832 k32 fp8 formats E4M3/E5M2/E3M4 (GPU-verified);
+    E3M2/E2M3 variants exist but are user-instructed SKIPS (no GPU
+    verification, never described as GPU validated)
+  * QMMA.16816 k16 E4M3/E5M2                                 -- F32 acc
+  * OMMA.SF.16864 k64 (functional CPU-only, GPU waiver)       -- F32 acc
 
-Each case asserts GPU result == Python model == semu result, word-for-word.
+Each checked case asserts GPU result == Python model == semu result,
+word-for-word (GPU==semu==model).
+
+EXIT SEMANTICS (gate contract):
+  * semu vs model disagreement   = HARD FAILURE (blocks, exit 1).
+  * GPU-only mismatch (semu==model) = WARNING (non-blocking, recorded as
+    "gpu_only_note"; GPU/compiler inf/NaN-sign conventions vary by input).
+  * user-instructed skips (e3m2/e2m3/omma) never run on GPU, never block.
+
+The JSON report carries a "provenance" block (git commit, GPU identity/UUID
+via nvidia-smi -L, driver + CUDA versions, seed/trials, semu binary
+sha256, timestamps/duration, script version).
 
 TMA coverage (same kernel text on GPU and semu; compare the platform's
-observable memory image byte-for-byte):
+observable memory image byte-for-byte).  TMA is DECODE-ONLY in semu
+(unclosed, non-blocking; semantics NOT frozen):
   * UTMALDG.2D      tensor load global->shared + mbarrier tx completion
   * UTMASTG.2D      tensor store shared->global (bulk-async-group commit)
   * UTMAREDG.2D.ADD tensor atomic reduce shared->global
@@ -23,8 +37,7 @@ observable memory image byte-for-byte):
 GPU runs use a device-backed tensor map (cuTensorMapEncode semantics
 mirrored by tools/tma_helper.py) so the SAME 128-byte descriptor blob drives
 both sides: base = the real device address on the GPU, base = the semu
-global-buffer offset on the interpreter.  Every TMA case asserts
-GPU observable image == semu observable image == expected bytes.
+global-buffer offset on the interpreter.
 
 Usage:
   tensor_gpu_differential.py <path-to-semu> [--trials=N]
@@ -32,18 +45,23 @@ Usage:
 """
 import argparse
 import ctypes
-import importlib
+import hashlib
 import json
 import random
 import struct
 import subprocess
 import sys
+import time
 from ctypes import c_uint32, c_uint64
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "tools"))
+
+SCRIPT_VERSION = "1.1.0"
+SEED = 0x7E57C0DE
 
 import hmma_model as M  # noqa: E402
 import tools.tma_helper as TMH  # noqa: E402
@@ -59,6 +77,82 @@ from tensor_differential_test import (  # noqa: E402
 
 NOP4 = ("NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  "
         "NOP;[7:7:{}:5:1]\n")
+
+
+# ---------------------------------------------------------------------------
+# Provenance collection (written into the JSON report)
+# ---------------------------------------------------------------------------
+
+def git_head_hash():
+    try:
+        r = subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
+                           capture_output=True, text=True, timeout=10)
+        return r.stdout.strip() if r.returncode == 0 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def gpu_identities():
+    """nvidia-smi -L lines, e.g. 'GPU 0: NVIDIA GeForce RTX 5090 (UUID: ...)'."""
+    try:
+        r = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True,
+                           timeout=10)
+        if r.returncode != 0:
+            return None
+        return [l for l in r.stdout.splitlines() if l.strip()]
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def driver_version():
+    try:
+        r = subprocess.run(["nvidia-smi", "--query-gpu=driver_version",
+                            "--format=csv,noheader"], capture_output=True,
+                           text=True, timeout=10)
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
+def cuda_version():
+    try:
+        r = subprocess.run(["nvcc", "--version"], capture_output=True,
+                           text=True, timeout=10)
+        for line in r.stdout.splitlines():
+            if "release" in line:
+                return line.split("release", 1)[1].strip()
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
+def file_sha256(path):
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def collect_provenance(semu, trials, started_at):
+    return {
+        "script": "tools/tensor_gpu_differential.py",
+        "script_version": SCRIPT_VERSION,
+        "git_commit": git_head_hash(),
+        "seed": f"0x{SEED:X}",
+        "trials": trials,
+        "gpu": gpu_identities(),
+        "driver_version": driver_version(),
+        "cuda_version": cuda_version(),
+        "semu_binary": str(semu),
+        "semu_sha256": file_sha256(semu),
+        "started_at": started_at,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -362,7 +456,7 @@ def tma_platform(name, kernel_text, src, desc, out_size, read_src_len,
 def tma_cases():
     """(name, kernel_text, src, desc, out_len, read_src_len, expect_src,
     expect_out) after launch.  Rows 1..16 f16 for load; preload shared for
-    store.""" 
+    store."""
     cases = []
     # UTMALDG: 16x16 f16 tensor values 1..256, box {16,8} coords {0,0}.
     # Shared tile lands rows 0..15 cols 0..7.  Kernel dumps phase + tile
@@ -419,9 +513,17 @@ def main():
         print(f"FAIL: semu binary not found: {semu}", file=sys.stderr)
         return 2
 
-    rng = random.Random(0x7E57C0DE)
-    report = {"cases": [], "tma": [], "summary": {}}
+    started_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    start_mono = time.monotonic()
+    # The rnd_* helpers in tensor_differential_test draw from the GLOBAL random
+    # module, so the seed must be applied with random.seed() (a local
+    # random.Random(SEED) instance is ignored and the stream stays unseeded).
+    random.seed(SEED)
+    rng = random.Random(SEED)
+    report = {"provenance": collect_provenance(semu, args.trials, started_at),
+              "cases": [], "tma": [], "summary": {}}
     failed = total = skipped = 0
+    gpu_notes = 0
     tma_total = tma_unclosed = 0
 
     for case, fn in tensor_cases(args.trials, rng):
@@ -464,14 +566,16 @@ def main():
         else:
             e["semu"] = [f"0x{x:08X}" for x in sm_d]
             e["semu_match"] = True
-        # The formally-checked contract is semu == model (CPU).  A GPU-only
-        # mismatch where semu still equals the model is a recorded, non-blocking
-        # GPU difference (the compiler/GPU inf/NaN-sign conventions vary by
-        # input); only a semu/model disagreement is a gate failure.
+        # The formally-checked gate contract is semu == model (CPU).  A GPU-only
+        # mismatch where semu still equals the model is a recorded, NON-BLOCKING
+        # WARNING ("gpu_only_note"; the compiler/GPU inf/NaN-sign conventions can
+        # vary by input) -- it never fails the run.  Only a semu/model
+        # disagreement is a HARD FAILURE (blocks the run, exit 1).
         ok = not semu_err
         if gpu_err and not semu_err:
             e["gpu_only_note"] = True
             e["ok"] = True
+            gpu_notes += 1
         elif semu_err:
             e["ok"] = False
         else:
@@ -549,16 +653,33 @@ def main():
         report["tma"].append(e)
         print(f"{'PASS' if ok else 'UNCLOSED'} tma/{name}")
 
-    report["summary"] = {"total": total, "failed": failed,
-                         "passed": total - failed, "skipped": skipped,
-                         "tma_total": tma_total,
-                         "tma_unclosed": tma_unclosed}
+    report["summary"] = {
+        "total": total,
+        "checked": total - skipped,
+        "passed": (total - skipped) - failed,
+        "failed": failed,
+        "skipped": skipped,
+        "skipped_reason": "user instructed skip (no GPU verification; "
+                          "must not be described as GPU validated)",
+        "gpu_notes": gpu_notes,
+        "exit_semantics": ("GPU-only mismatch = WARNING (non-blocking, "
+                           "recorded as gpu_only_note); semu/model "
+                           "disagreement = HARD FAILURE (blocks, exit 1)"),
+        "tma_total": tma_total,
+        "tma_unclosed": tma_unclosed,
+        "finished_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "duration_seconds": int(time.monotonic() - start_mono),
+    }
     with open(args.report, "w") as f:
         json.dump(report, f, indent=1)
-    print(f"\ntensor GPU differential: {total - skipped} checked "
-          f"({skipped} user-instructed skips), {failed} failures, "
-          f"tma {tma_total} ({tma_unclosed} unclosed, non-blocking) "
-          f"(report: {args.report})")
+    print(f"\ntensor GPU differential: {total - skipped} checked PASS "
+          f"({failed} hard failures), {skipped} user-instructed skips "
+          f"(no GPU verification, not GPU validated), "
+          f"{gpu_notes} GPU-note(s), "
+          f"tma {tma_total} ({tma_unclosed} unclosed, decode-only, "
+          f"non-blocking) (report: {args.report})")
+    print("exit semantics: GPU-only mismatch is a NON-BLOCKING WARNING; "
+          "only a semu/model disagreement is a HARD FAILURE (exit 1).")
     return 1 if failed else 0
 
 

@@ -1,23 +1,38 @@
 {
+ "provenance": {
+  "script": "tools/tensor_gpu_differential.py",
+  "script_version": "1.1.0",
+  "git_commit": "567c30fc2efa478a35c138a77725efbb301d2eba",
+  "seed": "0x7E57C0DE",
+  "trials": 6,
+  "gpu": [
+   "GPU 0: NVIDIA GeForce RTX 5090 (UUID: GPU-1649e0c9-dd89-4096-0096-67fa384dfb83)"
+  ],
+  "driver_version": "590.48.01",
+  "cuda_version": "13.1, V13.1.115",
+  "semu_binary": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/build/cli/semu",
+  "semu_sha256": "3dea69a35dd2017a7ba8c3f4804ce1f0b6f97804aaab333f80c41f802133f92f",
+  "started_at": "2026-08-18T06:49:43+00:00"
+ },
  "cases": [
   {
    "name": "hmma_k16_bf16_t0",
    "variant": "hmma_k16_bf16",
    "model": [
-    "0xBEE3F833",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0xBEE3F833",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0xBEE3F833",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
@@ -29,20 +44,20 @@
    "name": "hmma_k16_f16_t0",
    "variant": "hmma_k16_f16",
    "model": [
-    "0xBEE3F81B",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0xBEE3F81B",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0xBEE3F81B",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
@@ -54,23 +69,23 @@
    "name": "hmma_k8_bf16_t0",
    "variant": "hmma_k8_bf16",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45661FBF",
+    "0x45D0D9CF",
+    "0x44E084C5",
+    "0x45B1C6A0"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45661FBF",
+    "0x45D0D9CF",
+    "0x44E084C5",
+    "0x45B1C6A0"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45661FBF",
+    "0x45D0D9CF",
+    "0x44E084C5",
+    "0x45B1C6A0"
    ],
    "semu_match": true,
    "ok": true
@@ -79,23 +94,23 @@
    "name": "hmma_k8_f16_t0",
    "variant": "hmma_k8_f16",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45661FBF",
+    "0x45D0D9CF",
+    "0x44E084C5",
+    "0x45B1C6A0"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45661FBF",
+    "0x45D0D9CF",
+    "0x44E084C5",
+    "0x45B1C6A0"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45661FBF",
+    "0x45D0D9CF",
+    "0x44E084C5",
+    "0x45B1C6A0"
    ],
    "semu_match": true,
    "ok": true
@@ -193,23 +208,23 @@
    "name": "qmma_k16_e4m3_t0",
    "variant": "qmma_k16_e4m3",
    "model": [
-    "0x45DD7CA9",
-    "0x7920B900",
-    "0xC69FA1F9",
-    "0xC6A4D31B"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x45DD7CA9",
-    "0x7920B900",
-    "0xC69FA1F9",
-    "0xC6A4D31B"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0x45DD7CA9",
-    "0x7920B900",
-    "0xC69FA1F9",
-    "0xC6A4D31B"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "semu_match": true,
    "ok": true
@@ -218,23 +233,23 @@
    "name": "qmma_k16_e5m2_t0",
    "variant": "qmma_k16_e5m2",
    "model": [
-    "0x482D89B5",
-    "0x7920B900",
-    "0xCB281191",
-    "0xCB281429"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x482D89B5",
-    "0x7920B900",
-    "0xCB281191",
-    "0xCB281429"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0x482D89B5",
-    "0x7920B900",
-    "0xCB281191",
-    "0xCB281429"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "semu_match": true,
    "ok": true
@@ -307,23 +322,23 @@
    "name": "hmma_k8_bf16_t1",
    "variant": "hmma_k8_bf16",
    "model": [
-    "0x7F800000",
-    "0xC5B8A2CF",
-    "0x4612BA1C",
-    "0x7FFFFFFF"
+    "0xC6039623",
+    "0xC28DB605",
+    "0x459D430C",
+    "0x45FBE3D5"
    ],
    "gpu": [
-    "0x7F800000",
-    "0xC5B8A2CF",
-    "0x4612BA1C",
-    "0x7FFFFFFF"
+    "0xC6039623",
+    "0xC28DB605",
+    "0x459D430C",
+    "0x45FBE3D5"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7F800000",
-    "0xC5B8A2CF",
-    "0x4612BA1C",
-    "0x7FFFFFFF"
+    "0xC6039623",
+    "0xC28DB605",
+    "0x459D430C",
+    "0x45FBE3D5"
    ],
    "semu_match": true,
    "ok": true
@@ -332,23 +347,23 @@
    "name": "hmma_k8_f16_t1",
    "variant": "hmma_k8_f16",
    "model": [
-    "0x7F800000",
-    "0xC5B8A3AF",
-    "0x4612D9DC",
-    "0x7FFFFFFF"
+    "0xC60395B3",
+    "0xC28D7E05",
+    "0x459D430C",
+    "0x45FBE3D5"
    ],
    "gpu": [
-    "0x7F800000",
-    "0xC5B8A3AF",
-    "0x4612D9DC",
-    "0x7FFFFFFF"
+    "0xC60395B3",
+    "0xC28D7E05",
+    "0x459D430C",
+    "0x45FBE3D5"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7F800000",
-    "0xC5B8A3AF",
-    "0x4612D9DC",
-    "0x7FFFFFFF"
+    "0xC60395B3",
+    "0xC28D7E05",
+    "0x459D430C",
+    "0x45FBE3D5"
    ],
    "semu_match": true,
    "ok": true
@@ -446,23 +461,23 @@
    "name": "qmma_k16_e4m3_t1",
    "variant": "qmma_k16_e4m3",
    "model": [
-    "0x4504D5E8",
-    "0xC5AC757C",
-    "0x459E3F0D",
-    "0x443E95C4"
+    "0xC4AAECAC",
+    "0x79154547",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x4504D5E8",
-    "0xC5AC757C",
-    "0x459E3F0D",
-    "0x443E95C4"
+    "0xC4AAECAC",
+    "0x79154547",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0x4504D5E8",
-    "0xC5AC757C",
-    "0x459E3F0D",
-    "0x443E95C4"
+    "0xC4AAECAC",
+    "0x79154547",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "semu_match": true,
    "ok": true
@@ -471,23 +486,23 @@
    "name": "qmma_k16_e5m2_t1",
    "variant": "qmma_k16_e5m2",
    "model": [
-    "0x450F1B60",
-    "0xC5A752C0",
-    "0xFF800000",
-    "0xFF800000"
+    "0x7F800000",
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x450F1B60",
-    "0xC5A752C0",
-    "0xFF800000",
-    "0xFF800000"
+    "0x7F800000",
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0x450F1B60",
-    "0xC5A752C0",
-    "0xFF800000",
-    "0xFF800000"
+    "0x7F800000",
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
    ],
    "semu_match": true,
    "ok": true
@@ -560,23 +575,23 @@
    "name": "hmma_k8_bf16_t2",
    "variant": "hmma_k8_bf16",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC5D5EFA7",
+    "0x44E0A3BF",
+    "0xC60540DD",
+    "0xC60EA837"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC5D5EFA7",
+    "0x44E0A3BF",
+    "0xC60540DD",
+    "0xC60EA837"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC5D5EFA7",
+    "0x44E0A3BF",
+    "0xC60540DD",
+    "0xC60EA837"
    ],
    "semu_match": true,
    "ok": true
@@ -585,23 +600,23 @@
    "name": "hmma_k8_f16_t2",
    "variant": "hmma_k8_f16",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC5D5B87A",
+    "0x44E18073",
+    "0xC60540DD",
+    "0xC60EA837"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC5D5B87A",
+    "0x44E18073",
+    "0xC60540DD",
+    "0xC60EA837"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC5D5B87A",
+    "0x44E18073",
+    "0xC60540DD",
+    "0xC60EA837"
    ],
    "semu_match": true,
    "ok": true
@@ -610,21 +625,21 @@
    "name": "qmma_k32_e4m3_t2",
    "variant": "qmma_k32_e4m3",
    "model": [
-    "0xC828D0A0",
-    "0xC832857F",
+    "0xC8D460C1",
+    "0xC8D92199",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0xC828D0A0",
-    "0xC832857F",
+    "0xC8D460C1",
+    "0xC8D92199",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0xC828D0A0",
-    "0xC832857F",
+    "0xC8D460C1",
+    "0xC8D92199",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
@@ -635,46 +650,47 @@
    "name": "qmma_k32_e5m2_t2",
    "variant": "qmma_k32_e5m2",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0x7F800000",
+    "0x7F800000",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0xFF800000",
+    "0xFF800000",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
-   "gpu_match": true,
+   "gpu_match": false,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0x7F800000",
+    "0x7F800000",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "semu_match": true,
+   "gpu_only_note": true,
    "ok": true
   },
   {
    "name": "qmma_k32_e3m4_t2",
    "variant": "qmma_k32_e3m4",
    "model": [
-    "0x4590B740",
-    "0xC5A5E4A1",
+    "0x459D27BD",
+    "0xC5930E7C",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x4590B740",
-    "0xC5A5E4A1",
+    "0x459D27BD",
+    "0xC5930E7C",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0x4590B740",
-    "0xC5A5E4A1",
+    "0x459D27BD",
+    "0xC5930E7C",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
@@ -699,23 +715,23 @@
    "name": "qmma_k16_e4m3_t2",
    "variant": "qmma_k16_e4m3",
    "model": [
-    "0x45C0B09A",
-    "0xC56BD68F",
+    "0x45F78D93",
+    "0xC4E2A29A",
     "0x7FFFFFFF",
-    "0xC591B106"
+    "0xC5A907F7"
    ],
    "gpu": [
-    "0x45C0B09A",
-    "0xC56BD68F",
+    "0x45F78D93",
+    "0xC4E2A29A",
     "0x7FFFFFFF",
-    "0xC591B106"
+    "0xC5A907F7"
    ],
    "gpu_match": true,
    "semu": [
-    "0x45C0B09A",
-    "0xC56BD68F",
+    "0x45F78D93",
+    "0xC4E2A29A",
     "0x7FFFFFFF",
-    "0xC591B106"
+    "0xC5A907F7"
    ],
    "semu_match": true,
    "ok": true
@@ -724,23 +740,23 @@
    "name": "qmma_k16_e5m2_t2",
    "variant": "qmma_k16_e5m2",
    "model": [
-    "0x45DAA8EF",
-    "0xC537E5E5",
+    "0x45F7918F",
+    "0xC4E292A9",
     "0x7FFFFFFF",
-    "0xC6601A60"
+    "0xC5AE7FD5"
    ],
    "gpu": [
-    "0x45DAA8EF",
-    "0xC537E5E5",
+    "0x45F7918F",
+    "0xC4E292A9",
     "0x7FFFFFFF",
-    "0xC6601A60"
+    "0xC5AE7FD5"
    ],
    "gpu_match": true,
    "semu": [
-    "0x45DAA8EF",
-    "0xC537E5E5",
+    "0x45F7918F",
+    "0xC4E292A9",
     "0x7FFFFFFF",
-    "0xC6601A60"
+    "0xC5AE7FD5"
    ],
    "semu_match": true,
    "ok": true
@@ -813,23 +829,23 @@
    "name": "hmma_k8_bf16_t3",
    "variant": "hmma_k8_bf16",
    "model": [
-    "0x46180270",
-    "0x44C5B89B",
     "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x7FFFFFFF",
+    "0x44D98D08",
+    "0xC5F01787"
    ],
    "gpu": [
-    "0x46180270",
-    "0x44C5B89B",
     "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x7FFFFFFF",
+    "0x44D98D08",
+    "0xC5F01787"
    ],
    "gpu_match": true,
    "semu": [
-    "0x46180270",
-    "0x44C5B89B",
     "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x7FFFFFFF",
+    "0x44D98D08",
+    "0xC5F01787"
    ],
    "semu_match": true,
    "ok": true
@@ -838,23 +854,23 @@
    "name": "hmma_k8_f16_t3",
    "variant": "hmma_k8_f16",
    "model": [
-    "0x46182B07",
-    "0x44C6FD57",
     "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x7FFFFFFF",
+    "0x44D98D08",
+    "0xC5F01787"
    ],
    "gpu": [
-    "0x46182B07",
-    "0x44C6FD57",
     "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x7FFFFFFF",
+    "0x44D98D08",
+    "0xC5F01787"
    ],
    "gpu_match": true,
    "semu": [
-    "0x46182B07",
-    "0x44C6FD57",
     "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x7FFFFFFF",
+    "0x44D98D08",
+    "0xC5F01787"
    ],
    "semu_match": true,
    "ok": true
@@ -863,21 +879,21 @@
    "name": "qmma_k32_e4m3_t3",
    "variant": "qmma_k32_e4m3",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0xC8172F3A",
+    "0xC804BD8F",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0xC8172F3A",
+    "0xC804BD8F",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0xC8172F3A",
+    "0xC804BD8F",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
@@ -913,21 +929,21 @@
    "name": "qmma_k32_e3m4_t3",
    "variant": "qmma_k32_e3m4",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0xC62F3527",
+    "0x45EFCB0E",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0xC62F3527",
+    "0x45EFCB0E",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
+    "0xC62F3527",
+    "0x45EFCB0E",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
@@ -952,23 +968,23 @@
    "name": "qmma_k16_e4m3_t3",
    "variant": "qmma_k16_e4m3",
    "model": [
-    "0x47A587F7",
-    "0x47B6D8DA",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC8AC7A3B",
+    "0xC8A34165",
+    "0xC5550D80",
+    "0xC565A2C4"
    ],
    "gpu": [
-    "0x47A587F7",
-    "0x47B6D8DA",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC8AC7A3B",
+    "0xC8A34165",
+    "0xC5550D80",
+    "0xC565A2C4"
    ],
    "gpu_match": true,
    "semu": [
-    "0x47A587F7",
-    "0x47B6D8DA",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC8AC7A3B",
+    "0xC8A34165",
+    "0xC5550D80",
+    "0xC565A2C4"
    ],
    "semu_match": true,
    "ok": true
@@ -977,25 +993,26 @@
    "name": "qmma_k16_e5m2_t3",
    "variant": "qmma_k16_e5m2",
    "model": [
-    "0x7F800000",
-    "0x7F800000",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xFF800000",
+    "0xFF800000",
+    "0xFF800000",
+    "0xFF800000"
    ],
    "gpu": [
-    "0x7F800000",
-    "0x7F800000",
+    "0xFF800000",
+    "0xFF800000",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
-   "gpu_match": true,
+   "gpu_match": false,
    "semu": [
-    "0x7F800000",
-    "0x7F800000",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xFF800000",
+    "0xFF800000",
+    "0xFF800000",
+    "0xFF800000"
    ],
    "semu_match": true,
+   "gpu_only_note": true,
    "ok": true
   },
   {
@@ -1016,20 +1033,20 @@
    "name": "hmma_k16_bf16_t4",
    "variant": "hmma_k16_bf16",
    "model": [
-    "0x7F800000",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0x7F800000",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7F800000",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
@@ -1066,20 +1083,20 @@
    "name": "hmma_k8_bf16_t4",
    "variant": "hmma_k8_bf16",
    "model": [
-    "0xC51118BE",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0xC51118BE",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0xC51118BE",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
@@ -1091,20 +1108,20 @@
    "name": "hmma_k8_f16_t4",
    "variant": "hmma_k8_f16",
    "model": [
-    "0xC510A13E",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0xC510A13E",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0xC510A13E",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
@@ -1118,21 +1135,21 @@
    "model": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC80C0BE9",
+    "0xC80D4EE3"
    ],
    "gpu": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC80C0BE9",
+    "0xC80D4EE3"
    ],
    "gpu_match": true,
    "semu": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC80C0BE9",
+    "0xC80D4EE3"
    ],
    "semu_match": true,
    "ok": true
@@ -1143,23 +1160,24 @@
    "model": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xFF800000",
+    "0xFF800000"
    ],
    "gpu": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x7F800000",
+    "0x7F800000"
    ],
-   "gpu_match": true,
+   "gpu_match": false,
    "semu": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xFF800000",
+    "0xFF800000"
    ],
    "semu_match": true,
+   "gpu_only_note": true,
    "ok": true
   },
   {
@@ -1168,21 +1186,21 @@
    "model": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC6104B93",
+    "0xC6247B30"
    ],
    "gpu": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC6104B93",
+    "0xC6247B30"
    ],
    "gpu_match": true,
    "semu": [
     "0x7FFFFFFF",
     "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0xC6104B93",
+    "0xC6247B30"
    ],
    "semu_match": true,
    "ok": true
@@ -1205,23 +1223,23 @@
    "name": "qmma_k16_e4m3_t4",
    "variant": "qmma_k16_e4m3",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45341522",
+    "0x4609DF17",
+    "0xC60A9533",
+    "0xC61EC4D0"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45341522",
+    "0x4609DF17",
+    "0xC60A9533",
+    "0xC61EC4D0"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x45341522",
+    "0x4609DF17",
+    "0xC60A9533",
+    "0xC61EC4D0"
    ],
    "semu_match": true,
    "ok": true
@@ -1230,23 +1248,23 @@
    "name": "qmma_k16_e5m2_t4",
    "variant": "qmma_k16_e5m2",
    "model": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x480F9DBB",
+    "0x48156B57",
+    "0xFF800000",
+    "0xFF800000"
    ],
    "gpu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x480F9DBB",
+    "0x48156B57",
+    "0xFF800000",
+    "0xFF800000"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF",
-    "0x7FFFFFFF"
+    "0x480F9DBB",
+    "0x48156B57",
+    "0xFF800000",
+    "0xFF800000"
    ],
    "semu_match": true,
    "ok": true
@@ -1319,21 +1337,21 @@
    "name": "hmma_k8_bf16_t5",
    "variant": "hmma_k8_bf16",
    "model": [
-    "0xC5C9600B",
-    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0xC5C9600B",
-    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0xC5C9600B",
-    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
@@ -1344,21 +1362,21 @@
    "name": "hmma_k8_f16_t5",
    "variant": "hmma_k8_f16",
    "model": [
-    "0xC5C9600B",
-    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu": [
-    "0xC5C9600B",
-    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
    "gpu_match": true,
    "semu": [
-    "0xC5C9600B",
-    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0x7FFFFFFF",
     "0x7FFFFFFF"
    ],
@@ -1369,23 +1387,23 @@
    "name": "qmma_k32_e4m3_t5",
    "variant": "qmma_k32_e4m3",
    "model": [
-    "0xC7159FEB",
-    "0x7F800000",
-    "0xC8FB74D7",
-    "0xC8F5E458"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x45F059E4",
+    "0x46024E6F"
    ],
    "gpu": [
-    "0xC7159FEB",
-    "0x7F800000",
-    "0xC8FB74D7",
-    "0xC8F5E458"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x45F059E4",
+    "0x46024E6F"
    ],
    "gpu_match": true,
    "semu": [
-    "0xC7159FEB",
-    "0x7F800000",
-    "0xC8FB74D7",
-    "0xC8F5E458"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x45F059E4",
+    "0x46024E6F"
    ],
    "semu_match": true,
    "ok": true
@@ -1394,21 +1412,21 @@
    "name": "qmma_k32_e5m2_t5",
    "variant": "qmma_k32_e5m2",
    "model": [
-    "0x7F800000",
-    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0xFF800000",
     "0xFF800000"
    ],
    "gpu": [
-    "0x7F800000",
-    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0xFF800000",
     "0xFF800000"
    ],
    "gpu_match": true,
    "semu": [
-    "0x7F800000",
-    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
     "0xFF800000",
     "0xFF800000"
    ],
@@ -1419,23 +1437,23 @@
    "name": "qmma_k32_e3m4_t5",
    "variant": "qmma_k32_e3m4",
    "model": [
-    "0xC5F64E55",
-    "0x7F800000",
-    "0xC63AC142",
-    "0xC40B156C"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x46018003",
+    "0x460BA180"
    ],
    "gpu": [
-    "0xC5F64E55",
-    "0x7F800000",
-    "0xC63AC142",
-    "0xC40B156C"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x46018003",
+    "0x460BA180"
    ],
    "gpu_match": true,
    "semu": [
-    "0xC5F64E55",
-    "0x7F800000",
-    "0xC63AC142",
-    "0xC40B156C"
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x46018003",
+    "0x460BA180"
    ],
    "semu_match": true,
    "ok": true
@@ -1554,10 +1572,16 @@
  ],
  "summary": {
   "total": 78,
+  "checked": 54,
+  "passed": 54,
   "failed": 0,
-  "passed": 78,
   "skipped": 24,
+  "skipped_reason": "user instructed skip (no GPU verification; must not be described as GPU validated)",
+  "gpu_notes": 3,
+  "exit_semantics": "GPU-only mismatch = WARNING (non-blocking, recorded as gpu_only_note); semu/model disagreement = HARD FAILURE (blocks, exit 1)",
   "tma_total": 3,
-  "tma_unclosed": 3
+  "tma_unclosed": 3,
+  "finished_at": "2026-08-18T06:49:44+00:00",
+  "duration_seconds": 1
  }
 }

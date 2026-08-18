@@ -218,7 +218,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../sm120.json)
   # Phase 9 tensor differential gate: C++ tensor-core interpreter == the
   # Python reference model (tools/hmma_model.py) bit-for-bit, driven through
   # `semu run` on hand-assembled HMMA/QMMA/OMMA kernels.  CPU-only (the GPU
-  # differential is run separately via tensor_differential_test.py --gpu).
+  # differential is run separately via tools/tensor_gpu_differential.py).
   add_test(NAME tensor_differential
     COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_SOURCE_DIR}/../tools/tensor_differential_test.py

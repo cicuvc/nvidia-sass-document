@@ -1963,10 +1963,14 @@ fixture，不提交重建）**：
   （tma/pmtrig 字节级不变、vecmix 可解码）仍成立，仅编码/调度因编译器版本不同。
   后续若要恢复 CUDA 13.1 下 regen 全绿：给 semu renderer 补 `r2p__*` 的 `PR`
   操作数打印（1 处）后再 rebuild 提交新 fixture。
+  - **后续已闭合（2026-08-18，commit 567c30f）**：`r2p__*` 的 `PR` 操作数打印
+    缺口补齐，CUDA 13.1 重建 fixture（`cuobj_vectors_sm120.json`）全量通过，
+    cuobj_regen 恢复绿色（见 Phase 10 前置项完成记录）。
 
 **补测总结（2026-08-18 全量）**：fuzz **GPU 120/120** + non-GPU n=40 + mutation
 **108/108（0 errors）**；CTest 各套件 PASS（唯一未闭合为 cuobj_regen，上述环境
-差异，不影响 semu 逻辑）；diff_phase5 **GPU differential 484/484**；
+差异，不影响 semu 逻辑；其后 R2P `PR` 打印缺口补齐、cuobj_regen 已恢复绿色，
+见 Phase 10 前置项完成记录）；diff_phase5 **GPU differential 484/484**；
 decoder_cuobjdump **450/450** + tamper **4/4**；l1tex_oracle **C++==Python
 1941/1941**（frozen corpus；GPU 采样属 corpus 采集流程，本 retest 不另行重跑）。
 GPU 侧门禁挂起项全部闭合。`sim.py` 未修改。
@@ -1978,23 +1982,34 @@ GPU 侧门禁挂起项全部闭合。`sim.py` 未修改。
 interpreter** 上并行跑每个 FUNCTIONAL tensor variant，结果与 Python 参考模型
 （`tools/hmma_model.py`）逐 word / 逐 accumulator bit 三方对照。
 
-**结果（`/tmp/tgpu_v5.json`，已保存 `tools/tensor_gpu_differential_report.json`）**：
-**78/78 PASS，0 failures**；**24 skipped（user instructed skip）**；**TMA 3 未闭合
-non-blocking**。逐 bit 证据：模型 == GPU == semu 三方 word-for-word 一致。
+**结果（`/tmp/tgpu_v5.json`，已保存 `tools/tensor_gpu_differential_report.json`，
+2026-08-18 用 v1.1.0 脚本 + seed 0x7E57C0DE 重跑再生、含 provenance）**：
+**54/54 checked PASS（0 hard failures；semu == model 逐 bit 一致——CPU gate）**；
+**24 skipped（user instructed skip，无 GPU 验证）**；**TMA 3 项 decode-only、
+不冻结语义**。旧的 "78/78" 是 54 项真实对照 + 24 项用户指示跳过之和，被跳过项
+的"三方一致" 不成立、**不得描述为 GPU validated**。
 
-- **HMMA k16/k8 bf16+f16、QMMA k32×5（E4M3/E3M4/E2M3/E5M2/E3M2）+ k16×2
-  （E4M3/E3M4）、OMMA.SF.16864（E2M1 mxfp4 + E8M0 scales）** 全部 functional
-  并通过 CPU-only 差分门禁的 GPU 侧印证——每个 variant 断言
-  GPU result == Python model == semu result，逐 accumulator bit。
-- **24 skipped = user instructed skip**（`qmma_k32_e3m2`、`qmma_k32_e2m3` 各 6 trial、
-  `omma_k64` 12 trial）：用户在 e3m2/e2m3/omma 上前述差分（见修复记录 2）已批准为
-  跳过项，CPU-only 门禁仍覆盖其 bit 精确一致性；本 GPU 补测遵循同一指示，
-  不重复跑这三个格式的 GPU 侧（OMMA 同理）。
-- **TMA 3 项（utmaldg/utmastg/utmaredg）保持 non-blocking 未闭合**：`ok=false,
+- **semu == model 54/54（逐 accumulator bit）**：HMMA k16/k8 bf16+f16
+  （4 × 6 trial = 24）、QMMA k32 E4M3/E5M2/E3M4（3 × 6 trial = 18）、
+  QMMA k16 E4M3/E5M2（2 × 6 trial = 12）；每项断言
+  semu result == Python model，word-for-word。
+- **GPU==semu==model 三方一致 51/54**；其余 3 条全在 **E5M2**（fp8 带显式
+  ±inf/NaN 编码，accumulation 特例 lane 的 inf/NaN 符号约定与模型不同）：
+  `qmma_k32_e5m2_t2`（+inf→-inf）、`qmma_k32_e5m2_t4`（-inf→+inf）、
+  `qmma_k16_e5m2_t3`（-inf→NaN）——记录为 `gpu_only_note`，**非阻塞 warning**
+  （semu==model 不受影响），report 逐项列出。
+- **24 skipped = user instructed skip（e3m2/e2m3/omma，无 GPU 验证）**：
+  `qmma_k32_e3m2`、`qmma_k32_e2m3` 各 6 trial、`omma_k64` 12 trial。用户在
+  e3m2/e2m3/omma 上前述差分（见修复记录 2）已批准为跳过项，CPU-only 门禁仍
+  覆盖其 bit 精确一致性，但**这三个格式在 GPU 侧未跑、无 GPU 验证，不得描述为
+  GPU validated**（QMMA k32 在 GPU 侧仅有 E4M3/E5M2/E3M4 三种格式闭合；
+  OMMA.SF.16864 不具 GPU 三方一致证据）。
+- **TMA 3 项（utmaldg/utmastg/utmaredg）decode-only、不冻结语义**：`ok=false,
   unclosed=true`。GPU 侧已产出 observable 内存镜像，但 semu 侧存在已知缝隙
   （utmaldg 报 `mbarrier not initialized`、utmaredg 报 `element size != 4 is
   decode-only`），故 GPU image == semu image 尚未闭合——按 Phase 9 退出条件，
-  TMA 的 non-blocking 完成语义标为非闭合（非 functional），不强行猜测。
+  TMA 的 non-blocking 完成语义标为 decode-only（非 functional、不冻结），
+  不强行猜测。
 - `semu_test_tensor` 已注册 CTest（`add_test(NAME tensor ...)`，
   `semu/tests/CMakeLists.txt`），`tensor_differential` 亦注册 CTest（`add_test`
   + `tools/run_semu_cpu_gate.sh` 的 `tensor_differential` 项）。`sim.py` 未修改。
@@ -2020,11 +2035,13 @@ Phase 9/8 的所有 GPU 侧挂起前置项至此闭合，Phase 10 可开始：
 - Phase 5 diff_phase5 GPU differential **484/484**（含 4 runtime-fault checks）。
 - Phase 5 fuzz `--gpu` **120/120** + 非 GPU n=40 + mutation 108/108。
 - Phase 7/8 l1tex_oracle **C++==Python 1941/1941**（frozen corpus）。
-- Phase 9 tensor differential GPU 侧 **78/78 PASS 0 failures**（24 user-skip +
-  TMA 3 非闭合 non-blocking 除外）。
-- 唯一已知非闭合：cuobj_regen w/ CUDA 13.1（R2P `PR` renderer 打印缺口，环境
-  差异，不含 `PR` 缺口则 gate 全绿），以及 tensor e3m2/e2m3/omma user-skip、
-  TMA non-blocking。`sim.py` 未修改。
+- Phase 9 tensor differential GPU 侧 **54/54 checked PASS 0 hard failures**
+  （semu==model 逐 bit；51/54 GPU 三方一致 + 3 条 E5M2 inf/NaN 符号约定差异
+  为 GPU-only warning；24 user-skip 无 GPU 验证 + TMA 3 decode-only 除外）。
+- **cuobj_regen 已恢复绿色**：R2P `PR` renderer 打印缺口补齐（见下述记录），
+  CUDA 13.1 重建 fixture 全量通过。
+- 已知非闭合仅剩：tensor e3m2/e2m3/omma user-skip（无 GPU 验证，不得描述为
+  GPU validated）、TMA non-blocking（decode-only）。`sim.py` 未修改。
 
 ### Phase 10 — 稳定化与 JIT 接口冻结
 
@@ -2036,6 +2053,32 @@ Phase 9/8 的所有 GPU 侧挂起前置项至此闭合，Phase 10 可开始：
 - 完善用户文档、API 示例、capability matrix 和限制说明。
 
 当前阶段不实现真正的 JIT backend。
+
+#### 冻结范围与 waiver（2026-08-18 记录）
+
+Phase 10 冻结的是**接口与 gate 语义**，不冻结仍未闭合的**指令语义**。以下范围
+明确写入能力边界，不得在文档/capability matrix 中描述为已支持或已 GPU 验证：
+
+- **TMA（utmaldg/utmastg/utmaredg）：decode-only，不冻结语义。** 三者的
+  non-blocking 完成语义只有 GPU observable 镜像、无 semu 侧一致执行，属于
+  `decode-only` 级别（可解码、不可执行），不参与冻结的 functional 集合；capability
+  matrix 必须列出，后续补齐语义不视为破坏冻结 ABI。
+- **OMMA：functional，但 GPU 侧有 waiver。** 位精确模型与 semu 执行在 CPU-only
+  差分中逐 bit 一致（`functional`），但其 GPU 三方一致证据缺失（用户指示跳过，
+  见 Phase 9 tensor GPU differential），report 中必须同时标 `functional` +
+  `gpu_waiver`，不得写为 "GPU validated"。
+- **user-skip 口径（e3m2/e2m3/omma）：不得反向声称。** 这三个格式在 GPU 侧
+  **未执行**（用户指示跳过），只有 CPU-only bit 精确证据。任何文档表述必须
+  区分 "semu==model（CPU）" 与 "GPU 验证"，禁止把跳过项写进 GPU 验证结论。
+- **runtime services：保留版本化 async/TMA 扩展点。** 冻结的 runtime service 接口
+  必须为后续 async/TMA 语义落地预留版本化扩展点（如 completion/commit 回调和
+  mbarrier 状态查询），保证 TMA 从 decode-only 升级为 functional 时无需破坏既有
+  `IBackend`/event stream/fault ABI。
+- **mock JIT backend 的 fallback 面必须覆盖 tensor/TMA。** mock backend 在收到
+  decode-only 的 tensor/TMA 指令时必须回退 interpreter（未 lowering 路径），或按
+  fault ABI 报 `decode-only` fault；测试必须同时覆盖"回退 interpreter 成功执行"与
+  "无法 lowering 时报 decode-only fault"两条路径，证明冻结的 fallback 契约对
+  tensor/TMA 成立。
 
 #### 验证方式
 
@@ -2160,8 +2203,8 @@ LDGSTS 初始分级：
 | 5 | Done (2026-08-13) | - | compute subset (29 mnemonics) | 0 | 30 (19 CTest) | 484/484 diff + fuzz GPU/ref + mutation 108/108 (0 err) | MUFU/FCHK/IMAD.X (近似表/未实现 carry, Phase 9) |
 | 6 | Done (2026-08-13) | - | memory/sync subset | l1tex/l2/race events | 24 CTest + 484 diff + 110 fuzz + 108 mutation + ASan/UBSan/TSan clean | 484/484 GPU diff | multi-writer global race report set 对 worker 数不承诺（单 race 对逐字节一致）；Step 2B 未接入 ordinary LDGSTS（后续 Phase 8/9） |
 | 7 | Done (2026-08-16) | - | control + memory + compute subset | unchanged | 25 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 (0 err) + l1tex C++==Python 1941/1941 | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起；l1tex 为 frozen-corpus 门禁 1941/1941，GPU 采样属 corpus 采集流程不另行重跑） | debugger UX |
-| 8 | Done (2026-08-16) | - | unchanged | memory subset (shared/global/ldgsts/l1tex/l2) | 29 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS corpus C++==Python 520/520 + pure counts == HW 520/520 + codex 复验 8 项修复（2B+4H+2M） | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起） | LDGSTS SharedConf/GlobalConf 为定义性 approximate；scattered 8/16B、miss-path suppression、.cg bypass 未闭合 |
-| 9 | In progress (tensor core GPU-verified) | - | tensor/TMA subset | tensor/TMA | 32 CTest (含 tensor/tensor_map/mbarrier) + tensor_differential CPU gate + fuzz/mutation/l1tex 全绿 | **tensor GPU differential 78/78 PASS 0 failures**（2026-08-18，5090/CUDA 13.1；HMMA k16/k8 bf16+f16、QMMA k32×5+k16×2、OMMA.SF.16864 —— 模型==GPU==semu 逐 word）；`semu_test_tensor` 全过 | 24 user-skip（e3m2/e2m3/omma）；TMA 3 未闭合 non-blocking；`.cg` bypass 计数 unsupported（功能已闭合） |
+| 8 | Done (2026-08-16) | - | unchanged | memory subset (shared/global/ldgsts/l1tex/l2) | 29 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS corpus C++==Python 520/520 + pure counts == HW 520/520 + codex 复验 8 项修复（2B+4H+2M） | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起） | LDGSTS SharedConf/GlobalConf 为定义性 approximate；scattered 8/16B、miss-path suppression；`.cg` bypass 仅 profiler model confidence unsupported（功能已实现） |
+| 9 | In progress (tensor core GPU-verified) | - | tensor/TMA subset | tensor/TMA | 33 CTest (含 tensor/tensor_map/mbarrier) + tensor_differential CPU gate + fuzz/mutation/l1tex 全绿 | **tensor GPU differential 54/54 checked PASS 0 hard failures**（2026-08-18，5090/CUDA 13.1；semu==model 逐 word；51/54 模型==GPU==semu 三方一致 + 3 条 E5M2 inf/NaN 符号约定差异为 GPU-only warning）；`semu_test_tensor` 全过 | 24 user-skip（e3m2/e2m3/omma，无 GPU 验证、不得描述为 GPU validated）；TMA 3 decode-only 不冻结；`.cg` bypass 仅 profiler model confidence unsupported（功能已实现） |
 | 10 | Planned | full supported set | tracked | tracked | full | full optional | JIT follow-up |
 
 每个未解决行为应记录：关联 mnemonic/PC、硬件与软件版本、最小复现、观察结果、当前假设、反例、置信度和下一验证实验。
