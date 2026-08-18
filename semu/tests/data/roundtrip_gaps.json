@@ -544,22 +544,6 @@
   "kind": "bits-differ"
  },
  {
-  "variant_class": "p2r__RRR_RRR",
-  "kind": "matcher"
- },
- {
-  "variant_class": "p2r__RUR_RUR",
-  "kind": "matcher"
- },
- {
-  "variant_class": "p2r__RuIR_RIR",
-  "kind": "matcher"
- },
- {
-  "variant_class": "p2r_simple_",
-  "kind": "matcher"
- },
- {
   "variant_class": "qspc_urb_PuOnly__Ra64",
   "kind": "matcher"
  },
@@ -569,18 +553,6 @@
  },
  {
   "variant_class": "qspc_urb__Ra64",
-  "kind": "matcher"
- },
- {
-  "variant_class": "r2p__RIR",
-  "kind": "matcher"
- },
- {
-  "variant_class": "r2p__RRR",
-  "kind": "matcher"
- },
- {
-  "variant_class": "r2p__RUR",
   "kind": "matcher"
  },
  {

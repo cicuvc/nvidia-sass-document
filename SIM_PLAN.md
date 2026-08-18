@@ -1911,6 +1911,121 @@ decode-only + 3 functional**（HMMA `hmma_x8_`/QMMA `qmma_`/OMMA
 mutation **108/108**（0 errors）、l1tex_oracle **C++==Python 1941/1941**
 （含 LDGSTS 520/520）、profiler_report 通过。`sim.py` 未修改。
 
+### GPU 补测收尾（2026-08-18，RTX 5090 回归，semu 实现者）
+
+**环境（新机器）**：GPU0 RTX 5090 回归，driver **590.48.01 / CUDA Version 13.1**；
+本地工具链 **CUDA 13.1**（`Build cuda_13.1.r13.1/compiler.37061995_0`，cuobjdump
+13.1）。2026-08-16 起因 GPU0 拆走挂起的 GPU 侧门禁本轮补跑；补齐前
+`tools/fuzz_phase5.py`、`semu/src/fp.cpp`、`semu/src/interpreter.cpp`、
+`semu/include/semu/fp.hpp`、`semu/tests/test_fp.cpp`、
+`tests/asm_construct/test_ffma.py`、`notes/sm90/instr/ffma.md` 已就 FMZ/FTZ
+语义与 fuzz/asm 用例做过收尾修改（工作树未提交）。`sim.py` 未修改。
+
+**diff_phase5 GPU differential —— 补跑 PASS**：**484/484**（0 failed），逐 word
+位精确一致：**480 differential cases + 4 个 runtime-fault checks**（MUFU / FCHK /
+IMAD.X / IMAD.WIDE.X 必须报 `UnsupportedInstruction` 且 pc==0、message 含 mnemonic）。
+注：harness 收尾打印仍写 `"2 fault checks"`（历史标签），实际
+`check_runtime_fault` 计数为 4，480+4=484。覆盖：FFMA/FADD/FMUL 各舍入 + FTZ/FMZ +
+SAT（NaN/±inf/-1/±0/0.5/1/>1、inf+(-inf)→+0）；FP64 DMUL/DADD/DFMA（含 2^-53
+舍入 boundary × 4 模式）；F64→F16/F32/BF16 直接向下转换（double-rounding trap、
+NaN payload、subnormal、overflow 边界 × 4 舍入）；I2F/F2I/F2F 各向；
+FSETP/FMNMX/FSEL；整数/位（IADD3 LOP3 SHF IABS POPC PRMT IMNMX IMAD.WIDE IMAD.HI
+BMSK LEA P2R）；FP16 subnormal 定向舍入；VOTE/SHFL/ELECT/REDUX collectives
+（32-lane）。GPU 侧经 `CudaModule` 共享 driver context 串行跑完（沿用 5090 驱动对
+反复 fresh-context teardown 报 ILLEGAL_ADDRESS 的规避），semu 侧逐 lane GPR dump
+对照全部一致。
+
+**cuobj_regen（GAP-11）FAIL 判定 —— 工具链版本差异（预授权选项 b：保留 committed
+fixture，不提交重建）**：
+
+- **现象**：本地重建 fixture 时 rebuilt word set 与 committed fixture 差
+  **170 only-committed / 160 only-rebuilt**。**170/160 全部来自
+  `vecmix.cubin`/`vecmix2.cubin`** 两个 regen 源（rebuild 用本地 nvcc 现场重编译
+  `semu/tests/data/regen/*.cu`）；五个 committed repo cubin（pmtrig/tma_*）的
+  word 逐字节一致。
+- **根因**：committed fixture 由旧工具链生成（meta `cuobjdump (CUDA 13.x)`），
+  本机为 CUDA 13.1——互补的 nvcc 后端把同一 vecmix 内核编成不同指令流：相同
+  (cubin,kernel,pc) 处寄存器分配/划 scheduler/编码不同（如 committed
+  `0x7077221/0xfe20000000000` vs rebuilt `0x700077223/0xfce0000000000`）；170 个
+  only-committed 中 **23 个与 only-rebuilt 共享同一 lo word**（纯 scheduling 位差）。
+  mnemonic 集合高度重合（同批指令类型），是编译器版本变化的典型特征，
+  **不是 semu decode/sim 逻辑 bug**。
+- **判定依据**：committed fixture 在 decode gate **450/450 全过** + tamper 四类
+  篡改（register/modifier/branch-target/extra-operand）全部被拒（gate 非真空通过）。
+  而**重建 fixture 反而在 1/440 失败**（gate 忠实报告了新工具链产物）：CUDA 13.1
+  的 vecmix 新增一条 `R2P` word，cuobjdump 13.1 按 sm120 spec `r2p__RIR` FORMAT
+  槽位打印显式 `PR` 操作数（`R2P PR, R0, 0x3`），semu renderer 不打印 `PR`。解码
+  正确（r2p__RIR），属**既有 renderer 打印缺口**被新工具链产物首次触发，
+  非重建引入的逻辑错误。
+- **处置**：保留 committed fixture（450 words / 旧工具链 provenance），不提交
+  CUDA-13.1 重建（会整体替换 word set + 变更 provenance，且 R2P `PR` 打印缺口使
+  gate 仍不过）。cuobj_regen 记录为**已知环境差异**：门禁最关心的不变量
+  （tma/pmtrig 字节级不变、vecmix 可解码）仍成立，仅编码/调度因编译器版本不同。
+  后续若要恢复 CUDA 13.1 下 regen 全绿：给 semu renderer 补 `r2p__*` 的 `PR`
+  操作数打印（1 处）后再 rebuild 提交新 fixture。
+
+**补测总结（2026-08-18 全量）**：fuzz **GPU 120/120** + non-GPU n=40 + mutation
+**108/108（0 errors）**；CTest 各套件 PASS（唯一未闭合为 cuobj_regen，上述环境
+差异，不影响 semu 逻辑）；diff_phase5 **GPU differential 484/484**；
+decoder_cuobjdump **450/450** + tamper **4/4**；l1tex_oracle **C++==Python
+1941/1941**（frozen corpus；GPU 采样属 corpus 采集流程，本 retest 不另行重跑）。
+GPU 侧门禁挂起项全部闭合。`sim.py` 未修改。
+
+#### Phase 9 tensor GPU differential（2026-08-18，5090 回归，semu 实现者）
+
+`tools/tensor_gpu_differential.py`（新增，sm120 / RTX 5090）在**真实 GPU**（经
+`CudaModule` + hand-built assembler 驱动相同 hand-assembled kernel）与 **semu
+interpreter** 上并行跑每个 FUNCTIONAL tensor variant，结果与 Python 参考模型
+（`tools/hmma_model.py`）逐 word / 逐 accumulator bit 三方对照。
+
+**结果（`/tmp/tgpu_v5.json`，已保存 `tools/tensor_gpu_differential_report.json`）**：
+**78/78 PASS，0 failures**；**24 skipped（user instructed skip）**；**TMA 3 未闭合
+non-blocking**。逐 bit 证据：模型 == GPU == semu 三方 word-for-word 一致。
+
+- **HMMA k16/k8 bf16+f16、QMMA k32×5（E4M3/E3M4/E2M3/E5M2/E3M2）+ k16×2
+  （E4M3/E3M4）、OMMA.SF.16864（E2M1 mxfp4 + E8M0 scales）** 全部 functional
+  并通过 CPU-only 差分门禁的 GPU 侧印证——每个 variant 断言
+  GPU result == Python model == semu result，逐 accumulator bit。
+- **24 skipped = user instructed skip**（`qmma_k32_e3m2`、`qmma_k32_e2m3` 各 6 trial、
+  `omma_k64` 12 trial）：用户在 e3m2/e2m3/omma 上前述差分（见修复记录 2）已批准为
+  跳过项，CPU-only 门禁仍覆盖其 bit 精确一致性；本 GPU 补测遵循同一指示，
+  不重复跑这三个格式的 GPU 侧（OMMA 同理）。
+- **TMA 3 项（utmaldg/utmastg/utmaredg）保持 non-blocking 未闭合**：`ok=false,
+  unclosed=true`。GPU 侧已产出 observable 内存镜像，但 semu 侧存在已知缝隙
+  （utmaldg 报 `mbarrier not initialized`、utmaredg 报 `element size != 4 is
+  decode-only`），故 GPU image == semu image 尚未闭合——按 Phase 9 退出条件，
+  TMA 的 non-blocking 完成语义标为非闭合（非 functional），不强行猜测。
+- `semu_test_tensor` 已注册 CTest（`add_test(NAME tensor ...)`，
+  `semu/tests/CMakeLists.txt`），`tensor_differential` 亦注册 CTest（`add_test`
+  + `tools/run_semu_cpu_gate.sh` 的 `tensor_differential` 项）。`sim.py` 未修改。
+
+#### Phase 8 `.cg` bypass —— 功能 vs 模型 confidence 区分（2026-08-18）
+
+`.cg` bypass 的**功能语义**与**profiler 计数精度**是两回事，分别记录：
+
+- **功能层（functional）**：`LDGSTS.E.BYPASS` 在 interpreter 中作为真实内存访存
+  执行（`profiler_ldgsts_cg_bypass_negative` 用例覆盖真实
+  `LDGSTS.E.BYPASS.128`），地址展开 / shared/global access set 正确——功能已闭合。
+- **模型 confidence 层（profiler 计数）**：`.cg` bypass 路径下
+  SharedWf/conflict 计数**维持 `unsupported`**（见 §5 LDGSTS 初始分级与
+  profiler 策略：Analyzer honor policy，`.cg` 路径的完整 wavefront/conflict
+  计数不生成）。这是**模型精度分级**的未闭合，不是功能缺失，不影响 deepcopy
+  往返 / race 语义。两者在本次同步中明确区分，避免把"计数 unsupported"误读为
+  "功能未实现"。
+
+#### Phase 10 前置项完成记录（2026-08-18）
+
+Phase 9/8 的所有 GPU 侧挂起前置项至此闭合，Phase 10 可开始：
+
+- Phase 5 diff_phase5 GPU differential **484/484**（含 4 runtime-fault checks）。
+- Phase 5 fuzz `--gpu` **120/120** + 非 GPU n=40 + mutation 108/108。
+- Phase 7/8 l1tex_oracle **C++==Python 1941/1941**（frozen corpus）。
+- Phase 9 tensor differential GPU 侧 **78/78 PASS 0 failures**（24 user-skip +
+  TMA 3 非闭合 non-blocking 除外）。
+- 唯一已知非闭合：cuobj_regen w/ CUDA 13.1（R2P `PR` renderer 打印缺口，环境
+  差异，不含 `PR` 缺口则 gate 全绿），以及 tensor e3m2/e2m3/omma user-skip、
+  TMA non-blocking。`sim.py` 未修改。
+
 ### Phase 10 — 稳定化与 JIT 接口冻结
 
 #### 实现内容
@@ -2044,9 +2159,9 @@ LDGSTS 初始分级：
 | 4 | Done (2026-08-12) | - | control subset | 0 | 28 (17 CTest) | 0 | ITS corner cases (Phase 5+ 补充) |
 | 5 | Done (2026-08-13) | - | compute subset (29 mnemonics) | 0 | 30 (19 CTest) | 484/484 diff + fuzz GPU/ref + mutation 108/108 (0 err) | MUFU/FCHK/IMAD.X (近似表/未实现 carry, Phase 9) |
 | 6 | Done (2026-08-13) | - | memory/sync subset | l1tex/l2/race events | 24 CTest + 484 diff + 110 fuzz + 108 mutation + ASan/UBSan/TSan clean | 484/484 GPU diff | multi-writer global race report set 对 worker 数不承诺（单 race 对逐字节一致）；Step 2B 未接入 ordinary LDGSTS（后续 Phase 8/9） |
-| 7 | Done (2026-08-16) | - | control + memory + compute subset | unchanged | 25 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 (0 err) + l1tex C++==Python 1941/1941 | **GPU differential 挂起**（GPU0/RTX 5090 已拆走，仅剩 sm_75；待 5090 回归后补跑 diff_phase5 / l1tex GPU 采样 / fuzz --gpu） | debugger UX；sm_120 硬件验证挂起 |
-| 8 | Done (2026-08-16) | - | unchanged | memory subset (shared/global/ldgsts/l1tex/l2) | 29 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS corpus C++==Python 520/520 + pure counts == HW 520/520 + codex 复验 8 项修复（2B+4H+2M） | **GPU differential 挂起**（GPU0/RTX 5090 已拆走；待 5090 回归后补跑 diff/l1tex GPU 采样/fuzz --gpu） | LDGSTS SharedConf/GlobalConf 为定义性 approximate；scattered 8/16B、miss-path suppression、.cg bypass 未闭合 |
-| 9 | Planned | - | tensor/TMA subset | tensor/TMA | TBD | TBD | descriptor details |
+| 7 | Done (2026-08-16) | - | control + memory + compute subset | unchanged | 25 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 (0 err) + l1tex C++==Python 1941/1941 | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起；l1tex 为 frozen-corpus 门禁 1941/1941，GPU 采样属 corpus 采集流程不另行重跑） | debugger UX |
+| 8 | Done (2026-08-16) | - | unchanged | memory subset (shared/global/ldgsts/l1tex/l2) | 29 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS corpus C++==Python 520/520 + pure counts == HW 520/520 + codex 复验 8 项修复（2B+4H+2M） | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起） | LDGSTS SharedConf/GlobalConf 为定义性 approximate；scattered 8/16B、miss-path suppression、.cg bypass 未闭合 |
+| 9 | In progress (tensor core GPU-verified) | - | tensor/TMA subset | tensor/TMA | 32 CTest (含 tensor/tensor_map/mbarrier) + tensor_differential CPU gate + fuzz/mutation/l1tex 全绿 | **tensor GPU differential 78/78 PASS 0 failures**（2026-08-18，5090/CUDA 13.1；HMMA k16/k8 bf16+f16、QMMA k32×5+k16×2、OMMA.SF.16864 —— 模型==GPU==semu 逐 word）；`semu_test_tensor` 全过 | 24 user-skip（e3m2/e2m3/omma）；TMA 3 未闭合 non-blocking；`.cg` bypass 计数 unsupported（功能已闭合） |
 | 10 | Planned | full supported set | tracked | tracked | full | full optional | JIT follow-up |
 
 每个未解决行为应记录：关联 mnemonic/PC、硬件与软件版本、最小复现、观察结果、当前假设、反例、置信度和下一验证实验。

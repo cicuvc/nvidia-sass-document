@@ -68,14 +68,42 @@ def _is_zero_half(v, mant):
     return (v & ((1 << (mant + 1)) - 1)) == 0
 
 
+def fp8_special(v, mant, ebits):
+    """Classify an fp8 byte as ('inf', sign) | 'nan' | None (ordinary).
+
+    Verified on sm120 (RTX 5090, CUDA 13.1) byte probes per format:
+      * e5m2 (mant 2, ebits 5): 0x7C/0xFC = +/-inf; 0x7D-0x7F/0xFD-0xFF = NaN.
+      * e4m3 (mant 3, ebits 4) / e3m4 (mant 4, ebits 3): only the all-ones
+        byte 0x7F/0xFF is NaN; exp-all-ones with a smaller mantissa (e.g.
+        0x78..0x7E, 0x70..0x7E) is an ORDINARY value.
+      * e3m2 (mant 2, ebits 3) / e2m3 (mant 3, ebits 2) / e2m1: no special
+        values at all (the all-ones exponent is an ordinary exponent).
+    """
+    m = v & 0x7F
+    if ebits == 5 and mant == 2:                      # e5m2
+        if m == 0x7C:
+            return ("inf", -1 if (v & 0x80) else 1)
+        if m in (0x7D, 0x7E, 0x7F):
+            return "nan"
+        return None
+    if (mant == 3 and ebits == 4) or (mant == 4 and ebits == 3):
+        if m == 0x7F:
+            return "nan"
+        return None
+    return None
+
+
 def _sign_pos(v, mant):
     return not (v >> (mant + _ebits(mant)))
 
 
 def _sm_fp8(v, mant=3, bias=7, ebits=4):
-    """Decompose an fp8 (e4m3/e5m2-style) value.  NVIDIA QMMA treats the
-    all-ones exponent as an ordinary value (exp 15 -> 2^8 for e4m3): there are
-    NO NaN/inf special values in fp8 inputs -- verified on SM120."""
+    """Decompose an fp8 value as an ordinary (finite) number.
+
+    The all-ones exponent is an ordinary exponent for e4m3/e3m4/e3m2/e2m3
+    (verified on SM120); the fp8 special-value handling lives in fp8_special
+    (only e5m2 has true ±inf/NaN, which are handled before this is reached
+    for finite inputs)."""
     sign = -1 if (v >> (mant + ebits)) else 1
     e = (v >> mant) & ((1 << ebits) - 1)
     m = v & ((1 << mant) - 1)
@@ -214,11 +242,15 @@ def fda(c_bits, a_vals, b_vals, fmt="bf16"):
     values (bf16, f16, or fp8 e4m3).  Returns the FP32 output bits.
     """
     if fmt == "e4m3":
-        mant, bias = 3, 7
+        mant, bias, ebits = 3, 7, 4
+        is_fp8 = True
+    elif fmt == "e5m2":
+        mant, bias, ebits = 2, 15, 5
         is_fp8 = True
     else:
         mant = 7 if fmt == "bf16" else 10
         bias = 127 if fmt == "bf16" else 15
+        ebits = 8 if fmt == "bf16" else 5
         is_fp8 = False
 
     # ---- Step 1: special values -----------------------------------------
@@ -229,13 +261,34 @@ def fda(c_bits, a_vals, b_vals, fmt="bf16"):
     if _special(c_bits, 23) == "nan":
         return NAN_OUT
     if is_fp8:
-        # fp8 e4m3: only the all-ones pattern 0x7F/0xFF is NaN; every other
-        # bit pattern (incl. exp-15) is an ordinary value.  No fp8 infinity.
-        # NaN wins over c's inf, so check fp8 NaN before propagating c.
-        for a, b in zip(a_vals, b_vals):
-            if a in (0x7F, 0xFF) or b in (0x7F, 0xFF):
-                return NAN_OUT
+        # fp8 special-value handling VERIFIED on sm120 (RTX 5090, CUDA 13.1):
+        # only e5m2 carries true ±inf/NaN patterns; e4m3/e3m4 carry only the
+        # all-ones NaN; e3m2/e2m3/e2m1 have NO special values (see
+        # fp8_special).  NaN in any fp8 input wins over c's inf.
+        nan = False
+        infs = []
+        for a in a_vals:
+            sp = fp8_special(a & 0xFF, mant, ebits)
+            if sp == "nan":
+                nan = True
+            elif sp:
+                infs.append(("+" if sp[1] > 0 else "-") + "inf")
+        for b in b_vals:
+            sp = fp8_special(b & 0xFF, mant, ebits)
+            if sp == "nan":
+                nan = True
+            elif sp:
+                infs.append(("+" if sp[1] > 0 else "-") + "inf")
+        if nan:
+            return NAN_OUT
         c_sp = _special(c_bits, 23)
+        if c_sp in ("+inf", "-inf"):
+            if not infs:
+                return 0x7F800000 if c_sp == "+inf" else 0xFF800000
+        if infs:
+            if "+inf" in infs and "-inf" in infs:
+                return NAN_OUT
+            return 0x7F800000 if "+inf" in infs else 0xFF800000
         if c_sp in ("+inf", "-inf"):
             return 0x7F800000 if c_sp == "+inf" else 0xFF800000
     else:
@@ -271,8 +324,8 @@ def fda(c_bits, a_vals, b_vals, fmt="bf16"):
     e_max = c_e if have_c else None
     for a, b in zip(a_vals, b_vals):
         if is_fp8:
-            sa, anum, aden, ae = _sm_fp8(a)
-            sb, bnum, bden, be = _sm_fp8(b)
+            sa, anum, aden, ae = _sm_fp8(a, mant, bias, ebits)
+            sb, bnum, bden, be = _sm_fp8(b, mant, bias, ebits)
         else:
             sa, anum, aden, ae = _sm(a, mant, bias)
             sb, bnum, bden, be = _sm(b, mant, bias)

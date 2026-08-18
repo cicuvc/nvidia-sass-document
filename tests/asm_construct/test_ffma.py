@@ -17,9 +17,15 @@ from fma_ref import fma32
 # Rounding field [79:78] ("stride"): RN=0 RM=1 RP=2 RZ=3
 #   RN roundTiesToEven, RM toward -inf, RP toward +inf, RZ toward zero.
 # fmz field bits [80],[76]: nofmz=0 FMZ=1 FTZ=2
-#   .FTZ flushes denormal inputs AND the denormal result to sign-preserving
-#   zero.  Empirically on SM120 .FMZ is behaviourally identical to .FTZ for
-#   FFMA (flush denormal multiply inputs, addend, and result).
+#   .FTZ flushes all three denormal inputs sign-preserving; a subnormal
+#   result flushes sign-preserving to a signed zero; exact +/-0 results keep
+#   the IEEE zero-sum sign.
+#   .FMZ is NOT the same as .FTZ on SM120 (probed 2026-08-17): the denormal
+#   multiply inputs (a, b) flush to POSITIVE zero (the multiply path is
+#   sign-neutral), the denormal addend flushes sign-preserving, a subnormal
+#   product stays in the fused sum, a subnormal result flushes
+#   sign-preserving, and an exact zero-product + zero-addend sum takes the
+#   addend's sign under RM else +0.
 #
 # Reference: fma_ref.fma32 (big-integer exact sum + single grid rounding).
 # Cross-validated against an independent Fraction-based rounder over 20k
@@ -120,6 +126,32 @@ add("fmz-addend", 0x20000000, 0x20000000, 0x00000003, "FMZ", 0x00800000)
 # ---- underflow below the denormal grid ------------------------------------
 add("underflow", 0x00000001, 0x00000001, 0, "", 0)   # 2^-149 * 2^-149 -> 0
 
+# ---- FTZ/FMZ flushed-output SIGN (probed sm120, 2026-08-17) ----------------
+# FTZ flushes a negative subnormal result to -0 in every rounding mode
+# sign-preserving (product -2^-126 * +2^-126 = -2^-150).
+add("denout-neg-rn", 0x80800000, 0x00800000, 0, "FTZ", 0x80000000)
+add("denout-neg-rp", 0x80800000, 0x00800000, 0, "FTZ", 0x80000000)
+add("denout-neg-rz", 0x80800000, 0x00800000, 0, "FTZ", 0x80000000)
+# FTZ keeps the IEEE zero-sum sign: product -0 (+den flushed to -0 * 1.0) +
+# addend +0 -> -0 under RM, +0 otherwise.
+add("z-ftz-negprod-p0", 0x80000001, 0x3F800000, 0, "FTZ", 0x00000000)  # RN
+# FMZ multiply path is sign-neutral: +0 (from a=+den) * -1.5 = +0, addend
+# -0 -> +0 under RN (and all non-RM modes).
+add("z-fmz-posprod-negc", 0x00000001, 0xBF800000, 0x807FFFFF, "FMZ", 0x00000000)
+# Same inputs under FTZ: a flushed to +0, product +0 * -1.5 = -0, addend
+# -0 -> -0 (IEEE same-sign zero sum) even under RN.
+add("z-ftz-posprod-negc", 0x00000001, 0xBF800000, 0x807FFFFF, "FTZ", 0x80000000)
+# FMZ: -1.5 * +den -> product sign-neutral +0, addend +0 -> +0 under RM
+# (a genuine data product -1.5*+0 would round -0 under RM).
+add("z-fmz-sign-neutral", 0xBF800000, 0x00000001, 0, "FMZ", 0x00000000)
+# FMZ: product path +0 (a=+den) + addend -den(-0) -> +0 under RN/RZ,
+# -0 under RM (addend sign).
+add("z-fmz-addend-neg-rn", 0x00000001, 0x3F800000, 0x80000001, "FMZ", 0x00000000)
+add("z-fmz-addend-neg-rm", 0x00000001, 0x3F800000, 0x80000001, "FMZ.RM", 0x80000000)
+# FMZ keeps a subnormal product in the fused sum: 2^-126 * 2^-126 = 2^-252,
+# addend flushed to -0 -> +2^-252 -> flush +0 (NOT -0).
+add("z-fmz-tinyprod-negc", 0x00800000, 0x00800000, 0x80000001, "FMZ", 0)
+
 # ---- zero sign rules (IEEE 754-2019 5.4.2) --------------------------------
 # exact cancellation 1 + -1 -> +0 (RN/RP/RZ), -0 (RM)
 add("z-cancel",  0x3F800000, 0x3F800000, 0xBF800000, "RN", 0x00000000)
@@ -219,4 +251,6 @@ print("  overflow: RN/RP -> inf, RM/RZ -> clamp to max finite")
 print("  zero sum sign: +0 except RM -> -0 (IEEE 754-2019 5.4.2)")
 print("  NaN canonicalized to 0x7fffffff (all-1 mantissa, + sign)")
 print("  plain FFMA preserves denormal inputs AND denormal results")
-print("  .FTZ flushes denormal inputs + result; .FMZ == .FTZ on FFMA")
+print("  .FTZ flushes denormal inputs + subnormal result sign-preserving;")
+print("  .FMZ differs: multiplier path sign-neutral (+0), addend sign-")
+print("  preserving, fused subnormal product, addend-sign zero-sum under RM")

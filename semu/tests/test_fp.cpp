@@ -56,9 +56,9 @@ TEST(fp_rounding_modes_distinct) {
 
 TEST(fp_fma_tie_rounding) {
     // FFMA(1.0, 1.0, 2^-24) under RN ties-to-even -> 1.0; under RP -> 1+2^-23.
-    const std::uint32_t rn = ffma(kOne, kOne, 0x33800000u, Rnd::kRn, false, false);
-    const std::uint32_t up = ffma(kOne, kOne, 0x33800000u, Rnd::kRp, false, false);
-    const std::uint32_t dn = ffma(kOne, kOne, 0x33800000u, Rnd::kRm, false, false);
+    const std::uint32_t rn = ffma(kOne, kOne, 0x33800000u, Rnd::kRn, 0, false);
+    const std::uint32_t up = ffma(kOne, kOne, 0x33800000u, Rnd::kRp, 0, false);
+    const std::uint32_t dn = ffma(kOne, kOne, 0x33800000u, Rnd::kRm, 0, false);
     CHECK(rn == 0x3f800000u);
     CHECK(up == 0x3f800001u);
     CHECK(dn == 0x3f800000u);
@@ -66,20 +66,33 @@ TEST(fp_fma_tie_rounding) {
 
 TEST(fp_nan_canonical) {
     // NaN operands canonicalize to 0x7fffffff.
-    CHECK(ffma(0x7fc00000u, kOne, kOne, Rnd::kRn, false, false) ==
+    CHECK(ffma(0x7fc00000u, kOne, kOne, Rnd::kRn, 0, false) ==
           semu::fp::kCanonicalNan32);
     CHECK(fadd(0xffc00000u, kOne, Rnd::kRn, false, false) ==
           semu::fp::kCanonicalNan32);
 }
 
 TEST(fp_fmz_flush_all_inputs) {
-    // FMZ flushes all three denormal inputs sign-preserving; the result of
-    // fma(0,0,0) is +0.
-    CHECK(ffma(0x00000001u, 0x00000001u, 0x00000001u, Rnd::kRn, true, false) ==
+    // FTZ (fmz=2) flushes all three denormal inputs sign-preserving; the
+    // result of fma(0,0,0) is +0.
+    CHECK(ffma(0x00000001u, 0x00000001u, 0x00000001u, Rnd::kRn, 2, false) ==
           0x00000000u);
-    // Denormal result flush under RN -> +0.
-    CHECK(ffma(0x00000001u, 0xbf800000u, 0x807fffffu, Rnd::kRn, true, false) ==
+    // FTZ subnormal/zero result follows the arithmetic sign: product
+    // +0 * -1.5 = -0 plus addend -0 -> -0 under RN (verified sm120).
+    CHECK(ffma(0x00000001u, 0xbf800000u, 0x807fffffu, Rnd::kRn, 2, false) ==
+          0x80000000u);
+    // FMZ (fmz=1) flushes the multiply inputs to POSITIVE zero: +0 * -1.5
+    // is sign-neutral, addend -0 -> +0 under RN (verified sm120).
+    CHECK(ffma(0x00000001u, 0xbf800000u, 0x807fffffu, Rnd::kRn, 1, false) ==
           0x00000000u);
+    // FTZ flush of a negative subnormal RESULT is sign-preserving: -2^-150
+    // (product of -2^-126 * +2^-126) -> -0 in every rounding mode.
+    CHECK(ffma(0x80800000u, 0x00800000u, 0x00000000u, Rnd::kRn, 2, false) ==
+          0x80000000u);
+    CHECK(ffma(0x80800000u, 0x00800000u, 0x00000000u, Rnd::kRp, 2, false) ==
+          0x80000000u);
+    CHECK(ffma(0x80800000u, 0x00800000u, 0x00000000u, Rnd::kRz, 2, false) ==
+          0x80000000u);
 }
 
 TEST(fp_f64_rounding) {
@@ -209,7 +222,7 @@ TEST(fast_fp_finite_rn_matches_precise) {
             const std::uint32_t f_mul = semu::fp::fast_fmul(a, b, 0, false, false);
             CHECK(f_mul == p_mul);
             for (std::uint32_t c : vals) {
-                const std::uint32_t p_fma = ffma(a, b, c, Rnd::kRn, false, false);
+                const std::uint32_t p_fma = ffma(a, b, c, Rnd::kRn, 0, false);
                 const std::uint32_t f_fma = semu::fp::fast_ffma(a, b, c, 0, false, false);
                 CHECK(f_fma == p_fma);
                 ++n;

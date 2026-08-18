@@ -1,0 +1,1563 @@
+{
+ "cases": [
+  {
+   "name": "hmma_k16_bf16_t0",
+   "variant": "hmma_k16_bf16",
+   "model": [
+    "0xBEE3F833",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0xBEE3F833",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xBEE3F833",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_f16_t0",
+   "variant": "hmma_k16_f16",
+   "model": [
+    "0xBEE3F81B",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0xBEE3F81B",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xBEE3F81B",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_bf16_t0",
+   "variant": "hmma_k8_bf16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_f16_t0",
+   "variant": "hmma_k8_f16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e4m3_t0",
+   "variant": "qmma_k32_e4m3",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e5m2_t0",
+   "variant": "qmma_k32_e5m2",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m4_t0",
+   "variant": "qmma_k32_e3m4",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m2_t0",
+   "variant": "qmma_k32_e3m2",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e2m3_t0",
+   "variant": "qmma_k32_e2m3",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e4m3_t0",
+   "variant": "qmma_k16_e4m3",
+   "model": [
+    "0x45DD7CA9",
+    "0x7920B900",
+    "0xC69FA1F9",
+    "0xC6A4D31B"
+   ],
+   "gpu": [
+    "0x45DD7CA9",
+    "0x7920B900",
+    "0xC69FA1F9",
+    "0xC6A4D31B"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x45DD7CA9",
+    "0x7920B900",
+    "0xC69FA1F9",
+    "0xC6A4D31B"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e5m2_t0",
+   "variant": "qmma_k16_e5m2",
+   "model": [
+    "0x482D89B5",
+    "0x7920B900",
+    "0xCB281191",
+    "0xCB281429"
+   ],
+   "gpu": [
+    "0x482D89B5",
+    "0x7920B900",
+    "0xCB281191",
+    "0xCB281429"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x482D89B5",
+    "0x7920B900",
+    "0xCB281191",
+    "0xCB281429"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t0",
+   "variant": "omma_k64_t0",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t0",
+   "variant": "omma_k64_t0",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_bf16_t1",
+   "variant": "hmma_k16_bf16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_f16_t1",
+   "variant": "hmma_k16_f16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_bf16_t1",
+   "variant": "hmma_k8_bf16",
+   "model": [
+    "0x7F800000",
+    "0xC5B8A2CF",
+    "0x4612BA1C",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7F800000",
+    "0xC5B8A2CF",
+    "0x4612BA1C",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7F800000",
+    "0xC5B8A2CF",
+    "0x4612BA1C",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_f16_t1",
+   "variant": "hmma_k8_f16",
+   "model": [
+    "0x7F800000",
+    "0xC5B8A3AF",
+    "0x4612D9DC",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7F800000",
+    "0xC5B8A3AF",
+    "0x4612D9DC",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7F800000",
+    "0xC5B8A3AF",
+    "0x4612D9DC",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e4m3_t1",
+   "variant": "qmma_k32_e4m3",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e5m2_t1",
+   "variant": "qmma_k32_e5m2",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m4_t1",
+   "variant": "qmma_k32_e3m4",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m2_t1",
+   "variant": "qmma_k32_e3m2",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e2m3_t1",
+   "variant": "qmma_k32_e2m3",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e4m3_t1",
+   "variant": "qmma_k16_e4m3",
+   "model": [
+    "0x4504D5E8",
+    "0xC5AC757C",
+    "0x459E3F0D",
+    "0x443E95C4"
+   ],
+   "gpu": [
+    "0x4504D5E8",
+    "0xC5AC757C",
+    "0x459E3F0D",
+    "0x443E95C4"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x4504D5E8",
+    "0xC5AC757C",
+    "0x459E3F0D",
+    "0x443E95C4"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e5m2_t1",
+   "variant": "qmma_k16_e5m2",
+   "model": [
+    "0x450F1B60",
+    "0xC5A752C0",
+    "0xFF800000",
+    "0xFF800000"
+   ],
+   "gpu": [
+    "0x450F1B60",
+    "0xC5A752C0",
+    "0xFF800000",
+    "0xFF800000"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x450F1B60",
+    "0xC5A752C0",
+    "0xFF800000",
+    "0xFF800000"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t1",
+   "variant": "omma_k64_t1",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t1",
+   "variant": "omma_k64_t1",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_bf16_t2",
+   "variant": "hmma_k16_bf16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_f16_t2",
+   "variant": "hmma_k16_f16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_bf16_t2",
+   "variant": "hmma_k8_bf16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_f16_t2",
+   "variant": "hmma_k8_f16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e4m3_t2",
+   "variant": "qmma_k32_e4m3",
+   "model": [
+    "0xC828D0A0",
+    "0xC832857F",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0xC828D0A0",
+    "0xC832857F",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xC828D0A0",
+    "0xC832857F",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e5m2_t2",
+   "variant": "qmma_k32_e5m2",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m4_t2",
+   "variant": "qmma_k32_e3m4",
+   "model": [
+    "0x4590B740",
+    "0xC5A5E4A1",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x4590B740",
+    "0xC5A5E4A1",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x4590B740",
+    "0xC5A5E4A1",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m2_t2",
+   "variant": "qmma_k32_e3m2",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e2m3_t2",
+   "variant": "qmma_k32_e2m3",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e4m3_t2",
+   "variant": "qmma_k16_e4m3",
+   "model": [
+    "0x45C0B09A",
+    "0xC56BD68F",
+    "0x7FFFFFFF",
+    "0xC591B106"
+   ],
+   "gpu": [
+    "0x45C0B09A",
+    "0xC56BD68F",
+    "0x7FFFFFFF",
+    "0xC591B106"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x45C0B09A",
+    "0xC56BD68F",
+    "0x7FFFFFFF",
+    "0xC591B106"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e5m2_t2",
+   "variant": "qmma_k16_e5m2",
+   "model": [
+    "0x45DAA8EF",
+    "0xC537E5E5",
+    "0x7FFFFFFF",
+    "0xC6601A60"
+   ],
+   "gpu": [
+    "0x45DAA8EF",
+    "0xC537E5E5",
+    "0x7FFFFFFF",
+    "0xC6601A60"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x45DAA8EF",
+    "0xC537E5E5",
+    "0x7FFFFFFF",
+    "0xC6601A60"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t2",
+   "variant": "omma_k64_t2",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t2",
+   "variant": "omma_k64_t2",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_bf16_t3",
+   "variant": "hmma_k16_bf16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_f16_t3",
+   "variant": "hmma_k16_f16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_bf16_t3",
+   "variant": "hmma_k8_bf16",
+   "model": [
+    "0x46180270",
+    "0x44C5B89B",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x46180270",
+    "0x44C5B89B",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x46180270",
+    "0x44C5B89B",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_f16_t3",
+   "variant": "hmma_k8_f16",
+   "model": [
+    "0x46182B07",
+    "0x44C6FD57",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x46182B07",
+    "0x44C6FD57",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x46182B07",
+    "0x44C6FD57",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e4m3_t3",
+   "variant": "qmma_k32_e4m3",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e5m2_t3",
+   "variant": "qmma_k32_e5m2",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m4_t3",
+   "variant": "qmma_k32_e3m4",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m2_t3",
+   "variant": "qmma_k32_e3m2",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e2m3_t3",
+   "variant": "qmma_k32_e2m3",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e4m3_t3",
+   "variant": "qmma_k16_e4m3",
+   "model": [
+    "0x47A587F7",
+    "0x47B6D8DA",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x47A587F7",
+    "0x47B6D8DA",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x47A587F7",
+    "0x47B6D8DA",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e5m2_t3",
+   "variant": "qmma_k16_e5m2",
+   "model": [
+    "0x7F800000",
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7F800000",
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7F800000",
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t3",
+   "variant": "omma_k64_t3",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t3",
+   "variant": "omma_k64_t3",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_bf16_t4",
+   "variant": "hmma_k16_bf16",
+   "model": [
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7F800000",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_f16_t4",
+   "variant": "hmma_k16_f16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_bf16_t4",
+   "variant": "hmma_k8_bf16",
+   "model": [
+    "0xC51118BE",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0xC51118BE",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xC51118BE",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_f16_t4",
+   "variant": "hmma_k8_f16",
+   "model": [
+    "0xC510A13E",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0xC510A13E",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xC510A13E",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e4m3_t4",
+   "variant": "qmma_k32_e4m3",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e5m2_t4",
+   "variant": "qmma_k32_e5m2",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m4_t4",
+   "variant": "qmma_k32_e3m4",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m2_t4",
+   "variant": "qmma_k32_e3m2",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e2m3_t4",
+   "variant": "qmma_k32_e2m3",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e4m3_t4",
+   "variant": "qmma_k16_e4m3",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e5m2_t4",
+   "variant": "qmma_k16_e5m2",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t4",
+   "variant": "omma_k64_t4",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t4",
+   "variant": "omma_k64_t4",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_bf16_t5",
+   "variant": "hmma_k16_bf16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k16_f16_t5",
+   "variant": "hmma_k16_f16",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_bf16_t5",
+   "variant": "hmma_k8_bf16",
+   "model": [
+    "0xC5C9600B",
+    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0xC5C9600B",
+    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xC5C9600B",
+    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "hmma_k8_f16_t5",
+   "variant": "hmma_k8_f16",
+   "model": [
+    "0xC5C9600B",
+    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0xC5C9600B",
+    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xC5C9600B",
+    "0xC5215EF3",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e4m3_t5",
+   "variant": "qmma_k32_e4m3",
+   "model": [
+    "0xC7159FEB",
+    "0x7F800000",
+    "0xC8FB74D7",
+    "0xC8F5E458"
+   ],
+   "gpu": [
+    "0xC7159FEB",
+    "0x7F800000",
+    "0xC8FB74D7",
+    "0xC8F5E458"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xC7159FEB",
+    "0x7F800000",
+    "0xC8FB74D7",
+    "0xC8F5E458"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e5m2_t5",
+   "variant": "qmma_k32_e5m2",
+   "model": [
+    "0x7F800000",
+    "0x7F800000",
+    "0xFF800000",
+    "0xFF800000"
+   ],
+   "gpu": [
+    "0x7F800000",
+    "0x7F800000",
+    "0xFF800000",
+    "0xFF800000"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7F800000",
+    "0x7F800000",
+    "0xFF800000",
+    "0xFF800000"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m4_t5",
+   "variant": "qmma_k32_e3m4",
+   "model": [
+    "0xC5F64E55",
+    "0x7F800000",
+    "0xC63AC142",
+    "0xC40B156C"
+   ],
+   "gpu": [
+    "0xC5F64E55",
+    "0x7F800000",
+    "0xC63AC142",
+    "0xC40B156C"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0xC5F64E55",
+    "0x7F800000",
+    "0xC63AC142",
+    "0xC40B156C"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e3m2_t5",
+   "variant": "qmma_k32_e3m2",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k32_e2m3_t5",
+   "variant": "qmma_k32_e2m3",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e4m3_t5",
+   "variant": "qmma_k16_e4m3",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "qmma_k16_e5m2_t5",
+   "variant": "qmma_k16_e5m2",
+   "model": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "gpu_match": true,
+   "semu": [
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF",
+    "0x7FFFFFFF"
+   ],
+   "semu_match": true,
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t5",
+   "variant": "omma_k64_t5",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  },
+  {
+   "name": "omma_k64_t5",
+   "variant": "omma_k64_t5",
+   "skipped": true,
+   "reason": "user instructed skip",
+   "ok": true
+  }
+ ],
+ "tma": [
+  {
+   "name": "tma/utmaldg",
+   "gpu_out": "0100020003000400050006000700080009000a000b000c000d000e000f00100000000000",
+   "gpu_out_match": false,
+   "semu_out_error": "|ecution_mode\":\"precise\",\"approximate\":false,\"fast_stats\":{\"fast_fp_ops\":0,\"precise_fallback_ops\":0,\"ignored_modifier_ops\":0},\"fault\":{\"kind\":3,\"pc\":480,\"warp\":0,\"message\":\"mbarrier not initialized\"}}\n",
+   "ok": false,
+   "unclosed": true
+  },
+  {
+   "name": "tma/utmastg",
+   "gpu_base_match": true,
+   "semu_base": "01000000000000000000000000000000",
+   "semu_base_match": false,
+   "gpu_out": "0100020003000400050006000700080009000a000b000c000d000e000f001000",
+   "gpu_out_match": false,
+   "semu_out_match": true,
+   "base_gpu_vs_semu": false,
+   "out_gpu_vs_semu": false,
+   "ok": false,
+   "unclosed": true
+  },
+  {
+   "name": "tma/utmaredg",
+   "gpu_base_match": true,
+   "semu_base_error": "|ecise\",\"approximate\":false,\"fast_stats\":{\"fast_fp_ops\":0,\"precise_fallback_ops\":0,\"ignored_modifier_ops\":0},\"fault\":{\"kind\":1,\"pc\":272,\"warp\":0,\"message\":\"UTMAREDG element size != 4 is decode-only\"}}\n",
+   "gpu_out": "0100020003000400050006000700080009000a000b000c000d000e000f001000",
+   "gpu_out_match": false,
+   "semu_out_error": "|ecise\",\"approximate\":false,\"fast_stats\":{\"fast_fp_ops\":0,\"precise_fallback_ops\":0,\"ignored_modifier_ops\":0},\"fault\":{\"kind\":1,\"pc\":272,\"warp\":0,\"message\":\"UTMAREDG element size != 4 is decode-only\"}}\n",
+   "ok": false,
+   "unclosed": true
+  }
+ ],
+ "summary": {
+  "total": 78,
+  "failed": 0,
+  "passed": 78,
+  "skipped": 24,
+  "tma_total": 3,
+  "tma_unclosed": 3
+ }
+}

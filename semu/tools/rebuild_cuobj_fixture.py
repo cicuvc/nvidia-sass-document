@@ -133,20 +133,26 @@ def main() -> int:
         uniq.append(r)
 
     # toolchain provenance
-    try:
-        p = subprocess.run([CUOBJDUMP, "--version"], text=True,
-                           capture_output=True)
-        meta["toolchain"]["cuobjdump"] = p.stdout.splitlines()[0] if \
-            p.stdout else "unknown"
-    except Exception:
-        meta["toolchain"]["cuobjdump"] = "unknown"
-    try:
-        p = subprocess.run([NVCC, "--version"], text=True,
-                           capture_output=True)
-        meta["toolchain"]["nvcc"] = p.stdout.strip().splitlines()[-1] if \
-            p.stdout else "unknown"
-    except Exception:
-        meta["toolchain"]["nvcc"] = "unknown"
+    def tool_version(cmd, key):
+        try:
+            p = subprocess.run(cmd.split(), text=True, capture_output=True)
+            lines = [l.strip() for l in p.stdout.splitlines() if l.strip()]
+        except Exception:
+            lines = []
+        # Prefer the full `Cuda compilation tools, release X.Y, V...` line and
+        # the `Build cuda_...` line; fall back to the first output line.  This
+        # pins the exact toolkit so rebuild provenance is unambiguous across
+        # machines/toolchains.
+        rel = next((l for l in lines if "Cuda compilation tools" in l), None)
+        build = next((l for l in lines if l.startswith("Build cuda_")), None)
+        full = next((l for l in lines if "compiler." in l), None)
+        if rel and build:
+            return {"release": rel, "build": build}
+        if full:
+            return {"full": full}
+        return {"line0": lines[0] if lines else "unknown"}
+    meta["toolchain"]["cuobjdump"] = tool_version("/usr/local/cuda/bin/cuobjdump --version", "cuobjdump")
+    meta["toolchain"]["nvcc"] = tool_version("/usr/local/cuda/bin/nvcc --version", "nvcc")
 
     meta["count"] = len(uniq)
     doc = {"meta": meta, "vectors": uniq}

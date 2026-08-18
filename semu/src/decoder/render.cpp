@@ -438,6 +438,12 @@ std::optional<std::string> render_single(const isa::Variant* v,
         txt = "URZ";
     } else if (std::strcmp(r, "Predicate") == 0) {
         txt = (val && *val == 7) ? "PT" : "P" + std::to_string(val.value_or(0));
+    } else if (std::strcmp(r, "PR") == 0) {
+        // Raw predicate-register-file operand (R2P destination / P2R source).
+        // Rendered as the literal token `PR`; there is no per-operand value
+        // (no encoding field carries it).  Generic type handling so any
+        // variant with a `PR`-typed slot renders it.
+        txt = "PR";
     } else if (std::strcmp(r, "UniformPredicate") == 0) {
         txt = (val && *val == 7) ? "UPT" : "UP" + std::to_string(val.value_or(0));
     } else if (std::strcmp(r, "BITSET") == 0) {

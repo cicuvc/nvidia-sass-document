@@ -64,7 +64,18 @@ std::uint32_t fadd(std::uint32_t a, std::uint32_t b, Rnd rnd, bool flush,
 std::uint32_t fmul(std::uint32_t a, std::uint32_t b, Rnd rnd, bool flush,
                    bool sat);
 std::uint32_t ffma(std::uint32_t a, std::uint32_t b, std::uint32_t c,
-                   Rnd rnd, bool fmz, bool sat);
+                   Rnd rnd, int fmz, bool sat);
+// `fmz` is the SASS fmz field value: 0 = no flush, 1 = FMZ, 2 = FTZ.
+//   FTZ (2): flush all three denormal inputs sign-preserving; flush a
+//            subnormal result sign-preserving; exact zeros keep the IEEE
+//            zero-sum sign (verified matrix on sm120).
+//   FMZ (1): flush the denormal multiply inputs (a, b) to POSITIVE zero
+//            (the multiply path's zero is sign-neutral); flush the denormal
+//            addend sign-preserving; keep a subnormal product uncollapsed in
+//            the fused sum; flush a subnormal result sign-preserving; an
+//            exact zero sum of a zero product and a zero addend takes the
+//            addend's sign under RM and +0 otherwise (verified 288-combo
+//            sweep on sm120).
 
 // --- FP64 helpers ---------------------------------------------------------
 std::uint64_t fadd64(std::uint64_t a, std::uint64_t b, Rnd rnd, bool sat);

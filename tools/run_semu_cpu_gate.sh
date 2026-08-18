@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# CPU-only Phase 7 gate runner (replaces `ctest` which is unavailable on this
-# machine).  Runs the 25 CTest tests of the semu build tree directly against
-# the test executables + python drivers.
+# CPU-only phase gate runner (replaces `ctest` which is unavailable on this
+# machine).  Runs the semu CTest suite of the build tree directly against the
+# test executables + python drivers.
 #
 # Usage: tools/run_semu_cpu_gate.sh [build_dir]   (default semu/build)
 set -u
@@ -33,7 +33,7 @@ run() {
 }
 
 # --- C++ L0 unit tests (CPU only) ---
-for t in core decoder cubin memory cluster interp fp l1tex shared_bank global profiler subcore l2 race debugger tensor_map mbarrier; do
+for t in core decoder cubin memory cluster interp fp l1tex shared_bank global profiler subcore l2 race debugger tensor_map tensor mbarrier; do
   run "cpp/$t" "$BIN/semu_test_$t"
 done
 
@@ -56,8 +56,12 @@ run "decoder_cuobjdump_tamper" "$PY" "$SRC/decoder_cuobjdump_tamper_test.py" "$C
 # --- Phase 2 loader gates ---
 run "cubin_load" "$PY" "$SRC/cubin_load_test.py" "$CLI"
 
-# --- Phase 5 fuzz (CPU-only; GPU differential is suspended) ---
+# --- Phase 5 fuzz (CPU-only oracle here; the GPU differential is run
+# separately: tools/diff_phase5.py / tools/fuzz_phase5.py --gpu) ---
 run "fuzz_phase5" "$PY" "$SRC/fuzz_phase5_test.py" "$CLI" "$ROOT/tools/fuzz_phase5.py"
+
+# --- Phase 9 tensor differential (C++ interpreter == python reference; CPU) ---
+run "tensor_differential" "$PY" "$ROOT/tools/tensor_differential_test.py" "$CLI"
 
 # --- Phase 5.5 l1tex oracle (C++ estimator == python reference; CPU only) ---
 if [ -x "$BIN/semu_l1tex_cli" ] && [ -f "$L1TEX_DIR/unified_model.py" ]; then

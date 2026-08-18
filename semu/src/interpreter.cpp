@@ -10,6 +10,7 @@
 #include <cfenv>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <thread>
 
@@ -4271,15 +4272,19 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
         if (!tensor::qmma_shape(static_cast<int>(size), &shape)) {
             return unsupported("(shape)");
         }
-        // Probed SM120 srcFmt mapping (AGENTS.md): E4M3=0 E3M4=1 E2M3=2
-        // E5M2=4 E3M2=5 E2M1=6.
+        // SM120 QMMA srcFmt mapping (verified against real hardware on RTX
+        // 5090, CUDA 13.1: field value drives the SRCFMTA_qmma enum in the
+        // spec).  E4M3=0 E5M2=1 E3M4=2 E3M2=3 E2M3=4.  Field 5 is named
+        // E2M1 in the spec but empirically behaves EXACTLY like field 4
+        // (E2M3) on sm120 (identical D words on byte-level probes) — no
+        // distinct E2M1 QMMA format exists on this hardware.
         switch (sfa) {
             case 0: fmt = tensor::Format::kFp8E4M3; break;
-            case 1: fmt = tensor::Format::kFp8E3M4; break;
-            case 2: fmt = tensor::Format::kFp8E2M3; break;
-            case 4: fmt = tensor::Format::kFp8E5M2; break;
-            case 5: fmt = tensor::Format::kFp8E3M2; break;
-            case 6: fmt = tensor::Format::kFp8E2M1; break;
+            case 1: fmt = tensor::Format::kFp8E5M2; break;
+            case 2: fmt = tensor::Format::kFp8E3M4; break;
+            case 3: fmt = tensor::Format::kFp8E3M2; break;
+            case 4:
+            case 5: fmt = tensor::Format::kFp8E2M3; break;
             default: return unsupported("(srcFmtA)");
         }
     } else {  // OMMA.SF (mxfp4 block-scaled)
@@ -4389,10 +4394,15 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
     // ---- FP32 add/mul/fma -----------------------------------------------
     if (m == "FADD" || m == "FMUL" || m == "FFMA") {
         const Rnd rnd = static_cast<Rnd>(slot_value(inst, "rnd").value_or(0));
-        // FADD uses `ftz`; FMUL/FFMA use `fmz` (FMZ_hfma2: FMZ=1, FTZ=2).
+        // FADD uses `ftz`; FMUL/FFMA use `fmz` (fmz field: nofmz=0 FMZ=1
+        // FTZ=2).  FADD/FMUL take a plain flush bool; FFMA needs the raw
+        // fmz value (FMZ and FTZ differ on sm120, see fp.hpp).
         const bool flush = m == "FADD"
             ? slot_value(inst, "ftz").value_or(0) != 0
             : slot_value(inst, "fmz").value_or(0) != 0;
+        const int fmz_val = m == "FADD"
+            ? 0
+            : static_cast<int>(slot_value(inst, "fmz").value_or(0));
         const bool sat = slot_value(inst, "sat").value_or(0) != 0;
         if (!rd) return Status::success();
         const Operand* ra = find_op(inst, "Ra");
@@ -4450,7 +4460,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                     switch (op) {
                         case 0: out = fp::fadd(a, b, rnd, flush, sat); break;
                         case 1: out = fp::fmul(a, b, rnd, flush, sat); break;
-                        default: out = fp::ffma(a, b, c, rnd, flush, sat); break;
+                        default: out = fp::ffma(a, b, c, rnd, fmz_val, sat); break;
                     }
                 } else {
                     note_fast_leaf(true);
@@ -4460,7 +4470,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                 switch (op) {
                     case 0: out = fp::fadd(a, b, rnd, flush, sat); break;
                     case 1: out = fp::fmul(a, b, rnd, flush, sat); break;
-                    default: out = fp::ffma(a, b, c, rnd, flush, sat); break;
+                    default: out = fp::ffma(a, b, c, rnd, fmz_val, sat); break;
                 }
             }
             if (rd_idx >= 0) t.gpr[rd_idx] = out;

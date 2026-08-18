@@ -82,6 +82,41 @@ TEST(decoder_candidates_opcode_index) {
     CHECK(cands.size() >= 1);
 }
 
+TEST(decoder_pr_operand_rendered) {
+    // PR-typed operand slots (R2P destination / P2R source) must render the
+    // literal `PR` token; the generic renderer handles the PR type so every
+    // PR-carrying variant prints it.  The R2P word is the real CUDA 13.1
+    // cuobjdump vector from a recompiled vecmix; the RRR/RUR/P2R words are
+    // canonical encodings (assembler round-trip proven in the corpus gate).
+    struct PRVec {
+        std::uint64_t lo, hi;
+        const char* cls;
+        const char* expect;  // disasm operand region (PR included)
+    };
+    const PRVec kPR[] = {
+        {0x0000000300007804ULL, 0x000fe20000000000ULL, "r2p__RIR",
+         "PR, R0, 0x3"},
+        {0x00000400007204ULL, 0x0fc40000000000ULL, "r2p__RRR",
+         "PR, R0, R4"},
+        {0x00000400007c04ULL, 0x0fc40008000000ULL, "r2p__RUR",
+         "PR, R0, UR4"},
+        {0x00000100037803ULL, 0x0fc40000000000ULL, "p2r__RuIR_RIR",
+         "R3, PR, R0, 0x1"},
+    };
+    const auto& dec = Decoder::instance();
+    for (const auto& v : kPR) {
+        DecodeResult r = dec.decode(v.lo, v.hi);
+        CHECK(r.is_unique());
+        if (r.is_unique()) {
+            const auto& inst = r.instruction();
+            CHECK_EQ(std::string(inst.variant_class), std::string(v.cls));
+            CHECK(inst.disasm.find(v.expect) != std::string::npos);
+            // the literal PR token must never be dropped or substituted
+            CHECK(inst.disasm.find("PR") != std::string::npos);
+        }
+    }
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;

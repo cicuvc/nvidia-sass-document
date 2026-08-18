@@ -234,6 +234,26 @@ struct FmtParams {
     bool is_fp8 = false;
 };
 
+// fp8 special-class classification (verified on sm120 RTX 5090, CUDA 13.1).
+// Returns kPosInf/kNegInf/kNan/kNone.  Only e5m2 carries true +/-inf
+// (0x7C/0xFC) and NaN (0x7D-0x7F / 0xFD-0xFF); e4m3/e3m4 carry only the
+// all-ones NaN; the other fp8 formats have no special values.
+enum class Fp8Sp { kNone, kPosInf, kNegInf, kNan };
+
+Fp8Sp fp8_special_i(std::uint8_t v, const FmtParams& p) {
+    const std::uint8_t m = static_cast<std::uint8_t>(v & 0x7F);
+    if (p.ebits == 5 && p.mant == 2) {  // e5m2
+        if (m == 0x7C) return (v & 0x80) ? Fp8Sp::kNegInf : Fp8Sp::kPosInf;
+        if (m == 0x7D || m == 0x7E || m == 0x7F) return Fp8Sp::kNan;
+        return Fp8Sp::kNone;
+    }
+    if ((p.mant == 3 && p.ebits == 4) || (p.mant == 4 && p.ebits == 3)) {
+        if (m == 0x7F) return Fp8Sp::kNan;
+        return Fp8Sp::kNone;
+    }
+    return Fp8Sp::kNone;
+}
+
 FmtParams params_of(Format f) {
     switch (f) {
         case Format::kF16: return {10, 15, 5, false};
@@ -270,16 +290,23 @@ std::uint32_t fda_impl(std::uint32_t c, const std::uint32_t* a_vals,
     const Sp csp = classify(c, 23);
     if (csp == kNan) return kNanOut;
     if (p.is_fp8) {
-        // all-ones byte pattern 0x7F/0xFF is NaN in fp8 inputs; every other
-        // pattern (incl. exp-max with a lower mantissa) is an ordinary value.
-        // NaN wins over c's inf.
+        // fp8 special values VERIFIED on sm120 (RTX 5090, CUDA 13.1): only
+        // e5m2 has true +/-inf (0x7C/0xFC) and NaN (0x7D-0x7F); e4m3/e3m4
+        // have only the all-ones NaN; e3m2/e2m3/e2m1 have none.  NaN in any
+        // fp8 input wins over c's inf.
+        bool nan = false;
+        Fp8Sp pos = Fp8Sp::kNone, neg = Fp8Sp::kNone;
         for (std::size_t i = 0; i < k; ++i) {
-            const std::uint8_t av = a_vals[i] & 0xFF;
-            const std::uint8_t bv = b_vals[i] & 0xFF;
-            if (av == 0x7F || av == 0xFF || bv == 0x7F || bv == 0xFF) {
-                return kNanOut;
-            }
+            const Fp8Sp sa = fp8_special_i(a_vals[i] & 0xFF, p);
+            const Fp8Sp sb = fp8_special_i(b_vals[i] & 0xFF, p);
+            if (sa == Fp8Sp::kNan || sb == Fp8Sp::kNan) nan = true;
+            if (sa == Fp8Sp::kPosInf || sb == Fp8Sp::kPosInf) pos = Fp8Sp::kPosInf;
+            if (sa == Fp8Sp::kNegInf || sb == Fp8Sp::kNegInf) neg = Fp8Sp::kNegInf;
         }
+        if (nan) return kNanOut;
+        if (pos == Fp8Sp::kPosInf && neg == Fp8Sp::kNegInf) return kNanOut;
+        if (pos == Fp8Sp::kPosInf) return 0x7F800000u;
+        if (neg == Fp8Sp::kNegInf) return 0xFF800000u;
         if (csp == kPosInf) return 0x7F800000u;
         if (csp == kNegInf) return 0xFF800000u;
     } else {

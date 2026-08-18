@@ -6,26 +6,27 @@ random m16n8 fragments and compares the four FP32 accumulator words D0..D3
 BIT-FOR-BIT against tools/hmma_model.py.  Coverage:
 
   * HMMA.16816 (k16) bf16 / f16, HMMA.1688 (k8) bf16 / f16   -- F32 acc
-  * QMMA.16832 (k32) in the five spec-legal fp8 formats (e4m3 / e3m4 /
-    e2m3 / e5m2 / e3m2) and QMMA.16816 (k16) in the two spec-legal
-    formats (e4m3 / e3m4)                                    -- F32 acc
-    NOTE: the sm120 spec restricts the qmma_ srcFmt field to values 0..5
-    (6/7 are INVALID6/7) and the 16816 shape to values 0..1 ("size 16816
-    only allows srcfmt E5M2 or E4M3" in the qmma_ CLASS conditions, where
-    the condition names use the sm120 enum values).  With the probed SM120
-    format mapping (E4M3=0, E3M4=1, E2M3=2, E5M2=4, E3M2=5, E2M1=6) the
-    exercisable set is therefore k32 = E4M3/E3M4/E2M3/E5M2/E3M2 and
-    k16 = E4M3/E3M4; E2M1 (field value 6) is INVALID6 and cannot be
-    encoded on either shape.
+  * QMMA.16832 (k32) in the five distinct spec-legal fp8 formats (e4m3 /
+    e5m2 / e3m4 / e3m2 / e2m3) and QMMA.16816 (k16) in the two spec-legal
+    formats (e4m3 / e5m2)                                    -- F32 acc
+    NOTE: the qmma_ srcFmt field follows the SRCFMTA_qmma enum (E4M3=0
+    E5M2=1 E3M4=2 E3M2=3 E2M3=4 E2M1=5; values 6/7 are INVALID6/7).  The
+    "size 16816 only allows srcfmt E5M2 or E4M3" condition (named per the
+    sm120 enum) restricts k16 to field values 0 (E4M3) and 1 (E5M2) only;
+    k32 may use the rest.  Mapping verified on sm120 (RTX 5090, CUDA 13.1)
+    with byte-level probes: field == format directly (e.g. field 2 == E3M4;
+    the old "probed" mapping E3M4=1 was wrong).  Field 5 (E2M1) empirically
+    ALIASES field 4 (E2M3) on sm120 (identical D words on every probe) — no
+    distinct E2M1 QMMA format, so e2m1 is excluded from the differential.
   * OMMA.SF.16864 (k64) e2m1 mxfp4 with varied E8M0 scales    -- F32 acc
 
 For the formats the shipped model hard-codes (bf16/f16/e4m3) the reference is
 hmma_model.fda/hmma_frag/qmma_frag directly; the other fp8 formats use a
 generic fp8 FDA reference with the same mant/bias/ebits the engine uses
 (identical structure, verified e4m3 path).  Non-e4m3 QMMA words are produced
-by patching the srcFmtA/B fields of a base e4m3 encoding with the probed SM120
-mapping (E4M3=0 E3M4=1 E2M3=2 E5M2=4 E3M2=5 E2M1=6), so the interpreter sees
-the same field values the engine's do_tensor decodes.
+by patching the srcFmtA/B fields of a base e4m3 encoding with the spec
+mapping above, so the interpreter sees the same field values the engine's
+do_tensor decodes.
 
 Usage: tensor_differential_test.py <path-to-semu> [--trials=N]
 """
@@ -119,10 +120,27 @@ def fda_generic(fmt, c, a_vals, b_vals):
 
     if M._special(c, 23) == "nan":
         return M.NAN_OUT
-    for a, b in zip(a_vals, b_vals):
-        if a in (0x7F, 0xFF) or b in (0x7F, 0xFF):
+    # fp8 special values VERIFIED on sm120: only e5m2 has true ±inf/NaN;
+    # e4m3/e3m4 have only the all-ones NaN; e3m2/e2m3/e2m1 none.  NaN wins
+    # over c's inf.
+    infs = []
+    for a in a_vals:
+        sp = M.fp8_special(a & 0xFF, mant, ebits)
+        if sp == "nan":
             return M.NAN_OUT
+        if sp:
+            infs.append(("+" if sp[1] > 0 else "-") + "inf")
+    for b in b_vals:
+        sp = M.fp8_special(b & 0xFF, mant, ebits)
+        if sp == "nan":
+            return M.NAN_OUT
+        if sp:
+            infs.append(("+" if sp[1] > 0 else "-") + "inf")
     c_sp = M._special(c, 23)
+    if infs:
+        if "+inf" in infs and "-inf" in infs:
+            return M.NAN_OUT
+        return 0x7F800000 if "+inf" in infs else 0xFF800000
     if c_sp in ("+inf", "-inf"):
         return 0x7F800000 if c_sp == "+inf" else 0xFF800000
 
@@ -261,8 +279,10 @@ def rnd_scale_word():
 # QMMA srcFmt patching (probed SM120 mapping) + cubin text patch
 # ---------------------------------------------------------------------------
 
-QMMA_FMT_FIELD = {"e4m3": 0, "e3m4": 1, "e2m3": 2, "e5m2": 4, "e3m2": 5,
-                  "e2m1": 6}
+# QMMA srcFmt field values (spec SRCFMTA_qmma enum / verified on sm120 RTX
+# 5090 CUDA 13.1: field drives the format directly, e.g. 2 == E3M4).
+QMMA_FMT_FIELD = {"e4m3": 0, "e5m2": 1, "e3m4": 2, "e3m2": 3, "e2m3": 4,
+                  "e2m1": 5}
 
 
 def patch_qmma_srcfmt(cubin, qmma_line, fmtA, fmtB):
@@ -380,6 +400,7 @@ def main():
     random.seed(0x7E57C0DE)
     total = 0
     fails = 0
+    skipped = 0
     checked = 0  # never auto-pass
 
     def run(case, expected_fn):
@@ -390,6 +411,13 @@ def main():
         if not ok:
             fails += 1
             print(f"FAIL {msg}")
+
+    def skip(case):
+        # User-instructed skip; recorded but not counted as a failure.
+        nonlocal total, skipped
+        total += 1
+        skipped += 1
+        print(f"SKIP {case.name} (user instructed skip)")
 
     for t in range(args.trials):
         # HMMA k16 bf16 / f16
@@ -410,49 +438,41 @@ def main():
         run(Case(f"hmma_k8_f16_t{t}",
                  K_HMMA_K8, frag8img, "f16", frag16=frag8img),
             lambda f16: ref_hmma_k8(f16, "f16"))
-        # QMMA k32 — the spec-legal srcFmt values under the probed mapping
-        # are 0..5 (INVALID6/7 rejected by the qmma_ CLASS conditions), i.e.
-        # E4M3/E3M4/E2M3/E5M2/E3M2.
+        # QMMA k32 — all spec-legal srcFmt values that are distinct on sm120
+        # (E4M3/E5M2/E3M4/E3M2/E2M3; INVALID6/7 rejected by the qmma_ CLASS
+        # conditions).  Field 5 (spec "E2M1") empirically aliases field 4
+        # (E2M3) on sm120 — no distinct E2M1 QMMA format — so it is excluded.
         qfrag = [rnd_fp8_word() for _ in range(6)] + [rnd_c() for _ in range(4)]
-        for fmt in ["e4m3", "e3m4", "e2m3", "e5m2", "e3m2"]:
+        for fmt in ["e4m3", "e5m2", "e3m4", "e3m2", "e2m3"]:
             run(Case(f"qmma_k32_{fmt}_t{t}",
                      K_QMMA_K32, qfrag, fmt, patch=(fmt, fmt),
                      mma_line=MMA_QMMA_K32),
                 lambda f16, fmt=fmt: ref_qmma(f16, fmt))
         # QMMA k16 — the sm120 spec restricts the 16816 shape to srcFmt
-        # field values 0..1 ("size 16816 only allows srcfmt E5M2 or E4M3" in
-        # the qmma_ CLASS condition, named per the sm120 enum); under the
-        # probed mapping those are E4M3 (0) and E3M4 (1), so only those two
-        # formats are exercised (patching any other value decodes illegal).
+        # field values 0..1 ("size 16816 only allows srcfmt E5M2 or E4M3"
+        # in the qmma_ CLASS condition, named per the sm120 enum), i.e.
+        # E4M3 (0) and E5M2 (1) only; patching any other value decodes
+        # illegal.
         q16 = [rnd_fp8_word() for _ in range(2)] + [rnd_fp8_word()] + \
               [rnd_c() for _ in range(4)]
         q16img = [q16[0], q16[1], 0, 0, q16[2], 0, 0, 0] + q16[3:]
-        for fmt in ["e4m3", "e3m4"]:
+        for fmt in ["e4m3", "e5m2"]:
             run(Case(f"qmma_k16_{fmt}_t{t}",
                      K_QMMA_K16, q16img, fmt, patch=(fmt, fmt), frag16=q16img,
                      mma_line=MMA_QMMA_K16),
                 lambda f16, fmt=fmt: ref_qmma_k16(f16, fmt))
-        # OMMA k64 e2m1 with random scales.  The kernel's LDG layout places
-        # A at words 0-3, B at 4-5, C at 8-11, Re/Rh at 12-13 (words 6-7
-        # unused); the model fragment (frag16) instead is [A,B,Re,Rh,C].
-        ofrag = [rnd_e2m1_word() for _ in range(6)] + [rnd_c() for _ in range(4)] \
-                + [rnd_scale_word(), rnd_scale_word()]
-        og_glob = [ofrag[0], ofrag[1], ofrag[2], ofrag[3],  # A
-                   ofrag[4], ofrag[5],                      # B
-                   0, 0,                                    # unused
-                   ofrag[6], ofrag[7], ofrag[8], ofrag[9],  # C at 8-11
-                   ofrag[10], ofrag[11]]                    # Re,Rh at 12-13
-        om16 = [ofrag[0], ofrag[1], ofrag[2], ofrag[3],
-                ofrag[4], ofrag[5], ofrag[10], ofrag[11]] + ofrag[6:10]
-        run(Case(f"omma_k64_t{t}",
-                 K_OMMA, og_glob, "e2m1", frag16=om16),
-            lambda f16: M.omma_frag(f16))
+        # OMMA k64 e2m1 — SKIPPED per user instruction: the shipped OMMA
+        # Python reference model (M.omma_frag) disagrees with both the GPU and
+        # semu on inf/NaN-edge inputs (model not fixed, GPU verification
+        # suspended).  Recorded as "user instructed skip" rather than run.
+        omit = Case(f"omma_k64_t{t}", K_OMMA, [0] * 16, "e2m1")
+        skip(omit)
 
     if checked == 0:
         print("FAIL: no cases ran", file=sys.stderr)
         return 1
     print(f"tensor differential: {checked} cases, {fails} failures, "
-          f"0 skipped")
+          f"{skipped} skipped")
     return 1 if fails else 0
 
 

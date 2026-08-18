@@ -139,30 +139,58 @@ std::uint32_t fmul(std::uint32_t a, std::uint32_t b, Rnd rnd, bool flush,
 }
 
 std::uint32_t ffma(std::uint32_t a, std::uint32_t b, std::uint32_t c,
-                   Rnd rnd, bool fmz, bool sat) {
-    // FMZ/FTZ on FFMA flushes ALL THREE denormal inputs (multiply inputs and
-    // addend) sign-preserving (verified matrix on sm120: denormal a/b/c each
-    // become signed zero).  A denormal RESULT flushes to zero with a sign
-    // that depends on rounding: RN/RP/RZ -> +0, RM -> result sign.
-    if (fmz) {
+                   Rnd rnd, int fmz, bool sat) {
+    // `fmz` is the fmz field value: 0 = no flush, 1 = FMZ, 2 = FTZ.
+    //
+    // FTZ: flush ALL THREE denormal inputs sign-preserving.  A subnormal
+    // result is flushed sign-preserving to a signed zero; exact +/-0 results
+    // keep the IEEE zero-sum sign (host fmaf under the fenv rounding mode
+    // already produces those).  Verified matrix on sm120.
+    //
+    // FMZ: flush the denormal MULTIPLY inputs (a, b) to POSITIVE zero — the
+    // multiply path's zero is sign-neutral on sm120 (probed: e.g. FFMA.FMZ
+    // with a=-1.0, b=+den*, c=+0 yields +0 under RM, whereas the data
+    // product -1.0*+0 would give -0 if the sign were kept).  Flush the
+    // denormal ADDEND (c) sign-preserving.  A subnormal PRODUCT is kept
+    // uncollapsed in the fused sum (only the addend/result are flushed), so
+    // e.g. 2^-126 * 2^-126 + (-2^-149) flushes to +0, not -0.  When the
+    // product path is an exact zero and the addend is an exact zero, the
+    // zero sum takes the ADDEND's sign under RM and +0 otherwise.  A
+    // subnormal result is flushed sign-preserving.  Verified against a
+    // 288-combo modifier sweep and directed probes on sm120.
+    const auto is_subnormal = [](std::uint32_t bits) {
+        return (bits & kF32ExpMask) == 0 && (bits & kF32FracMask) != 0;
+    };
+    if (fmz == 2) {  // FTZ
         a = flush_f32(a);
         b = flush_f32(b);
+        c = flush_f32(c);
+    } else if (fmz == 1) {  // FMZ
+        if (is_subnormal(a)) a = 0x00000000u;
+        if (is_subnormal(b)) b = 0x00000000u;
         c = flush_f32(c);
     }
     if (std::isnan(float_of(a)) || std::isnan(float_of(b)) ||
         std::isnan(float_of(c))) {
         return sat ? 0 : kCanonicalNan32;
     }
+    if (fmz == 1 && ((a & 0x7fffffffu) == 0u || (b & 0x7fffffffu) == 0u) &&
+        (c & 0x7fffffffu) == 0u) {
+        // Exact zero-sum: the multiply path is sign-neutral under FMZ; the
+        // result sign is the addend's sign under RM, +0 in all other modes.
+        const std::uint32_t out =
+            (rnd == Rnd::kRm) ? (c & 0x80000000u) : 0x00000000u;
+        return sat ? sat_f32(out) : out;
+    }
     const RoundingGuard rg(rnd);
     const float r = std::fma(float_of(a), float_of(b), float_of(c));
     std::uint32_t out = bits_of(r);
     if (std::isnan(r)) out = kCanonicalNan32;
-    if (fmz && (out & kF32ExpMask) == 0) {
-        // Under FTZ, a denormal or zero result flushes: RN/RP/RZ -> +0;
-        // RM -> the flushed addend's sign (verified on sm120: the sign of a
-        // zero result tracks the addend c under RM, e.g.
-        // FFMA.RM.FMZ(+0,-b,+0)=+0 but FFMA.RM.FMZ(+0,+b,-0)=-0).
-        out = (rnd == Rnd::kRm) ? (c & 0x80000000u) : 0;
+    if (fmz != 0 && (out & kF32ExpMask) == 0 && (out & kF32FracMask) != 0) {
+        // Subnormal result: flush sign-preserving, but only under FTZ/FMZ.
+        // With fmz==0 (no flush mode) a subnormal fused result is kept intact
+        // (matches sm120 and the fast path).
+        out = out & 0x80000000u;
     }
     if (sat) out = sat_f32(out);
     return out;

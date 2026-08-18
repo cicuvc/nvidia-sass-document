@@ -184,12 +184,27 @@ The 48-bit exact product participates in the final round. `a=b=2^23+1`,
 
 - **Plain FFMA preserves denormal inputs AND denormal results** on SM120
   (e.g. `2^-149` propagates; `2^-63 * 2^-86 = 2^-149` stays denormal).
-- **`.FTZ` flushes** denormal inputs (multiplier + addend) and the denormal
-  result to sign-preserving zero.
-- **`.FMZ` is behaviourally identical to `.FTZ` on FFMA** (SM120): it flushes
-  the denormal multiplier inputs, the denormal addend (discriminator:
-  `2^-63*2^-63 + 3*2^-149` → plain 0x00800003, FTZ/FMZ 0x00800000), and the
-  denormal output. `.FMZ` has no PTX equivalent and appears only in SASS.
+- **`.FTZ` flushes** all three denormal inputs (multiplier + addend)
+  sign-preserving and the subnormal result sign-preserving; exact +/-0
+  results keep the IEEE zero-sum sign (verified matrix on sm120: a negative
+  subnormal result flushes to -0 under every rounding mode, e.g.
+  `-2^-126 * +2^-126` → 0x80000000).
+- **`.FMZ` is NOT behaviourally identical to `.FTZ` on SM120** (corrected
+  during the 2026-08-17 GPU differential rerun; verified by a 288-combo
+  modifier sweep + directed probes):
+  - The denormal **multiply inputs** (a, b) flush to **positive zero** — the
+    multiply path's zero is sign-neutral (e.g. `FFMA.FMZ(-1.0, +den, +0)`
+    under RM is +0, whereas a genuine data product `-1.0 * +0` would be -0).
+  - The denormal **addend** (c) flushes sign-preserving (discriminator:
+    `2^-63*2^-63 + 3*2^-149` → plain 0x00800003, FTZ/FMZ 0x00800000).
+  - A **subnormal product is kept uncollapsed** in the fused sum (only the
+    addend and result are flushed): `2^-126 * 2^-126 + (-2^-149)` flushes to
+    +0, not -0.
+  - A subnormal **result** flushes sign-preserving (`-2^-150` → -0 in every
+    mode).
+  - An **exact zero-product + zero-addend sum** takes the addend's sign
+    under RM and +0 otherwise (the product zero's sign is dropped).
+  `.FMZ` has no PTX equivalent and appears only in SASS.
 
 ### NaN canonicalization
 

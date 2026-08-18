@@ -154,22 +154,39 @@ def _canon(b):
     return CANON_NAN32 if _np.isnan(_f32v(b)) else b
 
 
-def ref_ffma(a, b, c, rnd, fmz):
-    """FP32 fused multiply-add (FMZ flushes all three inputs; result denormal
-    handling follows the sm120 verified rules)."""
+def ref_ffma(a, b, c, rnd, mode):
+    """FP32 fused multiply-add, sm120 flush semantics.
+
+    `mode` is the SASS fmz field value: 0 = none, 1 = FMZ, 2 = FTZ.
+    FTZ (2): flush all three denormal inputs sign-preserving, fused fma, a
+    subnormal result flushes sign-preserving, exact +/-0 results keep the
+    IEEE zero-sum sign.  FMZ (1): the denormal multiply inputs (a, b) flush
+    to POSITIVE zero (multiply-path zero is sign-neutral on sm120), the
+    denormal addend flushes sign-preserving, a subnormal product is kept in
+    the fused sum, a subnormal result flushes sign-preserving, and an exact
+    zero-product + zero-addend sum takes the addend's sign under RM else +0.
+    Rule verified against a 288-combo modifier sweep and directed probes on
+    sm120 (2026-08-17)."""
     if _is_f32nan(a) or _is_f32nan(b) or _is_f32nan(c):
         return CANON_NAN32
-    if fmz:
+    if mode == 2:  # FTZ
         a, b, c = _flush_f32(a), _flush_f32(b), _flush_f32(c)
+    elif mode == 1:  # FMZ
+        a = 0 if _is_f32den(a) else a
+        b = 0 if _is_f32den(b) else b
+        c = _flush_f32(c)
+    if mode == 1 and (int(a) & 0x7FFFFFFF) == 0 and \
+            (int(b) & 0x7FFFFFFF) == 0 and (int(c) & 0x7FFFFFFF) == 0:
+        # Exact zero-sum; multiply path sign-neutral under FMZ.
+        return (0x80000000 if (rnd == 1 and (int(c) & 0x80000000)) else 0)
     _set_round(rnd)
     r = _LIBM.fmaf(_ct.c_float(float(_f32v(a))), _ct.c_float(float(_f32v(b))),
                    _ct.c_float(float(_f32v(c))))
     _LIBM.fesetround(_FE_NEAREST)
     out = _canon(_f32bits(r))
-    if fmz and ((out & 0x7F800000) == 0):
-        # FTZ output: zero or denormal result; RN/RP/RZ -> +0, RM -> the
-        # flushed addend's sign (sm120 verified).
-        out = (0x80000000 if (rnd == 1 and (c & 0x80000000)) else 0)
+    if (out & 0x7F800000) == 0 and (out & 0x007FFFFF) != 0:
+        # Subnormal result: flush sign-preserving (FTZ and FMZ).
+        out = out & 0x80000000
     return out
 
 
@@ -667,12 +684,12 @@ def gen_ffma_cases(rng, n):
         sat = rng.choice(["", ".SAT"])
         label = f"FFMA-{a:08X}-{b:08X}-{c:08X}{rnd}{flush}{sat}"
         rnd_idx = {"": 0, ".RM": 1, ".RP": 2, ".RZ": 3}[rnd]
-        fmz = bool(flush)
+        mode = 1 if flush else 0   # fmz field value (FMZ only in fuzz)
         body = [mov("R0", a), mov("R1", b), mov("R2", c),
                 f"    FFMA{flush}{rnd}{sat} R3, R0, R1, R2;[1:7:{{0}}:8:1]"]
-        ref = lambda a=a, b=b, c=c, ri=rnd_idx, fm=fmz, st=bool(sat): \
-            [ref_ffma(a, b, c, ri, fm) if not st
-             else sat_ref(ref_ffma(a, b, c, ri, fm))]
+        ref = lambda a=a, b=b, c=c, ri=rnd_idx, md=mode, st=bool(sat): \
+            [ref_ffma(a, b, c, ri, md) if not st
+             else sat_ref(ref_ffma(a, b, c, ri, md))]
         cases.append((label, body, ["R3"], ref))
     return cases
 
