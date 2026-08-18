@@ -110,6 +110,13 @@ struct RunOptions {
     // Phase 6 Step 2B: performance-estimation mode (trace-only).
     MemoryModelOptions model;
 
+    // Phase 10: collect per-static-instruction dynamic counts (hotspot
+    // profile) into Result::pc_hotspots.  OPT-IN: every dynamic dispatch does
+    // one extra map increment, so the flag must stay off for throughput
+    // measurements (the throughput benchmark runs hotspots in a separate,
+    // untimed probe).  Never changes functional results.
+    bool collect_hotspots = false;
+
     // True when the run is allowed to produce FP results that differ from the
     // sm_120 bit-exact model (i.e. fast mode with at least one fast FP leaf).
     bool approximate() const { return mode == ExecutionMode::kFast; }

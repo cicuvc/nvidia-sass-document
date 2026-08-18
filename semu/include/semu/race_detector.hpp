@@ -1,5 +1,10 @@
 #pragma once
 
+// FROZEN (SIM_PLAN Phase 10): the race-detector report schema (RaceReport /
+// RaceAccess / reports_to_json) is stable — a deterministic execution's
+// report is byte-for-byte reproducible.  It consumes the event stream
+// (kEventStreamVersion, api.hpp) but never feeds back into execution.
+
 // Data-race detector (SIM_PLAN Phase 6 Step 2D).
 //
 // Happens-before based: two overlapping byte ranges with at least one write

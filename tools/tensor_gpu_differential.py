@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Phase 9 tensor/TMA GPU differential (sm120, RTX 5090).
 
+Compares THREE results: the real sm120 GPU (via CudaModule + the hand-built
+assembler), the semu interpreter, and the Python reference model
+(tools/hmma_model.py).  semu/model equality is asserted (a mismatch is a HARD
+FAILURE); GPU-only differences are recorded as WARNINGS (non-blocking).
+
 Runs every FUNCTIONAL tensor-core variant and the TMA family on BOTH the
 real sm120 GPU (via CudaModule + the hand-built assembler) and the semu
 interpreter, comparing results bit-for-bit against the Python reference
@@ -60,7 +65,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "tools"))
 
-SCRIPT_VERSION = "1.1.0"
+SCRIPT_VERSION = "1.2.0"
 SEED = 0x7E57C0DE
 
 import hmma_model as M  # noqa: E402
@@ -88,6 +93,42 @@ def git_head_hash():
         r = subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
                            capture_output=True, text=True, timeout=10)
         return r.stdout.strip() if r.returncode == 0 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def git_dirty():
+    """True when the source tree has uncommitted tracked-file changes."""
+    try:
+        r = subprocess.run(["git", "-C", str(REPO), "status", "--porcelain"],
+                           capture_output=True, text=True, timeout=10)
+        if r.returncode != 0:
+            return None
+        return len(r.stdout.strip()) > 0
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def source_tree_digest():
+    """SHA-256 over the sorted tracked-file list with each file's SHA-256.
+    A stable digest of the reproducible source tree (skips build trees by
+    construction: only git-tracked paths are hashed)."""
+    try:
+        r = subprocess.run(["git", "-C", str(REPO), "ls-files"],
+                           capture_output=True, text=True, timeout=30)
+        if r.returncode != 0:
+            return None
+        paths = sorted(p for p in r.stdout.splitlines() if p)
+        h = hashlib.sha256()
+        for p in paths:
+            dig = file_sha256(REPO / p)
+            if dig is None:
+                continue
+            h.update(p.encode("utf-8"))
+            h.update(b"\x00")
+            h.update(dig.encode("ascii"))
+            h.update(b"\x00")
+        return h.hexdigest()
     except Exception:  # noqa: BLE001
         return None
 
@@ -144,6 +185,11 @@ def collect_provenance(semu, trials, started_at):
         "script": "tools/tensor_gpu_differential.py",
         "script_version": SCRIPT_VERSION,
         "git_commit": git_head_hash(),
+        "git_dirty": git_dirty(),
+        "source_tree_digest": source_tree_digest(),
+        "tensor_gpu_differential_sha256": file_sha256(
+            Path(__file__).resolve()),
+        "hmma_model_sha256": file_sha256(REPO / "tools" / "hmma_model.py"),
         "seed": f"0x{SEED:X}",
         "trials": trials,
         "gpu": gpu_identities(),

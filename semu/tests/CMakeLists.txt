@@ -232,6 +232,50 @@ add_executable(semu_bench_fast_interp bench_fast_interp.cpp)
 target_link_libraries(semu_bench_fast_interp PRIVATE semu_core)
 target_compile_options(semu_bench_fast_interp PRIVATE ${SEMU_WARN_FLAGS})
 
+# Phase 10: interpreter throughput benchmark + hotspot probe.  Built but NOT
+# a CTest gate (no hard SLA; results are recorded to benchmarks/record.json).
+add_executable(semu_bench_interp_throughput bench_interp_throughput.cpp)
+target_link_libraries(semu_bench_interp_throughput PRIVATE semu_core)
+target_compile_options(semu_bench_interp_throughput PRIVATE ${SEMU_WARN_FLAGS})
+
+# ---------------------------------------------------------------------------
+# Phase 10: public-API compile tests.  Every public header must be
+# self-contained (compiles standalone with -Werror); the aggregate test also
+# RUNS smoke checks over the frozen API surface (api.hpp contracts).
+# ---------------------------------------------------------------------------
+
+# Per-header standalone object compile: catches a header that only compiles
+# because another include leaked its dependencies.
+function(semu_header_object_check _name _header)
+  set(_src "${CMAKE_CURRENT_BINARY_DIR}/hdr_check_${_name}.cpp")
+  file(WRITE "${_src}" "#include <semu/${_header}>\n"
+                       "int main() { return 0; }\n")
+  add_library(hdr_check_${_name} OBJECT "${_src}")
+  target_include_directories(hdr_check_${_name} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../generated)
+  target_compile_options(hdr_check_${_name} PRIVATE ${SEMU_WARN_FLAGS})
+endfunction()
+
+set(SEMU_PUBLIC_HEADERS
+  api.hpp capability.hpp cluster.hpp context.hpp cubin.hpp debugger.hpp
+  decoder.hpp execution.hpp fast_fp.hpp fault.hpp fp.hpp global_model.hpp
+  hb_clock.hpp interpreter.hpp l1tex_model.hpp l2_events.hpp mbarrier.hpp
+  memory.hpp memory_events.hpp memory_service.hpp mock_backend.hpp
+  profiler.hpp race_detector.hpp shared_bank.hpp status.hpp
+  subcore_scheduler.hpp tensor.hpp tensor_map.hpp version.hpp word.hpp)
+foreach(_h IN LISTS SEMU_PUBLIC_HEADERS)
+  string(REPLACE ".hpp" "" _base "${_h}")
+  string(REPLACE "/" "_" _base "${_base}")
+  string(REPLACE "." "_" _base "${_base}")
+  semu_header_object_check("${_base}" "${_h}")
+endforeach()
+
+add_executable(semu_test_api_compile compile_api_test.cpp)
+target_link_libraries(semu_test_api_compile PRIVATE semu_core)
+target_compile_options(semu_test_api_compile PRIVATE ${SEMU_WARN_FLAGS})
+add_test(NAME api_compile COMMAND semu_test_api_compile)
+
 # L1TEX estimator oracle cross-check CLI (Phase 6 Step 2B).
 add_executable(semu_l1tex_cli ${CMAKE_SOURCE_DIR}/tools/l1tex_cli.cpp)
 target_link_libraries(semu_l1tex_cli PRIVATE semu_core)
@@ -270,3 +314,8 @@ if(Python3_FOUND)
               ${CMAKE_BINARY_DIR})
   endif()
 endif()
+
+add_executable(semu_test_mock_backend test_mock_backend.cpp)
+target_link_libraries(semu_test_mock_backend PRIVATE semu_core)
+target_compile_options(semu_test_mock_backend PRIVATE ${SEMU_WARN_FLAGS})
+add_test(NAME mock_backend COMMAND semu_test_mock_backend)

@@ -7,6 +7,12 @@
 
 #include <semu/word.hpp>
 
+// FROZEN (SIM_PLAN Phase 10): this header is part of the decoded-IR contract —
+// DecodedInstruction / DecodeResult / Operand / ScheduleWord / slot_values /
+// raw_fields, the flattened IR execution backends dispatch on
+// (kDecodedIrVersion in api.hpp).  Extensions must ADD fields, never remove or
+// renumber them.
+
 // Public decoder API (SIM_PLAN Phase 1).
 //
 // The decoder turns a raw 128-bit sm120 instruction word into a unique

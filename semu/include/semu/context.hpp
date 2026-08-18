@@ -14,6 +14,21 @@
 #include <semu/memory.hpp>
 #include <semu/status.hpp>
 
+// FROZEN (SIM_PLAN Phase 10): this header holds the public launch ABI
+// (Context / Module / Function / LaunchConfig / LaunchResult / KernelArg) and
+// the backend contracts a future JIT plugs into:
+//
+//   - IBackend + BackendLaunchRequest        -> kBackendApiVersion
+//   - IRuntimeServices                       -> kRuntimeServicesVersion
+//   - IEventSink / BasicMemoryEvent / EventKind -> kEventStreamVersion
+//
+// (api.hpp).  Adding a real JIT backend must not require changing the cubin
+// loader, this launch API, the memory model, the debugger or the profiler
+// schema (Phase 10 exit criterion).  The async/TMA extension points are
+// reserved below in a versioned, documentation-only section: they are NOT
+// implemented yet and MUST NOT be added as new purely-virtual methods to
+// IRuntimeServices itself (that would break every existing implementor).
+
 // Runtime services: Context / Module / Function / LaunchConfig /
 // LaunchResult and the IBackend interface (SIM_PLAN Phase 3).
 //
@@ -155,6 +170,12 @@ struct LaunchResult {
 // order/scope, L1/L2 parents land with the Phase 8 profiler).  The sink
 // interface and emit protocol are stable; the record type will be extended,
 // not replaced, in Phase 8.
+//
+// FROZEN (SIM_PLAN Phase 10, kEventStreamVersion in api.hpp): the Phase 8
+// normalized stream lives in memory_events.hpp and the profiler schema is
+// locked by profiler::kReportSchemaVersion.  The interpreter PRODUCES the
+// stream; analyzers SUBSCRIBE; producing/consuming never feeds back into
+// execution.
 // ---------------------------------------------------------------------------
 
 enum class EventKind : std::uint8_t {
@@ -267,9 +288,55 @@ public:
 };
 
 // ---------------------------------------------------------------------------
+// Phase 10 reserved async / TMA extension points (VERSIONED, documentation
+// only — NOT implemented, NOT part of kRuntimeServicesVersion surface yet).
+//
+// When a future phase moves TMA from decode-only to functional it MUST add
+// these as members of a NEW versioned extension interface (e.g.
+// `IRuntimeServicesV2 : IRuntimeServices` or a standalone
+// `IAsyncRuntimeServices` the Context opts into via a cast/query), so the
+// frozen kRuntimeServicesVersion=1 ABI above stays source- and
+// binary-compatible for existing backends (mock backend, tests, interpreters).
+//
+// The current interpreter's async/TMA state is fully synchronous: cp.async
+// (LDGSTS) copies land immediately, TMA tile transfers are expanded
+// synchronously, and mbarrier phase flips are computed logically.  The
+// reserved shapes below are what a timing-aware / GPU-completion-observable
+// semantics would publish; their exact signatures are NOT frozen yet.
+//
+//   // Completion/commit callbacks — an async transfer completing reports its
+//   // identity + byte count so the runtime can mirror commit accounting.
+//   //   void set_async_completion_sink(AsyncCompletionSink* sink);
+//   //   struct AsyncCompletion { std::uint64_t group; std::uint64_t bytes;
+//   //                            std::uint64_t pc; std::string kind; };
+//   //   class AsyncCompletionSink {
+//   //       virtual ~AsyncCompletionSink() = default;
+//   //       virtual void on_commit(const AsyncCompletion& c) = 0;
+//   //       virtual void on_error(const AsyncCompletion& c,
+//   //                             const Error& e) = 0;
+//   //   };
+//
+//   // mbarrier state query — read the logical phase/arrive/expected/tx state
+//   // of an mbarrier at a shared byte offset (the interpreter's current
+//   // synchronous model already computes this internally; a JIT/TMA engine
+//   // would need the query to NOT carry a functional copy of the state).
+//   //   struct MbarrierSnapshot {
+//   //       std::uint32_t phase; std::uint32_t arrive; std::uint32_t expected;
+//   //       std::int64_t tx; bool locked; bool corrupted;
+//   //   };
+//   //   StatusOr<MbarrierSnapshot> query_mbarrier(std::uint64_t cta_id,
+//   //                                             std::uint32_t shared_off);
+//
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
 // IBackend: the interface the interpreter uses to run launches.  Backends
 // are bound to a Context (and its runtime services) at creation; they must
 // not bypass them.
+//
+// FROZEN (kBackendApiVersion in api.hpp): a future JIT backend implements
+// exactly this surface.  The interpreter is the reference backend; the mock
+// backend (mock_backend.hpp) exercises the contract for the JIT follow-up.
 // ---------------------------------------------------------------------------
 
 // Everything a backend needs to run one launch, handed as an immutable

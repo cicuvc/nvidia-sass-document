@@ -1,5 +1,11 @@
 #pragma once
 
+// FROZEN (SIM_PLAN Phase 10): the profiler schema is locked by
+// kReportSchemaVersion "1.0" (locked by a compatibility test); the event
+// stream it consumes is kEventStreamVersion (api.hpp).  A profiler-on run and
+// a profiler-off run are functionally identical — the stream never feeds back
+// into execution.
+
 // Memory profiler (SIM_PLAN Phase 8): backend-neutral execution/memory event
 // stream consumers.
 //

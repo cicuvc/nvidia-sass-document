@@ -92,8 +92,28 @@ fixture 由 committed cubin（`tests/*.cubin`，gitignore 例外）与 regen 源
 （`semu/tests/data/regen/*.cu`）重建；`cuobj_regen` CTest 验证重建 word-set
 与提交 fixture 一致。
 
- ## 阶段状态
+  ## 阶段状态
 
 见 `BASELINE.md`（Phase 0/1 基线记录）、`GAP.md`（验收差距修复记录）与
 SIM_PLAN.md 第 8 节进度表。Phase 5.5 快速解释器（fast FP semantics）的用户
 指南、CLI/API 与限制表见 `PHASE55_FAST.md`。
+
+## Phase 10 — 稳定化与 JIT 接口冻结
+
+- **用户文档 / API 示例 / capability matrix / 限制**：`docs/USER_GUIDE.md`、
+  `docs/API_EXAMPLES.md`。
+- **冻结契约**：`include/semu/api.hpp`（backend / decoded-IR / runtime
+  services / event stream / fault ABI 的版本标记）；`context.hpp` 预留了
+  版本化 async/TMA 扩展点。
+- **Mock backend**：`include/semu/mock_backend.hpp` + `src/mock_backend.cpp`
+  —— 验证未来 JIT 可接收 decoded IR、访问 runtime services、对未 lowering
+  指令回退 interpreter、对 decode-only（TMA / 非 dense tensor）按 fault ABI
+  报 fault。
+- **热点统计**：`RunOptions::collect_hotspots` → `Result::pc_hotspots`
+  （按静态字节 PC 的动态计数；并行 worker 合并）。
+- **基准**：`tests/bench_interp_throughput.cpp`（单/多 worker 吞吐、扩展比、
+  热点 profile），结果记录到 `benchmarks/record.json`，不设硬性 SLA。
+- **公共 API compile tests**：`tests/compile_api_test.cpp` + 每个公共头文件
+  的独立编译检查（`ctest -R api_compile` + header-object checks）。
+- **验证门禁**：`tools/run_semu_cpu_gate.sh`（33 项 CPU 门禁，含 mock
+  backend / api_compile）。

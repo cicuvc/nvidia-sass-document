@@ -2,12 +2,18 @@
 
 #include <string>
 
+#include <semu/api.hpp>
+
 // Build-time version and configuration info for the semu simulator.
 //
 // Values come from CMake compile definitions (semu_buildinfo interface
 // target) plus a couple of hard-coded ABI/stability markers.  This header is
 // part of the stable public API: its accessors are expected to survive every
 // phase.
+//
+// Interface-version markers (kBackendApiVersion / kDecodedIrVersion /
+// kRuntimeServicesVersion / kEventStreamVersion / kFaultAbiVersion) are the
+// Phase 10 freeze contract — see api.hpp.
 
 namespace semu {
 

@@ -71,6 +71,18 @@ void mem_value_to_bytes(const MemValue& v, std::uint64_t len,
     }
 }
 
+// Atomic-operand variant: atomic widths are {1,2,4,8} (check_atomic_width),
+// so clamp to 8 bytes — a 128-bit value can NEVER be written into an 8-byte
+// operand buffer, and the explicit clamp lets -O3 prove the write stays in
+// bounds (stringop-overflow).
+void mem_value_to_bytes_atomic(const MemValue& v, std::uint64_t len,
+                               std::uint8_t* dst) {
+    std::uint64_t n = std::min<std::uint64_t>(len, 8);
+    for (std::uint64_t i = 0; i < n; ++i) {
+        dst[i] = static_cast<std::uint8_t>((v[i / 4] >> (8 * (i % 4))) & 0xff);
+    }
+}
+
 // Load `len` little-endian bytes (1/2/4/8) from `src` into a uint64.
 std::uint64_t load_le(const std::uint8_t* src, std::uint64_t len) {
     std::uint64_t v = 0;
@@ -542,8 +554,8 @@ Status MemoryService::atom_global(std::uint64_t addr, std::uint64_t width,
     std::uint8_t opr_buf[8] = {0};
     std::uint8_t cmp_buf[8] = {0};
     std::memcpy(&cur, global_->data() + off, width);
-    mem_value_to_bytes(operands, width, opr_buf);
-    if (cmp) mem_value_to_bytes(*cmp, width, cmp_buf);
+    mem_value_to_bytes_atomic(operands, width, opr_buf);
+    if (cmp) mem_value_to_bytes_atomic(*cmp, width, cmp_buf);
     old = {};
     // `old` is the PRE-operation value: capture before the RMW applies.
     std::memcpy(&old[0], cur, width <= 4 ? width : 4);
@@ -583,8 +595,8 @@ Status MemoryService::atom_shared(std::vector<std::uint8_t>& shared,
     std::uint8_t opr_buf[8] = {0};
     std::uint8_t cmp_buf[8] = {0};
     std::memcpy(&cur, shared.data() + off, width);
-    mem_value_to_bytes(operands, width, opr_buf);
-    if (cmp) mem_value_to_bytes(*cmp, width, cmp_buf);
+    mem_value_to_bytes_atomic(operands, width, opr_buf);
+    if (cmp) mem_value_to_bytes_atomic(*cmp, width, cmp_buf);
     old = {};
     // `old` is the PRE-operation value: capture before the RMW applies.
     std::memcpy(&old[0], cur, width <= 4 ? width : 4);

@@ -762,6 +762,9 @@ Interpreter::Result Interpreter::run_result_parallel(
         merged.race_reports = std::move(race_reports);
         merged.execution_mode = options.mode;
         merged.fast_stats = winning->fast_stats;
+        // Phase 10 hotspot profile (opt-in): the winning worker's subset is
+        // the deterministic minimum, so its profile is the report.
+        if (options.collect_hotspots) merged.pc_hotspots = winning->pc_hotspots;
         merged.approximate = options.mode == ExecutionMode::kFast &&
                              winning->fast_stats.any_fast_fp;
         return merged;
@@ -772,6 +775,13 @@ Interpreter::Result Interpreter::run_result_parallel(
         for (auto& cta : wr.r.ctas) merged.ctas.push_back(std::move(cta));
         for (auto& ev : wr.r.memory_events) {
             merged.memory_events.push_back(std::move(ev));
+        }
+        // Phase 10 hotspot profile (opt-in): every worker profiled its own CTA
+        // subset; summing the per-PC counts yields the launch-wide profile.
+        if (options.collect_hotspots) {
+            for (auto& [pc, n] : wr.r.pc_hotspots) {
+                merged.pc_hotspots[pc] += n;
+            }
         }
     }
     merged.race_reports = std::move(race_reports);
@@ -861,6 +871,7 @@ Interpreter::Result Interpreter::run_owned() {
             r.trace = std::move(trace_);
             r.execution_mode = options_.mode;
             r.fast_stats = fast_stats_;
+            r.pc_hotspots = std::move(pc_hotspots_);
             r.approximate = options_.mode == ExecutionMode::kFast &&
                             fast_stats_.any_fast_fp;
             return r;
@@ -886,6 +897,7 @@ Interpreter::Result Interpreter::run_owned() {
             r.trace = std::move(trace_);
             r.execution_mode = options_.mode;
             r.fast_stats = fast_stats_;
+            r.pc_hotspots = std::move(pc_hotspots_);
             r.approximate = options_.mode == ExecutionMode::kFast &&
                             fast_stats_.any_fast_fp;
             return r;
@@ -925,6 +937,7 @@ Interpreter::Result Interpreter::run_owned() {
             r.trace = std::move(trace_);
             r.execution_mode = options_.mode;
             r.fast_stats = fast_stats_;
+            r.pc_hotspots = std::move(pc_hotspots_);
             r.approximate = options_.mode == ExecutionMode::kFast &&
                             fast_stats_.any_fast_fp;
             return r;
@@ -943,6 +956,7 @@ Interpreter::Result Interpreter::run_owned() {
             r.trace = std::move(trace_);
             r.execution_mode = options_.mode;
             r.fast_stats = fast_stats_;
+            r.pc_hotspots = std::move(pc_hotspots_);
             r.approximate = options_.mode == ExecutionMode::kFast &&
                             fast_stats_.any_fast_fp;
             return r;
@@ -958,6 +972,7 @@ Interpreter::Result Interpreter::run_owned() {
     r.trace = std::move(trace_);
     r.execution_mode = options_.mode;
     r.fast_stats = fast_stats_;
+    r.pc_hotspots = std::move(pc_hotspots_);
     r.approximate = options_.mode == ExecutionMode::kFast &&
                     fast_stats_.any_fast_fp;
     return r;
@@ -1185,6 +1200,11 @@ Status Interpreter::execute_group(int cta_idx, int warp, std::uint64_t pc,
                 }
             }
             if (exec_mask_out) *exec_mask_out = exec_mask;
+            // Phase 10 hotspot profile (opt-in): count every dynamic issue of a
+            // static word, keyed by its kernel-relative BYTE PC (a future JIT
+            // identifies hot basic blocks by byte PC).  Guarded by a single
+            // branch when disabled.
+            if (options_.collect_hotspots) ++pc_hotspots_[pc];
             const std::uint16_t op = semu::opcode_of(inst.word.lo, inst.word.hi);
             switch (op) {
                 case 0x947: return do_bra(ws, exec_mask, inst, pc, fault);   // BRA
@@ -4138,7 +4158,11 @@ void Interpreter::record_debug_access(const WarpState& w, std::uint32_t lane,
 // fault triggers — an unsupported S2R special register, a BSYNC with no
 // matching BSSY, an unrecognized atomic op — stay at runtime and surface as a
 // StepInfo fault.)
-bool Interpreter::supports(const DecodedInstruction& inst) const {
+//
+// Phase 10: extracted into the free `interpreter_handles` function so a
+// backend (mock backend) can query the reference interpreter's runtime
+// capability without constructing an interpreter.
+bool interpreter_handles(const DecodedInstruction& inst) {
     const std::string& m = inst.mnemonic;
     // Control flow (do_bra / do_bssy / do_bsync / do_exit / do_s2r / do_s2ur /
     // do_bar / NOP).
@@ -4188,6 +4212,11 @@ bool Interpreter::supports(const DecodedInstruction& inst) const {
         return true;
     }
     return false;
+}
+
+// The debugger-facing member: pure delegation to the free function.
+bool Interpreter::supports(const DecodedInstruction& inst) const {
+    return interpreter_handles(inst);
 }
 
 // Phase 7: S2R/S2UR special-register view (same resolve_sr the interpreter

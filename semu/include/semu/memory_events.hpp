@@ -1,5 +1,10 @@
 #pragma once
 
+// FROZEN (SIM_PLAN Phase 10, kEventStreamVersion in api.hpp): the
+// backend-neutral normalized memory event stream.  Extensions must ADD
+// fields/event kinds in the trailing tags (never renumber existing enum
+// values or remove populated fields).
+
 // Normalized memory events (Phase 6 Step 2B, extended Phase 8).  These are
 // produced when a dynamic warp memory instruction is issued; they carry
 // model-versioned predictions and subcore identity but never change

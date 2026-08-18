@@ -10,6 +10,12 @@
 #include <semu/decoder.hpp>
 #include <semu/status.hpp>
 
+// FROZEN (SIM_PLAN Phase 10): this header is part of the decoded-IR contract —
+// Kernel / PredecodedWord / KernelMetadata / KernelSectionRef, and the Module
+// loader that produces them.  A future JIT backend consumes exactly this IR
+// (kDecodedIrVersion in api.hpp).  No breaking change may be made without
+// bumping that version and re-freezing.
+
 // Public cubin loader API (SIM_PLAN Phase 2).
 //
 // The loader parses a raw ELF64 cubin (sm120 only) into a Module: section /

@@ -1,8 +1,12 @@
 {
  "provenance": {
   "script": "tools/tensor_gpu_differential.py",
-  "script_version": "1.1.0",
-  "git_commit": "567c30fc2efa478a35c138a77725efbb301d2eba",
+  "script_version": "1.2.0",
+  "git_commit": "4c56211a6ae56338b433a9011d33ab64db941532",
+  "git_dirty": true,
+  "source_tree_digest": "2e114cdab3d264dd23a8ff2fea4ace832891461ef4e423693450b8326ede9720",
+  "tensor_gpu_differential_sha256": "9be946353619328e97c0c243b006a15a72e3d15ca97c0191a07c103f94b62e4e",
+  "hmma_model_sha256": "5e050ba28fca01cefa99151438a2f62fe7172a16d7552bc5871480c716da6f50",
   "seed": "0x7E57C0DE",
   "trials": 6,
   "gpu": [
@@ -11,8 +15,8 @@
   "driver_version": "590.48.01",
   "cuda_version": "13.1, V13.1.115",
   "semu_binary": "/home/cicuvc/cs/projects/nvidia-sass-document/semu/build/cli/semu",
-  "semu_sha256": "3dea69a35dd2017a7ba8c3f4804ce1f0b6f97804aaab333f80c41f802133f92f",
-  "started_at": "2026-08-18T06:49:43+00:00"
+  "semu_sha256": "5841e6fb9a2aec133f4397d776864541b5d660b63b1e4dba24982a040b612c1b",
+  "started_at": "2026-08-18T08:27:17+00:00"
  },
  "cases": [
   {
@@ -1581,7 +1585,7 @@
   "exit_semantics": "GPU-only mismatch = WARNING (non-blocking, recorded as gpu_only_note); semu/model disagreement = HARD FAILURE (blocks, exit 1)",
   "tma_total": 3,
   "tma_unclosed": 3,
-  "finished_at": "2026-08-18T06:49:44+00:00",
+  "finished_at": "2026-08-18T08:27:19+00:00",
   "duration_seconds": 1
  }
 }

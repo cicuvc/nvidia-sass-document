@@ -33,7 +33,7 @@ run() {
 }
 
 # --- C++ L0 unit tests (CPU only) ---
-for t in core decoder cubin memory cluster interp fp l1tex shared_bank global profiler subcore l2 race debugger tensor_map tensor mbarrier; do
+for t in core decoder cubin memory cluster interp fp l1tex shared_bank global profiler subcore l2 race debugger tensor_map tensor mbarrier mock_backend api_compile; do
   run "cpp/$t" "$BIN/semu_test_$t"
 done
 

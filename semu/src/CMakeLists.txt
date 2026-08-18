@@ -16,6 +16,7 @@ add_library(semu_core STATIC
   fast_fp.cpp
   memory.cpp
   memory_service.cpp
+  mock_backend.cpp
   l1tex_model.cpp
   shared_bank.cpp
   global_model.cpp

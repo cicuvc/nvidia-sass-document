@@ -1815,7 +1815,9 @@ B1（coupled LDGSTS prediction==false 不得污染 L1 line/sector/cache 状态�
 
 #### 退出条件
 
-- 已标为 `functional` 的 tensor/TMA variant 均有 GPU differential。
+- 已标为 `functional` 的 tensor/TMA variant 必须有 GPU differential，或在
+  capability manifest 中记录显式批准的 GPU waiver（如 OMMA：CPU-only 差分逐
+  bit 一致 + user-instructed gpu_waiver，见 Phase 10 冻结范围与 waiver）。
 - 异步状态可在 debugger 中完整查看。
 - 尚未逆向清楚的 modifier 保持 decode-only，不使用猜测语义。
 
@@ -2093,6 +2095,64 @@ Phase 10 冻结的是**接口与 gate 语义**，不冻结仍未闭合的**指�
 - 所有已知限制都出现在 capability/report 中。
 - CPU-only 环境可以完成构建、加载、模拟、调试和 profile。
 
+#### Phase 10 完成记录（2026-08-18，semu 实现者）
+
+- **接口冻结**：`semu/include/semu/api.hpp` 定义版本标记 `kBackendApiVersion` /
+  `kDecodedIrVersion` / `kRuntimeServicesVersion` / `kEventStreamVersion` /
+  `kFaultAbiVersion`（均 = 1），并给每个冻结头文件（context/cubin/decoder/
+  fault/interpreter/memory_events/profiler/race_detector/version）加冻结契约注释；
+  `IRuntimeServices` 在 `context.hpp` 预留**版本化 async/TMA 扩展点**（completion/
+  commit 回调和 mbarrier 状态查询，文档化形状 + 版本化扩展接口契约，未实现，
+  不破坏既有 ABI）。`--version` 打印冻结接口版本。
+- **Mock backend**：`include/semu/mock_backend.hpp` + `src/mock_backend.cpp`。
+  验证未来 JIT 可接收 decoded IR（逐 word 分类 lowered / interpreter-fallback /
+  decode-only）、访问 runtime services（constant bank 切片喂 interpreter +
+  设备内存 write/read probe）、对未 lowering 指令回退 interpreter（整 launch
+  经 `Interpreter::run_result` 执行成功）、对无法 lowering 指令按 fault ABI 报
+  `FaultKind::kUnsupportedInstruction`。decode-only 边界显式覆盖 **TMA
+  （UTMALDG/UTMASTG/UTMAREDG）与非 dense tensor variant**（走 fault 路径）。
+  `interpreter_handles()` 从 `Interpreter::supports` 提取为自由函数（mock 无需
+  构造 interpreter 即可查询运行时能力）。
+- **热点统计**：`RunOptions::collect_hotspots`（opt-in）→
+  `Interpreter::Result::pc_hotspots`（按静态字节 PC 的动态 issue 计数，并行
+  worker 合并）；bench 用独立未计时 probe 取热点，不计入吞吐计时。
+- **Benchmark**：`semu/tests/bench_interp_throughput.cpp`（Release 记录：
+  grid 64×block 256×body 512，dyn=296960；worker 1→2→4→8 吞吐
+  31.1/126.2/502.8/1688.0 instr/ms，扩展比 1.0/4.06/16.17/54.28；热点为
+  FFMA 88.3%）。确定性门禁：每个 worker 数必须复现单 worker 控制流指纹。
+  结果记录到 `semu/benchmarks/record.json`（含 git commit / build / host_cpus /
+  recorded_at），不设硬性 SLA。
+- **公共 API compile tests**：`semu/tests/compile_api_test.cpp`（聚合可运行
+  烟测）+ 30 个公共头文件各自独立编译检查（object target，`-Werror`）。
+- **文档**：`semu/docs/USER_GUIDE.md`（构建/CLI/API/freeze 契约/capability
+  matrix 含 waiver/benchmark/限制）、`semu/docs/API_EXAMPLES.md`（7 组可编译
+  示例）；`semu/README.md` 加 Phase 10 小节。
+- **codex 复验遗留 3 Medium 修复**：
+  a) SIM_PLAN Phase 9 退出条件口径改为 "functional variant 必须有 GPU
+     differential 或在 capability manifest 记录显式批准的 GPU waiver"。
+  b) `tools/tensor_gpu_differential.py` 头部描述改为 "compares three results;
+     semu/model equality is asserted, GPU-only differences recorded as
+     warnings"（script 1.2.0）。
+  c) report provenance 增加 `git_dirty`、`source_tree_digest`（git-tracked 文件
+     排序 + 各自 SHA-256 的聚合）、`tensor_gpu_differential_sha256`、
+     `hmma_model_sha256`。
+- **验证**：
+  - 全量 CPU CTest 三树：`tools/run_semu_cpu_gate.sh` **35/35**（Debug / ASan /
+    TSan 各自 35/35；原 33 项 + `mock_backend` 9 项 + `api_compile` 6 项）。
+  - fuzz **gpu=False** n=40 + mutation **108/108** 0 errors。
+  - l1tex_oracle **C++==Python 1941/1941**；LDGSTS corpus **520/520** + 纯计数
+    TWf/TagConf/TSetAcc/Sectors == hardware meas 520/520。
+  - tensor differential（CPU）全绿；**tensor GPU differential 54/54 checked
+    PASS 0 hard failures**（5090/CUDA 13.1，report 已带新 provenance）。
+  - mock backend 9 项全过、api_compile 6 项全过、30 头文件独立编译全过。
+  - benchmark 记录写入 `semu/benchmarks/record.json`。
+  - `sim.py` 未修改（仓库无该文件）。
+- **退出条件确认**：加 JIT backend 无需改 cubin loader / public launch API /
+  memory model / debugger / profiler schema（mock backend 是证明）；所有已知
+  限制（TMA decode-only、OMMA gpu_waiver、e3m2/e2m3/omma user-skip、`.cg`
+  bypass 模型 unsupported）出现在 capability matrix 与 report；CPU-only 环境
+  完成构建/加载/模拟/调试/profile（35/35 全 CPU 门禁）。
+
 ## 4. 全局验证体系
 
 ### 4.1 测试分层
@@ -2205,7 +2265,7 @@ LDGSTS 初始分级：
 | 7 | Done (2026-08-16) | - | control + memory + compute subset | unchanged | 25 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 (0 err) + l1tex C++==Python 1941/1941 | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起；l1tex 为 frozen-corpus 门禁 1941/1941，GPU 采样属 corpus 采集流程不另行重跑） | debugger UX |
 | 8 | Done (2026-08-16) | - | unchanged | memory subset (shared/global/ldgsts/l1tex/l2) | 29 CTest (normal/ASan/UBSan/TSan) + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS corpus C++==Python 520/520 + pure counts == HW 520/520 + codex 复验 8 项修复（2B+4H+2M） | **GPU 侧已补跑**（2026-08-18，5090 回归，CUDA 13.1）：diff_phase5 **484/484** + fuzz --gpu **120/120**（此前因 GPU0 拆走挂起） | LDGSTS SharedConf/GlobalConf 为定义性 approximate；scattered 8/16B、miss-path suppression；`.cg` bypass 仅 profiler model confidence unsupported（功能已实现） |
 | 9 | In progress (tensor core GPU-verified) | - | tensor/TMA subset | tensor/TMA | 33 CTest (含 tensor/tensor_map/mbarrier) + tensor_differential CPU gate + fuzz/mutation/l1tex 全绿 | **tensor GPU differential 54/54 checked PASS 0 hard failures**（2026-08-18，5090/CUDA 13.1；semu==model 逐 word；51/54 模型==GPU==semu 三方一致 + 3 条 E5M2 inf/NaN 符号约定差异为 GPU-only warning）；`semu_test_tensor` 全过 | 24 user-skip（e3m2/e2m3/omma，无 GPU 验证、不得描述为 GPU validated）；TMA 3 decode-only 不冻结；`.cg` bypass 仅 profiler model confidence unsupported（功能已实现） |
-| 10 | Planned | full supported set | tracked | tracked | full | full optional | JIT follow-up |
+| 10 | Done (2026-08-18) | full supported set | tracked | tracked | **35 CTest 三树（Debug/ASan/TSan）全绿** + fuzz gpu=False + mutation 108/108 + l1tex_oracle 1941/1941 + LDGSTS 520/520 + tensor_differential + mock backend 9 项 + api_compile 6 项 | GPU differential 可选（5090 在，tensor GPU 54/54 checked PASS 0 hard failures 已补跑，report 带 git_dirty/source-tree digest/脚本 SHA-256 新 provenance） | JIT follow-up（接口已冻结，不实现 JIT）；TMA decode-only 不冻结；OMMA functional+gpu_waiver；e3m2/e2m3/omma user-skip 不得写 GPU validated |
 
 每个未解决行为应记录：关联 mnemonic/PC、硬件与软件版本、最小复现、观察结果、当前假设、反例、置信度和下一验证实验。
 

@@ -25,6 +25,12 @@
 
 // Interpreter execution core and control flow (SIM_PLAN Phase 4).
 //
+// FROZEN (SIM_PLAN Phase 10): the Interpreter is the REFERENCE backend for
+// the kBackendApiVersion contract (context.hpp/api.hpp).  Its public
+// run/step/supports surface and Result are part of the frozen public API; the
+// mock backend (mock_backend.hpp) decides interpreter-fallback by consulting
+// `supports()` + the capability manifest.
+//
 // Implements per-lane independent thread scheduling (ITS): each thread has
 // its own GPR file, predicate, lane PC and exit state; a warp executes one
 // dynamic warp instruction for a chosen group of lanes sharing the same PC.
@@ -283,6 +289,16 @@ struct L2RequestDescriptor {
     std::uint64_t len = 0;     // access byte width
 };
 
+// Ready accessor for the interpreter's implemented mnemonic family: whether
+// the reference interpreter FUNCTIONALLY executes this decoded instruction's
+// family (mnemonic-level).  `Interpreter::supports` delegates here (it needs
+// no instance state, so the mock backend can call it without constructing an
+// interpreter).  NOTE: variant-level decode-only alternatives INSIDE a
+// supported family (e.g. sparse/rowcol/scale tensor, TMA) are NOT excluded —
+// callers that need the frozen capability boundary must ALSO consult the
+// capability manifest (the mock backend does exactly that).
+bool interpreter_handles(const DecodedInstruction& inst);
+
 class Interpreter {
 public:
     // Run a kernel's pre-decoded IR from pc=0 with the given environment.
@@ -313,6 +329,11 @@ public:
         // Phase 6 Step 2D: data-race reports (empty unless model.race ==
         // kReport).  Trace-only; never affects functional results.
         std::vector<RaceReport> race_reports;
+        // Phase 10 hotspot profile (empty unless options.collect_hotspots):
+        // kernel-relative PC -> dynamic issue count for every static word that
+        // executed.  Sorted ascending by PC.  The benchmark derives top-N
+        // mnemonics from this map against the kernel's predecoded text.
+        std::map<std::uint64_t, std::uint64_t> pc_hotspots;
     };
     static Result run_result(const Kernel& kernel, const LaunchEnv& env,
                              std::uint64_t instruction_limit = 1000000,
@@ -764,6 +785,9 @@ private:
     std::vector<MemoryEvent> memory_events_;
     std::uint64_t limit_;
     std::uint64_t executed_ = 0;
+    // Phase 10 hotspot profile accumulator (populated only when
+    // options_.collect_hotspots).  See Result::pc_hotspots.
+    std::map<std::uint64_t, std::uint64_t> pc_hotspots_;
     std::vector<std::string> trace_;
     bool report_trace_ = false;
     // Phase 5.5 execution mode + fast accounting (fixed at construction).

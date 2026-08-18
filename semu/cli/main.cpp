@@ -1,3 +1,4 @@
+#include <semu/api.hpp>
 #include <semu/capability.hpp>
 #include <semu/cubin.hpp>
 #include <semu/debugger.hpp>
@@ -72,6 +73,11 @@ int run_version() {
                 semu::gpu_differential_enabled() ? "on" : "off");
     std::printf("  error model: %s\n", semu::kErrorModelVersion);
     std::printf("  capability manifest: %d\n", semu::kCapabilityManifestVersion);
+    std::printf("  frozen API (Phase 10): backend=%d decoded_ir=%d "
+                "runtime_services=%d event_stream=%d fault=%d\n",
+                semu::kBackendApiVersion, semu::kDecodedIrVersion,
+                semu::kRuntimeServicesVersion, semu::kEventStreamVersion,
+                semu::kFaultAbiVersion);
     return 0;
 }
 

@@ -7,6 +7,12 @@
 #include <semu/status.hpp>
 #include <semu/word.hpp>
 
+// FROZEN (SIM_PLAN Phase 10): the fault ABI — Fault / FaultKind / to_string /
+// describe — locked by kFaultAbiVersion (api.hpp).  SIM_PLAN Phase 0 promised
+// later phases only ENRICH the context fields (set_kernel/set_pc/set_cta/...);
+// they never change the surface.  The mock backend reports decode-only
+// instructions through exactly this ABI.
+
 // Runtime simulator fault.  A Fault is an Error enriched with the execution
 // context needed to localize a failure to a dynamic warp instruction:
 //
