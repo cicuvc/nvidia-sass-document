@@ -508,7 +508,7 @@ TEST(mock_backend_fallback_with_global_memory) {
 // ---------------------------------------------------------------------------
 TEST(mock_backend_freeze_markers) {
     CHECK(semu::kBackendApiVersion == 1);
-    CHECK(semu::kDecodedIrVersion == 2);
+    CHECK(semu::kDecodedIrVersion == 3);
     CHECK(semu::kRuntimeServicesVersion == 1);
     CHECK(semu::kEventStreamVersion == 1);
     CHECK(semu::kFaultAbiVersion == 1);

@@ -429,7 +429,7 @@ TEST(cubin_loads_minimal_single_kernel) {
     CHECK(at->unique);
     CHECK(at->pc == 16);
     // Kernel-relative PC in both places; the file offset is separate.
-    CHECK(at->inst.pc == 16);
+    CHECK(at->inst->pc == 16);
     CHECK(at->file_offset == k.text_offset + 16);
     CHECK(mod.word_at(k, 32) == nullptr);   // past the end
     CHECK(mod.word_at(k, 15) == nullptr);   // not 16-aligned
@@ -1290,7 +1290,7 @@ TEST(cubin_word_pc_is_kernel_relative) {
     for (std::size_t i = 0; i < k.predecoded.size(); ++i) {
         const auto& w = k.predecoded[i];
         CHECK(w.pc == i * 16);
-        if (w.unique) CHECK(w.inst.pc == i * 16);
+        if (w.unique) CHECK(w.inst->pc == i * 16);
         CHECK(w.file_offset == k.text_offset + i * 16);
     }
 }

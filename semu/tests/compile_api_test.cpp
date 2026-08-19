@@ -74,7 +74,7 @@ public:
             if (w.unique) {
                 ++words_parsed;
                 // The decoded IR surface a JIT would lower.
-                const auto& inst = w.inst;
+                const auto& inst = *w.inst;
                 (void)inst.mnemonic;
                 (void)inst.variant_class;
                 (void)inst.guard_pred;
@@ -115,7 +115,7 @@ public:
 
 TEST(api_compile_freeze_markers) {
     CHECK(semu::kBackendApiVersion == 1);
-    CHECK(semu::kDecodedIrVersion == 2);
+    CHECK(semu::kDecodedIrVersion == 3);
     CHECK(semu::kRuntimeServicesVersion == 1);
     CHECK(semu::kEventStreamVersion == 1);
     CHECK(semu::kFaultAbiVersion == 1);

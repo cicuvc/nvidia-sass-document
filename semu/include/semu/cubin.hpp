@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -105,11 +106,32 @@ struct PredecodedWord {
     std::uint64_t lo = 0;        // raw word
     std::uint64_t hi = 0;
     bool unique = false;         // decoded uniquely (inst is valid)
-    // Only meaningful when unique.  inst.pc is the kernel-relative PC
-    // (matching PredecodedWord::pc), never a file offset.
-    DecodedInstruction inst;
+    // Only meaningful when unique; heap-allocated (polymorphic, so it can
+    // later be a derived typed-shape instance).  inst->pc is the
+    // kernel-relative PC (matching PredecodedWord::pc), never a file offset.
+    std::unique_ptr<DecodedInstruction> inst;
     // Human-readable diagnosis for non-unique words.
     std::string reason;
+
+    // Deep-copying (the unique_ptr is copied as a fresh heap object); movable.
+    PredecodedWord() = default;
+    PredecodedWord(const PredecodedWord& o)
+        : pc(o.pc), file_offset(o.file_offset), lo(o.lo), hi(o.hi),
+          unique(o.unique),
+          inst(o.inst ? std::make_unique<DecodedInstruction>(*o.inst)
+                      : nullptr),
+          reason(o.reason) {}
+    PredecodedWord& operator=(const PredecodedWord& o) {
+        if (this == &o) return *this;
+        pc = o.pc; file_offset = o.file_offset; lo = o.lo; hi = o.hi;
+        unique = o.unique;
+        inst = o.inst ? std::make_unique<DecodedInstruction>(*o.inst)
+                      : nullptr;
+        reason = o.reason;
+        return *this;
+    }
+    PredecodedWord(PredecodedWord&&) noexcept = default;
+    PredecodedWord& operator=(PredecodedWord&&) noexcept = default;
 };
 
 // Per-kernel section association (text / constant / shared / local).  A

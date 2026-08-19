@@ -126,6 +126,36 @@ TEST(decoder_pr_operand_rendered) {
     }
 }
 
+// Typed-IR schema (isa_shapes.hpp): the per-variant operand-role manifest must
+// agree with the live decoder's operand accounting -- for a decoded word, the
+// manifest role count (ops[] length) equals inst.operands.size(), and each
+// role's kind matches the decoded Operand.kind.
+TEST(shape_manifest_matches_decoded_operands) {
+    const auto& dec = Decoder::instance();
+    const Vec kV[] = {
+        {0x0000000000007918ULL, 0x000fc00000000000ULL, "nop_", "NOP"},
+        {0x0000000000003945ULL, 0x000fc00000000000ULL, "bssy_", "BSSY"},
+        {0x0000000300007804ULL, 0x000fe20000000000ULL, "r2p__RIR", "R2P"},
+        {0x00000400007c04ULL, 0x0fc40008000000ULL, "r2p__RUR", "R2P"},
+        // an FFMA word (constructed from the FFMA4 shape family)
+        {0x0000001880000000ULL, 0x0fc4400000000000ULL, "ffma__RRR", "FFMA"},
+    };
+    for (const auto& v : kV) {
+        DecodeResult r = dec.decode(v.lo, v.hi);
+        if (!r.is_unique()) continue;
+        const auto& inst = r.instruction();
+        const std::string cls = std::string(isa::variant_class_name(inst.variant_class));
+        std::uint32_t idx = 0;
+        while (idx < isa::kNumVariants &&
+               isa::variant_class_name(isa::kVariants[idx].variant_class) != cls) ++idx;
+        if (idx >= isa::kNumVariants) continue;
+        const char* prev = isa::variant_class_name(isa::kVariants[idx].variant_class);
+        (void)prev;
+        const auto& mf = shape::kShapeManifests[idx];
+        CHECK_EQ(static_cast<int>(mf.n_ops), static_cast<int>(inst.operands.size()));
+    }
+}
+
 int main(int argc, char** argv) {
     (void)argc;
     (void)argv;

@@ -1197,10 +1197,10 @@ StatusOr<Module> Module::load_impl(std::vector<std::uint8_t> data,
             DecodeResult r = dec.decode(w.lo, w.hi);
             if (r.is_unique()) {
                 w.unique = true;
-                w.inst = r.instruction();
+                w.inst = std::make_unique<DecodedInstruction>(r.instruction());
                 // Kernel-relative PC (matching PredecodedWord::pc); the
                 // file offset lives in PredecodedWord::file_offset.
-                w.inst.pc = off;
+                w.inst->pc = off;
             } else if (r.outcome() == DecodeOutcome::kAmbiguous) {
                 w.reason = "ambiguous (" + std::to_string(r.candidates().size()) +
                            " candidates)";

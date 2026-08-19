@@ -1203,6 +1203,44 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
             L.append(f"    {modseen[mname]} {mname};")
         L.append("};")
 
+    # ---- per-variant operand-role manifest (aligned to kVariants index) ----
+    # Each operand slot of a variant -> (position in ops[], OperandKind).  This
+    # is what decode uses to fill a derived Decoded* ops[] positionally from the
+    # decoded slot map.
+    L.append("")
+    L.append("// Per-variant operand-role manifest (indexed by isa_data kVariants")
+    L.append("// index).  pos = position in the derived type's ops[] array.")
+    L.append("struct ShapeOpRole {")
+    L.append("    const char* slot;   // FORMAT slot name (e.g. \"Rd\", \"Rb\")")
+    L.append("    std::uint8_t pos;   // position in ops[]")
+    L.append("    OperandKind kind;   // OperandKind")
+    L.append("};")
+    L.append("static_assert(sizeof(ShapeOpRole) <= 16);")
+    L.append("static_assert(sizeof(OperandValue) <= 16);")
+    L.append("struct ShapeManifest {")
+    L.append("    std::uint16_t n_ops;             // number of operand roles")
+    L.append("    const ShapeOpRole* ops;          // role list, or nullptr")
+    L.append("};")  # == n_ops or pointer padding
+    roles_arrays = []
+    manifests = []
+    for i, v in enumerate(variants):
+        roles = shape_operand_roles(v)
+        if not roles:
+            manifests.append("    {0, nullptr},")
+            continue
+        arr_name = f"kShapeRoles_{i}"
+        roles_arrays.append((arr_name, roles))
+        manifests.append(f"    {{{len(roles)}, {arr_name}}},")
+    for arr_name, roles in roles_arrays:
+        rows = ", ".join(
+            f"{{ {cq(r['name'])}, {k}, "
+            f"OperandKind::{OPERAND_KIND.get(r['type'], 'kSpecial')} }}"
+            for k, r in enumerate(roles))
+        L.append(f"inline const ShapeOpRole {arr_name}[] = {{ {rows} }};")
+    L.append("")
+    L.append("inline const ShapeManifest kShapeManifests[] = {")
+    L.extend(manifests)
+    L.append("};")
     L.append("")
     L.append("}  // namespace semu::shape")
     L.append("")

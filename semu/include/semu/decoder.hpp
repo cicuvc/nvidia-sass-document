@@ -97,6 +97,11 @@ public:
     // including modifier slots (rnd/ftz/sat/fcomp/dstfmt.srcfmt/...).  This is
     // the stable interface the interpreter uses for modifier dispatch.
     std::vector<std::pair<std::string, std::uint64_t>> slot_values;
+
+    // Polymorphic: the decoded-IR migration stores concrete instructions as
+    // base pointers (PredecodedWord::inst is a unique_ptr) so a future typed
+    // derived Decoded<Mnemonic><Ops> can be allocated and deleted through this.
+    virtual ~DecodedInstruction() = default;
 };
 
 // One candidate's disposition during an illegal/ambiguous decode.

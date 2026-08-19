@@ -100,17 +100,17 @@ Status MockBackend::launch(const BackendLaunchRequest& request) {
     const auto report_decode_only = [&](const PredecodedWord& w) {
         Fault f(FaultKind::kUnsupportedInstruction,
                 "mock backend cannot lower '" +
-                    std::string(isa::mnemonic_name(w.inst.mnemonic)) +
+                    std::string(isa::mnemonic_name(w.inst->mnemonic)) +
                     "' (decode-only variant " +
-                    std::string(isa::variant_class_name(w.inst.variant_class)) +
+                    std::string(isa::variant_class_name(w.inst->variant_class)) +
                     "); not lowered, not functional -> decode-only fault");
         f.set_kernel(request.kernel_name)
             .set_pc(w.pc)
             .set_instruction({w.lo, w.hi})
-            .set_mnemonic(isa::mnemonic_name(w.inst.mnemonic))
-            .set_variant(isa::variant_class_name(w.inst.variant_class));
+            .set_mnemonic(isa::mnemonic_name(w.inst->mnemonic))
+            .set_variant(isa::variant_class_name(w.inst->variant_class));
         stats_.decode_only_mnemonics.push_back(
-            isa::mnemonic_name(w.inst.mnemonic));
+            isa::mnemonic_name(w.inst->mnemonic));
         if (!stats_.decode_only_fault) stats_.decode_only_fault = std::move(f);
         return f;
     };
@@ -132,9 +132,9 @@ Status MockBackend::launch(const BackendLaunchRequest& request) {
             }
             return Status::failure(*stats_.decode_only_fault);
         }
-        const isa::Mnemonic m = w.inst.mnemonic;
+        const isa::Mnemonic m = w.inst->mnemonic;
         if (is_forced_decode_only(isa::mnemonic_name(m)) ||
-            frozen_decode_only(w.inst)) {
+            frozen_decode_only(*w.inst)) {
             stats_.decode_only_mnemonics.push_back(isa::mnemonic_name(m));
             const Fault f = report_decode_only(w);
             return Status::failure(f);
@@ -142,7 +142,7 @@ Status MockBackend::launch(const BackendLaunchRequest& request) {
         // Runtime authority: the reference interpreter must be able to execute
         // the instruction family; otherwise it cannot be lowered anywhere and
         // the decode-only fault fires.
-        if (!interpreter_handles(w.inst)) {
+        if (!interpreter_handles(*w.inst)) {
             const Fault f = report_decode_only(w);
             return Status::failure(f);
         }

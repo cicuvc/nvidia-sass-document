@@ -493,7 +493,7 @@ bool Interpreter::step_group(StepGroupFrame* frame,
         const std::uint64_t idx = pc / 16;
         if (idx < kernel_.predecoded.size() &&
             kernel_.predecoded[idx].unique) {
-            const DecodedInstruction& inst = kernel_.predecoded[idx].inst;
+            const DecodedInstruction& inst = *kernel_.predecoded[idx].inst;
             if (!(*pre_exec)(static_cast<std::uint32_t>(cta),
                              static_cast<std::uint32_t>(warp), pc, mask,
                              inst)) {
@@ -1170,7 +1170,7 @@ Status Interpreter::execute_group(int cta_idx, int warp, std::uint64_t pc,
         if (fault) *fault = std::move(f);
         return Status::failure(Error::internal("interpreter fault"));
     }
-    const DecodedInstruction& inst = w.inst;
+    const DecodedInstruction& inst = *w.inst;
 
     // Advance every active lane's PC past this instruction first; branch
     // handlers overwrite per-lane PCs as needed.

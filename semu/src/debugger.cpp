@@ -1206,7 +1206,7 @@ StatusOr<DecodedInstruction> DebugSession::decode_at(std::uint64_t pc) const {
             Error(ErrorCode::kDecodeIllegal,
                   "word at pc 0x" + hex64(pc) + ": " + pre[pc / 16].reason));
     }
-    return StatusOr<DecodedInstruction>::success(pre[pc / 16].inst);
+    return StatusOr<DecodedInstruction>::success(*pre[pc / 16].inst);
 }
 
 // ---------------------------------------------------------------------------
