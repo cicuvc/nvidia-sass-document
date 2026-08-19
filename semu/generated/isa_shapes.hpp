@@ -2114,8 +2114,8 @@ enum class XORSIGN : std::int32_t {
 // modifiers are typed enum members specific to each instruction.
 struct DecodedMOV2 {
     OperandValue ops[2];
-    SPILLONLY nonconformity;
     ONLY64 size;
+    SPILLONLY nonconformity;
 };
 struct DecodedMOV3 {
     OperandValue ops[3];
@@ -2145,16 +2145,16 @@ struct DecodedFMNMX4 {
 struct DecodedFMNMX5 {
     OperandValue ops[5];
     FTZ ftz;
-    IS_AONLY is_A;
     NAN nan;
     XORSIGN xorsign;
+    IS_AONLY is_A;
 };
 struct DecodedFSET4 {
     OperandValue ops[4];
     BFONLY bf;
-    Bop bop;
     FCMP fcomp;
     FTZ ftz;
+    Bop bop;
 };
 struct DecodedFSET3 {
     OperandValue ops[3];
@@ -2164,9 +2164,9 @@ struct DecodedFSET3 {
 };
 struct DecodedFSETP5 {
     OperandValue ops[5];
-    Bop bop;
     FCMP fcomp;
     FTZ ftz;
+    Bop bop;
 };
 struct DecodedFSETP3 {
     OperandValue ops[3];
@@ -2175,27 +2175,27 @@ struct DecodedFSETP3 {
 };
 struct DecodedISETP6 {
     OperandValue ops[6];
+    ICmpAll icmp;
+    FMT_64_DIST fmt;
     Bop bop;
     EXONLY ex;
-    FMT_64_DIST fmt;
-    ICmpAll icmp;
 };
 struct DecodedISETP5 {
     OperandValue ops[5];
-    Bop bop;
-    FMT_64_DIST fmt;
     ICmpAll icmp;
+    FMT_64_DIST fmt;
+    Bop bop;
 };
 struct DecodedISETP4 {
     OperandValue ops[4];
-    EXONLY ex;
-    FMT_64_DIST fmt;
     ICmpAll icmp;
+    FMT_64_DIST fmt;
+    EXONLY ex;
 };
 struct DecodedISETP3 {
     OperandValue ops[3];
-    FMT_64_DIST fmt;
     ICmpAll icmp;
+    FMT_64_DIST fmt;
 };
 struct DecodedIADD36 {
     OperandValue ops[6];
@@ -2209,8 +2209,8 @@ struct DecodedISCADD5 {
 };
 struct DecodedLEA6 {
     OperandValue ops[6];
-    XONLY X;
     HIONLY_lea hilo;
+    XONLY X;
     SX32ONLY sx32;
 };
 struct DecodedLEA5 {
@@ -2220,8 +2220,8 @@ struct DecodedLEA5 {
 };
 struct DecodedLEA7 {
     OperandValue ops[7];
-    XONLY X;
     HIONLY_lea hilo;
+    XONLY X;
 };
 struct DecodedLOP5 {
     OperandValue ops[5];
@@ -2239,8 +2239,8 @@ struct DecodedLOP37 {
 };
 struct DecodedLOP36 {
     OperandValue ops[6];
-    LOP lop;
     LUTOnly lut;
+    LOP lop;
     LOP_POP pop;
 };
 struct DecodedLOP35 {
@@ -2264,8 +2264,8 @@ struct DecodedIMNMX6 {
 };
 struct DecodedSHF4 {
     OperandValue ops[4];
-    CWMode cw;
     SDIR dir;
+    CWMode cw;
     FMT_shf fmt;
     HILO hilo;
 };
@@ -2290,23 +2290,23 @@ struct DecodedBMSK3 {
 struct DecodedPLOP35 {
     OperandValue ops[5];
     LUTOnly lut;
-    SIGNONLY sign_a;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
+    SIGNONLY sign_a;
 };
 struct DecodedPLOP37 {
     OperandValue ops[7];
     LUTOnly lut;
-    SIGNONLY sign_a;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
+    SIGNONLY sign_a;
 };
 struct DecodedFMUL3 {
     OperandValue ops[3];
     FMZ_hfma2 fmz;
+    Scale scale;
     Round1 rnd;
     SAT sat;
-    Scale scale;
 };
 struct DecodedFADD3 {
     OperandValue ops[3];
@@ -2316,10 +2316,10 @@ struct DecodedFADD3 {
 };
 struct DecodedFHADD3 {
     OperandValue ops[3];
-    EXTRACT extract_a;
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
+    EXTRACT extract_a;
 };
 struct DecodedFFMA4 {
     OperandValue ops[4];
@@ -2329,47 +2329,47 @@ struct DecodedFFMA4 {
 };
 struct DecodedFHFMA4 {
     OperandValue ops[4];
-    EXTRACT extract_a;
-    EXTRACT extract_b;
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
+    EXTRACT extract_a;
+    EXTRACT extract_b;
 };
 struct DecodedIMAD4 {
     OperandValue ops[4];
+    LOOnly wide;
     FMT fmt;
     PSEUDO_OPCODE pseudo_opcode;
-    LOOnly wide;
 };
 struct DecodedIMAD5 {
     OperandValue ops[5];
-    XONLY X;
-    FMT fmt;
-    PSEUDO_OPCODE pseudo_opcode;
     LOOnly wide;
+    PSEUDO_OPCODE pseudo_opcode;
+    FMT fmt;
+    XONLY X;
 };
 struct DecodedIMUL3 {
     OperandValue ops[3];
-    FMT fmt;
     LOOnly wide;
+    FMT fmt;
 };
 struct DecodedIMAD6 {
     OperandValue ops[6];
-    XONLY X;
-    FMT fmt;
-    PSEUDO_OPCODE pseudo_opcode;
     WIDEONLY wide;
+    FMT fmt;
+    XONLY X;
+    PSEUDO_OPCODE pseudo_opcode;
 };
 struct DecodedIMUL4 {
     OperandValue ops[4];
-    FMT fmt;
     WIDEONLY wide;
+    FMT fmt;
 };
 struct DecodedIDP4 {
     OperandValue ops[4];
+    MODE_2ALO_2AHI mode;
     SRCFMT16A SrcAFmt;
     SRCFMT_U8_S8 SrcBFmt;
-    MODE_2ALO_2AHI mode;
 };
 struct DecodedIDP4A4 {
     OperandValue ops[4];
@@ -2386,8 +2386,8 @@ struct DecodedDADD3 {
 };
 struct DecodedDSETP5 {
     OperandValue ops[5];
-    Bop bop;
     DSETP_FCMP test;
+    Bop bop;
 };
 struct DecodedDSETP3 {
     OperandValue ops[3];
@@ -2403,91 +2403,91 @@ struct DecodedCLMAD4 {
 };
 struct DecodedHADD23 {
     OperandValue ops[3];
+    F32ONLY_hadd2 ofmt;
     FTZ ftz;
+    SAT sat;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
-    F32ONLY_hadd2 ofmt;
-    SAT sat;
 };
 struct DecodedHFMA24 {
     OperandValue ops[4];
-    MMAONLY MMA;
-    FMZ fmz;
-    ISWZA iswzA;
-    NONE iswzA_forced_H1_H0;
-    ISWZB iswzB;
-    ISWZA iswzB_as_C;
-    NONE iswzB_as_C_forced_H1_H0;
-    NONE iswzB_forced_H1_H0;
-    ISWZA iswzC;
-    ISWZB iswzC_as_B;
-    NONE iswzC_as_B_forced_H1_H0;
-    NONE iswzC_forced_H1_H0;
     OFMT ofmt;
+    FMZ fmz;
     SAT satrelu;
+    ISWZA iswzA;
+    ISWZB iswzB;
+    ISWZA iswzC;
+    MMAONLY MMA;
+    NONE iswzA_forced_H1_H0;
+    NONE iswzB_forced_H1_H0;
+    NONE iswzC_forced_H1_H0;
+    ISWZB iswzC_as_B;
+    ISWZA iswzB_as_C;
+    NONE iswzC_as_B_forced_H1_H0;
+    NONE iswzB_as_C_forced_H1_H0;
 };
 struct DecodedHFMA25 {
     OperandValue ops[5];
     MMAONLY MMA;
+    OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
-    ISWZA iswzA;
+    RELUONLY satrelu;
     NONE iswzA_forced_H1_H0;
-    ISWZB iswzB;
-    ISWZA iswzB_as_C;
-    NONE iswzB_as_C_forced_H1_H0;
     NONE iswzB_forced_H1_H0;
+    NONE iswzC_forced_H1_H0;
+    ISWZA iswzA;
+    ISWZB iswzB;
     ISWZA iswzC;
     ISWZB iswzC_as_B;
     NONE iswzC_as_B_forced_H1_H0;
-    NONE iswzC_forced_H1_H0;
-    OFMT_F16_V2_BF16_V2 ofmt;
-    RELUONLY satrelu;
+    NONE iswzB_as_C_forced_H1_H0;
+    ISWZA iswzB_as_C;
 };
 struct DecodedHMUL23 {
     OperandValue ops[3];
+    OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
+    SAT sat;
     ISWZA iswzA;
     ISWZA iswzB;
-    OFMT_F16_V2_BF16_V2 ofmt;
-    SAT sat;
 };
 struct DecodedHSET24 {
     OperandValue ops[4];
-    Bop bop;
+    OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
     FCMP cmp;
     FTZ ftz;
+    Bop bop;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
-    OFMT_F16_V2_BF16_V2 ofmt;
 };
 struct DecodedHSET23 {
     OperandValue ops[3];
+    OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
     FCMP cmp;
     FTZ ftz;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
-    OFMT_F16_V2_BF16_V2 ofmt;
 };
 struct DecodedHSETP25 {
     OperandValue ops[5];
-    Bop bop;
+    OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
-    FTZ ftz;
     H_AND h_and;
+    FTZ ftz;
+    Bop bop;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
-    OFMT_F16_V2_BF16_V2 ofmt;
 };
 struct DecodedHSETP24 {
     OperandValue ops[4];
+    OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
-    FTZ ftz;
     H_AND h_and;
+    FTZ ftz;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
-    OFMT_F16_V2_BF16_V2 ofmt;
 };
 struct DecodedIADD4 {
     OperandValue ops[4];
@@ -2495,8 +2495,8 @@ struct DecodedIADD4 {
 };
 struct DecodedIADD5 {
     OperandValue ops[5];
-    XONLY X;
     ONLY64 size;
+    XONLY X;
 };
 struct DecodedVIADD3 {
     OperandValue ops[3];
@@ -2505,130 +2505,130 @@ struct DecodedVIADD3 {
 };
 struct DecodedIMMA5 {
     OperandValue ops[5];
-    SAT SAT_;
-    COLONLY col_B;
-    ROWONLY row_A;
     SIZE_16816_16832_imma size;
     SRCFMTA_U8_S8 srcFmtA;
     SRCFMTA_U8_S8 srcFmtB;
+    SAT SAT_;
+    ROWONLY row_A;
+    COLONLY col_B;
 };
 struct DecodedIMMA7 {
     OperandValue ops[7];
-    SAT SAT_;
-    COLONLY col_B;
-    ROWONLY row_A;
-    SIZE_16832_16864_imma size;
     SPONLY sp;
     SPFORMAT spformat;
+    SIZE_16832_16864_imma size;
     SRCFMTA_U8_S8 srcFmtA;
     SRCFMTA_U8_S8 srcFmtB;
+    SAT SAT_;
+    ROWONLY row_A;
+    COLONLY col_B;
 };
 struct DecodedI2I2 {
     OperandValue ops[2];
-    SATONLY SAT;
     DSTFMT_i2i dstfmt;
     S32ONLY_i2i srcfmt;
+    SATONLY SAT;
 };
 struct DecodedI2IP4 {
     OperandValue ops[4];
     DSTFMT_S4_U4 dstfmt;
-    ONLY24 extract_limited;
-    SATRELU satrelu;
     S32ONLY_i2i srcfmt;
+    SATRELU satrelu;
+    ONLY24 extract_limited;
 };
 struct DecodedMOVM2 {
     OperandValue ops[2];
-    MOVM_MODE mode;
     MOVM_SZ sz;
+    MOVM_MODE mode;
 };
 struct DecodedHMMA7 {
     OperandValue ops[7];
-    FloatNo64 dstfmt;
-    SIZE_1688_16816_16832 size;
     SPONLY sp;
     SPFORMAT spformat;
+    SIZE_1688_16816_16832 size;
+    FloatNo64 dstfmt;
     SRCFMT srcfmt;
 };
 struct DecodedHMMA5 {
     OperandValue ops[5];
-    FloatNo64 dstfmt;
     SIZE_1688_16816_1684 size;
+    FloatNo64 dstfmt;
     SRCFMT srcfmt;
 };
 struct DecodedF2FP2 {
     OperandValue ops[2];
-    F16ONLY_f2fp dstfmt;
-    EXTRACT extract_B;
-    UNPACK_BONLY merge;
     RELU relu;
-    RNONLY rndMode;
-    SATFINITE satfinite;
-    B3B0 selB;
+    F16ONLY_f2fp dstfmt;
     SRCFMT_E0M3_E2M1 srcfmt;
+    UNPACK_BONLY merge;
+    RNONLY rndMode;
+    B3B0 selB;
+    EXTRACT extract_B;
+    SATFINITE satfinite;
 };
 struct DecodedF2FP3 {
     OperandValue ops[3];
-    DSTFMT_F16_BF16 dstfmt;
-    EXTRACT extract;
-    EXTRACT extract_B;
-    ISWZC iswzC;
-    PACK_ABONLY merge;
-    RELU relu;
-    RNDMODE_RN_RZ rndMode;
     SATFINITE satfinite;
+    RELU relu;
+    DSTFMT_F16_BF16 dstfmt;
+    F32ONLY_f2fp srcfmt;
+    PACK_ABONLY merge;
+    RNDMODE_RN_RZ rndMode;
+    EXTRACT extract;
     SATNARROW satnarrow;
     B3B0 selB;
-    F32ONLY_f2fp srcfmt;
+    ISWZC iswzC;
+    EXTRACT extract_B;
 };
 struct DecodedF2FP4 {
     OperandValue ops[4];
-    DSTFMT_E0M3_E2M1 dstfmt;
-    EXTRACT extract;
-    PACK_AB_MERGE_CONLY merge;
-    RELU relu;
-    RNONLY rndMode;
     SATFINITEONLY satfinite;
-    SATNARROW satnarrow;
+    RELU relu;
+    DSTFMT_E0M3_E2M1 dstfmt;
     F32ONLY_f2fp srcfmt;
+    PACK_AB_MERGE_CONLY merge;
+    RNONLY rndMode;
+    EXTRACT extract;
+    SATNARROW satnarrow;
 };
 struct DecodedDMMA5 {
     OperandValue ops[5];
-    Round1 rnd;
     SIZE_DMMA size;
+    Round1 rnd;
 };
 struct DecodedHMNMX24 {
     OperandValue ops[4];
+    OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
+    NAN nan;
+    XORSIGN xorsign;
     ISWZA iswzA;
     ISWZA iswzB;
-    NAN nan;
-    OFMT_F16_V2_BF16_V2 ofmt;
-    XORSIGN xorsign;
 };
 struct DecodedHMNMX26 {
     OperandValue ops[6];
+    OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
+    NAN nan;
+    XORSIGN xorsign;
     IS_AONLY isA;
     ISWZA iswzA;
     ISWZA iswzB;
-    NAN nan;
-    OFMT_F16_V2_BF16_V2 ofmt;
-    XORSIGN xorsign;
 };
 struct DecodedF2IP4 {
     OperandValue ops[4];
     DSTFMT_U8_S8 dstfmt;
-    EXTRACT extract;
+    F32ONLY_hadd2 srcfmt;
+    RND_ROUND_TRUNC rnd;
     NTZ ntz;
     RELU relu;
-    RND_ROUND_TRUNC rnd;
-    F32ONLY_hadd2 srcfmt;
+    EXTRACT extract;
 };
 struct DecodedI2FP2 {
     OperandValue ops[2];
     F32ONLY_i2fp dstfmt;
-    RND_RN_RZ rnd;
     SRCFMT_i2fp srcfmt;
+    RND_RN_RZ rnd;
 };
 struct DecodedVIMNMX4 {
     OperandValue ops[4];
@@ -2637,23 +2637,23 @@ struct DecodedVIMNMX4 {
 };
 struct DecodedQMMA5 {
     OperandValue ops[5];
-    COLONLY col_B;
-    FloatNo64 dstfmt;
-    ROWONLY row_A;
     SIZE_16816_16832 size;
+    FloatNo64 dstfmt;
     SRCFMTA_qmma srcFmtA;
     SRCFMTA_qmma srcFmtB;
+    ROWONLY row_A;
+    COLONLY col_B;
 };
 struct DecodedQMMA7 {
     OperandValue ops[7];
-    COLONLY col_B;
-    FloatNo64 dstfmt;
-    ROWONLY row_A;
-    SIZE_16832_16864 size;
     SPONLY sp;
     SPFORMAT spformat;
+    SIZE_16832_16864 size;
+    FloatNo64 dstfmt;
     SRCFMTA_qmma srcFmtA;
     SRCFMTA_qmma srcFmtB;
+    ROWONLY row_A;
+    COLONLY col_B;
 };
 struct DecodedR2UR3 {
     OperandValue ops[3];
@@ -2674,40 +2674,40 @@ struct DecodedFCHK3 {
 };
 struct DecodedF2F2 {
     OperandValue ops[2];
-    DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     FTZ ftz;
-    HSEL hsel;
+    DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     Round1 rnd;
+    HSEL hsel;
 };
 struct DecodedF2I2 {
     OperandValue ops[2];
-    DSTFMT_U8_S8_U16_S16_U32_S32 dstfmt;
     FTZ ftz;
-    HSEL hsel;
-    NTZ ntz;
-    Round3 rnd;
+    DSTFMT_U8_S8_U16_S16_U32_S32 dstfmt;
     Float16 srcfmt;
+    Round3 rnd;
+    NTZ ntz;
+    HSEL hsel;
 };
 struct DecodedI2F2 {
     OperandValue ops[2];
-    B3B0 bsel;
     DSTFMT_F16_F32_BF16 dstfmt;
-    HSEL hsel;
-    Round1 rnd;
     SRCFMT_U16_S16 srcfmt;
+    Round1 rnd;
+    HSEL hsel;
+    B3B0 bsel;
 };
 struct DecodedFRND2 {
     OperandValue ops[2];
-    BF16ONLY_frnd fmt;
     FTZ ftz;
-    HSEL hsel;
+    BF16ONLY_frnd fmt;
     Round3 rnd;
+    HSEL hsel;
 };
 struct DecodedMUFU2 {
     OperandValue ops[2];
-    HSEL extract;
-    FMT_F16_BF16 fmt;
     MUFU_OP mufuop;
+    FMT_F16_BF16 fmt;
+    HSEL extract;
 };
 struct DecodedPOPC2 {
     OperandValue ops[2];
@@ -2728,8 +2728,8 @@ struct DecodedBAR2 {
 struct DecodedBAR3 {
     OperandValue ops[3];
     BarRED barmode;
-    DEFER_BLOCKINGONLY defer_blocking;
     Red op;
+    DEFER_BLOCKINGONLY defer_blocking;
 };
 struct DecodedR2B2 {
     OperandValue ops[2];
@@ -2748,8 +2748,8 @@ struct DecodedALD4 {
 struct DecodedALD5 {
     OperandValue ops[5];
     AIO io;
-    PONLY p;
     AInteger sz;
+    PONLY p;
 };
 struct DecodedAST4 {
     OperandValue ops[4];
@@ -2758,8 +2758,8 @@ struct DecodedAST4 {
 };
 struct DecodedAST5 {
     OperandValue ops[5];
-    PONLY p;
     AInteger sz;
+    PONLY p;
 };
 struct DecodedOUT3 {
     OperandValue ops[3];
@@ -2781,9 +2781,9 @@ struct DecodedIPA5 {
 };
 struct DecodedCCTL0 {
     CONLY cache;
+    LDCONLY ldc;
     IVALLONLY cop;
     SHALLOWONLY depth;
-    LDCONLY ldc;
     LDCUONLY ldcu;
 };
 struct DecodedCALL3 {
@@ -2795,15 +2795,15 @@ struct DecodedCALL3 {
 };
 struct DecodedCALL2 {
     OperandValue ops[2];
-    std::uint8_t abs;
-    CALL_DEPTH depth;
     std::uint8_t rel;
+    CALL_DEPTH depth;
+    std::uint8_t abs;
     std::uint8_t rel_imm;
 };
 struct DecodedWARPSYNC2 {
     OperandValue ops[2];
-    ALLOnly all;
     DIV__EXCLUSIVE div;
+    ALLOnly all;
     std::uint8_t rel;
 };
 struct DecodedWARPSYNC3 {
@@ -2820,9 +2820,9 @@ struct DecodedRPCMOV2 {
 };
 struct DecodedBMOV2 {
     OperandValue ops[2];
+    ONLY32 sz;
     CLEAR clear;
     PQUAD pquad;
-    ONLY32 sz;
 };
 struct DecodedNANOTRAP2 {
     OperandValue ops[2];
@@ -2831,27 +2831,27 @@ struct DecodedNANOTRAP2 {
 struct DecodedNANOSLEEP2 {
     OperandValue ops[2];
     RAND rand;
-    SYNCS_MOD syncs;
     OPTIONAL_WARP warp;
+    SYNCS_MOD syncs;
 };
 struct DecodedTEX9 {
     OperandValue ops[9];
-    AOFFI aoffi;
     BONLY b;
-    COP cop;
-    DC dc;
-    DIV div;
-    LODLC_tex lodlc;
-    NODEP nodep;
     RM16 rm16;
-    SCRONLY scr;
+    LODLC_tex lodlc;
+    AOFFI aoffi;
     UAI uai;
+    DC dc;
+    COP cop;
+    DIV div;
+    NODEP nodep;
+    SCRONLY scr;
 };
 struct DecodedTMML6 {
     OperandValue ops[6];
     BONLY b;
-    DIV div;
     LODOnly lod;
+    DIV div;
     NODEP nodep;
 };
 struct DecodedTXQ5 {
@@ -2861,32 +2861,32 @@ struct DecodedTXQ5 {
 };
 struct DecodedLDG5 {
     OperandValue ops[5];
-    COP cop;
     E e;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SP2 sp2;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
 };
 struct DecodedST3 {
     OperandValue ops[3];
-    COP cop;
     E e;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
 };
 struct DecodedSTG3 {
     OperandValue ops[3];
-    COP cop;
     E e;
-    ORDER order;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ORDER order;
 };
 struct DecodedSTL3 {
     OperandValue ops[3];
@@ -2895,8 +2895,8 @@ struct DecodedSTL3 {
 };
 struct DecodedSTS3 {
     OperandValue ops[3];
-    STRIDE stride;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    STRIDE stride;
 };
 struct DecodedSHFL5 {
     OperandValue ops[5];
@@ -2904,49 +2904,49 @@ struct DecodedSHFL5 {
 };
 struct DecodedATOM6 {
     OperandValue ops[6];
-    COP cop;
     E e;
+    AtomsOp op;
+    COP cop;
+    ATOMICINTSIZES sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
-    AtomsOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    ATOMICINTSIZES sz;
 };
 struct DecodedATOM7 {
     OperandValue ops[7];
+    E e;
     CAS cas;
     COP cop;
-    E e;
+    ATOMCASSZ sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    AtomsSPIN spin;
+    AtomsOp op;
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
-    AtomsOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    AtomsSPIN spin;
-    ATOMCASSZ sz;
 };
 struct DecodedATOMS4 {
     OperandValue ops[4];
     AtomsOp op;
-    STRIDE stride;
     ATOMCASSZ sz;
+    STRIDE stride;
 };
 struct DecodedREDS3 {
     OperandValue ops[3];
     REDSOP op;
-    STRIDE stride;
     REDSSIZE sz;
+    STRIDE stride;
 };
 struct DecodedATOMS5 {
     OperandValue ops[5];
     CAS cas;
-    AtomsOp op;
-    AtomsSPIN spin;
-    STRIDE stride;
     ATOMCASSZ sz;
+    STRIDE stride;
+    AtomsSPIN spin;
+    AtomsOp op;
 };
 struct DecodedCCTLT0 {
     IVALLONLY_cctlt cop;
@@ -2957,31 +2957,31 @@ struct DecodedCCTLT1 {
 };
 struct DecodedSUATOM6 {
     OperandValue ops[6];
-    BA ba;
-    Clamp1 clamp;
-    COP cop;
     DOnly d;
+    BA ba;
     Dim1 dim;
-    AtomsOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    SURFACESIZE sz;
     UAI uai;
+    AtomsOp op;
+    COP cop;
+    SURFACESIZE sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    Clamp1 clamp;
 };
 struct DecodedSURED4 {
     OperandValue ops[4];
-    BA ba;
-    Clamp1 clamp;
-    COP cop;
     DOnly d;
+    BA ba;
     Dim1 dim;
-    RedOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    SURFACESIZE sz;
     UAI uai;
+    RedOp op;
+    COP cop;
+    SURFACESIZE sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    Clamp1 clamp;
 };
 struct DecodedMATCH3 {
     OperandValue ops[3];
@@ -2995,31 +2995,31 @@ struct DecodedMATCH2 {
 };
 struct DecodedATOMG5 {
     OperandValue ops[5];
-    COP cop;
     E e;
     ATOMICFPOPS op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SZ_0 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
 };
 struct DecodedSYNCS0 {
+    FLUSHONLY op;
     CCTLONLY cctl_mode;
     SYNCS_CCTL_OP_ALL cctlop;
-    FLUSHONLY op;
 };
 struct DecodedATOMG6 {
     OperandValue ops[6];
+    E e;
     CAS cas;
     COP cop;
-    E e;
+    ATOMCASSZ sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ATOMICFPOPS op;
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
-    ATOMICFPOPS op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    ATOMCASSZ sz;
 };
 struct DecodedQSPC3 {
     OperandValue ops[3];
@@ -3029,9 +3029,9 @@ struct DecodedQSPC3 {
 struct DecodedQSPC4 {
     OperandValue ops[4];
     E e;
+    QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
-    QUERY_SPACE space;
 };
 struct DecodedGETLMEMBASE1 {
     OperandValue ops[1];
@@ -3045,9 +3045,9 @@ struct DecodedREDUX2 {
     FMT sz;
 };
 struct DecodedFENCE0 {
-    SONLY memType;
-    ASYNCONLY syncType;
     VIEWONLY type;
+    ASYNCONLY syncType;
+    SONLY memType;
 };
 struct DecodedTTUOPEN0 {
     DUAL dual;
@@ -3073,106 +3073,106 @@ struct DecodedFADD32I3 {
 };
 struct DecodedHADD24 {
     OperandValue ops[4];
-    FTZ ftz;
-    ISWZA iswzA;
     F32ONLY_hadd2 ofmt;
+    FTZ ftz;
     SAT sat;
+    ISWZA iswzA;
 };
 struct DecodedHADD2_32I4 {
     OperandValue ops[4];
     FTZ ftz;
-    ISWZA iswzA;
     SAT sat;
+    ISWZA iswzA;
 };
 struct DecodedHFMA26 {
     OperandValue ops[6];
     MMAONLY MMA;
-    FMZ_hfma2 fmz;
-    ISWZA iswzA;
-    NONE iswzA_forced_H1_H0;
-    ISWZA iswzC;
-    ISWZB iswzC_as_B;
-    NONE iswzC_as_B_forced_H1_H0;
-    NONE iswzC_forced_H1_H0;
     OFMT_F16_V2_BF16_V2 ofmt;
+    FMZ_hfma2 fmz;
     RELUONLY satrelu;
+    NONE iswzA_forced_H1_H0;
+    NONE iswzC_as_B_forced_H1_H0;
+    ISWZA iswzA;
+    ISWZB iswzC_as_B;
+    NONE iswzC_forced_H1_H0;
+    ISWZA iswzC;
 };
 struct DecodedHSET25 {
     OperandValue ops[5];
-    Bop bop;
+    OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
     FCMP cmp;
     FTZ ftz;
+    Bop bop;
     ISWZA iswzA;
-    OFMT_F16_V2_BF16_V2 ofmt;
 };
 struct DecodedHSETP26 {
     OperandValue ops[6];
-    Bop bop;
-    FCMP cmp;
-    FTZ ftz;
-    H_AND h_and;
-    ISWZA iswzA;
     OFMT_F16_V2_BF16_V2 ofmt;
+    FCMP cmp;
+    H_AND h_and;
+    FTZ ftz;
+    Bop bop;
+    ISWZA iswzA;
 };
 struct DecodedQMMA8 {
     OperandValue ops[8];
-    F32ONLY_f2fp dstfmt;
-    REUSE reuse_src_h;
-    ONLY1X scaleVectorSz;
-    E8ONLY_mxqmma scalefmt;
     SFONLY sf;
     ONLY16832 size;
+    F32ONLY_f2fp dstfmt;
     SRCFMTA_qmma srcFmtA;
     SRCFMTA_qmma srcFmtB;
+    E8ONLY_mxqmma scalefmt;
+    ONLY1X scaleVectorSz;
+    REUSE reuse_src_h;
 };
 struct DecodedQMMA9 {
     OperandValue ops[9];
-    F32ONLY_f2fp dstfmt;
-    REUSE reuse_src_h;
-    ONLY1X scaleVectorSz;
-    E8ONLY_mxqmma scalefmt;
     SFONLY sf;
-    ONLY16864 size;
     SPONLY sp;
     SPFORMAT spformat;
+    ONLY16864 size;
+    F32ONLY_f2fp dstfmt;
     SRCFMTA_qmma srcFmtA;
     SRCFMTA_qmma srcFmtB;
+    E8ONLY_mxqmma scalefmt;
+    ONLY1X scaleVectorSz;
+    REUSE reuse_src_h;
 };
 struct DecodedMXQMMA8 {
     OperandValue ops[8];
-    F32ONLY_f2fp dstfmt;
-    REUSE reuse_src_h;
-    ONLY1X scaleVectorSz;
-    E8ONLY_mxqmma scalefmt;
     SFONLY sf;
     ONLY16832 size;
+    F32ONLY_f2fp dstfmt;
     S2_6ONLY_mxqmma srcFmtA;
     S2_6ONLY_mxqmma srcFmtB;
+    E8ONLY_mxqmma scalefmt;
+    ONLY1X scaleVectorSz;
+    REUSE reuse_src_h;
 };
 struct DecodedOMMA8 {
     OperandValue ops[8];
-    F32ONLY_f2fp dstfmt;
-    REUSE reuse_src_h;
-    SCALEVECTORSZ scaleVectorSz;
-    SCALEFMT scalefmt;
     SFONLY sf;
     ONLY16864 size;
+    F32ONLY_f2fp dstfmt;
     SRCFMTA srcFmtA;
     SRCFMTA srcFmtB;
+    SCALEFMT scalefmt;
+    SCALEVECTORSZ scaleVectorSz;
+    REUSE reuse_src_h;
 };
 struct DecodedOMMA9 {
     OperandValue ops[9];
-    F32ONLY_f2fp dstfmt;
-    REUSE reuse_src_h;
-    SCALEVECTORSZ scaleVectorSz;
-    SCALEFMT scalefmt;
     SFONLY sf;
-    ONLY168128 size;
     SPONLY sp;
     SPFORMAT spformat;
+    ONLY168128 size;
+    F32ONLY_f2fp dstfmt;
     SRCFMTA srcFmtA;
     SRCFMTA srcFmtB;
+    SCALEFMT scalefmt;
+    SCALEVECTORSZ scaleVectorSz;
+    REUSE reuse_src_h;
 };
 struct DecodedMOV64IUR2 {
     OperandValue ops[2];
@@ -3203,14 +3203,14 @@ struct DecodedCSMTEST1 {
 };
 struct DecodedCSMTEST4 {
     OperandValue ops[4];
-    Bop bop;
-    CCMP ccmp;
     VOP vtgmode;
+    CCMP ccmp;
+    Bop bop;
 };
 struct DecodedCSMTEST2 {
     OperandValue ops[2];
-    CCMP ccmp;
     VOP vtgmode;
+    CCMP ccmp;
 };
 struct DecodedVOTE_VTG1 {
     OperandValue ops[1];
@@ -3218,14 +3218,14 @@ struct DecodedVOTE_VTG1 {
 };
 struct DecodedVOTE_VTG4 {
     OperandValue ops[4];
-    Bop bop;
-    CCMP ccmp;
     VOP vtgmode;
+    CCMP ccmp;
+    Bop bop;
 };
 struct DecodedVOTE_VTG2 {
     OperandValue ops[2];
-    CCMP ccmp;
     VOP vtgmode;
+    CCMP ccmp;
 };
 struct DecodedISCADD32I5 {
     OperandValue ops[5];
@@ -3259,9 +3259,9 @@ struct DecodedFMUL32I3 {
 };
 struct DecodedFSWZADD4 {
     OperandValue ops[4];
-    DIV div;
     FTZ ftz;
     Round1 rnd;
+    DIV div;
 };
 struct DecodedFFMA32I4 {
     OperandValue ops[4];
@@ -3270,13 +3270,13 @@ struct DecodedFFMA32I4 {
 };
 struct DecodedIMUL32I3 {
     OperandValue ops[3];
-    FMT fmt;
     LOOnly wide;
+    FMT fmt;
 };
 struct DecodedIMUL32I4 {
     OperandValue ops[4];
-    FMT fmt;
     WIDEONLY wide;
+    FMT fmt;
 };
 struct DecodedPREEXIT0 {
 };
@@ -3294,16 +3294,16 @@ struct DecodedHFMA2_32I5 {
 };
 struct DecodedHMUL24 {
     OperandValue ops[4];
-    FMZ_hfma2 fmz;
-    ISWZA iswzA;
     OFMT_F16_V2_BF16_V2 ofmt;
+    FMZ_hfma2 fmz;
     SAT sat;
+    ISWZA iswzA;
 };
 struct DecodedHMUL2_32I4 {
     OperandValue ops[4];
     FMZ_hfma2 fmz;
-    ISWZA iswzA;
     SAT sat;
+    ISWZA iswzA;
 };
 struct DecodedIADD32I4 {
     OperandValue ops[4];
@@ -3314,39 +3314,39 @@ struct DecodedIADD32I5 {
 };
 struct DecodedLDSM3 {
     OperandValue ops[3];
+    LDSM_SZ sz;
     LDSM_MODE mode;
     LDSM_NUM num;
     PSEUDO_OP pseudo_op;
-    LDSM_SZ sz;
 };
 struct DecodedHMNMX25 {
     OperandValue ops[5];
-    FTZ ftz;
-    ISWZA iswzA;
-    NAN nan;
     OFMT_F16_V2_BF16_V2 ofmt;
+    FTZ ftz;
+    NAN nan;
     XORSIGN xorsign;
+    ISWZA iswzA;
 };
 struct DecodedHMNMX27 {
     OperandValue ops[7];
+    OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
+    NAN nan;
+    XORSIGN xorsign;
     IS_AONLY isA;
     ISWZA iswzA;
-    NAN nan;
-    OFMT_F16_V2_BF16_V2 ofmt;
-    XORSIGN xorsign;
 };
 struct DecodedSTSM3 {
     OperandValue ops[3];
+    STSM_SZ sz;
     STSM_MODE mode;
     LDSM_NUM num;
-    STSM_SZ sz;
 };
 struct DecodedUVIRTCOUNT2 {
     OperandValue ops[2];
-    ONEONLY one;
     DEALLOCONLY_uvirtcount op;
     SMPOOLONLY pool;
+    ONEONLY one;
 };
 struct DecodedACQSHMINIT0 {
 };
@@ -3365,16 +3365,16 @@ struct DecodedUPLOP35 {
 struct DecodedUPLOP36 {
     OperandValue ops[6];
     LUTOnly lut;
-    SIGNONLY sign_a;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
+    SIGNONLY sign_a;
 };
 struct DecodedUPLOP38 {
     OperandValue ops[8];
     LUTOnly lut;
-    SIGNONLY sign_a;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
+    SIGNONLY sign_a;
 };
 struct DecodedUPSETP6 {
     OperandValue ops[6];
@@ -3414,8 +3414,8 @@ struct DecodedAL2P3 {
 };
 struct DecodedISBERD3 {
     OperandValue ops[3];
-    BASE base;
     AIO io;
+    BASE base;
     SKEW skew;
     ISBERD_SZ sz;
 };
@@ -3425,8 +3425,8 @@ struct DecodedPIXLD2 {
 };
 struct DecodedISBEWR3 {
     OperandValue ops[3];
-    ISBEWR_BASE base;
     OONLY io;
+    ISBEWR_BASE base;
     SKEW skew;
     ISBERD_SZ sz;
 };
@@ -3448,11 +3448,11 @@ struct DecodedYIELD1 {
 };
 struct DecodedBRA2 {
     OperandValue ops[2];
-    COND__DIV_CONV cond;
     DEPTH depth;
+    COND__DIV_CONV cond;
+    USEL usel;
     NOTTID0 nottid0;
     std::uint8_t rel;
-    USEL usel;
 };
 struct DecodedWARPSYNC1 {
     OperandValue ops[1];
@@ -3465,10 +3465,10 @@ struct DecodedBRX3 {
 };
 struct DecodedJMP2 {
     OperandValue ops[2];
-    COND__DIV_CONV cond;
     DEPTH depth;
-    std::uint8_t rel;
+    COND__DIV_CONV cond;
     USEL usel;
+    std::uint8_t rel;
 };
 struct DecodedJMX3 {
     OperandValue ops[3];
@@ -3514,13 +3514,13 @@ struct DecodedNANOSLEEP1 {
 };
 struct DecodedLD4 {
     OperandValue ops[4];
-    COP cop;
     E e;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SP2 sp2;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
 };
 struct DecodedLDL3 {
     OperandValue ops[3];
@@ -3529,33 +3529,33 @@ struct DecodedLDL3 {
 };
 struct DecodedLDS3 {
     OperandValue ops[3];
-    STRIDE stride;
     LDSSIZE sz;
+    STRIDE stride;
 };
 struct DecodedREDG3 {
     OperandValue ops[3];
-    COP cop;
     E e;
     RedOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     REDSSIZE sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
 };
 struct DecodedCCTL2 {
     OperandValue ops[2];
+    E e;
     Cache cache;
     COP_PF1_WB_IV_RS_PML2_DML2 cop;
-    SHALLOWONLY depth;
-    E e;
     LDCONLY ldc;
+    SHALLOWONLY depth;
     LDCUONLY ldcu;
 };
 struct DecodedCCTL3 {
     OperandValue ops[3];
+    E e;
     Cache cache;
     PF2ONLY cop;
-    E e;
     QFAULTONLY qfault;
 };
 struct DecodedCCTLL0 {
@@ -3566,39 +3566,39 @@ struct DecodedCCTLL2 {
     COP_PF1_PF2_WB_IV_RS cop;
 };
 struct DecodedMEMBAR0 {
-    ASYNCONLY_membar mmio;
-    SCO_CTA_SM_GPU_SYS_VC_CTAPARTIAL sco;
     MEMBAR_SEM sem;
+    SCO_CTA_SM_GPU_SYS_VC_CTAPARTIAL sco;
+    ASYNCONLY_membar mmio;
 };
 struct DecodedSULD5 {
     OperandValue ops[5];
-    BA ba;
-    Clamp1 clamp;
-    COP cop;
-    DOnly d;
-    Dim1 dim;
     PONLY p;
+    Dim1 dim;
+    UAI uai;
+    COP cop;
+    SEM sem;
+    SCO sco;
     PRIVATE private_;
     RGBA rgba;
-    SCO sco;
-    SEM sem;
+    Clamp1 clamp;
+    DOnly d;
+    BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
-    UAI uai;
 };
 struct DecodedSUST4 {
     OperandValue ops[4];
-    BA ba;
-    Clamp1 clamp;
-    COP cop;
-    DOnly d;
-    Dim1 dim;
     PONLY p;
+    Dim1 dim;
+    UAI uai;
+    COP cop;
+    SEM sem;
+    SCO sco;
     PRIVATE private_;
     RGBA rgba;
-    SCO sco;
-    SEM sem;
+    Clamp1 clamp;
+    DOnly d;
+    BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
-    UAI uai;
 };
 struct DecodedERRBAR0 {
 };
@@ -3631,15 +3631,15 @@ struct DecodedBAR0 {
 struct DecodedCCTL4 {
     OperandValue ops[4];
     CONLY cache;
+    LDCONLY ldc;
     IVONLY cop;
     SHALLOWONLY depth;
-    LDCONLY ldc;
     LDCUONLY ldcu;
 };
 struct DecodedLDC5 {
     OperandValue ops[5];
-    AdMode ad;
     SZ_U8_S8_U16_S16_32_64 sz;
+    AdMode ad;
 };
 struct DecodedUVIADD4 {
     OperandValue ops[4];
@@ -3656,16 +3656,16 @@ struct DecodedUIABS3 {
 };
 struct DecodedUI2I3 {
     OperandValue ops[3];
-    SATONLY SAT;
     DSTFMT_i2i dstfmt;
     S32ONLY_i2i srcfmt;
+    SATONLY SAT;
 };
 struct DecodedUI2IP5 {
     OperandValue ops[5];
     DSTFMT_S4_U4 dstfmt;
-    ONLY24 extract_limited;
-    SATRELU_ui2ip satrelu;
     S32ONLY_i2i srcfmt;
+    SATRELU_ui2ip satrelu;
+    ONLY24 extract_limited;
 };
 struct DecodedUFMNMX5 {
     OperandValue ops[5];
@@ -3676,9 +3676,9 @@ struct DecodedUFMNMX5 {
 struct DecodedUFMNMX6 {
     OperandValue ops[6];
     FTZ ftz;
-    IS_AONLY is_A;
     NAN nan;
     XORSIGN xorsign;
+    IS_AONLY is_A;
 };
 struct DecodedUFSEL5 {
     OperandValue ops[5];
@@ -3687,9 +3687,9 @@ struct DecodedUFSEL5 {
 struct DecodedUFSET5 {
     OperandValue ops[5];
     BFONLY bf;
-    Bop bop;
     FCMP fcomp;
     FTZ ftz;
+    Bop bop;
 };
 struct DecodedUFSET4 {
     OperandValue ops[4];
@@ -3699,9 +3699,9 @@ struct DecodedUFSET4 {
 };
 struct DecodedUFSETP6 {
     OperandValue ops[6];
-    Bop bop;
     FCMP fcomp;
     FTZ ftz;
+    Bop bop;
 };
 struct DecodedUFSETP4 {
     OperandValue ops[4];
@@ -3716,10 +3716,10 @@ struct DecodedUFADD4 {
 };
 struct DecodedUFHADD4 {
     OperandValue ops[4];
-    EXTRACT extract_a;
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
+    EXTRACT extract_a;
 };
 struct DecodedUFFMA5 {
     OperandValue ops[5];
@@ -3729,64 +3729,64 @@ struct DecodedUFFMA5 {
 };
 struct DecodedUFHFMA5 {
     OperandValue ops[5];
-    EXTRACT extract_a;
-    EXTRACT extract_b;
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
+    EXTRACT extract_a;
+    EXTRACT extract_b;
 };
 struct DecodedUFMUL4 {
     OperandValue ops[4];
     FMZ_hfma2 fmz;
+    Scale scale;
     Round1 rnd;
     SAT sat;
-    Scale scale;
 };
 struct DecodedUF2IP5 {
     OperandValue ops[5];
     DSTFMT_U8_S8 dstfmt;
-    EXTRACT extract;
+    F32ONLY_hadd2 srcfmt;
+    RND_ROUND_TRUNC rnd;
     NTZ ntz;
     RELU relu;
-    RND_ROUND_TRUNC rnd;
-    F32ONLY_hadd2 srcfmt;
+    EXTRACT extract;
 };
 struct DecodedUI2F3 {
     OperandValue ops[3];
-    B3B0 bsel;
     DSTFMT_F16_F32_BF16 dstfmt;
-    HSEL hsel;
-    Round1 rnd;
     SRCFMT_U16_S16 srcfmt;
+    Round1 rnd;
+    HSEL hsel;
+    B3B0 bsel;
 };
 struct DecodedUF2F3 {
     OperandValue ops[3];
-    DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     FTZ ftz;
-    HSEL hsel;
+    DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     Round1 rnd;
+    HSEL hsel;
 };
 struct DecodedUF2I3 {
     OperandValue ops[3];
-    DSTFMT_U8_S8_U16_S16_U32_S32 dstfmt;
     FTZ ftz;
-    HSEL hsel;
-    NTZ ntz;
-    Round3 rnd;
+    DSTFMT_U8_S8_U16_S16_U32_S32 dstfmt;
     Float16 srcfmt;
+    Round3 rnd;
+    NTZ ntz;
+    HSEL hsel;
 };
 struct DecodedUFRND3 {
     OperandValue ops[3];
-    BF16ONLY_frnd fmt;
     FTZ ftz;
-    HSEL hsel;
+    BF16ONLY_frnd fmt;
     Round3 rnd;
+    HSEL hsel;
 };
 struct DecodedUI2FP3 {
     OperandValue ops[3];
     F32ONLY_i2fp dstfmt;
-    RND_RN_RZ rnd;
     SRCFMT_i2fp srcfmt;
+    RND_RN_RZ rnd;
 };
 struct DecodedUIMNMX8 {
     OperandValue ops[8];
@@ -3802,27 +3802,27 @@ struct DecodedUSEL5 {
 };
 struct DecodedUISETP6 {
     OperandValue ops[6];
-    Bop bop;
-    FMT_64_DIST fmt;
     ICmpAll icmp;
+    FMT_64_DIST fmt;
+    Bop bop;
 };
 struct DecodedUISETP7 {
     OperandValue ops[7];
+    ICmpAll icmp;
+    FMT_64_DIST fmt;
     Bop bop;
     EXONLY ex;
-    FMT_64_DIST fmt;
-    ICmpAll icmp;
 };
 struct DecodedUISETP4 {
     OperandValue ops[4];
-    FMT_64_DIST fmt;
     ICmpAll icmp;
+    FMT_64_DIST fmt;
 };
 struct DecodedUISETP5 {
     OperandValue ops[5];
-    EXONLY ex;
-    FMT_64_DIST fmt;
     ICmpAll icmp;
+    FMT_64_DIST fmt;
+    EXONLY ex;
 };
 struct DecodedUIADD37 {
     OperandValue ops[7];
@@ -3833,8 +3833,8 @@ struct DecodedUIADD39 {
 };
 struct DecodedULEA7 {
     OperandValue ops[7];
-    XONLY X;
     HIONLY_lea hilo;
+    XONLY X;
     SX32ONLY sx32;
 };
 struct DecodedULEA6 {
@@ -3844,8 +3844,8 @@ struct DecodedULEA6 {
 };
 struct DecodedULEA8 {
     OperandValue ops[8];
-    XONLY X;
     HIONLY_lea hilo;
+    XONLY X;
 };
 struct DecodedULOP6 {
     OperandValue ops[6];
@@ -3863,8 +3863,8 @@ struct DecodedULOP38 {
 };
 struct DecodedULOP37 {
     OperandValue ops[7];
-    LOP lop;
     LUTOnly lut;
+    LOP lop;
     LOP_POP pop;
 };
 struct DecodedULOP36 {
@@ -3884,8 +3884,8 @@ struct DecodedUIADD3_649 {
 };
 struct DecodedUSHF5 {
     OperandValue ops[5];
-    CWMode cw;
     SDIR dir;
+    CWMode cw;
     FMT_shf fmt;
     HILO hilo;
 };
@@ -3909,50 +3909,50 @@ struct DecodedUBMSK4 {
 };
 struct DecodedUIMAD5 {
     OperandValue ops[5];
-    FMT fmt;
     LOOnly wide;
+    FMT fmt;
 };
 struct DecodedUIMAD6 {
     OperandValue ops[6];
-    XONLY X;
-    FMT fmt;
     LOOnly wide;
+    FMT fmt;
+    XONLY X;
 };
 struct DecodedUIMAD7 {
     OperandValue ops[7];
-    XONLY X;
-    FMT fmt;
     WIDEONLY wide;
+    FMT fmt;
+    XONLY X;
 };
 struct DecodedUF2FP3 {
     OperandValue ops[3];
-    DSTFMT_uf2fp dstfmt;
-    EXTRACT extract;
-    UNPACK_BONLY merge;
     RELU relu;
-    RNONLY rndMode;
-    SATFINITE satfinite;
+    DSTFMT_uf2fp dstfmt;
     SRCFMT_E5M2_E4M3 srcfmt;
+    UNPACK_BONLY merge;
+    RNONLY rndMode;
+    EXTRACT extract;
+    SATFINITE satfinite;
 };
 struct DecodedUF2FP4 {
     OperandValue ops[4];
-    DSTFMT_uf2fp dstfmt;
-    EXTRACT extract;
-    PACK_ABONLY merge;
-    RELU relu;
-    RNDMODE_RN_RZ rndMode;
     SATFINITE satfinite;
+    RELU relu;
+    DSTFMT_uf2fp dstfmt;
     Float32 srcfmt;
+    PACK_ABONLY merge;
+    RNDMODE_RN_RZ rndMode;
+    EXTRACT extract;
 };
 struct DecodedUF2FP5 {
     OperandValue ops[5];
-    DSTFMT_uf2fp dstfmt;
-    EXTRACT extract;
-    PACK_AB_MERGE_CONLY merge;
-    RELU relu;
-    RNONLY rndMode;
     SATFINITE satfinite;
+    RELU relu;
+    DSTFMT_uf2fp dstfmt;
     Float32 srcfmt;
+    PACK_AB_MERGE_CONLY merge;
+    RNONLY rndMode;
+    EXTRACT extract;
 };
 struct DecodedUFLO4 {
     OperandValue ops[4];
@@ -3985,18 +3985,18 @@ struct DecodedSYNCS6 {
 };
 struct DecodedUTMALDG4 {
     OperandValue ops[4];
-    ONLY1CTA cluster_sz;
     TENSORDIM dim;
     MODE_TILED_IM2COL_W_GATHER4 mode;
     MULTICAST multicast;
+    ONLY1CTA cluster_sz;
     ONEONLY one;
 };
 struct DecodedUTMALDG6 {
     OperandValue ops[6];
-    ONLY1CTA cluster_sz;
     TENSORDIM dim;
     MODE_TILED_IM2COL_W_GATHER4 mode;
     MULTICAST multicast;
+    ONLY1CTA cluster_sz;
     ONEONLY one;
 };
 struct DecodedUTMASTG3 {
@@ -4015,15 +4015,15 @@ struct DecodedUTMAREDG3 {
     OperandValue ops[3];
     TENSORDIM dim;
     MODE_utmaredg mode;
-    ONEONLY one;
     RedOp op;
+    ONEONLY one;
 };
 struct DecodedUTMAREDG5 {
     OperandValue ops[5];
     TENSORDIM dim;
     MODE_utmaredg mode;
-    ONEONLY one;
     RedOp op;
+    ONEONLY one;
 };
 struct DecodedUTMAPF4 {
     OperandValue ops[4];
@@ -4041,47 +4041,47 @@ struct DecodedUTMAPF6 {
 };
 struct DecodedUBLKCP4 {
     OperandValue ops[4];
-    BYTE_MASK byte_mask;
     DST dst;
-    MULTICAST multicast;
-    ONEONLY one;
-    SCO sco;
-    SEM_ublkcp sem;
-    SEQ seq;
-    SP2 sp2;
     DST src;
+    MULTICAST multicast;
+    BYTE_MASK byte_mask;
+    SP2 sp2;
+    SEQ seq;
+    SEM_ublkcp sem;
+    SCO sco;
+    ONEONLY one;
 };
 struct DecodedUBLKCP6 {
     OperandValue ops[6];
-    BYTE_MASK byte_mask;
     DST dst;
-    MULTICAST multicast;
-    ONEONLY one;
-    SCO sco;
-    SEM_ublkcp sem;
-    SEQ seq;
-    SP2 sp2;
     DST src;
+    MULTICAST multicast;
+    BYTE_MASK byte_mask;
+    SP2 sp2;
+    SEQ seq;
+    SEM_ublkcp sem;
+    SCO sco;
+    ONEONLY one;
 };
 struct DecodedUBLKRED4 {
     OperandValue ops[4];
     DST dst;
-    ONEONLY one;
-    RedOp op;
-    SCO sco;
-    SEM_ublkcp sem;
     SONLY_ublkred src;
+    RedOp op;
     SIZE sz;
+    SEM_ublkcp sem;
+    SCO sco;
+    ONEONLY one;
 };
 struct DecodedUBLKRED6 {
     OperandValue ops[6];
     DST dst;
-    ONEONLY one;
-    RedOp op;
-    SCO sco;
-    SEM_ublkcp sem;
     SONLY_ublkred src;
+    RedOp op;
     SIZE sz;
+    SEM_ublkcp sem;
+    SCO sco;
+    ONEONLY one;
 };
 struct DecodedUBLKPF3 {
     OperandValue ops[3];
@@ -4134,28 +4134,28 @@ struct DecodedIPA6 {
 };
 struct DecodedBRA3 {
     OperandValue ops[3];
-    UONLY cond;
     DEPTH depth;
-    std::uint8_t rel;
+    UONLY cond;
     USEL usel;
+    std::uint8_t rel;
 };
 struct DecodedJMP3 {
     OperandValue ops[3];
-    UONLY cond;
     DEPTH depth;
-    std::uint8_t rel;
+    UONLY cond;
     USEL usel;
+    std::uint8_t rel;
 };
 struct DecodedSYNCS5 {
     OperandValue ops[5];
-    TRANS64ONLY bartype;
-    EXCHONLY emuop;
     PHASECHKONLY op;
+    TRANS64ONLY bartype;
+    WAIT wait;
+    EXCHONLY emuop;
+    ONLY64_syncs sz;
+    RETVAL_OLDSTATE_TMASK_RED retval;
     OPTOUT optout;
     PARAMTYPE paramtype;
-    RETVAL_OLDSTATE_TMASK_RED retval;
-    ONLY64_syncs sz;
-    WAIT wait;
 };
 struct DecodedLDCU8 {
     OperandValue ops[8];
@@ -4163,26 +4163,26 @@ struct DecodedLDCU8 {
 };
 struct DecodedSYNCS4 {
     OperandValue ops[4];
-    TRANS64ONLY bartype;
     LDONLY cctl_mode;
-    LDONLY_syncs emuop;
-    TCNTONLY op;
-    BarRED retval;
     ONLY64_syncs sz;
     WATCH watch;
+    TCNTONLY op;
+    TRANS64ONLY bartype;
+    BarRED retval;
+    LDONLY_syncs emuop;
 };
 struct DecodedUTMALDG3 {
     OperandValue ops[3];
-    ONLY1CTA cluster_sz;
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
+    ONLY1CTA cluster_sz;
     ONEONLY one;
 };
 struct DecodedUTMALDG5 {
     OperandValue ops[5];
-    ONLY1CTA cluster_sz;
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
+    ONLY1CTA cluster_sz;
     ONEONLY one;
 };
 struct DecodedUTMAPF3 {
@@ -4211,16 +4211,16 @@ struct DecodedELECT2 {
 };
 struct DecodedLDSM4 {
     OperandValue ops[4];
+    LDSM_SZ sz;
     LDSM_MODE mode;
     LDSM_NUM num;
     PSEUDO_OP pseudo_op;
-    LDSM_SZ sz;
 };
 struct DecodedSTSM4 {
     OperandValue ops[4];
+    STSM_SZ sz;
     STSM_MODE mode;
     LDSM_NUM num;
-    STSM_SZ sz;
 };
 struct DecodedUP2UR5 {
     OperandValue ops[5];
@@ -4248,101 +4248,101 @@ struct DecodedUCLEA6 {
 };
 struct DecodedBRXU3 {
     OperandValue ops[3];
-    COND cond;
     DEPTH depth;
+    COND cond;
     std::uint8_t rel;
 };
 struct DecodedJMXU3 {
     OperandValue ops[3];
-    COND cond;
     DEPTH depth;
+    COND cond;
     std::uint8_t rel;
 };
 struct DecodedLDG8 {
     OperandValue ops[8];
+    EONLY e;
     COP cop;
     COP2_EFL2_ENL2_ELL2 cop2;
-    EONLY e;
-    ONLY64 input_reg_sz_64_bit75_dist;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
     SP2 sp2;
     ONLY256 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_bit75_dist;
 };
 struct DecodedLDG7 {
     OperandValue ops[7];
+    EONLY e;
     COP cop;
     RML2ONLY_ldg cop2;
-    EONLY e;
+    SP2 sp2;
+    ONLY256 sz;
+    STRONGONLY sem;
+    GPUONLY sco;
+    PRIVATE private_;
     U32ONLY input_reg_sz_32_bit75_dist;
     ONLY64 input_reg_sz_64_bit75_dist;
     ONLY64 input_reg_sz_64_dist;
-    PRIVATE private_;
-    GPUONLY sco;
-    STRONGONLY sem;
-    SP2 sp2;
-    ONLY256 sz;
 };
 struct DecodedSTG7 {
     OperandValue ops[7];
+    EONLY e;
     COP cop;
     COP2 cop2;
-    EONLY e;
-    ONLY64 input_reg_sz_64_bit75_dist;
-    ORDER order;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
     ONLY256 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ORDER order;
+    ONLY64 input_reg_sz_64_bit75_dist;
 };
 struct DecodedSTG6 {
     OperandValue ops[6];
+    EONLY e;
     COP cop;
     COP2 cop2;
-    EONLY e;
+    ONLY256 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ORDER order;
     U32ONLY input_reg_sz_32_bit75_dist;
     ONLY64 input_reg_sz_64_bit75_dist;
-    ORDER order;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    ONLY256 sz;
 };
 struct DecodedLD6 {
     OperandValue ops[6];
-    COP cop;
     EONLY e;
-    ONLY64 input_reg_sz_64_dist;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SP2 sp2;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_dist;
 };
 struct DecodedLD5 {
     OperandValue ops[5];
-    COP cop;
     E e;
-    U32ONLY input_reg_sz_32_dist;
-    ONLY64 input_reg_sz_64_dist;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SP2 sp2;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    U32ONLY input_reg_sz_32_dist;
+    ONLY64 input_reg_sz_64_dist;
 };
 struct DecodedLDG6 {
     OperandValue ops[6];
-    COP cop;
     E e;
-    U32ONLY input_reg_sz_32_dist;
-    ONLY64 input_reg_sz_64_dist;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SP2 sp2;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    U32ONLY input_reg_sz_32_dist;
+    ONLY64 input_reg_sz_64_dist;
 };
 struct DecodedLDL5 {
     OperandValue ops[5];
@@ -4356,52 +4356,52 @@ struct DecodedLDL4 {
 };
 struct DecodedLDS4 {
     OperandValue ops[4];
-    STRIDE stride;
     LDSSIZE sz;
+    STRIDE stride;
 };
 struct DecodedST5 {
     OperandValue ops[5];
-    COP cop;
     EONLY e;
-    ONLY64 input_reg_sz_64_dist;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_dist;
 };
 struct DecodedST4 {
     OperandValue ops[4];
-    COP cop;
     E e;
+    COP cop;
+    SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    SZ_U8_S8_U16_S16_32_64_128 sz;
 };
 struct DecodedSTG5 {
     OperandValue ops[5];
-    COP cop;
     EONLY e;
-    ONLY64 input_reg_sz_64_dist;
-    ORDER order;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ORDER order;
+    ONLY64 input_reg_sz_64_dist;
 };
 struct DecodedSTG4 {
     OperandValue ops[4];
-    COP cop;
     E e;
+    COP cop;
+    SZ_U8_S8_U16_S16_32_64_128 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ORDER order;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
-    ORDER order;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    SZ_U8_S8_U16_S16_32_64_128 sz;
 };
 struct DecodedSTL5 {
     OperandValue ops[5];
@@ -4415,89 +4415,89 @@ struct DecodedSTL4 {
 };
 struct DecodedSTS4 {
     OperandValue ops[4];
-    STRIDE stride;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    STRIDE stride;
 };
 struct DecodedATOM8 {
     OperandValue ops[8];
-    COP cop;
     EONLY e;
-    ONLY64 input_reg_sz_64_100_dist;
     AtomsOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     ATOMICINTSIZES sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_100_dist;
 };
 struct DecodedREDS4 {
     OperandValue ops[4];
     REDSOP op;
-    STRIDE stride;
     REDSSIZE sz;
+    STRIDE stride;
 };
 struct DecodedREDG4 {
     OperandValue ops[4];
-    COP cop;
     E e;
+    RedOp op;
+    COP cop;
+    REDSSIZE sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
-    RedOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    REDSSIZE sz;
 };
 struct DecodedREDG5 {
     OperandValue ops[5];
-    COP cop;
     EONLY e;
-    ONLY64 input_reg_sz_64_dist;
     RedOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     REDSSIZE sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_dist;
 };
 struct DecodedATOMG7 {
     OperandValue ops[7];
-    COP cop;
     EONLY e;
-    ONLY64 input_reg_sz_64_100_dist;
     ATOMICFPOPS op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SZ_0 sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_100_dist;
 };
 struct DecodedLDGMC4 {
     OperandValue ops[4];
     EONLY e;
-    LDGMC_FP_OP fpOp;
-    LDGMC_FP_SIZES fpSz;
-    U32ONLY input_reg_sz_32_dist;
-    ONLY64 input_reg_sz_64_dist;
     INTOP_ADD_MIN_MAX_AND_OR_XOR intOp;
     REDSSIZE intSz;
-    SYSONLY sco;
     STRONGONLY sem;
+    SYSONLY sco;
+    U32ONLY input_reg_sz_32_dist;
+    ONLY64 input_reg_sz_64_dist;
+    LDGMC_FP_OP fpOp;
+    LDGMC_FP_SIZES fpSz;
 };
 struct DecodedLDGMC5 {
     OperandValue ops[5];
     EONLY e;
-    LDGMC_FP_OP fpOp;
-    LDGMC_FP_SIZES fpSz;
-    ONLY64 input_reg_sz_64_dist;
     INTOP_ADD_MIN_MAX_AND_OR_XOR intOp;
     REDSSIZE intSz;
-    SYSONLY sco;
     STRONGONLY sem;
+    SYSONLY sco;
+    ONLY64 input_reg_sz_64_dist;
+    LDGMC_FP_OP fpOp;
+    LDGMC_FP_SIZES fpSz;
 };
 struct DecodedQSPC5 {
     OperandValue ops[5];
     E e;
+    QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
-    QUERY_SPACE space;
 };
 struct DecodedLDCU5 {
     OperandValue ops[5];
@@ -4512,8 +4512,8 @@ struct DecodedLDCU4 {
 struct DecodedARRIVES3 {
     OperandValue ops[3];
     LDGSTSBARONLY arrive;
-    BAROP barop;
     CInteger_64 sz;
+    BAROP barop;
 };
 struct DecodedSYNCS3 {
     OperandValue ops[3];
@@ -4543,88 +4543,88 @@ struct DecodedULEPC3 {
 };
 struct DecodedTEX8 {
     OperandValue ops[8];
-    AOFFI aoffi;
     BONLY b;
-    COP cop;
-    DC dc;
-    DIV div;
-    LODLC_tex lodlc;
-    NODEP nodep;
     RM16 rm16;
-    SCRONLY scr;
+    LODLC_tex lodlc;
+    AOFFI aoffi;
     UAI uai;
+    DC dc;
+    COP cop;
+    DIV div;
+    NODEP nodep;
+    SCRONLY scr;
 };
 struct DecodedTLD48 {
     OperandValue ops[8];
-    BONLY b;
     TexComp comp;
-    COP cop;
-    DC dc;
-    NODEP nodep;
+    BONLY b;
     RM16 rm16;
-    SCRONLY scr;
     TOFF toff;
     UAI uai;
+    DC dc;
+    COP cop;
+    NODEP nodep;
+    SCRONLY scr;
 };
 struct DecodedTLD8 {
     OperandValue ops[8];
-    AOFFI aoffi;
     BONLY b;
-    CL cl;
-    COP cop;
-    LODLC_tld lodlc;
-    MS ms;
-    NODEP nodep;
     RM16 rm16;
-    SCRONLY scr;
+    LODLC_tld lodlc;
+    AOFFI aoffi;
     UAI uai;
+    COP cop;
+    MS ms;
+    CL cl;
+    NODEP nodep;
+    SCRONLY scr;
 };
 struct DecodedTXD8 {
     OperandValue ops[8];
-    AOFFI aoffi;
     BONLY b;
-    COP cop;
-    LC lc;
-    NODEP nodep;
     RM16 rm16;
+    LC lc;
+    AOFFI aoffi;
     UAI uai;
+    COP cop;
+    NODEP nodep;
 };
 struct DecodedFOOTPRINT6 {
     OperandValue ops[6];
     BONLY b;
-    DIV div;
+    MODE_FOOTPRINT mode;
     LODCTRL lodctrl;
     LODLC lodlc;
-    MODE_FOOTPRINT mode;
+    DIV div;
     NODEP nodep;
     SCRONLY scr;
 };
 struct DecodedLDGSTS6 {
     OperandValue ops[6];
-    COP cop;
     EONLY_ldgsts e;
-    FILLCTRL fc;
-    U32ONLY input_reg_sz_32_dist;
-    ONLY64 input_reg_sz_64_dist;
     LOC loc;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SP2 sp2;
     SIZE2 sz;
+    FILLCTRL fc;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_dist;
+    U32ONLY input_reg_sz_32_dist;
 };
 struct DecodedLDGSTS8 {
     OperandValue ops[8];
-    COP cop;
     EONLY_ldgsts e;
-    FILLCTRL fc;
-    ONLY64 input_reg_sz_64_dist;
     LOC loc;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SP2 sp2;
     SIZE2 sz;
+    FILLCTRL fc;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_dist;
 };
 struct DecodedSUQUERY7 {
     OperandValue ops[7];
@@ -4634,16 +4634,16 @@ struct DecodedSUQUERY7 {
 };
 struct DecodedSTAS4 {
     OperandValue ops[4];
-    U32ONLY input_reg_sz_32_dist;
-    ONLY64 input_reg_sz_64_dist;
     SZ_32_64_128 sz;
+    ONLY64 input_reg_sz_64_dist;
+    U32ONLY input_reg_sz_32_dist;
 };
 struct DecodedREDAS4 {
     OperandValue ops[4];
-    U32ONLY input_reg_sz_32_dist;
-    ONLY64 input_reg_sz_64_dist;
     REDSOP op;
     REDAS_SZ sz;
+    ONLY64 input_reg_sz_64_dist;
+    U32ONLY input_reg_sz_32_dist;
 };
 struct DecodedUCGABARWAIT1 {
     OperandValue ops[1];
@@ -4653,139 +4653,139 @@ struct DecodedUCGABAR_WAIT1 {
 };
 struct DecodedHMMA9 {
     OperandValue ops[9];
-    FloatNo64 dstfmt;
-    SIZE_1688_16816_16832 size;
     SPONLY sp;
     SPFORMAT spformat;
+    SIZE_1688_16816_16832 size;
+    FloatNo64 dstfmt;
     SRCFMT srcfmt;
 };
 struct DecodedTLD49 {
     OperandValue ops[9];
-    BONLY b;
-    TexComp comp;
-    COP cop;
-    DC dc;
-    NODEP nodep;
-    RM16 rm16;
     SCRONLY scr;
+    TexComp comp;
+    RM16 rm16;
     TOFF toff;
     UAI uai;
+    DC dc;
+    COP cop;
+    NODEP nodep;
+    BONLY b;
 };
 struct DecodedTLD9 {
     OperandValue ops[9];
-    AOFFI aoffi;
-    BONLY b;
-    CL cl;
-    COP cop;
-    LODLC_tld lodlc;
-    MS ms;
-    NODEP nodep;
-    RM16 rm16;
     SCRONLY scr;
+    RM16 rm16;
+    LODLC_tld lodlc;
+    AOFFI aoffi;
     UAI uai;
+    COP cop;
+    MS ms;
+    CL cl;
+    NODEP nodep;
+    BONLY b;
 };
 struct DecodedTMML7 {
     OperandValue ops[7];
-    BONLY b;
-    DIV div;
     LODOnly lod;
+    DIV div;
     NODEP nodep;
+    BONLY b;
 };
 struct DecodedTXD9 {
     OperandValue ops[9];
-    AOFFI aoffi;
-    BONLY b;
-    COP cop;
-    LC lc;
-    NODEP nodep;
     RM16 rm16;
+    LC lc;
+    AOFFI aoffi;
     UAI uai;
+    COP cop;
+    NODEP nodep;
+    BONLY b;
 };
 struct DecodedTXQ6 {
     OperandValue ops[6];
-    BONLY b;
     NODEP nodep;
+    BONLY b;
 };
 struct DecodedFOOTPRINT7 {
     OperandValue ops[7];
     BONLY b;
-    DIV div;
+    MODE_FOOTPRINT mode;
     LODCTRL lodctrl;
     LODLC lodlc;
-    MODE_FOOTPRINT mode;
+    DIV div;
     NODEP nodep;
     SCRONLY scr;
 };
 struct DecodedSUATOM7 {
     OperandValue ops[7];
-    BA ba;
-    Clamp1 clamp;
-    COP cop;
     DOnly d;
+    BA ba;
     Dim1 dim;
-    AtomsOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    SURFACESIZE sz;
     UAI uai;
+    AtomsOp op;
+    COP cop;
+    SURFACESIZE sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    Clamp1 clamp;
 };
 struct DecodedSULD6 {
     OperandValue ops[6];
-    BA ba;
-    Clamp1 clamp;
-    COP cop;
-    DOnly d;
-    Dim1 dim;
     PONLY p;
+    Dim1 dim;
+    UAI uai;
+    COP cop;
+    SEM sem;
+    SCO sco;
     PRIVATE private_;
     RGBA rgba;
-    SCO sco;
-    SEM sem;
+    Clamp1 clamp;
+    DOnly d;
+    BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
-    UAI uai;
 };
 struct DecodedSUST5 {
     OperandValue ops[5];
-    BA ba;
-    Clamp1 clamp;
-    COP cop;
-    DOnly d;
-    Dim1 dim;
     PONLY p;
+    Dim1 dim;
+    UAI uai;
+    COP cop;
+    SEM sem;
+    SCO sco;
     PRIVATE private_;
     RGBA rgba;
-    SCO sco;
-    SEM sem;
+    Clamp1 clamp;
+    DOnly d;
+    BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
-    UAI uai;
 };
 struct DecodedSURED5 {
     OperandValue ops[5];
-    BA ba;
-    Clamp1 clamp;
-    COP cop;
     DOnly d;
+    BA ba;
     Dim1 dim;
-    RedOp op;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
-    SURFACESIZE sz;
     UAI uai;
+    RedOp op;
+    COP cop;
+    SURFACESIZE sz;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    Clamp1 clamp;
 };
 struct DecodedLDGSTS7 {
     OperandValue ops[7];
-    COP cop;
     EONLY_ldgsts e;
-    FILLCTRL fc;
-    ONLY64 input_reg_sz_64_dist;
     LOC loc;
-    PRIVATE private_;
-    SCO sco;
-    SEM sem;
+    COP cop;
     SP2 sp2;
     SIZE2 sz;
+    FILLCTRL fc;
+    SEM sem;
+    SCO sco;
+    PRIVATE private_;
+    ONLY64 input_reg_sz_64_dist;
 };
 
 // Per-variant operand-role manifest (indexed by isa_data kVariants

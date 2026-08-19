@@ -1106,6 +1106,46 @@ def shape_modifier_slots(v):
     return [s for s in v["slots"] if s["modifier"] and s["name"] not in SCHED]
 
 
+def build_shape_groups(variants):
+    """Group variants by (mnemonic, operand-count).  Returns
+    (groups, order, vid2gid) where groups[key]=[(variant_idx, v, roles)...],
+    order = list of keys sorted by first appearance (deterministic), and
+    vid2gid[variant_idx] = group id."""
+    from collections import OrderedDict
+    groups = OrderedDict()
+    order = []
+    for i, v in enumerate(variants):
+        roles = shape_operand_roles(v)
+        key = (v["mnemonic"], len(roles))
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append((i, v, roles))
+    gid = {k: n for n, k in enumerate(order)}
+    vid2gid = [gid[(v["mnemonic"], len(shape_operand_roles(v)))]
+               for v in variants]
+    return groups, order, vid2gid
+
+
+def shape_members(group_members, enum_types):
+    """Union of typed modifier members across a group's variants.  Returns an
+    OrderedDict member_name -> (type_cident_or_'std::uint8_t', source_slot_name),
+    with the same collision handling as the type declaration (SAT_/private_)."""
+    from collections import OrderedDict
+    out = OrderedDict()
+    for _i, v, _roles in group_members:
+        for s in shape_modifier_slots(v):
+            ty = s["type"]
+            tyid = cident(ty) if ty in enum_types else "std::uint8_t"
+            mn = cident(s["name"])
+            if mn == tyid or mn in _CPP_KEYWORDS:
+                mn += "_"
+            if mn in out:
+                continue
+            out[mn] = (tyid, s["name"])
+    return out
+
+
 def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     """Emit isa_shapes.hpp: the typed decoded-IR schema (design review + later
     migration).  Pure addition -- does NOT replace the existing DecodedInstruction.
@@ -1171,36 +1211,21 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
         L.append("};")
 
     # ---- group variants by (mnemonic, operand-count) ----
-    from collections import OrderedDict
-    groups = OrderedDict()
-    for v in variants:
-        roles = shape_operand_roles(v)
-        key = (v["mnemonic"], len(roles))
-        groups.setdefault(key, []).append((v, roles))
+    groups, order, vid2gid = build_shape_groups(variants)
 
     L.append("")
     L.append("// Derived decoded types: one per (mnemonic, operand-count).")
     L.append("// Operands are positional in the mnemonic's canonical role order;")
     L.append("// modifiers are typed enum members specific to each instruction.")
-    for (mn, nops), members in groups.items():
+    for (mn, nops) in order:
+        members = groups[(mn, nops)]
         type_name = f"Decoded{cident(mn)}{nops}"
         L.append(f"struct {type_name} {{")
         if nops:
             L.append(f"    OperandValue ops[{nops}];")
-        # union of modifier slot names across the group members, typed
-        modseen = {}       # member name -> type cident (or "std::uint8_t")
-        for v, roles in members:
-            for s in shape_modifier_slots(v):
-                ty = s["type"]
-                tyid = cident(ty) if ty in enum_types else "std::uint8_t"
-                mn_name = cident(s["name"])
-                if mn_name == tyid or mn_name in _CPP_KEYWORDS:
-                    mn_name += "_"   # avoid `SAT SAT;` / C++ keyword collision
-                if mn_name in modseen:
-                    continue
-                modseen[mn_name] = tyid
-        for mname in sorted(modseen):
-            L.append(f"    {modseen[mname]} {mname};")
+        modseen = shape_members(members, enum_types)
+        for mname, (tyid, _src) in modseen.items():
+            L.append(f"    {tyid} {mname};")
         L.append("};")
 
     # ---- per-variant operand-role manifest (aligned to kVariants index) ----
@@ -1247,11 +1272,84 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     out.write_text("\n".join(L), encoding="utf-8")
 
 
+def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
+    """Emit isa_shapes_fill.hpp: per-variant fillers that populate a typed
+    Decoded<Mnemonic><Ops> (ops[] positional + typed modifier members) from an
+    opaque FillIn source.  Dispatch is by isa_data kVariants index; this is 2a's
+    equivalence path -- the decoder still uses the generic DecodedInstruction."""
+    enum_types = {t for t in
+                  (s["type"] for v in variants for s in shape_modifier_slots(v))
+                  if any(val is not None for val in
+                         db["enums"].get(t, {}).values())}
+    groups, order, vid2gid = build_shape_groups(variants)
+
+    L = []
+    L.append("// Generated file -- do not edit.  Regenerate with:")
+    L.append("//   python3 semu/tools/gen_isa.py --shapes")
+    L.append("#pragma once")
+    L.append("")
+    L.append("#include <cstdint>")
+    L.append("#include \"isa_shapes.hpp\"")
+    L.append("#include <semu/shape_in.hpp>")
+    L.append("")
+    L.append("namespace semu::shape {")
+    L.append("")
+    L.append("// Per-group modifier filler (cast void_out to Decoded<Mnemonic><N>).")
+    grp_has_mods = {}
+    for g, (mn, nops) in enumerate(order):
+        members = groups[(mn, nops)]
+        modseen = shape_members(members, enum_types)
+        grp_has_mods[g] = bool(modseen)
+        if not modseen:
+            continue
+        type_name = f"Decoded{cident(mn)}{nops}"
+        L.append(f"inline void shape_fill_mods_grp{g}("
+                 f"const FillIn& in, void* void_out) {{")
+        L.append(f"    auto& out = *static_cast<{type_name}*>(void_out);")
+        for mname, (_tyid, src) in modseen.items():
+            L.append(f"    out.{mname} = static_cast<{_tyid}>("
+                     f"in.value({cq(src)}));")
+        L.append("}")
+    L.append("")
+    L.append("// Fill a typed Decoded* (allocated by the caller) for variant index")
+    L.append("// vi (== isa_data kVariants index) from a decoded slot source.")
+    L.append("inline void fill_by_variant(std::uint32_t vi, "
+             "const FillIn& in, void* void_out) {")
+    L.append("    switch (vi) {")
+    for vi, v in enumerate(variants):
+        g = vid2gid[vi]
+        mn, nops = order[g]
+        type_name = f"Decoded{cident(mn)}{nops}"
+        roles = shape_operand_roles(v)
+        L.append(f"    case {vi}: {{")
+        if grp_has_mods[g]:
+            L.append(f"        shape_fill_mods_grp{g}(in, void_out);")
+        if roles:
+            L.append(f"        auto& out = *static_cast<{type_name}*>(void_out);")
+            for p, r in enumerate(roles):
+                kind = OPERAND_KIND.get(r["type"], "kSpecial")
+                L.append(f"        out.ops[{p}].kind = static_cast<std::uint8_t>("
+                         f"OperandKind::{kind});")
+                L.append(f"        out.ops[{p}].flags = in.flags({cq(r['name'])});")
+                L.append(f"        operand_set_value(out.ops[{p}], "
+                         f"OperandKind::{kind}, in.value({cq(r['name'])}));")
+        else:
+            L.append("        (void)void_out; (void)in;")
+        L.append("        break;")
+        L.append("    }")
+    L.append("    }")
+    L.append("}")
+    L.append("")
+    L.append("}  // namespace semu::shape")
+    L.append("")
+    out.write_text("\n".join(L), encoding="utf-8")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=str(REPO / "sm120.json"))
     ap.add_argument("--shapes", action="store_true",
-                    help="also emit isa_shapes.hpp (typed-IR schema, design review)")
+                    help="also emit isa_shapes{,.fill}.hpp (typed-IR schema/2a fill)")
     ap.add_argument("--output-dir", default=str(REPO / "semu" / "generated"))
     args = ap.parse_args()
 
@@ -1272,7 +1370,8 @@ def main() -> int:
              var_cond_meta, cond_table_helpers)
     if args.shapes:
         emit_shapes_hpp(out_dir / "isa_shapes.hpp", db, variants)
-        print(f"wrote {out_dir / 'isa_shapes.hpp'} (schema review)")
+        emit_shapes_fill(out_dir / "isa_shapes_fill.hpp", db, variants)
+        print(f"wrote {out_dir / 'isa_shapes.hpp'} + isa_shapes_fill.hpp (schema/2a)")
 
     multi = sum(1 for op in range(8192)
                 if opcode_count(variants, op) > 1)

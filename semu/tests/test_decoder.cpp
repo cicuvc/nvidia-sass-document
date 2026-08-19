@@ -4,8 +4,9 @@
 // corpus round-trip / ambiguity gates.
 
 #include <semu/decoder.hpp>
-#include <isa_shapes.hpp>  // typed-IR schema (design review; regenerate with --shapes)
-
+#include <isa_shapes.hpp>       // typed-IR schema (regenerate with --shapes)
+#include <isa_shapes_fill.hpp>  // 2a: per-variant typed fill (equivalence path)
+#include <cstddef>
 #include <cstdio>
 #include <string>
 
@@ -153,6 +154,107 @@ TEST(shape_manifest_matches_decoded_operands) {
         (void)prev;
         const auto& mf = shape::kShapeManifests[idx];
         CHECK_EQ(static_cast<int>(mf.n_ops), static_cast<int>(inst.operands.size()));
+    }
+}
+
+// 2a equivalence: populating the typed Decoded<Mnemonic><N> (ops[] union +
+// typed modifier members) from a decoded word's slot values must agree with
+// the live (generic) decoder's slot_values/operands.
+namespace {
+struct FillFromDecoded : shape::FillIn {
+    const DecodedInstruction& d;
+    explicit FillFromDecoded(const DecodedInstruction& d) : d(d) {}
+    std::int64_t value(const char* s) const override {
+        for (const auto& [n, v] : d.slot_values)
+            if (n == s) return static_cast<std::int64_t>(v);
+        for (const auto& o : d.operands)
+            if (o.slot == s) return o.value;
+        return 0;
+    }
+    std::uint8_t flags(const char* s) const override {
+        for (const auto& o : d.operands)
+            if (o.slot == s)
+                return static_cast<std::uint8_t>(
+                    o.negated | (o.absolute << 1) | (o.pred_not << 2));
+        return 0;
+    }
+};
+
+std::uint32_t variant_index_of(const std::string& cls) {
+    for (std::uint32_t i = 0; i < isa::kNumVariants; ++i)
+        if (isa::variant_class_name(isa::kVariants[i].variant_class) == cls)
+            return i;
+    return isa::kNumVariants;
+}
+
+// Read a filled OperandValue's numeric value via the kind-correct union member.
+std::uint64_t op_raw(const shape::OperandValue& o, shape::OperandKind k) {
+    switch (k) {
+        case shape::OperandKind::kRegister: return o.v.reg_idx;
+        case shape::OperandKind::kUniformRegister: return o.v.ureg_idx;
+        case shape::OperandKind::kPredicate:
+        case shape::OperandKind::kUniformPredicate: return o.v.pred_idx;
+        case shape::OperandKind::kSImm: return static_cast<std::uint64_t>(o.v.simm64);
+        case shape::OperandKind::kDesc: return o.v.desc;
+        default: return o.v.uimm64;
+    }
+}
+}  // namespace
+
+TEST(typed_fill_matches_generic_decode) {
+    alignas(16) std::byte buf[512];
+    const auto& dec = Decoder::instance();
+
+    // r2p__RIR -> DecodedR2P3 (3 ops + a_bsel modifier member)
+    auto rr = dec.decode(0x0000000300007804ULL, 0x000fe20000000000ULL);
+    CHECK(rr.is_unique());
+    if (rr.is_unique()) {
+        const auto& inst = rr.instruction();
+        const std::uint32_t idx = variant_index_of("r2p__RIR");
+        CHECK(idx < isa::kNumVariants);
+        const auto& mf = shape::kShapeManifests[idx];
+        CHECK_EQ(static_cast<int>(mf.n_ops), 3);
+        FillFromDecoded fi(inst);
+        shape::fill_by_variant(idx, fi, buf);
+        auto& d = *reinterpret_cast<shape::DecodedR2P3*>(buf);
+        for (std::uint8_t p = 0; p < mf.n_ops; ++p) {
+            CHECK_EQ(op_raw(d.ops[p], mf.ops[p].kind),
+                     static_cast<std::uint64_t>(fi.value(mf.ops[p].slot)));
+            CHECK_EQ(static_cast<int>(d.ops[p].kind),
+                     static_cast<int>(mf.ops[p].kind));
+        }
+        CHECK_EQ(static_cast<std::int64_t>(d.a_bsel), fi.value("a_bsel"));
+    }
+
+    // nop_ -> DecodedNOP0 (0 ops, empty)
+    auto rn = dec.decode(0x0000000000007918ULL, 0x000fc00000000000ULL);
+    CHECK(rn.is_unique());
+    if (rn.is_unique()) {
+        const auto& inst = rn.instruction();
+        const std::uint32_t idx = variant_index_of("nop_");
+        CHECK(idx < isa::kNumVariants);
+        CHECK_EQ(static_cast<int>(shape::kShapeManifests[idx].n_ops), 0);
+        FillFromDecoded fi(inst);
+        shape::fill_by_variant(idx, fi, buf);
+        auto& d = *reinterpret_cast<shape::DecodedNOP0*>(buf);
+        (void)d;
+    }
+
+    // bssy_ -> DecodedBSSY3 (3 ops)
+    auto rb = dec.decode(0x0000000000003945ULL, 0x000fc00000000000ULL);
+    CHECK(rb.is_unique());
+    if (rb.is_unique()) {
+        const auto& inst = rb.instruction();
+        const std::uint32_t idx = variant_index_of("bssy_");
+        CHECK(idx < isa::kNumVariants);
+        const auto& mf = shape::kShapeManifests[idx];
+        CHECK_EQ(static_cast<int>(mf.n_ops), 3);
+        FillFromDecoded fi(inst);
+        shape::fill_by_variant(idx, fi, buf);
+        auto& d = *reinterpret_cast<shape::DecodedBSSY3*>(buf);
+        for (std::uint8_t p = 0; p < mf.n_ops; ++p)
+            CHECK_EQ(d.ops[p].v.uimm64,
+                     static_cast<std::uint64_t>(fi.value(mf.ops[p].slot)));
     }
 }
 
