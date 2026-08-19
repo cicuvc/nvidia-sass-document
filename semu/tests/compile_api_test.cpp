@@ -83,7 +83,9 @@ public:
                 (void)inst.modifiers.size();
                 (void)inst.slot_values.size();
                 (void)inst.schedule.stall;
-                (void)inst.disasm_full.size();
+                (void)semu::Decoder::instance()
+                    .disassemble(inst.word, /*full=*/true)
+                    .size();
             }
         }
         // Runtime services access: constant bank + event channel + memory.
@@ -113,7 +115,7 @@ public:
 
 TEST(api_compile_freeze_markers) {
     CHECK(semu::kBackendApiVersion == 1);
-    CHECK(semu::kDecodedIrVersion == 1);
+    CHECK(semu::kDecodedIrVersion == 2);
     CHECK(semu::kRuntimeServicesVersion == 1);
     CHECK(semu::kEventStreamVersion == 1);
     CHECK(semu::kFaultAbiVersion == 1);
@@ -144,8 +146,8 @@ TEST(api_compile_decoded_ir_smoke) {
     CHECK(r.is_unique());
     if (!r.is_unique()) return;
     const auto& inst = r.instruction();
-    CHECK(!inst.mnemonic.empty());
-    CHECK(!inst.variant_class.empty());
+    CHECK(inst.mnemonic != semu::isa::Mnemonic::kUnknown);
+    CHECK(inst.variant_class != semu::isa::VariantClass::kUnknown);
     (void)inst.guard_pred;
     (void)inst.guard_not;
     (void)inst.operands;
@@ -153,8 +155,8 @@ TEST(api_compile_decoded_ir_smoke) {
     (void)inst.slot_values;
     (void)inst.raw_fields;
     (void)inst.schedule;
-    (void)inst.disasm;
-    (void)inst.disasm_full;
+    (void)semu::Decoder::instance().disassemble(inst.word);
+    (void)semu::Decoder::instance().disassemble(inst.word, /*full=*/true);
     // word.hpp bit helpers.
     CHECK(semu::opcode_of(0x0000000000007918ULL, 0x000fc00000000000ULL) != 0);
     (void)semu::extract_bits(0, 0, 63, 0);

@@ -165,6 +165,14 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../sm120.json)
             ${SEMU_CORPUS}
             ${CMAKE_SOURCE_DIR}/../sm120.json)
 
+  # Compile-time hardening equivalence (kConds -> C++ thunks): the EMITTED
+  # C++ expressions (gen_isa.CondEmitter) must evaluate identically to the
+  # reference string evaluator (sass_cond) on randomized slot maps.
+  add_test(NAME cond_compile_equiv
+    COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/cond_compile_equiv_test.py
+            ${CMAKE_SOURCE_DIR}/../sm120.json)
+
   # Real cuobjdump vector differential (GAP-05): words extracted from sm120
   # cubins via cuobjdump -sass must decode uniquely with matching
   # mnemonic + registers.

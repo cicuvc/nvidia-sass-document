@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 
+#include <isa_data.hpp>
 #include <semu/word.hpp>
 
 // FROZEN (SIM_PLAN Phase 10): this header is part of the decoded-IR contract —
@@ -12,6 +13,17 @@
 // raw_fields, the flattened IR execution backends dispatch on
 // (kDecodedIrVersion in api.hpp).  Extensions must ADD fields, never remove or
 // renumber them.
+//
+// v1 -> v2 (kDecodedIrVersion bump): mnemonic / variant_class / pipe changed
+// from std::string to the generated isa::Mnemonic / isa::VariantClass /
+// isa::Pipe enums (see isa_data.hpp), and the disasm / disasm_full fields
+// were removed (now rendered on demand via Decoder::disassemble).
+// The human-readable names are still available via isa::mnemonic_name() /
+// isa::variant_class_name() / isa::pipe_name(), and isa::*_from_name() maps a
+// name back to the enum.  Execution backends dispatch on the enum values
+// directly (no per-instruction string allocation or comparison), and the
+// hot decode/predecode path no longer builds disassembly text it only reads
+// under an opt-in trace / debugger / CLI consumer.
 
 // Public decoder API (SIM_PLAN Phase 1).
 //
@@ -60,9 +72,9 @@ class DecodedInstruction {
 public:
     Word128 word{};
     std::uint64_t pc = 0;   // byte address (set by the loader/debugger)
-    std::string mnemonic;
-    std::string variant_class;
-    std::string pipe;
+    isa::Mnemonic mnemonic = isa::Mnemonic::kUnknown;
+    isa::VariantClass variant_class = isa::VariantClass::kUnknown;
+    isa::Pipe pipe = isa::Pipe::kUnknown;
 
     // Guard predicate: 0..6 = P0..P6, 7 = PT (always).
     int guard_pred = 7;
@@ -72,10 +84,11 @@ public:
     std::vector<std::string> modifiers;  // ".MOD" tokens in source order
     ScheduleWord schedule;
 
-    // Normalized disassembly.  `disasm` omits the guard + schedule bracket;
-    // `disasm_full` includes both (round-trip-able in the assembler dialect).
-    std::string disasm;
-    std::string disasm_full;
+    // Normalized disassembly is NOT stored here: it is rendered on demand via
+    // Decoder::disassemble(word, full) so the per-instruction hot path (LOAD +
+    // per-predecoded-word copies) never pays for disassembly text it never
+    // reads.  `full=false` omits the guard + schedule bracket;
+    // `full=true` includes both (round-trip-able in the assembler dialect).
 
     // Raw extracted field values (name -> value) for the debugger.
     std::vector<std::pair<std::string, std::uint64_t>> raw_fields;
@@ -115,6 +128,11 @@ public:
 
     DecodeResult decode(Word128 word) const;
     DecodeResult decode(std::uint64_t lo, std::uint64_t hi) const;
+
+    // Render one word's normalized disassembly (re-decodes on demand; empty
+    // on illegal/ambiguous).  `full=false` -> plain operands text;
+    // `full=true`  -> guard predicate + schedule bracket included.
+    std::string disassemble(Word128 word, bool full = false) const;
 
     // All encoding variants sharing an opcode (in generated order).
     std::vector<const isa::Variant*> candidates(std::uint16_t opcode) const;

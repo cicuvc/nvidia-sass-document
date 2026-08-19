@@ -165,8 +165,10 @@ std::string DebugStepInfo::summary() const {
     os << to_string(reason) << " cta=" << cta << " warp=" << warp
        << " pc=" << hex64(pc) << " mask=" << std::hex
        << std::setw(8) << std::setfill('0') << active_mask << std::dec;
-    if (!instruction.mnemonic.empty())
-        os << " " << instruction.disasm_full;
+    if (instruction.mnemonic != isa::Mnemonic::kUnknown)
+        os << " "
+           << Decoder::instance().disassemble(instruction.word,
+                                              /*full=*/true);
     if (watch_hits.size())
         os << " watch=" << watch_hits.size() << " hit(s)";
     if (reg_diffs.size()) os << " diff=" << reg_diffs.size();
@@ -178,7 +180,7 @@ std::string DebugStepInfo::summary() const {
 std::string DebugStepInfo::canonical() const {
     std::ostringstream os;
     os << to_string(reason) << "|" << kernel_name << "|" << cta << "|" << warp
-       << "|" << pc << "|" << active_mask << "|" << instruction.mnemonic
+       << "|" << pc << "|" << active_mask << "|" << isa::mnemonic_name(instruction.mnemonic)
        << "|" << instruction.word.lo << "|" << instruction.word.hi << "|"
        << breakpoint_id << "|" << dynamic_instructions;
     // Register diffs (fixed natural order).
@@ -555,13 +557,17 @@ bool DebugSession::drive_group(bool continue_mode, WarpSnapshot* snapshot,
         out->instruction = inst;
         if (!interp_->supports(inst)) {
             Fault f(FaultKind::kUnsupportedInstruction,
-                    "decode-only instruction '" + inst.mnemonic + "' (" +
-                        inst.variant_class + ") at pc " + hex64(pc) +
+                    "decode-only instruction '" +
+                        std::string(isa::mnemonic_name(inst.mnemonic)) +
+                        "' (" + std::string(isa::variant_class_name(
+                                                inst.variant_class)) +
+                        ") at pc " + hex64(pc) +
                         " is not implemented; debug stopped before executing");
             f.set_kernel(interp_->kernel().symbol_name).set_pc(pc)
                 .set_cta(gcta).set_warp(warp).set_active_mask(mask)
-                .set_instruction(inst.word).set_mnemonic(inst.mnemonic)
-                .set_variant(inst.variant_class);
+                .set_instruction(inst.word)
+                .set_mnemonic(isa::mnemonic_name(inst.mnemonic))
+                .set_variant(isa::variant_class_name(inst.variant_class));
             out->fault = f;
             out->reason = DebugStopReason::kUnsupported;
             return false;  // stop before executing
@@ -575,7 +581,8 @@ bool DebugSession::drive_group(bool continue_mode, WarpSnapshot* snapshot,
                 suspend_bp_->matches(gcta, warp, pc);
             if (!bypass) {
                 for (const auto& bp : breakpoints_) {
-                    if (!bp.matches(gcta, warp, pc, mask, inst.mnemonic))
+                    if (!bp.matches(gcta, warp, pc, mask,
+                                    isa::mnemonic_name(inst.mnemonic)))
                         continue;
                     out->reason = bp.kind == BreakpointKind::kPc
                                       ? DebugStopReason::kPcBreakpoint

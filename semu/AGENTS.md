@@ -65,8 +65,9 @@ CMake 选项：`SEMU_BUILD_CLI`、`SEMU_BUILD_TESTS`、`SEMU_ENABLE_SANITIZERS`�
 
 ## 测试标准（门禁）
 
-**主门禁**：`tools/run_semu_cpu_gate.sh <build_dir>` —— **35 项**，三树（Debug/ASan/TSan）
-各 **35/35** 必须全绿。**必须** `export PATH="/home/cicuvc/miniconda3/bin:..."` 再跑
+**主门禁**：`tools/run_semu_cpu_gate.sh <build_dir>` —— **36 项**，三树（Debug/ASan/TSan）
+各 **36/36** 必须全绿（含 `cond_compile_equiv`：校验 kConds 编译期固化生成的 C++ thunk
+与 sass_cond 参考求值器在随机槽图上语义等价）。**必须** `export PATH="/home/cicuvc/miniconda3/bin:..."` 再跑
 （脚本内 `PY=$(command -v python3)` 覆盖环境变量，PATH 决定 python）。
 
 门禁组成：C++ 单测（decoder/fp/interp/race/profiler/debugger/tensor/tensor_map/mbarrier/

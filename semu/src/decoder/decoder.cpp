@@ -294,11 +294,13 @@ bool build_slot_map(const isa::Variant* v, Word128 word, DecodeCtx* ctx,
 }
 
 // ---------------------------------------------------------------------------
-// try_decode_variant: fixed-bit checks + slot map + legality conditions.
+// build_decode_ctx: fixed-bit checks + slot map + legality conditions for a
+// candidate variant (no rendering).  try_decode_variant adds rendering;
+// Decoder::disassemble uses this directly to re-render disassembly text on
+// demand without storing it on the instruction.
 // ---------------------------------------------------------------------------
-bool try_decode_variant(const isa::Variant* v, Word128 word,
-                        DecodedInstruction* inst, std::string* reject) {
-    DecodeCtx ctx;
+bool build_decode_ctx(const isa::Variant* v, Word128 word, DecodeCtx& ctx,
+                      std::string* reject) {
     ctx.variant = v;
     ctx.word = word;
 
@@ -446,44 +448,57 @@ bool try_decode_variant(const isa::Variant* v, Word128 word,
         }
     }
 
-    // legality conditions
-    {
-        ExprEvaluator ev(isa_data());
-        ev.set_slots(ctx.sm);
-        for (std::uint16_t ci = 0; ci < v->nconds; ++ci) {
-            const isa::Cond& c = v->conds[ci];
-            // GAP-04: a condition that cannot be fully parsed/resolved must
-            // not be treated as satisfied -- reject with an explicit reason
-            // so the decode never claims authoritative uniqueness on top of
-            // an unevaluable legality check.
-            auto r = ev.eval_bool_tristate(c.predicate);
-            if (!r.has_value()) {
-                std::string reason(c.error);
-                reason += ": condition unresolved (parser gap)";
-                if (c.message && *c.message) {
-                    reason += ": ";
-                    reason += c.message;
-                }
-                *reject = std::move(reason);
-                return false;
+    // legality conditions -- evaluated by the per-variant merged thunk
+    // (compile-time hardened by the generator), never by runtime string
+    // parsing.  This variant's packed condition-slot array is filled once from
+    // the decoded slot map; absent slots stay 0 (lenient reference semantics).
+    if (v->check) {
+        static thread_local std::int64_t g_slots[isa::kMaxCondSlots];
+        for (std::uint16_t k = 0; k < v->ncondslots; ++k) {
+            auto it = ctx.sm.find(v->condslots[k]);
+            g_slots[k] = it == ctx.sm.end() ? 0 : it->second;
+        }
+        if (auto err = v->check(word, g_slots)) {
+            std::string reason(err->error_type);
+            if (err->message && *err->message) {
+                reason += ": ";
+                reason += err->message;
             }
-            if (!*r) {
-                std::string reason(c.error);
-                if (c.message && *c.message) {
-                    reason += ": ";
-                    reason += c.message;
-                }
-                *reject = std::move(reason);
-                return false;
-            }
+            *reject = std::move(reason);
+            return false;
         }
     }
 
+    return true;
+}
+
+bool try_decode_variant(const isa::Variant* v, Word128 word,
+                        DecodedInstruction* inst, std::string* reject) {
+    DecodeCtx ctx;
+    if (!build_decode_ctx(v, word, ctx, reject)) return false;
     *inst = render_instruction(v, word, ctx);
     return true;
 }
 
 }
+
+std::string Decoder::disassemble(Word128 word, bool full) const {
+    const std::uint16_t opc = opcode_of(word.lo, word.hi);
+    const std::uint32_t start = isa::kOpcodeStart[opc];
+    const std::uint32_t end = isa::kOpcodeStart[opc + 1];
+    if (start == end) return "";
+    for (std::uint32_t i = start; i < end; ++i) {
+        const isa::Variant* v = &isa::kVariants[i];
+        if (v->alternate) continue;
+        DecodeCtx ctx;
+        std::string reject;
+        if (!build_decode_ctx(v, word, ctx, &reject)) continue;
+        DecodedInstruction inst = render_instruction(v, word, ctx);
+        return render_disasm_text(v, ctx, inst, full);
+    }
+    return "";
+}
+
 
 DecodeResult Decoder::decode(Word128 word) const {
     DecodeResult res;
@@ -506,7 +521,7 @@ DecodeResult Decoder::decode(Word128 word) const {
         // ALTERNATE CLASSes are alternative encodings, not decode candidates
         // (matches the reference disassembler).
         if (v->alternate) {
-            rejected.push_back({v->variant_class,
+            rejected.push_back({isa::variant_class_name(v->variant_class),
                                 "alternate class (not a decode candidate)"});
             continue;
         }
@@ -515,7 +530,8 @@ DecodeResult Decoder::decode(Word128 word) const {
         if (try_decode_variant(v, word, &inst, &reason)) {
             matched.push_back(std::move(inst));
         } else {
-            rejected.push_back({v->variant_class, reason});
+            rejected.push_back({isa::variant_class_name(v->variant_class),
+                                reason});
         }
     }
 
@@ -528,7 +544,8 @@ DecodeResult Decoder::decode(Word128 word) const {
     if (matched.size() > 1) {
         res.outcome_ = DecodeOutcome::kAmbiguous;
         for (auto& m : matched) {
-            res.candidates_.push_back({m.variant_class, ""});
+            res.candidates_.push_back(
+                {isa::variant_class_name(m.variant_class), ""});
         }
         for (auto& r : rejected) {
             res.candidates_.push_back(std::move(r));
@@ -583,7 +600,8 @@ std::size_t scan_condition_parse_gaps(bool report,
             } else {
                 ++gaps;
                 if (report) {
-                    std::printf("%s\t%s\t%s\n", v->variant_class,
+                    std::printf("%s\t%s\t%s\n",
+                                isa::variant_class_name(v->variant_class),
                                 v->conds[ci].error, v->conds[ci].predicate);
                 }
             }
@@ -599,7 +617,8 @@ std::vector<ConditionVerdict> condition_verdicts(
     std::vector<ConditionVerdict> out;
     const isa::Variant* variant = nullptr;
     for (std::uint32_t i = 0; i < isa::kNumVariants; ++i) {
-        if (variant_class == isa::kVariants[i].variant_class) {
+        if (variant_class ==
+            isa::variant_class_name(isa::kVariants[i].variant_class)) {
             variant = &isa::kVariants[i];
             break;
         }
@@ -632,6 +651,7 @@ std::vector<ConditionVerdict> condition_verdicts(
     }
     return out;
 }
+
 
 int eval_predicate(const std::string& predicate,
                    const std::vector<std::pair<std::string, std::int64_t>>&

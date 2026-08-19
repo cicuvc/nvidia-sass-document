@@ -433,7 +433,7 @@ int main(int argc, char** argv) {
             const std::size_t idx = static_cast<std::size_t>(pc / 16);
             std::string mnem =
                 (idx < k->predecoded.size() && k->predecoded[idx].unique)
-                    ? k->predecoded[idx].inst.mnemonic
+                    ? semu::isa::mnemonic_name(k->predecoded[idx].inst.mnemonic)
                     : "?";
             hotspots.push_back({pc, std::move(mnem), n});
         }

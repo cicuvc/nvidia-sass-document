@@ -95,8 +95,9 @@ int run_disasm(int argc, char** argv) {
         semu::DecodeResult r = dec.decode(lo, hi);
         if (r.is_unique()) {
             const auto& inst = r.instruction();
-            std::printf("OK   %s | %s | %s\n", inst.variant_class.c_str(),
-                        inst.mnemonic.c_str(), inst.disasm_full.c_str());
+            std::printf("OK   %s | %s | %s\n", semu::isa::variant_class_name(inst.variant_class),
+                        semu::isa::mnemonic_name(inst.mnemonic),
+                        dec.disassemble(inst.word, /*full=*/true).c_str());
             return 0;
         }
         if (r.outcome() == semu::DecodeOutcome::kAmbiguous) {
@@ -125,8 +126,8 @@ int run_disasm(int argc, char** argv) {
         if (r.is_unique()) {
             ++ok;
             const auto& inst = r.instruction();
-            std::printf("OK\t%s\t%s\n", inst.variant_class.c_str(),
-                        inst.disasm_full.c_str());
+            std::printf("OK\t%s\t%s\n", semu::isa::variant_class_name(inst.variant_class),
+                        dec.disassemble(inst.word, /*full=*/true).c_str());
         } else if (r.outcome() == semu::DecodeOutcome::kAmbiguous) {
             ++ambig;
             std::printf("AMBIG\t%zu\n", r.candidates().size());
@@ -153,7 +154,7 @@ int run_decode_json(int argc, char** argv) {
     auto print_inst = [](const semu::DecodedInstruction& inst) {
         std::printf("{\"mnemonic\":\"%s\",\"variant_class\":\"%s\","
                     "\"guard\":%d,\"guard_not\":%d,\"modifiers\":[",
-                    inst.mnemonic.c_str(), inst.variant_class.c_str(),
+                    semu::isa::mnemonic_name(inst.mnemonic), semu::isa::variant_class_name(inst.variant_class),
                     inst.guard_pred, inst.guard_not ? 1 : 0);
         for (std::size_t i = 0; i < inst.modifiers.size(); ++i) {
             if (i) std::printf(",");
@@ -465,7 +466,9 @@ int run_disasm_module(int argc, char** argv) {
             if (w.unique) {
                 std::printf("        /*%04llx*/  %s\n",
                             static_cast<unsigned long long>(w.pc),
-                            w.inst.disasm_full.c_str());
+                            semu::Decoder::instance()
+                                .disassemble(semu::Word128{w.lo, w.hi}, /*full=*/true)
+                                .c_str());
             } else {
                 std::printf("        /*%04llx*/  <unresolved: %s>\n",
                             static_cast<unsigned long long>(w.pc),
@@ -917,8 +920,11 @@ void print_step(const semu::DebugStepInfo& s) {
                 s.cta, s.warp, static_cast<unsigned long long>(s.pc),
                 static_cast<unsigned long long>(s.active_mask),
                 static_cast<unsigned long long>(s.dynamic_instructions));
-    if (!s.instruction.mnemonic.empty()) {
-        std::printf("  %s", s.instruction.disasm_full.c_str());
+    if (s.instruction.mnemonic != semu::isa::Mnemonic::kUnknown) {
+        std::printf("  %s",
+                    semu::Decoder::instance()
+                        .disassemble(s.instruction.word, /*full=*/true)
+                        .c_str());
     }
     std::printf("\n");
     for (const auto& d : s.reg_diffs)

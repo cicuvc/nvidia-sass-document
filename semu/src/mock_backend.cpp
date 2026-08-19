@@ -18,10 +18,13 @@ namespace {
 // is functional).
 CapabilityState manifest_state(const DecodedInstruction& inst) {
     const auto& manifest = CapabilityManifest::current();
-    for (const auto* e : manifest.by_mnemonic(inst.mnemonic)) {
-        if (e->variant_class == inst.variant_class) return e->state;
+    for (const auto* e : manifest.by_mnemonic(isa::mnemonic_name(inst.mnemonic))) {
+        if (e->variant_class ==
+            isa::variant_class_name(inst.variant_class)) {
+            return e->state;
+        }
     }
-    for (const auto* e : manifest.by_mnemonic(inst.mnemonic)) {
+    for (const auto* e : manifest.by_mnemonic(isa::mnemonic_name(inst.mnemonic))) {
         if (e->state != CapabilityState::kDecodeOnly &&
             e->state != CapabilityState::kUnsupported) {
             return e->state;
@@ -40,14 +43,16 @@ CapabilityState manifest_state(const DecodedInstruction& inst) {
 // The dense F32-accumulator HMMA/QMMA/OMMA shapes ARE functional (OMMA carries
 // the documented gpu_waiver: CPU-only differential evidence).
 bool frozen_decode_only(const DecodedInstruction& inst) {
-    const std::string& m = inst.mnemonic;
-    if (m == "UTMALDG" || m == "UTMASTG" || m == "UTMAREDG") {
+    const isa::Mnemonic m = inst.mnemonic;
+    if (m == isa::Mnemonic::kUTMALDG || m == isa::Mnemonic::kUTMASTG ||
+        m == isa::Mnemonic::kUTMAREDG) {
         return true;  // TMA family: decode-only, not frozen
     }
     // MXQMMA is scale-only (every variant is mxqmma_scale_): the explicit
     // tensor boundary covers it so it faults with the other non-dense
     // alternatives instead of falling through to the generic handler path.
-    if (m == "HMMA" || m == "QMMA" || m == "OMMA" || m == "MXQMMA") {
+    if (m == isa::Mnemonic::kHMMA || m == isa::Mnemonic::kQMMA ||
+        m == isa::Mnemonic::kOMMA || m == isa::Mnemonic::kMXQMMA) {
         const CapabilityState st = manifest_state(inst);
         return !(st == CapabilityState::kFunctional ||
                  st == CapabilityState::kProfiled);
@@ -94,15 +99,18 @@ Status MockBackend::launch(const BackendLaunchRequest& request) {
     };
     const auto report_decode_only = [&](const PredecodedWord& w) {
         Fault f(FaultKind::kUnsupportedInstruction,
-                "mock backend cannot lower '" + w.inst.mnemonic +
-                    "' (decode-only variant " + w.inst.variant_class +
+                "mock backend cannot lower '" +
+                    std::string(isa::mnemonic_name(w.inst.mnemonic)) +
+                    "' (decode-only variant " +
+                    std::string(isa::variant_class_name(w.inst.variant_class)) +
                     "); not lowered, not functional -> decode-only fault");
         f.set_kernel(request.kernel_name)
             .set_pc(w.pc)
             .set_instruction({w.lo, w.hi})
-            .set_mnemonic(w.inst.mnemonic)
-            .set_variant(w.inst.variant_class);
-        stats_.decode_only_mnemonics.push_back(w.inst.mnemonic);
+            .set_mnemonic(isa::mnemonic_name(w.inst.mnemonic))
+            .set_variant(isa::variant_class_name(w.inst.variant_class));
+        stats_.decode_only_mnemonics.push_back(
+            isa::mnemonic_name(w.inst.mnemonic));
         if (!stats_.decode_only_fault) stats_.decode_only_fault = std::move(f);
         return f;
     };
@@ -124,9 +132,10 @@ Status MockBackend::launch(const BackendLaunchRequest& request) {
             }
             return Status::failure(*stats_.decode_only_fault);
         }
-        const std::string& m = w.inst.mnemonic;
-        if (is_forced_decode_only(m) || frozen_decode_only(w.inst)) {
-            stats_.decode_only_mnemonics.push_back(m);
+        const isa::Mnemonic m = w.inst.mnemonic;
+        if (is_forced_decode_only(isa::mnemonic_name(m)) ||
+            frozen_decode_only(w.inst)) {
+            stats_.decode_only_mnemonics.push_back(isa::mnemonic_name(m));
             const Fault f = report_decode_only(w);
             return Status::failure(f);
         }
@@ -137,7 +146,7 @@ Status MockBackend::launch(const BackendLaunchRequest& request) {
             const Fault f = report_decode_only(w);
             return Status::failure(f);
         }
-        if (is_lowered(m)) {
+        if (is_lowered(isa::mnemonic_name(m))) {
             ++stats_.lowered;
         } else {
             ++stats_.interpreter_fallback;

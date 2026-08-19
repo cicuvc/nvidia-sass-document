@@ -48,6 +48,7 @@ run "isa_regen" "$PY" "$SRC/isa_regen_test.py" "$ROOT/sm120.json" "$SRC/../gener
 run "decoder_roundtrip" "$PY" "$SRC/decoder_roundtrip_test.py" "$CLI" "$CORPUS" "$ROOT/sm120.json"
 run "decoder_ambig" "$PY" "$SRC/decoder_ambig_test.py" "$CLI" "$CORPUS" "$ROOT/sm120.json"
 run "cond_differential" "$PY" "$SRC/cond_differential_test.py" "$CLI" "$CORPUS" "$ROOT/sm120.json"
+run "cond_compile_equiv" "$PY" "$SRC/cond_compile_equiv_test.py" "$ROOT/sm120.json"
 run "decoder_cuobjdump" "$PY" "$SRC/decoder_cuobjdump_test.py" "$CLI" "$SRC/data/cuobj_vectors_sm120.json"
 run "decoder_negative" "$PY" "$SRC/decoder_negative_test.py" "$CLI" "$CORPUS" "$ROOT/sm120.json"
 run "cuobj_regen" "$PY" "$SRC/cuobj_regen_test.py"

@@ -909,14 +909,15 @@ Interpreter::Result Interpreter::run_owned() {
                           "w%d pc=0x%llx mask=0x%08x %s",
                           warp, static_cast<unsigned long long>(pc), mask,
                           /* the decoded mnemonic */ "");
-            // Append mnemonic from a fresh decode.
-            auto dr = Decoder::instance().decode(
-                kernel_.predecoded[pc / 16].lo, kernel_.predecoded[pc / 16].hi);
-            if (dr.is_unique()) {
+            // Append mnemonic from a fresh decode + on-demand disassembly.
+            const auto& pw = kernel_.predecoded[pc / 16];
+            std::string d = Decoder::instance().disassemble(
+                Word128{pw.lo, pw.hi}, /*full=*/false);
+            if (!d.empty()) {
                 std::snprintf(line, sizeof(line),
                               "w%d pc=0x%llx mask=0x%08x %s",
                               warp, static_cast<unsigned long long>(pc),
-                              mask, dr.instruction().disasm.c_str());
+                              mask, d.c_str());
             }
             trace_.push_back(line);
         }
@@ -1387,14 +1388,14 @@ bool checked_uadd(std::uint64_t a, std::uint64_t b, std::uint64_t* out) {
 std::optional<std::uint64_t> Interpreter::branch_target(
     const DecodedInstruction& inst, std::uint64_t pc,
     ThreadState& t) const {
-    const std::string& m = inst.mnemonic;
+    const isa::Mnemonic m = inst.mnemonic;
     std::int64_t target_s = 0;
-    if (m == "BRA" || m == "JMP") {
+    if (m == isa::Mnemonic::kBRA || m == isa::Mnemonic::kJMP) {
         auto imm = field_value(inst, "sImm");
         if (!imm) imm = field_value(inst, "Sa");
         if (!imm) imm = field_value(inst, "Sb");
         if (!imm) return std::nullopt;
-        if (m == "BRA") {
+        if (m == isa::Mnemonic::kBRA) {
             // sImm is a 56-bit two's-complement field (verified via the
             // assembler's backward BRA: raw 72057594037927924 == -12).
             const std::int64_t disp = sign_extend(*imm, 56);
@@ -1412,7 +1413,7 @@ std::optional<std::uint64_t> Interpreter::branch_target(
             sa = static_cast<std::int64_t>(*imm);
             if (!checked_mul4(sa, &target_s)) return std::nullopt;
         }
-    } else if (m == "BRX" || m == "JMX") {
+    } else if (m == isa::Mnemonic::kBRX || m == isa::Mnemonic::kJMX) {
         // BRX/JMX use a 64-bit register pair Ra:R(a+1) (verified:
         // test_brx target = next_pc + sign-extended(Ra:R(a+1)) + off*4).
         auto ra = field_value(inst, "Ra");
@@ -1429,12 +1430,12 @@ std::optional<std::uint64_t> Interpreter::branch_target(
         const std::int64_t off_v = off ? sign_extend(*off, 58) : 0;
         std::int64_t scaled;
         if (!checked_mul4(off_v, &scaled)) return std::nullopt;
-        std::int64_t base = (m == "BRX")
+        std::int64_t base = (m == isa::Mnemonic::kBRX)
             ? static_cast<std::int64_t>(pc) + 16
             : static_cast<std::int64_t>(pc);
         if (!checked_add(base, disp, &base)) return std::nullopt;
         if (!checked_add(base, scaled, &target_s)) return std::nullopt;
-    } else if (m == "BSSY") {
+    } else if (m == isa::Mnemonic::kBSSY) {
         // BSSY target is Sa*4 absolute (30-bit field, no PC add).
         auto sa = field_value(inst, "Sa");
         if (!sa) return std::nullopt;
@@ -2040,7 +2041,7 @@ Status Interpreter::do_umov(WarpState& w, const DecodedInstruction& inst,
     }
     w.ur[static_cast<std::size_t>(u)] = val;
     // imm64 form writes the 64-bit immediate to URd:URd+1.
-    if (inst.variant_class.find("imm64") != std::string::npos && sb &&
+    if (std::strstr(isa::variant_class_name(inst.variant_class), "imm64") != nullptr && sb &&
         u + 1 < kNumUrs) {
         w.ur[static_cast<std::size_t>(u + 1)] =
             static_cast<std::uint32_t>(static_cast<std::uint64_t>(sb->value) >>
@@ -2218,17 +2219,17 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
     const Operand* rc_op = find_op(inst, "Rc");
     // The decoder reports every IMAD width variant under mnemonic "IMAD";
     // the WIDE/HI distinction lives in the variant class.
-    const bool is_wide = inst.variant_class.find("wide") != std::string::npos ||
-                         inst.variant_class.find("hi") != std::string::npos;
-    const bool is_hi = inst.variant_class.find("hi") != std::string::npos;
+    const bool is_wide = std::strstr(isa::variant_class_name(inst.variant_class), "wide") != nullptr ||
+                         std::strstr(isa::variant_class_name(inst.variant_class), "hi") != nullptr;
+    const bool is_hi = std::strstr(isa::variant_class_name(inst.variant_class), "hi") != nullptr;
     // The X-extended forms (IMAD.X / IMAD.WIDE.X / IMAD.HI.X) add carry-in
     // (from the [!]Pp predicate) and carry-out (to Pu) semantics that Phase 5
     // does not implement or verify.  Degrade them explicitly to unsupported
     // instead of silently computing a carry-less result.
-    const bool is_x = inst.variant_class.find("_x") != std::string::npos;
+    const bool is_x = std::strstr(isa::variant_class_name(inst.variant_class), "_x") != nullptr;
     if (is_x) {
         Fault f(FaultKind::kUnsupportedInstruction,
-                "instruction '" + inst.mnemonic + "' (" + inst.variant_class +
+                "instruction '" + std::string(isa::mnemonic_name(inst.mnemonic)) + "' (" + std::string(isa::variant_class_name(inst.variant_class)) +
                     ") X carry form is not implemented at pc " +
                     std::to_string(pc));
         f.set_warp(static_cast<std::uint32_t>(w.warp_id)).set_pc(pc)
@@ -2358,7 +2359,7 @@ std::uint64_t read_addr_pair(const ThreadState& t, const Operand* ra) {
 // caller MUST fault and must NEVER downgrade to ADD.  CAS is decoded
 // separately by the presence of the Rc compare operand.
 std::optional<AtomicOp> decode_atomic_op(const DecodedInstruction& inst) {
-    if (inst.variant_class.find("_fp") != std::string::npos) {
+    if (std::strstr(isa::variant_class_name(inst.variant_class), "_fp") != nullptr) {
         return std::nullopt;  // ATOM.FADD / ATOM.FMIN / ... unimplemented
     }
     const std::uint64_t opv = slot_value(inst, "op").value_or(0);
@@ -2402,30 +2403,30 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
                                      std::optional<Fault>* fault) {
     (void)w;
     (void)fault;
-    const std::string& m = inst.mnemonic;
+    const isa::Mnemonic m = inst.mnemonic;
     MemWidthInfo wi = mem_sz(inst);
     *width_out = wi.bytes;
     *off_out = offset_value(inst, "Ra_offset");
 
-    if (m == "LDG" || m == "STG" || m == "LDL" || m == "STL") {
+    if (m == isa::Mnemonic::kLDG || m == isa::Mnemonic::kSTG || m == isa::Mnemonic::kLDL || m == isa::Mnemonic::kSTL) {
         // Global/local: descriptor + Ra(64) + signed offset.
         const Operand* ra = find_op(inst, "Ra");
         const std::uint64_t ra_val = read_addr_pair(t, ra);
         // The descriptor's Ra_URb / Ra_URc provides the descriptor UR pair;
         // step 1 uses a single global buffer, so the address = Ra + offset.
         *addr_out = ra_val;
-        *space_out = (m == "LDL" || m == "STL") ? AddressSpace::kLocal
+        *space_out = (m == isa::Mnemonic::kLDL || m == isa::Mnemonic::kSTL) ? AddressSpace::kLocal
                                                 : AddressSpace::kGlobal;
         return Status::success();
     }
-    if (m == "LDS" || m == "STS" || m == "ATOMS" || m == "REDS") {
+    if (m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kSTS || m == isa::Mnemonic::kATOMS || m == isa::Mnemonic::kREDS) {
         // Shared: 32-bit Ra + offset.
         const Operand* ra = find_op(inst, "Ra");
         *addr_out = ra ? read_reg_val(t, *ra) : 0;
         *space_out = AddressSpace::kShared;
         return Status::success();
     }
-    if (m == "LDC" || m == "LDCU") {
+    if (m == isa::Mnemonic::kLDC || m == isa::Mnemonic::kLDCU) {
         // Constant: bank (Sa_bank) + offset (Ra_offset).  The address is the
         // constant-bank window offset; bank n spans [n*64K, (n+1)*64K).
         const auto bank = slot_value(inst, "Sa_bank").value_or(0);
@@ -2439,7 +2440,7 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
         *space_out = AddressSpace::kConstant;
         return Status::success();
     }
-    if (m == "ATOMG" || m == "REDG") {
+    if (m == isa::Mnemonic::kATOMG || m == isa::Mnemonic::kREDG) {
         // Global atomic: descriptor + Ra(64) + signed offset.
         const Operand* ra = find_op(inst, "Ra");
         const std::uint64_t ra_val = read_addr_pair(t, ra);
@@ -2447,31 +2448,31 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
         *space_out = AddressSpace::kGlobal;
         return Status::success();
     }
-    if (m == "ATOM" || m == "RED") {
+    if (m == isa::Mnemonic::kATOM || std::strcmp(isa::mnemonic_name(m), "RED") == 0) {
         const Operand* ra = find_op(inst, "Ra");
         *addr_out = ra ? read_reg_val(t, *ra) : 0;
         *space_out = AddressSpace::kGlobal;
         return Status::success();
     }
     return Status::failure(Error(ErrorCode::kUnimplemented,
-                                 "memory address resolve for '" + m + "'"));
+                                 "memory address resolve for '" + std::string(isa::mnemonic_name(m)) + "'"));
 }
 
 Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
                               const DecodedInstruction& inst,
                               std::uint64_t pc,
                               std::optional<Fault>* fault) {
-    const std::string& m = inst.mnemonic;
+    const isa::Mnemonic m = inst.mnemonic;
 
     // Barriers / fences / depbar: functional no-ops (single-writer model) but
     // keep the scoreboard bookkeeping consistent.  MEMBAR/FENCE also feed the
     // race detector (recorded fence: no standalone HB; combined with a
     // matching release/acquire atomic).
-    if (m == "MEMBAR" || m == "FENCE") {
+    if (m == isa::Mnemonic::kMEMBAR || m == isa::Mnemonic::kFENCE) {
         memory_->membar();
         if (race_detector_ && race_detector_->enabled()) {
             std::string scope = "gpu";
-            if (m == "MEMBAR") {
+            if (m == isa::Mnemonic::kMEMBAR) {
                 const auto scov = slot_value(inst, "sco").value_or(2);
                 if (scov == 0) scope = "cta";
                 else if (scov == 1) scope = "sm";
@@ -2492,13 +2493,13 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
         }
         return Status::success();
     }
-    if (m == "ERRBAR" || m == "CGAERRBAR" || m == "CCTL") {
+    if (m == isa::Mnemonic::kERRBAR || m == isa::Mnemonic::kCGAERRBAR || m == isa::Mnemonic::kCCTL) {
         // Cache/error-reporting barriers emitted around MEMBAR (IVALL / WBALL
         // etc.).  Functional no-ops in the single-writer model.
         return Status::success();
     }
-    if (m == "DEPBAR" || m == "LDGDEPBAR") {
-        if (m == "LDGDEPBAR") {
+    if (m == isa::Mnemonic::kDEPBAR || m == isa::Mnemonic::kLDGDEPBAR) {
+        if (m == isa::Mnemonic::kLDGDEPBAR) {
             // cp.async.commit_group: seal the open LDGSTS group and count it
             // on the target scoreboard (wr).
             do_ldgdepbar(w, inst, pc);
@@ -2510,23 +2511,23 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
         }
         return Status::success();
     }
-    if (m == "BAR") {
+    if (m == isa::Mnemonic::kBAR) {
         return do_bar(w, inst, mask, pc, fault);
     }
 
     // LDGSTS / cp.async (coupled L1-read -> shared-write).  Functional copy
     // (global -> shared per lane) plus the trace-only UnifiedV1 prediction.
-    if (m == "LDGSTS") {
+    if (m == isa::Mnemonic::kLDGSTS) {
         return do_ldgsts(w, mask, inst, pc, fault);
     }
 
     // Loads / stores / atomics: resolve once per lane.
     const Operand* rd = find_op(inst, "Rd");
     const Operand* rb = find_op(inst, "Rb");
-    const bool is_load = (m == "LDG" || m == "LDS" || m == "LDC" ||
-                          m == "LDCU" || m == "LDL");
-    const bool is_atom = (m == "ATOM" || m == "ATOMS" || m == "RED" ||
-                          m == "REDS" || m == "ATOMG" || m == "REDG");
+    const bool is_load = (m == isa::Mnemonic::kLDG || m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kLDC ||
+                          m == isa::Mnemonic::kLDCU || m == isa::Mnemonic::kLDL);
+    const bool is_atom = (m == isa::Mnemonic::kATOM || m == isa::Mnemonic::kATOMS || std::strcmp(isa::mnemonic_name(m), "RED") == 0 ||
+                          m == isa::Mnemonic::kREDS || m == isa::Mnemonic::kATOMG || m == isa::Mnemonic::kREDG);
 
     // Phase 6 Step 2B: trace-only subcore issue event for this memory op.
     // Never changes the functional path below.  Phase 8: the raw per-lane
@@ -2712,7 +2713,7 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
             if (!dec) {
                 if (fault) {
                     *fault = Fault(FaultKind::kUnsupportedInstruction,
-                                   inst.mnemonic + " atomic op is not "
+                                   std::string(isa::mnemonic_name(inst.mnemonic)) + " atomic op is not "
                                    "implemented (never downgraded to ADD)")
                                  .set_pc(pc)
                                  .set_warp(static_cast<std::uint32_t>(w.warp_id))
@@ -3869,7 +3870,7 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
         ev.cta = static_cast<std::uint32_t>(w.cta_id);
         ev.warp = static_cast<std::uint32_t>(w.warp_id);
         ev.pc = pc;
-        ev.mnemonic = inst.mnemonic;
+        ev.mnemonic = isa::mnemonic_name(inst.mnemonic);
         ev.request_kind = "tma-store";
         ev.element_width = acc.element_bytes;
         ev.address_space = EventAddressSpace::kShared;
@@ -3884,7 +3885,7 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
         gev.cta = static_cast<std::uint32_t>(w.cta_id);
         gev.warp = static_cast<std::uint32_t>(w.warp_id);
         gev.pc = pc;
-        gev.mnemonic = inst.mnemonic;
+        gev.mnemonic = isa::mnemonic_name(inst.mnemonic);
         gev.request_kind = "tma-store-write";
         gev.element_width = acc.element_bytes;
         gev.address_space = EventAddressSpace::kGlobal;
@@ -3926,7 +3927,7 @@ void Interpreter::record_memory_event(const WarpState& w,
     ev.warp = static_cast<std::uint32_t>(w.warp_id);
     ev.active_mask = committed_mask != 0 ? committed_mask : mask;
     ev.pc = pc;
-    ev.mnemonic = inst.mnemonic;
+    ev.mnemonic = isa::mnemonic_name(inst.mnemonic);
     ev.request_kind = request_kind;
     ev.element_width = element_width;
     ev.issue_tick = ir.issue_tick;
@@ -3935,7 +3936,7 @@ void Interpreter::record_memory_event(const WarpState& w,
     ev.prediction = false;
     // Phase 8 refinement: stable variant class + cache-policy contract.  The
     // ordinary LDG/STG/LDS/STS/atomic path always allocates through L1.
-    ev.variant_class = inst.variant_class;
+    ev.variant_class = isa::variant_class_name(inst.variant_class);
     ev.cache_policy = "default";
     ev.miss_path = "l1-access";
     // Phase 8 backend-neutral raw access stream.
@@ -3976,7 +3977,7 @@ void Interpreter::record_coupled_l1_to_shared(const WarpState& w,
     ev.warp = static_cast<std::uint32_t>(w.warp_id);
     ev.active_mask = mask;
     ev.pc = pc;
-    ev.mnemonic = inst.mnemonic;
+    ev.mnemonic = isa::mnemonic_name(inst.mnemonic);
     ev.request_kind = "coupled";
     ev.element_width = element_width;
     ev.issue_tick = ir.issue_tick;
@@ -3985,7 +3986,7 @@ void Interpreter::record_coupled_l1_to_shared(const WarpState& w,
     // slot discriminates LOC@ACCESS (default, L1 allocate) from LOC@BYPASS
     // (the .cg / L1-bypass path).  The estimator honors it: "cg" marks the
     // SharedWf / conflict counters unsupported on the profiler path.
-    ev.variant_class = inst.variant_class;
+    ev.variant_class = isa::variant_class_name(inst.variant_class);
     const bool l1_bypass = slot_value(inst, "loc").value_or(1) == 0;
     ev.cache_policy = l1_bypass ? "cg" : "default";
     ev.miss_path = l1_bypass ? "l1-bypass" : "l1-access";
@@ -4050,7 +4051,7 @@ void Interpreter::record_l2_access(const WarpState& w,
     d.lane = lane;
     d.ordinal = l2_ordinal_[cta]++;
     d.pc = pc;
-    d.mnemonic = inst.mnemonic;
+    d.mnemonic = isa::mnemonic_name(inst.mnemonic);
     d.request_kind = request_kind;
     d.addr = addr;
     d.len = len;
@@ -4102,7 +4103,7 @@ void Interpreter::record_race_access(const WarpState& w,
     RaceAccess a;
     a.instruction = executed_;
     a.pc = pc;
-    a.mnemonic = inst.mnemonic;
+    a.mnemonic = isa::mnemonic_name(inst.mnemonic);
     a.space = space;
     a.cta = static_cast<std::uint32_t>(w.cta_id);
     a.sm = sm_of_cta(static_cast<std::uint32_t>(w.cta_id));
@@ -4112,7 +4113,7 @@ void Interpreter::record_race_access(const WarpState& w,
     a.byte_end = addr + len;
     a.is_write = is_write;
     a.is_atomic = is_atomic;
-    a.atomic_op = is_atomic ? inst.mnemonic : "";
+    a.atomic_op = is_atomic ? isa::mnemonic_name(inst.mnemonic) : "";
     a.mem_order = mem_order;
     a.scope = scope;
     a.order_scope_ok = classify_order_scope(mem_order, scope);
@@ -4163,52 +4164,52 @@ void Interpreter::record_debug_access(const WarpState& w, std::uint32_t lane,
 // backend (mock backend) can query the reference interpreter's runtime
 // capability without constructing an interpreter.
 bool interpreter_handles(const DecodedInstruction& inst) {
-    const std::string& m = inst.mnemonic;
+    const isa::Mnemonic m = inst.mnemonic;
     // Control flow (do_bra / do_bssy / do_bsync / do_exit / do_s2r / do_s2ur /
     // do_bar / NOP).
-    if (m == "BRA" || m == "BRX" || m == "JMP" || m == "JMX" ||
-        m == "BSSY" || m == "BSYNC" || m == "EXIT" || m == "S2R" ||
-        m == "S2UR" || m == "BAR" || m == "NOP") {
+    if (m == isa::Mnemonic::kBRA || m == isa::Mnemonic::kBRX || m == isa::Mnemonic::kJMP || m == isa::Mnemonic::kJMX ||
+        m == isa::Mnemonic::kBSSY || m == isa::Mnemonic::kBSYNC || m == isa::Mnemonic::kEXIT || m == isa::Mnemonic::kS2R ||
+        m == isa::Mnemonic::kS2UR || m == isa::Mnemonic::kBAR || m == isa::Mnemonic::kNOP) {
         return true;
     }
     // Minimal ALU (do_mov / do_iadd3 / do_isetp / do_imad).  IMAD covers
     // the .WIDE / .HI / .X / imm / uniform variants (same mnemonic).
-    if (m == "MOV" || m == "IADD3" || m == "ISETP" || m == "IMAD") {
+    if (m == isa::Mnemonic::kMOV || m == isa::Mnemonic::kIADD3 || m == isa::Mnemonic::kISETP || m == isa::Mnemonic::kIMAD) {
         return true;
     }
     // Phase 6 memory (do_memory).  LDGSTS is now functional (cp.async).
-    if (m == "LDG" || m == "STG" || m == "LDS" || m == "STS" ||
-        m == "LDC" || m == "LDCU" || m == "LDL" || m == "STL" ||
-        m == "ATOM" || m == "ATOMS" || m == "RED" || m == "REDS" ||
-        m == "ATOMG" || m == "REDG" || m == "MEMBAR" || m == "FENCE" ||
-        m == "ERRBAR" || m == "CGAERRBAR" || m == "CCTL" ||
-        m == "DEPBAR" || m == "LDGDEPBAR" || m == "LDGSTS") {
+    if (m == isa::Mnemonic::kLDG || m == isa::Mnemonic::kSTG || m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kSTS ||
+        m == isa::Mnemonic::kLDC || m == isa::Mnemonic::kLDCU || m == isa::Mnemonic::kLDL || m == isa::Mnemonic::kSTL ||
+        m == isa::Mnemonic::kATOM || m == isa::Mnemonic::kATOMS || std::strcmp(isa::mnemonic_name(m), "RED") == 0 || m == isa::Mnemonic::kREDS ||
+        m == isa::Mnemonic::kATOMG || m == isa::Mnemonic::kREDG || m == isa::Mnemonic::kMEMBAR || m == isa::Mnemonic::kFENCE ||
+        m == isa::Mnemonic::kERRBAR || m == isa::Mnemonic::kCGAERRBAR || m == isa::Mnemonic::kCCTL ||
+        m == isa::Mnemonic::kDEPBAR || m == isa::Mnemonic::kLDGDEPBAR || m == isa::Mnemonic::kLDGSTS) {
         return true;
     }
     // Phase 9 subset: mbarrier (SYNCS), cp.async.mbarrier.arrive (ARRIVES)
     // and the TMA family (UTMALDG / UTMASTG / UTMAREDG / UTMACMDFLUSH /
     // UTMACCTL).
-    if (m == "SYNCS" || m == "ARRIVES" || m == "UTMALDG" ||
-        m == "UTMASTG" || m == "UTMAREDG" || m == "UTMACMDFLUSH" ||
-        m == "UTMACCTL") {
+    if (m == isa::Mnemonic::kSYNCS || m == isa::Mnemonic::kARRIVES || m == isa::Mnemonic::kUTMALDG ||
+        m == isa::Mnemonic::kUTMASTG || m == isa::Mnemonic::kUTMAREDG || m == isa::Mnemonic::kUTMACMDFLUSH ||
+        m == isa::Mnemonic::kUTMACCTL) {
         return true;
     }
     // Phase 9 tensor core: HMMA / QMMA / OMMA dense F32-accumulator shapes
     // (do_tensor).  Sparse/rowcol/scale alternatives and the F16 accumulator
     // fault at runtime (do_tensor dispatches on the decoded variant class /
     // modifier slots).
-    if (m == "HMMA" || m == "QMMA" || m == "OMMA") {
+    if (m == isa::Mnemonic::kHMMA || m == isa::Mnemonic::kQMMA || m == isa::Mnemonic::kOMMA) {
         return true;
     }
     // Phase 5 compute (do_compute).
-    if (m == "FADD" || m == "FMUL" || m == "FFMA" || m == "DADD" ||
-        m == "DMUL" || m == "DFMA" || m == "FSETP" || m == "FSET" ||
-        m == "FMNMX" || m == "FSEL" || m == "F2F" || m == "I2F" ||
-        m == "F2I" || m == "FRND" || m == "P2R" || m == "VOTE" ||
-        m == "ELECT" || m == "REDUX" || m == "SHFL" || m == "LOP3" ||
-        m == "LOP" || m == "SHF" || m == "IABS" || m == "IMNMX" ||
-        m == "ISCADD" || m == "LEA" || m == "POPC" || m == "FLO" ||
-        m == "BFE" || m == "BMSK" || m == "BFREV" || m == "PRMT") {
+    if (m == isa::Mnemonic::kFADD || m == isa::Mnemonic::kFMUL || m == isa::Mnemonic::kFFMA || m == isa::Mnemonic::kDADD ||
+        m == isa::Mnemonic::kDMUL || m == isa::Mnemonic::kDFMA || m == isa::Mnemonic::kFSETP || m == isa::Mnemonic::kFSET ||
+        m == isa::Mnemonic::kFMNMX || m == isa::Mnemonic::kFSEL || m == isa::Mnemonic::kF2F || m == isa::Mnemonic::kI2F ||
+        m == isa::Mnemonic::kF2I || m == isa::Mnemonic::kFRND || m == isa::Mnemonic::kP2R || m == isa::Mnemonic::kVOTE ||
+        m == isa::Mnemonic::kELECT || m == isa::Mnemonic::kREDUX || m == isa::Mnemonic::kSHFL || m == isa::Mnemonic::kLOP3 ||
+        m == isa::Mnemonic::kLOP || m == isa::Mnemonic::kSHF || m == isa::Mnemonic::kIABS || m == isa::Mnemonic::kIMNMX ||
+        m == isa::Mnemonic::kISCADD || m == isa::Mnemonic::kLEA || m == isa::Mnemonic::kPOPC || m == isa::Mnemonic::kFLO ||
+        std::strcmp(isa::mnemonic_name(m), "BFE") == 0 || m == isa::Mnemonic::kBMSK || std::strcmp(isa::mnemonic_name(m), "BFREV") == 0 || m == isa::Mnemonic::kPRMT) {
         return true;
     }
     return false;
@@ -4246,7 +4247,7 @@ std::uint32_t Interpreter::special_register_value(SpecialReg sr,
 Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
                               const DecodedInstruction& inst, std::uint64_t pc,
                               std::optional<Fault>* fault) {
-    const std::string& m = inst.mnemonic;
+    const isa::Mnemonic m = inst.mnemonic;
     const Operand* rd = find_op(inst, "Rd");
     if (!rd || rd->kind != "Register") {
         *fault = Fault(FaultKind::kInternal, "tensor op missing Rd")
@@ -4262,11 +4263,11 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
     tensor::Format fmt = tensor::Format::kBf16;
     bool need_uri = false;
 
-    const std::string& cls = inst.variant_class;
+    const isa::VariantClass cls = inst.variant_class;
     const auto unsupported =
         [&](const std::string& why) -> Status {
             Fault f(FaultKind::kUnsupportedInstruction,
-                    "instruction '" + m + "' (" + cls + ") " + why +
+                    "instruction '" + std::string(isa::mnemonic_name(m)) + "' (" + std::string(isa::variant_class_name(cls)) + ") " + why +
                         " is decode-only (not implemented) at pc 0x" +
                         std::to_string(pc));
             f.set_warp(static_cast<std::uint32_t>(w.warp_id))
@@ -4277,10 +4278,10 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
             return Status::failure(Error::internal("interpreter fault"));
         };
 
-    if (m == "HMMA") {
+    if (m == isa::Mnemonic::kHMMA) {
         // Dense HMMA (hmma_x8_): size 0=k8 / 1=k16 / 2=k4(TF32), srcfmt
         // 0=F16 1=BF16 2=TF32 3=E6M9, dstfmt 0=F16 1=F32 accumulator.
-        if (cls != "hmma_x8_") return unsupported("(sparse/indexedRF variant)");
+        if (cls != isa::VariantClass::khmma_x8_) return unsupported("(sparse/indexedRF variant)");
         const std::uint64_t size = slot_value(inst, "size").value_or(0);
         const std::uint64_t srcfmt = slot_value(inst, "srcfmt").value_or(0);
         const std::uint64_t dstfmt = slot_value(inst, "dstfmt").value_or(0);
@@ -4291,9 +4292,9 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
             return unsupported("(shape)");
         }
         fmt = (srcfmt == 1) ? tensor::Format::kBf16 : tensor::Format::kF16;
-    } else if (m == "QMMA") {
+    } else if (m == isa::Mnemonic::kQMMA) {
         // Dense QMMA (qmma_): size 0=k16 / 1=k32, dstfmt(ntz) 0=F16 1=F32.
-        if (cls != "qmma_") return unsupported("(sparse/rowcol/scale variant)");
+        if (cls != isa::VariantClass::kqmma_) return unsupported("(sparse/rowcol/scale variant)");
         const std::uint64_t size = slot_value(inst, "size").value_or(0);
         const std::uint64_t dstfmt = slot_value(inst, "dstfmt").value_or(0);
         if (dstfmt != 1) return unsupported("(F16 accumulator)");
@@ -4317,7 +4318,7 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
             default: return unsupported("(srcFmtA)");
         }
     } else {  // OMMA.SF (mxfp4 block-scaled)
-        if (cls != "omma_scale_") return unsupported("(sparse/scale variant)");
+        if (cls != isa::VariantClass::komma_scale_) return unsupported("(sparse/scale variant)");
         // Only the verified 2X-scale E8 e2m1 configuration is implemented.
         const std::uint64_t sf = slot_value(inst, "scalefmt").value_or(0);
         const std::uint64_t ssz = slot_value(inst, "scaleVectorSz").value_or(1);
@@ -4384,13 +4385,13 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
         }
 
         std::uint32_t out[4] = {0};
-        if (m == "HMMA") {
+        if (m == isa::Mnemonic::kHMMA) {
             if (shape.k == 16) {
                 tensor::hmma_k16(a, b, c, fmt, out);
             } else {
                 tensor::hmma_k8(a, b, c, fmt, out);
             }
-        } else if (m == "QMMA") {
+        } else if (m == isa::Mnemonic::kQMMA) {
             if (shape.k == 32) {
                 tensor::qmma_k32(a, b, c, fmt, out);
             } else {
@@ -4417,19 +4418,19 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                                const DecodedInstruction& inst,
                                std::uint64_t pc,
                                std::optional<Fault>* fault) {
-    const std::string& m = inst.mnemonic;
+    const isa::Mnemonic m = inst.mnemonic;
     const Operand* rd = find_op(inst, "Rd");
 
     // ---- FP32 add/mul/fma -----------------------------------------------
-    if (m == "FADD" || m == "FMUL" || m == "FFMA") {
+    if (m == isa::Mnemonic::kFADD || m == isa::Mnemonic::kFMUL || m == isa::Mnemonic::kFFMA) {
         const Rnd rnd = static_cast<Rnd>(slot_value(inst, "rnd").value_or(0));
         // FADD uses `ftz`; FMUL/FFMA use `fmz` (fmz field: nofmz=0 FMZ=1
         // FTZ=2).  FADD/FMUL take a plain flush bool; FFMA needs the raw
         // fmz value (FMZ and FTZ differ on sm120, see fp.hpp).
-        const bool flush = m == "FADD"
+        const bool flush = m == isa::Mnemonic::kFADD
             ? slot_value(inst, "ftz").value_or(0) != 0
             : slot_value(inst, "fmz").value_or(0) != 0;
-        const int fmz_val = m == "FADD"
+        const int fmz_val = m == isa::Mnemonic::kFADD
             ? 0
             : static_cast<int>(slot_value(inst, "fmz").value_or(0));
         const bool sat = slot_value(inst, "sat").value_or(0) != 0;
@@ -4439,12 +4440,12 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         const Operand* rc = find_op(inst, "Rc");
         const Operand* sc = find_op(inst, "Sc");  // RRI immediate addend
         const Operand* sb = find_op(inst, "Sb");  // RIR immediate mult-add
-        const int op = m == "FADD" ? 0 : m == "FMUL" ? 1 : 2;
+        const int op = m == isa::Mnemonic::kFADD ? 0 : m == isa::Mnemonic::kFMUL ? 1 : 2;
         // Phase 5.5: resolve the leaf policy once per instruction (M5).
         const Fp32Plan plan = plan_fp32(op, static_cast<int>(rnd), flush);
         // M5 pre-binding: resolve each source operand's register index /
         // immediate value once so the per-lane loop does no string compares.
-        const Operand* second = (m == "FADD") ? rc : rb;
+        const Operand* second = (m == isa::Mnemonic::kFADD) ? rc : rb;
         const int ra_r = bind_reg_index(ra);
         const int second_r = bind_reg_index(second);
         const int rc_r = bind_reg_index(rc);
@@ -4508,7 +4509,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
     }
 
     // ---- FP64 add/mul/fma -----------------------------------------------
-    if (m == "DADD" || m == "DMUL" || m == "DFMA") {
+    if (m == isa::Mnemonic::kDADD || m == isa::Mnemonic::kDMUL || m == isa::Mnemonic::kDFMA) {
         const Rnd rnd = static_cast<Rnd>(slot_value(inst, "rnd").value_or(0));
         const bool sat = slot_value(inst, "sat").value_or(0) != 0;
         const bool ftz = slot_value(inst, "ftz").value_or(0) != 0;
@@ -4516,7 +4517,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         const Operand* ra = find_op(inst, "Ra");
         const Operand* rb = find_op(inst, "Rb");
         const Operand* rc = find_op(inst, "Rc");
-        const int op = m == "DADD" ? 0 : m == "DMUL" ? 1 : 2;
+        const int op = m == isa::Mnemonic::kDADD ? 0 : m == isa::Mnemonic::kDMUL ? 1 : 2;
         // Phase 5.5: resolve the leaf policy once per instruction (M5).
         const Fp64Plan plan = plan_fp64(op, static_cast<int>(rnd));
         // M5 pre-binding: pair base indices resolved once (2nd source = Rb,
@@ -4583,7 +4584,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
     }
 
     // ---- FP compares / min-max / select / round --------------------------
-    if (m == "FSETP" || m == "FSET") {
+    if (m == isa::Mnemonic::kFSETP || m == isa::Mnemonic::kFSET) {
         // FSETP Pu, Pv, Ra, Rb/Sb, Pp  (bop combines with Pp)
         // FSET  Rd, Ra, Rb/Sb, Pp       (Rd = 0x3f800000 or 0)
         const std::uint64_t fcomp = slot_value(inst, "fcomp").value_or(0);
@@ -4666,7 +4667,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                 default: outv = !r; break;
             }
             if (fast_mode()) note_fast_leaf(false);
-            if (m == "FSETP") {
+            if (m == isa::Mnemonic::kFSETP) {
                 if (pu) write_pred(t, *pu, out);
                 if (pv) write_pred(t, *pv, outv);
             } else {  // FSET: Rd = 1.0f or 0.0f (also writes inverse via
@@ -4677,7 +4678,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "FMNMX") {
+    if (m == isa::Mnemonic::kFMNMX) {
         // FMNMX Rd, Ra, Rb/Sb, Pp  (Pp: PT=min, !PT=max; .NAN propagate).
         // XORSIGN: result sign = sign(Ra) XOR sign(Rb) XOR sign(result).
         const bool nan = slot_value(inst, "nan").value_or(0) != 0;
@@ -4758,7 +4759,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "FSEL") {
+    if (m == isa::Mnemonic::kFSEL) {
         // FSEL Rd, Ra, Rb/Sb, Pp (select Ra when Pp true, else Rb/Sb).
         const bool ftz = slot_value(inst, "ftz").value_or(0) != 0;
         const Operand* ra = find_op(inst, "Ra");
@@ -4795,7 +4796,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
     }
 
     // ---- conversions -----------------------------------------------------
-    if (m == "F2F") {
+    if (m == isa::Mnemonic::kF2F) {
         // F2F Rd, Rb (src/dst format in the combined dstfmt.srcfmt slot).
         const std::uint64_t fmt = slot_value(inst, "dstfmt.srcfmt").value_or(0);
         const Rnd rnd = static_cast<Rnd>(slot_value(inst, "rnd").value_or(0));
@@ -4927,7 +4928,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "I2F" || m == "F2I") {
+    if (m == isa::Mnemonic::kI2F || m == isa::Mnemonic::kF2I) {
         const Rnd rnd = static_cast<Rnd>(slot_value(inst, "rnd").value_or(0));
         const bool ftz = slot_value(inst, "ftz").value_or(0) != 0;
         const bool sat = slot_value(inst, "sat").value_or(0) != 0;
@@ -4955,7 +4956,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                 // F2I: checked-range fast conversion; out-of-range / NaN /
                 // Inf / unsupported format routes to the precise saturating
                 // helper (no UB on any path).
-                if (m == "I2F") {
+                if (m == isa::Mnemonic::kI2F) {
                     const int f = dstfmt == 3 ? 2
                                  : dstfmt == 1 ? 0
                                  : dstfmt == 4 ? 3
@@ -4979,7 +4980,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                     ++fast_stats_.precise_fallback_ops;
                 }
             }
-            if (m == "I2F") {
+            if (m == isa::Mnemonic::kI2F) {
                 // I2F dstfmt enum: Float32 F32=2, Float64 F64=3,
                 // DSTFMT_F16_F32_BF16 F16=1 F32=2 BF16=4.  Map to the fp
                 // constants (F16=0 F32=1 F64=2 BF16=3).
@@ -4996,14 +4997,14 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                 out = fp::f2i(val, dstfmt, srcfmt, rnd, ftz, false);
             }
             // F64 destinations (I2F.F64, dstfmt==3) write a register pair.
-            const bool f64_dst = (m == "I2F" && dstfmt == 3);
+            const bool f64_dst = (m == isa::Mnemonic::kI2F && dstfmt == 3);
             write_rd(w, t, inst, rd, static_cast<std::uint32_t>(out),
                      static_cast<std::uint32_t>(out >> 32), f64_dst);
         }
         return Status::success();
     }
 
-    if (m == "FRND") {
+    if (m == isa::Mnemonic::kFRND) {
         const Rnd rnd = static_cast<Rnd>(slot_value(inst, "rnd").value_or(0));
         const Operand* ra = find_op(inst, "Ra");
         for (int lane = 0; lane < kLanesPerWarp; ++lane) {
@@ -5025,7 +5026,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "P2R") {
+    if (m == isa::Mnemonic::kP2R) {
         // P2R[.B0/.B1/.B2/.B3] Rd, PR, Ra, Sb — pack predicates into Rd.
         // Rd = Ra (base); for each predicate i where Sb bit i is set, write
         // P[i] into bit (i + 8*insert); insert selects the byte (B0=0..B3=3).
@@ -5057,7 +5058,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
     }
 
     // ---- collectives -----------------------------------------------------
-    if (m == "VOTE") {
+    if (m == isa::Mnemonic::kVOTE) {
         // VOTE.op Rd, Pu, Pp — warp-wide reduction of Pp into Rd (bitmask),
         // Pu = result predicate (per-lane).
         const std::uint64_t op = slot_value(inst, "voteop").value_or(1);
@@ -5086,7 +5087,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "ELECT") {
+    if (m == isa::Mnemonic::kELECT) {
         // ELECT Pu, URd, Pp: leader election — lowest active lane with Pp.
         const Operand* pu = find_op(inst, "Pu");
         const Operand* pp = find_op(inst, "Pp");
@@ -5115,7 +5116,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "REDUX") {
+    if (m == isa::Mnemonic::kREDUX) {
         // REDUX.op.sz URd, Ra — reduce active-lane Ra values into URd.
         const std::uint64_t op = slot_value(inst, "op").value_or(0);
         const Operand* urd = find_op(inst, "URd");
@@ -5145,7 +5146,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "SHFL") {
+    if (m == isa::Mnemonic::kSHFL) {
         // SHFL.idx/mode Pu, Rd, Ra, Sb, Rc — warp shuffle.
         const std::uint64_t mode = slot_value(inst, "shflmd").value_or(0);
         const Operand* pu = find_op(inst, "Pu");
@@ -5207,7 +5208,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
     }
 
     // ---- integer / bit ---------------------------------------------------
-    if (m == "LOP3" || m == "LOP") {
+    if (m == isa::Mnemonic::kLOP3 || m == isa::Mnemonic::kLOP) {
         // LOP3 Rd, Ra, Rb, Rc, imm8 — 3-input logic with 8-bit LUT.
         // LOP  Rd, Ra, Rb — AND/OR/XOR/PASS_B.
         const Operand* ra = find_op(inst, "Ra");
@@ -5215,7 +5216,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         const Operand* rc = find_op(inst, "Rc");
         const Operand* imm = find_op(inst, "imm8");
         std::uint32_t lut = imm ? static_cast<std::uint32_t>(imm->value) : 0;
-        if (m == "LOP") {
+        if (m == isa::Mnemonic::kLOP) {
             // Map LOP.AND/OR/XOR/PASS_B to the matching 3-input truth table
             // with Rc=0:  AND=0x80, OR=0xfe, XOR=0x96, PASS_B=0xcc.
             const std::uint64_t lop = slot_value(inst, "lop").value_or(0);
@@ -5249,7 +5250,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "SHF") {
+    if (m == isa::Mnemonic::kSHF) {
         // SHF.L/.R Rd, Ra, Rb, Rc (shift count = Rb & 0x1f).  hilo selects
         // which register holds the value being shifted (verified on sm120):
         //   .L: HI uses (c<<sh)|(a>>(32-sh)); LO is just a<<sh (no fill)
@@ -5286,7 +5287,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "IABS") {
+    if (m == isa::Mnemonic::kIABS) {
         const Operand* rb = find_op(inst, "Rb");
         for (int lane = 0; lane < kLanesPerWarp; ++lane) {
             if (!(mask & (1u << lane))) continue;
@@ -5300,7 +5301,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "IMNMX") {
+    if (m == isa::Mnemonic::kIMNMX) {
         // IMNMX Rd, Ra, Sb, Pp — signed min/max (Pp: PT=min, !PT=max).
         const Operand* ra = find_op(inst, "Ra");
         const Operand* sb = find_op(inst, "Sb");
@@ -5321,7 +5322,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "ISCADD") {
+    if (m == isa::Mnemonic::kISCADD) {
         // ISCADD Rd, Ra, Rb, imm (shift) — (Ra + (Rb << imm)).
         const Operand* ra = find_op(inst, "Ra");
         const Operand* rb = find_op(inst, "Rb");
@@ -5338,7 +5339,7 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "LEA") {
+    if (m == isa::Mnemonic::kLEA) {
         // LEA[.HI][.X] Rd, Pu, [-]Ra, [-]Rb, [Rc,] scaleU5.
         //   LO: Rd = low32((Ra << N) + Rb)
         //   HI: Rd = high32((Ra << N) + Rb + Rc)
@@ -5365,8 +5366,8 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
         return Status::success();
     }
 
-    if (m == "POPC" || m == "FLO" || m == "BFE" || m == "BMSK" ||
-        m == "BFREV" || m == "PRMT") {
+    if (m == isa::Mnemonic::kPOPC || m == isa::Mnemonic::kFLO || std::strcmp(isa::mnemonic_name(m), "BFE") == 0 || m == isa::Mnemonic::kBMSK ||
+        std::strcmp(isa::mnemonic_name(m), "BFREV") == 0 || m == isa::Mnemonic::kPRMT) {
         const Operand* ra = find_op(inst, "Ra");
         const Operand* rb = find_op(inst, "Rb");
         const Operand* sb = find_op(inst, "Sb");
@@ -5382,21 +5383,21 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                     ? static_cast<std::uint32_t>(sb->value)
                     : 0;
             std::uint32_t out = 0;
-            if (m == "POPC") {
+            if (m == isa::Mnemonic::kPOPC) {
                 out = static_cast<std::uint32_t>(__builtin_popcount(a));
-            } else if (m == "FLO") {
+            } else if (m == isa::Mnemonic::kFLO) {
                 // FLO = find leading one (like __builtin_clz on the first
                 // set bit).  Returns 0xffffffff when input is 0.
                 out = (a == 0) ? 0xffffffffu
                     : static_cast<std::uint32_t>(31 - __builtin_clz(a));
-            } else if (m == "BFE") {
+            } else if (std::strcmp(isa::mnemonic_name(m), "BFE") == 0) {
                 // BFE Rd, Ra, Rb: Rb[4:0]=offset, Rb[9:5]=size (u32).
                 const unsigned off = b & 0x1f;
                 const unsigned sz = (b >> 5) & 0x1f;
                 if (sz == 0) out = 0;
                 else if (sz == 32) out = a;
                 else out = (a >> off) & ((1u << sz) - 1);
-            } else if (m == "BMSK") {
+            } else if (m == isa::Mnemonic::kBMSK) {
                 // BMSK[.C/.W] Rd, Ra, Rb: Ra = POSITION, Rb = WIDTH.
                 //   Rd = ((1 << width) - 1) << pos (truncated to 32 bits).
                 //   .C (clamp, default): pos>=32 -> 0; width>=32 -> all bits
@@ -5419,14 +5420,14 @@ Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
                 } else {
                     out = ((1u << width) - 1u) << pos;
                 }
-            } else if (m == "BFREV") {
+            } else if (std::strcmp(isa::mnemonic_name(m), "BFREV") == 0) {
                 // BFREV Rd, Ra — reverse bits.
                 std::uint32_t v = a;
                 for (int i = 0; i < 32; ++i) {
                     out = (out << 1) | (v & 1);
                     v >>= 1;
                 }
-            } else if (m == "PRMT") {
+            } else if (m == isa::Mnemonic::kPRMT) {
                 // PRMT Rd, Ra, Rb, Rc — byte permute.  Rb[2:0]=src byte,
                 // Rb[3]=zero/upper (0=source byte, 1=0xFF or 0), Rb[7:4]
                 // ignored.  Rc = selector, Rb = sourceA, Ra = sourceB?  The
@@ -5461,7 +5462,7 @@ Status Interpreter::do_unsupported(WarpState& w,
                                    std::optional<Fault>* fault) {
     // decode-only instruction actually hit -> UnsupportedInstruction.
     Fault f(FaultKind::kUnsupportedInstruction,
-            "instruction '" + inst.mnemonic + "' (" + inst.variant_class +
+            "instruction '" + std::string(isa::mnemonic_name(inst.mnemonic)) + "' (" + std::string(isa::variant_class_name(inst.variant_class)) +
                 ") is decode-only and not yet implemented at pc 0x" +
                 std::to_string(pc));
     f.set_warp(static_cast<std::uint32_t>(w.warp_id)).set_pc(pc)

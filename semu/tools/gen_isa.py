@@ -28,6 +28,37 @@ ARCH = "sm120"
 RHS_KIND = {"slot": 0, "slot_attr": 1, "opcode": 2, "num": 3, "star_num": 4,
             "star_slot": 5, "table_fn": 6, "other_fn": 7}
 
+
+def cident(name: str) -> str:
+    """Mangle a SASS name into a valid, unique C++ enum identifier.
+
+    SASS names may contain '.' (e.g. "UIADD3.64") and start with a digit;
+    C++ enumerators cannot.  '.' and any other non-alnum char become '_'
+    (colon names are already [A-Za-z0-9_], so this only changes mnemonics);
+    a leading digit is prefixed with '_'.  Verified collision-free for the
+    sm120 corpus (mnemonics and variant classes read back to distinct ids).
+    """
+    s = re.sub(r"[^A-Za-z0-9_]", "_", name)
+    if s and s[0].isdigit():
+        s = "_" + s
+    return s
+
+
+def category_ids(values):
+    """Return (sorted_unique, id_map) where id_map[n] = index+1 (1-based; 0
+    is reserved for the kUnknown enum value).  Sorted order keeps the enum
+    enumerators deterministic and stable across regenerations."""
+    uniq = sorted(set(values))
+    return uniq, {n: i + 1 for i, n in enumerate(uniq)}
+
+
+def emit_category_enums(L, kind, uniq, ids):
+    """Append one enum class + 1-based enumerator list to the header lines L."""
+    L.append(f"enum class {kind} : std::uint16_t {{")
+    L.append("    kUnknown = 0,")
+    for name in uniq:
+        L.append(f"    k{cident(name)} = {ids[name]},")
+    L.append("};")
 SCALE_RE = re.compile(r"(.*?)(?:\s+SCALE\s+(\d+))?$")
 
 
@@ -153,15 +184,492 @@ def build_variants(db):
     return vs
 
 
-def emit_hpp(out: Path) -> None:
+# ---------------------------------------------------------------------------
+# Condition-predicate -> C++ emitter (compile-time hardening of kConds).
+#
+# Each legality condition's predicate string is translated here, at generation
+# time, into the body of a C++ lambda `bool(const std::int64_t* CS)` where CS
+# is a dense array of the decoded slot values indexed by a global, generated
+# slot index.  The decoder therefore never tokenizes/parses/evaluates a string
+# at runtime -- it calls the precompiled thunk, and %PARAM/$CONST/`Enum@val`
+# are baked as integer literals.  DEFINED TABLES_*(...) / bare-table values
+# compile to generated integer-tuple membership/value helpers.
+#
+# The grammar is a strict port of assembler/sass_cond.py (the reference
+# evaluator), restricted to the operators that actually appear in the sm120
+# corpus (== != <= && || -> ! & << + - %, slots, @attr, enums, params, consts,
+# DEFINED tables).  Generation asserts each predicate compiles with all tokens
+# consumed, so runtime decode can never hit an "unresolved" predicate (GAP-04
+# totality is enforced at build time).
+# ---------------------------------------------------------------------------
+
+COND_ATTR_SUFFIX = {"not": "_not", "invert": "_invert",
+                    "negate": "_negated", "absolute": "_abs"}
+
+
+def cond_tokenize(predicate: str):
+    toks = []
+    i, n = 0, len(predicate)
+    while i < n:
+        c = predicate[i]
+        if c.isspace():
+            i += 1
+            continue
+        if c == "`":
+            j = i + 1
+            while j < n and (predicate[j].isalnum() or predicate[j] == "_"):
+                j += 1
+            typ = predicate[i + 1:j]
+            if j < n and predicate[j] == "@":
+                j += 1
+            if j < n and predicate[j] == '"':
+                j += 1
+                start = j
+                while j < n and predicate[j] != '"':
+                    j += 1
+                val = predicate[start:j]
+                if j < n:
+                    j += 1
+            else:
+                start = j
+                while j < n and (predicate[j].isalnum() or predicate[j] in "_."):
+                    j += 1
+                val = predicate[start:j]
+            toks.append(("ENUM", f"{typ}@{val}"))
+            i = j
+            continue
+        two = predicate[i:i + 2]
+        if two in ("==", "!=", "<=", ">=", "&&", "||", "->", "<<", ">>"):
+            toks.append(("OP", two))
+            i += 2
+            continue
+        if c == "%" and i + 1 < n and (predicate[i + 1].isalnum() or predicate[i + 1] == "_"):
+            j = i + 1
+            while j < n and (predicate[j].isalnum() or predicate[j] == "_"):
+                j += 1
+            toks.append(("PARAM", predicate[i + 1:j]))
+            i = j
+            continue
+        if c == "$" and i + 1 < n and (predicate[i + 1].isalnum() or predicate[i + 1] == "_"):
+            j = i + 1
+            while j < n and (predicate[j].isalnum() or predicate[j] == "_"):
+                j += 1
+            toks.append(("CONST", predicate[i + 1:j]))
+            i = j
+            continue
+        if c in "()+-*%<>!@,&?:":
+            toks.append(("OP", c))
+            i += 1
+            continue
+        if c.isdigit() or (c == "-" and i + 1 < n and predicate[i + 1].isdigit()):
+            if predicate[i:i + 2].lower() == "0x":
+                j = i + 2
+                while j < n and predicate[j] in "0123456789abcdefABCDEF":
+                    j += 1
+            else:
+                j = i + 1
+                while j < n and predicate[j].isdigit():
+                    j += 1
+            toks.append(("NUM", predicate[i:j]))
+            i = j
+            continue
+        if c.isalpha() or c == "_":
+            j = i + 1
+            while j < n and (predicate[j].isalnum() or predicate[j] == "_"):
+                j += 1
+            toks.append(("IDENT", predicate[i:j]))
+            i = j
+            continue
+        raise ValueError(f"unclassifiable char {c!r} in condition {predicate!r}")
+    return toks
+
+
+def cpp_enum_value(db, literal: str) -> int:
+    """Resolve `Type@Value or Type@\"Value\" to its integer (matching the
+    reference evaluator's _enum, including AInteger-style `_64` aliasing)."""
+    etype, _, value = literal.partition("@")
+    value = value.strip('"')
+    ev = db["enums"].get(etype, {})
+    if value in ev:
+        return int(ev[value])
+    if value.startswith("_") and value[1:] in ev:
+        return int(ev[value[1:]])
+    if not value.startswith("_") and "_" + value in ev:
+        return int(ev["_" + value])
+    try:
+        return int(value, 0)
+    except ValueError:
+        return 0
+
+
+class CondEmitter:
+    """Recursive-descent emitter: predicate -> C++ int64 expression over the
+    dense cond-slot array `CS` (indexed by `slot_idx[slotkey]`)."""
+
+    def __init__(self, db, slot_idx):
+        self.db = db
+        self.slot_idx = slot_idx
+        self.tables = set(db["tables"].keys())
+        self.table_helpers = {}
+        self.toks = []
+        self.pos = 0
+
+    def emit(self, predicate: str) -> str:
+        self.toks = cond_tokenize(predicate)
+        self.pos = 0
+        expr = self.impl()
+        if self.pos != len(self.toks):
+            raise ValueError(f"unconsumed tokens in condition {predicate!r}")
+        return expr
+
+    def slot_ref(self, key):
+        """Emit the C++ reference for a slot key: a local `s_<pos>` bound in
+        the merged per-variant lambda from its packed slot array."""
+        return f"s_{self.slot_idx[key]}"
+
+    def _peek(self):
+        return self.toks[self.pos] if self.pos < len(self.toks) else None
+
+    def _peek2(self):
+        return self.toks[self.pos + 1] if self.pos + 1 < len(self.toks) else None
+
+    def _eat_op(self, *ops):
+        t = self._peek()
+        if t and t[0] == "OP" and t[1] in ops:
+            self.pos += 1
+            return t[1]
+        return None
+
+    def impl(self):
+        left = self.or_expr()
+        if self._eat_op("?"):
+            then_e = self.impl()
+            if not self._eat_op(":"):
+                raise ValueError("missing ':' in ternary condition")
+            els_e = self.impl()
+            return f"({left} ? ({then_e}) : ({els_e}))"
+        if self._eat_op("->"):
+            right = self.or_expr()
+            return f"(({left}) ? (({right}) ? 1 : 0) : 1)"  # !left || right
+        return left
+
+    def or_expr(self):
+        v = self.and_expr()
+        while self._eat_op("||"):
+            r = self.and_expr()
+            v = f"(({v}) || ({r}) ? 1 : 0)"
+        return v
+
+    def and_expr(self):
+        v = self.bitand()
+        while self._eat_op("&&"):
+            r = self.bitand()
+            v = f"(({v}) && ({r}) ? 1 : 0)"
+        return v
+
+    def bitand(self):
+        v = self.cmp()
+        while self._eat_op("&"):
+            r = self.cmp()
+            v = f"(({v}) & ({r}))"
+        return v
+
+    def cmp(self):
+        left = self.shift()
+        t = self._peek()
+        if t and t[0] == "OP" and t[1] in ("==", "!=", "<=", ">=", "<", ">"):
+            op = t[1]
+            self.pos += 1
+            right = self.shift()
+            return f"(({left}) {op} ({right}) ? 1 : 0)"
+        return left
+
+    def shift(self):
+        v = self.add()
+        while True:
+            t = self._peek()
+            if t and t[0] == "OP" and t[1] in ("<<", ">>"):
+                self.pos += 1
+                r = self.add()
+                op = t[1]
+                # guard: avoid UB / match Python exactly within int64 range
+                v = f"(({r}) < 0 || ({r}) >= 64 ? 0 : ({v}) {op} ({r}))"
+            else:
+                return v
+
+    def add(self):
+        v = self.mul()
+        while True:
+            t = self._peek()
+            if t and t[0] == "OP" and t[1] in ("+", "-"):
+                self.pos += 1
+                r = self.mul()
+                v = f"(({v}) + ({r}))" if t[1] == "+" else f"(({v}) - ({r}))"
+            else:
+                return v
+
+    def mul(self):
+        v = self.unary()
+        while True:
+            t = self._peek()
+            if t and t[0] == "OP" and t[1] in ("%", "*", "/"):
+                self.pos += 1
+                r = self.unary()
+                if t[1] == "%":
+                    v = f"(({r}) ? (({v}) % ({r})) : 0)"
+                elif t[1] == "*":
+                    v = f"(({v}) * ({r}))"
+                else:
+                    v = f"(({r}) ? (({v}) / ({r})) : 0)"
+            else:
+                return v
+
+    def unary(self):
+        t = self._peek()
+        if t and t[0] == "OP" and t[1] == "!":
+            self.pos += 1
+            return f"(({self.unary()}) ? 0 : 1)"
+        if t and t[0] == "OP" and t[1] == "-":
+            self.pos += 1
+            return f"(-({self.unary()}))"
+        if t and t[0] == "OP" and t[1] == "(":
+            self.pos += 1
+            v = self.impl()
+            self._eat_op(")")
+            return f"({v})"
+        return self.atom()
+
+    def atom(self):
+        t = self._peek()
+        if not t:
+            return "0"
+        k, v = t
+        if k == "IDENT" and v == "DEFINED":
+            return self.defined()
+        nxt = self._peek2()
+        if k == "IDENT" and nxt and nxt[0] == "OP" and nxt[1] == "@":
+            self.pos += 2
+            attr = self._peek()
+            self.pos += 1
+            base = v
+            suffix = COND_ATTR_SUFFIX.get(attr[1] if attr else "", attr[1] if attr else "")
+            key = base + suffix
+            # `X@attr` is a 0/1 predicate flag: normalize the (possibly
+            # multi-bit) slot value to 0/1, matching slot_attr's `val ? 1 : 0`.
+            return f"(({self.slot_ref(key)}) ? 1 : 0)"
+        if k == "IDENT":
+            self.pos += 1
+            nxt2 = self._peek()
+            if nxt2 and nxt2[0] == "OP" and nxt2[1] == "(" and v in self.tables:
+                return self.table_value(v)
+            return self.slot_ref(v)
+        if k == "PARAM":
+            self.pos += 1
+            return str(int(self.db["parameters"].get(v, 0)))
+        if k == "CONST":
+            self.pos += 1
+            return str(int(self.db["constants"].get(v, 0)))
+        if k == "ENUM":
+            self.pos += 1
+            return str(cpp_enum_value(self.db, v))
+        if k == "NUM":
+            self.pos += 1
+            return str(int(v, 0))
+        self.pos += 1
+        return "0"
+
+    def resolve_arg(self):
+        t = self._peek()
+        if not t:
+            return "0"
+        k, v = t
+        if k in ("PARAM", "CONST", "ENUM", "NUM", "IDENT"):
+            return self.atom()
+        self.pos += 1
+        return "0"
+
+    def parse_table_args(self):
+        self._eat_op("(")
+        args = []
+        while True:
+            args.append(self.resolve_arg())
+            if not self._eat_op(","):
+                break
+        self._eat_op(")")
+        return args
+
+    def defined(self):
+        self.pos += 1  # DEFINED
+        name_t = self._peek()
+        self.pos += 1
+        if not name_t or name_t[0] != "IDENT":
+            return "0"
+        table_name = name_t[1]
+        args = self.parse_table_args()
+        self.remember_table(table_name, len(args))
+        return f"tbl_defined_{table_name}({', '.join(args)})"
+
+    def table_value(self, table_name):
+        args = self.parse_table_args()
+        self.remember_table(table_name, len(args))
+        return f"tbl_value_{table_name}({', '.join(args)})"
+
+    def remember_table(self, table_name, argc):
+        self.table_helpers.setdefault(table_name, argc)
+
+
+def variant_cond_slots(conds, tables):
+    """Ordered (first-appearance) list of slot keys referenced by one variant's
+    conditions: bare base slots + @attr-suffixed keys (e.g. `Sb@negate` ->
+    "Sb_negated").  Table names / DEFINED are excluded (not slot reads)."""
+    slots = []
+    seen = set()
+    for c in conds:
+        toks = cond_tokenize(c["predicate"])
+        i = 0
+        while i < len(toks):
+            k, val = toks[i]
+            if k == "IDENT":
+                if val == "DEFINED" or val in tables:
+                    i += 1
+                    continue
+                if i + 1 < len(toks) and toks[i + 1][0] == "OP" and \
+                        toks[i + 1][1] == "@":
+                    attr = toks[i + 2][1] if i + 2 < len(toks) else ""
+                    key = val + COND_ATTR_SUFFIX.get(attr, attr)
+                    if key not in seen:
+                        seen.add(key)
+                        slots.append(key)
+                    i += 3
+                    continue
+                if val not in seen:
+                    seen.add(val)
+                    slots.append(val)
+            i += 1
+    return slots
+
+
+def emit_table_helpers(db, table_helpers):
+    """Generate the shared table membership/value helpers (deduped by table
+    name; the integer tuples are baked at generation time)."""
+    helper_lines = []
+    for tname in sorted(table_helpers):
+        argc = table_helpers[tname]
+        t = db["tables"][tname]
+        rows = t["rows"]
+        ins = []
+        outs = []
+        for row in rows:
+            ins.append([int(str(a), 0) for a in row["in"]])
+            try:
+                outs.append(int(str(row["out"]), 0))
+            except ValueError:
+                outs.append(0)
+        if argc < 1:
+            raise ValueError(
+                f"condition table {tname} has unsupported arg width {argc}")
+        params = ", ".join(f"std::int64_t a{i}" for i in range(argc))
+        eq = f" && ".join(f"r[{i}] == a{i}" for i in range(argc))
+        rows_def = [f"{{{', '.join(str(ins[i][j]) for j in range(argc))}}}"
+                    for i in range(len(ins))]
+        helper_lines.append(
+            f"inline bool tbl_defined_{tname}({params}) {{"
+            f"  static const std::int64_t k[][{argc}] = "
+            f"{{{', '.join(rows_def)}}};"
+            f"  for (auto& r : k) if ({eq}) return true;"
+            f"  return false;"
+            f"}}")
+        rows_val = [
+            "{" + ", ".join(str(ins[i][j]) for j in range(argc)) +
+            f", {outs[i]}" + "}" for i in range(len(ins))]
+        helper_lines.append(
+            f"inline std::int64_t tbl_value_{tname}({params}) {{"
+            f"  static const std::int64_t k[][{argc + 1}] = "
+            f"{{{', '.join(rows_val)}}};"
+            f"  for (auto& r : k) if ({eq}) return r[{argc}];"
+            f"  return 0;"
+            f"}}")
+    return helper_lines
+
+
+def compile_variant_conds(db, variants):
+    """Compile legality conditions into ONE merged lambda per variant (no
+    cross-variant dedup; L1i-friendly single call per CLASS).  Returns
+    (var_meta, shared_table_helper_lines, max_cond_slots) where var_meta[i] is
+    None (no conditions) or
+        {slot_names: [...], pairs: [(cpp_expr, error, message), ...]}.
+    The lambda's slots read `s_<pos>` locals bound from `slots[<pos>]`."""
+    tables = set(db["tables"].keys())
+    em = CondEmitter(db, {})
+    var_meta = []
+    max_cond_slots = 0
+    for v in variants:
+        conds = v["conds"]
+        if not conds:
+            var_meta.append(None)
+            continue
+        slots = variant_cond_slots(conds, tables)
+        max_cond_slots = max(max_cond_slots, len(slots))
+        em.slot_idx = {s: i for i, s in enumerate(slots)}
+        pairs = []
+        for c in conds:
+            expr = em.emit(c["predicate"])
+            pairs.append((expr, c["error"], c["message"]))
+        var_meta.append({"slot_names": slots, "pairs": pairs})
+    return var_meta, emit_table_helpers(db, em.table_helpers), max_cond_slots
+
+
+def emit_hpp(out: Path, mnemonics, classes, pipes,
+              mnemonic_id, class_id, pipe_id, max_cond_slots) -> None:
     L = [
         "// Generated file -- do not edit.  Regenerate with:",
         "//   python3 semu/tools/gen_isa.py",
         "#pragma once",
         "",
         "#include <cstdint>",
+        "#include <optional>",
+        "",
+        "namespace semu { struct Word128; }  // forward decl (word.hpp)",
         "",
         "namespace semu::isa {",
+        "",
+        "// Instruction-category enums (1-based; kUnknown=0 reserved).",
+        "// DecodedInstruction spans the same enums so execution backends can",
+        "// dispatch on cheap integral values instead of strings.",
+    ]
+    emit_category_enums(L, "Mnemonic", mnemonics, mnemonic_id)
+    L.append("")
+    emit_category_enums(L, "VariantClass", classes, class_id)
+    L.append("")
+    emit_category_enums(L, "Pipe", pipes, pipe_id)
+    L.append("")
+    L += [
+        f"inline constexpr std::uint32_t kNumMnemonics = {len(mnemonics)};",
+        f"inline constexpr std::uint32_t kNumVariantClasses = {len(classes)};",
+        f"inline constexpr std::uint32_t kNumPipes = {len(pipes)};",
+        "",
+        "// Enum-value -> name tables (index 0 = kUnknown -> \"\").",
+        "extern const char* const kMnemonicNames[];",
+        "extern const char* const kVariantClassNames[];",
+        "extern const char* const kPipeNames[];",
+        "",
+        "inline const char* mnemonic_name(Mnemonic m) {",
+        "    const std::uint32_t i = static_cast<std::uint32_t>(m);",
+        "    return i <= kNumMnemonics ? kMnemonicNames[i] : \"\";",
+        "}",
+        "inline const char* variant_class_name(VariantClass v) {",
+        "    const std::uint32_t i = static_cast<std::uint32_t>(v);",
+        "    return i <= kNumVariantClasses ? kVariantClassNames[i] : \"\";",
+        "}",
+        "inline const char* pipe_name(Pipe p) {",
+        "    const std::uint32_t i = static_cast<std::uint32_t>(p);",
+        "    return i <= kNumPipes ? kPipeNames[i] : \"\";",
+        "}",
+        "",
+        "// Name -> enum lookup (\"\" / unknown -> kUnknown).  Defined in the .cpp.",
+        "Mnemonic mnemonic_from_name(const char* name);",
+        "VariantClass variant_class_from_name(const char* name);",
+        "Pipe pipe_from_name(const char* name);",
         "",
         "// Modifier/operand enums.",
         "struct EnumEntry {",
@@ -202,12 +710,36 @@ def emit_hpp(out: Path) -> None:
         "    const char* dflt;             // raw default string, may be null",
         "    bool modifier;",
         "};",
-        "// Legality condition.",
+        "// Per-variant LEGALITY-CHECK RESULT: the first failing condition's",
+        "// error type + message, or nullopt when every condition passes.",
+        "struct CondResult {",
+        "    const char* error_type;",
+        "    const char* message;",
+        "};",
+        "",
+        "// Merged per-variant legality check (one lambda per CLASS, L1i-friendly):",
+        "// takes the raw instruction word plus THIS variant's own packed",
+        "// condition-slot array (length = kVariants[i].ncondslots, keys listed in",
+        "// kVariants[i].condslots), and returns the first failing condition's",
+        "// CondResult or nullopt.  Compiled from the predicate strings at",
+        "// generation time (tools/gen_isa.py): decode never runtime-parses a",
+        "// predicate and evaluates all of a variant's conditions in one call.",
+        "using CondCheck = std::optional<CondResult> (*)(const semu::Word128&,",
+        "                                                const std::int64_t* slots);",
+        "",
+        "// Legality condition (spec-derived).  `predicate` string kept for",
+        "// diagnostics/tests; evaluation happens via the variant's merged CondCheck.",
         "struct Cond {",
         "    const char* error;",
         "    const char* predicate;",
         "    const char* message;",
         "};",
+        "",
+    ]
+    L.append(
+        f"inline constexpr std::uint32_t kMaxCondSlots = {max_cond_slots};")
+    L += [
+
         "// Size/pipe predicate (IDEST_SIZE, ISRC_*_SIZE, VIRTUAL_QUEUE, ...).",
         "struct Pred {",
         "    const char* key;",
@@ -215,13 +747,16 @@ def emit_hpp(out: Path) -> None:
         "};",
         "",
         "struct Variant {",
-        "    const char* mnemonic;",
-        "    const char* variant_class;",
+        "    Mnemonic mnemonic;",
+        "    VariantClass variant_class;",
         "    std::uint16_t opcode;",
-        "    std::uint16_t pipe;",
+        "    Pipe pipe;",
         "    std::uint16_t nslots;   const Slot* slots;",
         "    std::uint16_t nfields;  const Field* fields;",
         "    std::uint16_t nconds;   const Cond* conds;",
+        "    CondCheck check;                    // merged legality check (nullptr: none)",
+        "    std::uint16_t ncondslots;           // packed condition-slot count",
+        "    const char* const* condslots;       // this variant's condition slot names",
         "    std::uint16_t npreds;   const Pred* preds;",
         "    bool alternate;         // ALTERNATE CLASS (not a decode candidate)",
         "};",
@@ -233,7 +768,6 @@ def emit_hpp(out: Path) -> None:
         "// Opcode candidate index: for each of the 8192 13-bit opcodes, the",
         "// [kOpcodeStart[op], kOpcodeStart[op+1]) slice of kVariants.",
         "extern const std::uint32_t kOpcodeStart[8193];",
-        "extern const char* const kPipes[];    extern const std::uint32_t kNumPipes;",
         "extern const char* const kParameters[]; extern const std::int64_t kParameterVals[];",
         "extern const std::uint32_t kNumParameters;",
         "extern const char* const kConstants[]; extern const std::int64_t kConstantVals[];",
@@ -245,11 +779,15 @@ def emit_hpp(out: Path) -> None:
     out.write_text("\n".join(L), encoding="utf-8")
 
 
-def emit_cpp(out: Path, db: dict, variants: list) -> None:
+def emit_cpp(out: Path, db: dict, variants: list,
+             mnemonics, classes, pipes, mnemonic_id, class_id, pipe_id,
+             var_cond_meta, cond_table_helpers) -> None:
     lines = [
         "// Generated file -- do not edit.  Regenerate with:",
         "//   python3 semu/tools/gen_isa.py",
         "#include \"isa_data.hpp\"",
+        "",
+        "#include <cstring>",
         "",
         "namespace semu::isa {",
     ]
@@ -309,21 +847,51 @@ def emit_cpp(out: Path, db: dict, variants: list) -> None:
     lines.append(f"const std::uint32_t kNumTables = {len(table_names)};")
     lines.append("")
 
-    # ---- pipes ----
-    pipes = sorted({v["pipe"] for v in variants})
-    lines.append("namespace {")
-    lines.append("constexpr const char* kPipeNames[] = {")
-    for p in pipes:
-        lines.append(f"    {cq(p)},")
+    # ---- mnemonic / variant-class / pipe name tables (enum-value indexed;
+    # index 0 = kUnknown -> "") ----
+    lines.append("const char* const kMnemonicNames[] = {")
+    lines.append('    "",')
+    for n in mnemonics:
+        lines.append(f"    {cq(n)},")
     lines.append("};")
+    lines.append("")
+    lines.append("const char* const kVariantClassNames[] = {")
+    lines.append('    "",')
+    for n in classes:
+        lines.append(f"    {cq(n)},")
+    lines.append("};")
+    lines.append("")
+    lines.append("const char* const kPipeNames[] = {")
+    lines.append('    "",')
+    for n in pipes:
+        lines.append(f"    {cq(n)},")
+    lines.append("};")
+    lines.append("")
+
+    # ---- name -> enum reverse lookups ----
+    lines.append("namespace {")
+    lines.append("std::int32_t lookup_name(const char* const* names, "
+                 "std::uint32_t n, const char* name) {")
+    lines.append("    if (!name) return 0;")
+    lines.append("    for (std::uint32_t i = 1; i <= n; ++i)")
+    lines.append("        if (std::strcmp(names[i], name) == 0) "
+                 "return static_cast<std::int32_t>(i);")
+    lines.append("    return 0;  // unknown")
+    lines.append("}")
     lines.append("}")
     lines.append("")
-    lines.append("const char* const kPipes[] = {")
-    for p in pipes:
-        lines.append(f"    {cq(p)},")
-    lines.append("};")
-    lines.append(f"const std::uint32_t kNumPipes = {len(pipes)};")
-    pipe_idx = {p: i for i, p in enumerate(pipes)}
+    lines.append("Mnemonic mnemonic_from_name(const char* name) {")
+    lines.append("    return static_cast<Mnemonic>(lookup_name("
+                 "kMnemonicNames, kNumMnemonics, name));")
+    lines.append("}")
+    lines.append("VariantClass variant_class_from_name(const char* name) {")
+    lines.append("    return static_cast<VariantClass>(lookup_name("
+                 "kVariantClassNames, kNumVariantClasses, name));")
+    lines.append("}")
+    lines.append("Pipe pipe_from_name(const char* name) {")
+    lines.append("    return static_cast<Pipe>(lookup_name("
+                 "kPipeNames, kNumPipes, name));")
+    lines.append("}")
     lines.append("")
 
     # ---- parameters / constants ----
@@ -365,6 +933,33 @@ def emit_cpp(out: Path, db: dict, variants: list) -> None:
 
     # ---- variants ----
     lines.append("namespace {")
+    # shared condition-table membership/value helpers (integer tuples,
+    # deduped by table name)
+    for h in cond_table_helpers:
+        lines.append(h)
+    # per-variant merged legality checks (one lambda per CLASS; no dedup) and
+    # their per-variant packed condition-slot name arrays
+    for i, meta in enumerate(var_cond_meta):
+        if meta is None:
+            continue
+        lines.append("")
+        lines.append(f"static const char* const kVarCondSlots_{i}[] = {{")
+        for s in meta["slot_names"]:
+            lines.append(f"    {cq(s)},")
+        lines.append("};")
+        lines.append("")
+        lines.append(f"static std::optional<CondResult> cond_check_{i}("
+                     f"const semu::Word128& w, const std::int64_t* slots) {{")
+        lines.append("    (void)w;")
+        # bind locals s_<pos> = slots[<pos>]
+        for pos in range(len(meta["slot_names"])):
+            lines.append(f"    const std::int64_t s_{pos} = slots[{pos}];")
+        for expr, err, msg in meta["pairs"]:
+            lines.append(f"    if (!(({expr}) != 0))")
+            lines.append(f"        return CondResult{{{cq(err)}, {cq(msg)}}};")
+        lines.append("    return std::nullopt;")
+        lines.append("}")
+    lines.append("")
     # field ranges storage
     all_ranges = []
     lines.append("constexpr std::uint8_t kFieldRanges[] = {")
@@ -402,7 +997,8 @@ def emit_cpp(out: Path, db: dict, variants: list) -> None:
     lines.append("};")
     lines.append("")
 
-    # cond structs
+    # cond structs (spec data; no eval pointer -- legality is evaluated via the
+    # per-variant merged cond_check_<i> thunks)
     lines.append("constexpr Cond kConds[] = {")
     for v in variants:
         for c in v["conds"]:
@@ -424,15 +1020,27 @@ def emit_cpp(out: Path, db: dict, variants: list) -> None:
     # variant structs
     lines.append(f"const Variant kVariants[] = {{")
     foff = soff = coff = poff = 0
-    for v in variants:
+    for i, v in enumerate(variants):
         nf = len(v["fields"])
         ns = len(v["slots"])
         nc = len(v["conds"])
         np_ = len(v["preds"])
+        meta = var_cond_meta[i]
+        if meta is not None:
+            chk = f"&cond_check_{i}"
+            ncslots = len(meta["slot_names"])
+            cslots = f"kVarCondSlots_{i}"
+        else:
+            chk = "nullptr"
+            ncslots = 0
+            cslots = "nullptr"
         lines.append(
-            f"    {{{cq(v['mnemonic'])}, {cq(v['class'])}, {v['opcode']}, "
-            f"{pipe_idx[v['pipe']]}, {ns}, &kSlots[{soff}], {nf}, "
-            f"&kFields[{foff}], {nc}, &kConds[{coff}], {np_}, "
+            f"    {{static_cast<Mnemonic>({mnemonic_id[v['mnemonic']]}), "
+            f"static_cast<VariantClass>({class_id[v['class']]}), "
+            f"{v['opcode']}, static_cast<Pipe>({pipe_id[v['pipe']]}), "
+            f"{ns}, &kSlots[{soff}], {nf}, "
+            f"&kFields[{foff}], {nc}, &kConds[{coff}], {chk}, "
+            f"{ncslots}, {cslots}, {np_}, "
             f"&kPreds[{poff}], {'true' if v['alternate'] else 'false'}}},")
         foff += nf
         soff += ns
@@ -473,8 +1081,16 @@ def main() -> int:
 
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    emit_hpp(out_dir / "isa_data.hpp")
-    emit_cpp(out_dir / "isa_data.cpp", db, variants)
+    mnemonics, mnemonic_id = category_ids(v["mnemonic"] for v in variants)
+    classes, class_id = category_ids(v["class"] for v in variants)
+    pipes, pipe_id = category_ids(v["pipe"] for v in variants)
+    var_cond_meta, cond_table_helpers, max_cond_slots = \
+        compile_variant_conds(db, variants)
+    emit_hpp(out_dir / "isa_data.hpp", mnemonics, classes, pipes,
+             mnemonic_id, class_id, pipe_id, max_cond_slots)
+    emit_cpp(out_dir / "isa_data.cpp", db, variants,
+             mnemonics, classes, pipes, mnemonic_id, class_id, pipe_id,
+             var_cond_meta, cond_table_helpers)
 
     multi = sum(1 for op in range(8192)
                 if opcode_count(variants, op) > 1)

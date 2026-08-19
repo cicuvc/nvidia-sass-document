@@ -298,7 +298,7 @@ TEST(dbg_step_basic) {
     CHECK(a.cta == 0 && a.warp == 0);
     CHECK(a.pc == 0x0);
     CHECK(a.active_mask == 0xffffffffu);
-    CHECK(a.instruction.mnemonic == "S2R");
+    CHECK(a.instruction.mnemonic == isa::Mnemonic::kS2R);
     // Register diff: R0 per lane set to TID.X, PC advanced.
     std::uint32_t lane0 = 0;
     CHECK(s.read_gpr(0, 0, 0, 0, &lane0).ok() && lane0 == 0);
@@ -314,7 +314,7 @@ TEST(dbg_step_basic) {
     DebugStepInfo b = s.step();
     CHECK(b.reason == DebugStopReason::kStepped);
     CHECK(b.pc == 0x10);
-    CHECK(b.instruction.mnemonic == "EXIT");
+    CHECK(b.instruction.mnemonic == isa::Mnemonic::kEXIT);
     bool saw_exited = false;
     for (const auto& d : b.reg_diffs)
         if (d.kind == ChangeKind::kExited && d.lane == 5 && d.new_value)
@@ -490,7 +490,7 @@ TEST(dbg_breakpoint_cta_warp_lane_condition) {
     DebugStepInfo st = s.continue_run();
     CHECK(st.reason == DebugStopReason::kMnemonicBreakpoint);
     CHECK(st.cta == 1);
-    CHECK(st.instruction.mnemonic == "S2R");
+    CHECK(st.instruction.mnemonic == isa::Mnemonic::kS2R);
     CHECK(st.breakpoint_id == id.value());
     // The breakpoint fires BEFORE CTA 1's S2R executes, so exactly one group
     // (CTA 0's S2R) ran.
@@ -532,7 +532,7 @@ TEST(dbg_mnemonic_breakpoint_compares_mnemonic) {
     DebugStepInfo st = s.continue_run();
     CHECK(st.reason == DebugStopReason::kMnemonicBreakpoint);
     CHECK(st.pc == 0x30);
-    CHECK(st.instruction.mnemonic == "STG");
+    CHECK(st.instruction.mnemonic == isa::Mnemonic::kSTG);
     CHECK(st.breakpoint_id == id.value());
     CHECK(s.executed_count() == 3);  // MOV32I, MOV32I, IADD3 ran; STG not yet
 
@@ -704,7 +704,7 @@ TEST(dbg_watchpoint_atomic_and_kind_negatives) {
         CHECK(id.ok());
         DebugStepInfo st = s.continue_run();
         CHECK(st.reason == DebugStopReason::kWatchpoint);
-        CHECK(st.instruction.mnemonic == "ATOM");
+        CHECK(st.instruction.mnemonic == isa::Mnemonic::kATOM);
         CHECK(!st.watch_hits.empty());
         CHECK(st.watch_hits[0].watchpoint_id == id.value());
         CHECK(st.watch_hits[0].atomic);
@@ -1143,7 +1143,7 @@ TEST(dbg_state_view_barrier_scoreboard_pending_sreg) {
     // decode_at returns the schedule word (scoreboard fields) for a pc.
     auto di = s.decode_at(0x0);
     CHECK(di.ok());
-    CHECK(di.value().mnemonic == "S2R");
+    CHECK(di.value().mnemonic == isa::Mnemonic::kS2R);
     CHECK(di.value().schedule.dst_wr_sb >= 0);
     // PC modify: jump lane 0 to the EXIT word; the write is reflected in the
     // live state and the launch then completes.

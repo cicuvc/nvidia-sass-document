@@ -798,7 +798,7 @@ DecodedInstruction render_instruction(const isa::Variant* v, Word128 word,
     inst.word = word;
     inst.mnemonic = v->mnemonic;
     inst.variant_class = v->variant_class;
-    inst.pipe = (v->pipe < isa::kNumPipes) ? isa::kPipes[v->pipe] : "";
+    inst.pipe = v->pipe;
 
     for (const auto& [f, val] : ctx.fields) {
         inst.raw_fields.emplace_back(f->name, val);
@@ -854,13 +854,27 @@ DecodedInstruction render_instruction(const isa::Variant* v, Word128 word,
         }
     }
 
-    // operands
+    // (Disassembly text is NOT rendered here -- it is produced on demand by
+    // render_disasm_text so the per-instruction decode path never builds
+    // strings only an infrequent consumer (debugger/CLI/trace) reads.)
+    return inst;
+}
+
+std::string render_disasm_text(const isa::Variant* v, const DecodeCtx& ctx,
+                               const DecodedInstruction& inst, bool full) {
     auto ops = render_ops(v, ctx);
     std::string opstr;
     for (std::size_t i = 0; i < ops.size(); ++i) {
         if (i) opstr += ", ";
         opstr += ops[i];
     }
+
+    std::string mods;
+    for (const auto& m : inst.modifiers) mods += m;
+
+    std::string out =
+        std::string(isa::mnemonic_name(inst.mnemonic)) + mods + " " + opstr;
+    if (!full) return out;
 
     std::string pred;
     if (inst.guard_pred != 7 || inst.guard_not) {
@@ -870,11 +884,6 @@ DecodedInstruction render_instruction(const isa::Variant* v, Word128 word,
         else pred += "P" + std::to_string(inst.guard_pred);
         pred += " ";
     }
-
-    std::string mods;
-    for (const auto& m : inst.modifiers) mods += m;
-
-    inst.disasm = inst.mnemonic + mods + " " + opstr;
 
     // schedule bracket
     char br[64];
@@ -899,8 +908,7 @@ DecodedInstruction render_instruction(const isa::Variant* v, Word128 word,
                       reqs.c_str(), inst.schedule.stall, yield_flag);
     }
 
-    inst.disasm_full = pred + inst.disasm + " ; " + br;
-    return inst;
+    return pred + out + " ; " + br;
 }
 
 }  // namespace semu

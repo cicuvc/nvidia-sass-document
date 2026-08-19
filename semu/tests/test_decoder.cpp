@@ -35,9 +35,9 @@ void check_decode(const Vec& v) {
     CHECK(r.is_unique());
     if (r.is_unique()) {
         const auto& inst = r.instruction();
-        CHECK_EQ(std::string(inst.variant_class), std::string(v.cls));
-        CHECK_EQ(std::string(inst.mnemonic), std::string(v.mnem));
-        CHECK(!inst.disasm.empty());
+        CHECK_EQ(std::string(isa::variant_class_name(inst.variant_class)), std::string(v.cls));
+        CHECK_EQ(std::string(isa::mnemonic_name(inst.mnemonic)), std::string(v.mnem));
+        CHECK(!Decoder::instance().disassemble(inst.word).empty());
     }
 }
 
@@ -109,10 +109,10 @@ TEST(decoder_pr_operand_rendered) {
         CHECK(r.is_unique());
         if (r.is_unique()) {
             const auto& inst = r.instruction();
-            CHECK_EQ(std::string(inst.variant_class), std::string(v.cls));
-            CHECK(inst.disasm.find(v.expect) != std::string::npos);
+            CHECK_EQ(std::string(isa::variant_class_name(inst.variant_class)), std::string(v.cls));
+            CHECK(Decoder::instance().disassemble(inst.word).find(v.expect) != std::string::npos);
             // the literal PR token must never be dropped or substituted
-            CHECK(inst.disasm.find("PR") != std::string::npos);
+            CHECK(Decoder::instance().disassemble(inst.word).find("PR") != std::string::npos);
         }
     }
 }

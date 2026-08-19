@@ -37,7 +37,9 @@ inline constexpr int kBackendApiVersion = 1;
 // Operand, ScheduleWord, PredecodedWord, Kernel.  A future JIT lowers exactly
 // this IR; the interpretation of the flattened `slot_values` / `raw_fields`
 // maps is stable.
-inline constexpr int kDecodedIrVersion = 1;
+// v2: DecodedInstruction's mnemonic / variant_class / pipe are now the
+// generated isa::{Mnemonic,VariantClass,Pipe} enums instead of std::string.
+inline constexpr int kDecodedIrVersion = 2;
 
 // IRuntimeServices (memory / constant bank / event channel / cluster DSMEM).
 // Async/TMA semantics are NOT frozen; their future completion/commit callbacks

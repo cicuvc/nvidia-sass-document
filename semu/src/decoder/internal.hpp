@@ -47,4 +47,11 @@ std::int64_t slot_attr_val(const DecodeCtx& ctx, const std::string& name,
 DecodedInstruction render_instruction(const isa::Variant* v, Word128 word,
                                       const DecodeCtx& ctx);
 
+// Render the normalized disassembly text for an already-decoded instruction
+// (render.cpp).  Needs the variant + decode context to re-render operands.
+// `full` includes the guard predicate + schedule bracket.
+std::string render_disasm_text(const isa::Variant* v, const DecodeCtx& ctx,
+                               const DecodedInstruction& inst, bool full);
+
+
 }  // namespace semu
