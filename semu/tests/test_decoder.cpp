@@ -4,6 +4,7 @@
 // corpus round-trip / ambiguity gates.
 
 #include <semu/decoder.hpp>
+#include <isa_shapes.hpp>  // typed-IR schema (design review; regenerate with --shapes)
 
 #include <cstdio>
 #include <string>
@@ -11,6 +12,14 @@
 #include "test_framework.hpp"
 
 using namespace semu;
+
+// Compile-time smoke for the typed decoded-IR schema (semu/generated/
+// isa_shapes.hpp): the OperandValue union is a fixed, small layout and the
+// per-(mnemonic,operand-count) derived types carry exactly the ops[] array.
+static_assert(sizeof(shape::OperandValue) <= 16);
+static_assert(sizeof(shape::DecodedFFMA4) >= 4 * sizeof(shape::OperandValue));
+static_assert(sizeof(shape::DecodedLDG5) >= 5 * sizeof(shape::OperandValue));
+static_assert(sizeof(shape::DecodedNOP0) >= 0);
 
 namespace {
 

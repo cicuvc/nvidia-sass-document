@@ -99,7 +99,7 @@ public:
 
 private:
     mutable std::mutex mutex_;
-    std::uint32_t sm_count_;
+    [[maybe_unused]] std::uint32_t sm_count_;  // reserved SM count (unused)
     std::uint64_t seed_;
     std::mt19937_64 rng_;
     std::uint64_t request_id_ = 0;

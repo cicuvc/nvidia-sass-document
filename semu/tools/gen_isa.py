@@ -573,7 +573,7 @@ def emit_table_helpers(db, table_helpers):
         rows_def = [f"{{{', '.join(str(ins[i][j]) for j in range(argc))}}}"
                     for i in range(len(ins))]
         helper_lines.append(
-            f"inline bool tbl_defined_{tname}({params}) {{"
+            f"[[maybe_unused]] inline bool tbl_defined_{tname}({params}) {{"
             f"  static const std::int64_t k[][{argc}] = "
             f"{{{', '.join(rows_def)}}};"
             f"  for (auto& r : k) if ({eq}) return true;"
@@ -583,7 +583,8 @@ def emit_table_helpers(db, table_helpers):
             "{" + ", ".join(str(ins[i][j]) for j in range(argc)) +
             f", {outs[i]}" + "}" for i in range(len(ins))]
         helper_lines.append(
-            f"inline std::int64_t tbl_value_{tname}({params}) {{"
+            f"[[maybe_unused]] inline std::int64_t tbl_value_{tname}"
+            f"({params}) {{"
             f"  static const std::int64_t k[][{argc + 1}] = "
             f"{{{', '.join(rows_val)}}};"
             f"  for (auto& r : k) if ({eq}) return r[{argc}];"
@@ -896,12 +897,6 @@ def emit_cpp(out: Path, db: dict, variants: list,
 
     # ---- parameters / constants ----
     pkeys = sorted(db["parameters"])
-    lines.append("namespace {")
-    lines.append("constexpr const char* kParamKeys[] = {")
-    for k in pkeys:
-        lines.append(f"    {cq(k)},")
-    lines.append("};")
-    lines.append("}")
     lines.append("const char* const kParameters[] = {")
     for k in pkeys:
         lines.append(f"    {cq(k)},")
@@ -914,12 +909,6 @@ def emit_cpp(out: Path, db: dict, variants: list,
     lines.append("")
 
     ckeys = sorted(db["constants"])
-    lines.append("namespace {")
-    lines.append("constexpr const char* kConstKeys[] = {")
-    for k in ckeys:
-        lines.append(f"    {cq(k)},")
-    lines.append("};")
-    lines.append("}")
     lines.append("const char* const kConstants[] = {")
     for k in ckeys:
         lines.append(f"    {cq(k)},")
@@ -1070,9 +1059,161 @@ def emit_cpp(out: Path, db: dict, variants: list,
     out.write_text("\n".join(lines), encoding="utf-8")
 
 
+_CPP_KEYWORDS = set("""alignas alignof and and_eq asm auto bitand bitor bool break case catch char
+char8_t char16_t char32_t class compl concept const consteval constexpr constinit const_cast
+continue co_await co_return co_yield decltype default delete do double dynamic_cast else enum
+explicit export extern false float for friend goto if inline int long mutable namespace new
+noexcept not not_eq nullptr operator or or_eq private protected public register reinterpret_cast
+requires return short signed sizeof static static_assert static_cast struct switch template this
+thread_local throw true try typedef typeid typename union unsigned using virtual void volatile
+wchar_t while xor xor_eq""".split())
+
+SCHED = {"req", "req_bit_set", "usched_info", "batch_t", "pm_pred",
+         "reuse_src_a", "reuse_src_b", "reuse_src_c", "reuse_src_d",
+         "rd", "wr", "src_rel_sb", "dst_wr_sb"}
+
+OPERAND_KIND = {
+    "Register": "kRegister", "NonZeroRegister": "kRegister",
+    "ZeroRegister": "kRegister",
+    "UniformRegister": "kUniformRegister",
+    "NonZeroUniformRegister": "kUniformRegister",
+    "ZeroUniformRegister": "kUniformRegister",
+    "Predicate": "kPredicate", "UniformPredicate": "kUniformPredicate",
+    "SImm": "kSImm", "RSImm": "kSImm",
+    "UImm": "kUImm",
+    "F32Imm": "kFImm32", "F64Imm": "kFImm64", "F16Imm": "kFImm16",
+    "DESC": "kDesc", "TMA": "kDesc",
+}
+
+
+def shape_operand_roles(v):
+    """Positional (display-order) operand roles for a variant: distinct
+    non-modifier, non-schedule, non-Pg FORMAT slot names, first appearance."""
+    roles = []
+    seen = set()
+    for s in v["slots"]:
+        n = s["name"]
+        if n == "Pg" or n in SCHED or s["modifier"]:
+            continue
+        if n in seen:
+            continue
+        seen.add(n)
+        roles.append(s)
+    return roles
+
+
+def shape_modifier_slots(v):
+    return [s for s in v["slots"] if s["modifier"] and s["name"] not in SCHED]
+
+
+def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
+    """Emit isa_shapes.hpp: the typed decoded-IR schema (design review + later
+    migration).  Pure addition -- does NOT replace the existing DecodedInstruction.
+    Groups decoded types by (mnemonic, operand-count); operands are a positional
+    union array; modifiers are reusable enums as typed members."""
+    L = []
+    L.append("// Generated file -- do not edit.  Regenerate with:")
+    L.append("//   python3 semu/tools/gen_isa.py --shapes")
+    L.append("//")
+    L.append("// Typed decoded-IR schema (design review; not yet wired into the")
+    L.append("// decoder -- the existing DecodedInstruction is unchanged).")
+    L.append("#pragma once")
+    L.append("")
+    L.append("#include <cstdint>")
+    L.append("")
+    L.append("namespace semu::shape {")
+
+    # ---- OperandKind + OperandValue ----
+    L.append("")
+    L.append("enum class OperandKind : std::uint8_t {")
+    for k in ("kRegister", "kUniformRegister", "kPredicate",
+              "kUniformPredicate", "kSImm", "kUImm", "kFImm16", "kFImm32",
+              "kFImm64", "kDesc", "kSpecial"):
+        L.append(f"    {k},")
+    L.append("};")
+    L.append("")
+    L.append("struct OperandValue {")
+    L.append("    std::uint8_t kind;   // OperandKind")
+    L.append("    std::uint8_t flags;  // bit0 negate, bit1 absolute, bit2 pred_not")
+    L.append("    union {")
+    L.append("        std::uint64_t uimm64;  std::int64_t simm64;")
+    L.append("        std::uint32_t uimm32;  std::int32_t simm32;")
+    L.append("        float fimm32;          double dimm64;")
+    L.append("        std::uint16_t uimm16;  std::uint8_t uimm8;")
+    L.append("        std::int16_t simm16;   std::int8_t simm8;")
+    L.append("        std::int32_t reg_idx;  std::int32_t ureg_idx;")
+    L.append("        std::uint8_t pred_idx; std::uint64_t desc;")
+    L.append("    } v;")
+    L.append("};")  # == 0 if C++ reserves padding
+
+    # ---- reusable modifier enums (deduped by modifier FORMAT type).  A type
+    # whose enum has no int-valued entries (e.g. ABSONLY) yields no enum; the
+    # corresponding struct member degrades to std::uint8_t.
+    modtypes = set()
+    for v in variants:
+        for s in shape_modifier_slots(v):
+            modtypes.add(s["type"])
+    enum_types = {t for t in modtypes
+                  if any(v is not None for v in db["enums"].get(t, {}).values())}
+    L.append("")
+    L.append("// Reusable modifier enums (one per modifier FORMAT type).")
+    for t in sorted(enum_types):
+        enum = db["enums"][t]
+        entries = [(str(n), enum[n]) for n in enum if enum[n] is not None]
+        L.append(f"enum class {cident(t)} : std::int32_t {{")
+        used = set()
+        for name, val in sorted(entries, key=lambda x: (str(x[1]), x[0])):
+            mid = f"k{cident(str(name))}"
+            if mid in used:
+                continue
+            used.add(mid)
+            L.append(f"    {mid} = {int(val)},")
+        L.append("};")
+
+    # ---- group variants by (mnemonic, operand-count) ----
+    from collections import OrderedDict
+    groups = OrderedDict()
+    for v in variants:
+        roles = shape_operand_roles(v)
+        key = (v["mnemonic"], len(roles))
+        groups.setdefault(key, []).append((v, roles))
+
+    L.append("")
+    L.append("// Derived decoded types: one per (mnemonic, operand-count).")
+    L.append("// Operands are positional in the mnemonic's canonical role order;")
+    L.append("// modifiers are typed enum members specific to each instruction.")
+    for (mn, nops), members in groups.items():
+        type_name = f"Decoded{cident(mn)}{nops}"
+        L.append(f"struct {type_name} {{")
+        if nops:
+            L.append(f"    OperandValue ops[{nops}];")
+        # union of modifier slot names across the group members, typed
+        modseen = {}       # member name -> type cident (or "std::uint8_t")
+        for v, roles in members:
+            for s in shape_modifier_slots(v):
+                ty = s["type"]
+                tyid = cident(ty) if ty in enum_types else "std::uint8_t"
+                mn_name = cident(s["name"])
+                if mn_name == tyid or mn_name in _CPP_KEYWORDS:
+                    mn_name += "_"   # avoid `SAT SAT;` / C++ keyword collision
+                if mn_name in modseen:
+                    continue
+                modseen[mn_name] = tyid
+        for mname in sorted(modseen):
+            L.append(f"    {modseen[mname]} {mname};")
+        L.append("};")
+
+    L.append("")
+    L.append("}  // namespace semu::shape")
+    L.append("")
+    out.write_text("\n".join(L), encoding="utf-8")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=str(REPO / "sm120.json"))
+    ap.add_argument("--shapes", action="store_true",
+                    help="also emit isa_shapes.hpp (typed-IR schema, design review)")
     ap.add_argument("--output-dir", default=str(REPO / "semu" / "generated"))
     args = ap.parse_args()
 
@@ -1091,6 +1232,9 @@ def main() -> int:
     emit_cpp(out_dir / "isa_data.cpp", db, variants,
              mnemonics, classes, pipes, mnemonic_id, class_id, pipe_id,
              var_cond_meta, cond_table_helpers)
+    if args.shapes:
+        emit_shapes_hpp(out_dir / "isa_shapes.hpp", db, variants)
+        print(f"wrote {out_dir / 'isa_shapes.hpp'} (schema review)")
 
     multi = sum(1 for op in range(8192)
                 if opcode_count(variants, op) > 1)

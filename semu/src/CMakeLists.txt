@@ -32,6 +32,17 @@ add_library(semu_core STATIC
   ${CMAKE_CURRENT_SOURCE_DIR}/../generated/capability_data.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../generated/isa_data.cpp
 )
+
+# Generated ISA tables: the compile-time condition thunks are emitted with
+# constant-foldable `a || b` operands (e.g. an enum/param literal folding to a
+# constant).  Clang's -Wconstant-logical-operand is -Werror here; silence it
+# for this generated file only (it is not hand-authored).
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set_source_files_properties(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../generated/isa_data.cpp
+    PROPERTIES COMPILE_OPTIONS
+              "-Wno-constant-logical-operand;-Wno-overlength-strings")
+endif()
 target_include_directories(semu_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/../include
   ${CMAKE_CURRENT_SOURCE_DIR}/../generated

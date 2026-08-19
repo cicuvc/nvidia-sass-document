@@ -46,10 +46,15 @@ docs/            USER_GUIDE.md（capability matrix）、API_EXAMPLES.md
 环境（新机器 local-debian）：CUDA 13.1 在 `/usr/local/cuda/bin`（nvcc/ncu），
 Python 用 **miniconda**（`/home/cicuvc/miniconda3/bin/python3`，有 numpy；
 系统 `/usr/bin/python3` 无 numpy——跑门禁必须把 conda bin 放 PATH 前面）。
+本机用 **Clang 23** 编译（位于 `/opt/LLVM-23.0.0git-Linux-X64/`）——g++ 及其 asan/tsan
+过慢。四棵构建树均以该 clang 为编译器。
 
 ```bash
 export PATH="/home/cicuvc/miniconda3/bin:/usr/local/cuda/bin:$PATH"
-cmake -S semu -B semu/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+CLANG=/opt/LLVM-23.0.0git-Linux-X64/bin/clang++
+CC=/opt/LLVM-23.0.0git-Linux-X64/bin/clang
+cmake -S semu -B semu/build -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_CXX_COMPILER=$CLANG -DCMAKE_C_COMPILER=$CC
 cmake --build semu/build
 ```
 
@@ -57,8 +62,10 @@ cmake --build semu/build
 - `semu/build`：Debug（门禁主树）
 - `semu/build-asan`：`-DSEMU_ENABLE_SANITIZERS=ON`（ASan+UBSan）
 - `semu/build-tsan`：TSan 树
-- `semu/build-rel`：Release（benchmark 用，`-DSEMU_WERROR=OFF`——GCC-12 -O3 有
-  vector::resize memmove 误报；Debug/ASan/TSan 树保持 -Werror）
+- `semu/build-rel`：Release（benchmark 用，`-DSEMU_WERROR=OFF`）
+- 注：生成文件 `isa_data.cpp` 在 Clang 下需局部屏蔽 `-Wno-constant-logical-operand`
+  （`-Wno-overlength-strings`），见 `src/CMakeLists.txt`；Clang 的 -Werror 会额外
+  报 `-Wunused-private-field`（`l2_events.hpp` 已 `[[maybe_unused]]`）。
 
 CMake 选项：`SEMU_BUILD_CLI`、`SEMU_BUILD_TESTS`、`SEMU_ENABLE_SANITIZERS`、
 `SEMU_ENABLE_GPU_DIFFERENTIAL`。
