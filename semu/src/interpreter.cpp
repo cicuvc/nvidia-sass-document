@@ -5075,1174 +5075,1254 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
     return Status::success();
 }
 
-Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
-                               const DecodedInstruction& inst,
-                               std::uint64_t pc,
-                               std::optional<Fault>* fault) {
-    const isa::Mnemonic m = inst.mnemonic;
+// ===========================================================================
+// Phase 5 compute — one function per instruction (2b-3 plan-b + refactor).
+// Per-instruction entry points with a small number of shared per-lane cores
+// (the core is parameterized by the instruction's extracted operands/modifiers;
+// each do_<MNEMONIC> just casts the concrete shape and forwards).
+// ===========================================================================
 
-    // ---- FP32 add/mul/fma -----------------------------------------------
-    if (m == isa::Mnemonic::kFADD || m == isa::Mnemonic::kFMUL || m == isa::Mnemonic::kFFMA) {
-        // Concrete typed storage: FADD/FMUL are 3-op, FFMA 4-op — operand
-        // roles are Rd, Ra, <2nd source>, [<3rd source>]; the 2nd/3rd source
-        // resolves by OperandKind to register / uniform register / immediate.
-        const shape::OperandValue* ops = nullptr;
-        Rnd rnd = Rnd::kRn;
-        bool flush = false;
-        int fmz_val = 0;
-        bool sat = false;
-        if (m == isa::Mnemonic::kFADD) {
-            const auto& d = *static_cast<const shape::DecodedFADD3*>(&inst);
-            ops = d.ops;
-            rnd = static_cast<Rnd>(d.rnd);
-            flush = static_cast<int>(d.ftz) != 0;
-            sat = static_cast<int>(d.sat) != 0;
-        } else if (m == isa::Mnemonic::kFMUL) {
-            const auto& d = *static_cast<const shape::DecodedFMUL3*>(&inst);
-            ops = d.ops;
-            rnd = static_cast<Rnd>(d.rnd);
-            flush = static_cast<int>(d.fmz) != 0;
-            sat = static_cast<int>(d.sat) != 0;
-        } else {  // FFMA
-            const auto& d = *static_cast<const shape::DecodedFFMA4*>(&inst);
-            ops = d.ops;
-            rnd = static_cast<Rnd>(d.rnd);
-            // FFMA needs the raw fmz value (FMZ and FTZ differ on sm120).
-            fmz_val = static_cast<int>(d.fmz);
-            flush = fmz_val != 0;
-            sat = static_cast<int>(d.sat) != 0;
+Status Interpreter::fp32_arith_core(WarpState& w, std::uint32_t mask,
+                                    const shape::OperandValue* ops,
+                                    std::uint64_t rd_rv, int op, Rnd rnd,
+                                    bool flush, bool sat, int fmz_val) {
+    // Phase 5.5: resolve the leaf policy once per instruction (M5).
+    const Fp32Plan plan = plan_fp32(op, static_cast<int>(rnd), flush);
+    // Source value: register / uniform register / UImm/SImm immediate.
+    // (Float-bit immediates (FImm32) are NOT fed to the immediate path —
+    // same as the pre-migration behavior.)
+    auto src_val = [&w](const ThreadState& t,
+                        const shape::OperandValue& o) -> std::uint32_t {
+        const auto k = static_cast<shape::OperandKind>(o.kind);
+        if (k == shape::OperandKind::kRegister)
+            return read_reg_ov(t, o);
+        if (k == shape::OperandKind::kUniformRegister)
+            return read_ur_ov(w, o);
+        if (k == shape::OperandKind::kUImm ||
+            k == shape::OperandKind::kSImm)
+            return static_cast<std::uint32_t>(
+                shape::operand_value_as_i64(o));
+        return 0;
+    };
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = src_val(t, ops[1]);
+        std::uint32_t b = src_val(t, ops[2]);
+        std::uint32_t c = (op == 2) ? src_val(t, ops[3]) : 0;
+        bool use_fast = plan.use_fast;
+        if (plan.need_exceptional &&
+            (exceptional_f32(a) || exceptional_f32(b) ||
+             exceptional_f32(c))) {
+            use_fast = false;
         }
-        const int op = m == isa::Mnemonic::kFADD ? 0 : m == isa::Mnemonic::kFMUL ? 1 : 2;
-        // Phase 5.5: resolve the leaf policy once per instruction (M5).
-        const Fp32Plan plan = plan_fp32(op, static_cast<int>(rnd), flush);
-        // Source value: register / uniform register / UImm/SImm immediate.
-        // (Float-bit immediates (FImm32) are NOT fed to the immediate path —
-        // same as the pre-migration behavior.)
-        auto src_val = [&w](const ThreadState& t,
-                            const shape::OperandValue& o) -> std::uint32_t {
-            const auto k = static_cast<shape::OperandKind>(o.kind);
-            if (k == shape::OperandKind::kRegister)
-                return read_reg_ov(t, o);
-            if (k == shape::OperandKind::kUniformRegister)
-                return read_ur_ov(w, o);
-            if (k == shape::OperandKind::kUImm ||
-                k == shape::OperandKind::kSImm)
-                return static_cast<std::uint32_t>(
-                    shape::operand_value_as_i64(o));
-            return 0;
-        };
-        const std::uint64_t rd_rv =
-            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = src_val(t, ops[1]);
-            std::uint32_t b = src_val(t, ops[2]);
-            std::uint32_t c = (op == 2) ? src_val(t, ops[3]) : 0;
-            bool use_fast = plan.use_fast;
-            if (plan.need_exceptional &&
-                (exceptional_f32(a) || exceptional_f32(b) ||
-                 exceptional_f32(c))) {
-                use_fast = false;
+        std::uint32_t out;
+        if (use_fast) {
+            if (plan.ignored_modifier) ++fast_stats_.ignored_modifier_ops;
+            switch (op) {
+                case 0: out = fp::fast_fadd(a, b, static_cast<int>(rnd), flush, sat); break;
+                case 1: out = fp::fast_fmul(a, b, static_cast<int>(rnd), flush, sat); break;
+                default: out = fp::fast_ffma(a, b, c, static_cast<int>(rnd), flush, sat); break;
             }
-            std::uint32_t out;
-            if (use_fast) {
-                if (plan.ignored_modifier) ++fast_stats_.ignored_modifier_ops;
-                switch (op) {
-                    case 0: out = fp::fast_fadd(a, b, static_cast<int>(rnd), flush, sat); break;
-                    case 1: out = fp::fast_fmul(a, b, static_cast<int>(rnd), flush, sat); break;
-                    default: out = fp::fast_ffma(a, b, c, static_cast<int>(rnd), flush, sat); break;
-                }
-                // Phase 5.5 High-2: kExceptional also falls back when the
-                // NATIVE RESULT is exceptional, even if all inputs were
-                // finite (e.g. overflow to Inf).  The input check above only
-                // caught exceptional operands; recompute with the precise
-                // helper here so the fallback policy is honored.
-                if (plan.need_exceptional && exceptional_f32(out)) {
-                    ++fast_stats_.precise_fallback_ops;
-                    switch (op) {
-                        case 0: out = fp::fadd(a, b, rnd, flush, sat); break;
-                        case 1: out = fp::fmul(a, b, rnd, flush, sat); break;
-                        default: out = fp::ffma(a, b, c, rnd, fmz_val, sat); break;
-                    }
-                } else {
-                    note_fast_leaf(true);
-                }
-            } else {
-                if (fast_mode()) ++fast_stats_.precise_fallback_ops;
+            // Phase 5.5 High-2: kExceptional also falls back when the
+            // NATIVE RESULT is exceptional, even if all inputs were
+            // finite (e.g. overflow to Inf).  The input check above only
+            // caught exceptional operands; recompute with the precise
+            // helper here so the fallback policy is honored.
+            if (plan.need_exceptional && exceptional_f32(out)) {
+                ++fast_stats_.precise_fallback_ops;
                 switch (op) {
                     case 0: out = fp::fadd(a, b, rnd, flush, sat); break;
                     case 1: out = fp::fmul(a, b, rnd, flush, sat); break;
                     default: out = fp::ffma(a, b, c, rnd, fmz_val, sat); break;
                 }
-            }
-            if (rd_rv != 255 && rd_rv < kNumGprs) t.gpr[rd_rv] = out;
-        }
-        return Status::success();
-    }
-
-    // ---- FP64 add/mul/fma -----------------------------------------------
-    if (m == isa::Mnemonic::kDADD || m == isa::Mnemonic::kDMUL || m == isa::Mnemonic::kDFMA) {
-        // DADD/DMUL are 3-op (Rd, Ra, <2nd source>); DFMA is 4-op with a
-        // third source.  The typed schema has only `rnd` as an FP64 modifier
-        // (sat/ftz are not present, so they read 0 — same as before).
-        const shape::OperandValue* ops = nullptr;
-        Rnd rnd = Rnd::kRn;
-        if (m == isa::Mnemonic::kDADD) {
-            const auto& d = *static_cast<const shape::DecodedDADD3*>(&inst);
-            ops = d.ops;
-            rnd = static_cast<Rnd>(d.rnd);
-        } else if (m == isa::Mnemonic::kDMUL) {
-            const auto& d = *static_cast<const shape::DecodedDMUL3*>(&inst);
-            ops = d.ops;
-            rnd = static_cast<Rnd>(d.rnd);
-        } else {
-            const auto& d = *static_cast<const shape::DecodedDFMA4*>(&inst);
-            ops = d.ops;
-            rnd = static_cast<Rnd>(d.rnd);
-        }
-        const bool sat = false;
-        const bool ftz = false;
-        const int op = m == isa::Mnemonic::kDADD ? 0 : m == isa::Mnemonic::kDMUL ? 1 : 2;
-        // Phase 5.5: resolve the leaf policy once per instruction (M5).
-        const Fp64Plan plan = plan_fp64(op, static_cast<int>(rnd));
-        // M5 pre-binding: pair base indices resolved once (2nd source = pos2;
-        // DADD has no Rb, its 2nd source is Rc — same position).
-        const int ra_r = bind_idx_ov(ops[1]);
-        const int sb_r = bind_idx_ov(ops[2]);
-        const int rc_r = (op == 2) ? bind_idx_ov(ops[3]) : -1;
-        const std::uint64_t rd_rv =
-            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
-        auto read_pair_at = [](const ThreadState& t, int idx) -> std::uint64_t {
-            if (idx < 0 || idx >= kNumGprs - 1) return 0;
-            std::uint64_t lo = t.gpr[idx];
-            std::uint64_t hi = t.gpr[idx + 1];
-            return lo | (hi << 32);
-        };
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            const std::uint64_t a = read_pair_at(t, ra_r);
-            const std::uint64_t b = read_pair_at(t, sb_r);
-            const std::uint64_t c = read_pair_at(t, rc_r);
-            bool use_fast = plan.use_fast;
-            if (plan.need_exceptional &&
-                (exceptional_f64(a) || exceptional_f64(b) ||
-                 exceptional_f64(c))) {
-                use_fast = false;
-            }
-            std::uint64_t out;
-            if (use_fast) {
-                if (plan.ignored_modifier) ++fast_stats_.ignored_modifier_ops;
-                switch (op) {
-                    case 0: out = fp::fast_fadd64(a, b, static_cast<int>(rnd), sat); break;
-                    case 1: out = fp::fast_fmul64(a, b, static_cast<int>(rnd), sat); break;
-                    default: out = fp::fast_fma64(a, b, c, static_cast<int>(rnd), sat); break;
-                }
-                // Phase 5.5 High-2: kExceptional also falls back on an
-                // exceptional NATIVE RESULT (overflow -> Inf) even when all
-                // inputs were finite.
-                if (plan.need_exceptional && exceptional_f64(out)) {
-                    ++fast_stats_.precise_fallback_ops;
-                    switch (op) {
-                        case 0: out = fp::fadd64(a, b, rnd, sat); break;
-                        case 1: out = fp::fmul64(a, b, rnd, sat); break;
-                        default: out = fp::fma64(a, b, c, rnd, sat); break;
-                    }
-                } else {
-                    note_fast_leaf(true);
-                }
             } else {
-                if (fast_mode()) ++fast_stats_.precise_fallback_ops;
+                note_fast_leaf(true);
+            }
+        } else {
+            if (fast_mode()) ++fast_stats_.precise_fallback_ops;
+            switch (op) {
+                case 0: out = fp::fadd(a, b, rnd, flush, sat); break;
+                case 1: out = fp::fmul(a, b, rnd, flush, sat); break;
+                default: out = fp::ffma(a, b, c, rnd, fmz_val, sat); break;
+            }
+        }
+        if (rd_rv != 255 && rd_rv < kNumGprs) t.gpr[rd_rv] = out;
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_fadd(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    const auto& d = *static_cast<const shape::DecodedFADD3*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const Rnd rnd = static_cast<Rnd>(d.rnd);
+    const bool flush = static_cast<int>(d.ftz) != 0;
+    const bool sat = static_cast<int>(d.sat) != 0;
+    const std::uint64_t rd_rv = static_cast<std::uint64_t>(
+        shape::operand_value_as_i64(ops[0]));
+    return fp32_arith_core(w, mask, ops, rd_rv, 0, rnd, flush, sat, 0);
+}
+
+Status Interpreter::do_fmul(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    const auto& d = *static_cast<const shape::DecodedFMUL3*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const Rnd rnd = static_cast<Rnd>(d.rnd);
+    const bool flush = static_cast<int>(d.fmz) != 0;
+    const bool sat = static_cast<int>(d.sat) != 0;
+    const std::uint64_t rd_rv = static_cast<std::uint64_t>(
+        shape::operand_value_as_i64(ops[0]));
+    return fp32_arith_core(w, mask, ops, rd_rv, 1, rnd, flush, sat, 0);
+}
+
+Status Interpreter::do_ffma(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    const auto& d = *static_cast<const shape::DecodedFFMA4*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const Rnd rnd = static_cast<Rnd>(d.rnd);
+    // FFMA needs the raw fmz value (FMZ and FTZ differ on sm120).
+    const int fmz_val = static_cast<int>(d.fmz);
+    const bool flush = fmz_val != 0;
+    const bool sat = static_cast<int>(d.sat) != 0;
+    const std::uint64_t rd_rv = static_cast<std::uint64_t>(
+        shape::operand_value_as_i64(ops[0]));
+    return fp32_arith_core(w, mask, ops, rd_rv, 2, rnd, flush, sat, fmz_val);
+}
+
+Status Interpreter::fp64_arith_core(WarpState& w, std::uint32_t mask,
+                                    const shape::OperandValue* ops, int op,
+                                    Rnd rnd) {
+    // Phase 5.5: resolve the leaf policy once per instruction (M5).
+    const Fp64Plan plan = plan_fp64(op, static_cast<int>(rnd));
+    const bool sat = false;
+    // M5 pre-binding: pair base indices resolved once (2nd source = pos2;
+    // DADD has no Rb, its 2nd source is Rc — same position).
+    const int ra_r = bind_idx_ov(ops[1]);
+    const int sb_r = bind_idx_ov(ops[2]);
+    const int rc_r = (op == 2) ? bind_idx_ov(ops[3]) : -1;
+    const std::uint64_t rd_rv =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+    auto read_pair_at = [](const ThreadState& t, int idx) -> std::uint64_t {
+        if (idx < 0 || idx >= kNumGprs - 1) return 0;
+        std::uint64_t lo = t.gpr[idx];
+        std::uint64_t hi = t.gpr[idx + 1];
+        return lo | (hi << 32);
+    };
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        const std::uint64_t a = read_pair_at(t, ra_r);
+        const std::uint64_t b = read_pair_at(t, sb_r);
+        const std::uint64_t c = read_pair_at(t, rc_r);
+        bool use_fast = plan.use_fast;
+        if (plan.need_exceptional &&
+            (exceptional_f64(a) || exceptional_f64(b) ||
+             exceptional_f64(c))) {
+            use_fast = false;
+        }
+        std::uint64_t out;
+        if (use_fast) {
+            if (plan.ignored_modifier) ++fast_stats_.ignored_modifier_ops;
+            switch (op) {
+                case 0: out = fp::fast_fadd64(a, b, static_cast<int>(rnd), sat); break;
+                case 1: out = fp::fast_fmul64(a, b, static_cast<int>(rnd), sat); break;
+                default: out = fp::fast_fma64(a, b, c, static_cast<int>(rnd), sat); break;
+            }
+            // Phase 5.5 High-2: kExceptional also falls back on an
+            // exceptional NATIVE RESULT (overflow -> Inf) even when all
+            // inputs were finite.
+            if (plan.need_exceptional && exceptional_f64(out)) {
+                ++fast_stats_.precise_fallback_ops;
                 switch (op) {
                     case 0: out = fp::fadd64(a, b, rnd, sat); break;
                     case 1: out = fp::fmul64(a, b, rnd, sat); break;
                     default: out = fp::fma64(a, b, c, rnd, sat); break;
                 }
-            }
-            (void)ftz;
-            if (rd_rv != 255 && rd_rv < kNumGprs - 1) {
-                t.gpr[rd_rv] = static_cast<std::uint32_t>(out & 0xffffffffu);
-                t.gpr[rd_rv + 1] = static_cast<std::uint32_t>(out >> 32);
-            }
-        }
-        return Status::success();
-    }
-
-    // ---- FP compares / min-max / select / round --------------------------
-    if (m == isa::Mnemonic::kFSETP || m == isa::Mnemonic::kFSET) {
-        // FSETP Pu, Pv, Ra, Rb/Sb, Pp  (bop combines with Pp; simple 3-op
-        // form has no Pv/Pp)
-        // FSET  Rd, Ra, Rb/Sb, Pp       (Rd = 0x3f800000 or 0)
-        // Cast to the concrete type by mnemonic + operand count; positions:
-        // FSETP5=[Pu,Pv,Ra,2nd,Pp]  FSETP3=[Pu,Ra,2nd]
-        // FSET4=[Rd,Ra,2nd,Pp]      FSET3=[Rd,Ra,2nd]
-        const auto& mf = shape::kShapeManifests[inst.shape_variant];
-        const std::uint16_t nops = mf.n_ops;
-        const shape::OperandValue* ops = nullptr;
-        std::uint64_t fcomp = 0, bop = 0;
-        bool ftz = false;
-        int ra_pos = 1;
-        int pp_pos = -1;
-        if (m == isa::Mnemonic::kFSETP) {
-            if (nops == 5) {
-                const auto& d =
-                    *static_cast<const shape::DecodedFSETP5*>(&inst);
-                ops = d.ops;
-                fcomp = static_cast<std::uint64_t>(d.fcomp);
-                bop = static_cast<std::uint64_t>(d.bop);
-                ftz = static_cast<int>(d.ftz) != 0;
-                ra_pos = 2;
-                pp_pos = 4;
             } else {
-                const auto& d =
-                    *static_cast<const shape::DecodedFSETP3*>(&inst);
-                ops = d.ops;
-                fcomp = static_cast<std::uint64_t>(d.fcomp);
-                ftz = static_cast<int>(d.ftz) != 0;
-                ra_pos = 1;
+                note_fast_leaf(true);
             }
         } else {
-            if (nops == 4) {
-                const auto& d = *static_cast<const shape::DecodedFSET4*>(&inst);
-                ops = d.ops;
-                fcomp = static_cast<std::uint64_t>(d.fcomp);
-                bop = static_cast<std::uint64_t>(d.bop);
-                ftz = static_cast<int>(d.ftz) != 0;
-                pp_pos = 3;
-            } else {
-                const auto& d = *static_cast<const shape::DecodedFSET3*>(&inst);
-                ops = d.ops;
-                fcomp = static_cast<std::uint64_t>(d.fcomp);
-                ftz = static_cast<int>(d.ftz) != 0;
+            if (fast_mode()) ++fast_stats_.precise_fallback_ops;
+            switch (op) {
+                case 0: out = fp::fadd64(a, b, rnd, sat); break;
+                case 1: out = fp::fmul64(a, b, rnd, sat); break;
+                default: out = fp::fma64(a, b, c, rnd, sat); break;
             }
         }
-        const int second_pos = ra_pos + 1;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[ra_pos]);
-            std::uint32_t b = src_value(w, t, ops[second_pos]);
-            if (ftz) {
-                if (fast_mode()) {
-                    // Phase 5.5: kNone skips the subnormal flush and counts
-                    // an ignored modifier; other policies fall back to the
-                    // precise flush.
-                    if (options_.fast_fp_fallback != FastFpFallback::kNone) {
-                        ++fast_stats_.precise_fallback_ops;
-                        a = fp::flush_f32(a);
-                        b = fp::flush_f32(b);
-                    } else {
-                        ++fast_stats_.ignored_modifier_ops;
-                    }
-                } else {
+        if (rd_rv != 255 && rd_rv < kNumGprs - 1) {
+            t.gpr[rd_rv] = static_cast<std::uint32_t>(out & 0xffffffffu);
+            t.gpr[rd_rv + 1] = static_cast<std::uint32_t>(out >> 32);
+        }
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_dadd(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    const auto& d = *static_cast<const shape::DecodedDADD3*>(&inst);
+    return fp64_arith_core(w, mask, d.ops, 0, static_cast<Rnd>(d.rnd));
+}
+
+Status Interpreter::do_dmul(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    const auto& d = *static_cast<const shape::DecodedDMUL3*>(&inst);
+    return fp64_arith_core(w, mask, d.ops, 1, static_cast<Rnd>(d.rnd));
+}
+
+Status Interpreter::do_dfma(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    const auto& d = *static_cast<const shape::DecodedDFMA4*>(&inst);
+    return fp64_arith_core(w, mask, d.ops, 2, static_cast<Rnd>(d.rnd));
+}
+
+Status Interpreter::fset_core(WarpState& w, std::uint32_t mask,
+                              const shape::OperandValue* ops,
+                              std::uint16_t nops, std::uint64_t fcomp,
+                              std::uint64_t bop, bool ftz, int ra_pos,
+                              int pp_pos, bool dest_is_pred) {
+    const int second_pos = ra_pos + 1;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[ra_pos]);
+        std::uint32_t b = src_value(w, t, ops[second_pos]);
+        if (ftz) {
+            if (fast_mode()) {
+                // Phase 5.5: kNone skips the subnormal flush and counts
+                // an ignored modifier; other policies fall back to the
+                // precise flush.
+                if (options_.fast_fp_fallback != FastFpFallback::kNone) {
+                    ++fast_stats_.precise_fallback_ops;
                     a = fp::flush_f32(a);
                     b = fp::flush_f32(b);
-                }
-            }
-            const float fa = std::bit_cast<float>(a);
-            const float fb = std::bit_cast<float>(b);
-            const bool anan = std::isnan(fa);
-            const bool bnan = std::isnan(fb);
-            bool r = false;
-            switch (fcomp) {
-                case 0:  r = false; break;                                   // F
-                case 1:  r = !anan && !bnan && fa < fb; break;               // LT
-                case 2:  r = !anan && !bnan && fa == fb; break;              // EQ
-                case 3:  r = !anan && !bnan && fa <= fb; break;              // LE
-                case 4:  r = !anan && !bnan && fa > fb; break;               // GT
-                case 5:  r = !anan && !bnan && fa != fb; break;              // NE
-                case 6:  r = !anan && !bnan && fa >= fb; break;              // GE
-                case 7:  r = !anan && !bnan; break;                          // NUM
-                case 8:  r = anan || bnan; break;                            // NAN
-                // U-variants are unordered-true: true when either operand
-                // is NaN (verified on sm120: every FSETP.*U(1.0, NaN) -> 1).
-                case 9:  r = anan || bnan || fa < fb; break;                  // LTU
-                case 10: r = anan || bnan || fa == fb; break;                 // EQU
-                case 11: r = anan || bnan || fa <= fb; break;                 // LEU
-                case 12: r = anan || bnan || fa > fb; break;                  // GTU
-                case 13: r = anan || bnan || fa != fb; break;                 // NEU
-                case 14: r = anan || bnan || fa >= fb; break;                 // GEU
-                case 15: r = true; break;                                    // T
-                default: break;
-            }
-            // Bop combines (r) with Pp: AND/OR/XOR.  Pu = (r) BOP Pp;
-            // Pv = (!r) BOP Pp (verified: FSETP Pv is NOT !Pu for OR).
-            bool ppv = true;
-            if (pp_pos >= 0) read_pred_ov(t, ops[pp_pos], &ppv);
-            bool out = false;
-            switch (bop) {
-                case 0: out = r && ppv; break;  // AND
-                case 1: out = r || ppv; break;  // OR
-                case 2: out = r != ppv; break;  // XOR
-                default: out = r; break;
-            }
-            bool outv = false;
-            switch (bop) {
-                case 0: outv = (!r) && ppv; break;
-                case 1: outv = (!r) || ppv; break;
-                case 2: outv = (!r) != ppv; break;
-                default: outv = !r; break;
-            }
-            if (fast_mode()) note_fast_leaf(false);
-            if (m == isa::Mnemonic::kFSETP) {
-                write_pred_ov(t, ops[0], out);
-                if (nops == 5) write_pred_ov(t, ops[1], outv);
-            } else {  // FSET: Rd = 1.0f or 0.0f (also writes inverse via
-                // Pv-style semantics not present; FSET.Rd holds result).
-                write_rd_ov(w, t, ops[0], out ? 0x3f800000u : 0u, 0);
-            }
-        }
-        return Status::success();
-    }
-
-    if (m == isa::Mnemonic::kFMNMX) {
-        // FMNMX Rd[, Pu], Ra, Rb/Sb, Pp  (Pp: PT=min, !PT=max; .NAN
-        // propagate; XORSIGN: result sign = sign(Ra) XOR sign(Rb)).
-        // 4-op form: [Rd,Ra,2nd,Pp]; 5-op form: [Rd,Pu,Ra,2nd,Pp].
-        const auto& mf = shape::kShapeManifests[inst.shape_variant];
-        const std::uint16_t nops = mf.n_ops;
-        const shape::OperandValue* ops = nullptr;
-        std::uint64_t nan = 0, xorsign_val = 0;
-        bool ftz = false;
-        int ra_pos = 1, pp_pos = 3;
-        if (nops == 5) {
-            const auto& d = *static_cast<const shape::DecodedFMNMX5*>(&inst);
-            ops = d.ops;
-            nan = static_cast<std::uint64_t>(d.nan);
-            xorsign_val = static_cast<std::uint64_t>(d.xorsign);
-            ftz = static_cast<int>(d.ftz) != 0;
-            ra_pos = 2;
-            pp_pos = 4;
-        } else {
-            const auto& d = *static_cast<const shape::DecodedFMNMX4*>(&inst);
-            ops = d.ops;
-            nan = static_cast<std::uint64_t>(d.nan);
-            xorsign_val = static_cast<std::uint64_t>(d.xorsign);
-            ftz = static_cast<int>(d.ftz) != 0;
-        }
-        const bool xorsign = xorsign_val != 0;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[ra_pos]);
-            std::uint32_t b = src_value(w, t, ops[ra_pos + 1]);
-            if (ftz) {
-                if (fast_mode()) {
-                    if (options_.fast_fp_fallback != FastFpFallback::kNone) {
-                        ++fast_stats_.precise_fallback_ops;
-                        a = fp::flush_f32(a);
-                        b = fp::flush_f32(b);
-                    } else {
-                        ++fast_stats_.ignored_modifier_ops;
-                    }
                 } else {
-                    a = fp::flush_f32(a);
-                    b = fp::flush_f32(b);
+                    ++fast_stats_.ignored_modifier_ops;
                 }
-            }
-            // Pp=PT (7) is "min" per the test; !PT is max.  (pred value == 7
-            // AND not inverted) is min, anything else is max (FMNMX R3, R0,
-            // R1, PT -> min; !PT -> max).
-            const std::uint64_t ppv_v =
-                static_cast<std::uint64_t>(shape::operand_value_as_i64(
-                    ops[pp_pos]));
-            const bool is_max =
-                !(ppv_v == 7 && !(ops[pp_pos].flags & 4));
-            const float fa = std::bit_cast<float>(a);
-            const float fb = std::bit_cast<float>(b);
-            const bool a_nan = std::isnan(fa);
-            const bool b_nan = std::isnan(fb);
-            std::uint32_t out;
-            bool nan_propagated = false;
-            if (nan && (a_nan || b_nan)) {
-                // .NAN: propagate a NaN (canonicalize like arithmetic).
-                out = fp::kCanonicalNan32;
-                nan_propagated = true;
-            } else if (a_nan || b_nan) {
-                // nonan: return the non-NaN operand.
-                out = a_nan ? b : a;
-                nan_propagated = true;
             } else {
-                // min/max of two numbers; ties pick b on min per the test
-                // (+0/-0 handled by comparing as IEEE float).
-                const bool pick_b = is_max ? (fb >= fa) : (fb <= fa);
-                out = pick_b ? b : a;
+                a = fp::flush_f32(a);
+                b = fp::flush_f32(b);
             }
-            // XORSIGN only applies to the selected min/max value, NOT to a
-            // NaN-propagated result (verified: FMNMX.XORSIGN with a NaN
-            // operand returns the non-NaN operand with its own sign).
-            if (xorsign && !nan_propagated) {
-                // XORSIGN: result sign = sign(a) XOR sign(b).  Verified:
-                // FMNMX.XORSIGN min(-1,-2) -> +2 (sa^sb = 1^1 = 0 -> +).
-                const std::uint32_t sa = (a >> 31) & 1;
-                const std::uint32_t sb_ = (b >> 31) & 1;
-                const std::uint32_t ns = sa ^ sb_;
-                out = (out & 0x7fffffffu) | (ns << 31);
-            }
-            if (fast_mode()) note_fast_leaf(false);
-            write_rd_ov(w, t, ops[0], out, 0);
         }
-        return Status::success();
-    }
-
-    if (m == isa::Mnemonic::kFSEL) {
-        // FSEL Rd, Ra, Rb/Sb, Pp (select Ra when Pp true, else Rb/Sb).
-        // Roles: [Rd, Ra, 2nd, Pp].
-        const auto& d = *static_cast<const shape::DecodedFSEL4*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        const bool ftz = static_cast<int>(d.ftz) != 0;
-        const int pp_pos = 3;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[1]);
-            if (ftz) {
-                if (fast_mode()) {
-                    if (options_.fast_fp_fallback != FastFpFallback::kNone) {
-                        ++fast_stats_.precise_fallback_ops;
-                        a = fp::flush_f32(a);
-                    } else {
-                        ++fast_stats_.ignored_modifier_ops;
-                    }
-                } else {
-                    a = fp::flush_f32(a);
-                }
-            }
-            std::uint32_t b = src_value(w, t, ops[2]);
-            bool p = false;
-            read_pred_ov(t, ops[pp_pos], &p);
-            if (fast_mode()) note_fast_leaf(false);
-            write_rd_ov(w, t, ops[0], p ? a : b, 0);
-        }
-        return Status::success();
-    }
-
-    // ---- conversions -----------------------------------------------------
-    if (m == isa::Mnemonic::kF2F) {
-        // F2F Rd, Rb/Sb/URb (src/dst format in the combined dstfmt.srcfmt
-        // slot).  Roles: [Rd, source].  RIR forms (source = Sb immediate) are
-        // not executed — same as the pre-migration has_rb gate, identified by
-        // the operand kind (Register only).
-        const auto& d = *static_cast<const shape::DecodedF2F2*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        if (static_cast<shape::OperandKind>(ops[1].kind) !=
-            shape::OperandKind::kRegister)
-            return Status::success();
-        const std::uint64_t fmt =
-            static_cast<std::uint64_t>(d.dstfmt_srcfmt);
-        const Rnd rnd = static_cast<Rnd>(d.rnd);
-        const bool ftz = static_cast<int>(d.ftz) != 0;
-        const bool sat = false;  // F2F has no SAT modifier (was always 0)
-        const int rb_r = bind_idx_ov(ops[1]);
-        const std::uint64_t rd_rv =
-            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
-        // Combined fmt codes (DSTFMT_SRCFMT_*): F16.F32=17, BF16.F32=20,
-        // F32.F16=10, BF16.F16=12, F16.BF16=33, F32.BF16=34, F64.F16=11,
-        // F64.BF16=35, F16.F64=25, F32.F64=26, BF16.F64=28.
-        int dstfmt = 0, srcfmt = 0;
-        switch (fmt) {
-            case 17: dstfmt = 0; srcfmt = 1; break;   // F16.F32
-            case 19: dstfmt = 2; srcfmt = 1; break;   // F64.F32
-            case 20: dstfmt = 3; srcfmt = 1; break;   // BF16.F32
-            case 10: dstfmt = 1; srcfmt = 0; break;   // F32.F16
-            case 12: dstfmt = 3; srcfmt = 0; break;   // BF16.F16
-            case 33: dstfmt = 0; srcfmt = 3; break;   // F16.BF16
-            case 34: dstfmt = 1; srcfmt = 3; break;   // F32.BF16
-            case 11: dstfmt = 2; srcfmt = 0; break;   // F64.F16
-            case 35: dstfmt = 2; srcfmt = 3; break;   // F64.BF16
-            case 25: dstfmt = 0; srcfmt = 2; break;   // F16.F64
-            case 26: dstfmt = 1; srcfmt = 2; break;   // F32.F64
-            case 28: dstfmt = 3; srcfmt = 2; break;   // BF16.F64
+        const float fa = std::bit_cast<float>(a);
+        const float fb = std::bit_cast<float>(b);
+        const bool anan = std::isnan(fa);
+        const bool bnan = std::isnan(fb);
+        bool r = false;
+        switch (fcomp) {
+            case 0:  r = false; break;                                   // F
+            case 1:  r = !anan && !bnan && fa < fb; break;               // LT
+            case 2:  r = !anan && !bnan && fa == fb; break;              // EQ
+            case 3:  r = !anan && !bnan && fa <= fb; break;              // LE
+            case 4:  r = !anan && !bnan && fa > fb; break;               // GT
+            case 5:  r = !anan && !bnan && fa != fb; break;              // NE
+            case 6:  r = !anan && !bnan && fa >= fb; break;              // GE
+            case 7:  r = !anan && !bnan; break;                          // NUM
+            case 8:  r = anan || bnan; break;                            // NAN
+            // U-variants are unordered-true: true when either operand
+            // is NaN (verified on sm120: every FSETP.*U(1.0, NaN) -> 1).
+            case 9:  r = anan || bnan || fa < fb; break;                  // LTU
+            case 10: r = anan || bnan || fa == fb; break;                 // EQU
+            case 11: r = anan || bnan || fa <= fb; break;                 // LEU
+            case 12: r = anan || bnan || fa > fb; break;                  // GTU
+            case 13: r = anan || bnan || fa != fb; break;                 // NEU
+            case 14: r = anan || bnan || fa >= fb; break;                 // GEU
+            case 15: r = true; break;                                    // T
             default: break;
         }
-        // M5 pre-binding: F64 source pair base + dest index (used by both the
-        // fast and the precise path below; hoisted out of the lane loop).
-        // Hoisted policy flag (Medium-7 / perf): under kNone the exceptional
-        // input/result classification is skipped entirely; only kExceptional
-        // pays for it.
-        const bool exc_policy =
-            options_.fast_fp_fallback == FastFpFallback::kExceptional;
-        auto read_f64_pair = [](const ThreadState& t, int idx) {
-            if (idx < 0 || idx >= kNumGprs - 1) return std::uint64_t{0};
-            return t.gpr[idx] |
-                   (static_cast<std::uint64_t>(t.gpr[idx + 1]) << 32);
-        };
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t src = read_reg_ov(t, ops[1]);
-            std::uint32_t out = 0;
-            std::uint32_t outhi = 0;
-            // Phase 5.5: fast F2F for native host conversions (RN, no
-            // FTZ/FMZ/SAT).  Fallback policy routes exceptional inputs and
-            // modifier mismatches to the precise helpers.
-            if (fast_mode() && rnd == Rnd::kRn && !ftz && !sat) {
-                std::uint32_t src_hi = 0;
-                bool exceptional = false;
-                if (srcfmt == 2) {  // F64 source: read the {Rb,Rb+1} pair and
-                                    // classify the FULL 64-bit pattern as a
-                                    // double (not two separate f32s — High-3).
-                    const std::uint64_t pair = read_f64_pair(t, rb_r);
-                    src_hi = static_cast<std::uint32_t>(pair >> 32);
-                    exceptional = exc_policy && exceptional_f64(pair);
+        // Bop combines (r) with Pp: AND/OR/XOR.  Pu = (r) BOP Pp;
+        // Pv = (!r) BOP Pp (verified: FSETP Pv is NOT !Pu for OR).
+        bool ppv = true;
+        if (pp_pos >= 0) read_pred_ov(t, ops[pp_pos], &ppv);
+        bool out = false;
+        switch (bop) {
+            case 0: out = r && ppv; break;  // AND
+            case 1: out = r || ppv; break;  // OR
+            case 2: out = r != ppv; break;  // XOR
+            default: out = r; break;
+        }
+        bool outv = false;
+        switch (bop) {
+            case 0: outv = (!r) && ppv; break;
+            case 1: outv = (!r) || ppv; break;
+            case 2: outv = (!r) != ppv; break;
+            default: outv = !r; break;
+        }
+        if (fast_mode()) note_fast_leaf(false);
+        if (dest_is_pred) {
+            write_pred_ov(t, ops[0], out);
+            if (nops == 5) write_pred_ov(t, ops[1], outv);
+        } else {  // FSET: Rd = 1.0f or 0.0f (FSET.Rd holds result).
+            write_rd_ov(w, t, ops[0], out ? 0x3f800000u : 0u, 0);
+        }
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_fsetp(WarpState& w, std::uint32_t mask,
+                             const DecodedInstruction& inst) {
+    // FSETP Pu, Pv, Ra, Rb/Sb, Pp (bop combines with Pp; simple 3-op
+    // form has no Pv/Pp).  FSETP5=[Pu,Pv,Ra,2nd,Pp]  FSETP3=[Pu,Ra,2nd].
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    std::uint64_t fcomp = 0, bop = 0;
+    bool ftz = false;
+    int ra_pos = 1;
+    int pp_pos = -1;
+    if (nops == 5) {
+        const auto& d = *static_cast<const shape::DecodedFSETP5*>(&inst);
+        fcomp = static_cast<std::uint64_t>(d.fcomp);
+        bop = static_cast<std::uint64_t>(d.bop);
+        ftz = static_cast<int>(d.ftz) != 0;
+        ra_pos = 2;
+        pp_pos = 4;
+        return fset_core(w, mask, d.ops, nops, fcomp, bop, ftz, ra_pos,
+                         pp_pos, true);
+    }
+    const auto& d = *static_cast<const shape::DecodedFSETP3*>(&inst);
+    fcomp = static_cast<std::uint64_t>(d.fcomp);
+    ftz = static_cast<int>(d.ftz) != 0;
+    return fset_core(w, mask, d.ops, nops, fcomp, bop, ftz, ra_pos, pp_pos,
+                     true);
+}
+
+Status Interpreter::do_fset(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // FSET  Rd, Ra, Rb/Sb, Pp  (Rd = 0x3f800000 or 0).
+    // FSET4=[Rd,Ra,2nd,Pp]     FSET3=[Rd,Ra,2nd].
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    if (nops == 4) {
+        const auto& d = *static_cast<const shape::DecodedFSET4*>(&inst);
+        return fset_core(w, mask, d.ops, nops,
+                         static_cast<std::uint64_t>(d.fcomp),
+                         static_cast<std::uint64_t>(d.bop),
+                         static_cast<int>(d.ftz) != 0, 1, 3, false);
+    }
+    const auto& d = *static_cast<const shape::DecodedFSET3*>(&inst);
+    return fset_core(w, mask, d.ops, nops,
+                     static_cast<std::uint64_t>(d.fcomp), 0,
+                     static_cast<int>(d.ftz) != 0, 1, -1, false);
+}
+
+Status Interpreter::do_fmnmx(WarpState& w, std::uint32_t mask,
+                             const DecodedInstruction& inst) {
+    // FMNMX Rd[, Pu], Ra, Rb/Sb, Pp  (Pp: PT=min, !PT=max; .NAN
+    // propagate; XORSIGN: result sign = sign(Ra) XOR sign(Rb)).
+    // 4-op form: [Rd,Ra,2nd,Pp]; 5-op form: [Rd,Pu,Ra,2nd,Pp].
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t nan = 0, xorsign_val = 0;
+    bool ftz = false;
+    int ra_pos = 1, pp_pos = 3;
+    if (nops == 5) {
+        const auto& d = *static_cast<const shape::DecodedFMNMX5*>(&inst);
+        ops = d.ops;
+        nan = static_cast<std::uint64_t>(d.nan);
+        xorsign_val = static_cast<std::uint64_t>(d.xorsign);
+        ftz = static_cast<int>(d.ftz) != 0;
+        ra_pos = 2;
+        pp_pos = 4;
+    } else {
+        const auto& d = *static_cast<const shape::DecodedFMNMX4*>(&inst);
+        ops = d.ops;
+        nan = static_cast<std::uint64_t>(d.nan);
+        xorsign_val = static_cast<std::uint64_t>(d.xorsign);
+        ftz = static_cast<int>(d.ftz) != 0;
+    }
+    const bool xorsign = xorsign_val != 0;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[ra_pos]);
+        std::uint32_t b = src_value(w, t, ops[ra_pos + 1]);
+        if (ftz) {
+            if (fast_mode()) {
+                if (options_.fast_fp_fallback != FastFpFallback::kNone) {
+                    ++fast_stats_.precise_fallback_ops;
+                    a = fp::flush_f32(a);
+                    b = fp::flush_f32(b);
                 } else {
-                    // Format-aware source classification (round-3 Blocker):
-                    // a BF16/F16 source lives in the low 16 bits; the raw
-                    // 32-bit register value is not a meaningful f32.
-                    exceptional = exc_policy &&
-                        exceptional_f2f_source(srcfmt, src, src_hi);
+                    ++fast_stats_.ignored_modifier_ops;
                 }
-                std::uint32_t fout = 0, fouthi = 0;
-                if (!exceptional &&
-                    fp::fast_f2f(src, src_hi, dstfmt, srcfmt, &fout,
-                                 &fouthi)) {
-                    // Fast conversion produced a native result.  Under
-                    // kExceptional, a native RESULT that is exceptional (e.g.
-                    // finite F32 -> F16 overflow to Inf) also falls back.
-                    // Exactly ONE precise_fallback_ops increment per lane/leaf:
-                    // fall through to the common exit below (Issue-2 round-2 —
-                    // no double counting).
-                    const bool result_exc =
-                        exc_policy && exceptional_f2f_result(dstfmt, fout,
-                                                             fouthi);
-                    if (!result_exc) {
-                        note_fast_leaf(true);
-                        if (rd_rv != 255 && rd_rv < kNumGprs) {
-                            t.gpr[rd_rv] = fout;
-                            if (dstfmt == 2 && rd_rv < kNumGprs - 1)
-                                t.gpr[rd_rv + 1] = fouthi;
-                        }
-                        continue;
+            } else {
+                a = fp::flush_f32(a);
+                b = fp::flush_f32(b);
+            }
+        }
+        // Pp=PT (7) is "min" per the test; !PT is max.  (pred value == 7
+        // AND not inverted) is min, anything else is max.
+        const std::uint64_t ppv_v =
+            static_cast<std::uint64_t>(shape::operand_value_as_i64(
+                ops[pp_pos]));
+        const bool is_max =
+            !(ppv_v == 7 && !(ops[pp_pos].flags & 4));
+        const float fa = std::bit_cast<float>(a);
+        const float fb = std::bit_cast<float>(b);
+        const bool a_nan = std::isnan(fa);
+        const bool b_nan = std::isnan(fb);
+        std::uint32_t out;
+        bool nan_propagated = false;
+        if (nan && (a_nan || b_nan)) {
+            // .NAN: propagate a NaN (canonicalize like arithmetic).
+            out = fp::kCanonicalNan32;
+            nan_propagated = true;
+        } else if (a_nan || b_nan) {
+            // nonan: return the non-NaN operand.
+            out = a_nan ? b : a;
+            nan_propagated = true;
+        } else {
+            // min/max of two numbers; ties pick b on min per the test
+            // (+0/-0 handled by comparing as IEEE float).
+            const bool pick_b = is_max ? (fb >= fa) : (fb <= fa);
+            out = pick_b ? b : a;
+        }
+        // XORSIGN only applies to the selected min/max value, NOT to a
+        // NaN-propagated result.
+        if (xorsign && !nan_propagated) {
+            // XORSIGN: result sign = sign(a) XOR sign(b).
+            const std::uint32_t sa = (a >> 31) & 1;
+            const std::uint32_t sb_ = (b >> 31) & 1;
+            const std::uint32_t ns = sa ^ sb_;
+            out = (out & 0x7fffffffu) | (ns << 31);
+        }
+        if (fast_mode()) note_fast_leaf(false);
+        write_rd_ov(w, t, ops[0], out, 0);
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_fsel(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // FSEL Rd, Ra, Rb/Sb, Pp (select Ra when Pp true, else Rb/Sb).
+    // Roles: [Rd, Ra, 2nd, Pp].
+    const auto& d = *static_cast<const shape::DecodedFSEL4*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const bool ftz = static_cast<int>(d.ftz) != 0;
+    const int pp_pos = 3;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[1]);
+        if (ftz) {
+            if (fast_mode()) {
+                if (options_.fast_fp_fallback != FastFpFallback::kNone) {
+                    ++fast_stats_.precise_fallback_ops;
+                    a = fp::flush_f32(a);
+                } else {
+                    ++fast_stats_.ignored_modifier_ops;
+                }
+            } else {
+                a = fp::flush_f32(a);
+            }
+        }
+        std::uint32_t b = src_value(w, t, ops[2]);
+        bool p = false;
+        read_pred_ov(t, ops[pp_pos], &p);
+        if (fast_mode()) note_fast_leaf(false);
+        write_rd_ov(w, t, ops[0], p ? a : b, 0);
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_f2f(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst) {
+    // F2F Rd, Rb/Sb/URb (src/dst format in the combined dstfmt.srcfmt
+    // slot).  Roles: [Rd, source].  RIR forms (source = Sb immediate) are
+    // not executed — same as the pre-migration has_rb gate, identified by
+    // the operand kind (Register only).
+    const auto& d = *static_cast<const shape::DecodedF2F2*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    if (static_cast<shape::OperandKind>(ops[1].kind) !=
+        shape::OperandKind::kRegister)
+        return Status::success();
+    const std::uint64_t fmt =
+        static_cast<std::uint64_t>(d.dstfmt_srcfmt);
+    const Rnd rnd = static_cast<Rnd>(d.rnd);
+    const bool ftz = static_cast<int>(d.ftz) != 0;
+    const bool sat = false;  // F2F has no SAT modifier (was always 0)
+    const int rb_r = bind_idx_ov(ops[1]);
+    const std::uint64_t rd_rv =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+    // Combined fmt codes (DSTFMT_SRCFMT_*): F16.F32=17, BF16.F32=20,
+    // F32.F16=10, BF16.F16=12, F16.BF16=33, F32.BF16=34, F64.F16=11,
+    // F64.BF16=35, F16.F64=25, F32.F64=26, BF16.F64=28.
+    int dstfmt = 0, srcfmt = 0;
+    switch (fmt) {
+        case 17: dstfmt = 0; srcfmt = 1; break;   // F16.F32
+        case 19: dstfmt = 2; srcfmt = 1; break;   // F64.F32
+        case 20: dstfmt = 3; srcfmt = 1; break;   // BF16.F32
+        case 10: dstfmt = 1; srcfmt = 0; break;   // F32.F16
+        case 12: dstfmt = 3; srcfmt = 0; break;   // BF16.F16
+        case 33: dstfmt = 0; srcfmt = 3; break;   // F16.BF16
+        case 34: dstfmt = 1; srcfmt = 3; break;   // F32.BF16
+        case 11: dstfmt = 2; srcfmt = 0; break;   // F64.F16
+        case 35: dstfmt = 2; srcfmt = 3; break;   // F64.BF16
+        case 25: dstfmt = 0; srcfmt = 2; break;   // F16.F64
+        case 26: dstfmt = 1; srcfmt = 2; break;   // F32.F64
+        case 28: dstfmt = 3; srcfmt = 2; break;   // BF16.F64
+        default: break;
+    }
+    // M5 pre-binding: F64 source pair base + dest index (used by both the
+    // fast and the precise path below; hoisted out of the lane loop).
+    // Hoisted policy flag (Medium-7 / perf): under kNone the exceptional
+    // input/result classification is skipped entirely; only kExceptional
+    // pays for it.
+    const bool exc_policy =
+        options_.fast_fp_fallback == FastFpFallback::kExceptional;
+    auto read_f64_pair = [](const ThreadState& t, int idx) {
+        if (idx < 0 || idx >= kNumGprs - 1) return std::uint64_t{0};
+        return t.gpr[idx] |
+               (static_cast<std::uint64_t>(t.gpr[idx + 1]) << 32);
+    };
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t src = read_reg_ov(t, ops[1]);
+        std::uint32_t out = 0;
+        std::uint32_t outhi = 0;
+        // Phase 5.5: fast F2F for native host conversions (RN, no
+        // FTZ/FMZ/SAT).  Fallback policy routes exceptional inputs and
+        // modifier mismatches to the precise helpers.
+        if (fast_mode() && rnd == Rnd::kRn && !ftz && !sat) {
+            std::uint32_t src_hi = 0;
+            bool exceptional = false;
+            if (srcfmt == 2) {  // F64 source: read the {Rb,Rb+1} pair and
+                                // classify the FULL 64-bit pattern as a
+                                // double (not two separate f32s — High-3).
+                const std::uint64_t pair = read_f64_pair(t, rb_r);
+                src_hi = static_cast<std::uint32_t>(pair >> 32);
+                exceptional = exc_policy && exceptional_f64(pair);
+            } else {
+                // Format-aware source classification (round-3 Blocker):
+                // a BF16/F16 source lives in the low 16 bits; the raw
+                // 32-bit register value is not a meaningful f32.
+                exceptional = exc_policy &&
+                    exceptional_f2f_source(srcfmt, src, src_hi);
+            }
+            std::uint32_t fout = 0, fouthi = 0;
+            if (!exceptional &&
+                fp::fast_f2f(src, src_hi, dstfmt, srcfmt, &fout,
+                             &fouthi)) {
+                // Fast conversion produced a native result.  Under
+                // kExceptional, a native RESULT that is exceptional (e.g.
+                // finite F32 -> F16 overflow to Inf) also falls back.
+                // Exactly ONE precise_fallback_ops increment per lane/leaf:
+                // fall through to the common exit below (Issue-2 round-2 —
+                // no double counting).
+                const bool result_exc =
+                    exc_policy && exceptional_f2f_result(dstfmt, fout,
+                                                         fouthi);
+                if (!result_exc) {
+                    note_fast_leaf(true);
+                    if (rd_rv != 255 && rd_rv < kNumGprs) {
+                        t.gpr[rd_rv] = fout;
+                        if (dstfmt == 2 && rd_rv < kNumGprs - 1)
+                            t.gpr[rd_rv + 1] = fouthi;
                     }
+                    continue;
                 }
-                // Common fallback exit: reached when the input is exceptional,
-                // fast_f2f cannot handle the (dstfmt,srcfmt) pair natively, or
-                // the native result was exceptional.  Counted exactly once.
+            }
+            // Common fallback exit: reached when the input is exceptional,
+            // fast_f2f cannot handle the (dstfmt,srcfmt) pair natively, or
+            // the native result was exceptional.  Counted exactly once.
+            ++fast_stats_.precise_fallback_ops;
+        }
+        if (dstfmt == 2) {
+            std::uint32_t f32;
+            if (srcfmt == 0) f32 = fp::f16_to_f32(
+                static_cast<std::uint16_t>(src & 0xffffu));
+            else if (srcfmt == 3) f32 = src & 0xffff0000u;
+            else f32 = src;
+            if (ftz) f32 = fp::flush_f32(f32);
+            const double dbl = static_cast<double>(
+                std::bit_cast<float>(f32));
+            const std::uint64_t d = std::bit_cast<std::uint64_t>(dbl);
+            out = static_cast<std::uint32_t>(d & 0xffffffffu);
+            outhi = static_cast<std::uint32_t>(d >> 32);
+        } else if (srcfmt == 2) {
+            // 64-bit source (F16/BF16/F32 <- F64): read the {Rb,Rb+1}
+            // pair as the F64 value and downconvert DIRECTLY from the
+            // FP64 bit pattern (no FP32 intermediate — avoids double
+            // rounding and preserves directed rounding).
+            const std::uint64_t pair = read_f64_pair(t, rb_r);
+            if (dstfmt == 1) {  // F32.F64
+                out = fp::f64_to_f32(pair, rnd, ftz, sat);
+            } else if (dstfmt == 0) {  // F16.F64
+                out = fp::f64_to_f16(pair, rnd, ftz, sat);
+            } else if (dstfmt == 3) {  // BF16.F64
+                out = fp::f64_to_bf16(pair, rnd, ftz, sat);
+            }
+        } else {
+            out = fp::f2f(src, dstfmt, srcfmt, rnd, ftz, sat);
+        }
+        if (rd_rv != 255 && rd_rv < kNumGprs) {
+            t.gpr[rd_rv] = out;
+            if (dstfmt == 2 && rd_rv < kNumGprs - 1)
+                t.gpr[rd_rv + 1] = outhi;
+        }
+        (void)outhi;
+    }
+    return Status::success();
+}
+
+Status Interpreter::cvtx_core(WarpState& w, std::uint32_t mask,
+                              const shape::OperandValue* ops, Rnd rnd,
+                              bool ftz, int dstfmt, int srcfmt,
+                              bool is_i2f) {
+    const bool sat = false;
+    // Source operand: register (Rb/URb) or Sb immediate.
+    const auto src_kind = static_cast<shape::OperandKind>(ops[1].kind);
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        const std::uint32_t val =
+            (src_kind == shape::OperandKind::kRegister)
+                ? read_reg_ov(t, ops[1])
+                : static_cast<std::uint32_t>(
+                      shape::operand_value_as_i64(ops[1]));
+        std::uint64_t out = 0;
+        if (fast_mode()) {
+            // Phase 5.5 fast conversions.  I2F: RN + F32/F64 destination
+            // are native host casts (bit-exact); otherwise fall back.
+            // F2I: checked-range fast conversion; out-of-range / NaN /
+            // Inf / unsupported format routes to the precise saturating
+            // helper (no UB on any path).
+            if (is_i2f) {
+                const int f = dstfmt == 3 ? 2
+                             : dstfmt == 1 ? 0
+                             : dstfmt == 4 ? 3
+                             : 1;  // map to fp F16=0 F32=1 F64=2 BF16=3
+                std::uint32_t fout = 0, fouthi = 0;
+                if (rnd == Rnd::kRn &&
+                    fp::fast_i2f(val, f, srcfmt, &fout, &fouthi)) {
+                    note_fast_leaf(true);
+                    write_rd_ov(w, t, ops[0], fout, fouthi, f == 2);
+                    continue;
+                }
+                ++fast_stats_.precise_fallback_ops;
+            } else {  // F2I
+                std::uint32_t fout = 0;
+                if (fp::fast_f2i(val, dstfmt, static_cast<int>(rnd), ftz,
+                                 &fout)) {
+                    note_fast_leaf(true);
+                    write_rd_ov(w, t, ops[0], fout, 0, false);
+                    continue;
+                }
                 ++fast_stats_.precise_fallback_ops;
             }
-            if (dstfmt == 2) {
-                std::uint32_t f32;
-                if (srcfmt == 0) f32 = fp::f16_to_f32(
-                    static_cast<std::uint16_t>(src & 0xffffu));
-                else if (srcfmt == 3) f32 = src & 0xffff0000u;
-                else f32 = src;
-                if (ftz) f32 = fp::flush_f32(f32);
-                const double dbl = static_cast<double>(
-                    std::bit_cast<float>(f32));
-                const std::uint64_t d = std::bit_cast<std::uint64_t>(dbl);
-                out = static_cast<std::uint32_t>(d & 0xffffffffu);
-                outhi = static_cast<std::uint32_t>(d >> 32);
-            } else if (srcfmt == 2) {
-                // 64-bit source (F16/BF16/F32 <- F64): read the {Rb,Rb+1}
-                // pair as the F64 value and downconvert DIRECTLY from the
-                // FP64 bit pattern (no FP32 intermediate — avoids double
-                // rounding and preserves directed rounding).
-                const std::uint64_t pair = read_f64_pair(t, rb_r);
-                if (dstfmt == 1) {  // F32.F64
-                    out = fp::f64_to_f32(pair, rnd, ftz, sat);
-                } else if (dstfmt == 0) {  // F16.F64
-                    out = fp::f64_to_f16(pair, rnd, ftz, sat);
-                } else if (dstfmt == 3) {  // BF16.F64
-                    out = fp::f64_to_bf16(pair, rnd, ftz, sat);
-                }
-            } else {
-                out = fp::f2f(src, dstfmt, srcfmt, rnd, ftz, sat);
-            }
-            if (rd_rv != 255 && rd_rv < kNumGprs) {
-                t.gpr[rd_rv] = out;
-                if (dstfmt == 2 && rd_rv < kNumGprs - 1)
-                    t.gpr[rd_rv + 1] = outhi;
-            }
-            (void)outhi;
         }
-        return Status::success();
-    }
-
-    if (m == isa::Mnemonic::kI2F || m == isa::Mnemonic::kF2I) {
-        // Roles: [Rd, source]; source is a register (Rb/URb) or the Sb
-        // immediate.  Sat is absent from both schemas (was always 0); F2I has
-        // no ftz member (I2F none either) so ftz reads 0.
-        const shape::OperandValue* ops = nullptr;
-        Rnd rnd = Rnd::kRn;
-        bool ftz = false;
-        int dstfmt = 0, srcfmt = 1;
-        if (m == isa::Mnemonic::kI2F) {
-            const auto& d = *static_cast<const shape::DecodedI2F2*>(&inst);
-            ops = d.ops;
-            rnd = static_cast<Rnd>(d.rnd);
-            dstfmt = static_cast<int>(d.dstfmt);
-            srcfmt = static_cast<int>(d.srcfmt);
+        if (is_i2f) {
+            // I2F dstfmt enum: Float32 F32=2, Float64 F64=3,
+            // DSTFMT_F16_F32_BF16 F16=1 F32=2 BF16=4.  Map to the fp
+            // constants (F16=0 F32=1 F64=2 BF16=3).
+            int f = 1;
+            switch (dstfmt) {
+                case 1: f = 0; break;  // F16
+                case 2: f = 1; break;  // F32
+                case 3: f = 2; break;  // F64
+                case 4: f = 3; break;  // BF16
+                default: f = 1; break;
+            }
+            out = fp::i2f(val, f, srcfmt, rnd, sat);
         } else {
-            const auto& d = *static_cast<const shape::DecodedF2I2*>(&inst);
-            ops = d.ops;
-            rnd = static_cast<Rnd>(d.rnd);
-            ftz = static_cast<int>(d.ftz) != 0;
-            dstfmt = static_cast<int>(d.dstfmt);
-            srcfmt = static_cast<int>(d.srcfmt);
+            out = fp::f2i(val, dstfmt, srcfmt, rnd, ftz, false);
         }
-        const bool sat = false;
-        // Source operand: register (Rb/URb) or Sb immediate.
-        const auto src_kind = static_cast<shape::OperandKind>(ops[1].kind);
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            const std::uint32_t val =
-                (src_kind == shape::OperandKind::kRegister)
-                    ? read_reg_ov(t, ops[1])
-                    : static_cast<std::uint32_t>(
-                          shape::operand_value_as_i64(ops[1]));
-            std::uint64_t out = 0;
-            if (fast_mode()) {
-                // Phase 5.5 fast conversions.  I2F: RN + F32/F64 destination
-                // are native host casts (bit-exact); otherwise fall back.
-                // F2I: checked-range fast conversion; out-of-range / NaN /
-                // Inf / unsupported format routes to the precise saturating
-                // helper (no UB on any path).
-                if (m == isa::Mnemonic::kI2F) {
-                    const int f = dstfmt == 3 ? 2
-                                 : dstfmt == 1 ? 0
-                                 : dstfmt == 4 ? 3
-                                 : 1;  // map to fp F16=0 F32=1 F64=2 BF16=3
-                    std::uint32_t fout = 0, fouthi = 0;
-                    if (rnd == Rnd::kRn &&
-                        fp::fast_i2f(val, f, srcfmt, &fout, &fouthi)) {
-                        note_fast_leaf(true);
-                        write_rd_ov(w, t, ops[0], fout, fouthi, f == 2);
-                        continue;
-                    }
-                    ++fast_stats_.precise_fallback_ops;
-                } else {  // F2I
-                    std::uint32_t fout = 0;
-                    if (fp::fast_f2i(val, dstfmt, static_cast<int>(rnd), ftz,
-                                     &fout)) {
-                        note_fast_leaf(true);
-                        write_rd_ov(w, t, ops[0], fout, 0, false);
-                        continue;
-                    }
-                    ++fast_stats_.precise_fallback_ops;
-                }
-            }
-            if (m == isa::Mnemonic::kI2F) {
-                // I2F dstfmt enum: Float32 F32=2, Float64 F64=3,
-                // DSTFMT_F16_F32_BF16 F16=1 F32=2 BF16=4.  Map to the fp
-                // constants (F16=0 F32=1 F64=2 BF16=3).
-                int f = 1;
-                switch (dstfmt) {
-                    case 1: f = 0; break;  // F16
-                    case 2: f = 1; break;  // F32
-                    case 3: f = 2; break;  // F64
-                    case 4: f = 3; break;  // BF16
-                    default: f = 1; break;
-                }
-                out = fp::i2f(val, f, srcfmt, rnd, sat);
-            } else {
-                out = fp::f2i(val, dstfmt, srcfmt, rnd, ftz, false);
-            }
-            // F64 destinations (I2F.F64, dstfmt==3) write a register pair.
-            const bool f64_dst = (m == isa::Mnemonic::kI2F && dstfmt == 3);
-            write_rd_ov(w, t, ops[0], static_cast<std::uint32_t>(out),
-                        static_cast<std::uint32_t>(out >> 32), f64_dst);
-        }
-        return Status::success();
+        // F64 destinations (I2F.F64, dstfmt==3) write a register pair.
+        const bool f64_dst = (is_i2f && dstfmt == 3);
+        write_rd_ov(w, t, ops[0], static_cast<std::uint32_t>(out),
+                    static_cast<std::uint32_t>(out >> 32), f64_dst);
     }
+    return Status::success();
+}
 
-    if (m == isa::Mnemonic::kFRND) {
-        // FRND Rd, Rb/Sb/URb — round to integral.  Roles: [Rd, source].
-        const auto& d = *static_cast<const shape::DecodedFRND2*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        const Rnd rnd = static_cast<Rnd>(d.rnd);
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[1]);
-            const float f = std::bit_cast<float>(a);
-            float r;
-            switch (rnd) {
-                case Rnd::kRm: r = std::floor(f); break;
-                case Rnd::kRp: r = std::ceil(f); break;
-                case Rnd::kRz: r = std::trunc(f); break;
-                default: r = std::nearbyint(f); break;
-            }
-            if (fast_mode()) note_fast_leaf(false);
-            write_rd_ov(w, t, ops[0], std::bit_cast<std::uint32_t>(r), 0);
+Status Interpreter::do_i2f(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst) {
+    // Roles: [Rd, source]; source is a register (Rb/URb) or the Sb
+    // immediate.  Sat is absent from the schema (was always 0); no ftz.
+    const auto& d = *static_cast<const shape::DecodedI2F2*>(&inst);
+    return cvtx_core(w, mask, d.ops, static_cast<Rnd>(d.rnd), false,
+                     static_cast<int>(d.dstfmt),
+                     static_cast<int>(d.srcfmt), true);
+}
+
+Status Interpreter::do_f2i(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst) {
+    // Roles: [Rd, source].  F2I has no sat member (was always 0).
+    const auto& d = *static_cast<const shape::DecodedF2I2*>(&inst);
+    return cvtx_core(w, mask, d.ops, static_cast<Rnd>(d.rnd),
+                     static_cast<int>(d.ftz) != 0,
+                     static_cast<int>(d.dstfmt),
+                     static_cast<int>(d.srcfmt), false);
+}
+
+Status Interpreter::do_frnd(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // FRND Rd, Rb/Sb/URb — round to integral.  Roles: [Rd, source].
+    const auto& d = *static_cast<const shape::DecodedFRND2*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const Rnd rnd = static_cast<Rnd>(d.rnd);
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[1]);
+        const float f = std::bit_cast<float>(a);
+        float r;
+        switch (rnd) {
+            case Rnd::kRm: r = std::floor(f); break;
+            case Rnd::kRp: r = std::ceil(f); break;
+            case Rnd::kRz: r = std::trunc(f); break;
+            default: r = std::nearbyint(f); break;
         }
-        return Status::success();
+        if (fast_mode()) note_fast_leaf(false);
+        write_rd_ov(w, t, ops[0], std::bit_cast<std::uint32_t>(r), 0);
     }
+    return Status::success();
+}
 
-    if (m == isa::Mnemonic::kP2R) {
-        // P2R[.B0/.B1/.B2/.B3] Rd, PR, Ra, Sb — pack predicates into Rd.
-        // Roles: [Rd, Pr, Ra, 2nd].
-        const auto& d = *static_cast<const shape::DecodedP2R4*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        const std::uint64_t insert = static_cast<std::uint64_t>(d.insert);
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t base = read_reg_ov(t, ops[2]);
-            std::uint32_t sel = src_value(w, t, ops[3]);
-            std::uint32_t out = base;
-            const unsigned shift = static_cast<unsigned>(8 * (insert & 3));
-            for (int i = 0; i < 8; ++i) {
-                if (!(sel & (1u << i))) continue;
-                const bool pv = (i == 7) ? true : t.pred[i];  // P7 = PT
-                const std::uint32_t bit = 1u << (i + shift);
-                if (pv) out |= bit;
-                else out &= ~bit;
-            }
-            write_rd_ov(w, t, ops[0], out, 0);
+Status Interpreter::do_p2r(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst) {
+    // P2R[.B0/.B1/.B2/.B3] Rd, PR, Ra, Sb — pack predicates into Rd.
+    // Roles: [Rd, Pr, Ra, 2nd].
+    const auto& d = *static_cast<const shape::DecodedP2R4*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const std::uint64_t insert = static_cast<std::uint64_t>(d.insert);
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t base = read_reg_ov(t, ops[2]);
+        std::uint32_t sel = src_value(w, t, ops[3]);
+        std::uint32_t out = base;
+        const unsigned shift = static_cast<unsigned>(8 * (insert & 3));
+        for (int i = 0; i < 8; ++i) {
+            if (!(sel & (1u << i))) continue;
+            const bool pv = (i == 7) ? true : t.pred[i];  // P7 = PT
+            const std::uint32_t bit = 1u << (i + shift);
+            if (pv) out |= bit;
+            else out &= ~bit;
         }
-        return Status::success();
+        write_rd_ov(w, t, ops[0], out, 0);
     }
+    return Status::success();
+}
 
-    // ---- collectives -----------------------------------------------------
-    if (m == isa::Mnemonic::kVOTE) {
-        // VOTE.op Rd, Pu, Pp — warp-wide reduction of Pp into Rd (bitmask),
-        // Pu = result predicate (per-lane).  Roles: [Rd, Pu, Pp].
-        const auto& d = *static_cast<const shape::DecodedVOTE3*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        const std::uint64_t op = static_cast<std::uint64_t>(d.voteop);
-        // Build the warp mask of Pp over all ACTIVE lanes (those at this PC).
-        std::uint32_t all = 0;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            const ThreadState& t = w.threads[lane];
-            bool p = false;
-            read_pred_ov(t, ops[2], &p);
-            if (p) all |= (1u << lane);
-        }
-        const int pop = __builtin_popcount(all);
-        const bool result = (op == 0) ? (pop == __builtin_popcount(mask))
-            : (op == 1) ? (pop != 0)
-            : (pop == __builtin_popcount(mask) || pop == 0);  // EQ
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            write_pred_ov(t, ops[1], result);
-            write_rd_ov(w, t, ops[0], all, 0);
-        }
-        return Status::success();
+Status Interpreter::do_vote(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // VOTE.op Rd, Pu, Pp — warp-wide reduction of Pp into Rd (bitmask),
+    // Pu = result predicate (per-lane).  Roles: [Rd, Pu, Pp].
+    const auto& d = *static_cast<const shape::DecodedVOTE3*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const std::uint64_t op = static_cast<std::uint64_t>(d.voteop);
+    // Build the warp mask of Pp over all ACTIVE lanes (those at this PC).
+    std::uint32_t all = 0;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        const ThreadState& t = w.threads[lane];
+        bool p = false;
+        read_pred_ov(t, ops[2], &p);
+        if (p) all |= (1u << lane);
     }
-
-    if (m == isa::Mnemonic::kELECT) {
-        // ELECT Pu, URd, Pp: leader election — lowest active lane with Pp.
-        // Roles: [Pu, URd, <Pp|URa>] (the third role is Pp when present).
-        const auto& d = *static_cast<const shape::DecodedELECT3*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        const bool has_pp =
-            static_cast<shape::OperandKind>(ops[2].kind) ==
-            shape::OperandKind::kPredicate;
-        int leader = -1;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            const ThreadState& t = w.threads[lane];
-            bool p = false;
-            if (has_pp) read_pred_ov(t, ops[2], &p);
-            if (p) { leader = lane; break; }
-        }
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            const bool is_leader = (lane == leader);
-            write_pred_ov(t, ops[0], is_leader);
-            // URd = leader lane id for all lanes.
-            const std::uint64_t r =
-                static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
-            if (r < kNumUrs)
-                w.ur[r] = static_cast<std::uint32_t>(leader);
-        }
-        return Status::success();
+    const int pop = __builtin_popcount(all);
+    const bool result = (op == 0) ? (pop == __builtin_popcount(mask))
+        : (op == 1) ? (pop != 0)
+        : (pop == __builtin_popcount(mask) || pop == 0);  // EQ
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        write_pred_ov(t, ops[1], result);
+        write_rd_ov(w, t, ops[0], all, 0);
     }
+    return Status::success();
+}
 
-    if (m == isa::Mnemonic::kREDUX) {
-        // REDUX.op.sz URd, Ra — reduce active-lane Ra values into URd.
-        // Roles: [URd, Ra].
-        const auto& d = *static_cast<const shape::DecodedREDUX2*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        const std::uint64_t op = static_cast<std::uint64_t>(d.op);
-        bool first = true;
-        std::uint32_t acc = 0;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            const ThreadState& t = w.threads[lane];
-            const std::uint32_t v = read_reg_ov(t, ops[1]);
-            if (first) { acc = v; first = false; }
-            else {
-                switch (op) {
-                    case 0: acc &= v; break;  // AND
-                    case 1: acc |= v; break;  // OR
-                    case 2: acc ^= v; break;  // XOR
-                    case 4: acc = (v < acc) ? v : acc; break;  // MIN
-                    case 5: acc = (v > acc) ? v : acc; break;  // MAX
-                    default: acc += v; break;  // SUM
-                }
+Status Interpreter::do_elect(WarpState& w, std::uint32_t mask,
+                             const DecodedInstruction& inst) {
+    // ELECT Pu, URd, Pp: leader election — lowest active lane with Pp.
+    // Roles: [Pu, URd, <Pp|URa>] (the third role is Pp when present).
+    const auto& d = *static_cast<const shape::DecodedELECT3*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const bool has_pp =
+        static_cast<shape::OperandKind>(ops[2].kind) ==
+        shape::OperandKind::kPredicate;
+    int leader = -1;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        const ThreadState& t = w.threads[lane];
+        bool p = false;
+        if (has_pp) read_pred_ov(t, ops[2], &p);
+        if (p) { leader = lane; break; }
+    }
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        const bool is_leader = (lane == leader);
+        write_pred_ov(t, ops[0], is_leader);
+        // URd = leader lane id for all lanes.
+        const std::uint64_t r =
+            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
+        if (r < kNumUrs)
+            w.ur[r] = static_cast<std::uint32_t>(leader);
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_redux(WarpState& w, std::uint32_t mask,
+                             const DecodedInstruction& inst) {
+    // REDUX.op.sz URd, Ra — reduce active-lane Ra values into URd.
+    // Roles: [URd, Ra].
+    const auto& d = *static_cast<const shape::DecodedREDUX2*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const std::uint64_t op = static_cast<std::uint64_t>(d.op);
+    bool first = true;
+    std::uint32_t acc = 0;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        const ThreadState& t = w.threads[lane];
+        const std::uint32_t v = read_reg_ov(t, ops[1]);
+        if (first) { acc = v; first = false; }
+        else {
+            switch (op) {
+                case 0: acc &= v; break;  // AND
+                case 1: acc |= v; break;  // OR
+                case 2: acc ^= v; break;  // XOR
+                case 4: acc = (v < acc) ? v : acc; break;  // MIN
+                case 5: acc = (v > acc) ? v : acc; break;  // MAX
+                default: acc += v; break;  // SUM
             }
         }
-        if (!first) {
-            const std::uint64_t r =
-                static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
-            if (r < kNumUrs) w.ur[r] = acc;
-        }
-        return Status::success();
     }
-
-    if (m == isa::Mnemonic::kSHFL) {
-        // SHFL.idx/mode Pu, Rd, Ra, Sb/Rb, Rc/Sc — warp shuffle.
-        // Roles: [Pu, Rd, Ra, 2nd (idx), 3rd (segment base)].
-        const auto& d = *static_cast<const shape::DecodedSHFL5*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        const std::uint64_t mode = static_cast<std::uint64_t>(d.shflmd);
-        // Gather all active-lane Ra values (per-lane).
-        std::array<std::uint32_t, kLanesPerWarp> vals{};
-        for (int lane = 0; lane < kLanesPerWarp; ++lane)
-            vals[lane] = read_reg_ov(w.threads[lane], ops[2]);
-        const auto seg_kind = static_cast<shape::OperandKind>(ops[4].kind);
-        const std::int64_t seg_v = shape::operand_value_as_i64(ops[4]);
-        const auto idx_kind = static_cast<shape::OperandKind>(ops[3].kind);
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            const std::uint32_t seg =
-                (seg_kind == shape::OperandKind::kRegister && seg_v != 255)
-                ? read_reg_ov(t, ops[4]) & 0x1f
-                : 0;
-            std::uint32_t idx = 0;
-            if (idx_kind == shape::OperandKind::kUImm ||
-                idx_kind == shape::OperandKind::kSImm) {
-                idx = static_cast<std::uint32_t>(
-                          shape::operand_value_as_i64(ops[3])) &
-                      0x1f;
-            } else if (idx_kind == shape::OperandKind::kRegister) {
-                idx = read_reg_ov(t, ops[3]) & 0x1f;
-            }
-            int srclane = -1;
-            const int laneid = lane;
-            switch (mode) {
-                case 0:  // IDX: source lane = seg_base + idx
-                    srclane = static_cast<int>(seg + (idx & 0x1f));
-                    break;
-                case 1:  // UP: source lane = lane - idx (own if out of range)
-                    srclane = laneid - static_cast<int>(idx);
-                    break;
-                case 2:  // DOWN: source lane = lane + idx (own if >= bound)
-                    srclane = laneid + static_cast<int>(idx);
-                    break;
-                case 3:  // BFLY: source lane = lane ^ idx
-                    srclane = laneid ^ static_cast<int>(idx);
-                    break;
-                default: break;
-            }
-            // Range check: UP keeps only lane-idx >= 0; DOWN keeps only
-            // lane+idx < 32; IDX keeps the source < 32 (segment bounds the
-            // source to [seg*0, seg*0+31] — a full warp when seg=0).
-            const bool valid = (srclane >= 0 && srclane < kLanesPerWarp);
-            if (valid && (mask & (1u << srclane))) {
-                write_rd_ov(w, t, ops[1], vals[srclane], 0);
-                write_pred_ov(t, ops[0], true);
-            } else {
-                // Out of range: Rd = the lane's own Ra value (verified in
-                // test_shfl: UP t<delta keeps t; DOWN t+delta>=32 keeps t).
-                write_rd_ov(w, t, ops[1], vals[lane], 0);
-                write_pred_ov(t, ops[0], false);
-            }
-        }
-        return Status::success();
+    if (!first) {
+        const std::uint64_t r =
+            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+        if (r < kNumUrs) w.ur[r] = acc;
     }
+    return Status::success();
+}
 
-    // ---- integer / bit ---------------------------------------------------
-    if (m == isa::Mnemonic::kLOP3 || m == isa::Mnemonic::kLOP) {
-        // LOP3 Rd, Ra, Rb/Sb, Rc, imm8 — 3-input logic with 8-bit LUT.
-        // LOP  Rd, Ra, Rb/Sb — AND/OR/XOR/PASS_B.
-        // Positional layout: [Pu, Rd, Ra, 2nd, Rc(, imm8|Pp(, Pp))].  pos5 is
-        // imm8 (UImm) on the LUT forms or Pp (Predicate) on the no-LUT forms.
-        const auto& mf = shape::kShapeManifests[inst.shape_variant];
-        const std::uint16_t nops = mf.n_ops;
-        const shape::OperandValue* ops = nullptr;
-        std::uint64_t lop = 0;
-        if (m == isa::Mnemonic::kLOP3) {
-            if (nops == 7) {
-                ops = static_cast<const shape::DecodedLOP37*>(&inst)->ops;
-            } else if (nops == 6) {
-                ops = static_cast<const shape::DecodedLOP36*>(&inst)->ops;
-            } else {
-                ops = static_cast<const shape::DecodedLOP35*>(&inst)->ops;
-            }
-        } else {  // LOP
-            lop = (nops == 5)
-                      ? static_cast<std::uint64_t>(
-                            static_cast<const shape::DecodedLOP5*>(&inst)
-                                ->lop)
-                      : static_cast<std::uint64_t>(
-                            static_cast<const shape::DecodedLOP4*>(&inst)
-                                ->lop);
-            ops = (nops == 5)
-                      ? static_cast<const shape::DecodedLOP5*>(&inst)->ops
-                      : static_cast<const shape::DecodedLOP4*>(&inst)->ops;
+Status Interpreter::do_shfl(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // SHFL.idx/mode Pu, Rd, Ra, Sb/Rb, Rc/Sc — warp shuffle.
+    // Roles: [Pu, Rd, Ra, 2nd (idx), 3rd (segment base)].
+    const auto& d = *static_cast<const shape::DecodedSHFL5*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const std::uint64_t mode = static_cast<std::uint64_t>(d.shflmd);
+    // Gather all active-lane Ra values (per-lane).
+    std::array<std::uint32_t, kLanesPerWarp> vals{};
+    for (int lane = 0; lane < kLanesPerWarp; ++lane)
+        vals[lane] = read_reg_ov(w.threads[lane], ops[2]);
+    const auto seg_kind = static_cast<shape::OperandKind>(ops[4].kind);
+    const std::int64_t seg_v = shape::operand_value_as_i64(ops[4]);
+    const auto idx_kind = static_cast<shape::OperandKind>(ops[3].kind);
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        const std::uint32_t seg =
+            (seg_kind == shape::OperandKind::kRegister && seg_v != 255)
+            ? read_reg_ov(t, ops[4]) & 0x1f
+            : 0;
+        std::uint32_t idx = 0;
+        if (idx_kind == shape::OperandKind::kUImm ||
+            idx_kind == shape::OperandKind::kSImm) {
+            idx = static_cast<std::uint32_t>(
+                      shape::operand_value_as_i64(ops[3])) &
+                  0x1f;
+        } else if (idx_kind == shape::OperandKind::kRegister) {
+            idx = read_reg_ov(t, ops[3]) & 0x1f;
         }
-        std::uint32_t lut = 0;
-        if (m == isa::Mnemonic::kLOP3 && nops >= 6 &&
-            static_cast<shape::OperandKind>(ops[5].kind) ==
-                shape::OperandKind::kUImm) {
-            lut = static_cast<std::uint32_t>(
-                shape::operand_value_as_i64(ops[5]));
-        } else if (m == isa::Mnemonic::kLOP) {
-            // Map LOP.AND/OR/XOR/PASS_B to the matching 3-input truth table
-            // (with Rc=0): AND=0x80, OR=0xfe, XOR=0x96, PASS_B=0xcc.
-            switch (lop) {
-                case 0: lut = 0x80; break;  // AND
-                case 1: lut = 0xfe; break;  // OR
-                case 2: lut = 0x96; break;  // XOR
-                case 3: lut = 0xcc; break;  // PASS_B
-                default: break;
-            }
+        int srclane = -1;
+        const int laneid = lane;
+        switch (mode) {
+            case 0:  // IDX: source lane = seg_base + idx
+                srclane = static_cast<int>(seg + (idx & 0x1f));
+                break;
+            case 1:  // UP: source lane = lane - idx (own if out of range)
+                srclane = laneid - static_cast<int>(idx);
+                break;
+            case 2:  // DOWN: source lane = lane + idx (own if >= bound)
+                srclane = laneid + static_cast<int>(idx);
+                break;
+            case 3:  // BFLY: source lane = lane ^ idx
+                srclane = laneid ^ static_cast<int>(idx);
+                break;
+            default: break;
         }
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[2]);
-            std::uint32_t b = src_value(w, t, ops[3]);
-            std::uint32_t c = read_reg_ov(t, ops[4]);
-            std::uint32_t out = 0;
-            // LOP3 truth-table: bit i = output for input (a,b,c) with a as
-            // the index MSB (verified: lut 0xC0 = a&b = bits 6,7).  Index =
-            // (a<<2)|(b<<1)|(c<<0).
-            for (int bit = 0; bit < 32; ++bit) {
-                const int idx = (((a >> bit) & 1) << 2) |
-                                (((b >> bit) & 1) << 1) |
-                                ((c >> bit) & 1);
-                if ((lut >> idx) & 1) out |= (1u << bit);
-            }
-            write_rd_ov(w, t, ops[1], out, 0);
-        }
-        return Status::success();
-    }
-
-    if (m == isa::Mnemonic::kSHF) {
-        // SHF.L/.R Rd, Ra, 2nd, 3rd (shift count = 2nd & 0x1f).  hilo selects
-        // which register holds the value being shifted; dir the direction.
-        const auto& d = *static_cast<const shape::DecodedSHF4*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        const std::uint64_t dir = static_cast<std::uint64_t>(d.dir);
-        const std::uint64_t hilo = static_cast<std::uint64_t>(d.hilo);
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[1]);
-            std::uint32_t b = src_value(w, t, ops[2]);
-            std::uint32_t c = read_reg_ov(t, ops[3]);
-            const unsigned sh = b & 0x1f;
-            std::uint32_t out;
-            if (dir == 0) {  // L
-                if (hilo == 0) {
-                    out = (sh == 0) ? a : (a << sh);
-                } else {
-                    out = (sh == 0) ? c : ((c << sh) | (a >> (32 - sh)));
-                }
-            } else {  // R
-                if (hilo == 0) {
-                    out = (sh == 0) ? a : ((c << (32 - sh)) | (a >> sh));
-                } else {
-                    out = (sh == 0) ? c : (c >> sh);
-                }
-            }
-            write_rd_ov(w, t, ops[0], out, 0);
-        }
-        return Status::success();
-    }
-
-    if (m == isa::Mnemonic::kIABS) {
-        const auto& d = *static_cast<const shape::DecodedIABS2*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t b = src_value(w, t, ops[1]);
-            const std::uint32_t out = (b & 0x80000000u)
-                ? ((b == 0x80000000u) ? b : (~b + 1)) : b;
-            write_rd_ov(w, t, ops[0], out, 0);
-        }
-        return Status::success();
-    }
-
-    if (m == isa::Mnemonic::kIMNMX) {
-        // IMNMX Rd, Ra, 2nd, Pp — signed min/max (Pp: PT=min, !PT=max).
-        // Roles: [Pu, Pv, Rd, Ra, 2nd, Pp(, Pq)].
-        const auto& mf = shape::kShapeManifests[inst.shape_variant];
-        const bool has_pq = mf.n_ops == 7;
-        const shape::OperandValue* ops =
-            has_pq ? static_cast<const shape::DecodedIMNMX7*>(&inst)->ops
-                   : static_cast<const shape::DecodedIMNMX6*>(&inst)->ops;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::int32_t a = static_cast<std::int32_t>(read_reg_ov(t, ops[3]));
-            std::int32_t b = static_cast<std::int32_t>(src_value(w, t, ops[4]));
-            bool do_min = true;
-            read_pred_ov(t, ops[5], &do_min);
-            std::int32_t out = do_min ? (a < b ? a : b) : (a > b ? a : b);
-            write_rd_ov(w, t, ops[2], static_cast<std::uint32_t>(out), 0);
-        }
-        return Status::success();
-    }
-
-    if (m == isa::Mnemonic::kISCADD) {
-        // ISCADD Rd, Pu, Ra, 2nd, scaleU5 — (Ra + (2nd << scaleU5)).
-        // Roles: [Rd, Pu, Ra, 2nd, scaleU5].
-        const auto& d = *static_cast<const shape::DecodedISCADD5*>(&inst);
-        const shape::OperandValue* ops = d.ops;
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[2]);
-            std::uint32_t b = src_value(w, t, ops[3]);
-            const unsigned sh = static_cast<unsigned>(
-                shape::operand_value_as_i64(ops[4]) & 0x1f);
-            write_rd_ov(w, t, ops[0], a + (b << sh), 0);
-        }
-        return Status::success();
-    }
-
-    if (m == isa::Mnemonic::kLEA) {
-        // LEA[.HI][.X] Rd, Pu, Ra, 2nd, [Rc,] scaleU5(, Pp).
-        //   LO: Rd = low32((Ra << N) + 2nd)
-        //   HI: Rd = high32((Ra << N) + 2nd + Rc)
-        // Layouts: 5-op [Rd,Pu,Ra,2nd,scaleU5]; 6-op +Rc; 7-op +Pp.  scaleU5
-        // sits at pos4 (5-op) or pos5 (6/7-op); Rc only on the 6/7-op forms.
-        const auto& mf = shape::kShapeManifests[inst.shape_variant];
-        const std::uint16_t nops = mf.n_ops;
-        const shape::OperandValue* ops = nullptr;
-        std::uint64_t hilo = 0;
-        if (nops == 5) {
-            const auto& d = *static_cast<const shape::DecodedLEA5*>(&inst);
-            ops = d.ops;
-            hilo = static_cast<std::uint64_t>(d.hilo);
-        } else if (nops == 6) {
-            const auto& d = *static_cast<const shape::DecodedLEA6*>(&inst);
-            ops = d.ops;
-            hilo = static_cast<std::uint64_t>(d.hilo);
+        // Range check: UP keeps only lane-idx >= 0; DOWN keeps only
+        // lane+idx < 32; IDX keeps the source < 32 (segment bounds the
+        // source to [seg*0, seg*0+31] — a full warp when seg=0).
+        const bool valid = (srclane >= 0 && srclane < kLanesPerWarp);
+        if (valid && (mask & (1u << srclane))) {
+            write_rd_ov(w, t, ops[1], vals[srclane], 0);
+            write_pred_ov(t, ops[0], true);
         } else {
-            const auto& d = *static_cast<const shape::DecodedLEA7*>(&inst);
-            ops = d.ops;
-            hilo = static_cast<std::uint64_t>(d.hilo);
+            // Out of range: Rd = the lane's own Ra value (verified in
+            // test_shfl: UP t<delta keeps t; DOWN t+delta>=32 keeps t).
+            write_rd_ov(w, t, ops[1], vals[lane], 0);
+            write_pred_ov(t, ops[0], false);
         }
-        const bool has_rc = nops >= 6;
-        const std::uint64_t scale_v =
-            static_cast<std::uint64_t>(shape::operand_value_as_i64(
-                ops[(nops == 5) ? 4 : 5]));
-        const unsigned sh = static_cast<unsigned>(scale_v & 0x1f);
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[2]);
-            std::uint32_t b = src_value(w, t, ops[3]);
-            std::uint32_t c = has_rc ? read_reg_ov(t, ops[4]) : 0;
-            const std::uint64_t sum = (static_cast<std::uint64_t>(a) << sh) +
-                                      b + (hilo ? c : 0);
-            const std::uint32_t out = (hilo == 0)
-                ? static_cast<std::uint32_t>(sum & 0xffffffffu)
-                : static_cast<std::uint32_t>(sum >> 32);
-            write_rd_ov(w, t, ops[0], out, 0);
-        }
-        return Status::success();
     }
+    return Status::success();
+}
 
-    if (m == isa::Mnemonic::kPOPC || m == isa::Mnemonic::kFLO ||
-        m == isa::Mnemonic::kBMSK || m == isa::Mnemonic::kPRMT) {
-        // Positional layouts: POPC [Rd,src]; FLO [Rd,Pu,src];
-        // BMSK [Rd,Ra,2nd]; PRMT [Rd,Ra,2nd,3rd].
-        const shape::OperandValue* ops = nullptr;
-        int apos = 1, bpos = -1;
-        std::uint64_t cw = 0;
-        if (m == isa::Mnemonic::kPOPC) {
-            ops = static_cast<const shape::DecodedPOPC2*>(&inst)->ops;
-        } else if (m == isa::Mnemonic::kFLO) {
-            ops = static_cast<const shape::DecodedFLO3*>(&inst)->ops;
-            apos = 2;
-        } else if (m == isa::Mnemonic::kBMSK) {
-            const auto& d = *static_cast<const shape::DecodedBMSK3*>(&inst);
-            ops = d.ops;
-            bpos = 2;
-            cw = static_cast<std::uint64_t>(d.cw);
+Status Interpreter::lut_core(WarpState& w, std::uint32_t mask,
+                             const shape::OperandValue* ops,
+                             std::uint32_t lut) {
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[2]);
+        std::uint32_t b = src_value(w, t, ops[3]);
+        std::uint32_t c = read_reg_ov(t, ops[4]);
+        std::uint32_t out = 0;
+        // LOP3 truth-table: bit i = output for input (a,b,c) with a as
+        // the index MSB (verified: lut 0xC0 = a&b = bits 6,7).  Index =
+        // (a<<2)|(b<<1)|(c<<0).
+        for (int bit = 0; bit < 32; ++bit) {
+            const int idx = (((a >> bit) & 1) << 2) |
+                            (((b >> bit) & 1) << 1) |
+                            ((c >> bit) & 1);
+            if ((lut >> idx) & 1) out |= (1u << bit);
+        }
+        write_rd_ov(w, t, ops[1], out, 0);
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_lop3(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // LOP3 Rd, Ra, Rb/Sb, Rc, imm8 — 3-input logic with 8-bit LUT.
+    // Positional layout: [Pu, Rd, Ra, 2nd, Rc(, imm8|Pp(, Pp))].  pos5 is
+    // imm8 (UImm) on the LUT forms or Pp (Predicate) on the no-LUT forms.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    if (nops == 7) {
+        ops = static_cast<const shape::DecodedLOP37*>(&inst)->ops;
+    } else if (nops == 6) {
+        ops = static_cast<const shape::DecodedLOP36*>(&inst)->ops;
+    } else {
+        ops = static_cast<const shape::DecodedLOP35*>(&inst)->ops;
+    }
+    std::uint32_t lut = 0;
+    if (nops >= 6 && static_cast<shape::OperandKind>(ops[5].kind) ==
+                         shape::OperandKind::kUImm) {
+        lut = static_cast<std::uint32_t>(
+            shape::operand_value_as_i64(ops[5]));
+    }
+    return lut_core(w, mask, ops, lut);
+}
+
+Status Interpreter::do_lop(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst) {
+    // LOP  Rd, Ra, Rb/Sb — AND/OR/XOR/PASS_B (2-input op mapped to the
+    // matching 3-input truth table with Rc=0): AND=0x80, OR=0xfe,
+    // XOR=0x96, PASS_B=0xcc.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t lop = 0;
+    lop = (nops == 5)
+              ? static_cast<std::uint64_t>(
+                    static_cast<const shape::DecodedLOP5*>(&inst)->lop)
+              : static_cast<std::uint64_t>(
+                    static_cast<const shape::DecodedLOP4*>(&inst)->lop);
+    ops = (nops == 5)
+              ? static_cast<const shape::DecodedLOP5*>(&inst)->ops
+              : static_cast<const shape::DecodedLOP4*>(&inst)->ops;
+    std::uint32_t lut = 0;
+    switch (lop) {
+        case 0: lut = 0x80; break;  // AND
+        case 1: lut = 0xfe; break;  // OR
+        case 2: lut = 0x96; break;  // XOR
+        case 3: lut = 0xcc; break;  // PASS_B
+        default: break;
+    }
+    return lut_core(w, mask, ops, lut);
+}
+
+Status Interpreter::do_shf(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst) {
+    // SHF.L/.R Rd, Ra, 2nd, 3rd (shift count = 2nd & 0x1f).  hilo selects
+    // which register holds the value being shifted; dir the direction.
+    const auto& d = *static_cast<const shape::DecodedSHF4*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const std::uint64_t dir = static_cast<std::uint64_t>(d.dir);
+    const std::uint64_t hilo = static_cast<std::uint64_t>(d.hilo);
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[1]);
+        std::uint32_t b = src_value(w, t, ops[2]);
+        std::uint32_t c = read_reg_ov(t, ops[3]);
+        const unsigned sh = b & 0x1f;
+        std::uint32_t out;
+        if (dir == 0) {  // L
+            if (hilo == 0) {
+                out = (sh == 0) ? a : (a << sh);
+            } else {
+                out = (sh == 0) ? c : ((c << sh) | (a >> (32 - sh)));
+            }
+        } else {  // R
+            if (hilo == 0) {
+                out = (sh == 0) ? a : ((c << (32 - sh)) | (a >> sh));
+            } else {
+                out = (sh == 0) ? c : (c >> sh);
+            }
+        }
+        write_rd_ov(w, t, ops[0], out, 0);
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_iabs(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    const auto& d = *static_cast<const shape::DecodedIABS2*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t b = src_value(w, t, ops[1]);
+        const std::uint32_t out = (b & 0x80000000u)
+            ? ((b == 0x80000000u) ? b : (~b + 1)) : b;
+        write_rd_ov(w, t, ops[0], out, 0);
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_imnmx(WarpState& w, std::uint32_t mask,
+                             const DecodedInstruction& inst) {
+    // IMNMX Rd, Ra, 2nd, Pp — signed min/max (Pp: PT=min, !PT=max).
+    // Roles: [Pu, Pv, Rd, Ra, 2nd, Pp(, Pq)].
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const bool has_pq = mf.n_ops == 7;
+    const shape::OperandValue* ops =
+        has_pq ? static_cast<const shape::DecodedIMNMX7*>(&inst)->ops
+               : static_cast<const shape::DecodedIMNMX6*>(&inst)->ops;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::int32_t a = static_cast<std::int32_t>(read_reg_ov(t, ops[3]));
+        std::int32_t b = static_cast<std::int32_t>(src_value(w, t, ops[4]));
+        bool do_min = true;
+        read_pred_ov(t, ops[5], &do_min);
+        std::int32_t out = do_min ? (a < b ? a : b) : (a > b ? a : b);
+        write_rd_ov(w, t, ops[2], static_cast<std::uint32_t>(out), 0);
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_iscadd(WarpState& w, std::uint32_t mask,
+                              const DecodedInstruction& inst) {
+    // ISCADD Rd, Pu, Ra, 2nd, scaleU5 — (Ra + (2nd << scaleU5)).
+    // Roles: [Rd, Pu, Ra, 2nd, scaleU5].
+    const auto& d = *static_cast<const shape::DecodedISCADD5*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[2]);
+        std::uint32_t b = src_value(w, t, ops[3]);
+        const unsigned sh = static_cast<unsigned>(
+            shape::operand_value_as_i64(ops[4]) & 0x1f);
+        write_rd_ov(w, t, ops[0], a + (b << sh), 0);
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_lea(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst) {
+    // LEA[.HI][.X] Rd, Pu, Ra, 2nd, [Rc,] scaleU5(, Pp).
+    //   LO: Rd = low32((Ra << N) + 2nd)
+    //   HI: Rd = high32((Ra << N) + 2nd + Rc)
+    // Layouts: 5-op [Rd,Pu,Ra,2nd,scaleU5]; 6-op +Rc; 7-op +Pp.  scaleU5
+    // sits at pos4 (5-op) or pos5 (6/7-op); Rc only on the 6/7-op forms.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t hilo = 0;
+    if (nops == 5) {
+        const auto& d = *static_cast<const shape::DecodedLEA5*>(&inst);
+        ops = d.ops;
+        hilo = static_cast<std::uint64_t>(d.hilo);
+    } else if (nops == 6) {
+        const auto& d = *static_cast<const shape::DecodedLEA6*>(&inst);
+        ops = d.ops;
+        hilo = static_cast<std::uint64_t>(d.hilo);
+    } else {
+        const auto& d = *static_cast<const shape::DecodedLEA7*>(&inst);
+        ops = d.ops;
+        hilo = static_cast<std::uint64_t>(d.hilo);
+    }
+    const bool has_rc = nops >= 6;
+    const std::uint64_t scale_v =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(
+            ops[(nops == 5) ? 4 : 5]));
+    const unsigned sh = static_cast<unsigned>(scale_v & 0x1f);
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[2]);
+        std::uint32_t b = src_value(w, t, ops[3]);
+        std::uint32_t c = has_rc ? read_reg_ov(t, ops[4]) : 0;
+        const std::uint64_t sum = (static_cast<std::uint64_t>(a) << sh) +
+                                  b + (hilo ? c : 0);
+        const std::uint32_t out = (hilo == 0)
+            ? static_cast<std::uint32_t>(sum & 0xffffffffu)
+            : static_cast<std::uint32_t>(sum >> 32);
+        write_rd_ov(w, t, ops[0], out, 0);
+    }
+    return Status::success();
+}
+
+Status Interpreter::bitops_core(WarpState& w, std::uint32_t mask,
+                                const shape::OperandValue* ops, int apos,
+                                int bpos, std::uint64_t cw, int mode) {
+    // mode: 0=POPC 1=FLO 2=BMSK 3=PRMT (op positionally identified).
+    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+        if (!(mask & (1u << lane))) continue;
+        ThreadState& t = w.threads[lane];
+        if (!t.active || t.exited) continue;
+        std::uint32_t a = read_reg_ov(t, ops[apos]);
+        std::uint32_t b = (bpos >= 0) ? src_value(w, t, ops[bpos]) : 0;
+        std::uint32_t out = 0;
+        if (mode == 0) {  // POPC
+            out = static_cast<std::uint32_t>(__builtin_popcount(a));
+        } else if (mode == 1) {  // FLO
+            // FLO = find leading one (like __builtin_clz on the first
+            // set bit).  Returns 0xffffffff when input is 0.
+            out = (a == 0) ? 0xffffffffu
+                : static_cast<std::uint32_t>(31 - __builtin_clz(a));
+        } else if (mode == 2) {  // BMSK
+            // BMSK[.C/.W] Rd, Ra, Rb: Ra = POSITION, Rb = WIDTH.
+            //   Rd = ((1 << width) - 1) << pos (truncated to 32 bits).
+            //   .C (clamp, default): pos>=32 -> 0; width>=32 -> all bits
+            //      below pos (natural 32-bit truncation).
+            //   .W (wrap): pos & 31 and width & 31 first.
+            std::uint32_t pos = a;
+            std::uint32_t width = b;
+            const bool wrap = cw != 0;
+            if (wrap) {
+                pos &= 31;
+                width &= 31;
+            }
+            if (pos >= 32) {
+                out = 0;  // .C: position out of range -> 0
+            } else if (width == 0) {
+                out = 0;
+            } else if (width >= 32) {
+                // all bits below pos (for pos=0 -> 0xFFFFFFFF).
+                out = ~0u << pos;
+            } else {
+                out = ((1u << width) - 1u) << pos;
+            }
         } else {  // PRMT
-            ops = static_cast<const shape::DecodedPRMT4*>(&inst)->ops;
-            bpos = 2;
-        }
-        for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-            if (!(mask & (1u << lane))) continue;
-            ThreadState& t = w.threads[lane];
-            if (!t.active || t.exited) continue;
-            std::uint32_t a = read_reg_ov(t, ops[apos]);
-            std::uint32_t b = (bpos >= 0) ? src_value(w, t, ops[bpos]) : 0;
-            std::uint32_t out = 0;
-            if (m == isa::Mnemonic::kPOPC) {
-                out = static_cast<std::uint32_t>(__builtin_popcount(a));
-            } else if (m == isa::Mnemonic::kFLO) {
-                // FLO = find leading one (like __builtin_clz on the first
-                // set bit).  Returns 0xffffffff when input is 0.
-                out = (a == 0) ? 0xffffffffu
-                    : static_cast<std::uint32_t>(31 - __builtin_clz(a));
-            } else if (m == isa::Mnemonic::kBMSK) {
-                // BMSK[.C/.W] Rd, Ra, Rb: Ra = POSITION, Rb = WIDTH.
-                //   Rd = ((1 << width) - 1) << pos (truncated to 32 bits).
-                //   .C (clamp, default): pos>=32 -> 0; width>=32 -> all bits
-                //      below pos (natural 32-bit truncation).
-                //   .W (wrap): pos & 31 and width & 31 first.
-                std::uint32_t pos = a;
-                std::uint32_t width = b;
-                const bool wrap = cw != 0;
-                if (wrap) {
-                    pos &= 31;
-                    width &= 31;
-                }
-                if (pos >= 32) {
-                    out = 0;  // .C: position out of range -> 0
-                } else if (width == 0) {
-                    out = 0;
-                } else if (width >= 32) {
-                    // all bits below pos (for pos=0 -> 0xFFFFFFFF).
-                    out = ~0u << pos;
+            // PRMT Rd, Ra, 2nd(sel), 3rd — byte permute.  sel[2:0]=src
+            // byte, sel[3]=zero/upper, sel[7:4] ignored.  (test_prmt.)
+            const std::uint32_t sel = b;
+            const std::uint32_t srcb = read_reg_ov(t, ops[3]);
+            for (int i = 0; i < 4; ++i) {
+                const unsigned c = (sel >> (4 * i)) & 0xf;
+                if (c & 8) {
+                    out |= ((c & 4) ? 0xffu : 0u) << (8 * i);
                 } else {
-                    out = ((1u << width) - 1u) << pos;
+                    const unsigned by = (c & 3) * 8;
+                    out |= ((a >> by) & 0xff) << (8 * i);
                 }
-            } else if (m == isa::Mnemonic::kPRMT) {
-                // PRMT Rd, Ra, 2nd(sel), 3rd — byte permute.  sel[2:0]=src
-                // byte, sel[3]=zero/upper, sel[7:4] ignored.  (test_prmt.)
-                const std::uint32_t sel = b;
-                const std::uint32_t srcb = read_reg_ov(t, ops[3]);
-                for (int i = 0; i < 4; ++i) {
-                    const unsigned c = (sel >> (4 * i)) & 0xf;
-                    if (c & 8) {
-                        out |= ((c & 4) ? 0xffu : 0u) << (8 * i);
-                    } else {
-                        const unsigned by = (c & 3) * 8;
-                        out |= ((a >> by) & 0xff) << (8 * i);
-                    }
-                }
-                (void)srcb;
             }
-            write_rd_ov(w, t, ops[0], out, 0);
+            (void)srcb;
         }
-        return Status::success();
+        write_rd_ov(w, t, ops[0], out, 0);
     }
+    return Status::success();
+}
 
+Status Interpreter::do_popc(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // POPC [Rd,src].
+    const auto* ops = static_cast<const shape::DecodedPOPC2*>(&inst)->ops;
+    return bitops_core(w, mask, ops, 1, -1, 0, 0);
+}
+
+Status Interpreter::do_flo(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst) {
+    // FLO [Rd,Pu,src].
+    const auto* ops = static_cast<const shape::DecodedFLO3*>(&inst)->ops;
+    return bitops_core(w, mask, ops, 2, -1, 0, 1);
+}
+
+Status Interpreter::do_bmsk(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // BMSK [Rd,Ra,2nd].
+    const auto& d = *static_cast<const shape::DecodedBMSK3*>(&inst);
+    return bitops_core(w, mask, d.ops, 1, 2,
+                       static_cast<std::uint64_t>(d.cw), 2);
+}
+
+Status Interpreter::do_prmt(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst) {
+    // PRMT [Rd,Ra,2nd,3rd].
+    const auto* ops = static_cast<const shape::DecodedPRMT4*>(&inst)->ops;
+    return bitops_core(w, mask, ops, 1, 2, 0, 3);
+}
+
+Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
+                               const DecodedInstruction& inst,
+                               std::uint64_t pc,
+                               std::optional<Fault>* fault) {
+    // NOTE: temporary dispatcher — the plan-b refactor replaces this with
+    // the unified mnemonic switch in execute_group (final commit).
+    switch (inst.mnemonic) {
+        case isa::Mnemonic::kFADD:  return do_fadd(w, mask, inst);
+        case isa::Mnemonic::kFMUL:  return do_fmul(w, mask, inst);
+        case isa::Mnemonic::kFFMA:  return do_ffma(w, mask, inst);
+        case isa::Mnemonic::kDADD:  return do_dadd(w, mask, inst);
+        case isa::Mnemonic::kDMUL:  return do_dmul(w, mask, inst);
+        case isa::Mnemonic::kDFMA:  return do_dfma(w, mask, inst);
+        case isa::Mnemonic::kFSETP: return do_fsetp(w, mask, inst);
+        case isa::Mnemonic::kFSET:  return do_fset(w, mask, inst);
+        case isa::Mnemonic::kFMNMX: return do_fmnmx(w, mask, inst);
+        case isa::Mnemonic::kFSEL:  return do_fsel(w, mask, inst);
+        case isa::Mnemonic::kF2F:   return do_f2f(w, mask, inst);
+        case isa::Mnemonic::kI2F:   return do_i2f(w, mask, inst);
+        case isa::Mnemonic::kF2I:   return do_f2i(w, mask, inst);
+        case isa::Mnemonic::kFRND:  return do_frnd(w, mask, inst);
+        case isa::Mnemonic::kP2R:   return do_p2r(w, mask, inst);
+        case isa::Mnemonic::kVOTE:  return do_vote(w, mask, inst);
+        case isa::Mnemonic::kELECT: return do_elect(w, mask, inst);
+        case isa::Mnemonic::kREDUX: return do_redux(w, mask, inst);
+        case isa::Mnemonic::kSHFL:  return do_shfl(w, mask, inst);
+        case isa::Mnemonic::kLOP3:  return do_lop3(w, mask, inst);
+        case isa::Mnemonic::kLOP:   return do_lop(w, mask, inst);
+        case isa::Mnemonic::kSHF:   return do_shf(w, mask, inst);
+        case isa::Mnemonic::kIABS:  return do_iabs(w, mask, inst);
+        case isa::Mnemonic::kIMNMX: return do_imnmx(w, mask, inst);
+        case isa::Mnemonic::kISCADD:return do_iscadd(w, mask, inst);
+        case isa::Mnemonic::kLEA:   return do_lea(w, mask, inst);
+        case isa::Mnemonic::kPOPC:  return do_popc(w, mask, inst);
+        case isa::Mnemonic::kFLO:   return do_flo(w, mask, inst);
+        case isa::Mnemonic::kBMSK:  return do_bmsk(w, mask, inst);
+        case isa::Mnemonic::kPRMT:  return do_prmt(w, mask, inst);
+        default:
+            break;
+    }
     // ---- fault for unsupported --------------------------------------------------
     return do_unsupported(w, inst, pc, mask, fault);
 }

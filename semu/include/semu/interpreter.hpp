@@ -14,6 +14,7 @@
 #include <semu/decoder.hpp>
 #include <semu/execution.hpp>
 #include <semu/fault.hpp>
+#include <semu/fp.hpp>
 #include <semu/l2_events.hpp>
 #include <semu/mbarrier.hpp>
 #include <semu/memory_events.hpp>
@@ -689,7 +690,93 @@ private:
                             std::uint64_t* width_out, AddressSpace* space_out,
                             std::optional<Fault>* fault);
 
-    // Phase 5 compute: integer/bit, FP, conversions, compares, collectives.
+    // --- Phase 5 compute: one handler per instruction (plan-b refactor) ---
+    // Every compute mnemonic has its own entry point; closely-related
+    // instructions share a per-lane core (parameterized by the extracted
+    // operands/modifiers) so the per-instruction function is just the
+    // concrete-shape cast + forward.
+    Status fp32_arith_core(WarpState& w, std::uint32_t mask,
+                           const shape::OperandValue* ops,
+                           std::uint64_t rd_rv, int op, semu::fp::Rnd rnd,
+                           bool flush, bool sat, int fmz_val);
+    Status fp64_arith_core(WarpState& w, std::uint32_t mask,
+                           const shape::OperandValue* ops, int op,
+                           semu::fp::Rnd rnd);
+    Status fset_core(WarpState& w, std::uint32_t mask,
+                     const shape::OperandValue* ops, std::uint16_t nops,
+                     std::uint64_t fcomp, std::uint64_t bop, bool ftz,
+                     int ra_pos, int pp_pos, bool dest_is_pred);
+    Status cvtx_core(WarpState& w, std::uint32_t mask,
+                     const shape::OperandValue* ops,
+                     semu::fp::Rnd rnd, bool ftz,
+                     int dstfmt, int srcfmt, bool is_i2f);
+    Status lut_core(WarpState& w, std::uint32_t mask,
+                    const shape::OperandValue* ops, std::uint32_t lut);
+    Status bitops_core(WarpState& w, std::uint32_t mask,
+                       const shape::OperandValue* ops, int apos, int bpos,
+                       std::uint64_t cw, int mode);
+    Status do_fadd(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_fmul(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_ffma(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_dadd(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_dmul(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_dfma(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_fsetp(WarpState& w, std::uint32_t mask,
+                    const DecodedInstruction& inst);
+    Status do_fset(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_fmnmx(WarpState& w, std::uint32_t mask,
+                    const DecodedInstruction& inst);
+    Status do_fsel(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_f2f(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst);
+    Status do_i2f(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst);
+    Status do_f2i(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst);
+    Status do_frnd(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_p2r(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst);
+    Status do_vote(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_elect(WarpState& w, std::uint32_t mask,
+                    const DecodedInstruction& inst);
+    Status do_redux(WarpState& w, std::uint32_t mask,
+                    const DecodedInstruction& inst);
+    Status do_shfl(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_lop3(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_lop(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst);
+    Status do_shf(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst);
+    Status do_iabs(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_imnmx(WarpState& w, std::uint32_t mask,
+                    const DecodedInstruction& inst);
+    Status do_iscadd(WarpState& w, std::uint32_t mask,
+                     const DecodedInstruction& inst);
+    Status do_lea(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst);
+    Status do_popc(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_flo(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst);
+    Status do_bmsk(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    Status do_prmt(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst);
+    // Temporary family dispatcher (removed when execute_group gains the
+    // unified mnemonic switch).
     Status do_compute(WarpState& w, std::uint32_t mask,
                       const DecodedInstruction& inst, std::uint64_t pc,
                       std::optional<Fault>* fault);
