@@ -2,10 +2,12 @@
 
 Status snapshot for anyone resuming the **decoded-IR migration** in `semu/` (SM120
 SASS simulator, CUDA-agnostic C++20). The 2b checkpoint is committed, and 2b-3
-(the typed-storage cleanup) is **in progress**: typed accessors (`decoded_access.hpp`)
-exist and the first two interpreter families are migrated, Debug/ASan gates green
-36/36. The migration continues in small, gated-green increments; this doc records
-**where we are** and the exact next operation.
+(the typed-storage cleanup) is **nearly final**: all interpreter families read
+the typed `Decoded*` storage and 3 of the 4 generic base vectors are deleted
+(only `raw_fields` remains, for the unsurfaced S2R `imm8` / BAR `barname`
+fields). Debug/ASan gates green 36/36. The migration continues in small,
+gated-green increments; this doc records **where we are** and the exact next
+operation.
 
 ---
 
@@ -64,6 +66,10 @@ types, no generic vectors. User decisions locked in:
 | working tree (2026-08-20) | **2b checkpoint**: generated shapes now derive from `DecodedInstruction`; decoder allocates/fills the concrete shape through `make_by_variant` + `fill_by_variant`; `DecodeResult` and `PredecodedWord` preserve the dynamic type through `clone()`; ABI is v4. The interpreter bridge reads typed operands through `ShapeManifest` and typed modifiers through generated `slot_value_by_variant`. Generic vectors remain only as a temporary compatibility bridge. |
 | `d206a4a` | **2b-3 step 1 (migration begin)**: add `include/semu/decoded_access.hpp` — `op_lookup`/`op_value`/`op_kind`/`op_flag` read an operand role straight out of the typed `Decoded*` ops[] via `ShapeManifest` (slot→position), and a `shape::slot_value` wrapper over generated `slot_value_by_variant`. These replace the `const Operand*`/generic-vector contract (no base `operand_cache`, no vector scan). Migrate the **uniform/ALU control family** (`do_mov`/`do_umov`/`do_uiadd3`/`do_ushf`/`do_iadd3`/`do_isetp`/`do_imad`) off `find_op`/`field_value`/`const Operand*` onto `read_reg_slot`/`read_ur_slot`/`read_pred_slot` + `shape::op_value`/`shape::op_flag`/`shape::slot_value`. Add `decoded_access.hpp` to the per-header compile list. Debug+ASan gates 36/36. |
 | `3c2cb2e` | **2b-3 step 2**: migrate `do_tensor` (HMMA/QMMA/OMMA) to the typed accessors (`shape::op_value` bases + `op_lookup`/`read_reg_slot`/`read_ur_slot` for Re/Rh/URi). Debug gate 36/36. |
+| `7ec42dd` | **2b-3 step 3**: migrate the entire `do_compute` (~40 operanded blocks) to typed accessors — every FP/convert/collective/integer block reads via `shape::op_value`/`op_kind`/`op_flag` + `bind_reg_slot`/`read_reg_slot`/`read_pred_slot`/`write_pred_slot`/`write_rd_slot`. Removed the last legacy `Operand*` readers (`bind_reg_index`, `read_pred`, `write_pred`, `write_rd`). Immediate slots (Sb/Sc/imm8) classified UImm/SImm exactly as before (a roster dump of per-mnemonic ShapeManifest role slots made this safe). Debug gate 36/36. |
+| `2e0c2a9` | **2b-3 steps 4-6 (vector deletion)**: migrate `do_memory`/`resolve_mem_addr`/`do_ldgsts`/`do_syncs`/`do_arrives`/`do_tma` (deleted `find_op`, `read_reg_val`, `read_ur_val`, `read_ur_pair`, `read_addr_pair`). DELETE the generic `operands` / `modifiers` / `slot_values` vectors + the bounded `operand_cache` and the `Operand` struct from `DecodedInstruction`. `render_instruction` no longer builds them; modifier text is rendered on demand from the decode context (`render_modifiers`). CLI `decode-json` and `test_decoder`/`compile_api_test` migrated to the typed surface (whole-corpus typed-fill is now a typed-storage interception, not a generic-path duplicate). `raw_fields` stays on the base (see below). Debug **and ASan** gates 36/36. |
+
+**2b-3 status: 3 of 4 vectors deleted; `raw_fields` is the remaining slice.**
 
 **2b-3 migration lessons (folded in, do not reintroduce):**
 - The RIR/RRI immediate's **canonical SLOT name is `Sb`** (the raw FIELD is named `Ra_offset`). `slot_value("Ra_offset")`/`op_value("Ra_offset")` return nullopt for those variants — read `Sb` instead.
@@ -177,50 +183,47 @@ storage, that test effectively asserts main == expectations. Add:
 
 ## 7. Current status / next operation
 
-The tree is **2b-3 in progress**: typed accessors exist and the first two
-interpreter families are migrated; the bulk of `find_op`/`const Operand*`
-sites remain (notably `do_compute`, `do_memory`/`resolve_mem_addr`, and the
-`do_ldgsts`/`do_syncs`/`do_arrives`/`do_tma` Phase-9 family). The four generic
-vectors are still mounted on the base and are still populated by
-`render_instruction`; none can be deleted until every family migrates.
+The tree is **2b-3 nearly final**: all interpreter families read the typed
+`Decoded*` storage (`shape::op_value`/`op_kind`/`op_flag` + the typed slot
+readers); `operands`/`modifiers`/`slot_values` vectors and the `Operand`
+struct/`operand_cache` are DELETED; `render_instruction` no longer builds
+generic vectors (modifiers render on demand); CLI/tests migrated.  Debug and
+ASan gates 36/36.  **Only `raw_fields` remains** on the base.
 
-DONE (committed, Debug+ASan 36/36):
+DONE (committed: d206a4a, 3c2cb2e, 7ec42dd, 2e0c2a9):
 - `decoded_access.hpp` accessors (`op_lookup/op_value/op_kind/op_flag` +
-  `shape::slot_value`), and per-family typed slot readers `read_reg_slot` /
-  `read_ur_slot` / `read_pred_slot` in interpreter.cpp.
-- do_mov/do_umov/do_uiadd3/do_ushf/do_iadd3/do_isetp/do_imad migrated.
-- do_tensor migrated.
+  `shape::slot_value`); typed slot readers `read_reg_slot`/`read_ur_slot`/
+  `read_pred_slot`/`write_pred_slot`/`write_rd_slot`/`read_addr_pair_slot`/
+  `read_ur_pair_slot`/`bind_reg_slot` in interpreter.cpp.
+- All interpreter families migrated (uniform/ALU, do_tensor, do_compute,
+  do_memory + resolve_mem_addr, do_ldgsts, do_syncs, do_arrives, do_tma).
+- Deleted `operands`/`modifiers`/`slot_values`/`operand_cache`/`Operand`;
+  render_disasm_text builds modifiers from DecodeCtx; tests + CLI updated.
 
 PENDING (next session):
-1. `rg -n "find_op|read_reg_val|read_ur_val|read_bound|write_rd|read_addr_pair|\
-   slot_value|field_value" src/interpreter.cpp` and classify every remaining
-   consumer.  `field_value`/`raw_fields` is a separate slice (see below).
-2. Migrate **do_compute** (largest; ~40 operanded blocks; re-add the
-   `bind_reg_slot` helper and a slot-based `write_rd_slot`) one `if (m==…)`
-   block at a time, Debug interp/fuzz after each.
-3. Migrate **do_memory + resolve_mem_addr + mem_sz + decode_atomic_op**
-   (`read_addr_pair`→`read_addr_pair_slot`, `offset_value`→typed) and the
-   Phase-9 family `do_ldgsts`/`do_syncs`/`do_arrives`/`do_tma`.
-4. Then delete `operands`/`slot_values`/`modifiers`/`operand_cache` from the
-   base; stop `render_instruction` from building them; make
-   `render_disasm_text` build the modifier string from `DecodeCtx` instead of
-   `inst.modifiers`; drop the `inst.slot_values` fallback in the interpreter
-   `slot_value`; rewrite `test_decoder` (FillFromDecoded + whole-corpus
-   typed-fill interception) and `compile_api_test` off the vectors.
-5. **raw_fields is a separate, genuine obstacle**: S2R's special-register
-   index (`imm8`) and BAR's `barname` are raw fields NOT surfaced as typed
-   slots (verified: `slot_value("imm8")`/`slot_value("barname")` are
-   nullopt).  Deleting `raw_fields` needs a targeted solution for these two
-   (direct word-bit extraction replacing `special_reg`/`do_bar`, or a minimal
-   fixed member), updating `field_value` call sites for the surfaced slots to
-   typed reads (sImm/Sa/Sb/Ra/Ra_offset/Rb/Rd/URd/barReg/Pu/e/sz/dstfmt are
-   all surfaced — branch_target can move to `shape::op_value`/`slot_value`;
-   the `sImm` slot is already sign-extended, so drop the manual 56-bit
-   re-extend or keep it idempotent).  Marked separately because it is not
-   required to delete the other three vectors.
-6. Regenerate artifacts (none changed this session), then Debug/ASan/TSan
-   `tools/run_semu_cpu_gate.sh` (36/36 each).  Minimize ASan/TSan runs to
-   milestones; iterate on Debug.
+1. **raw_fields deletion (final slice).**  `field_value` (interpreter.cpp) is
+   the only consumer; call sites: branch_target (sImm/Sa/Sb/Ra/Ra_offset),
+   special_reg (imm8), do_bssy/do_bsync (barReg), do_s2r/do_s2ur,
+   do_bar (barname).  All are surfaced slots EXCEPT **S2R/S2UR `imm8`** and
+   **BAR `barname`** (verified: `shape::slot_value("imm8")` and
+   `slot_value("barname")` return nullopt).  Plan: migrate the surfaced ones
+   to `shape::op_value`/`slot_value` (branch_target's `sImm` slot is already
+   sign-extended; the 56-bit re-extend becomes idempotent), then handle
+   imm8/barname via direct word-bit extraction in `special_reg`/`do_bar`
+   (bit positions from the variant's `ENCODING` fields) and delete
+   `raw_fields` + `field_value`.  Then rerun Debug/ASan/TSan.
+2. Run the **TSan gate** (not yet re-run since the vector deletion; the
+   earlier TSan gate run aborted on the slow tree).
+3. Optional polish per done-good: the anonymous `slot_value` shim in
+   interpreter.cpp is redundant with `shape::slot_value` — can be
+   aliased/removed after everything is on the typed path.
+
+Note for the next session: the do_compute migration preserved pre-existing
+(untested) slot-name quirks exactly — ISCADD still reads the shift from
+"Ra_offset" (absent role; shift stays 0), FRND still reads "Ra" (absent;
+read stays 0), FFMA/FSETP F32-immediate operands are still excluded from the
+UImm/SImm immediate path.  Fixing those is separate follow-up work, NOT part
+of the migration.
 
 ## 8. Done-good definition for 2b
 - `DecodedInstruction` has no `operands/modifiers/slot_values/raw_fields` vectors.
