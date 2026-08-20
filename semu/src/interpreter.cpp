@@ -2801,234 +2801,33 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
                                  "memory address resolve for '" + std::string(isa::mnemonic_name(m)) + "'"));
 }
 
-Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
-                              const DecodedInstruction& inst,
-                              std::uint64_t pc,
-                              std::optional<Fault>* fault) {
-    const isa::Mnemonic m = inst.mnemonic;
+// ===========================================================================
+// Phase 6 memory — one function per instruction (plan-b refactor).  The
+// load/store/atomic family shares `mem_ldst_atom_core` (the per-lane loop);
+// each do_<MNEMONIC> extracts its register indices + atom meta from the
+// concrete shape and forwards.
+// ===========================================================================
 
-    // Barriers / fences / depbar: functional no-ops (single-writer model) but
-    // keep the scoreboard bookkeeping consistent.  MEMBAR/FENCE also feed the
-    // race detector (recorded fence: no standalone HB; combined with a
-    // matching release/acquire atomic).
-    if (m == isa::Mnemonic::kMEMBAR || m == isa::Mnemonic::kFENCE) {
-        memory_->membar();
-        if (race_detector_ && race_detector_->enabled()) {
-            std::string scope = "gpu";
-            if (m == isa::Mnemonic::kMEMBAR) {
-                // sco member present on membar_ / membar_async_ only (the
-                // tma barrier form has no cohere-scope field).
-                std::uint64_t scov = 2;
-                if (inst.variant_class == isa::VariantClass::kmembar_ ||
-                    inst.variant_class == isa::VariantClass::kmembar_async_) {
-                    scov = static_cast<std::uint64_t>(
-                        static_cast<const shape::DecodedMEMBAR0*>(&inst)->sco);
-                }
-                if (scov == 0) scope = "cta";
-                else if (scov == 1) scope = "sm";
-                else if (scov == 3) scope = "sys";
-                else if (scov == 5) scope = "vc";
-                else scope = "gpu";
-            } else {
-                scope = "gpu";  // FENCE (fence.g / fence.membar.gl)
-            }
-            RaceEvent ev;
-            ev.kind = RaceEvent::kFence;
-            ev.cta = static_cast<std::uint32_t>(w.cta_id);
-            ev.sm = sm_of_cta(static_cast<std::uint32_t>(w.cta_id));
-            ev.ordinal = race_ordinal_[ev.cta]++;
-            ev.warp = static_cast<std::uint32_t>(w.warp_id);
-            ev.scope = std::move(scope);
-            race_log_.push_back(std::move(ev));
-        }
-        return Status::success();
-    }
-    if (m == isa::Mnemonic::kERRBAR || m == isa::Mnemonic::kCGAERRBAR || m == isa::Mnemonic::kCCTL) {
-        // Cache/error-reporting barriers emitted around MEMBAR (IVALL / WBALL
-        // etc.).  Functional no-ops in the single-writer model.
-        return Status::success();
-    }
-    if (m == isa::Mnemonic::kDEPBAR || m == isa::Mnemonic::kLDGDEPBAR) {
-        if (m == isa::Mnemonic::kLDGDEPBAR) {
-            // cp.async.commit_group: seal the open LDGSTS group and count it
-            // on the target scoreboard (wr).
-            do_ldgdepbar(w, inst, pc);
-        } else {
-            // DEPBAR.LE SBn, cnt / DEPBAR {S} / DEPBAR.ALL: drain the group
-            // tally.  Step 1 memory is synchronous so every copy already
-            // landed; the bookkeeping is observable for the profiler/debugger.
-            do_depbar(w, inst, pc);
-        }
-        return Status::success();
-    }
-    if (m == isa::Mnemonic::kBAR) {
-        return do_bar(w, inst, mask, pc, fault);
-    }
+namespace {
 
-    // LDGSTS / cp.async (coupled L1-read -> shared-write).  Functional copy
-    // (global -> shared per lane) plus the trace-only UnifiedV1 prediction.
-    if (m == isa::Mnemonic::kLDGSTS) {
-        return do_ldgsts(w, mask, inst, pc, fault);
-    }
+// Extract an operand slot's register index (255 = absent / RZ).
+std::uint64_t mem_ov_idx(const shape::OperandValue* o, int p) {
+    return (p < 0) ? 255u
+                   : static_cast<std::uint64_t>(shape::operand_value_as_i64(o[p]));
+}
 
-    // Loads / stores / atomics: resolve once per lane.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t mf_nops = mf.n_ops;
-    const bool is_load = (m == isa::Mnemonic::kLDG || m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kLDC ||
-                          m == isa::Mnemonic::kLDCU || m == isa::Mnemonic::kLDL);
-    const bool is_atom = (m == isa::Mnemonic::kATOM || m == isa::Mnemonic::kATOMS ||
-                          m == isa::Mnemonic::kREDS || m == isa::Mnemonic::kATOMG || m == isa::Mnemonic::kREDG);
+}  // namespace
 
-    // Destination/source/CAS register indices (255 = absent/RZ) resolved once
-    // by (mnemonic, nops) cast — the per-lane loop reads gprs directly.
-    std::uint64_t rd_r = 255, rb_r = 255, cas_r = 255, atom_sz = 0;
-    auto take = [](const shape::OperandValue* o, int p) -> std::uint64_t {
-        return (p < 0) ? 255u
-                       : static_cast<std::uint64_t>(shape::operand_value_as_i64(o[p]));
-    };
-    switch (m) {
-        case isa::Mnemonic::kLDG: {
-            const auto& o = *static_cast<const shape::DecodedLDG7*>(&inst);
-            rd_r = take(o.ops, 1);
-            break;
-        }
-        case isa::Mnemonic::kSTG: {
-            if (mf_nops == 3) { const auto& o = *static_cast<const shape::DecodedSTG3*>(&inst); rb_r = take(o.ops, 2); }
-            else if (mf_nops == 4 || mf_nops == 6) { const auto& o = *static_cast<const shape::DecodedSTG4*>(&inst); rb_r = take(o.ops, 3); }
-            else { const auto& o = *static_cast<const shape::DecodedSTG5*>(&inst); rb_r = take(o.ops, 4); }
-            break;
-        }
-        case isa::Mnemonic::kLDS: {
-            const auto& o = *static_cast<const shape::DecodedLDS3*>(&inst);
-            rd_r = take(o.ops, 0);
-            break;
-        }
-        case isa::Mnemonic::kSTS: {
-            const auto& o = *static_cast<const shape::DecodedSTS3*>(&inst);
-            rb_r = take(o.ops, 2);
-            break;
-        }
-        case isa::Mnemonic::kLDL: {
-            const auto& o = *static_cast<const shape::DecodedLDL3*>(&inst);
-            rd_r = take(o.ops, 0);
-            break;
-        }
-        case isa::Mnemonic::kSTL: {
-            const auto& o = *static_cast<const shape::DecodedSTL3*>(&inst);
-            rb_r = take(o.ops, 2);
-            break;
-        }
-        case isa::Mnemonic::kLDC:
-            rd_r = take(static_cast<const shape::DecodedLDC5*>(&inst)->ops, 0);
-            break;
-        case isa::Mnemonic::kATOM: {
-            if (mf_nops == 7) {
-                const auto& o = *static_cast<const shape::DecodedATOM7*>(&inst);
-                rd_r = take(o.ops, 1); rb_r = take(o.ops, 4); cas_r = take(o.ops, 5);
-                atom_sz = static_cast<std::uint64_t>(o.sz);
-            } else {
-                const auto& o = *static_cast<const shape::DecodedATOM6*>(&inst);
-                rd_r = take(o.ops, 1); rb_r = take(o.ops, 4);
-                atom_sz = static_cast<std::uint64_t>(o.sz);
-            }
-            break;
-        }
-        case isa::Mnemonic::kATOMS: {
-            if (mf_nops == 5) {
-                const auto& o = *static_cast<const shape::DecodedATOMS5*>(&inst);
-                rd_r = take(o.ops, 0); rb_r = take(o.ops, 3); cas_r = take(o.ops, 4);
-                atom_sz = static_cast<std::uint64_t>(o.sz);
-            } else {
-                const auto& o = *static_cast<const shape::DecodedATOMS4*>(&inst);
-                rd_r = take(o.ops, 0); rb_r = take(o.ops, 3);
-                atom_sz = static_cast<std::uint64_t>(o.sz);
-            }
-            break;
-        }
-        case isa::Mnemonic::kATOMG: {
-            if (mf_nops == 5) {
-                const auto& o = *static_cast<const shape::DecodedATOMG5*>(&inst);
-                rd_r = take(o.ops, 1); rb_r = take(o.ops, 4);
-                atom_sz = static_cast<std::uint64_t>(o.sz);
-            } else if (mf_nops == 6) {
-                const auto& o = *static_cast<const shape::DecodedATOMG6*>(&inst);
-                rd_r = take(o.ops, 1); rb_r = take(o.ops, 5); cas_r = take(o.ops, 5);
-                atom_sz = static_cast<std::uint64_t>(o.sz);
-            } else {
-                const auto& o = *static_cast<const shape::DecodedATOMG7*>(&inst);
-                rd_r = take(o.ops, 1); rb_r = take(o.ops, 5); cas_r = take(o.ops, 5);
-                atom_sz = static_cast<std::uint64_t>(o.sz);
-            }
-            break;
-        }
-        case isa::Mnemonic::kREDG: {
-            if (mf_nops == 3) rb_r = take(static_cast<const shape::DecodedREDG3*>(&inst)->ops, 2);
-            else if (mf_nops == 4) rb_r = take(static_cast<const shape::DecodedREDG4*>(&inst)->ops, 3);
-            else rb_r = take(static_cast<const shape::DecodedREDG5*>(&inst)->ops, 4);
-            atom_sz = (mf_nops == 3)
-                          ? static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG3*>(&inst)->sz)
-                          : static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG4*>(&inst)->sz);
-            break;
-        }
-        case isa::Mnemonic::kREDS: {
-            rb_r = (mf_nops == 4)
-                       ? take(static_cast<const shape::DecodedREDS4*>(&inst)->ops, 3)
-                       : take(static_cast<const shape::DecodedREDS3*>(&inst)->ops, 2);
-            atom_sz = (mf_nops == 4)
-                          ? static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS4*>(&inst)->sz)
-                          : static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS3*>(&inst)->sz);
-            break;
-        }
-        default: break;
-    }
-    // Atom sem/sco (release/acquire clock bookkeeping).  ATOMS carries none.
-    std::uint64_t atom_sem = 1, atom_sco = 0;
-    if (is_atom) {
-        switch (m) {
-            case isa::Mnemonic::kATOM:
-                if (mf_nops == 7) {
-                    const auto& d = *static_cast<const shape::DecodedATOM7*>(&inst);
-                    atom_sem = static_cast<std::uint64_t>(d.sem);
-                    atom_sco = static_cast<std::uint64_t>(d.sco);
-                } else {
-                    const auto& d = *static_cast<const shape::DecodedATOM6*>(&inst);
-                    atom_sem = static_cast<std::uint64_t>(d.sem);
-                    atom_sco = static_cast<std::uint64_t>(d.sco);
-                }
-                break;
-            case isa::Mnemonic::kATOMG:
-                if (mf_nops == 5) {
-                    const auto& d = *static_cast<const shape::DecodedATOMG5*>(&inst);
-                    atom_sem = static_cast<std::uint64_t>(d.sem);
-                    atom_sco = static_cast<std::uint64_t>(d.sco);
-                } else if (mf_nops == 6) {
-                    const auto& d = *static_cast<const shape::DecodedATOMG6*>(&inst);
-                    atom_sem = static_cast<std::uint64_t>(d.sem);
-                    atom_sco = static_cast<std::uint64_t>(d.sco);
-                } else {
-                    const auto& d = *static_cast<const shape::DecodedATOMG7*>(&inst);
-                    atom_sem = static_cast<std::uint64_t>(d.sem);
-                    atom_sco = static_cast<std::uint64_t>(d.sco);
-                }
-                break;
-            case isa::Mnemonic::kREDG:
-                if (mf_nops == 3) {
-                    const auto& d = *static_cast<const shape::DecodedREDG3*>(&inst);
-                    atom_sem = static_cast<std::uint64_t>(d.sem);
-                    atom_sco = static_cast<std::uint64_t>(d.sco);
-                } else {
-                    const auto& d = *static_cast<const shape::DecodedREDG4*>(&inst);
-                    atom_sem = static_cast<std::uint64_t>(d.sem);
-                    atom_sco = static_cast<std::uint64_t>(d.sco);
-                }
-                break;
-            case isa::Mnemonic::kREDS:
-                // REDS has no sem/sco member (kept 1/0 like the old reads).
-                break;
-            default: break;  // ATOMS: no sem/sco (kept 1/0)
-        }
-    }
-
+// Shared per-lane load/store/atomic loop (the old do_memory body).  The
+// extractable per-instruction part (which GPR holds the dest/source/comparand
+// and the atom size/order) is resolved by each do_<MNEMONIC> entry point;
+// everything below is exactly the pre-refactor behavior.
+Status Interpreter::mem_ldst_atom_core(
+    WarpState& w, std::uint32_t mask, const DecodedInstruction& inst,
+    std::uint64_t pc, std::optional<Fault>* fault, bool is_load,
+    bool is_atom, std::uint64_t rd_r, std::uint64_t rb_r,
+    std::uint64_t cas_r, std::uint64_t atom_sz, std::uint64_t atom_sem,
+    std::uint64_t atom_sco) {
     // Phase 6 Step 2B: trace-only subcore issue event for this memory op.
     // Never changes the functional path below.  Phase 8: the raw per-lane
     // byte ranges of the COMMITTED access are collected inside the per-lane
@@ -3351,6 +3150,306 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
                             prof_committed);
     }
     return Status::success();
+}
+
+Status Interpreter::do_ldg(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst, std::uint64_t pc,
+                           std::optional<Fault>* fault) {
+    // 5/7/8-op: Rd is ops[1] in every layout.
+    const auto& o = *static_cast<const shape::DecodedLDG7*>(&inst);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
+                              mem_ov_idx(o.ops, 1), 255, 255, 0, 0, 0);
+}
+
+Status Interpreter::do_stg(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst, std::uint64_t pc,
+                           std::optional<Fault>* fault) {
+    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    std::uint64_t rb_r = 255;
+    if (nops == 3) {
+        const auto& o = *static_cast<const shape::DecodedSTG3*>(&inst);
+        rb_r = mem_ov_idx(o.ops, 2);
+    } else if (nops == 4 || nops == 6) {
+        const auto& o = *static_cast<const shape::DecodedSTG4*>(&inst);
+        rb_r = mem_ov_idx(o.ops, 3);
+    } else {
+        const auto& o = *static_cast<const shape::DecodedSTG5*>(&inst);
+        rb_r = mem_ov_idx(o.ops, 4);
+    }
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, false, false,
+                              255, rb_r, 255, 0, 0, 0);
+}
+
+Status Interpreter::do_lds(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst, std::uint64_t pc,
+                           std::optional<Fault>* fault) {
+    const auto& o = *static_cast<const shape::DecodedLDS3*>(&inst);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
+                              mem_ov_idx(o.ops, 0), 255, 255, 0, 0, 0);
+}
+
+Status Interpreter::do_sts(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst, std::uint64_t pc,
+                           std::optional<Fault>* fault) {
+    // 3/4-op: Rb is ops[2] in both layouts.
+    const auto& o = *static_cast<const shape::DecodedSTS3*>(&inst);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, false, false,
+                              255, mem_ov_idx(o.ops, 2), 255, 0, 0, 0);
+}
+
+Status Interpreter::do_ldl(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst, std::uint64_t pc,
+                           std::optional<Fault>* fault) {
+    const auto& o = *static_cast<const shape::DecodedLDL3*>(&inst);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
+                              mem_ov_idx(o.ops, 0), 255, 255, 0, 0, 0);
+}
+
+Status Interpreter::do_stl(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst, std::uint64_t pc,
+                           std::optional<Fault>* fault) {
+    const auto& o = *static_cast<const shape::DecodedSTL3*>(&inst);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, false, false,
+                              255, mem_ov_idx(o.ops, 2), 255, 0, 0, 0);
+}
+
+Status Interpreter::do_ldc(WarpState& w, std::uint32_t mask,
+                           const DecodedInstruction& inst, std::uint64_t pc,
+                           std::optional<Fault>* fault) {
+    const auto& o = *static_cast<const shape::DecodedLDC5*>(&inst);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
+                              mem_ov_idx(o.ops, 0), 255, 255, 0, 0, 0);
+}
+
+Status Interpreter::do_ldcu(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst, std::uint64_t pc,
+                            std::optional<Fault>* fault) {
+    // LDCU has no GPR Rd (uniform dest); the pre-refactor path kept rd=255
+    // (result not surfaced) — preserved.
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
+                              255, 255, 255, 0, 0, 0);
+}
+
+Status Interpreter::do_atom(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst, std::uint64_t pc,
+                            std::optional<Fault>* fault) {
+    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    if (nops == 7) {
+        const auto& o = *static_cast<const shape::DecodedATOM7*>(&inst);
+        return mem_ldst_atom_core(
+            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 1),
+            mem_ov_idx(o.ops, 4), mem_ov_idx(o.ops, 5),
+            static_cast<std::uint64_t>(o.sz),
+            static_cast<std::uint64_t>(o.sem),
+            static_cast<std::uint64_t>(o.sco));
+    }
+    const auto& o = *static_cast<const shape::DecodedATOM6*>(&inst);
+    return mem_ldst_atom_core(
+        w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 1),
+        mem_ov_idx(o.ops, 4), 255, static_cast<std::uint64_t>(o.sz),
+        static_cast<std::uint64_t>(o.sem),
+        static_cast<std::uint64_t>(o.sco));
+}
+
+Status Interpreter::do_atoms(WarpState& w, std::uint32_t mask,
+                             const DecodedInstruction& inst, std::uint64_t pc,
+                             std::optional<Fault>* fault) {
+    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    if (nops == 5) {
+        const auto& o = *static_cast<const shape::DecodedATOMS5*>(&inst);
+        return mem_ldst_atom_core(
+            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 0),
+            mem_ov_idx(o.ops, 3), mem_ov_idx(o.ops, 4),
+            static_cast<std::uint64_t>(o.sz), 1, 0);
+    }
+    const auto& o = *static_cast<const shape::DecodedATOMS4*>(&inst);
+    return mem_ldst_atom_core(
+        w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 0),
+        mem_ov_idx(o.ops, 3), 255, static_cast<std::uint64_t>(o.sz), 1, 0);
+}
+
+Status Interpreter::do_reds(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst, std::uint64_t pc,
+                            std::optional<Fault>* fault) {
+    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    if (nops == 4) {
+        const auto& o = *static_cast<const shape::DecodedREDS4*>(&inst);
+        return mem_ldst_atom_core(
+            w, mask, inst, pc, fault, false, true, 255,
+            mem_ov_idx(o.ops, 3), 255, static_cast<std::uint64_t>(o.sz), 1, 0);
+    }
+    const auto& o = *static_cast<const shape::DecodedREDS3*>(&inst);
+    return mem_ldst_atom_core(
+        w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(o.ops, 2), 255,
+        static_cast<std::uint64_t>(o.sz), 1, 0);
+}
+
+Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
+                             const DecodedInstruction& inst, std::uint64_t pc,
+                             std::optional<Fault>* fault) {
+    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    if (nops == 5) {
+        const auto& o = *static_cast<const shape::DecodedATOMG5*>(&inst);
+        return mem_ldst_atom_core(
+            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 1),
+            mem_ov_idx(o.ops, 4), 255, static_cast<std::uint64_t>(o.sz),
+            static_cast<std::uint64_t>(o.sem),
+            static_cast<std::uint64_t>(o.sco));
+    }
+    if (nops == 6) {
+        const auto& o = *static_cast<const shape::DecodedATOMG6*>(&inst);
+        return mem_ldst_atom_core(
+            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 1),
+            mem_ov_idx(o.ops, 5), mem_ov_idx(o.ops, 5),
+            static_cast<std::uint64_t>(o.sz),
+            static_cast<std::uint64_t>(o.sem),
+            static_cast<std::uint64_t>(o.sco));
+    }
+    const auto& o = *static_cast<const shape::DecodedATOMG7*>(&inst);
+    return mem_ldst_atom_core(
+        w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 1),
+        mem_ov_idx(o.ops, 5), mem_ov_idx(o.ops, 5),
+        static_cast<std::uint64_t>(o.sz),
+        static_cast<std::uint64_t>(o.sem),
+        static_cast<std::uint64_t>(o.sco));
+}
+
+Status Interpreter::do_redg(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst, std::uint64_t pc,
+                            std::optional<Fault>* fault) {
+    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    if (nops == 3) {
+        const auto& o = *static_cast<const shape::DecodedREDG3*>(&inst);
+        return mem_ldst_atom_core(
+            w, mask, inst, pc, fault, false, true, 255,
+            mem_ov_idx(o.ops, 2), 255, static_cast<std::uint64_t>(o.sz),
+            static_cast<std::uint64_t>(o.sem),
+            static_cast<std::uint64_t>(o.sco));
+    }
+    if (nops == 4) {
+        const auto& o = *static_cast<const shape::DecodedREDG4*>(&inst);
+        return mem_ldst_atom_core(
+            w, mask, inst, pc, fault, false, true, 255,
+            mem_ov_idx(o.ops, 3), 255, static_cast<std::uint64_t>(o.sz),
+            static_cast<std::uint64_t>(o.sem),
+            static_cast<std::uint64_t>(o.sco));
+    }
+    // 5-op: rb at ops[4]; sz/sem/sco read via the REDG4 cast exactly like
+    // the pre-refactor switch (preserved quirk).
+    const auto& o = *static_cast<const shape::DecodedREDG5*>(&inst);
+    const auto& o4 = *static_cast<const shape::DecodedREDG4*>(&inst);
+    return mem_ldst_atom_core(
+        w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(o.ops, 4), 255,
+        static_cast<std::uint64_t>(o4.sz),
+        static_cast<std::uint64_t>(o4.sem),
+        static_cast<std::uint64_t>(o4.sco));
+}
+
+Status Interpreter::do_membar(WarpState& w, const DecodedInstruction& inst) {
+    memory_->membar();
+    if (race_detector_ && race_detector_->enabled()) {
+        std::string scope = "gpu";
+        // sco member present on membar_ / membar_async_ only (the tma
+        // barrier form has no cohere-scope field).
+        std::uint64_t scov = 2;
+        if (inst.variant_class == isa::VariantClass::kmembar_ ||
+            inst.variant_class == isa::VariantClass::kmembar_async_) {
+            scov = static_cast<std::uint64_t>(
+                static_cast<const shape::DecodedMEMBAR0*>(&inst)->sco);
+        }
+        if (scov == 0) scope = "cta";
+        else if (scov == 1) scope = "sm";
+        else if (scov == 3) scope = "sys";
+        else if (scov == 5) scope = "vc";
+        else scope = "gpu";
+        RaceEvent ev;
+        ev.kind = RaceEvent::kFence;
+        ev.cta = static_cast<std::uint32_t>(w.cta_id);
+        ev.sm = sm_of_cta(static_cast<std::uint32_t>(w.cta_id));
+        ev.ordinal = race_ordinal_[ev.cta]++;
+        ev.warp = static_cast<std::uint32_t>(w.warp_id);
+        ev.scope = std::move(scope);
+        race_log_.push_back(std::move(ev));
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_fence(WarpState& w) {
+    memory_->membar();
+    if (race_detector_ && race_detector_->enabled()) {
+        // FENCE (fence.g / fence.membar.gl): gpu scope.
+        RaceEvent ev;
+        ev.kind = RaceEvent::kFence;
+        ev.cta = static_cast<std::uint32_t>(w.cta_id);
+        ev.sm = sm_of_cta(static_cast<std::uint32_t>(w.cta_id));
+        ev.ordinal = race_ordinal_[ev.cta]++;
+        ev.warp = static_cast<std::uint32_t>(w.warp_id);
+        ev.scope = "gpu";
+        race_log_.push_back(std::move(ev));
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_errbar(WarpState& w, const DecodedInstruction& inst,
+                              std::uint64_t pc) {
+    (void)w; (void)inst; (void)pc;
+    // Cache/error-reporting barrier emitted around MEMBAR (IVALL): functional
+    // no-op in the single-writer model.
+    return Status::success();
+}
+
+Status Interpreter::do_cgaerrbar(WarpState& w, const DecodedInstruction& inst,
+                                  std::uint64_t pc) {
+    (void)w; (void)inst; (void)pc;
+    // Cluster-level error barrier: functional no-op in the single-writer
+    // model.
+    return Status::success();
+}
+
+Status Interpreter::do_cctl(WarpState& w, const DecodedInstruction& inst,
+                            std::uint64_t pc) {
+    (void)w; (void)inst; (void)pc;
+    // Cache control (IVALL/WBALL around MEMBAR): functional no-op.
+    return Status::success();
+}
+
+Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
+                              const DecodedInstruction& inst,
+                              std::uint64_t pc,
+                              std::optional<Fault>* fault) {
+    // NOTE: temporary dispatcher — the plan-b refactor replaces this with
+    // the unified mnemonic switch in execute_group (final commit).
+    switch (inst.mnemonic) {
+        case isa::Mnemonic::kLDG:     return do_ldg(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kSTG:     return do_stg(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kLDS:     return do_lds(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kSTS:     return do_sts(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kLDL:     return do_ldl(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kSTL:     return do_stl(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kLDC:     return do_ldc(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kLDCU:    return do_ldcu(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kATOM:    return do_atom(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kATOMS:   return do_atoms(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kREDS:    return do_reds(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kATOMG:   return do_atomg(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kREDG:    return do_redg(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kMEMBAR:  return do_membar(w, inst);
+        case isa::Mnemonic::kFENCE:   return do_fence(w);
+        case isa::Mnemonic::kERRBAR:  return do_errbar(w, inst, pc);
+        case isa::Mnemonic::kCGAERRBAR: return do_cgaerrbar(w, inst, pc);
+        case isa::Mnemonic::kCCTL:    return do_cctl(w, inst, pc);
+        case isa::Mnemonic::kDEPBAR:
+            do_depbar(w, inst, pc);
+            return Status::success();
+        case isa::Mnemonic::kLDGDEPBAR:
+            do_ldgdepbar(w, inst, pc);
+            return Status::success();
+        case isa::Mnemonic::kBAR:     return do_bar(w, inst, mask, pc, fault);
+        case isa::Mnemonic::kLDGSTS:  return do_ldgsts(w, mask, inst, pc, fault);
+        default:
+            break;
+    }
+    return do_unsupported(w, inst, pc, mask, fault);
 }
 
 // Deterministic CTA -> SM mapping (High-3): with simulated_sm_count > 1 the

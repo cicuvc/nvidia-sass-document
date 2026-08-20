@@ -573,7 +573,66 @@ private:
                    const DecodedInstruction& inst, std::uint64_t pc,
                    std::optional<Fault>* fault);
 
-    // --- Phase 6 memory ------------------------------------------------
+    // --- Phase 6 memory: one handler per instruction (plan-b refactor) ---
+    // Loads/stores/atomics share mem_ldst_atom_core (the per-lane loop);
+    // each do_<MNEMONIC> extracts its register indices + atom meta.
+    Status mem_ldst_atom_core(WarpState& w, std::uint32_t mask,
+                              const DecodedInstruction& inst,
+                              std::uint64_t pc,
+                              std::optional<Fault>* fault, bool is_load,
+                              bool is_atom, std::uint64_t rd_r,
+                              std::uint64_t rb_r, std::uint64_t cas_r,
+                              std::uint64_t atom_sz, std::uint64_t atom_sem,
+                              std::uint64_t atom_sco);
+    Status do_ldg(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst, std::uint64_t pc,
+                  std::optional<Fault>* fault);
+    Status do_stg(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst, std::uint64_t pc,
+                  std::optional<Fault>* fault);
+    Status do_lds(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst, std::uint64_t pc,
+                  std::optional<Fault>* fault);
+    Status do_sts(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst, std::uint64_t pc,
+                  std::optional<Fault>* fault);
+    Status do_ldl(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst, std::uint64_t pc,
+                  std::optional<Fault>* fault);
+    Status do_stl(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst, std::uint64_t pc,
+                  std::optional<Fault>* fault);
+    Status do_ldc(WarpState& w, std::uint32_t mask,
+                  const DecodedInstruction& inst, std::uint64_t pc,
+                  std::optional<Fault>* fault);
+    Status do_ldcu(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst, std::uint64_t pc,
+                   std::optional<Fault>* fault);
+    Status do_atom(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst, std::uint64_t pc,
+                   std::optional<Fault>* fault);
+    Status do_atoms(WarpState& w, std::uint32_t mask,
+                    const DecodedInstruction& inst, std::uint64_t pc,
+                    std::optional<Fault>* fault);
+    Status do_reds(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst, std::uint64_t pc,
+                   std::optional<Fault>* fault);
+    Status do_atomg(WarpState& w, std::uint32_t mask,
+                    const DecodedInstruction& inst, std::uint64_t pc,
+                    std::optional<Fault>* fault);
+    Status do_redg(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst, std::uint64_t pc,
+                   std::optional<Fault>* fault);
+    Status do_membar(WarpState& w, const DecodedInstruction& inst);
+    Status do_fence(WarpState& w);
+    Status do_errbar(WarpState& w, const DecodedInstruction& inst,
+                     std::uint64_t pc);
+    Status do_cgaerrbar(WarpState& w, const DecodedInstruction& inst,
+                        std::uint64_t pc);
+    Status do_cctl(WarpState& w, const DecodedInstruction& inst,
+                   std::uint64_t pc);
+    // Temporary family dispatcher (removed when execute_group gains the
+    // unified mnemonic switch).
     Status do_memory(WarpState& w, std::uint32_t mask,
                      const DecodedInstruction& inst, std::uint64_t pc,
                      std::optional<Fault>* fault);
