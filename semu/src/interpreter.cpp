@@ -21,19 +21,72 @@
 #include <semu/decoded_access.hpp>
 
 #include "isa_shapes_fill.hpp"
+#include "isa_data.hpp"
 
 namespace semu {
 namespace {
 
 using semu::fp::Rnd;
 
-// Field lookup helper: find a raw field value by name.
-std::optional<std::uint64_t> field_value(const DecodedInstruction& inst,
-                                         const char* name) {
-    for (const auto& [n, v] : inst.raw_fields) {
-        if (n == name) return v;
+// Extract a raw ENCODING field by name directly from the 128-bit word's
+// bits (multi-range MSB-first, mirroring decoder extract_field).  Used only
+// for the handful of raw fields the typed schema does NOT surface as FORMAT
+// slots (S2R/S2UR `imm8`, BAR `barname`); surfaced slots should be read via
+// shape::op_value / shape::slot_value instead.
+std::optional<std::uint64_t> raw_field_bits(const DecodedInstruction& inst,
+                                            const char* name) {
+    if (inst.shape_variant >= isa::kNumVariants) return std::nullopt;
+    const isa::Variant& v = isa::kVariants[inst.shape_variant];
+    for (std::uint16_t fi = 0; fi < v.nfields; ++fi) {
+        const isa::Field& f = v.fields[fi];
+        if (std::strcmp(f.name, name) != 0) continue;
+        std::uint64_t val = 0;
+        for (std::uint8_t i = 0; i < f.nranges; ++i) {
+            const int hi = f.ranges[2 * i];
+            const int lo = f.ranges[2 * i + 1];
+            const int width = hi - lo + 1;
+            std::uint64_t part;
+            if (lo >= 64) {
+                const std::uint64_t mask =
+                    (width == 64) ? ~std::uint64_t{0}
+                                  : ((std::uint64_t{1} << width) - 1);
+                part = (inst.word.hi >> (lo - 64)) & mask;
+            } else if (hi < 64) {
+                const std::uint64_t mask =
+                    (width == 64) ? ~std::uint64_t{0}
+                                  : ((std::uint64_t{1} << width) - 1);
+                part = (inst.word.lo >> lo) & mask;
+            } else {
+                const int lo_w = 64 - lo;
+                const std::uint64_t lo_mask =
+                    (lo_w == 64) ? ~std::uint64_t{0}
+                                 : ((std::uint64_t{1} << lo_w) - 1);
+                std::uint64_t hi_part = 0;
+                if (width - lo_w > 0 && width - lo_w < 64)
+                    hi_part =
+                        inst.word.hi & ((std::uint64_t{1} << (width - lo_w)) - 1);
+                else if (width - lo_w >= 64)
+                    hi_part = inst.word.hi;
+                part = (inst.word.lo >> lo) & lo_mask;
+                if (lo_w < 64) part |= hi_part << lo_w;
+            }
+            if (width >= 64) {
+                val = part;
+            } else {
+                val = (val << width) | part;
+            }
+        }
+        return val;
     }
     return std::nullopt;
+}
+
+// Field lookup helper: find a raw ENCODING field value by name, extracted
+// straight from the word.  (2b-3: the base `raw_fields` vector was removed;
+// this serves the same unsurfaced fields via the variant's ENCODING.)
+std::optional<std::uint64_t> field_value(const DecodedInstruction& inst,
+                                         const char* name) {
+    return raw_field_bits(inst, name);
 }
 
 // RZ (255) reads as 0.

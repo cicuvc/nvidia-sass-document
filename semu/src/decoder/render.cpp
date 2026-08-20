@@ -784,11 +784,9 @@ std::unique_ptr<DecodedInstruction> render_instruction(
     inst->pipe = v->pipe;
     inst->shape_variant = vi;
 
-    for (const auto& [f, val] : ctx.fields) {
-        inst->raw_fields.emplace_back(f->name, val);
-    }
-
-    // schedule word
+    // 2b-3: no generic vectors are built anymore — the derived Decoded* is
+    // the only storage; raw fields are extracted from the word on demand
+    // (interpreter field_value).
     auto fv = [&ctx](const char* name, std::int64_t dflt) -> std::int64_t {
         for (const auto& [f, val] : ctx.fields) {
             if (std::strcmp(f->name, name) == 0) {

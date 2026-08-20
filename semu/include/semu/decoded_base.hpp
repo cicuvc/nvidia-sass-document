@@ -1,11 +1,7 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
 #include <memory>
-#include <string>
-#include <utility>
-#include <vector>
 
 #include <isa_data.hpp>
 #include <semu/word.hpp>
@@ -34,13 +30,13 @@ public:
     int guard_pred = 7;
     bool guard_not = false;
 
-    // 2b-3: the generic operands/modifiers/slot_values vectors and the
-    // bounded Operand cache were removed with the typed migration; only the
-    // schedule word and the raw encoded fields remain on the base.  raw_fields
-    // is still consumed by field_value for a few genuinely unsurfaced raw
-    // fields (S2R imm8 / BAR barname) — see HANDOFF_v2.md §7 before deleting.
+    // 2b-3: the generic operands/modifiers/slot_values/raw_fields vectors and
+    // the bounded Operand cache were removed with the typed migration; the
+    // derived Decoded<Mnemonic><Ops> object is the only operand/modifier
+    // storage.  The few genuinely unsurfaced raw ENCODING fields (S2R imm8 /
+    // BAR barname) are read on demand straight from the word via
+    // interpreter.cpp field_value.
     ScheduleWord schedule;
-    std::vector<std::pair<std::string, std::uint64_t>> raw_fields;
 
     virtual ~DecodedInstruction() = default;
     virtual std::unique_ptr<DecodedInstruction> clone() const {
