@@ -3069,12 +3069,162 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
     }
 
     // Loads / stores / atomics: resolve once per lane.
-    const auto rd_v = shape::op_value(inst, "Rd");
-    const auto rb_v = shape::op_value(inst, "Rb");
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t mf_nops = mf.n_ops;
     const bool is_load = (m == isa::Mnemonic::kLDG || m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kLDC ||
                           m == isa::Mnemonic::kLDCU || m == isa::Mnemonic::kLDL);
-    const bool is_atom = (m == isa::Mnemonic::kATOM || m == isa::Mnemonic::kATOMS || std::strcmp(isa::mnemonic_name(m), "RED") == 0 ||
+    const bool is_atom = (m == isa::Mnemonic::kATOM || m == isa::Mnemonic::kATOMS ||
                           m == isa::Mnemonic::kREDS || m == isa::Mnemonic::kATOMG || m == isa::Mnemonic::kREDG);
+
+    // Destination/source/CAS register indices (255 = absent/RZ) resolved once
+    // by (mnemonic, nops) cast — the per-lane loop reads gprs directly.
+    std::uint64_t rd_r = 255, rb_r = 255, cas_r = 255, atom_sz = 0;
+    auto take = [](const shape::OperandValue* o, int p) -> std::uint64_t {
+        return (p < 0) ? 255u
+                       : static_cast<std::uint64_t>(shape::operand_value_as_i64(o[p]));
+    };
+    switch (m) {
+        case isa::Mnemonic::kLDG: {
+            const auto& o = *static_cast<const shape::DecodedLDG7*>(&inst);
+            rd_r = take(o.ops, 1);
+            break;
+        }
+        case isa::Mnemonic::kSTG: {
+            if (mf_nops == 3) { const auto& o = *static_cast<const shape::DecodedSTG3*>(&inst); rb_r = take(o.ops, 2); }
+            else if (mf_nops == 4 || mf_nops == 6) { const auto& o = *static_cast<const shape::DecodedSTG4*>(&inst); rb_r = take(o.ops, 3); }
+            else { const auto& o = *static_cast<const shape::DecodedSTG5*>(&inst); rb_r = take(o.ops, 4); }
+            break;
+        }
+        case isa::Mnemonic::kLDS: {
+            const auto& o = *static_cast<const shape::DecodedLDS3*>(&inst);
+            rd_r = take(o.ops, 0);
+            break;
+        }
+        case isa::Mnemonic::kSTS: {
+            const auto& o = *static_cast<const shape::DecodedSTS3*>(&inst);
+            rb_r = take(o.ops, 2);
+            break;
+        }
+        case isa::Mnemonic::kLDL: {
+            const auto& o = *static_cast<const shape::DecodedLDL3*>(&inst);
+            rd_r = take(o.ops, 0);
+            break;
+        }
+        case isa::Mnemonic::kSTL: {
+            const auto& o = *static_cast<const shape::DecodedSTL3*>(&inst);
+            rb_r = take(o.ops, 2);
+            break;
+        }
+        case isa::Mnemonic::kLDC:
+            rd_r = take(static_cast<const shape::DecodedLDC5*>(&inst)->ops, 0);
+            break;
+        case isa::Mnemonic::kATOM: {
+            if (mf_nops == 7) {
+                const auto& o = *static_cast<const shape::DecodedATOM7*>(&inst);
+                rd_r = take(o.ops, 1); rb_r = take(o.ops, 4); cas_r = take(o.ops, 5);
+                atom_sz = static_cast<std::uint64_t>(o.sz);
+            } else {
+                const auto& o = *static_cast<const shape::DecodedATOM6*>(&inst);
+                rd_r = take(o.ops, 1); rb_r = take(o.ops, 4);
+                atom_sz = static_cast<std::uint64_t>(o.sz);
+            }
+            break;
+        }
+        case isa::Mnemonic::kATOMS: {
+            if (mf_nops == 5) {
+                const auto& o = *static_cast<const shape::DecodedATOMS5*>(&inst);
+                rd_r = take(o.ops, 0); rb_r = take(o.ops, 3); cas_r = take(o.ops, 4);
+                atom_sz = static_cast<std::uint64_t>(o.sz);
+            } else {
+                const auto& o = *static_cast<const shape::DecodedATOMS4*>(&inst);
+                rd_r = take(o.ops, 0); rb_r = take(o.ops, 3);
+                atom_sz = static_cast<std::uint64_t>(o.sz);
+            }
+            break;
+        }
+        case isa::Mnemonic::kATOMG: {
+            if (mf_nops == 5) {
+                const auto& o = *static_cast<const shape::DecodedATOMG5*>(&inst);
+                rd_r = take(o.ops, 1); rb_r = take(o.ops, 4);
+                atom_sz = static_cast<std::uint64_t>(o.sz);
+            } else if (mf_nops == 6) {
+                const auto& o = *static_cast<const shape::DecodedATOMG6*>(&inst);
+                rd_r = take(o.ops, 1); rb_r = take(o.ops, 5); cas_r = take(o.ops, 5);
+                atom_sz = static_cast<std::uint64_t>(o.sz);
+            } else {
+                const auto& o = *static_cast<const shape::DecodedATOMG7*>(&inst);
+                rd_r = take(o.ops, 1); rb_r = take(o.ops, 5); cas_r = take(o.ops, 5);
+                atom_sz = static_cast<std::uint64_t>(o.sz);
+            }
+            break;
+        }
+        case isa::Mnemonic::kREDG: {
+            if (mf_nops == 3) rb_r = take(static_cast<const shape::DecodedREDG3*>(&inst)->ops, 2);
+            else if (mf_nops == 4) rb_r = take(static_cast<const shape::DecodedREDG4*>(&inst)->ops, 3);
+            else rb_r = take(static_cast<const shape::DecodedREDG5*>(&inst)->ops, 4);
+            atom_sz = (mf_nops == 3)
+                          ? static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG3*>(&inst)->sz)
+                          : static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG4*>(&inst)->sz);
+            break;
+        }
+        case isa::Mnemonic::kREDS: {
+            rb_r = (mf_nops == 4)
+                       ? take(static_cast<const shape::DecodedREDS4*>(&inst)->ops, 3)
+                       : take(static_cast<const shape::DecodedREDS3*>(&inst)->ops, 2);
+            atom_sz = (mf_nops == 4)
+                          ? static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS4*>(&inst)->sz)
+                          : static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS3*>(&inst)->sz);
+            break;
+        }
+        default: break;
+    }
+    // Atom sem/sco (release/acquire clock bookkeeping).  ATOMS carries none.
+    std::uint64_t atom_sem = 1, atom_sco = 0;
+    if (is_atom) {
+        switch (m) {
+            case isa::Mnemonic::kATOM:
+                if (mf_nops == 7) {
+                    const auto& d = *static_cast<const shape::DecodedATOM7*>(&inst);
+                    atom_sem = static_cast<std::uint64_t>(d.sem);
+                    atom_sco = static_cast<std::uint64_t>(d.sco);
+                } else {
+                    const auto& d = *static_cast<const shape::DecodedATOM6*>(&inst);
+                    atom_sem = static_cast<std::uint64_t>(d.sem);
+                    atom_sco = static_cast<std::uint64_t>(d.sco);
+                }
+                break;
+            case isa::Mnemonic::kATOMG:
+                if (mf_nops == 5) {
+                    const auto& d = *static_cast<const shape::DecodedATOMG5*>(&inst);
+                    atom_sem = static_cast<std::uint64_t>(d.sem);
+                    atom_sco = static_cast<std::uint64_t>(d.sco);
+                } else if (mf_nops == 6) {
+                    const auto& d = *static_cast<const shape::DecodedATOMG6*>(&inst);
+                    atom_sem = static_cast<std::uint64_t>(d.sem);
+                    atom_sco = static_cast<std::uint64_t>(d.sco);
+                } else {
+                    const auto& d = *static_cast<const shape::DecodedATOMG7*>(&inst);
+                    atom_sem = static_cast<std::uint64_t>(d.sem);
+                    atom_sco = static_cast<std::uint64_t>(d.sco);
+                }
+                break;
+            case isa::Mnemonic::kREDG:
+                if (mf_nops == 3) {
+                    const auto& d = *static_cast<const shape::DecodedREDG3*>(&inst);
+                    atom_sem = static_cast<std::uint64_t>(d.sem);
+                    atom_sco = static_cast<std::uint64_t>(d.sco);
+                } else {
+                    const auto& d = *static_cast<const shape::DecodedREDG4*>(&inst);
+                    atom_sem = static_cast<std::uint64_t>(d.sem);
+                    atom_sco = static_cast<std::uint64_t>(d.sco);
+                }
+                break;
+            case isa::Mnemonic::kREDS:
+                // REDS has no sem/sco member (kept 1/0 like the old reads).
+                break;
+            default: break;  // ATOMS: no sem/sco (kept 1/0)
+        }
+    }
 
     // Phase 6 Step 2B: trace-only subcore issue event for this memory op.
     // Never changes the functional path below.  Phase 8: the raw per-lane
@@ -3125,9 +3275,8 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
         if (is_atom) {
             // ATOM/ATOMS use ATOMICINTSIZES (U32=0, S32=1, U64=2, S64=3,
             // 128=4) — not the SZ_U8_... load/store enum.
-            const auto szv = slot_value(inst, "sz").value_or(0);
-            if (szv == 2 || szv == 3) wi.bytes = 8;
-            else if (szv == 4) wi.bytes = 16;
+            if (atom_sz == 2 || atom_sz == 3) wi.bytes = 8;
+            else if (atom_sz == 4) wi.bytes = 16;
             else wi.bytes = 4;
         }
 
@@ -3198,8 +3347,8 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
             prof_width = static_cast<std::uint32_t>(wi.bytes);
             // 128-bit loads write Rd..Rd+3; narrower write Rd (and Rd+1 for
             // 64-bit) (Blocker-3).
-            if (rd_v) {
-                const std::uint64_t r = static_cast<std::uint64_t>(*rd_v);
+            if (rd_r != 255) {
+                const std::uint64_t r = rd_r;
                 if (r != 255 && r < kNumGprs) {
                     t.gpr[r] = val[0];
                     if (wi.bytes > 4 && r + 1 < kNumGprs) t.gpr[r + 1] = val[1];
@@ -3215,8 +3364,8 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
         // Store / atomic: source value from Rb (or Rd for ATOMS' result).
         // 128-bit stores read Rb..Rb+3.
         MemValue val{};
-        if (rb_v) {
-            const std::uint64_t r = static_cast<std::uint64_t>(*rb_v);
+        if (rb_r != 255) {
+            const std::uint64_t r = rb_r;
             if (r != 255 && r < kNumGprs) {
                 val[0] = t.gpr[r];
                 if (wi.bytes > 4 && r + 1 < kNumGprs) val[1] = t.gpr[r + 1];
@@ -3230,8 +3379,8 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
             // Phase 6 Step 2D: race detector observation (shared/global).
             // Decode the real sem/sco so release/acquire clock bookkeeping
             // (Blocker-2) sees the actual memory order.
-            const std::uint64_t semv = slot_value(inst, "sem").value_or(1);
-            const std::uint64_t scov = slot_value(inst, "sco").value_or(0);
+            const std::uint64_t semv = atom_sem;
+            const std::uint64_t scov = atom_sco;
             std::string mem_order = "relaxed";
             if (semv == 2) mem_order = "acq_rel";
             else if (semv == 3) mem_order = "mmio";
@@ -3254,7 +3403,7 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
             // ADD (INC/DEC were previously run as +1, MIN/MAX as unsigned).
             AtomicOp op = AtomicOp::kAdd;
             std::optional<AtomicOp> dec = decode_atomic_op(inst);
-            if (shape::op_lookup(inst, "Rc")) {
+            if (cas_r != 255) {
                 dec = AtomicOp::kCas;  // ATOM/ATOMS/ATOMG.CAS / .CAST
             }
             if (!dec) {
@@ -3273,10 +3422,8 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
             const MemValue* cmp = nullptr;
             MemValue cmp_val{};
             if (op == AtomicOp::kCas) {
-                const auto rc_v = shape::op_value(inst, "Rc");
-                if (rc_v) {
-                    const std::uint64_t r =
-                        static_cast<std::uint64_t>(*rc_v);
+                if (cas_r != 255) {
+                    const std::uint64_t r = cas_r;
                     if (r != 255 && r < kNumGprs) {
                         cmp_val[0] = t.gpr[r];
                         if (wi.bytes > 4 && r + 1 < kNumGprs)
@@ -3326,8 +3473,8 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
             prof_space = space;
             prof_width = static_cast<std::uint32_t>(wi.bytes);
             // Write the pre-value back to Rd (ATOM) or Rd for ATOMS.
-            if (rd_v) {
-                const std::uint64_t r = static_cast<std::uint64_t>(*rd_v);
+            if (rd_r != 255) {
+                const std::uint64_t r = rd_r;
                 if (r != 255 && r < kNumGprs) {
                     t.gpr[r] = old[0];
                     if (wi.bytes > 4 && r + 1 < kNumGprs) t.gpr[r + 1] = old[1];
@@ -3516,32 +3663,63 @@ Status Interpreter::do_ldgsts(WarpState& w, std::uint32_t mask,
     CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
     std::uint32_t goff[kLanesPerWarp] = {};
     std::uint32_t soff[kLanesPerWarp] = {};
-    const std::int64_t rao = offset_value(inst, "Ra_offset");
-    const std::int64_t rbo = offset_value(inst, "Rb_offset");
-    const bool has_ra = shape::op_lookup(inst, "Ra") != nullptr;
-    const bool has_urc = shape::op_lookup(inst, "Ra_URc") != nullptr;
-    const bool wide = slot_value(inst, "input_reg_sz_64_dist").value_or(0) != 0;
-    const std::uint64_t ur_base =
-        has_urc ? read_ur_pair_slot(w, inst, "Ra_URc") : 0;
-    const auto szv = slot_value(inst, "sz").value_or(0);
+    // LDGSTS layouts vary: 6-op A [Rb,Rb_URc,Rb_offset,Ra,Ra_offset,Pnz];
+    // 6-op B [Rb,Rb_offset,Ra,Ra_URc,Ra_offset,Pnz]; 7-op memdesc
+    // [Rb,Rb_URc,Rb_offset,memdesc,Ra_URd,Ra,Ra_offset,Pnz]; 7-op desc_RRU
+    // [Rb,Rb_offset,memdesc,Ra_URc,Ra,Ra_offset,Pnz].  Distinguish by the
+    // kind of ops[1] (uniform register => A/memdesc, immediate => B/desc_RRU).
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
+    const bool has_urc =
+        static_cast<shape::OperandKind>(ops[1].kind) ==
+        shape::OperandKind::kUniformRegister;
+    int ra, rao, rbo;
+    std::uint64_t wide = 0, szv = 0;
+    if (nops == 6) {
+        const auto& d = *static_cast<const shape::DecodedLDGSTS6*>(&inst);
+        ra = has_urc ? 3 : 2;
+        rao = 4;
+        rbo = has_urc ? 2 : 1;
+        wide = static_cast<std::uint64_t>(d.input_reg_sz_64_dist);
+        szv = static_cast<std::uint64_t>(d.sz);
+    } else {
+        const auto& d = *static_cast<const shape::DecodedLDGSTS7*>(&inst);
+        ra = has_urc ? 5 : 4;
+        rao = has_urc ? 6 : 5;
+        rbo = has_urc ? 2 : 1;
+        wide = static_cast<std::uint64_t>(d.input_reg_sz_64_dist);
+        szv = static_cast<std::uint64_t>(d.sz);
+    }
+    const std::int64_t rao_v = shape::operand_value_as_i64(ops[rao]);
+    const std::int64_t rbo_v = shape::operand_value_as_i64(ops[rbo]);
     const std::uint32_t ew = szv == 1 ? 8u : szv == 2 ? 16u : 4u;
+    // Uniform base (Ra_URc / Ra_URd) contributes the high 32 bits on the
+    // RR/memdesc layouts; the RUR layouts carry none (base stays 0).
+    std::uint64_t ur_base = 0;
+    if (nops == 6) {
+        if (!has_urc) ur_base = read_ur_pair_ov(w, ops[3]);
+    } else {
+        ur_base = read_ur_pair_ov(w, has_urc ? ops[4] : ops[3]);
+    }
 
     std::uint32_t goff_valid_mask = 0;
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        const std::uint64_t s = read_reg_slot(t, inst, "Rb");
+        const std::uint64_t s = read_reg_ov(t, ops[0]);
         std::uint64_t g = 0;
         if (wide) {
-            g = read_addr_pair_slot(t, inst, "Ra");
-        } else if (has_ra) {
-            g = read_reg_slot(t, inst, "Ra");
+            g = read_addr_pair_ov(t, ops[ra]);
+        } else {
+            g = read_reg_ov(t, ops[ra]);
         }
         std::uint64_t gadd = 0, gv = 0, sv = 0;
         if (!checked_uadd(g, ur_base, &gadd) ||
-            !checked_add(gadd, rao, &gv) ||
-            !checked_add(s, rbo, &sv)) {
+            !checked_add(gadd, rao_v, &gv) ||
+            !checked_add(s, rbo_v, &sv)) {
             continue;  // lane excluded: address computation failed
         }
         goff[lane] = static_cast<std::uint32_t>(gv);
