@@ -1,9 +1,10 @@
 # HANDOFF_v2.md — typed-IR migration status & next tasks
 
 Status snapshot for anyone resuming the **decoded-IR migration** in `semu/` (SM120
-SASS simulator, CUDA-agnostic C++20). The current 2b checkpoint is implemented in
-the working tree (not yet committed); Debug/ASan/TSan gates are green at 36/36.
-The migration continues in small, gated-green increments; this doc records
+SASS simulator, CUDA-agnostic C++20). The 2b checkpoint is committed, and 2b-3
+(the typed-storage cleanup) is **in progress**: typed accessors (`decoded_access.hpp`)
+exist and the first two interpreter families are migrated, Debug/ASan gates green
+36/36. The migration continues in small, gated-green increments; this doc records
 **where we are** and the exact next operation.
 
 ---
@@ -61,6 +62,13 @@ types, no generic vectors. User decisions locked in:
 | `15acc1f` | **2a typed-fill**: `gen_isa --shapes` also emits `isa_shapes_fill.hpp` — per-variant fillers (`fill_by_variant(kVariants-index, FillIn, void*)`) that populate a typed `Decoded*` (ops[] + modifier members) from an opaque `FillIn` (decoded slot source). Added `include/semu/shape_in.hpp` (FillIn + `operand_set_value` kind→union setter). Representative equivalence test. |
 | `553699d` | **2a complete**: whole-1414-corpus equivalence — `typed_fill_matches_across_corpus` decodes every `isa_corpus.hpp` word, fills a typed `Decoded*`, reads ops[0..n) via offset-0 overlay, and asserts value+kind+flags == live `slot_values`/`operands`. Caught + fixed a F-imm union read-width bug. |
 | working tree (2026-08-20) | **2b checkpoint**: generated shapes now derive from `DecodedInstruction`; decoder allocates/fills the concrete shape through `make_by_variant` + `fill_by_variant`; `DecodeResult` and `PredecodedWord` preserve the dynamic type through `clone()`; ABI is v4. The interpreter bridge reads typed operands through `ShapeManifest` and typed modifiers through generated `slot_value_by_variant`. Generic vectors remain only as a temporary compatibility bridge. |
+| `d206a4a` | **2b-3 step 1 (migration begin)**: add `include/semu/decoded_access.hpp` — `op_lookup`/`op_value`/`op_kind`/`op_flag` read an operand role straight out of the typed `Decoded*` ops[] via `ShapeManifest` (slot→position), and a `shape::slot_value` wrapper over generated `slot_value_by_variant`. These replace the `const Operand*`/generic-vector contract (no base `operand_cache`, no vector scan). Migrate the **uniform/ALU control family** (`do_mov`/`do_umov`/`do_uiadd3`/`do_ushf`/`do_iadd3`/`do_isetp`/`do_imad`) off `find_op`/`field_value`/`const Operand*` onto `read_reg_slot`/`read_ur_slot`/`read_pred_slot` + `shape::op_value`/`shape::op_flag`/`shape::slot_value`. Add `decoded_access.hpp` to the per-header compile list. Debug+ASan gates 36/36. |
+| `3c2cb2e` | **2b-3 step 2**: migrate `do_tensor` (HMMA/QMMA/OMMA) to the typed accessors (`shape::op_value` bases + `op_lookup`/`read_reg_slot`/`read_ur_slot` for Re/Rh/URi). Debug gate 36/36. |
+
+**2b-3 migration lessons (folded in, do not reintroduce):**
+- The RIR/RRI immediate's **canonical SLOT name is `Sb`** (the raw FIELD is named `Ra_offset`). `slot_value("Ra_offset")`/`op_value("Ra_offset")` return nullopt for those variants — read `Sb` instead.
+- In `do_uiadd3`, **`URc==255` (UZ) is the encoder's "no third reg" pin** that must fall through to the `Sb` immediate; routing on operand *presence* instead of *value==255* silently drops the addend.
+- The legacy `read_op` helper was fully removed once its last caller migrated; `bind_reg_slot` must be re-added when `do_compute` is migrated (kept out to stay -Werror-clean).
 
 **2a conclusion (proven by test):** the generated typed `Decoded*` fill is
 semantically equivalent to the current generic decoder **across the whole ISA**.
@@ -80,8 +88,12 @@ semantically equivalent to the current generic decoder **across the whole ISA**.
   `python3 semu/tools/gen_corpus.py --hpp semu/generated/isa_corpus.hpp`.
   These are NOT checked by `isa_regen` (only isa_data is); they're design/2a
   artifacts, now used by decoder/interpreter code and `test_decoder.cpp`.
-- Hand-written glue: `include/semu/decoded_base.hpp` and
-  `include/semu/shape_in.hpp`.
+- Hand-written glue: `include/semu/decoded_base.hpp`, `include/semu/shape_in.hpp`,
+  and **`include/semu/decoded_access.hpp`** (2b-3: `op_lookup`/`op_value`/
+  `op_kind`/`op_flag` + `shape::slot_value` wrappers over the typed ops[] /
+  `slot_value_by_variant`, the replacement for the former `const Operand*` contract).
+  Also per-family typed slot readers live in `src/interpreter.cpp`
+  (`read_reg_slot`/`read_ur_slot`/`read_pred_slot`).
 
 ---
 
@@ -165,22 +177,50 @@ storage, that test effectively asserts main == expectations. Add:
 
 ## 7. Current status / next operation
 
-The current tree is **2b checkpoint complete but not 2b final**:
+The tree is **2b-3 in progress**: typed accessors exist and the first two
+interpreter families are migrated; the bulk of `find_op`/`const Operand*`
+sites remain (notably `do_compute`, `do_memory`/`resolve_mem_addr`, and the
+`do_ldgsts`/`do_syncs`/`do_arrives`/`do_tma` Phase-9 family). The four generic
+vectors are still mounted on the base and are still populated by
+`render_instruction`; none can be deleted until every family migrates.
 
-- DONE: typed decoder main storage, dynamic cloning, interpreter typed bridge,
-  ABI v4, dynamic-shape smoke coverage, and all three 36-item gates.
-- PENDING: delete the four generic base vectors and the temporary `Operand` cache;
-  rewrite interpreter reads to typed value/flag/kind accessors and direct typed
-  modifiers; remove the now-duplicate generic equivalence path.
+DONE (committed, Debug+ASan 36/36):
+- `decoded_access.hpp` accessors (`op_lookup/op_value/op_kind/op_flag` +
+  `shape::slot_value`), and per-family typed slot readers `read_reg_slot` /
+  `read_ur_slot` / `read_pred_slot` in interpreter.cpp.
+- do_mov/do_umov/do_uiadd3/do_ushf/do_iadd3/do_isetp/do_imad migrated.
+- do_tensor migrated.
 
-Next session should begin with:
-
-1. `rg -n "operands|modifiers|slot_values|raw_fields|find_op|slot_value" semu/src semu/include semu/tests` and classify every remaining consumer.
-2. Add typed value/flag/kind accessors beside generated `slot_value_by_variant`.
-3. Mechanically migrate one interpreter family at a time, running the Debug
-   decoder/interpreter tests after each family.
-4. Delete the vectors/cache, regenerate artifacts, then run Debug/ASan/TSan
-   `tools/run_semu_cpu_gate.sh` (36/36 each).
+PENDING (next session):
+1. `rg -n "find_op|read_reg_val|read_ur_val|read_bound|write_rd|read_addr_pair|\
+   slot_value|field_value" src/interpreter.cpp` and classify every remaining
+   consumer.  `field_value`/`raw_fields` is a separate slice (see below).
+2. Migrate **do_compute** (largest; ~40 operanded blocks; re-add the
+   `bind_reg_slot` helper and a slot-based `write_rd_slot`) one `if (m==…)`
+   block at a time, Debug interp/fuzz after each.
+3. Migrate **do_memory + resolve_mem_addr + mem_sz + decode_atomic_op**
+   (`read_addr_pair`→`read_addr_pair_slot`, `offset_value`→typed) and the
+   Phase-9 family `do_ldgsts`/`do_syncs`/`do_arrives`/`do_tma`.
+4. Then delete `operands`/`slot_values`/`modifiers`/`operand_cache` from the
+   base; stop `render_instruction` from building them; make
+   `render_disasm_text` build the modifier string from `DecodeCtx` instead of
+   `inst.modifiers`; drop the `inst.slot_values` fallback in the interpreter
+   `slot_value`; rewrite `test_decoder` (FillFromDecoded + whole-corpus
+   typed-fill interception) and `compile_api_test` off the vectors.
+5. **raw_fields is a separate, genuine obstacle**: S2R's special-register
+   index (`imm8`) and BAR's `barname` are raw fields NOT surfaced as typed
+   slots (verified: `slot_value("imm8")`/`slot_value("barname")` are
+   nullopt).  Deleting `raw_fields` needs a targeted solution for these two
+   (direct word-bit extraction replacing `special_reg`/`do_bar`, or a minimal
+   fixed member), updating `field_value` call sites for the surfaced slots to
+   typed reads (sImm/Sa/Sb/Ra/Ra_offset/Rb/Rd/URd/barReg/Pu/e/sz/dstfmt are
+   all surfaced — branch_target can move to `shape::op_value`/`slot_value`;
+   the `sImm` slot is already sign-extended, so drop the manual 56-bit
+   re-extend or keep it idempotent).  Marked separately because it is not
+   required to delete the other three vectors.
+6. Regenerate artifacts (none changed this session), then Debug/ASan/TSan
+   `tools/run_semu_cpu_gate.sh` (36/36 each).  Minimize ASan/TSan runs to
+   milestones; iterate on Debug.
 
 ## 8. Done-good definition for 2b
 - `DecodedInstruction` has no `operands/modifiers/slot_values/raw_fields` vectors.
