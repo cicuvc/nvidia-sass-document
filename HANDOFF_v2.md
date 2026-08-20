@@ -218,3 +218,42 @@ Remaining (optional, NOT required for 2b):
 - Three trees (Debug/ASan/TSan) pass the full 36-item gate; whole-corpus
   typed-fill interception no longer needed as a separate duplicate path
   (it now intercepts the actual typed main storage).
+
+---
+
+## 9. 2b-3 plan-b — eliminate ALL string lookups on the interpreter execution path
+
+**Goal (user requirement, 2026 session):** interpreter reads operands and
+modifiers purely as **direct typed members / positional `ops[]`** — no slot-name
+string matching, no slot-id comparisons anywhere on the execution path.  This
+supersedes the earlier `decoded_access.hpp` slot-name bridge for the
+interpreter (the bridge stays for decode-only / tests).
+
+**Generator support (committed):** `gen_isa.py --shapes` now emits a
+`std::uint8_t subclass;` member on every `Decoded<Mnemonic><N>` type, filled at
+decode time from the CLASS name (bit0 `_x`, bit1 `wide`, bit2 `hi`, bit3
+`imm64`, bit4 `_fp`), and a typed `barname` member on the BAR types.  Used by
+do_imad (wide/hi/x), do_umov (imm64), decode_atomic_op (_fp) — replaces the
+variant-class `strstr`.  The dead `RED`/`BFE`/`BFREV` mnemonic `strcmp`s were
+deleted (those mnemonics do not exist in sm120).  `SRa` role replaced the raw
+S2R `imm8` field; `barname` replaced the raw BAR field; `field_value`/
+`raw_field_bits` are now dead.
+
+**Migrated so far (commits d98fc5a..a4de422; Debug gate 36/36):**
+branch_target/special_reg/bssy/bsync/s2r/s2ur/bar, the ENTIRE do_compute,
+do_mov/umov/uiadd3/ushf/iadd3/isetp/imad, do_tensor (HMMA/QMMA/OMMA),
+mem_sz (by (m,nops) cast; LDG 5/7/8-op), decode_atomic_op (members +
+subclass), resolve_mem_addr (positional Ra/off by (m,nops); LDC/LDCU keep
+slot-name reads — its Sa_offset/URa layouts are form-specific), do_memory
+(rd/rb/cas indices + atom sz/sem/sco by (m,nops)), do_ldgsts (its 4 layouts
+distinguished by operand kind + 64-bit/uniform base), do_depbar/do_ldgdepbar.
+The old `read_*_slot` / `op_value` / `slot_value` helpers are now used only by
+the not-yet-migrated syncs/tma families (~60 remaining call sites).
+
+**PENDING (next session, same mechanical pattern):**
+1. do_syncs (8 opcode cases; layouts known), do_arrives, do_tma, MEMBAR `sco`
+   member — replace the remaining ~60 slot-name reads.
+2. Delete dead helpers: `read_reg_slot`/`read_ur_slot`/`read_pred_slot`/
+   `write_pred_slot`/`read_addr_pair_slot`/`read_ur_pair_slot`/`write_rd_slot`,
+   the anonymous `slot_value`, `offset_value`, `field_value`/`raw_field_bits`.
+3. Re-run Debug + ASan + TSan gates (36/36 each); update this doc.
