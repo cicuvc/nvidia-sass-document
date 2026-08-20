@@ -1,11 +1,17 @@
 // Generated file -- do not edit.  Regenerate with:
 //   python3 semu/tools/gen_isa.py --shapes
 //
-// Typed decoded-IR schema (design review; not yet wired into the
-// decoder -- the existing DecodedInstruction is unchanged).
+// Typed decoded-IR schema used by the decoder's main storage path.
 #pragma once
 
 #include <cstdint>
+#include <cstring>
+#include <optional>
+#include <memory>
+#include <semu/decoded_base.hpp>
+#ifdef NAN
+#undef NAN
+#endif
 
 namespace semu::shape {
 
@@ -2112,222 +2118,351 @@ enum class XORSIGN : std::int32_t {
 // Derived decoded types: one per (mnemonic, operand-count).
 // Operands are positional in the mnemonic's canonical role order;
 // modifiers are typed enum members specific to each instruction.
-struct DecodedMOV2 {
+struct DecodedMOV2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMOV2>(*this);
+    }
     OperandValue ops[2];
     ONLY64 size;
     SPILLONLY nonconformity;
 };
-struct DecodedMOV3 {
+struct DecodedMOV3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMOV3>(*this);
+    }
     OperandValue ops[3];
 };
-struct DecodedP2R4 {
+struct DecodedP2R4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedP2R4>(*this);
+    }
     OperandValue ops[4];
     B3B0 insert;
 };
-struct DecodedR2P3 {
+struct DecodedR2P3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedR2P3>(*this);
+    }
     OperandValue ops[3];
     B3B0 a_bsel;
 };
-struct DecodedSEL4 {
+struct DecodedSEL4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSEL4>(*this);
+    }
     OperandValue ops[4];
     ONLY64 size;
 };
-struct DecodedFSEL4 {
+struct DecodedFSEL4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFSEL4>(*this);
+    }
     OperandValue ops[4];
     FTZ ftz;
 };
-struct DecodedFMNMX4 {
+struct DecodedFMNMX4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFMNMX4>(*this);
+    }
     OperandValue ops[4];
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
 };
-struct DecodedFMNMX5 {
+struct DecodedFMNMX5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFMNMX5>(*this);
+    }
     OperandValue ops[5];
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
     IS_AONLY is_A;
 };
-struct DecodedFSET4 {
+struct DecodedFSET4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFSET4>(*this);
+    }
     OperandValue ops[4];
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
 };
-struct DecodedFSET3 {
+struct DecodedFSET3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFSET3>(*this);
+    }
     OperandValue ops[3];
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
 };
-struct DecodedFSETP5 {
+struct DecodedFSETP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFSETP5>(*this);
+    }
     OperandValue ops[5];
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
 };
-struct DecodedFSETP3 {
+struct DecodedFSETP3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFSETP3>(*this);
+    }
     OperandValue ops[3];
     FCMP fcomp;
     FTZ ftz;
 };
-struct DecodedISETP6 {
+struct DecodedISETP6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedISETP6>(*this);
+    }
     OperandValue ops[6];
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
     EXONLY ex;
 };
-struct DecodedISETP5 {
+struct DecodedISETP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedISETP5>(*this);
+    }
     OperandValue ops[5];
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
 };
-struct DecodedISETP4 {
+struct DecodedISETP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedISETP4>(*this);
+    }
     OperandValue ops[4];
     ICmpAll icmp;
     FMT_64_DIST fmt;
     EXONLY ex;
 };
-struct DecodedISETP3 {
+struct DecodedISETP3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedISETP3>(*this);
+    }
     OperandValue ops[3];
     ICmpAll icmp;
     FMT_64_DIST fmt;
 };
-struct DecodedIADD36 {
+struct DecodedIADD36 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIADD36>(*this);
+    }
     OperandValue ops[6];
 };
-struct DecodedIADD38 {
+struct DecodedIADD38 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIADD38>(*this);
+    }
     OperandValue ops[8];
     XONLY X;
 };
-struct DecodedISCADD5 {
+struct DecodedISCADD5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedISCADD5>(*this);
+    }
     OperandValue ops[5];
 };
-struct DecodedLEA6 {
+struct DecodedLEA6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLEA6>(*this);
+    }
     OperandValue ops[6];
     HIONLY_lea hilo;
     XONLY X;
     SX32ONLY sx32;
 };
-struct DecodedLEA5 {
+struct DecodedLEA5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLEA5>(*this);
+    }
     OperandValue ops[5];
     HIONLY_lea hilo;
     SX32ONLY sx32;
 };
-struct DecodedLEA7 {
+struct DecodedLEA7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLEA7>(*this);
+    }
     OperandValue ops[7];
     HIONLY_lea hilo;
     XONLY X;
 };
-struct DecodedLOP5 {
+struct DecodedLOP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLOP5>(*this);
+    }
     OperandValue ops[5];
     LOP lop;
     LOP_POP pop;
 };
-struct DecodedLOP4 {
+struct DecodedLOP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLOP4>(*this);
+    }
     OperandValue ops[4];
     LOP lop;
 };
-struct DecodedLOP37 {
+struct DecodedLOP37 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLOP37>(*this);
+    }
     OperandValue ops[7];
     LUTOnly lut;
     LOP_POP pop;
 };
-struct DecodedLOP36 {
+struct DecodedLOP36 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLOP36>(*this);
+    }
     OperandValue ops[6];
     LUTOnly lut;
     LOP lop;
     LOP_POP pop;
 };
-struct DecodedLOP35 {
+struct DecodedLOP35 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLOP35>(*this);
+    }
     OperandValue ops[5];
     LOP lop;
 };
-struct DecodedIABS2 {
+struct DecodedIABS2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIABS2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedPRMT4 {
+struct DecodedPRMT4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPRMT4>(*this);
+    }
     OperandValue ops[4];
     PMode pmode;
 };
-struct DecodedIMNMX7 {
+struct DecodedIMNMX7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMNMX7>(*this);
+    }
     OperandValue ops[7];
     FMT_64_DIST fmt;
 };
-struct DecodedIMNMX6 {
+struct DecodedIMNMX6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMNMX6>(*this);
+    }
     OperandValue ops[6];
     FMT_64_DIST fmt;
 };
-struct DecodedSHF4 {
+struct DecodedSHF4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSHF4>(*this);
+    }
     OperandValue ops[4];
     SDIR dir;
     CWMode cw;
     FMT_shf fmt;
     HILO hilo;
 };
-struct DecodedSHL3 {
+struct DecodedSHL3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSHL3>(*this);
+    }
     OperandValue ops[3];
     CWMode cw;
 };
-struct DecodedSHR3 {
+struct DecodedSHR3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSHR3>(*this);
+    }
     OperandValue ops[3];
     CWMode cw;
     FMT_S32_U32 fmt;
 };
-struct DecodedSGXT3 {
+struct DecodedSGXT3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSGXT3>(*this);
+    }
     OperandValue ops[3];
     CWMode cw;
     FMT fmt;
 };
-struct DecodedBMSK3 {
+struct DecodedBMSK3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBMSK3>(*this);
+    }
     OperandValue ops[3];
     CWMode cw;
 };
-struct DecodedPLOP35 {
+struct DecodedPLOP35 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPLOP35>(*this);
+    }
     OperandValue ops[5];
     LUTOnly lut;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
     SIGNONLY sign_a;
 };
-struct DecodedPLOP37 {
+struct DecodedPLOP37 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPLOP37>(*this);
+    }
     OperandValue ops[7];
     LUTOnly lut;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
     SIGNONLY sign_a;
 };
-struct DecodedFMUL3 {
+struct DecodedFMUL3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFMUL3>(*this);
+    }
     OperandValue ops[3];
     FMZ_hfma2 fmz;
     Scale scale;
     Round1 rnd;
     SAT sat;
 };
-struct DecodedFADD3 {
+struct DecodedFADD3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFADD3>(*this);
+    }
     OperandValue ops[3];
     FTZ ftz;
     Round1 rnd;
     SAT sat;
 };
-struct DecodedFHADD3 {
+struct DecodedFHADD3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFHADD3>(*this);
+    }
     OperandValue ops[3];
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
     EXTRACT extract_a;
 };
-struct DecodedFFMA4 {
+struct DecodedFFMA4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFFMA4>(*this);
+    }
     OperandValue ops[4];
     FMZ_hfma2 fmz;
     Round1 rnd;
     SAT sat;
 };
-struct DecodedFHFMA4 {
+struct DecodedFHFMA4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFHFMA4>(*this);
+    }
     OperandValue ops[4];
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
@@ -2335,73 +2470,115 @@ struct DecodedFHFMA4 {
     EXTRACT extract_a;
     EXTRACT extract_b;
 };
-struct DecodedIMAD4 {
+struct DecodedIMAD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMAD4>(*this);
+    }
     OperandValue ops[4];
     LOOnly wide;
     FMT fmt;
     PSEUDO_OPCODE pseudo_opcode;
 };
-struct DecodedIMAD5 {
+struct DecodedIMAD5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMAD5>(*this);
+    }
     OperandValue ops[5];
     LOOnly wide;
     PSEUDO_OPCODE pseudo_opcode;
     FMT fmt;
     XONLY X;
 };
-struct DecodedIMUL3 {
+struct DecodedIMUL3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMUL3>(*this);
+    }
     OperandValue ops[3];
     LOOnly wide;
     FMT fmt;
 };
-struct DecodedIMAD6 {
+struct DecodedIMAD6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMAD6>(*this);
+    }
     OperandValue ops[6];
     WIDEONLY wide;
     FMT fmt;
     XONLY X;
     PSEUDO_OPCODE pseudo_opcode;
 };
-struct DecodedIMUL4 {
+struct DecodedIMUL4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMUL4>(*this);
+    }
     OperandValue ops[4];
     WIDEONLY wide;
     FMT fmt;
 };
-struct DecodedIDP4 {
+struct DecodedIDP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIDP4>(*this);
+    }
     OperandValue ops[4];
     MODE_2ALO_2AHI mode;
     SRCFMT16A SrcAFmt;
     SRCFMT_U8_S8 SrcBFmt;
 };
-struct DecodedIDP4A4 {
+struct DecodedIDP4A4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIDP4A4>(*this);
+    }
     OperandValue ops[4];
     SRCFMT_U8_S8 SrcAFmt;
     SRCFMT_U8_S8 SrcBFmt;
 };
-struct DecodedDMUL3 {
+struct DecodedDMUL3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDMUL3>(*this);
+    }
     OperandValue ops[3];
     Round1 rnd;
 };
-struct DecodedDADD3 {
+struct DecodedDADD3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDADD3>(*this);
+    }
     OperandValue ops[3];
     Round1 rnd;
 };
-struct DecodedDSETP5 {
+struct DecodedDSETP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDSETP5>(*this);
+    }
     OperandValue ops[5];
     DSETP_FCMP test;
     Bop bop;
 };
-struct DecodedDSETP3 {
+struct DecodedDSETP3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDSETP3>(*this);
+    }
     OperandValue ops[3];
     DSETP_FCMP test;
 };
-struct DecodedDFMA4 {
+struct DecodedDFMA4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDFMA4>(*this);
+    }
     OperandValue ops[4];
     Round1 rnd;
 };
-struct DecodedCLMAD4 {
+struct DecodedCLMAD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCLMAD4>(*this);
+    }
     OperandValue ops[4];
     HILO hilo;
 };
-struct DecodedHADD23 {
+struct DecodedHADD23 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHADD23>(*this);
+    }
     OperandValue ops[3];
     F32ONLY_hadd2 ofmt;
     FTZ ftz;
@@ -2409,7 +2586,10 @@ struct DecodedHADD23 {
     ISWZA iswzA;
     ISWZA iswzB_as_C;
 };
-struct DecodedHFMA24 {
+struct DecodedHFMA24 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHFMA24>(*this);
+    }
     OperandValue ops[4];
     OFMT ofmt;
     FMZ fmz;
@@ -2426,7 +2606,10 @@ struct DecodedHFMA24 {
     NONE iswzC_as_B_forced_H1_H0;
     NONE iswzB_as_C_forced_H1_H0;
 };
-struct DecodedHFMA25 {
+struct DecodedHFMA25 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHFMA25>(*this);
+    }
     OperandValue ops[5];
     MMAONLY MMA;
     OFMT_F16_V2_BF16_V2 ofmt;
@@ -2443,7 +2626,10 @@ struct DecodedHFMA25 {
     NONE iswzB_as_C_forced_H1_H0;
     ISWZA iswzB_as_C;
 };
-struct DecodedHMUL23 {
+struct DecodedHMUL23 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMUL23>(*this);
+    }
     OperandValue ops[3];
     OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
@@ -2451,7 +2637,10 @@ struct DecodedHMUL23 {
     ISWZA iswzA;
     ISWZA iswzB;
 };
-struct DecodedHSET24 {
+struct DecodedHSET24 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHSET24>(*this);
+    }
     OperandValue ops[4];
     OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
@@ -2461,7 +2650,10 @@ struct DecodedHSET24 {
     ISWZA iswzA;
     ISWZA iswzB_as_C;
 };
-struct DecodedHSET23 {
+struct DecodedHSET23 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHSET23>(*this);
+    }
     OperandValue ops[3];
     OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
@@ -2470,7 +2662,10 @@ struct DecodedHSET23 {
     ISWZA iswzA;
     ISWZA iswzB_as_C;
 };
-struct DecodedHSETP25 {
+struct DecodedHSETP25 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHSETP25>(*this);
+    }
     OperandValue ops[5];
     OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
@@ -2480,7 +2675,10 @@ struct DecodedHSETP25 {
     ISWZA iswzA;
     ISWZA iswzB_as_C;
 };
-struct DecodedHSETP24 {
+struct DecodedHSETP24 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHSETP24>(*this);
+    }
     OperandValue ops[4];
     OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
@@ -2489,21 +2687,33 @@ struct DecodedHSETP24 {
     ISWZA iswzA;
     ISWZA iswzB_as_C;
 };
-struct DecodedIADD4 {
+struct DecodedIADD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIADD4>(*this);
+    }
     OperandValue ops[4];
     ONLY64 size;
 };
-struct DecodedIADD5 {
+struct DecodedIADD5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIADD5>(*this);
+    }
     OperandValue ops[5];
     ONLY64 size;
     XONLY X;
 };
-struct DecodedVIADD3 {
+struct DecodedVIADD3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedVIADD3>(*this);
+    }
     OperandValue ops[3];
     FMT_viadd fmt;
     ISAT isat;
 };
-struct DecodedIMMA5 {
+struct DecodedIMMA5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMMA5>(*this);
+    }
     OperandValue ops[5];
     SIZE_16816_16832_imma size;
     SRCFMTA_U8_S8 srcFmtA;
@@ -2512,7 +2722,10 @@ struct DecodedIMMA5 {
     ROWONLY row_A;
     COLONLY col_B;
 };
-struct DecodedIMMA7 {
+struct DecodedIMMA7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMMA7>(*this);
+    }
     OperandValue ops[7];
     SPONLY sp;
     SPFORMAT spformat;
@@ -2523,25 +2736,37 @@ struct DecodedIMMA7 {
     ROWONLY row_A;
     COLONLY col_B;
 };
-struct DecodedI2I2 {
+struct DecodedI2I2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedI2I2>(*this);
+    }
     OperandValue ops[2];
     DSTFMT_i2i dstfmt;
     S32ONLY_i2i srcfmt;
     SATONLY SAT;
 };
-struct DecodedI2IP4 {
+struct DecodedI2IP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedI2IP4>(*this);
+    }
     OperandValue ops[4];
     DSTFMT_S4_U4 dstfmt;
     S32ONLY_i2i srcfmt;
     SATRELU satrelu;
     ONLY24 extract_limited;
 };
-struct DecodedMOVM2 {
+struct DecodedMOVM2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMOVM2>(*this);
+    }
     OperandValue ops[2];
     MOVM_SZ sz;
     MOVM_MODE mode;
 };
-struct DecodedHMMA7 {
+struct DecodedHMMA7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMMA7>(*this);
+    }
     OperandValue ops[7];
     SPONLY sp;
     SPFORMAT spformat;
@@ -2549,13 +2774,19 @@ struct DecodedHMMA7 {
     FloatNo64 dstfmt;
     SRCFMT srcfmt;
 };
-struct DecodedHMMA5 {
+struct DecodedHMMA5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMMA5>(*this);
+    }
     OperandValue ops[5];
     SIZE_1688_16816_1684 size;
     FloatNo64 dstfmt;
     SRCFMT srcfmt;
 };
-struct DecodedF2FP2 {
+struct DecodedF2FP2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedF2FP2>(*this);
+    }
     OperandValue ops[2];
     RELU relu;
     F16ONLY_f2fp dstfmt;
@@ -2566,7 +2797,10 @@ struct DecodedF2FP2 {
     EXTRACT extract_B;
     SATFINITE satfinite;
 };
-struct DecodedF2FP3 {
+struct DecodedF2FP3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedF2FP3>(*this);
+    }
     OperandValue ops[3];
     SATFINITE satfinite;
     RELU relu;
@@ -2580,7 +2814,10 @@ struct DecodedF2FP3 {
     ISWZC iswzC;
     EXTRACT extract_B;
 };
-struct DecodedF2FP4 {
+struct DecodedF2FP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedF2FP4>(*this);
+    }
     OperandValue ops[4];
     SATFINITEONLY satfinite;
     RELU relu;
@@ -2591,12 +2828,18 @@ struct DecodedF2FP4 {
     EXTRACT extract;
     SATNARROW satnarrow;
 };
-struct DecodedDMMA5 {
+struct DecodedDMMA5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDMMA5>(*this);
+    }
     OperandValue ops[5];
     SIZE_DMMA size;
     Round1 rnd;
 };
-struct DecodedHMNMX24 {
+struct DecodedHMNMX24 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMNMX24>(*this);
+    }
     OperandValue ops[4];
     OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
@@ -2605,7 +2848,10 @@ struct DecodedHMNMX24 {
     ISWZA iswzA;
     ISWZA iswzB;
 };
-struct DecodedHMNMX26 {
+struct DecodedHMNMX26 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMNMX26>(*this);
+    }
     OperandValue ops[6];
     OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
@@ -2615,7 +2861,10 @@ struct DecodedHMNMX26 {
     ISWZA iswzA;
     ISWZA iswzB;
 };
-struct DecodedF2IP4 {
+struct DecodedF2IP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedF2IP4>(*this);
+    }
     OperandValue ops[4];
     DSTFMT_U8_S8 dstfmt;
     F32ONLY_hadd2 srcfmt;
@@ -2624,18 +2873,27 @@ struct DecodedF2IP4 {
     RELU relu;
     EXTRACT extract;
 };
-struct DecodedI2FP2 {
+struct DecodedI2FP2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedI2FP2>(*this);
+    }
     OperandValue ops[2];
     F32ONLY_i2fp dstfmt;
     SRCFMT_i2fp srcfmt;
     RND_RN_RZ rnd;
 };
-struct DecodedVIMNMX4 {
+struct DecodedVIMNMX4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedVIMNMX4>(*this);
+    }
     OperandValue ops[4];
     FMT_vimnmx fmt;
     RELU relu;
 };
-struct DecodedQMMA5 {
+struct DecodedQMMA5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedQMMA5>(*this);
+    }
     OperandValue ops[5];
     SIZE_16816_16832 size;
     FloatNo64 dstfmt;
@@ -2644,7 +2902,10 @@ struct DecodedQMMA5 {
     ROWONLY row_A;
     COLONLY col_B;
 };
-struct DecodedQMMA7 {
+struct DecodedQMMA7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedQMMA7>(*this);
+    }
     OperandValue ops[7];
     SPONLY sp;
     SPFORMAT spformat;
@@ -2655,31 +2916,49 @@ struct DecodedQMMA7 {
     ROWONLY row_A;
     COLONLY col_B;
 };
-struct DecodedR2UR3 {
+struct DecodedR2UR3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedR2UR3>(*this);
+    }
     OperandValue ops[3];
     ORONLY OR;
     NONCONFORMITY_FILL_BROADCAST nonconformity;
 };
-struct DecodedFLO3 {
+struct DecodedFLO3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFLO3>(*this);
+    }
     OperandValue ops[3];
     FMT fmt;
     SH sh;
 };
-struct DecodedBREV2 {
+struct DecodedBREV2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBREV2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedFCHK3 {
+struct DecodedFCHK3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFCHK3>(*this);
+    }
     OperandValue ops[3];
     ChkMode mode;
 };
-struct DecodedF2F2 {
+struct DecodedF2F2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedF2F2>(*this);
+    }
     OperandValue ops[2];
     FTZ ftz;
     DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     Round1 rnd;
     HSEL hsel;
 };
-struct DecodedF2I2 {
+struct DecodedF2I2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedF2I2>(*this);
+    }
     OperandValue ops[2];
     FTZ ftz;
     DSTFMT_U8_S8_U16_S16_U32_S32 dstfmt;
@@ -2688,7 +2967,10 @@ struct DecodedF2I2 {
     NTZ ntz;
     HSEL hsel;
 };
-struct DecodedI2F2 {
+struct DecodedI2F2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedI2F2>(*this);
+    }
     OperandValue ops[2];
     DSTFMT_F16_F32_BF16 dstfmt;
     SRCFMT_U16_S16 srcfmt;
@@ -2696,145 +2978,229 @@ struct DecodedI2F2 {
     HSEL hsel;
     B3B0 bsel;
 };
-struct DecodedFRND2 {
+struct DecodedFRND2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFRND2>(*this);
+    }
     OperandValue ops[2];
     FTZ ftz;
     BF16ONLY_frnd fmt;
     Round3 rnd;
     HSEL hsel;
 };
-struct DecodedMUFU2 {
+struct DecodedMUFU2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMUFU2>(*this);
+    }
     OperandValue ops[2];
     MUFU_OP mufuop;
     FMT_F16_BF16 fmt;
     HSEL extract;
 };
-struct DecodedPOPC2 {
+struct DecodedPOPC2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPOPC2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedB2R2 {
+struct DecodedB2R2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedB2R2>(*this);
+    }
     OperandValue ops[2];
     BarmdBAR mode;
 };
-struct DecodedB2R1 {
+struct DecodedB2R1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedB2R1>(*this);
+    }
     OperandValue ops[1];
     BarmdWARP mode;
 };
-struct DecodedBAR2 {
+struct DecodedBAR2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBAR2>(*this);
+    }
     OperandValue ops[2];
     BarArv barmode;
     DEFER_BLOCKINGONLY defer_blocking;
 };
-struct DecodedBAR3 {
+struct DecodedBAR3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBAR3>(*this);
+    }
     OperandValue ops[3];
     BarRED barmode;
     Red op;
     DEFER_BLOCKINGONLY defer_blocking;
 };
-struct DecodedR2B2 {
+struct DecodedR2B2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedR2B2>(*this);
+    }
     OperandValue ops[2];
     MODE_BAR_WARP mode;
 };
-struct DecodedSETCTAID1 {
+struct DecodedSETCTAID1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSETCTAID1>(*this);
+    }
     OperandValue ops[1];
     CTA_DIM dim;
 };
-struct DecodedALD4 {
+struct DecodedALD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedALD4>(*this);
+    }
     OperandValue ops[4];
     AIO io;
     PHYSONLY p;
     ONLY32 sz;
 };
-struct DecodedALD5 {
+struct DecodedALD5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedALD5>(*this);
+    }
     OperandValue ops[5];
     AIO io;
     AInteger sz;
     PONLY p;
 };
-struct DecodedAST4 {
+struct DecodedAST4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedAST4>(*this);
+    }
     OperandValue ops[4];
     PHYSONLY p;
     ONLY32 sz;
 };
-struct DecodedAST5 {
+struct DecodedAST5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedAST5>(*this);
+    }
     OperandValue ops[5];
     AInteger sz;
     PONLY p;
 };
-struct DecodedOUT3 {
+struct DecodedOUT3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedOUT3>(*this);
+    }
     OperandValue ops[3];
     CUTONLY type;
 };
-struct DecodedOUT1 {
+struct DecodedOUT1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedOUT1>(*this);
+    }
     OperandValue ops[1];
     FINALONLY type;
 };
-struct DecodedIPA4 {
+struct DecodedIPA4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIPA4>(*this);
+    }
     OperandValue ops[4];
     MODE ipaop;
     MSI_CENTER_CENTROID msi;
 };
-struct DecodedIPA5 {
+struct DecodedIPA5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIPA5>(*this);
+    }
     OperandValue ops[5];
     MODE ipaop;
     OFFSETONLY msi;
 };
-struct DecodedCCTL0 {
+struct DecodedCCTL0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCCTL0>(*this);
+    }
     CONLY cache;
     LDCONLY ldc;
     IVALLONLY cop;
     SHALLOWONLY depth;
     LDCUONLY ldcu;
 };
-struct DecodedCALL3 {
+struct DecodedCALL3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCALL3>(*this);
+    }
     OperandValue ops[3];
     std::uint8_t abs;
     CALL_DEPTH depth;
     std::uint8_t rel;
     std::uint8_t rel_imm;
 };
-struct DecodedCALL2 {
+struct DecodedCALL2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCALL2>(*this);
+    }
     OperandValue ops[2];
     std::uint8_t rel;
     CALL_DEPTH depth;
     std::uint8_t abs;
     std::uint8_t rel_imm;
 };
-struct DecodedWARPSYNC2 {
+struct DecodedWARPSYNC2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedWARPSYNC2>(*this);
+    }
     OperandValue ops[2];
     DIV__EXCLUSIVE div;
     ALLOnly all;
     std::uint8_t rel;
 };
-struct DecodedWARPSYNC3 {
+struct DecodedWARPSYNC3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedWARPSYNC3>(*this);
+    }
     OperandValue ops[3];
     COLLECTIVEONLY div;
     std::uint8_t rel;
 };
-struct DecodedLEPC1 {
+struct DecodedLEPC1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLEPC1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedRPCMOV2 {
+struct DecodedRPCMOV2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedRPCMOV2>(*this);
+    }
     OperandValue ops[2];
     ONLY32 sz;
 };
-struct DecodedBMOV2 {
+struct DecodedBMOV2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBMOV2>(*this);
+    }
     OperandValue ops[2];
     ONLY32 sz;
     CLEAR clear;
     PQUAD pquad;
 };
-struct DecodedNANOTRAP2 {
+struct DecodedNANOTRAP2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedNANOTRAP2>(*this);
+    }
     OperandValue ops[2];
     RAND rand;
 };
-struct DecodedNANOSLEEP2 {
+struct DecodedNANOSLEEP2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedNANOSLEEP2>(*this);
+    }
     OperandValue ops[2];
     RAND rand;
     OPTIONAL_WARP warp;
     SYNCS_MOD syncs;
 };
-struct DecodedTEX9 {
+struct DecodedTEX9 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTEX9>(*this);
+    }
     OperandValue ops[9];
     BONLY b;
     RM16 rm16;
@@ -2847,19 +3213,28 @@ struct DecodedTEX9 {
     NODEP nodep;
     SCRONLY scr;
 };
-struct DecodedTMML6 {
+struct DecodedTMML6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTMML6>(*this);
+    }
     OperandValue ops[6];
     BONLY b;
     LODOnly lod;
     DIV div;
     NODEP nodep;
 };
-struct DecodedTXQ5 {
+struct DecodedTXQ5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTXQ5>(*this);
+    }
     OperandValue ops[5];
     BONLY b;
     NODEP nodep;
 };
-struct DecodedLDG5 {
+struct DecodedLDG5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDG5>(*this);
+    }
     OperandValue ops[5];
     E e;
     COP cop;
@@ -2869,7 +3244,10 @@ struct DecodedLDG5 {
     SCO sco;
     PRIVATE private_;
 };
-struct DecodedST3 {
+struct DecodedST3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedST3>(*this);
+    }
     OperandValue ops[3];
     E e;
     COP cop;
@@ -2878,7 +3256,10 @@ struct DecodedST3 {
     SCO sco;
     PRIVATE private_;
 };
-struct DecodedSTG3 {
+struct DecodedSTG3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTG3>(*this);
+    }
     OperandValue ops[3];
     E e;
     COP cop;
@@ -2888,21 +3269,33 @@ struct DecodedSTG3 {
     PRIVATE private_;
     ORDER order;
 };
-struct DecodedSTL3 {
+struct DecodedSTL3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTL3>(*this);
+    }
     OperandValue ops[3];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedSTS3 {
+struct DecodedSTS3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTS3>(*this);
+    }
     OperandValue ops[3];
     SZ_U8_S8_U16_S16_32_64_128 sz;
     STRIDE stride;
 };
-struct DecodedSHFL5 {
+struct DecodedSHFL5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSHFL5>(*this);
+    }
     OperandValue ops[5];
     Shflmd shflmd;
 };
-struct DecodedATOM6 {
+struct DecodedATOM6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedATOM6>(*this);
+    }
     OperandValue ops[6];
     E e;
     AtomsOp op;
@@ -2914,7 +3307,10 @@ struct DecodedATOM6 {
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
 };
-struct DecodedATOM7 {
+struct DecodedATOM7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedATOM7>(*this);
+    }
     OperandValue ops[7];
     E e;
     CAS cas;
@@ -2928,19 +3324,28 @@ struct DecodedATOM7 {
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
 };
-struct DecodedATOMS4 {
+struct DecodedATOMS4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedATOMS4>(*this);
+    }
     OperandValue ops[4];
     AtomsOp op;
     ATOMCASSZ sz;
     STRIDE stride;
 };
-struct DecodedREDS3 {
+struct DecodedREDS3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedREDS3>(*this);
+    }
     OperandValue ops[3];
     REDSOP op;
     REDSSIZE sz;
     STRIDE stride;
 };
-struct DecodedATOMS5 {
+struct DecodedATOMS5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedATOMS5>(*this);
+    }
     OperandValue ops[5];
     CAS cas;
     ATOMCASSZ sz;
@@ -2948,14 +3353,23 @@ struct DecodedATOMS5 {
     AtomsSPIN spin;
     AtomsOp op;
 };
-struct DecodedCCTLT0 {
+struct DecodedCCTLT0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCCTLT0>(*this);
+    }
     IVALLONLY_cctlt cop;
 };
-struct DecodedCCTLT1 {
+struct DecodedCCTLT1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCCTLT1>(*this);
+    }
     OperandValue ops[1];
     CCTLTOp cop;
 };
-struct DecodedSUATOM6 {
+struct DecodedSUATOM6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSUATOM6>(*this);
+    }
     OperandValue ops[6];
     DOnly d;
     BA ba;
@@ -2969,7 +3383,10 @@ struct DecodedSUATOM6 {
     PRIVATE private_;
     Clamp1 clamp;
 };
-struct DecodedSURED4 {
+struct DecodedSURED4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSURED4>(*this);
+    }
     OperandValue ops[4];
     DOnly d;
     BA ba;
@@ -2983,17 +3400,26 @@ struct DecodedSURED4 {
     PRIVATE private_;
     Clamp1 clamp;
 };
-struct DecodedMATCH3 {
+struct DecodedMATCH3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMATCH3>(*this);
+    }
     OperandValue ops[3];
     ALLOnly op;
     MATCH_SZ sz;
 };
-struct DecodedMATCH2 {
+struct DecodedMATCH2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMATCH2>(*this);
+    }
     OperandValue ops[2];
     ANYONLY op;
     MATCH_SZ sz;
 };
-struct DecodedATOMG5 {
+struct DecodedATOMG5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedATOMG5>(*this);
+    }
     OperandValue ops[5];
     E e;
     ATOMICFPOPS op;
@@ -3003,12 +3429,18 @@ struct DecodedATOMG5 {
     SCO sco;
     PRIVATE private_;
 };
-struct DecodedSYNCS0 {
+struct DecodedSYNCS0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSYNCS0>(*this);
+    }
     FLUSHONLY op;
     CCTLONLY cctl_mode;
     SYNCS_CCTL_OP_ALL cctlop;
 };
-struct DecodedATOMG6 {
+struct DecodedATOMG6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedATOMG6>(*this);
+    }
     OperandValue ops[6];
     E e;
     CAS cas;
@@ -3021,70 +3453,118 @@ struct DecodedATOMG6 {
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
 };
-struct DecodedQSPC3 {
+struct DecodedQSPC3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedQSPC3>(*this);
+    }
     OperandValue ops[3];
     E e;
     QUERY_SPACE space;
 };
-struct DecodedQSPC4 {
+struct DecodedQSPC4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedQSPC4>(*this);
+    }
     OperandValue ops[4];
     E e;
     QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedGETLMEMBASE1 {
+struct DecodedGETLMEMBASE1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedGETLMEMBASE1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedSETLMEMBASE1 {
+struct DecodedSETLMEMBASE1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSETLMEMBASE1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedREDUX2 {
+struct DecodedREDUX2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedREDUX2>(*this);
+    }
     OperandValue ops[2];
     REDUX_OP op;
     FMT sz;
 };
-struct DecodedFENCE0 {
+struct DecodedFENCE0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFENCE0>(*this);
+    }
     VIEWONLY type;
     ASYNCONLY syncType;
     SONLY memType;
 };
-struct DecodedTTUOPEN0 {
+struct DecodedTTUOPEN0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTTUOPEN0>(*this);
+    }
     DUAL dual;
 };
-struct DecodedTTUST4 {
+struct DecodedTTUST4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTTUST4>(*this);
+    }
     OperandValue ops[4];
 };
-struct DecodedTTUCLOSE1 {
+struct DecodedTTUCLOSE1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTTUCLOSE1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedTTULD5 {
+struct DecodedTTULD5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTTULD5>(*this);
+    }
     OperandValue ops[5];
     CLOSE close;
 };
-struct DecodedTTUGO0 {
+struct DecodedTTUGO0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTTUGO0>(*this);
+    }
 };
-struct DecodedTTUCCTL0 {
+struct DecodedTTUCCTL0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTTUCCTL0>(*this);
+    }
     IVALLONLY_utmacctl ivall;
 };
-struct DecodedFADD32I3 {
+struct DecodedFADD32I3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFADD32I3>(*this);
+    }
     OperandValue ops[3];
     FTZ ftz;
 };
-struct DecodedHADD24 {
+struct DecodedHADD24 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHADD24>(*this);
+    }
     OperandValue ops[4];
     F32ONLY_hadd2 ofmt;
     FTZ ftz;
     SAT sat;
     ISWZA iswzA;
 };
-struct DecodedHADD2_32I4 {
+struct DecodedHADD2_32I4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHADD2_32I4>(*this);
+    }
     OperandValue ops[4];
     FTZ ftz;
     SAT sat;
     ISWZA iswzA;
 };
-struct DecodedHFMA26 {
+struct DecodedHFMA26 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHFMA26>(*this);
+    }
     OperandValue ops[6];
     MMAONLY MMA;
     OFMT_F16_V2_BF16_V2 ofmt;
@@ -3097,7 +3577,10 @@ struct DecodedHFMA26 {
     NONE iswzC_forced_H1_H0;
     ISWZA iswzC;
 };
-struct DecodedHSET25 {
+struct DecodedHSET25 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHSET25>(*this);
+    }
     OperandValue ops[5];
     OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
@@ -3106,7 +3589,10 @@ struct DecodedHSET25 {
     Bop bop;
     ISWZA iswzA;
 };
-struct DecodedHSETP26 {
+struct DecodedHSETP26 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHSETP26>(*this);
+    }
     OperandValue ops[6];
     OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
@@ -3115,7 +3601,10 @@ struct DecodedHSETP26 {
     Bop bop;
     ISWZA iswzA;
 };
-struct DecodedQMMA8 {
+struct DecodedQMMA8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedQMMA8>(*this);
+    }
     OperandValue ops[8];
     SFONLY sf;
     ONLY16832 size;
@@ -3126,7 +3615,10 @@ struct DecodedQMMA8 {
     ONLY1X scaleVectorSz;
     REUSE reuse_src_h;
 };
-struct DecodedQMMA9 {
+struct DecodedQMMA9 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedQMMA9>(*this);
+    }
     OperandValue ops[9];
     SFONLY sf;
     SPONLY sp;
@@ -3139,7 +3631,10 @@ struct DecodedQMMA9 {
     ONLY1X scaleVectorSz;
     REUSE reuse_src_h;
 };
-struct DecodedMXQMMA8 {
+struct DecodedMXQMMA8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMXQMMA8>(*this);
+    }
     OperandValue ops[8];
     SFONLY sf;
     ONLY16832 size;
@@ -3150,7 +3645,10 @@ struct DecodedMXQMMA8 {
     ONLY1X scaleVectorSz;
     REUSE reuse_src_h;
 };
-struct DecodedOMMA8 {
+struct DecodedOMMA8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedOMMA8>(*this);
+    }
     OperandValue ops[8];
     SFONLY sf;
     ONLY16864 size;
@@ -3161,7 +3659,10 @@ struct DecodedOMMA8 {
     SCALEVECTORSZ scaleVectorSz;
     REUSE reuse_src_h;
 };
-struct DecodedOMMA9 {
+struct DecodedOMMA9 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedOMMA9>(*this);
+    }
     OperandValue ops[9];
     SFONLY sf;
     SPONLY sp;
@@ -3174,152 +3675,254 @@ struct DecodedOMMA9 {
     SCALEVECTORSZ scaleVectorSz;
     REUSE reuse_src_h;
 };
-struct DecodedMOV64IUR2 {
+struct DecodedMOV64IUR2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMOV64IUR2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedCGAERRBAR0 {
+struct DecodedCGAERRBAR0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCGAERRBAR0>(*this);
+    }
 };
-struct DecodedPMTRIG2 {
+struct DecodedPMTRIG2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPMTRIG2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedMOV32I3 {
+struct DecodedMOV32I3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMOV32I3>(*this);
+    }
     OperandValue ops[3];
 };
-struct DecodedP2R2 {
+struct DecodedP2R2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedP2R2>(*this);
+    }
     OperandValue ops[2];
     B3B0 insert;
 };
-struct DecodedCS2R2 {
+struct DecodedCS2R2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCS2R2>(*this);
+    }
     OperandValue ops[2];
     QInteger sz;
 };
-struct DecodedVOTE3 {
+struct DecodedVOTE3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedVOTE3>(*this);
+    }
     OperandValue ops[3];
     VoteOp voteop;
 };
-struct DecodedCSMTEST1 {
+struct DecodedCSMTEST1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCSMTEST1>(*this);
+    }
     OperandValue ops[1];
     VOP vtgmode;
 };
-struct DecodedCSMTEST4 {
+struct DecodedCSMTEST4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCSMTEST4>(*this);
+    }
     OperandValue ops[4];
     VOP vtgmode;
     CCMP ccmp;
     Bop bop;
 };
-struct DecodedCSMTEST2 {
+struct DecodedCSMTEST2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCSMTEST2>(*this);
+    }
     OperandValue ops[2];
     VOP vtgmode;
     CCMP ccmp;
 };
-struct DecodedVOTE_VTG1 {
+struct DecodedVOTE_VTG1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedVOTE_VTG1>(*this);
+    }
     OperandValue ops[1];
     VOP vtgmode;
 };
-struct DecodedVOTE_VTG4 {
+struct DecodedVOTE_VTG4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedVOTE_VTG4>(*this);
+    }
     OperandValue ops[4];
     VOP vtgmode;
     CCMP ccmp;
     Bop bop;
 };
-struct DecodedVOTE_VTG2 {
+struct DecodedVOTE_VTG2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedVOTE_VTG2>(*this);
+    }
     OperandValue ops[2];
     VOP vtgmode;
     CCMP ccmp;
 };
-struct DecodedISCADD32I5 {
+struct DecodedISCADD32I5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedISCADD32I5>(*this);
+    }
     OperandValue ops[5];
 };
-struct DecodedLOP32I5 {
+struct DecodedLOP32I5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLOP32I5>(*this);
+    }
     OperandValue ops[5];
     LOP lop;
     LOP_POP pop;
 };
-struct DecodedLOP32I4 {
+struct DecodedLOP32I4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLOP32I4>(*this);
+    }
     OperandValue ops[4];
     LOP lop;
 };
-struct DecodedPLOP34 {
+struct DecodedPLOP34 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPLOP34>(*this);
+    }
     OperandValue ops[4];
     PLOP_OP_NOREG lop;
 };
-struct DecodedPSETP5 {
+struct DecodedPSETP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPSETP5>(*this);
+    }
     OperandValue ops[5];
     PSETP_BOP0 bop0;
     PSETP_BOP0 bop1;
 };
-struct DecodedPSETP3 {
+struct DecodedPSETP3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPSETP3>(*this);
+    }
     OperandValue ops[3];
     PSETP_BOP0 bop0;
 };
-struct DecodedFMUL32I3 {
+struct DecodedFMUL32I3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFMUL32I3>(*this);
+    }
     OperandValue ops[3];
     FMZ_hfma2 fmz;
     SAT sat;
 };
-struct DecodedFSWZADD4 {
+struct DecodedFSWZADD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFSWZADD4>(*this);
+    }
     OperandValue ops[4];
     FTZ ftz;
     Round1 rnd;
     DIV div;
 };
-struct DecodedFFMA32I4 {
+struct DecodedFFMA32I4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFFMA32I4>(*this);
+    }
     OperandValue ops[4];
     FMZ_hfma2 fmz;
     SAT sat;
 };
-struct DecodedIMUL32I3 {
+struct DecodedIMUL32I3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMUL32I3>(*this);
+    }
     OperandValue ops[3];
     LOOnly wide;
     FMT fmt;
 };
-struct DecodedIMUL32I4 {
+struct DecodedIMUL32I4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIMUL32I4>(*this);
+    }
     OperandValue ops[4];
     WIDEONLY wide;
     FMT fmt;
 };
-struct DecodedPREEXIT0 {
+struct DecodedPREEXIT0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPREEXIT0>(*this);
+    }
 };
-struct DecodedACQBULK0 {
+struct DecodedACQBULK0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedACQBULK0>(*this);
+    }
 };
-struct DecodedELECT3 {
+struct DecodedELECT3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedELECT3>(*this);
+    }
     OperandValue ops[3];
     IGNORE_KILL ignoreKill;
 };
-struct DecodedHFMA2_32I5 {
+struct DecodedHFMA2_32I5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHFMA2_32I5>(*this);
+    }
     OperandValue ops[5];
     FMZ fmz;
     ISWZA iswzA;
     ISWZA iswzC;
 };
-struct DecodedHMUL24 {
+struct DecodedHMUL24 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMUL24>(*this);
+    }
     OperandValue ops[4];
     OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
     SAT sat;
     ISWZA iswzA;
 };
-struct DecodedHMUL2_32I4 {
+struct DecodedHMUL2_32I4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMUL2_32I4>(*this);
+    }
     OperandValue ops[4];
     FMZ_hfma2 fmz;
     SAT sat;
     ISWZA iswzA;
 };
-struct DecodedIADD32I4 {
+struct DecodedIADD32I4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIADD32I4>(*this);
+    }
     OperandValue ops[4];
 };
-struct DecodedIADD32I5 {
+struct DecodedIADD32I5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIADD32I5>(*this);
+    }
     OperandValue ops[5];
     XONLY X;
 };
-struct DecodedLDSM3 {
+struct DecodedLDSM3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDSM3>(*this);
+    }
     OperandValue ops[3];
     LDSM_SZ sz;
     LDSM_MODE mode;
     LDSM_NUM num;
     PSEUDO_OP pseudo_op;
 };
-struct DecodedHMNMX25 {
+struct DecodedHMNMX25 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMNMX25>(*this);
+    }
     OperandValue ops[5];
     OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
@@ -3327,7 +3930,10 @@ struct DecodedHMNMX25 {
     XORSIGN xorsign;
     ISWZA iswzA;
 };
-struct DecodedHMNMX27 {
+struct DecodedHMNMX27 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMNMX27>(*this);
+    }
     OperandValue ops[7];
     OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
@@ -3336,117 +3942,195 @@ struct DecodedHMNMX27 {
     IS_AONLY isA;
     ISWZA iswzA;
 };
-struct DecodedSTSM3 {
+struct DecodedSTSM3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTSM3>(*this);
+    }
     OperandValue ops[3];
     STSM_SZ sz;
     STSM_MODE mode;
     LDSM_NUM num;
 };
-struct DecodedUVIRTCOUNT2 {
+struct DecodedUVIRTCOUNT2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUVIRTCOUNT2>(*this);
+    }
     OperandValue ops[2];
     DEALLOCONLY_uvirtcount op;
     SMPOOLONLY pool;
     ONEONLY one;
 };
-struct DecodedACQSHMINIT0 {
+struct DecodedACQSHMINIT0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedACQSHMINIT0>(*this);
+    }
 };
-struct DecodedUMOV3 {
+struct DecodedUMOV3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUMOV3>(*this);
+    }
     OperandValue ops[3];
     ONLY64_syncs size;
 };
-struct DecodedVOTEU3 {
+struct DecodedVOTEU3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedVOTEU3>(*this);
+    }
     OperandValue ops[3];
     VoteOp voteop;
 };
-struct DecodedUPLOP35 {
+struct DecodedUPLOP35 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUPLOP35>(*this);
+    }
     OperandValue ops[5];
     PLOP_OP_NOREG lop;
 };
-struct DecodedUPLOP36 {
+struct DecodedUPLOP36 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUPLOP36>(*this);
+    }
     OperandValue ops[6];
     LUTOnly lut;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
     SIGNONLY sign_a;
 };
-struct DecodedUPLOP38 {
+struct DecodedUPLOP38 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUPLOP38>(*this);
+    }
     OperandValue ops[8];
     LUTOnly lut;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
     SIGNONLY sign_a;
 };
-struct DecodedUPSETP6 {
+struct DecodedUPSETP6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUPSETP6>(*this);
+    }
     OperandValue ops[6];
     PSETP_BOP0 bop0;
     PSETP_BOP0 bop1;
 };
-struct DecodedUPSETP4 {
+struct DecodedUPSETP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUPSETP4>(*this);
+    }
     OperandValue ops[4];
     PSETP_BOP0 bop0;
 };
-struct DecodedCS2UR3 {
+struct DecodedCS2UR3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCS2UR3>(*this);
+    }
     OperandValue ops[3];
     QInteger sz;
 };
-struct DecodedNOP0 {
+struct DecodedNOP0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedNOP0>(*this);
+    }
 };
-struct DecodedS2R2 {
+struct DecodedS2R2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedS2R2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedDEPBAR3 {
+struct DecodedDEPBAR3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDEPBAR3>(*this);
+    }
     OperandValue ops[3];
     LEONLY le;
 };
-struct DecodedDEPBAR1 {
+struct DecodedDEPBAR1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDEPBAR1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedDEPBAR0 {
+struct DecodedDEPBAR0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedDEPBAR0>(*this);
+    }
     ALLOnly le;
 };
-struct DecodedENDCOLLECTIVE1 {
+struct DecodedENDCOLLECTIVE1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedENDCOLLECTIVE1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedAL2P3 {
+struct DecodedAL2P3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedAL2P3>(*this);
+    }
     OperandValue ops[3];
     AIO io;
     AInteger sz;
 };
-struct DecodedISBERD3 {
+struct DecodedISBERD3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedISBERD3>(*this);
+    }
     OperandValue ops[3];
     AIO io;
     BASE base;
     SKEW skew;
     ISBERD_SZ sz;
 };
-struct DecodedPIXLD2 {
+struct DecodedPIXLD2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedPIXLD2>(*this);
+    }
     OperandValue ops[2];
     PIXLD_MODE mode;
 };
-struct DecodedISBEWR3 {
+struct DecodedISBEWR3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedISBEWR3>(*this);
+    }
     OperandValue ops[3];
     OONLY io;
     ISBEWR_BASE base;
     SKEW skew;
     ISBERD_SZ sz;
 };
-struct DecodedBSYNC2 {
+struct DecodedBSYNC2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBSYNC2>(*this);
+    }
     OperandValue ops[2];
     RELIABILITY_RELIABLE_RECONVERGENT reliability;
 };
-struct DecodedBREAK2 {
+struct DecodedBREAK2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBREAK2>(*this);
+    }
     OperandValue ops[2];
     RELIABLEONLY reliability;
 };
-struct DecodedBSSY3 {
+struct DecodedBSSY3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBSSY3>(*this);
+    }
     OperandValue ops[3];
     std::uint8_t rel;
     RELIABILITY_RELIABLE_RECONVERGENT reliability;
 };
-struct DecodedYIELD1 {
+struct DecodedYIELD1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedYIELD1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedBRA2 {
+struct DecodedBRA2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBRA2>(*this);
+    }
     OperandValue ops[2];
     DEPTH depth;
     COND__DIV_CONV cond;
@@ -3454,65 +4138,107 @@ struct DecodedBRA2 {
     NOTTID0 nottid0;
     std::uint8_t rel;
 };
-struct DecodedWARPSYNC1 {
+struct DecodedWARPSYNC1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedWARPSYNC1>(*this);
+    }
     OperandValue ops[1];
     ALLOnly all;
 };
-struct DecodedBRX3 {
+struct DecodedBRX3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBRX3>(*this);
+    }
     OperandValue ops[3];
     DEPTH depth;
     std::uint8_t rel;
 };
-struct DecodedJMP2 {
+struct DecodedJMP2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedJMP2>(*this);
+    }
     OperandValue ops[2];
     DEPTH depth;
     COND__DIV_CONV cond;
     USEL usel;
     std::uint8_t rel;
 };
-struct DecodedJMX3 {
+struct DecodedJMX3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedJMX3>(*this);
+    }
     OperandValue ops[3];
     DEPTH depth;
     std::uint8_t rel;
 };
-struct DecodedEXIT1 {
+struct DecodedEXIT1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedEXIT1>(*this);
+    }
     OperandValue ops[1];
     EXIT_MODE mode;
     NO_ATEXIT no_atexit;
 };
-struct DecodedLEPC2 {
+struct DecodedLEPC2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLEPC2>(*this);
+    }
     OperandValue ops[2];
     std::uint8_t rel;
 };
-struct DecodedRTT0 {
+struct DecodedRTT0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedRTT0>(*this);
+    }
 };
-struct DecodedRET3 {
+struct DecodedRET3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedRET3>(*this);
+    }
     OperandValue ops[3];
     ABSONLY_ret addr;
     RET_DEPTH depth;
     std::uint8_t rel_imm;
 };
-struct DecodedRET2 {
+struct DecodedRET2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedRET2>(*this);
+    }
     OperandValue ops[2];
     RET_ADDR addr;
     RET_DEPTH depth;
 };
-struct DecodedIDE1 {
+struct DecodedIDE1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIDE1>(*this);
+    }
     OperandValue ops[1];
     IDEAction action;
 };
-struct DecodedKILL1 {
+struct DecodedKILL1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedKILL1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedBPT1 {
+struct DecodedBPT1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBPT1>(*this);
+    }
     OperandValue ops[1];
     BPT_TRAP_INT bpt;
 };
-struct DecodedNANOSLEEP1 {
+struct DecodedNANOSLEEP1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedNANOSLEEP1>(*this);
+    }
     OperandValue ops[1];
     CLEARONLY clear;
 };
-struct DecodedLD4 {
+struct DecodedLD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLD4>(*this);
+    }
     OperandValue ops[4];
     E e;
     COP cop;
@@ -3522,17 +4248,26 @@ struct DecodedLD4 {
     SCO sco;
     PRIVATE private_;
 };
-struct DecodedLDL3 {
+struct DecodedLDL3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDL3>(*this);
+    }
     OperandValue ops[3];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedLDS3 {
+struct DecodedLDS3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDS3>(*this);
+    }
     OperandValue ops[3];
     LDSSIZE sz;
     STRIDE stride;
 };
-struct DecodedREDG3 {
+struct DecodedREDG3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedREDG3>(*this);
+    }
     OperandValue ops[3];
     E e;
     RedOp op;
@@ -3542,7 +4277,10 @@ struct DecodedREDG3 {
     SCO sco;
     PRIVATE private_;
 };
-struct DecodedCCTL2 {
+struct DecodedCCTL2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCCTL2>(*this);
+    }
     OperandValue ops[2];
     E e;
     Cache cache;
@@ -3551,26 +4289,41 @@ struct DecodedCCTL2 {
     SHALLOWONLY depth;
     LDCUONLY ldcu;
 };
-struct DecodedCCTL3 {
+struct DecodedCCTL3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCCTL3>(*this);
+    }
     OperandValue ops[3];
     E e;
     Cache cache;
     PF2ONLY cop;
     QFAULTONLY qfault;
 };
-struct DecodedCCTLL0 {
+struct DecodedCCTLL0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCCTLL0>(*this);
+    }
     COP_IVALL_WBALL cop;
 };
-struct DecodedCCTLL2 {
+struct DecodedCCTLL2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCCTLL2>(*this);
+    }
     OperandValue ops[2];
     COP_PF1_PF2_WB_IV_RS cop;
 };
-struct DecodedMEMBAR0 {
+struct DecodedMEMBAR0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMEMBAR0>(*this);
+    }
     MEMBAR_SEM sem;
     SCO_CTA_SM_GPU_SYS_VC_CTAPARTIAL sco;
     ASYNCONLY_membar mmio;
 };
-struct DecodedSULD5 {
+struct DecodedSULD5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSULD5>(*this);
+    }
     OperandValue ops[5];
     PONLY p;
     Dim1 dim;
@@ -3585,7 +4338,10 @@ struct DecodedSULD5 {
     BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedSUST4 {
+struct DecodedSUST4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSUST4>(*this);
+    }
     OperandValue ops[4];
     PONLY p;
     Dim1 dim;
@@ -3600,35 +4356,62 @@ struct DecodedSUST4 {
     BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedERRBAR0 {
+struct DecodedERRBAR0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedERRBAR0>(*this);
+    }
 };
-struct DecodedLDGDEPBAR0 {
+struct DecodedLDGDEPBAR0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDGDEPBAR0>(*this);
+    }
 };
-struct DecodedSUQUERY6 {
+struct DecodedSUQUERY6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSUQUERY6>(*this);
+    }
     OperandValue ops[6];
     BA ba;
     Dim1 dim;
     UAI uai;
 };
-struct DecodedUTMACMDFLUSH1 {
+struct DecodedUTMACMDFLUSH1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMACMDFLUSH1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedUTMACCTL1 {
+struct DecodedUTMACCTL1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMACCTL1>(*this);
+    }
     OperandValue ops[1];
     IVALLONLY_utmacctl ivall;
     ONEONLY one;
 };
-struct DecodedS2UR3 {
+struct DecodedS2UR3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedS2UR3>(*this);
+    }
     OperandValue ops[3];
 };
-struct DecodedTTUMACROFUSE1 {
+struct DecodedTTUMACROFUSE1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTTUMACROFUSE1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedBAR0 {
+struct DecodedBAR0 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBAR0>(*this);
+    }
     BarSYNCALL barmode;
     DEFER_BLOCKINGONLY defer_blocking;
 };
-struct DecodedCCTL4 {
+struct DecodedCCTL4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedCCTL4>(*this);
+    }
     OperandValue ops[4];
     CONLY cache;
     LDCONLY ldc;
@@ -3636,98 +4419,149 @@ struct DecodedCCTL4 {
     SHALLOWONLY depth;
     LDCUONLY ldcu;
 };
-struct DecodedLDC5 {
+struct DecodedLDC5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDC5>(*this);
+    }
     OperandValue ops[5];
     SZ_U8_S8_U16_S16_32_64 sz;
     AdMode ad;
 };
-struct DecodedUVIADD4 {
+struct DecodedUVIADD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUVIADD4>(*this);
+    }
     OperandValue ops[4];
     FMT_viadd fmt;
     ISAT isat;
 };
-struct DecodedUVIMNMX5 {
+struct DecodedUVIMNMX5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUVIMNMX5>(*this);
+    }
     OperandValue ops[5];
     FMT_vimnmx fmt;
     RELU relu;
 };
-struct DecodedUIABS3 {
+struct DecodedUIABS3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIABS3>(*this);
+    }
     OperandValue ops[3];
 };
-struct DecodedUI2I3 {
+struct DecodedUI2I3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUI2I3>(*this);
+    }
     OperandValue ops[3];
     DSTFMT_i2i dstfmt;
     S32ONLY_i2i srcfmt;
     SATONLY SAT;
 };
-struct DecodedUI2IP5 {
+struct DecodedUI2IP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUI2IP5>(*this);
+    }
     OperandValue ops[5];
     DSTFMT_S4_U4 dstfmt;
     S32ONLY_i2i srcfmt;
     SATRELU_ui2ip satrelu;
     ONLY24 extract_limited;
 };
-struct DecodedUFMNMX5 {
+struct DecodedUFMNMX5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFMNMX5>(*this);
+    }
     OperandValue ops[5];
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
 };
-struct DecodedUFMNMX6 {
+struct DecodedUFMNMX6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFMNMX6>(*this);
+    }
     OperandValue ops[6];
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
     IS_AONLY is_A;
 };
-struct DecodedUFSEL5 {
+struct DecodedUFSEL5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFSEL5>(*this);
+    }
     OperandValue ops[5];
     FTZ ftz;
 };
-struct DecodedUFSET5 {
+struct DecodedUFSET5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFSET5>(*this);
+    }
     OperandValue ops[5];
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
 };
-struct DecodedUFSET4 {
+struct DecodedUFSET4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFSET4>(*this);
+    }
     OperandValue ops[4];
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
 };
-struct DecodedUFSETP6 {
+struct DecodedUFSETP6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFSETP6>(*this);
+    }
     OperandValue ops[6];
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
 };
-struct DecodedUFSETP4 {
+struct DecodedUFSETP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFSETP4>(*this);
+    }
     OperandValue ops[4];
     FCMP fcomp;
     FTZ ftz;
 };
-struct DecodedUFADD4 {
+struct DecodedUFADD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFADD4>(*this);
+    }
     OperandValue ops[4];
     FTZ ftz;
     Round1 rnd;
     SAT sat;
 };
-struct DecodedUFHADD4 {
+struct DecodedUFHADD4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFHADD4>(*this);
+    }
     OperandValue ops[4];
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
     EXTRACT extract_a;
 };
-struct DecodedUFFMA5 {
+struct DecodedUFFMA5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFFMA5>(*this);
+    }
     OperandValue ops[5];
     FMZ_hfma2 fmz;
     Round1 rnd;
     SAT sat;
 };
-struct DecodedUFHFMA5 {
+struct DecodedUFHFMA5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFHFMA5>(*this);
+    }
     OperandValue ops[5];
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
@@ -3735,14 +4569,20 @@ struct DecodedUFHFMA5 {
     EXTRACT extract_a;
     EXTRACT extract_b;
 };
-struct DecodedUFMUL4 {
+struct DecodedUFMUL4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFMUL4>(*this);
+    }
     OperandValue ops[4];
     FMZ_hfma2 fmz;
     Scale scale;
     Round1 rnd;
     SAT sat;
 };
-struct DecodedUF2IP5 {
+struct DecodedUF2IP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUF2IP5>(*this);
+    }
     OperandValue ops[5];
     DSTFMT_U8_S8 dstfmt;
     F32ONLY_hadd2 srcfmt;
@@ -3751,7 +4591,10 @@ struct DecodedUF2IP5 {
     RELU relu;
     EXTRACT extract;
 };
-struct DecodedUI2F3 {
+struct DecodedUI2F3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUI2F3>(*this);
+    }
     OperandValue ops[3];
     DSTFMT_F16_F32_BF16 dstfmt;
     SRCFMT_U16_S16 srcfmt;
@@ -3759,14 +4602,20 @@ struct DecodedUI2F3 {
     HSEL hsel;
     B3B0 bsel;
 };
-struct DecodedUF2F3 {
+struct DecodedUF2F3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUF2F3>(*this);
+    }
     OperandValue ops[3];
     FTZ ftz;
     DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     Round1 rnd;
     HSEL hsel;
 };
-struct DecodedUF2I3 {
+struct DecodedUF2I3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUF2I3>(*this);
+    }
     OperandValue ops[3];
     FTZ ftz;
     DSTFMT_U8_S8_U16_S16_U32_S32 dstfmt;
@@ -3775,156 +4624,249 @@ struct DecodedUF2I3 {
     NTZ ntz;
     HSEL hsel;
 };
-struct DecodedUFRND3 {
+struct DecodedUFRND3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFRND3>(*this);
+    }
     OperandValue ops[3];
     FTZ ftz;
     BF16ONLY_frnd fmt;
     Round3 rnd;
     HSEL hsel;
 };
-struct DecodedUI2FP3 {
+struct DecodedUI2FP3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUI2FP3>(*this);
+    }
     OperandValue ops[3];
     F32ONLY_i2fp dstfmt;
     SRCFMT_i2fp srcfmt;
     RND_RN_RZ rnd;
 };
-struct DecodedUIMNMX8 {
+struct DecodedUIMNMX8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIMNMX8>(*this);
+    }
     OperandValue ops[8];
     FMT_64_DIST fmt;
 };
-struct DecodedUIMNMX7 {
+struct DecodedUIMNMX7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIMNMX7>(*this);
+    }
     OperandValue ops[7];
     FMT_64_DIST fmt;
 };
-struct DecodedUSEL5 {
+struct DecodedUSEL5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSEL5>(*this);
+    }
     OperandValue ops[5];
     ONLY64 size;
 };
-struct DecodedUISETP6 {
+struct DecodedUISETP6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUISETP6>(*this);
+    }
     OperandValue ops[6];
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
 };
-struct DecodedUISETP7 {
+struct DecodedUISETP7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUISETP7>(*this);
+    }
     OperandValue ops[7];
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
     EXONLY ex;
 };
-struct DecodedUISETP4 {
+struct DecodedUISETP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUISETP4>(*this);
+    }
     OperandValue ops[4];
     ICmpAll icmp;
     FMT_64_DIST fmt;
 };
-struct DecodedUISETP5 {
+struct DecodedUISETP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUISETP5>(*this);
+    }
     OperandValue ops[5];
     ICmpAll icmp;
     FMT_64_DIST fmt;
     EXONLY ex;
 };
-struct DecodedUIADD37 {
+struct DecodedUIADD37 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIADD37>(*this);
+    }
     OperandValue ops[7];
 };
-struct DecodedUIADD39 {
+struct DecodedUIADD39 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIADD39>(*this);
+    }
     OperandValue ops[9];
     XONLY X;
 };
-struct DecodedULEA7 {
+struct DecodedULEA7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULEA7>(*this);
+    }
     OperandValue ops[7];
     HIONLY_lea hilo;
     XONLY X;
     SX32ONLY sx32;
 };
-struct DecodedULEA6 {
+struct DecodedULEA6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULEA6>(*this);
+    }
     OperandValue ops[6];
     HIONLY_lea hilo;
     SX32ONLY sx32;
 };
-struct DecodedULEA8 {
+struct DecodedULEA8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULEA8>(*this);
+    }
     OperandValue ops[8];
     HIONLY_lea hilo;
     XONLY X;
 };
-struct DecodedULOP6 {
+struct DecodedULOP6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULOP6>(*this);
+    }
     OperandValue ops[6];
     LOP lop;
     LOP_POP pop;
 };
-struct DecodedULOP5 {
+struct DecodedULOP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULOP5>(*this);
+    }
     OperandValue ops[5];
     LOP lop;
 };
-struct DecodedULOP38 {
+struct DecodedULOP38 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULOP38>(*this);
+    }
     OperandValue ops[8];
     LUTOnly lut;
     LOP_POP pop;
 };
-struct DecodedULOP37 {
+struct DecodedULOP37 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULOP37>(*this);
+    }
     OperandValue ops[7];
     LUTOnly lut;
     LOP lop;
     LOP_POP pop;
 };
-struct DecodedULOP36 {
+struct DecodedULOP36 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULOP36>(*this);
+    }
     OperandValue ops[6];
     LOP lop;
 };
-struct DecodedUPRMT5 {
+struct DecodedUPRMT5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUPRMT5>(*this);
+    }
     OperandValue ops[5];
     IDXOnly idx;
 };
-struct DecodedUIADD3_647 {
+struct DecodedUIADD3_647 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIADD3_647>(*this);
+    }
     OperandValue ops[7];
 };
-struct DecodedUIADD3_649 {
+struct DecodedUIADD3_649 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIADD3_649>(*this);
+    }
     OperandValue ops[9];
     XONLY X;
 };
-struct DecodedUSHF5 {
+struct DecodedUSHF5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSHF5>(*this);
+    }
     OperandValue ops[5];
     SDIR dir;
     CWMode cw;
     FMT_shf fmt;
     HILO hilo;
 };
-struct DecodedUSHL4 {
+struct DecodedUSHL4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSHL4>(*this);
+    }
     OperandValue ops[4];
     CWMode cw;
 };
-struct DecodedUSHR4 {
+struct DecodedUSHR4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSHR4>(*this);
+    }
     OperandValue ops[4];
     CWMode cw;
     FMT_S32_U32 fmt;
 };
-struct DecodedUSGXT4 {
+struct DecodedUSGXT4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSGXT4>(*this);
+    }
     OperandValue ops[4];
     CWMode cw;
     FMT fmt;
 };
-struct DecodedUBMSK4 {
+struct DecodedUBMSK4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUBMSK4>(*this);
+    }
     OperandValue ops[4];
     CWMode cw;
 };
-struct DecodedUIMAD5 {
+struct DecodedUIMAD5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIMAD5>(*this);
+    }
     OperandValue ops[5];
     LOOnly wide;
     FMT fmt;
 };
-struct DecodedUIMAD6 {
+struct DecodedUIMAD6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIMAD6>(*this);
+    }
     OperandValue ops[6];
     LOOnly wide;
     FMT fmt;
     XONLY X;
 };
-struct DecodedUIMAD7 {
+struct DecodedUIMAD7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUIMAD7>(*this);
+    }
     OperandValue ops[7];
     WIDEONLY wide;
     FMT fmt;
     XONLY X;
 };
-struct DecodedUF2FP3 {
+struct DecodedUF2FP3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUF2FP3>(*this);
+    }
     OperandValue ops[3];
     RELU relu;
     DSTFMT_uf2fp dstfmt;
@@ -3934,7 +4876,10 @@ struct DecodedUF2FP3 {
     EXTRACT extract;
     SATFINITE satfinite;
 };
-struct DecodedUF2FP4 {
+struct DecodedUF2FP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUF2FP4>(*this);
+    }
     OperandValue ops[4];
     SATFINITE satfinite;
     RELU relu;
@@ -3944,7 +4889,10 @@ struct DecodedUF2FP4 {
     RNDMODE_RN_RZ rndMode;
     EXTRACT extract;
 };
-struct DecodedUF2FP5 {
+struct DecodedUF2FP5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUF2FP5>(*this);
+    }
     OperandValue ops[5];
     SATFINITE satfinite;
     RELU relu;
@@ -3954,36 +4902,60 @@ struct DecodedUF2FP5 {
     RNONLY rndMode;
     EXTRACT extract;
 };
-struct DecodedUFLO4 {
+struct DecodedUFLO4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUFLO4>(*this);
+    }
     OperandValue ops[4];
     FMT fmt;
     SH sh;
 };
-struct DecodedUBREV3 {
+struct DecodedUBREV3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUBREV3>(*this);
+    }
     OperandValue ops[3];
 };
-struct DecodedUPOPC3 {
+struct DecodedUPOPC3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUPOPC3>(*this);
+    }
     OperandValue ops[3];
 };
-struct DecodedLDCU7 {
+struct DecodedLDCU7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDCU7>(*this);
+    }
     OperandValue ops[7];
     ONLY256_ldcu sz;
 };
-struct DecodedLDCU6 {
+struct DecodedLDCU6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDCU6>(*this);
+    }
     OperandValue ops[6];
     ONLY256_ldcu sz;
     TEXUNPACK texunpack;
 };
-struct DecodedLDTRAM4 {
+struct DecodedLDTRAM4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDTRAM4>(*this);
+    }
     OperandValue ops[4];
     MODE_ldtram mode;
 };
-struct DecodedSYNCS6 {
+struct DecodedSYNCS6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSYNCS6>(*this);
+    }
     OperandValue ops[6];
     CASONLY emuop;
     ONLY64_syncs sz;
 };
-struct DecodedUTMALDG4 {
+struct DecodedUTMALDG4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMALDG4>(*this);
+    }
     OperandValue ops[4];
     TENSORDIM dim;
     MODE_TILED_IM2COL_W_GATHER4 mode;
@@ -3991,7 +4963,10 @@ struct DecodedUTMALDG4 {
     ONLY1CTA cluster_sz;
     ONEONLY one;
 };
-struct DecodedUTMALDG6 {
+struct DecodedUTMALDG6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMALDG6>(*this);
+    }
     OperandValue ops[6];
     TENSORDIM dim;
     MODE_TILED_IM2COL_W_GATHER4 mode;
@@ -3999,47 +4974,68 @@ struct DecodedUTMALDG6 {
     ONLY1CTA cluster_sz;
     ONEONLY one;
 };
-struct DecodedUTMASTG3 {
+struct DecodedUTMASTG3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMASTG3>(*this);
+    }
     OperandValue ops[3];
     TENSORDIM dim;
     MODE_utmastg mode;
     ONEONLY one;
 };
-struct DecodedUTMASTG5 {
+struct DecodedUTMASTG5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMASTG5>(*this);
+    }
     OperandValue ops[5];
     TENSORDIM dim;
     MODE_utmastg mode;
     ONEONLY one;
 };
-struct DecodedUTMAREDG3 {
+struct DecodedUTMAREDG3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMAREDG3>(*this);
+    }
     OperandValue ops[3];
     TENSORDIM dim;
     MODE_utmaredg mode;
     RedOp op;
     ONEONLY one;
 };
-struct DecodedUTMAREDG5 {
+struct DecodedUTMAREDG5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMAREDG5>(*this);
+    }
     OperandValue ops[5];
     TENSORDIM dim;
     MODE_utmaredg mode;
     RedOp op;
     ONEONLY one;
 };
-struct DecodedUTMAPF4 {
+struct DecodedUTMAPF4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMAPF4>(*this);
+    }
     OperandValue ops[4];
     L2ONLY cache;
     TENSORDIM dim;
     MODE_IM2COL_W mode;
     ONEONLY one;
 };
-struct DecodedUTMAPF6 {
+struct DecodedUTMAPF6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMAPF6>(*this);
+    }
     OperandValue ops[6];
     L2ONLY cache;
     TENSORDIM dim;
     MODE_IM2COL_W mode;
     ONEONLY one;
 };
-struct DecodedUBLKCP4 {
+struct DecodedUBLKCP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUBLKCP4>(*this);
+    }
     OperandValue ops[4];
     DST dst;
     DST src;
@@ -4051,7 +5047,10 @@ struct DecodedUBLKCP4 {
     SCO sco;
     ONEONLY one;
 };
-struct DecodedUBLKCP6 {
+struct DecodedUBLKCP6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUBLKCP6>(*this);
+    }
     OperandValue ops[6];
     DST dst;
     DST src;
@@ -4063,7 +5062,10 @@ struct DecodedUBLKCP6 {
     SCO sco;
     ONEONLY one;
 };
-struct DecodedUBLKRED4 {
+struct DecodedUBLKRED4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUBLKRED4>(*this);
+    }
     OperandValue ops[4];
     DST dst;
     SONLY_ublkred src;
@@ -4073,7 +5075,10 @@ struct DecodedUBLKRED4 {
     SCO sco;
     ONEONLY one;
 };
-struct DecodedUBLKRED6 {
+struct DecodedUBLKRED6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUBLKRED6>(*this);
+    }
     OperandValue ops[6];
     DST dst;
     SONLY_ublkred src;
@@ -4083,70 +5088,115 @@ struct DecodedUBLKRED6 {
     SCO sco;
     ONEONLY one;
 };
-struct DecodedUBLKPF3 {
+struct DecodedUBLKPF3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUBLKPF3>(*this);
+    }
     OperandValue ops[3];
     L2ONLY cache;
     ONEONLY one;
 };
-struct DecodedUBLKPF5 {
+struct DecodedUBLKPF5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUBLKPF5>(*this);
+    }
     OperandValue ops[5];
     L2ONLY cache;
     ONEONLY one;
 };
-struct DecodedUCGABARSET2 {
+struct DecodedUCGABARSET2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCGABARSET2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedUCGABAR_SET2 {
+struct DecodedUCGABAR_SET2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCGABAR_SET2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedUSETMAXREG3 {
+struct DecodedUSETMAXREG3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSETMAXREG3>(*this);
+    }
     OperandValue ops[3];
     TRY_ALLOCONLY mode;
     CTAPOOLONLY pool;
 };
-struct DecodedUSETMAXREG2 {
+struct DecodedUSETMAXREG2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSETMAXREG2>(*this);
+    }
     OperandValue ops[2];
     DEALLOCONLY mode;
     CTAPOOLONLY pool;
 };
-struct DecodedUSETSHMSZ2 {
+struct DecodedUSETSHMSZ2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSETSHMSZ2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedUGETNEXTWORKID3 {
+struct DecodedUGETNEXTWORKID3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUGETNEXTWORKID3>(*this);
+    }
     OperandValue ops[3];
     UGETNEXTWORKID_CAST cast;
     ONEONLY one;
 };
-struct DecodedUMEMSETS5 {
+struct DecodedUMEMSETS5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUMEMSETS5>(*this);
+    }
     OperandValue ops[5];
     ONLY64 sz;
 };
-struct DecodedULEPC2 {
+struct DecodedULEPC2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULEPC2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedMOV4 {
+struct DecodedMOV4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedMOV4>(*this);
+    }
     OperandValue ops[4];
 };
-struct DecodedIPA6 {
+struct DecodedIPA6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedIPA6>(*this);
+    }
     OperandValue ops[6];
     MODE ipaop;
     OFFSETONLY msi;
 };
-struct DecodedBRA3 {
+struct DecodedBRA3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBRA3>(*this);
+    }
     OperandValue ops[3];
     DEPTH depth;
     UONLY cond;
     USEL usel;
     std::uint8_t rel;
 };
-struct DecodedJMP3 {
+struct DecodedJMP3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedJMP3>(*this);
+    }
     OperandValue ops[3];
     DEPTH depth;
     UONLY cond;
     USEL usel;
     std::uint8_t rel;
 };
-struct DecodedSYNCS5 {
+struct DecodedSYNCS5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSYNCS5>(*this);
+    }
     OperandValue ops[5];
     PHASECHKONLY op;
     TRANS64ONLY bartype;
@@ -4157,11 +5207,17 @@ struct DecodedSYNCS5 {
     OPTOUT optout;
     PARAMTYPE paramtype;
 };
-struct DecodedLDCU8 {
+struct DecodedLDCU8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDCU8>(*this);
+    }
     OperandValue ops[8];
     ONLY256_ldcu sz;
 };
-struct DecodedSYNCS4 {
+struct DecodedSYNCS4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSYNCS4>(*this);
+    }
     OperandValue ops[4];
     LDONLY cctl_mode;
     ONLY64_syncs sz;
@@ -4171,94 +5227,148 @@ struct DecodedSYNCS4 {
     BarRED retval;
     LDONLY_syncs emuop;
 };
-struct DecodedUTMALDG3 {
+struct DecodedUTMALDG3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMALDG3>(*this);
+    }
     OperandValue ops[3];
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
     ONLY1CTA cluster_sz;
     ONEONLY one;
 };
-struct DecodedUTMALDG5 {
+struct DecodedUTMALDG5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMALDG5>(*this);
+    }
     OperandValue ops[5];
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
     ONLY1CTA cluster_sz;
     ONEONLY one;
 };
-struct DecodedUTMAPF3 {
+struct DecodedUTMAPF3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMAPF3>(*this);
+    }
     OperandValue ops[3];
     L2ONLY cache;
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
     ONEONLY one;
 };
-struct DecodedUTMAPF5 {
+struct DecodedUTMAPF5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMAPF5>(*this);
+    }
     OperandValue ops[5];
     L2ONLY cache;
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
     ONEONLY one;
 };
-struct DecodedUCGABARGET2 {
+struct DecodedUCGABARGET2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCGABARGET2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedUCGABAR_GET2 {
+struct DecodedUCGABAR_GET2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCGABAR_GET2>(*this);
+    }
     OperandValue ops[2];
 };
-struct DecodedELECT2 {
+struct DecodedELECT2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedELECT2>(*this);
+    }
     OperandValue ops[2];
     IGNORE_KILL ignoreKill;
 };
-struct DecodedLDSM4 {
+struct DecodedLDSM4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDSM4>(*this);
+    }
     OperandValue ops[4];
     LDSM_SZ sz;
     LDSM_MODE mode;
     LDSM_NUM num;
     PSEUDO_OP pseudo_op;
 };
-struct DecodedSTSM4 {
+struct DecodedSTSM4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTSM4>(*this);
+    }
     OperandValue ops[4];
     STSM_SZ sz;
     STSM_MODE mode;
     LDSM_NUM num;
 };
-struct DecodedUP2UR5 {
+struct DecodedUP2UR5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUP2UR5>(*this);
+    }
     OperandValue ops[5];
     B3B0 insert;
 };
-struct DecodedUP2UR3 {
+struct DecodedUP2UR3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUP2UR3>(*this);
+    }
     OperandValue ops[3];
     B3B0 insert;
 };
-struct DecodedUR2UP4 {
+struct DecodedUR2UP4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUR2UP4>(*this);
+    }
     OperandValue ops[4];
     B3B0 ur2up_selA;
 };
-struct DecodedULOP32I6 {
+struct DecodedULOP32I6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULOP32I6>(*this);
+    }
     OperandValue ops[6];
     LOP lop;
     LOP_POP pop;
 };
-struct DecodedULOP32I5 {
+struct DecodedULOP32I5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULOP32I5>(*this);
+    }
     OperandValue ops[5];
     LOP lop;
 };
-struct DecodedUCLEA6 {
+struct DecodedUCLEA6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCLEA6>(*this);
+    }
     OperandValue ops[6];
 };
-struct DecodedBRXU3 {
+struct DecodedBRXU3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedBRXU3>(*this);
+    }
     OperandValue ops[3];
     DEPTH depth;
     COND cond;
     std::uint8_t rel;
 };
-struct DecodedJMXU3 {
+struct DecodedJMXU3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedJMXU3>(*this);
+    }
     OperandValue ops[3];
     DEPTH depth;
     COND cond;
     std::uint8_t rel;
 };
-struct DecodedLDG8 {
+struct DecodedLDG8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDG8>(*this);
+    }
     OperandValue ops[8];
     EONLY e;
     COP cop;
@@ -4270,7 +5380,10 @@ struct DecodedLDG8 {
     PRIVATE private_;
     ONLY64 input_reg_sz_64_bit75_dist;
 };
-struct DecodedLDG7 {
+struct DecodedLDG7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDG7>(*this);
+    }
     OperandValue ops[7];
     EONLY e;
     COP cop;
@@ -4284,7 +5397,10 @@ struct DecodedLDG7 {
     ONLY64 input_reg_sz_64_bit75_dist;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedSTG7 {
+struct DecodedSTG7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTG7>(*this);
+    }
     OperandValue ops[7];
     EONLY e;
     COP cop;
@@ -4296,7 +5412,10 @@ struct DecodedSTG7 {
     ORDER order;
     ONLY64 input_reg_sz_64_bit75_dist;
 };
-struct DecodedSTG6 {
+struct DecodedSTG6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTG6>(*this);
+    }
     OperandValue ops[6];
     EONLY e;
     COP cop;
@@ -4309,7 +5428,10 @@ struct DecodedSTG6 {
     U32ONLY input_reg_sz_32_bit75_dist;
     ONLY64 input_reg_sz_64_bit75_dist;
 };
-struct DecodedLD6 {
+struct DecodedLD6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLD6>(*this);
+    }
     OperandValue ops[6];
     EONLY e;
     COP cop;
@@ -4320,7 +5442,10 @@ struct DecodedLD6 {
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedLD5 {
+struct DecodedLD5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLD5>(*this);
+    }
     OperandValue ops[5];
     E e;
     COP cop;
@@ -4332,7 +5457,10 @@ struct DecodedLD5 {
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedLDG6 {
+struct DecodedLDG6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDG6>(*this);
+    }
     OperandValue ops[6];
     E e;
     COP cop;
@@ -4344,22 +5472,34 @@ struct DecodedLDG6 {
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedLDL5 {
+struct DecodedLDL5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDL5>(*this);
+    }
     OperandValue ops[5];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedLDL4 {
+struct DecodedLDL4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDL4>(*this);
+    }
     OperandValue ops[4];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedLDS4 {
+struct DecodedLDS4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDS4>(*this);
+    }
     OperandValue ops[4];
     LDSSIZE sz;
     STRIDE stride;
 };
-struct DecodedST5 {
+struct DecodedST5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedST5>(*this);
+    }
     OperandValue ops[5];
     EONLY e;
     COP cop;
@@ -4369,7 +5509,10 @@ struct DecodedST5 {
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedST4 {
+struct DecodedST4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedST4>(*this);
+    }
     OperandValue ops[4];
     E e;
     COP cop;
@@ -4380,7 +5523,10 @@ struct DecodedST4 {
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedSTG5 {
+struct DecodedSTG5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTG5>(*this);
+    }
     OperandValue ops[5];
     EONLY e;
     COP cop;
@@ -4391,7 +5537,10 @@ struct DecodedSTG5 {
     ORDER order;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedSTG4 {
+struct DecodedSTG4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTG4>(*this);
+    }
     OperandValue ops[4];
     E e;
     COP cop;
@@ -4403,22 +5552,34 @@ struct DecodedSTG4 {
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedSTL5 {
+struct DecodedSTL5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTL5>(*this);
+    }
     OperandValue ops[5];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedSTL4 {
+struct DecodedSTL4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTL4>(*this);
+    }
     OperandValue ops[4];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedSTS4 {
+struct DecodedSTS4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTS4>(*this);
+    }
     OperandValue ops[4];
     SZ_U8_S8_U16_S16_32_64_128 sz;
     STRIDE stride;
 };
-struct DecodedATOM8 {
+struct DecodedATOM8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedATOM8>(*this);
+    }
     OperandValue ops[8];
     EONLY e;
     AtomsOp op;
@@ -4429,13 +5590,19 @@ struct DecodedATOM8 {
     PRIVATE private_;
     ONLY64 input_reg_sz_64_100_dist;
 };
-struct DecodedREDS4 {
+struct DecodedREDS4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedREDS4>(*this);
+    }
     OperandValue ops[4];
     REDSOP op;
     REDSSIZE sz;
     STRIDE stride;
 };
-struct DecodedREDG4 {
+struct DecodedREDG4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedREDG4>(*this);
+    }
     OperandValue ops[4];
     E e;
     RedOp op;
@@ -4447,7 +5614,10 @@ struct DecodedREDG4 {
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedREDG5 {
+struct DecodedREDG5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedREDG5>(*this);
+    }
     OperandValue ops[5];
     EONLY e;
     RedOp op;
@@ -4458,7 +5628,10 @@ struct DecodedREDG5 {
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedATOMG7 {
+struct DecodedATOMG7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedATOMG7>(*this);
+    }
     OperandValue ops[7];
     EONLY e;
     ATOMICFPOPS op;
@@ -4469,7 +5642,10 @@ struct DecodedATOMG7 {
     PRIVATE private_;
     ONLY64 input_reg_sz_64_100_dist;
 };
-struct DecodedLDGMC4 {
+struct DecodedLDGMC4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDGMC4>(*this);
+    }
     OperandValue ops[4];
     EONLY e;
     INTOP_ADD_MIN_MAX_AND_OR_XOR intOp;
@@ -4481,7 +5657,10 @@ struct DecodedLDGMC4 {
     LDGMC_FP_OP fpOp;
     LDGMC_FP_SIZES fpSz;
 };
-struct DecodedLDGMC5 {
+struct DecodedLDGMC5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDGMC5>(*this);
+    }
     OperandValue ops[5];
     EONLY e;
     INTOP_ADD_MIN_MAX_AND_OR_XOR intOp;
@@ -4492,56 +5671,89 @@ struct DecodedLDGMC5 {
     LDGMC_FP_OP fpOp;
     LDGMC_FP_SIZES fpSz;
 };
-struct DecodedQSPC5 {
+struct DecodedQSPC5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedQSPC5>(*this);
+    }
     OperandValue ops[5];
     E e;
     QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedLDCU5 {
+struct DecodedLDCU5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDCU5>(*this);
+    }
     OperandValue ops[5];
     SZ_U8_S8_U16_S16_32_64_128 sz;
     TEXUNPACK texunpack;
 };
-struct DecodedLDCU4 {
+struct DecodedLDCU4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDCU4>(*this);
+    }
     OperandValue ops[4];
     SZ_U8_S8_U16_S16_32_64_128 sz;
     TEXUNPACK texunpack;
 };
-struct DecodedARRIVES3 {
+struct DecodedARRIVES3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedARRIVES3>(*this);
+    }
     OperandValue ops[3];
     LDGSTSBARONLY arrive;
     CInteger_64 sz;
     BAROP barop;
 };
-struct DecodedSYNCS3 {
+struct DecodedSYNCS3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSYNCS3>(*this);
+    }
     OperandValue ops[3];
     CCTLONLY cctl_mode;
     SYNCS_CCTL_OP cctlop;
 };
-struct DecodedUTMACCTL2 {
+struct DecodedUTMACCTL2 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUTMACCTL2>(*this);
+    }
     OperandValue ops[2];
     COP_utmacctl cop;
     ONEONLY one;
 };
-struct DecodedUCGABARARV1 {
+struct DecodedUCGABARARV1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCGABARARV1>(*this);
+    }
     OperandValue ops[1];
     SYNCALL syncall;
 };
-struct DecodedUCGABAR_ARV1 {
+struct DecodedUCGABAR_ARV1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCGABAR_ARV1>(*this);
+    }
     OperandValue ops[1];
     SYNCALL syncall;
 };
-struct DecodedUSETSHMSZ1 {
+struct DecodedUSETSHMSZ1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUSETSHMSZ1>(*this);
+    }
     OperandValue ops[1];
     FLUSHONLY_usetshmsz flush;
 };
-struct DecodedULEPC3 {
+struct DecodedULEPC3 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedULEPC3>(*this);
+    }
     OperandValue ops[3];
     std::uint8_t rel;
 };
-struct DecodedTEX8 {
+struct DecodedTEX8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTEX8>(*this);
+    }
     OperandValue ops[8];
     BONLY b;
     RM16 rm16;
@@ -4554,7 +5766,10 @@ struct DecodedTEX8 {
     NODEP nodep;
     SCRONLY scr;
 };
-struct DecodedTLD48 {
+struct DecodedTLD48 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTLD48>(*this);
+    }
     OperandValue ops[8];
     TexComp comp;
     BONLY b;
@@ -4566,7 +5781,10 @@ struct DecodedTLD48 {
     NODEP nodep;
     SCRONLY scr;
 };
-struct DecodedTLD8 {
+struct DecodedTLD8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTLD8>(*this);
+    }
     OperandValue ops[8];
     BONLY b;
     RM16 rm16;
@@ -4579,7 +5797,10 @@ struct DecodedTLD8 {
     NODEP nodep;
     SCRONLY scr;
 };
-struct DecodedTXD8 {
+struct DecodedTXD8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTXD8>(*this);
+    }
     OperandValue ops[8];
     BONLY b;
     RM16 rm16;
@@ -4589,7 +5810,10 @@ struct DecodedTXD8 {
     COP cop;
     NODEP nodep;
 };
-struct DecodedFOOTPRINT6 {
+struct DecodedFOOTPRINT6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFOOTPRINT6>(*this);
+    }
     OperandValue ops[6];
     BONLY b;
     MODE_FOOTPRINT mode;
@@ -4599,7 +5823,10 @@ struct DecodedFOOTPRINT6 {
     NODEP nodep;
     SCRONLY scr;
 };
-struct DecodedLDGSTS6 {
+struct DecodedLDGSTS6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDGSTS6>(*this);
+    }
     OperandValue ops[6];
     EONLY_ldgsts e;
     LOC loc;
@@ -4613,7 +5840,10 @@ struct DecodedLDGSTS6 {
     ONLY64 input_reg_sz_64_dist;
     U32ONLY input_reg_sz_32_dist;
 };
-struct DecodedLDGSTS8 {
+struct DecodedLDGSTS8 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDGSTS8>(*this);
+    }
     OperandValue ops[8];
     EONLY_ldgsts e;
     LOC loc;
@@ -4626,32 +5856,50 @@ struct DecodedLDGSTS8 {
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
 };
-struct DecodedSUQUERY7 {
+struct DecodedSUQUERY7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSUQUERY7>(*this);
+    }
     OperandValue ops[7];
     BA ba;
     Dim1 dim;
     UAI uai;
 };
-struct DecodedSTAS4 {
+struct DecodedSTAS4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSTAS4>(*this);
+    }
     OperandValue ops[4];
     SZ_32_64_128 sz;
     ONLY64 input_reg_sz_64_dist;
     U32ONLY input_reg_sz_32_dist;
 };
-struct DecodedREDAS4 {
+struct DecodedREDAS4 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedREDAS4>(*this);
+    }
     OperandValue ops[4];
     REDSOP op;
     REDAS_SZ sz;
     ONLY64 input_reg_sz_64_dist;
     U32ONLY input_reg_sz_32_dist;
 };
-struct DecodedUCGABARWAIT1 {
+struct DecodedUCGABARWAIT1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCGABARWAIT1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedUCGABAR_WAIT1 {
+struct DecodedUCGABAR_WAIT1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUCGABAR_WAIT1>(*this);
+    }
     OperandValue ops[1];
 };
-struct DecodedHMMA9 {
+struct DecodedHMMA9 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedHMMA9>(*this);
+    }
     OperandValue ops[9];
     SPONLY sp;
     SPFORMAT spformat;
@@ -4659,7 +5907,10 @@ struct DecodedHMMA9 {
     FloatNo64 dstfmt;
     SRCFMT srcfmt;
 };
-struct DecodedTLD49 {
+struct DecodedTLD49 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTLD49>(*this);
+    }
     OperandValue ops[9];
     SCRONLY scr;
     TexComp comp;
@@ -4671,7 +5922,10 @@ struct DecodedTLD49 {
     NODEP nodep;
     BONLY b;
 };
-struct DecodedTLD9 {
+struct DecodedTLD9 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTLD9>(*this);
+    }
     OperandValue ops[9];
     SCRONLY scr;
     RM16 rm16;
@@ -4684,14 +5938,20 @@ struct DecodedTLD9 {
     NODEP nodep;
     BONLY b;
 };
-struct DecodedTMML7 {
+struct DecodedTMML7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTMML7>(*this);
+    }
     OperandValue ops[7];
     LODOnly lod;
     DIV div;
     NODEP nodep;
     BONLY b;
 };
-struct DecodedTXD9 {
+struct DecodedTXD9 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTXD9>(*this);
+    }
     OperandValue ops[9];
     RM16 rm16;
     LC lc;
@@ -4701,12 +5961,18 @@ struct DecodedTXD9 {
     NODEP nodep;
     BONLY b;
 };
-struct DecodedTXQ6 {
+struct DecodedTXQ6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedTXQ6>(*this);
+    }
     OperandValue ops[6];
     NODEP nodep;
     BONLY b;
 };
-struct DecodedFOOTPRINT7 {
+struct DecodedFOOTPRINT7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedFOOTPRINT7>(*this);
+    }
     OperandValue ops[7];
     BONLY b;
     MODE_FOOTPRINT mode;
@@ -4716,7 +5982,10 @@ struct DecodedFOOTPRINT7 {
     NODEP nodep;
     SCRONLY scr;
 };
-struct DecodedSUATOM7 {
+struct DecodedSUATOM7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSUATOM7>(*this);
+    }
     OperandValue ops[7];
     DOnly d;
     BA ba;
@@ -4730,7 +5999,10 @@ struct DecodedSUATOM7 {
     PRIVATE private_;
     Clamp1 clamp;
 };
-struct DecodedSULD6 {
+struct DecodedSULD6 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSULD6>(*this);
+    }
     OperandValue ops[6];
     PONLY p;
     Dim1 dim;
@@ -4745,7 +6017,10 @@ struct DecodedSULD6 {
     BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedSUST5 {
+struct DecodedSUST5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSUST5>(*this);
+    }
     OperandValue ops[5];
     PONLY p;
     Dim1 dim;
@@ -4760,7 +6035,10 @@ struct DecodedSUST5 {
     BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
 };
-struct DecodedSURED5 {
+struct DecodedSURED5 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedSURED5>(*this);
+    }
     OperandValue ops[5];
     DOnly d;
     BA ba;
@@ -4774,7 +6052,10 @@ struct DecodedSURED5 {
     PRIVATE private_;
     Clamp1 clamp;
 };
-struct DecodedLDGSTS7 {
+struct DecodedLDGSTS7 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedLDGSTS7>(*this);
+    }
     OperandValue ops[7];
     EONLY_ldgsts e;
     LOC loc;

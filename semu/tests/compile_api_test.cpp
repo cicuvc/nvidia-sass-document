@@ -115,7 +115,7 @@ public:
 
 TEST(api_compile_freeze_markers) {
     CHECK(semu::kBackendApiVersion == 1);
-    CHECK(semu::kDecodedIrVersion == 3);
+    CHECK(semu::kDecodedIrVersion == 4);
     CHECK(semu::kRuntimeServicesVersion == 1);
     CHECK(semu::kEventStreamVersion == 1);
     CHECK(semu::kFaultAbiVersion == 1);

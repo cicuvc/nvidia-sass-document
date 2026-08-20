@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "isa_data.hpp"
+#include "isa_shapes_fill.hpp"
 
 // const char* slot-type comparison helper.
 static bool styp(const char* t, const char* want) {
@@ -792,20 +793,61 @@ void collect_slot_values(const isa::Variant* v, const DecodeCtx& ctx,
 
 }  // namespace
 
-DecodedInstruction render_instruction(const isa::Variant* v, Word128 word,
-                                      const DecodeCtx& ctx) {
-    DecodedInstruction inst;
-    inst.word = word;
-    inst.mnemonic = v->mnemonic;
-    inst.variant_class = v->variant_class;
-    inst.pipe = v->pipe;
+namespace {
 
-    for (const auto& [f, val] : ctx.fields) {
-        inst.raw_fields.emplace_back(f->name, val);
+class ContextFillIn final : public shape::FillIn {
+public:
+    ContextFillIn(const isa::Variant* v, const DecodeCtx& ctx) : v_(v), ctx_(ctx) {}
+
+    std::int64_t value(const char* slot) const override {
+        auto val = do_slot_value(ctx_, slot);
+        if (!val) return 0;
+        for (std::uint16_t i = 0; i < v_->nslots; ++i) {
+            const isa::Slot& s = v_->slots[i];
+            if (std::strcmp(s.name, slot) != 0) continue;
+            if (std::strcmp(s.type, "SImm") == 0 ||
+                std::strcmp(s.type, "RSImm") == 0) {
+                const isa::Field* f = field_for_slot(ctx_, slot);
+                int width = field_width(f);
+                if (width == 0) width = 32;
+                return sign_ext(*val, width);
+            }
+            break;
+        }
+        return *val;
     }
 
-    collect_operands(v, ctx, &inst.operands);
-    collect_slot_values(v, ctx, &inst.slot_values);
+    std::uint8_t flags(const char* slot) const override {
+        return static_cast<std::uint8_t>(
+            slot_attr_val(ctx_, slot, "negate") |
+            (slot_attr_val(ctx_, slot, "absolute") << 1) |
+            (slot_attr_val(ctx_, slot, "not") << 2));
+    }
+
+private:
+    const isa::Variant* v_;
+    const DecodeCtx& ctx_;
+};
+
+}  // namespace
+
+std::unique_ptr<DecodedInstruction> render_instruction(
+    const isa::Variant* v, Word128 word, const DecodeCtx& ctx) {
+    const std::uint32_t vi = static_cast<std::uint32_t>(v - isa::kVariants);
+    auto inst = shape::make_by_variant(vi);
+    if (!inst) return nullptr;
+    inst->word = word;
+    inst->mnemonic = v->mnemonic;
+    inst->variant_class = v->variant_class;
+    inst->pipe = v->pipe;
+    inst->shape_variant = vi;
+
+    for (const auto& [f, val] : ctx.fields) {
+        inst->raw_fields.emplace_back(f->name, val);
+    }
+
+    collect_operands(v, ctx, &inst->operands);
+    collect_slot_values(v, ctx, &inst->slot_values);
 
     // schedule word
     auto fv = [&ctx](const char* name, std::int64_t dflt) -> std::int64_t {
@@ -816,20 +858,20 @@ DecodedInstruction render_instruction(const isa::Variant* v, Word128 word,
         }
         return dflt;
     };
-    inst.schedule.dst_wr_sb = static_cast<int>(fv("dst_wr_sb", 7));
-    inst.schedule.src_rel_sb = static_cast<int>(fv("src_rel_sb", 7));
-    inst.schedule.req_bit_set = static_cast<int>(fv("req_bit_set", 0));
-    inst.schedule.opex = static_cast<int>(fv("opex", 0));
-    inst.schedule.usched = inst.schedule.opex & 0x1F;
-    inst.schedule.stall = inst.schedule.usched & 0xF;
-    inst.schedule.yield_off = inst.schedule.usched >= 16 ? 1 : 0;
-    inst.schedule.batch_t = inst.schedule.opex >> 5;
+    inst->schedule.dst_wr_sb = static_cast<int>(fv("dst_wr_sb", 7));
+    inst->schedule.src_rel_sb = static_cast<int>(fv("src_rel_sb", 7));
+    inst->schedule.req_bit_set = static_cast<int>(fv("req_bit_set", 0));
+    inst->schedule.opex = static_cast<int>(fv("opex", 0));
+    inst->schedule.usched = inst->schedule.opex & 0x1F;
+    inst->schedule.stall = inst->schedule.usched & 0xF;
+    inst->schedule.yield_off = inst->schedule.usched >= 16 ? 1 : 0;
+    inst->schedule.batch_t = inst->schedule.opex >> 5;
 
     // guard predicate
     if (auto pg = do_slot_value(ctx, "Pg")) {
-        inst.guard_pred = static_cast<int>(*pg);
+        inst->guard_pred = static_cast<int>(*pg);
     }
-    inst.guard_not = slot_attr_val(ctx, "Pg", "not") != 0;
+    inst->guard_not = slot_attr_val(ctx, "Pg", "not") != 0;
 
     // modifiers
     for (std::uint16_t si = 0; si < v->nslots; ++si) {
@@ -850,9 +892,12 @@ DecodedInstruction render_instruction(const isa::Variant* v, Word128 word,
             nm = isa_data().enum_first(s.type);
         }
         if (nm && !nm->empty()) {
-            inst.modifiers.push_back("." + *nm);
+            inst->modifiers.push_back("." + *nm);
         }
     }
+
+    ContextFillIn in(v, ctx);
+    shape::fill_by_variant(vi, in, inst.get());
 
     // (Disassembly text is NOT rendered here -- it is produced on demand by
     // render_disasm_text so the per-instruction decode path never builds

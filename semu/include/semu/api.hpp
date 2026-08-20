@@ -41,7 +41,9 @@ inline constexpr int kBackendApiVersion = 1;
 // generated isa::{Mnemonic,VariantClass,Pipe} enums instead of std::string.
 // v3: PredecodedWord::inst is now a std::unique_ptr<DecodedInstruction>
 // (vector-of-pointers storage), and DecodedInstruction is polymorphic.
-inline constexpr int kDecodedIrVersion = 3;
+// v4: DecodeResult and PredecodedWord preserve generated typed derived shapes
+// through polymorphic cloning.
+inline constexpr int kDecodedIrVersion = 4;
 
 // IRuntimeServices (memory / constant bank / event channel / cluster DSMEM).
 // Async/TMA semantics are NOT frozen; their future completion/commit callbacks

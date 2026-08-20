@@ -118,15 +118,13 @@ struct PredecodedWord {
     PredecodedWord(const PredecodedWord& o)
         : pc(o.pc), file_offset(o.file_offset), lo(o.lo), hi(o.hi),
           unique(o.unique),
-          inst(o.inst ? std::make_unique<DecodedInstruction>(*o.inst)
-                      : nullptr),
+          inst(o.inst ? o.inst->clone() : nullptr),
           reason(o.reason) {}
     PredecodedWord& operator=(const PredecodedWord& o) {
         if (this == &o) return *this;
         pc = o.pc; file_offset = o.file_offset; lo = o.lo; hi = o.hi;
         unique = o.unique;
-        inst = o.inst ? std::make_unique<DecodedInstruction>(*o.inst)
-                      : nullptr;
+        inst = o.inst ? o.inst->clone() : nullptr;
         reason = o.reason;
         return *this;
     }

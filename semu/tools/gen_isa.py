@@ -1155,11 +1155,17 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     L.append("// Generated file -- do not edit.  Regenerate with:")
     L.append("//   python3 semu/tools/gen_isa.py --shapes")
     L.append("//")
-    L.append("// Typed decoded-IR schema (design review; not yet wired into the")
-    L.append("// decoder -- the existing DecodedInstruction is unchanged).")
+    L.append("// Typed decoded-IR schema used by the decoder's main storage path.")
     L.append("#pragma once")
     L.append("")
     L.append("#include <cstdint>")
+    L.append("#include <cstring>")
+    L.append("#include <optional>")
+    L.append("#include <memory>")
+    L.append("#include <semu/decoded_base.hpp>")
+    L.append("#ifdef NAN")
+    L.append("#undef NAN")
+    L.append("#endif")
     L.append("")
     L.append("namespace semu::shape {")
 
@@ -1220,7 +1226,10 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     for (mn, nops) in order:
         members = groups[(mn, nops)]
         type_name = f"Decoded{cident(mn)}{nops}"
-        L.append(f"struct {type_name} {{")
+        L.append(f"struct {type_name} : DecodedInstruction {{")
+        L.append("    std::unique_ptr<DecodedInstruction> clone() const override {")
+        L.append(f"        return std::make_unique<{type_name}>(*this);")
+        L.append("    }")
         if nops:
             L.append(f"    OperandValue ops[{nops}];")
         modseen = shape_members(members, enum_types)
@@ -1289,6 +1298,9 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
     L.append("#pragma once")
     L.append("")
     L.append("#include <cstdint>")
+    L.append("#ifdef NAN")
+    L.append("#undef NAN")
+    L.append("#endif")
     L.append("#include \"isa_shapes.hpp\"")
     L.append("#include <semu/shape_in.hpp>")
     L.append("")
@@ -1337,6 +1349,66 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
             L.append("        (void)void_out; (void)in;")
         L.append("        break;")
         L.append("    }")
+    L.append("    }")
+    L.append("}")
+    L.append("")
+    L.append("// Read a typed modifier or operand slot by name.  This is the")
+    L.append("// temporary 2b bridge used by the interpreter while call sites")
+    L.append("// migrate from the generic vector representation.")
+    L.append("inline std::optional<std::uint64_t> slot_value_by_variant(")
+    L.append("    std::uint32_t vi, const DecodedInstruction* inst, const char* name) {")
+    L.append("    switch (vi) {")
+    for vi, v in enumerate(variants):
+        g = vid2gid[vi]
+        mn, nops = order[g]
+        type_name = f"Decoded{cident(mn)}{nops}"
+        roles = shape_operand_roles(v)
+        actual_mods = shape_modifier_slots(v)
+        modseen = shape_members(groups[(mn, nops)], enum_types)
+        member_by_src = {src: mname for mname, (_ty, src) in modseen.items()}
+        L.append(f"    case {vi}: {{")
+        if roles or actual_mods:
+            L.append(f"        const auto& out = *static_cast<const {type_name}*>(inst);")
+        for p, r in enumerate(roles):
+            L.append(f"        if (std::strcmp(name, {cq(r['name'])}) == 0)")
+            L.append(f"            return static_cast<std::uint64_t>(operand_value_as_i64(out.ops[{p}]));")
+        for s in actual_mods:
+            mname = member_by_src.get(s["name"])
+            if mname is None:
+                continue
+            L.append(f"        if (std::strcmp(name, {cq(s['name'])}) == 0)")
+            L.append(f"            return static_cast<std::uint64_t>(out.{mname});")
+        L.append("        return std::nullopt;")
+        L.append("    }")
+    L.append("    default: return std::nullopt;")
+    L.append("    }")
+    L.append("}")
+    L.append("")
+    L.append("// Allocate the concrete generated shape for a variant index.")
+    L.append("inline std::unique_ptr<DecodedInstruction> make_by_variant(std::uint32_t vi) {")
+    L.append("    switch (vi) {")
+    for vi, _v in enumerate(variants):
+        g = vid2gid[vi]
+        mn, nops = order[g]
+        type_name = f"Decoded{cident(mn)}{nops}"
+        L.append(f"    case {vi}: return std::make_unique<{type_name}>();")
+    L.append("    default: return nullptr;")
+    L.append("    }")
+    L.append("}")
+    L.append("")
+    L.append("// Return the positional operand array of a typed decoded shape.")
+    L.append("inline const OperandValue* operand_values_by_variant(")
+    L.append("    std::uint32_t vi, const DecodedInstruction* inst) {")
+    L.append("    switch (vi) {")
+    for vi, _v in enumerate(variants):
+        g = vid2gid[vi]
+        mn, nops = order[g]
+        type_name = f"Decoded{cident(mn)}{nops}"
+        if nops:
+            L.append(f"    case {vi}: return static_cast<const {type_name}*>(inst)->ops;")
+        else:
+            L.append(f"    case {vi}: return nullptr;")
+    L.append("    default: return nullptr;")
     L.append("    }")
     L.append("}")
     L.append("")

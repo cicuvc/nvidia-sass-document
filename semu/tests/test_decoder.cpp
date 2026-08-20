@@ -60,6 +60,25 @@ TEST(decoder_known_words_unique) {
     }
 }
 
+TEST(typed_main_storage_dynamic_shape) {
+    const auto& dec = Decoder::instance();
+
+    auto r2p = dec.decode(0x0000000300007804ULL,
+                           0x000fe20000000000ULL);
+    CHECK(r2p.is_unique());
+    if (r2p.is_unique()) {
+        const auto& inst = r2p.instruction();
+        CHECK(dynamic_cast<const shape::DecodedR2P3*>(&inst) != nullptr);
+        CHECK(inst.shape_variant < isa::kNumVariants);
+    }
+
+    auto nop = dec.decode(0x0000000000007918ULL,
+                           0x000fc00000000000ULL);
+    CHECK(nop.is_unique());
+    if (nop.is_unique())
+        CHECK(dynamic_cast<const shape::DecodedNOP0*>(&nop.instruction()) != nullptr);
+}
+
 TEST(decoder_batch_all_unique_via_corpus_words) {
     // The Python gate (decoder_roundtrip_test) proves 1414/1414 corpus words
     // decode uniquely.  Here we just exercise the API shape on a couple of
@@ -264,8 +283,8 @@ TEST(typed_fill_matches_generic_decode) {
 
 // Whole-ISA typed-fill equivalence: for every corpus word that decodes
 // uniquely, the generated fill must reproduce the live slot_values/operands in
-// the typed Decoded* ops[] (read back generically: ops[] is the first member,
-// i.e. at offset 0, in every derived Decoded<Mnemonic><Ops>).
+// the typed Decoded* ops[] (read back through generated variant dispatch;
+// typed shapes now have the common polymorphic base at offset 0).
 TEST(typed_fill_matches_across_corpus) {
     const auto& dec = Decoder::instance();
     alignas(16) std::byte buf[512];
@@ -282,7 +301,8 @@ TEST(typed_fill_matches_across_corpus) {
         if (mf.n_ops == 0) { checked++; continue; }
         FillFromDecoded fi(inst);
         shape::fill_by_variant(idx, fi, buf);
-        const auto* ops = reinterpret_cast<const shape::OperandValue*>(buf);
+        const auto* typed = reinterpret_cast<const DecodedInstruction*>(buf);
+        const auto* ops = shape::operand_values_by_variant(idx, typed);
         for (std::uint8_t p = 0; p < mf.n_ops; ++p) {
             const shape::OperandKind k = mf.ops[p].kind;
             const std::uint64_t got = op_raw(ops[p], k);

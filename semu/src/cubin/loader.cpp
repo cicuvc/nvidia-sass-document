@@ -1197,7 +1197,7 @@ StatusOr<Module> Module::load_impl(std::vector<std::uint8_t> data,
             DecodeResult r = dec.decode(w.lo, w.hi);
             if (r.is_unique()) {
                 w.unique = true;
-                w.inst = std::make_unique<DecodedInstruction>(r.instruction());
+                w.inst = r.instruction().clone();
                 // Kernel-relative PC (matching PredecodedWord::pc); the
                 // file offset lives in PredecodedWord::file_offset.
                 w.inst->pc = off;

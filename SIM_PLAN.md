@@ -2153,6 +2153,23 @@ Phase 10 冻结的是**接口与 gate 语义**，不冻结仍未闭合的**指�
   bypass 模型 unsupported）出现在 capability matrix 与 report；CPU-only 环境
   完成构建/加载/模拟/调试/profile（35/35 全 CPU 门禁）。
 
+#### Typed decoded-IR migration — 2b checkpoint（2026-08-20）
+
+- 2b-2 的主存储切片已落地：生成的 `Decoded<Mnemonic><N>` 现在继承
+  `DecodedInstruction`；decoder 按 `kVariants` index 分配具体 shape，经
+  `fill_by_variant` 填充 `OperandValue ops[]` 和 typed modifier members。
+  `DecodeResult` 与 `PredecodedWord` 通过 virtual `clone()` 保留动态类型。
+- 2b-1 bridge 已接入解释器：`find_op` 通过 `ShapeManifest`/typed payload
+  构造临时兼容 view，`slot_value` 通过生成的 `slot_value_by_variant` 读取
+  typed operand/modifier；因此解释器不再为正常 decoded instructions 扫描
+  `inst.operands`/`inst.slot_values`。generic vectors 仍暂时保留，待下一切片
+  删除并完成最终 public-IR 清理。
+- `kDecodedIrVersion` 已从 3 提升到 4；新增 typed dynamic-shape smoke test，
+  whole-corpus typed-fill 等价性仍为 1414/1414。
+- 验证：Debug、ASan、TSan 的 `tools/run_semu_cpu_gate.sh` 均为 **36/36**；
+  ASan 首次失败仅为新增 smoke test 使用了非稳定唯一的手工 FFMA 字，改用稳定
+  `R2P__RIR` corpus vector 后重跑全绿，未出现 sanitizer 报告。
+
 ## 4. 全局验证体系
 
 ### 4.1 测试分层

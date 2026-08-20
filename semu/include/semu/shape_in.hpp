@@ -5,6 +5,8 @@
 // and a kind->union-member setter used by the generated per-variant fill.
 
 #include <cstdint>
+#include <cstring>
+#include <optional>
 
 #include <isa_shapes.hpp>
 
@@ -45,6 +47,31 @@ inline void operand_set_value(OperandValue& ov, OperandKind k, std::int64_t v) {
         default:
             ov.v.uimm64 = static_cast<std::uint64_t>(v);        break;
     }
+}
+
+inline std::int64_t operand_value_as_i64(const OperandValue& ov) {
+    switch (static_cast<OperandKind>(ov.kind)) {
+        case OperandKind::kRegister: return ov.v.reg_idx;
+        case OperandKind::kUniformRegister: return ov.v.ureg_idx;
+        case OperandKind::kPredicate:
+        case OperandKind::kUniformPredicate: return ov.v.pred_idx;
+        case OperandKind::kSImm: return ov.v.simm64;
+        case OperandKind::kUImm: return static_cast<std::int64_t>(ov.v.uimm64);
+        case OperandKind::kFImm16: return ov.v.uimm16;
+        case OperandKind::kFImm32: {
+            std::uint32_t bits = 0;
+            std::memcpy(&bits, &ov.v.fimm32, sizeof(bits));
+            return bits;
+        }
+        case OperandKind::kFImm64: {
+            std::uint64_t bits = 0;
+            std::memcpy(&bits, &ov.v.dimm64, sizeof(bits));
+            return static_cast<std::int64_t>(bits);
+        }
+        case OperandKind::kDesc:
+        case OperandKind::kSpecial: return static_cast<std::int64_t>(ov.v.uimm64);
+    }
+    return 0;
 }
 
 }  // namespace semu::shape

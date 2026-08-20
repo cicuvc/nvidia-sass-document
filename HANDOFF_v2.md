@@ -1,9 +1,10 @@
 # HANDOFF_v2.md — typed-IR migration status & next tasks
 
 Status snapshot for anyone resuming the **decoded-IR migration** in `semu/` (SM120
-SASS simulator, CUDA-agnostic C++20). Everything here is committed on `main`,
-gates green (Debug/ASan/TSan 36/36). The migration has been done in small,
-gated-green increments; this doc records **where we are** and **what 2b must do**.
+SASS simulator, CUDA-agnostic C++20). The current 2b checkpoint is implemented in
+the working tree (not yet committed); Debug/ASan/TSan gates are green at 36/36.
+The migration continues in small, gated-green increments; this doc records
+**where we are** and the exact next operation.
 
 ---
 
@@ -50,7 +51,7 @@ types, no generic vectors. User decisions locked in:
 
 ---
 
-## 3. What is DONE (committed, each slice gate-green 36/36)
+## 3. Completed history and current checkpoint
 
 | Commit | Content |
 |--------|---------|
@@ -59,6 +60,7 @@ types, no generic vectors. User decisions locked in:
 | `2316f6c` | **Storage → vector-of-pointers**: `PredecodedWord::inst` = `std::unique_ptr<DecodedInstruction>` (deep-copyable + movable); `DecodedInstruction` gains `virtual ~` (polymorphic prep); update all `.inst` → `->` sites; ABI v2→**v3**. Also `--shapes` now emits per-variant **ShapeManifest** (`kShapeManifests`, indexed by `kVariants` index: slot→(pos, kind)); `gen_corpus.py --hpp` → `isa_corpus.hpp` (1414 canonical words). |
 | `15acc1f` | **2a typed-fill**: `gen_isa --shapes` also emits `isa_shapes_fill.hpp` — per-variant fillers (`fill_by_variant(kVariants-index, FillIn, void*)`) that populate a typed `Decoded*` (ops[] + modifier members) from an opaque `FillIn` (decoded slot source). Added `include/semu/shape_in.hpp` (FillIn + `operand_set_value` kind→union setter). Representative equivalence test. |
 | `553699d` | **2a complete**: whole-1414-corpus equivalence — `typed_fill_matches_across_corpus` decodes every `isa_corpus.hpp` word, fills a typed `Decoded*`, reads ops[0..n) via offset-0 overlay, and asserts value+kind+flags == live `slot_values`/`operands`. Caught + fixed a F-imm union read-width bug. |
+| working tree (2026-08-20) | **2b checkpoint**: generated shapes now derive from `DecodedInstruction`; decoder allocates/fills the concrete shape through `make_by_variant` + `fill_by_variant`; `DecodeResult` and `PredecodedWord` preserve the dynamic type through `clone()`; ABI is v4. The interpreter bridge reads typed operands through `ShapeManifest` and typed modifiers through generated `slot_value_by_variant`. Generic vectors remain only as a temporary compatibility bridge. |
 
 **2a conclusion (proven by test):** the generated typed `Decoded*` fill is
 semantically equivalent to the current generic decoder **across the whole ISA**.
@@ -71,13 +73,15 @@ semantically equivalent to the current generic decoder **across the whole ISA**.
   (regenerate: `python3 semu/tools/gen_isa.py`). **isa_regen gate** checks byte
   determinism vs committed.
 - `semu/generated/isa_shapes.hpp` (schema: OperandValue/modifier enums/425
-  types/ShapeManifest), `isa_shapes_fill.hpp` (per-variant fillers),
+  types/ShapeManifest), `isa_shapes_fill.hpp` (per-variant fillers, allocation,
+  typed slot accessors),
   `isa_corpus.hpp` (1414 words) — regenerate with:
   `python3 semu/tools/gen_isa.py --shapes` and
   `python3 semu/tools/gen_corpus.py --hpp semu/generated/isa_corpus.hpp`.
   These are NOT checked by `isa_regen` (only isa_data is); they're design/2a
-  artifacts, currently used only by `test_decoder.cpp` (compiled + asserted).
-- Hand-written glue: `include/semu/shape_in.hpp`.
+  artifacts, now used by decoder/interpreter code and `test_decoder.cpp`.
+- Hand-written glue: `include/semu/decoded_base.hpp` and
+  `include/semu/shape_in.hpp`.
 
 ---
 
@@ -90,33 +94,31 @@ fields positionally / via strong-typed modifier members.
 
 ### 2b sub-parts (suggested order, keep gates green each step)
 
-**2b-1: Transition bridge for the interpreter (de-risk before deleting vectors).**
-Add to the polymorphic base `DecodedInstruction` a small name-based reader that
-works over the typed derived storage, so the 193 interpreter call sites keep
-compiling:
+**2b-1: Transition bridge — DONE in the current checkpoint.**
+The bridge works over typed derived storage, so the existing interpreter call
+sites keep compiling:
 - `find_op` returns `const Operand*` today (122 sites dereference
   `.value/.negated/.absolute/.kind/.slot`). This contract does not map cleanly
   onto a union array, so **2b-1 = introduce value/flag-returning accessors**
   (`op_value(inst,"Rb")`, `op_flag(inst,"Rb",neg|abs|not)`, `op_kind(inst,"Rb")`,
   `slot_value(inst,"sz")`) backed by the typed storage + per-variant `ShapeManifest`,
-  and mechanically rewrite the 122 `find_op` sites + 71 `slot_value` sites to use
-  them. Keep a temporary compatibility `Operand*`/vector view ONLY during 2b-1
-  (or run 2b-1 and 2b-2 together under the equivalence test).
-- Modifier reads: `slot_value(inst,"rnd")` → typed member `inst.rnd` (per-shape —
-  needs table-driven or generated per-type access; the 71 sites are per-family so
-  map each to the right member).
+  The existing 122 `find_op` and 71 `slot_value` call sites are kept compiling
+  through the bridge. The current compatibility `Operand*` result is materialized in a bounded
+  base-owned cache; normal decoded instructions no longer scan `inst.operands`.
+- Modifier reads are served by generated `slot_value_by_variant`; this is the
+  temporary table-driven bridge before direct per-family typed-member reads.
 
-**2b-2: decoder storage swap.**
+**2b-2: decoder storage swap — DONE in the current checkpoint.**
 `render_instruction`/decode allocates the correct derived `Decoded<Mnemonic><N>`
 (via `fill_by_variant` + a per-variant type-allocate dispatch) and sets it into
-`PredecodedWord::inst` (already `unique_ptr<DecodedInstruction>`). Remove
-`operands/modifiers/slot_values/raw_fields` from `DecodedInstruction`.
+`PredecodedWord::inst` (already `unique_ptr<DecodedInstruction>`). The four
+generic vectors are not deleted yet; that is the next cleanup slice.
 
-**2b-3: cleanup + ABI.**
+**2b-3: cleanup + ABI — ABI DONE; vector cleanup PENDING.**
 - `render`/`Decoder::disassemble(word)` already re-decodes from `isa_data` and
   does NOT read the vectors → unaffected.
-- Bump `kDecodedIrVersion` 3→4 (breaking: vector fields removed / typed storage
-  becomes main).
+- Bump `kDecodedIrVersion` 3→4 (breaking: typed dynamic storage became the main
+  path; vector removal remains pending within v4).
 - Update the two freeze-marker tests (`compile_api_test.cpp`,
   `test_mock_backend.cpp`) asserting the version.
 
@@ -126,21 +128,23 @@ is the safety net: once the decoder produces the typed `Decoded*` as main
 storage, that test effectively asserts main == expectations. Add:
 - a check that the typed main-storage path is what the interpreter consumes
   (decode → execute unchanged behavior on the interp/fuzz/tensor gates);
-- remove the generic-vector path once 2b-2 lands.
+- remove the generic-vector path in the pending cleanup slice after the typed
+  bridge has been migrated off the compatibility cache.
 
-**Open design notes for 2b-1/2b-2:**
-- `find_op`'s `const Operand*` result cannot point into a union array — the
-  122 call sites MUST be rewritten to value/flag accessors (mechanical, but
-  spread across `do_compute/do_memory/do_tensor/do_s2ur/...`).
-- Modifier typed members: the interpreter reads e.g. `slot_value(inst,"rnd")`
-  from many families; mapping to `inst.rnd` needs either a generated per-type
-  accessor or a small per-type `slot_value(name)` that switches over the type's
-  known members. Decide the mechanism in 2b-1.
-- `Operand` struct (`slot/kind/text/value/negated/absolute/pred_not`) may still be
-  needed transiently by anything that renders/interprets by-slot; once vectors
-  are gone, assess whether to keep `Operand` only for the `SlotManifest`-style
-  lookup or delete it.
-- Keep 16-bit sign-extension rule (user spec) in `operand_set_value`/op_read.
+**Open design notes for the next cleanup slice:**
+- Remove `operands`, `modifiers`, `slot_values`, and `raw_fields` from the base;
+  first grep all remaining consumers, especially debugger/mock-backend/render
+  paths, then make typed accessors the only interpreter path.
+- Replace the temporary `Operand*` cache/find-op compatibility layer with value,
+  flag, and kind accessors. Group the mechanical rewrite by interpreter family:
+  `do_compute`, `do_memory`, `do_tensor`, `do_s2ur`, and control flow.
+- Replace generated name-based modifier lookup with direct typed-member access
+  where practical; retain one generated typed fallback only for families whose
+  modifier member names differ across variants.
+- Update tests that currently use generic `FillIn`/vector equivalence so the
+  whole-corpus assertion intercepts the actual typed main-storage object rather
+  than maintaining a duplicate generic path.
+- Keep 16-bit sign-extension rule in `operand_set_value`/typed op reads.
 
 ---
 
@@ -148,7 +152,7 @@ storage, that test effectively asserts main == expectations. Add:
 
 - 128-bit words: hi64 bytes at `[127:64]`, lo64 `[63:0]`; opcode = `{bit[91],bits[11:0]}`.
 - `DecodedInstruction` is now polymorphic (`virtual ~`); `PredecodedWord::inst` is
-  a deep-copyable `unique_ptr` (has copy ctor that `make_unique`s).
+  a deep-copyable `unique_ptr` whose copy path must call virtual `clone()`.
 - `Array` `isa::kVariants` order == `build_variants(db)` order ==
   `shape::kShapeManifests` index order — keep them aligned when adding manifests.
 - Generated files: don't hand-edit; regen + commit. `isa_data` is determinism-gated
@@ -159,7 +163,26 @@ storage, that test effectively asserts main == expectations. Add:
 
 ---
 
-## 7. Done-good definition for 2b
+## 7. Current status / next operation
+
+The current tree is **2b checkpoint complete but not 2b final**:
+
+- DONE: typed decoder main storage, dynamic cloning, interpreter typed bridge,
+  ABI v4, dynamic-shape smoke coverage, and all three 36-item gates.
+- PENDING: delete the four generic base vectors and the temporary `Operand` cache;
+  rewrite interpreter reads to typed value/flag/kind accessors and direct typed
+  modifiers; remove the now-duplicate generic equivalence path.
+
+Next session should begin with:
+
+1. `rg -n "operands|modifiers|slot_values|raw_fields|find_op|slot_value" semu/src semu/include semu/tests` and classify every remaining consumer.
+2. Add typed value/flag/kind accessors beside generated `slot_value_by_variant`.
+3. Mechanically migrate one interpreter family at a time, running the Debug
+   decoder/interpreter tests after each family.
+4. Delete the vectors/cache, regenerate artifacts, then run Debug/ASan/TSan
+   `tools/run_semu_cpu_gate.sh` (36/36 each).
+
+## 8. Done-good definition for 2b
 - `DecodedInstruction` has no `operands/modifiers/slot_values/raw_fields` vectors.
 - decode allocates/consumes the typed `Decoded*` via `PredecodedWord::inst`.
 - interpreter reads operands positionally / modifier members typed (no per-opname

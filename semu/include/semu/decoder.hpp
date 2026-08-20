@@ -1,12 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <isa_data.hpp>
+#include <semu/decoded_base.hpp>
 #include <semu/word.hpp>
+#include <isa_shapes.hpp>
 
 // FROZEN (SIM_PLAN Phase 10): this header is part of the decoded-IR contract —
 // DecodedInstruction / DecodeResult / Operand / ScheduleWord / slot_values /
@@ -46,64 +49,6 @@ enum class DecodeOutcome {
     kAmbiguous, // more than one variant matched
 };
 
-struct Operand {
-    std::string slot;   // format slot name
-    std::string kind;   // slot type, e.g. "Register" / "SImm"
-    std::string text;   // rendered text, e.g. "R8", "-0x10", "c[0x0][0x380]"
-    std::int64_t value = 0;
-    bool negated = false;
-    bool absolute = false;
-    bool pred_not = false;
-};
-
-// Schedule / control word (bits [124:110] + opex [109:105] + req [121:116]).
-struct ScheduleWord {
-    int dst_wr_sb = 7;   // bits [112:110], 7 = no scoreboard
-    int src_rel_sb = 7;  // bits [115:113]
-    int req_bit_set = 0; // bits [121:116]
-    int opex = 0;        // bits [124:122] + [109:105]
-    int usched = 0;      // opex & 0x1F
-    int stall = 0;       // usched & 0xF
-    int yield_off = 0;   // 0 = yield, 1 = no-yield (usched >= 16)
-    int batch_t = 0;     // opex >> 5 (batch_t or reuse bitfield)
-};
-
-class DecodedInstruction {
-public:
-    Word128 word{};
-    std::uint64_t pc = 0;   // byte address (set by the loader/debugger)
-    isa::Mnemonic mnemonic = isa::Mnemonic::kUnknown;
-    isa::VariantClass variant_class = isa::VariantClass::kUnknown;
-    isa::Pipe pipe = isa::Pipe::kUnknown;
-
-    // Guard predicate: 0..6 = P0..P6, 7 = PT (always).
-    int guard_pred = 7;
-    bool guard_not = false;
-
-    std::vector<Operand> operands;
-    std::vector<std::string> modifiers;  // ".MOD" tokens in source order
-    ScheduleWord schedule;
-
-    // Normalized disassembly is NOT stored here: it is rendered on demand via
-    // Decoder::disassemble(word, full) so the per-instruction hot path (LOAD +
-    // per-predecoded-word copies) never pays for disassembly text it never
-    // reads.  `full=false` omits the guard + schedule bracket;
-    // `full=true` includes both (round-trip-able in the assembler dialect).
-
-    // Raw extracted field values (name -> value) for the debugger.
-    std::vector<std::pair<std::string, std::uint64_t>> raw_fields;
-
-    // FORMAT slot values (name -> value) for every non-schedule slot,
-    // including modifier slots (rnd/ftz/sat/fcomp/dstfmt.srcfmt/...).  This is
-    // the stable interface the interpreter uses for modifier dispatch.
-    std::vector<std::pair<std::string, std::uint64_t>> slot_values;
-
-    // Polymorphic: the decoded-IR migration stores concrete instructions as
-    // base pointers (PredecodedWord::inst is a unique_ptr) so a future typed
-    // derived Decoded<Mnemonic><Ops> can be allocated and deleted through this.
-    virtual ~DecodedInstruction() = default;
-};
-
 // One candidate's disposition during an illegal/ambiguous decode.
 struct CandidateRejection {
     std::string variant_class;
@@ -112,9 +57,15 @@ struct CandidateRejection {
 
 class DecodeResult {
 public:
+    DecodeResult() = default;
+    DecodeResult(const DecodeResult& o);
+    DecodeResult& operator=(const DecodeResult& o);
+    DecodeResult(DecodeResult&&) noexcept = default;
+    DecodeResult& operator=(DecodeResult&&) noexcept = default;
+
     DecodeOutcome outcome() const { return outcome_; }
     bool is_unique() const { return outcome_ == DecodeOutcome::kUnique; }
-    const DecodedInstruction& instruction() const { return instruction_; }
+    const DecodedInstruction& instruction() const { return *instruction_; }
     const std::vector<CandidateRejection>& candidates() const {
         return candidates_;
     }
@@ -122,7 +73,7 @@ public:
 private:
     friend class Decoder;
     DecodeOutcome outcome_ = DecodeOutcome::kIllegal;
-    DecodedInstruction instruction_;
+    std::unique_ptr<DecodedInstruction> instruction_;
     std::vector<CandidateRejection> candidates_;
 };
 

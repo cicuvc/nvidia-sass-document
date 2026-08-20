@@ -18,6 +18,8 @@
 #include <semu/fp.hpp>
 #include <semu/l1tex_model.hpp>
 
+#include "isa_shapes_fill.hpp"
+
 namespace semu {
 namespace {
 
@@ -1883,6 +1885,40 @@ std::uint32_t read_op(const ThreadState& t, const DecodedInstruction& inst,
 
 // Look up a decoded operand by slot name.
 const Operand* find_op(const DecodedInstruction& inst, const char* name) {
+    if (inst.shape_variant < isa::kNumVariants) {
+        const auto& mf = shape::kShapeManifests[inst.shape_variant];
+        const auto* ops = shape::operand_values_by_variant(
+            inst.shape_variant, &inst);
+        for (std::uint16_t p = 0; p < mf.n_ops; ++p) {
+            const auto& role = mf.ops[p];
+            if (std::strcmp(role.slot, name) != 0) continue;
+            Operand& out = inst.operand_cache[role.pos];
+            out.slot = role.slot;
+            out.text.clear();
+            switch (role.kind) {
+                case shape::OperandKind::kRegister: out.kind = "Register"; break;
+                case shape::OperandKind::kUniformRegister:
+                    out.kind = "UniformRegister"; break;
+                case shape::OperandKind::kPredicate:
+                case shape::OperandKind::kUniformPredicate:
+                    out.kind = "Predicate"; break;
+                case shape::OperandKind::kSImm: out.kind = "SImm"; break;
+                case shape::OperandKind::kUImm: out.kind = "UImm"; break;
+                case shape::OperandKind::kFImm16: out.kind = "FImm16"; break;
+                case shape::OperandKind::kFImm32: out.kind = "FImm32"; break;
+                case shape::OperandKind::kFImm64: out.kind = "FImm64"; break;
+                case shape::OperandKind::kDesc: out.kind = "DESC"; break;
+                case shape::OperandKind::kSpecial: out.kind = "Special"; break;
+            }
+            out.value = ops ? shape::operand_value_as_i64(ops[role.pos]) : 0;
+            const std::uint8_t flags = ops ? ops[role.pos].flags : 0;
+            out.negated = (flags & 1) != 0;
+            out.absolute = (flags & 2) != 0;
+            out.pred_not = (flags & 4) != 0;
+            return &out;
+        }
+    }
+    // Compatibility fallback for hand-built legacy IR values.
     for (const auto& o : inst.operands) {
         if (o.slot == name) return &o;
     }
@@ -1892,6 +1928,12 @@ const Operand* find_op(const DecodedInstruction& inst, const char* name) {
 // Look up a FORMAT slot value by slot name (modifiers included).
 std::optional<std::uint64_t> slot_value(const DecodedInstruction& inst,
                                         const char* name) {
+    if (inst.shape_variant < isa::kNumVariants) {
+        if (auto v = shape::slot_value_by_variant(inst.shape_variant, &inst,
+                                                   name))
+            return *v;
+    }
+    // Compatibility fallback for hand-built legacy IR values.
     for (const auto& [n, v] : inst.slot_values) {
         if (n == name) return v;
     }

@@ -473,11 +473,12 @@ bool build_decode_ctx(const isa::Variant* v, Word128 word, DecodeCtx& ctx,
 }
 
 bool try_decode_variant(const isa::Variant* v, Word128 word,
-                        DecodedInstruction* inst, std::string* reject) {
+                        std::unique_ptr<DecodedInstruction>* inst,
+                        std::string* reject) {
     DecodeCtx ctx;
     if (!build_decode_ctx(v, word, ctx, reject)) return false;
     *inst = render_instruction(v, word, ctx);
-    return true;
+    return *inst != nullptr;
 }
 
 }
@@ -493,12 +494,26 @@ std::string Decoder::disassemble(Word128 word, bool full) const {
         DecodeCtx ctx;
         std::string reject;
         if (!build_decode_ctx(v, word, ctx, &reject)) continue;
-        DecodedInstruction inst = render_instruction(v, word, ctx);
-        return render_disasm_text(v, ctx, inst, full);
+        auto inst = render_instruction(v, word, ctx);
+        if (!inst) continue;
+        return render_disasm_text(v, ctx, *inst, full);
     }
     return "";
 }
 
+
+DecodeResult::DecodeResult(const DecodeResult& o)
+    : outcome_(o.outcome_),
+      instruction_(o.instruction_ ? o.instruction_->clone() : nullptr),
+      candidates_(o.candidates_) {}
+
+DecodeResult& DecodeResult::operator=(const DecodeResult& o) {
+    if (this == &o) return *this;
+    outcome_ = o.outcome_;
+    instruction_ = o.instruction_ ? o.instruction_->clone() : nullptr;
+    candidates_ = o.candidates_;
+    return *this;
+}
 
 DecodeResult Decoder::decode(Word128 word) const {
     DecodeResult res;
@@ -514,7 +529,7 @@ DecodeResult Decoder::decode(Word128 word) const {
         return res;
     }
 
-    std::vector<DecodedInstruction> matched;
+    std::vector<std::unique_ptr<DecodedInstruction>> matched;
     std::vector<CandidateRejection> rejected;
     for (std::uint32_t i = start; i < end; ++i) {
         const isa::Variant* v = &isa::kVariants[i];
@@ -525,7 +540,7 @@ DecodeResult Decoder::decode(Word128 word) const {
                                 "alternate class (not a decode candidate)"});
             continue;
         }
-        DecodedInstruction inst;
+        std::unique_ptr<DecodedInstruction> inst;
         std::string reason;
         if (try_decode_variant(v, word, &inst, &reason)) {
             matched.push_back(std::move(inst));
@@ -545,7 +560,7 @@ DecodeResult Decoder::decode(Word128 word) const {
         res.outcome_ = DecodeOutcome::kAmbiguous;
         for (auto& m : matched) {
             res.candidates_.push_back(
-                {isa::variant_class_name(m.variant_class), ""});
+                {isa::variant_class_name(m->variant_class), ""});
         }
         for (auto& r : rejected) {
             res.candidates_.push_back(std::move(r));
