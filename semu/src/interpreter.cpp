@@ -2835,48 +2835,169 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
     (void)w;
     (void)fault;
     const isa::Mnemonic m = inst.mnemonic;
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
     MemWidthInfo wi = mem_sz(inst);
     *width_out = wi.bytes;
-    *off_out = offset_value(inst, "Ra_offset");
 
-    if (m == isa::Mnemonic::kLDG || m == isa::Mnemonic::kSTG || m == isa::Mnemonic::kLDL || m == isa::Mnemonic::kSTL) {
-        // Global/local: descriptor + Ra(64) + signed offset.
-        const std::uint64_t ra_val = read_addr_pair_slot(t, inst, "Ra");
-        // The descriptor's Ra_URb / Ra_URc provides the descriptor UR pair;
-        // step 1 uses a single global buffer, so the address = Ra + offset.
-        *addr_out = ra_val;
-        *space_out = (m == isa::Mnemonic::kLDL || m == isa::Mnemonic::kSTL) ? AddressSpace::kLocal
+    if (m == isa::Mnemonic::kLDG) {
+        // 5-op [Pu,Rd,Ra,off,Pnz]; uniform 7 [Pu,Rd,Ra,Ra_URb,off,Pnz];
+        // memdesc 7/8 [..,memdesc,Ra_URb,Ra,off,..].
+        const shape::OperandValue* ops;
+        int ra, off;
+        if (nops == 5) {
+            ops = static_cast<const shape::DecodedLDG5*>(&inst)->ops;
+            ra = 2; off = 3;
+        } else if (static_cast<shape::OperandKind>(
+                       (ops = static_cast<const shape::DecodedLDG7*>(&inst)->ops)[                                                                                   2].kind) ==
+                   shape::OperandKind::kRegister) {
+            ra = 2; off = 4;  // uniform 7-op
+        } else {
+            ops = static_cast<const shape::DecodedLDG8*>(&inst)->ops;
+            ra = 4; off = 5;  // memdesc 7/8
+        }
+        *addr_out = read_addr_pair_ov(t, ops[ra]);
+        *off_out = shape::operand_value_as_i64(ops[off]);
+        *space_out = AddressSpace::kGlobal;
+        return Status::success();
+    }
+    if (m == isa::Mnemonic::kSTG || m == isa::Mnemonic::kSTL) {
+        // STG 3 [Ra,off,Rb]; 4 [Ra,Ra_URc,off,Rb]; 5 [memdesc,Ra_URc,Ra,off,Rb];
+        // 6 [Ra,Ra_URc,off,Rb,Rb2,word_mask]; 7 +memdesc.  STL is 3-op.
+        const shape::OperandValue* ops;
+        int ra, off;
+        if (m == isa::Mnemonic::kSTL || nops == 3) {
+            ops = static_cast<const shape::DecodedSTL3*>(&inst)->ops;
+            ra = 0; off = 1;
+        } else if (nops == 4) {
+            ops = static_cast<const shape::DecodedSTG4*>(&inst)->ops;
+            ra = 0; off = 2;
+        } else if (nops == 5) {
+            ops = static_cast<const shape::DecodedSTG5*>(&inst)->ops;
+            ra = 2; off = 3;
+        } else if (nops == 6) {
+            ops = static_cast<const shape::DecodedSTG6*>(&inst)->ops;
+            ra = 0; off = 2;
+        } else {
+            ops = static_cast<const shape::DecodedSTG7*>(&inst)->ops;
+            ra = 2; off = 3;
+        }
+        *addr_out = read_addr_pair_ov(t, ops[ra]);
+        *off_out = shape::operand_value_as_i64(ops[off]);
+        *space_out = (m == isa::Mnemonic::kSTL) ? AddressSpace::kLocal
                                                 : AddressSpace::kGlobal;
         return Status::success();
     }
+    if (m == isa::Mnemonic::kLDL) {
+        // 3 [Rd,Ra,off]; 4 [Rd,Ra,Ra_URb,off]; 5 [Rd,memdesc,Ra_URb,Ra,off].
+        const shape::OperandValue* ops;
+        int ra, off;
+        if (nops == 3) {
+            ops = static_cast<const shape::DecodedLDL3*>(&inst)->ops;
+            ra = 1; off = 2;
+        } else if (nops == 4) {
+            ops = static_cast<const shape::DecodedLDL4*>(&inst)->ops;
+            ra = 1; off = 3;
+        } else {
+            ops = static_cast<const shape::DecodedLDL5*>(&inst)->ops;
+            ra = 3; off = 4;
+        }
+        *addr_out = read_addr_pair_ov(t, ops[ra]);
+        *off_out = shape::operand_value_as_i64(ops[off]);
+        *space_out = AddressSpace::kLocal;
+        return Status::success();
+    }
     if (m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kSTS || m == isa::Mnemonic::kATOMS || m == isa::Mnemonic::kREDS) {
-        // Shared: 32-bit Ra + offset.
-        *addr_out = read_reg_slot(t, inst, "Ra");
+        // LDS 3 [Rd,Ra,off]; 4 [Rd,Ra,Ra_URb,off].  STS/ATOMS/REDS 3 [Ra,off,..]
+        // or 4 [Ra,Ra_URc,off,..].
+        const shape::OperandValue* ops;
+        int ra, off;
+        if (m == isa::Mnemonic::kLDS) {
+            if (nops == 4) {
+                ops = static_cast<const shape::DecodedLDS4*>(&inst)->ops;
+                ra = 1; off = 3;
+            } else {
+                ops = static_cast<const shape::DecodedLDS3*>(&inst)->ops;
+                ra = 1; off = 2;
+            }
+        } else if (m == isa::Mnemonic::kSTS) {
+            ops = (nops == 4)
+                      ? static_cast<const shape::DecodedSTS4*>(&inst)->ops
+                      : static_cast<const shape::DecodedSTS3*>(&inst)->ops;
+            ra = 0; off = (nops == 4) ? 2 : 1;
+        } else if (m == isa::Mnemonic::kATOMS) {
+            ops = (nops == 5)
+                      ? static_cast<const shape::DecodedATOMS5*>(&inst)->ops
+                      : static_cast<const shape::DecodedATOMS4*>(&inst)->ops;
+            ra = 1; off = 2;
+        } else {  // REDS
+            ops = (nops == 4)
+                      ? static_cast<const shape::DecodedREDS4*>(&inst)->ops
+                      : static_cast<const shape::DecodedREDS3*>(&inst)->ops;
+            ra = 0; off = (nops == 4) ? 2 : 1;
+        }
+        *addr_out = read_reg_ov(t, ops[ra]);
+        *off_out = shape::operand_value_as_i64(ops[off]);
         *space_out = AddressSpace::kShared;
         return Status::success();
     }
     if (m == isa::Mnemonic::kLDC || m == isa::Mnemonic::kLDCU) {
-        // Constant: bank (Sa_bank) + offset (Ra_offset).  The address is the
-        // constant-bank window offset; bank n spans [n*64K, (n+1)*64K).
+        // Constant: bank (Sa_bank) + offset (Ra_offset/Sa_offset).  The
+        // offset operand's ROLE position differs across the ldc/ldcu forms
+        // (ldcu const forms carry Sa_offset at the tail with a URa base);
+        // read the classic slots by name here — the ldg/stg/l**/atom branches
+        // above are fully positional.
         const auto bank = slot_value(inst, "Sa_bank").value_or(0);
-        // For the RaRZ form the offset is in Ra_offset; for RaNonRZ it may be
-        // Ra + Ra_offset.  c[0x0][0x380] -> bank 0, Ra=RZ, offset 0x380.
-        const std::uint64_t ra_val = read_reg_slot(t, inst, "Ra");
-        const std::int64_t roff = offset_value(inst, "Ra_offset");
-        *addr_out = bank * 0x10000 + ra_val +
-                    static_cast<std::uint64_t>(roff);
+        const std::uint64_t base_v =
+            (m == isa::Mnemonic::kLDCU)
+                ? read_ur_slot(w, inst, "URa")
+                : read_reg_slot(t, inst, "Ra");
+        const std::int64_t off =
+            (m == isa::Mnemonic::kLDCU)
+                ? static_cast<std::int64_t>(
+                      slot_value(inst, "Sa_offset").value_or(0))
+                : offset_value(inst, "Ra_offset");
+        *addr_out = bank * 0x10000 + base_v +
+                    static_cast<std::uint64_t>(off);
         *space_out = AddressSpace::kConstant;
         return Status::success();
     }
     if (m == isa::Mnemonic::kATOMG || m == isa::Mnemonic::kREDG) {
-        // Global atomic: descriptor + Ra(64) + signed offset.
-        const std::uint64_t ra_val = read_addr_pair_slot(t, inst, "Ra");
-        *addr_out = ra_val;
+        // 5/6 [Pu,Rd,Ra,off,..] (+Rc for CAS); 7/5 +memdesc prefix.
+        const shape::OperandValue* ops;
+        int ra, off;
+        if (nops <= 6) {
+            if (m == isa::Mnemonic::kATOMG) {
+                ops = (nops == 5)
+                          ? static_cast<const shape::DecodedATOMG5*>(&inst)->ops
+                          : static_cast<const shape::DecodedATOMG6*>(&inst)->ops;
+            } else {
+                ops = (nops == 3)
+                          ? static_cast<const shape::DecodedREDG3*>(&inst)->ops
+                          : static_cast<const shape::DecodedREDG4*>(&inst)->ops;
+            }
+            ra = 2;
+            off = 3;
+        } else {
+            ops = (m == isa::Mnemonic::kATOMG)
+                      ? static_cast<const shape::DecodedATOMG7*>(&inst)->ops
+                      : static_cast<const shape::DecodedREDG5*>(&inst)->ops;
+            ra = 4;
+            off = 5;
+        }
+        *addr_out = read_addr_pair_ov(t, ops[ra]);
+        *off_out = shape::operand_value_as_i64(ops[off]);
         *space_out = AddressSpace::kGlobal;
         return Status::success();
     }
-    if (m == isa::Mnemonic::kATOM || std::strcmp(isa::mnemonic_name(m), "RED") == 0) {
-        *addr_out = read_reg_slot(t, inst, "Ra");
+    if (m == isa::Mnemonic::kATOM) {
+        // 6 [Pu,Rd,Ra,off,Rb,wr]; 7 cas +Rc.
+        const shape::OperandValue* ops =
+            (nops == 7)
+                ? static_cast<const shape::DecodedATOM7*>(&inst)->ops
+                : static_cast<const shape::DecodedATOM6*>(&inst)->ops;
+        *addr_out = read_reg_ov(t, ops[2]);
+        *off_out = shape::operand_value_as_i64(ops[3]);
         *space_out = AddressSpace::kGlobal;
         return Status::success();
     }
