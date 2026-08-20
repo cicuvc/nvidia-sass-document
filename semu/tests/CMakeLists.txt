@@ -267,7 +267,8 @@ endfunction()
 
 set(SEMU_PUBLIC_HEADERS
   api.hpp capability.hpp cluster.hpp context.hpp cubin.hpp debugger.hpp
-  decoder.hpp execution.hpp fast_fp.hpp fault.hpp fp.hpp global_model.hpp
+  decoded_access.hpp decoder.hpp execution.hpp fast_fp.hpp fault.hpp fp.hpp
+  global_model.hpp
   hb_clock.hpp interpreter.hpp l1tex_model.hpp l2_events.hpp mbarrier.hpp
   memory.hpp memory_events.hpp memory_service.hpp mock_backend.hpp
   profiler.hpp race_detector.hpp shared_bank.hpp status.hpp
