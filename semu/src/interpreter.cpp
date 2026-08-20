@@ -2611,7 +2611,77 @@ namespace {
 namespace {
 
 MemWidthInfo mem_sz(const DecodedInstruction& inst) {
-    auto sz = slot_value(inst, "sz").value_or(4);
+    // All memory/atomic families carry the `sz` modifier member; resolve it
+    // by casting to the concrete shape (mnemonic + operand count) — no
+    // slot-name lookup.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    std::uint64_t sz = 4;
+    switch (inst.mnemonic) {
+        case isa::Mnemonic::kLDG:
+            if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG5*>(&inst)->sz);
+            else if (nops == 7) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG7*>(&inst)->sz);
+            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG8*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kSTG:
+            if (nops == 3) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG3*>(&inst)->sz);
+            else if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG4*>(&inst)->sz);
+            else if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG5*>(&inst)->sz);
+            else if (nops == 6) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG6*>(&inst)->sz);
+            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG7*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kLDS:
+            sz = (nops == 4) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDS4*>(&inst)->sz)
+                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDS3*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kSTS:
+            sz = (nops == 4) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedSTS4*>(&inst)->sz)
+                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedSTS3*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kLDL:
+            if (nops == 3) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL3*>(&inst)->sz);
+            else if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL4*>(&inst)->sz);
+            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL5*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kSTL: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTL3*>(&inst)->sz); break;
+        case isa::Mnemonic::kLDC: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDC5*>(&inst)->sz); break;
+        case isa::Mnemonic::kLDCU:
+            if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU4*>(&inst)->sz);
+            else if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU5*>(&inst)->sz);
+            else if (nops == 6) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6*>(&inst)->sz);
+            else if (nops == 7) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU7*>(&inst)->sz);
+            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU8*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kATOM:
+            sz = (nops == 7) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7*>(&inst)->sz)
+                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kATOMS:
+            sz = (nops == 5) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5*>(&inst)->sz)
+                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kATOMG:
+            if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG5*>(&inst)->sz);
+            else if (nops == 6) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6*>(&inst)->sz);
+            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG7*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kREDG:
+            if (nops == 3) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG3*>(&inst)->sz);
+            else if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG4*>(&inst)->sz);
+            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG5*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kREDS:
+            sz = (nops == 4) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS4*>(&inst)->sz)
+                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS3*>(&inst)->sz);
+            break;
+        case isa::Mnemonic::kLDGSTS:
+            sz = (nops == 7) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS7*>(&inst)->sz)
+                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS6*>(&inst)->sz);
+            break;
+        default:
+            // sz not present on this family; keep the default 32-bit width.
+            break;
+    }
     return mem_width_info(sz);
 }
 
@@ -2638,11 +2708,93 @@ MemWidthInfo mem_sz(const DecodedInstruction& inst) {
 // caller MUST fault and must NEVER downgrade to ADD.  CAS is decoded
 // separately by the presence of the Rc compare operand.
 std::optional<AtomicOp> decode_atomic_op(const DecodedInstruction& inst) {
-    if (std::strstr(isa::variant_class_name(inst.variant_class), "_fp") != nullptr) {
-        return std::nullopt;  // ATOM.FADD / ATOM.FMIN / ... unimplemented
+    // FP atomic (ATOMICFPOPS) variants are marked by the generated subclass
+    // fp bit; they are not implemented.  op/sz are typed members resolved by
+    // (mnemonic, nops) cast.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    std::uint64_t opv = 0, szv = 0;
+    std::uint8_t subclass = 0;
+    switch (inst.mnemonic) {
+        case isa::Mnemonic::kATOM:
+            if (nops == 7) {
+                const auto& d = *static_cast<const shape::DecodedATOM7*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else {
+                const auto& d = *static_cast<const shape::DecodedATOM6*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            }
+            break;
+        case isa::Mnemonic::kATOMS:
+            if (nops == 5) {
+                const auto& d = *static_cast<const shape::DecodedATOMS5*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else {
+                const auto& d = *static_cast<const shape::DecodedATOMS4*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            }
+            break;
+        case isa::Mnemonic::kATOMG:
+            if (nops == 5) {
+                const auto& d = *static_cast<const shape::DecodedATOMG5*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else if (nops == 6) {
+                const auto& d = *static_cast<const shape::DecodedATOMG6*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else {
+                const auto& d = *static_cast<const shape::DecodedATOMG7*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            }
+            break;
+        case isa::Mnemonic::kREDG:
+            if (nops == 3) {
+                const auto& d = *static_cast<const shape::DecodedREDG3*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else if (nops == 4) {
+                const auto& d = *static_cast<const shape::DecodedREDG4*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else {
+                const auto& d = *static_cast<const shape::DecodedREDG5*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            }
+            break;
+        case isa::Mnemonic::kREDS:
+            if (nops == 4) {
+                const auto& d = *static_cast<const shape::DecodedREDS4*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else {
+                const auto& d = *static_cast<const shape::DecodedREDS3*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            }
+            break;
+        default:
+            return std::nullopt;
     }
-    const std::uint64_t opv = slot_value(inst, "op").value_or(0);
-    const std::uint64_t szv = slot_value(inst, "sz").value_or(0);
+    if (subclass & 16) return std::nullopt;  // FP atomics unimplemented
     const bool signed_size = (szv == 1 || szv == 3);  // S32 / S64
     switch (opv) {
         case 0: return AtomicOp::kAdd;
