@@ -258,7 +258,7 @@ the not-yet-migrated syncs/tma families (~60 remaining call sites).
    the anonymous `slot_value`, `offset_value`, `field_value`/`raw_field_bits`.
 3. Re-run Debug + ASan + TSan gates (36/36 each); update this doc.
 
-**DONE (2026-08 session, commits <pending>; Debug + ASan + TSan gates 36/36):**
+**DONE (2026-08 session, commit 382b5e4; Debug + ASan + TSan gates 36/36):**
 - **do_syncs**: all 9 opcode cases read typed members + positional ops[] via
   per-case casts (`DecodedSYNCS0/3/4/5/6`).  The shared target is resolved
   uniformly: uniform forms (EXCH/CAS/LD) use `[URa,URa_offset]` at [2]/[3];
