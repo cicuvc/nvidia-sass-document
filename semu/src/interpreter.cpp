@@ -4357,8 +4357,8 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
                               const DecodedInstruction& inst, std::uint64_t pc,
                               std::optional<Fault>* fault) {
     const isa::Mnemonic m = inst.mnemonic;
-    const Operand* rd = find_op(inst, "Rd");
-    if (!rd || rd->kind != "Register") {
+    const auto rd_v = shape::op_value(inst, "Rd");
+    if (!rd_v) {
         *fault = Fault(FaultKind::kInternal, "tensor op missing Rd")
                      .set_pc(pc)
                      .set_warp(static_cast<std::uint32_t>(w.warp_id))
@@ -4441,20 +4441,20 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
         fmt = tensor::Format::kFp8E4M3;  // unused for gdfs; kept for symmetry
     }
 
-    const Operand* ra = find_op(inst, "Ra");
-    const Operand* rb = find_op(inst, "Rb");
-    const Operand* rc = find_op(inst, "Rc");
-    const Operand* re_op = find_op(inst, "Re");
-    const Operand* rh_op = find_op(inst, "Rh");
-    const Operand* uri_op = find_op(inst, "URi");
-    if (!ra || !rb || !rc || !rd) {
+    const auto ra_v = shape::op_value(inst, "Ra");
+    const auto rb_v = shape::op_value(inst, "Rb");
+    const auto rc_v = shape::op_value(inst, "Rc");
+    const bool has_re = shape::op_lookup(inst, "Re") != nullptr;
+    const bool has_rh = shape::op_lookup(inst, "Rh") != nullptr;
+    const bool has_uri = shape::op_lookup(inst, "URi") != nullptr;
+    if (!ra_v || !rb_v || !rc_v || !rd_v) {
         return unsupported("(operands)");
     }
 
     // OMMA selection register: only sel=0 is verified legal on SM120.
     if (need_uri) {
         std::uint32_t sel = 0;
-        if (uri_op) sel = read_ur_val(w, *uri_op);
+        if (has_uri) sel = read_ur_slot(w, inst, "URi");
         if (sel != 0) {
             Fault f(FaultKind::kUnsupportedInstruction,
                     "OMMA.SF selector URi != 0 is decode-only (only sel=0 is "
@@ -4469,10 +4469,10 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
     // Fragment register base indices (RZ reads as 0; base + width must stay in
     // range per the CONDITIONS — a misaligned/overflowing group already
     // decodes as OOR_REG_ERROR / MISALIGNED_REG_ERROR in the decoder).
-    const int rd_base = rd->kind == "Register" ? static_cast<int>(rd->value) : 0;
-    const int ra_base = ra->kind == "Register" ? static_cast<int>(ra->value) : 0;
-    const int rb_base = rb->kind == "Register" ? static_cast<int>(rb->value) : 0;
-    const int rc_base = rc->kind == "Register" ? static_cast<int>(rc->value) : 0;
+    const int rd_base = static_cast<int>(*rd_v);
+    const int ra_base = static_cast<int>(*ra_v);
+    const int rb_base = static_cast<int>(*rb_v);
+    const int rc_base = static_cast<int>(*rc_v);
 
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
@@ -4507,9 +4507,9 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
                 tensor::qmma_k16(a, b, c, fmt, out);
             }
         } else {
-            if (!re_op || !rh_op) return unsupported("(missing Re/Rh)");
-            std::uint32_t re = read_reg_val(t, *re_op);
-            std::uint32_t rh = read_reg_val(t, *rh_op);
+            if (!has_re || !has_rh) return unsupported("(missing Re/Rh)");
+            std::uint32_t re = read_reg_slot(t, inst, "Re");
+            std::uint32_t rh = read_reg_slot(t, inst, "Rh");
             const std::uint32_t sel = 0;  // validated above
             tensor::omma_k64(a, b, c, re, rh, sel, out);
         }
