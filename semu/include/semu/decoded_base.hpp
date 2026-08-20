@@ -33,9 +33,8 @@ public:
     // 2b-3: the generic operands/modifiers/slot_values/raw_fields vectors and
     // the bounded Operand cache were removed with the typed migration; the
     // derived Decoded<Mnemonic><Ops> object is the only operand/modifier
-    // storage.  The few genuinely unsurfaced raw ENCODING fields (S2R imm8 /
-    // BAR barname) are read on demand straight from the word via
-    // interpreter.cpp field_value.
+    // storage (S2R imm8 / BAR barname are surfaced as typed `SRa`/`barname`
+    // members).
     ScheduleWord schedule;
 
     virtual ~DecodedInstruction() = default;

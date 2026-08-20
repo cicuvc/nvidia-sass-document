@@ -18,8 +18,6 @@
 #include <semu/fp.hpp>
 #include <semu/l1tex_model.hpp>
 
-#include <semu/decoded_access.hpp>
-
 #include "isa_shapes_fill.hpp"
 #include "isa_data.hpp"
 
@@ -27,67 +25,6 @@ namespace semu {
 namespace {
 
 using semu::fp::Rnd;
-
-// Extract a raw ENCODING field by name directly from the 128-bit word's
-// bits (multi-range MSB-first, mirroring decoder extract_field).  Used only
-// for the handful of raw fields the typed schema does NOT surface as FORMAT
-// slots (S2R/S2UR `imm8`, BAR `barname`); surfaced slots should be read via
-// shape::op_value / shape::slot_value instead.
-std::optional<std::uint64_t> raw_field_bits(const DecodedInstruction& inst,
-                                            const char* name) {
-    if (inst.shape_variant >= isa::kNumVariants) return std::nullopt;
-    const isa::Variant& v = isa::kVariants[inst.shape_variant];
-    for (std::uint16_t fi = 0; fi < v.nfields; ++fi) {
-        const isa::Field& f = v.fields[fi];
-        if (std::strcmp(f.name, name) != 0) continue;
-        std::uint64_t val = 0;
-        for (std::uint8_t i = 0; i < f.nranges; ++i) {
-            const int hi = f.ranges[2 * i];
-            const int lo = f.ranges[2 * i + 1];
-            const int width = hi - lo + 1;
-            std::uint64_t part;
-            if (lo >= 64) {
-                const std::uint64_t mask =
-                    (width == 64) ? ~std::uint64_t{0}
-                                  : ((std::uint64_t{1} << width) - 1);
-                part = (inst.word.hi >> (lo - 64)) & mask;
-            } else if (hi < 64) {
-                const std::uint64_t mask =
-                    (width == 64) ? ~std::uint64_t{0}
-                                  : ((std::uint64_t{1} << width) - 1);
-                part = (inst.word.lo >> lo) & mask;
-            } else {
-                const int lo_w = 64 - lo;
-                const std::uint64_t lo_mask =
-                    (lo_w == 64) ? ~std::uint64_t{0}
-                                 : ((std::uint64_t{1} << lo_w) - 1);
-                std::uint64_t hi_part = 0;
-                if (width - lo_w > 0 && width - lo_w < 64)
-                    hi_part =
-                        inst.word.hi & ((std::uint64_t{1} << (width - lo_w)) - 1);
-                else if (width - lo_w >= 64)
-                    hi_part = inst.word.hi;
-                part = (inst.word.lo >> lo) & lo_mask;
-                if (lo_w < 64) part |= hi_part << lo_w;
-            }
-            if (width >= 64) {
-                val = part;
-            } else {
-                val = (val << width) | part;
-            }
-        }
-        return val;
-    }
-    return std::nullopt;
-}
-
-// Field lookup helper: find a raw ENCODING field value by name, extracted
-// straight from the word.  (2b-3: the base `raw_fields` vector was removed;
-// this serves the same unsurfaced fields via the variant's ENCODING.)
-[[maybe_unused]] std::optional<std::uint64_t> field_value(const DecodedInstruction& inst,
-                                         const char* name) {
-    return raw_field_bits(inst, name);
-}
 
 // RZ (255) reads as 0.
 constexpr int kRegRz = 255;
@@ -1951,139 +1888,6 @@ Status Interpreter::do_bar(WarpState& w, const DecodedInstruction& inst,
 
 namespace {
 
-// Read a register operand (Ra/Rb/Rc/Ra_URc) with RZ=0.
-// (Legacy: superseded by read_reg_slot; kept only while un-migrated families
-// reference it.)
-
-// Look up a FORMAT slot value by slot name (modifiers included).
-// 2b-3: typed-only (generated per-variant reader); the generic-vector
-// fallback was removed with the slot_values migration.
-[[maybe_unused]] std::optional<std::uint64_t> slot_value(const DecodedInstruction& inst,
-                                        const char* name) {
-    if (inst.shape_variant < isa::kNumVariants) {
-        if (auto v = shape::slot_value_by_variant(inst.shape_variant, &inst,
-                                                   name))
-            return *v;
-    }
-    return std::nullopt;
-}
-
-// M5 pre-binding: extract a register operand's index once per instruction
-// Per-lane register read from a pre-bound index (negate/absolute applied).
-[[maybe_unused]] std::uint32_t read_bound(const ThreadState& t, int idx, bool absolute,
-                         bool negated) {
-    std::uint32_t v = idx >= 0 ? t.gpr[idx] : 0;
-    if (absolute) v &= 0x7fffffff;
-    if (negated) v = ~v + 1;
-    return v;
-}
-
-// M5 pre-binding: typed slot equivalent of bind_reg_index (2b-3).  Resolves
-// the GPR index once per instruction (-1 when absent / RZ / not a plain
-// register).
-[[maybe_unused]] int bind_reg_slot(const DecodedInstruction& inst, const char* slot) {
-    const auto* o = shape::op_lookup(inst, slot);
-    if (!o || static_cast<shape::OperandKind>(o->kind) !=
-                  shape::OperandKind::kRegister)
-        return -1;
-    const std::uint64_t r =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(*o));
-    if (r == 255 || r >= kNumGprs) return -1;
-    return static_cast<int>(r);
-}
-
-// 2b-3 typed-slot 64-bit uniform-pair read.
-[[maybe_unused]] std::uint64_t read_ur_pair_slot(const WarpState& w,
-                                const DecodedInstruction& inst,
-                                const char* slot) {
-    const auto* o = shape::op_lookup(inst, slot);
-    if (!o || static_cast<shape::OperandKind>(o->kind) !=
-                  shape::OperandKind::kUniformRegister)
-        return 0;
-    const std::uint64_t r =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(*o));
-    if (r == 255) return 0;  // URZ
-    if (r >= kNumUrs - 1) return 0;  // no room for the high word
-    return static_cast<std::uint64_t>(w.ur[r]) |
-           (static_cast<std::uint64_t>(w.ur[r + 1]) << 32);
-}
-
-// ---- typed slot readers (2b-3) ------------------------------------------
-// These are the replacement for the `const Operand*` readers above: they read
-// an operand role straight out of the generated typed Decoded* storage via
-// shape::op_lookup (ShapeManifest -> position in the typed ops[] array).  No
-// base-mounted Operand cache, no generic-vector scan.  Semantics match the
-// corresponding legacy helpers exactly (RZ/URZ=0, abs-bit1, neg-bit0,
-// pred_not-bit2).
-
-// Read a GPR operand with RZ=0 + negate/absolute applied.
-[[maybe_unused]] std::uint32_t read_reg_slot(const ThreadState& t,
-                            const DecodedInstruction& inst,
-                            const char* slot) {
-    const auto* o = shape::op_lookup(inst, slot);
-    if (!o || static_cast<shape::OperandKind>(o->kind) !=
-                  shape::OperandKind::kRegister)
-        return 0;
-    const std::uint64_t r =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(*o));
-    std::uint32_t v = (r == 255 || r >= kNumGprs) ? 0 : t.gpr[r];
-    if (o->flags & 2) v &= 0x7fffffff;  // absolute
-    if (o->flags & 1) v = ~v + 1;       // negate
-    return v;
-}
-
-// Read a uniform-register operand from warp state (URZ = 255 -> 0).
-[[maybe_unused]] std::uint32_t read_ur_slot(const WarpState& w,
-                           const DecodedInstruction& inst,
-                           const char* slot) {
-    const auto* o = shape::op_lookup(inst, slot);
-    if (!o || static_cast<shape::OperandKind>(o->kind) !=
-                  shape::OperandKind::kUniformRegister)
-        return 0;
-    const std::uint64_t r =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(*o));
-    if (r == 255) return 0;  // URZ
-    if (r < kNumUrs) return w.ur[r];
-    return 0;
-}
-
-// Extract a predicate operand per-lane (Pp/Pu/Pv/Pq); false when absent.
-// `not` flag inverts.  Matches read_pred.
-[[maybe_unused]] bool read_pred_slot(const ThreadState& t,
-                    const DecodedInstruction& inst, const char* slot,
-                    bool* out) {
-    const auto* o = shape::op_lookup(inst, slot);
-    if (!o || static_cast<shape::OperandKind>(o->kind) !=
-                  shape::OperandKind::kPredicate)
-        return false;
-    const bool not_ = (o->flags & 4) != 0;
-    const std::uint64_t p =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(*o));
-    if (p == 7) {  // PT
-        *out = !not_;
-        return true;
-    }
-    if (p < 7) {
-        bool v = t.pred[p];
-        if (not_) v = !v;
-        *out = v;
-        return true;
-    }
-    return false;
-}
-
-// Write a predicate destination (Pu/Pv/Pq) per-lane by slot name.
-[[maybe_unused]] void write_pred_slot(ThreadState& t, const DecodedInstruction& inst,
-                     const char* slot, bool v) {
-    const auto* o = shape::op_lookup(inst, slot);
-    if (!o || static_cast<shape::OperandKind>(o->kind) !=
-                  shape::OperandKind::kPredicate)
-        return;
-    const std::uint64_t p =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(*o));
-    if (p < 7) t.pred[p] = v;
-}
-
 // ---- 2b-3 plan-b direct typed readers ------------------------------------
 // These take a value straight out of the generated ops[] array (the
 // interpreter casts the decoded instruction to its concrete
@@ -2578,30 +2382,6 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
 // encodings share an opcode (LOP3/LOP, ISCADD/LEA).
 // ---------------------------------------------------------------------------
 
-namespace {
-
-// 2b-3 typed-slot destination write: write a value to Rd (resolved by FORMAT
-// slot name from the typed ops[]).  For 64-bit destinations (`hi` != the low
-// half and the destination is a register pair), writes Rd+1 as well.  Handles
-// Rd=RZ (discard).
-[[maybe_unused]] void write_rd_slot(WarpState& w, ThreadState& t,
-                   const DecodedInstruction& inst, const char* slot,
-                   std::uint32_t lo, std::uint32_t hi,
-                   bool write_hi = false) {
-    (void)w;
-    (void)inst;
-    const auto rd = shape::op_value(inst, slot);
-    if (!rd) return;
-    const std::uint64_t r = static_cast<std::uint64_t>(*rd);
-    if (r == 255 || r >= kNumGprs) return;  // RZ dest: discard
-    t.gpr[r] = lo;
-    if (write_hi && r + 1 < kNumGprs) {
-        t.gpr[r + 1] = hi;
-    }
-}
-
-}  // namespace
-
 // ---------------------------------------------------------------------------
 // Phase 6 memory + sync
 // ---------------------------------------------------------------------------
@@ -2683,21 +2463,6 @@ MemWidthInfo mem_sz(const DecodedInstruction& inst) {
             break;
     }
     return mem_width_info(sz);
-}
-
-// 2b-3 typed-slot 64-bit address-pair read.
-[[maybe_unused]] std::uint64_t read_addr_pair_slot(const ThreadState& t,
-                                  const DecodedInstruction& inst,
-                                  const char* slot) {
-    const auto* o = shape::op_lookup(inst, slot);
-    if (!o || static_cast<shape::OperandKind>(o->kind) !=
-                  shape::OperandKind::kRegister)
-        return 0;
-    const std::uint64_t r =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(*o));
-    if (r == 255 || r >= kNumGprs - 1) return 0;
-    return static_cast<std::uint64_t>(t.gpr[r]) |
-           (static_cast<std::uint64_t>(t.gpr[r + 1]) << 32);
 }
 
 // Blocker-4: decode the ATOMS `op` slot (AtomsOp /
@@ -2811,15 +2576,6 @@ std::optional<AtomicOp> decode_atomic_op(const DecodedInstruction& inst) {
         case 9: return std::nullopt;  // SAFEADD (ATOMG/REDG) unimplemented
         default: return std::nullopt;  // INVALID*
     }
-}
-
-// Read a signed/unsigned immediate OFFSET operand's value (e.g. Ra_offset /
-// Rb_offset).  The decoder stores SImm operand values SIGN-EXTENDED (matching
-// render_imm), so a negative displacement (STS [R1-0x20]) reads as -0x20, not
-// +0xFFFFE0.  Falls back to the raw slot value when the operand is absent.
-std::int64_t offset_value(const DecodedInstruction& inst, const char* slot) {
-    if (auto ov = shape::op_value(inst, slot)) return *ov;
-    return static_cast<std::int64_t>(shape::slot_value(inst, slot).value_or(0));
 }
 
 }  // namespace
@@ -2942,21 +2698,61 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
         return Status::success();
     }
     if (m == isa::Mnemonic::kLDC || m == isa::Mnemonic::kLDCU) {
-        // Constant: bank (Sa_bank) + offset (Ra_offset/Sa_offset).  The
-        // offset operand's ROLE position differs across the ldc/ldcu forms
-        // (ldcu const forms carry Sa_offset at the tail with a URa base);
-        // read the classic slots by name here — the ldg/stg/l**/atom branches
-        // above are fully positional.
-        const auto bank = slot_value(inst, "Sa_bank").value_or(0);
-        const std::uint64_t base_v =
-            (m == isa::Mnemonic::kLDCU)
-                ? read_ur_slot(w, inst, "URa")
-                : read_reg_slot(t, inst, "Ra");
-        const std::int64_t off =
-            (m == isa::Mnemonic::kLDCU)
-                ? static_cast<std::int64_t>(
-                      slot_value(inst, "Sa_offset").value_or(0))
-                : offset_value(inst, "Ra_offset");
+        // Constant: bank (Sa_bank) + base (Ra / URa by form) + offset
+        // (Ra_offset / Sa_offset).  The layouts are form-specific (the offset
+        // operand's ROLE position differs across the ldc/ldcu forms) so this
+        // branch dispatches by opcode — no slot-name lookups:
+        //   0xb82  LDC          [Rd,Sa,Sa_bank,Ra,Ra_offset]
+        //   0x1582 LDC.UR       [Rd,Sa,URa,Rb,Sa_offset]  (bank/base/off absent)
+        //   0x17ac LDCU.CONST   [UPg,URd,Sa,Sa_bank,URa,Sa_offset]
+        //   0x1dac LDCU.256.CONST [UPg,URd2,URd,Sa,Sa_bank,URa,Sa_offset,word_mask]
+        //   0x1bac LDCU.CONST   [UPg,URd,Sa,URa,URb,Sa_offset]   (no bank)
+        //   0x13ac LDCU.256.UR  [UPg,URd2,URd,URa,Sa_offset,(word_mask,UPp)]
+        //   0x19ac LDCU.UR       [UPg,URd,URa,Sa_offset,(UPp)]
+        //   0x15ac LDCU.256.CONST [UPg,URd2,URd,Sa,URa,URb,Sa_offset,word_mask]
+        const std::uint16_t op = semu::opcode_of(inst.word.lo, inst.word.hi);
+        const shape::OperandValue* ops =
+            shape::operand_values_by_variant(inst.shape_variant, &inst);
+        std::uint64_t bank = 0, base_v = 0;
+        std::int64_t off = 0;
+        switch (op) {
+            case 0xb82:  // Sa_bank/Ra/Ra_offset at [2]/[3]/[4]
+                bank = static_cast<std::uint64_t>(
+                    shape::operand_value_as_i64(ops[2]));
+                base_v = read_reg_ov(t, ops[3]);
+                off = shape::operand_value_as_i64(ops[4]);
+                break;
+            case 0x17ac:  // Sa_bank/URa/Sa_offset at [3]/[4]/[5]
+                bank = static_cast<std::uint64_t>(
+                    shape::operand_value_as_i64(ops[3]));
+                base_v = read_ur_ov(w, ops[4]);
+                off = shape::operand_value_as_i64(ops[5]);
+                break;
+            case 0x1dac:  // Sa_bank/URa/Sa_offset at [4]/[5]/[6]
+                bank = static_cast<std::uint64_t>(
+                    shape::operand_value_as_i64(ops[4]));
+                base_v = read_ur_ov(w, ops[5]);
+                off = shape::operand_value_as_i64(ops[6]);
+                break;
+            case 0x1bac:  // URa/Sa_offset at [3]/[5]
+                base_v = read_ur_ov(w, ops[3]);
+                off = shape::operand_value_as_i64(ops[5]);
+                break;
+            case 0x13ac:  // URa/Sa_offset at [3]/[4]
+                base_v = read_ur_ov(w, ops[3]);
+                off = shape::operand_value_as_i64(ops[4]);
+                break;
+            case 0x19ac:  // URa/Sa_offset at [2]/[3]
+                base_v = read_ur_ov(w, ops[2]);
+                off = shape::operand_value_as_i64(ops[3]);
+                break;
+            case 0x15ac:  // URa/Sa_offset at [4]/[6]
+                base_v = read_ur_ov(w, ops[4]);
+                off = shape::operand_value_as_i64(ops[6]);
+                break;
+            default:      // 0x1582 LDC.UR: no Sa_bank/Ra/Ra_offset roles
+                break;
+        }
         *addr_out = bank * 0x10000 + base_v +
                     static_cast<std::uint64_t>(off);
         *space_out = AddressSpace::kConstant;
@@ -3020,7 +2816,14 @@ Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
         if (race_detector_ && race_detector_->enabled()) {
             std::string scope = "gpu";
             if (m == isa::Mnemonic::kMEMBAR) {
-                const auto scov = slot_value(inst, "sco").value_or(2);
+                // sco member present on membar_ / membar_async_ only (the
+                // tma barrier form has no cohere-scope field).
+                std::uint64_t scov = 2;
+                if (inst.variant_class == isa::VariantClass::kmembar_ ||
+                    inst.variant_class == isa::VariantClass::kmembar_async_) {
+                    scov = static_cast<std::uint64_t>(
+                        static_cast<const shape::DecodedMEMBAR0*>(&inst)->sco);
+                }
                 if (scov == 0) scope = "cta";
                 else if (scov == 1) scope = "sm";
                 else if (scov == 3) scope = "sys";
@@ -3876,40 +3679,66 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
     // already returned for exec_mask == 0.
     (void)mask;
 
-    // Shared target = [Ra + URc + Ra_offset] (Ra is RZ for mbarrier ops).
-    const bool has_ura = shape::op_lookup(inst, "URa") != nullptr;
-    const bool has_urc = shape::op_lookup(inst, "Ra_URc") != nullptr;
-    const auto ura_off_v = shape::op_value(inst, "URa_offset");
-    const bool has_ra = shape::op_lookup(inst, "Ra") != nullptr;
-    const auto ra_off_v = shape::op_value(inst, "Ra_offset");
-
+    // Operand layouts (positional, ShapeManifest role order):
+    //   ARRIVE   0x19a7/5op [Rd,Ra,Ra_URc,Ra_offset,Rb]
+    //   TCNT     0x19a7/4op [Ra,Ra_URc,Ra_offset,Rb]
+    //   PHASECHK 0x15a7/5op [Pu,Ra,Ra_URc,Ra_offset,Rb]
+    //   LD       0x15b1/4op [Rd,Ra,Ra_URc,Ra_offset]
+    //   CCTL     0x19b1/3op [Ra,Ra_URc,Ra_offset]
+    //   EXCH     0x15b2/5op [UPg,URd,URa,URa_offset,URb]
+    //   CAS      0x13b2/6op [UPg,URd,URa,URa_offset,URb,URc]
+    //   LD.64    0x19b2/4op [UPg,URd,URa,URa_offset]
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
+    // Shared target = [Ra + URc + Ra_offset] (Ra is RZ for mbarrier ops);
+    // the uniform forms use [URa + URa_offset].  The offset trio sits at the
+    // tail except on the Rb-carrying forms (one slot before it).
+    const bool uniform = (op == 0x15b2 || op == 0x13b2 || op == 0x19b2);
+    const bool has_rb = (op == 0x19a7 || op == 0x15a7);
+    const int ra_pos = uniform ? 2 : nops - (has_rb ? 4 : 3);
+    const int ra_urc_pos = ra_pos + 1;  // non-uniform: Ra_URc
+    const int ra_off_pos = uniform ? ra_pos + 1 : ra_pos + 2;
     std::uint32_t addr = 0;
-    if (has_ura) {
-        addr = read_ur_slot(w, inst, "URa");
-        const std::int64_t off = ura_off_v.value_or(0);
-        addr = static_cast<std::uint32_t>(
-            static_cast<std::uint64_t>(addr) +
-            static_cast<std::uint64_t>(off));
-    } else {
-        const std::uint64_t base =
-            has_urc ? read_ur_slot(w, inst, "Ra_URc") : 0;
-        const std::int64_t off = ra_off_v.value_or(0);
-        const std::uint64_t rbase = has_ra
-            ? read_reg_slot(w.threads[0], inst, "Ra")
-            : 0;
-        addr = static_cast<std::uint32_t>(
-            rbase + base + static_cast<std::uint64_t>(off));
+    if (uniform || nops >= 3) {
+        if (uniform) {
+            const std::uint64_t base =
+                read_ur_ov(w, ops[ra_pos]);  // URa
+            const std::int64_t off =
+                shape::operand_value_as_i64(ops[ra_off_pos]);  // URa_offset
+            addr = static_cast<std::uint32_t>(
+                base + static_cast<std::uint64_t>(off));
+        } else {
+            const std::uint64_t base =
+                read_ur_ov(w, ops[ra_urc_pos]);  // Ra_URc
+            const std::uint64_t rbase =
+                read_reg_ov(w.threads[0], ops[ra_pos]);  // Ra
+            const std::int64_t off =
+                shape::operand_value_as_i64(ops[ra_off_pos]);  // Ra_offset
+            addr = static_cast<std::uint32_t>(
+                rbase + base + static_cast<std::uint64_t>(off));
+        }
     }
 
     CtaState* cta = &ctas_[static_cast<std::size_t>(w.local_cta_id)];
     // Uniform atomics operate on the CURRENT CTA's shared window (no DSMEM
     // translation needed — EXCH/CAS/LD are local shared memory ops).
     switch (op) {
-        case 0x19a7: {  // ARRIVE / tcnt (expect_tx / complete_tx)
-            const std::uint64_t paramtype =
-                slot_value(inst, "paramtype").value_or(0);
-            const std::uint64_t retval =
-                slot_value(inst, "retval").value_or(0);
+        case 0x19a7: {  // ARRIVE (5-op) / TCNT (4-op: expect_tx/complete_tx)
+            std::uint64_t paramtype = 0, retval = 0;
+            const shape::OperandValue* rd_op = nullptr;
+            if (nops == 5) {
+                const auto& d =
+                    *static_cast<const shape::DecodedSYNCS5*>(&inst);
+                paramtype = static_cast<std::uint64_t>(d.paramtype);
+                retval = static_cast<std::uint64_t>(d.retval);
+                rd_op = &d.ops[0];  // Rd
+            } else {
+                const auto& d =
+                    *static_cast<const shape::DecodedSYNCS4*>(&inst);
+                retval = static_cast<std::uint64_t>(d.retval);
+            }
             auto* st = mbarrier_at(*cta, addr, /*create_if_missing=*/true);
             if (!st) {
                 if (fault) {
@@ -3921,7 +3750,8 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                 }
                 return Status::failure(Error::internal("memory fault"));
             }
-            const std::uint64_t rv = read_reg_slot(w.threads[0], inst, "Rb");
+            const std::uint64_t rv =
+                read_reg_ov(w.threads[0], ops[nops - 1]);  // Rb
             std::uint32_t inc = 0;
             std::uint64_t tx = 0;
             bool tx_is_complete = false;
@@ -3960,26 +3790,26 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                         static_cast<std::uint8_t>((nw >> (8 * i)) & 0xff);
             }
             // Token (retval OLDSTATE): write the old state word into Rd
-            // (64-bit pair for TRANS64).
-            if (retval == 0) {
-                const auto rd_v = shape::op_value(inst, "Rd");
-                if (rd_v) {
-                    const std::uint64_t reg =
-                        static_cast<std::uint64_t>(*rd_v);
-                    if (reg != 255 && reg + 1 < kNumGprs) {
-                        w.threads[0].gpr[reg] =
-                            static_cast<std::uint32_t>(r.old_word & 0xffffffffu);
-                        w.threads[0].gpr[reg + 1] =
-                            static_cast<std::uint32_t>(r.old_word >> 32);
-                    }
+            // (64-bit pair for TRANS64).  TCNT has no Rd role.
+            if (retval == 0 && rd_op) {
+                const std::uint64_t reg = static_cast<std::uint64_t>(
+                    shape::operand_value_as_i64(*rd_op));
+                if (reg != 255 && reg + 1 < kNumGprs) {
+                    w.threads[0].gpr[reg] =
+                        static_cast<std::uint32_t>(r.old_word & 0xffffffffu);
+                    w.threads[0].gpr[reg + 1] =
+                        static_cast<std::uint32_t>(r.old_word >> 32);
                 }
             }
             return Status::success();
         }
         case 0x15a7: {  // PHASECHK / try_wait.parity
-            const auto pu_v = shape::op_value(inst, "Pu");
+            const auto& d =
+                *static_cast<const shape::DecodedSYNCS5*>(&inst);
+            const std::uint64_t pnum = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.ops[0]));  // Pu
             const std::uint64_t parity =
-                (read_reg_slot(w.threads[0], inst, "Rb") >> 31) & 1;
+                (read_reg_ov(w.threads[0], d.ops[4]) >> 31) & 1;  // Rb
             auto* st = mbarrier_at(*cta, addr, /*create_if_missing=*/true);
             if (!st) {
                 if (fault) {
@@ -4001,18 +3831,17 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                 }
                 return Status::failure(Error::internal("memory fault"));
             }
-            if (pu_v) {
-                const std::uint64_t p = static_cast<std::uint64_t>(*pu_v);
-                if (p < 7) {
-                    for (int lane = 0; lane < kLanesPerWarp; ++lane) {
-                        if (mask & (1u << lane))
-                            w.threads[lane].pred[p] = r.predicate;
-                    }
+            if (pnum < 7) {
+                for (int lane = 0; lane < kLanesPerWarp; ++lane) {
+                    if (mask & (1u << lane))
+                        w.threads[lane].pred[pnum] = r.predicate;
                 }
             }
             return Status::success();
         }
         case 0x19b1: {  // CCTL per-address (.IV / .WB)
+            const auto& d =
+                *static_cast<const shape::DecodedSYNCS3*>(&inst);
             auto* st = mbarrier_at(*cta, addr, /*create_if_missing=*/true);
             if (!st) {
                 if (fault) {
@@ -4023,13 +3852,17 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                 }
                 return Status::failure(Error::internal("memory fault"));
             }
-            const auto cctlop = slot_value(inst, "cctlop").value_or(0);
+            const std::uint64_t cctlop =
+                static_cast<std::uint64_t>(d.cctlop);
             if (cctlop == 0) mbarrier_invalidate(st);  // IV
             // WB is a writeback hint: functional no-op.
             return Status::success();
         }
         case 0x9b1: {  // CCTL.ALL (.IVALL / .WBALL)
-            const auto cctlop = slot_value(inst, "cctlop").value_or(0);
+            const auto& d =
+                *static_cast<const shape::DecodedSYNCS0*>(&inst);
+            const std::uint64_t cctlop =
+                static_cast<std::uint64_t>(d.cctlop);
             if (cctlop == 0) {
                 for (auto& [_, st] : cta->mbarriers) {
                     mbarrier_invalidate(&st);
@@ -4038,6 +3871,8 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             return Status::success();
         }
         case 0x15b1: {  // LD: load barrier state (64-bit) into GPR Rd
+            const auto& d =
+                *static_cast<const shape::DecodedSYNCS4*>(&inst);
             auto* st = mbarrier_at(*cta, addr, /*create_if_missing=*/true);
             if (!st) {
                 if (fault) {
@@ -4048,16 +3883,14 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                 }
                 return Status::failure(Error::internal("memory fault"));
             }
-            const auto rd_v = shape::op_value(inst, "Rd");
-            if (rd_v) {
-                const std::uint64_t reg = static_cast<std::uint64_t>(*rd_v);
-                const std::uint64_t nw = st->encode();
-                if (reg != 255 && reg + 1 < kNumGprs) {
-                    w.threads[0].gpr[reg] =
-                        static_cast<std::uint32_t>(nw & 0xffffffffu);
-                    w.threads[0].gpr[reg + 1] =
-                        static_cast<std::uint32_t>(nw >> 32);
-                }
+            const std::uint64_t reg = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.ops[0]));  // Rd
+            const std::uint64_t nw = st->encode();
+            if (reg != 255 && reg + 1 < kNumGprs) {
+                w.threads[0].gpr[reg] =
+                    static_cast<std::uint32_t>(nw & 0xffffffffu);
+                w.threads[0].gpr[reg + 1] =
+                    static_cast<std::uint32_t>(nw >> 32);
             }
             return Status::success();
         }
@@ -4071,10 +3904,12 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             return Status::failure(Error::internal("memory fault"));
         }
         case 0x15b2: {  // EXCH.64: uniform shared atomic exchange (mbarrier.init)
-            const auto urd_v = shape::op_value(inst, "URd");
-            const bool has_urb = shape::op_lookup(inst, "URb") != nullptr;
+            const auto& d =
+                *static_cast<const shape::DecodedSYNCS5*>(&inst);
+            const std::uint64_t urd = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.ops[1]));  // URd
             const std::uint64_t new_val =
-                has_urb ? read_ur_pair_slot(w, inst, "URb") : 0;
+                read_ur_pair_ov(w, d.ops[4]);  // URb
             if (addr > cta->shared.size() || addr + 8 > cta->shared.size()) {
                 if (fault) {
                     *fault = Fault(FaultKind::kIllegalMemoryAccess,
@@ -4098,19 +3933,17 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             } else {
                 cta->mbarriers.erase(addr);
             }
-            if (urd_v) {
-                const std::uint64_t u = static_cast<std::uint64_t>(*urd_v);
-                if (u != 255 && u + 1 < kNumUrs) {
-                    w.ur[u] = static_cast<std::uint32_t>(old_val & 0xffffffffu);
-                    w.ur[u + 1] = static_cast<std::uint32_t>(old_val >> 32);
-                }
+            if (urd != 255 && urd + 1 < kNumUrs) {
+                w.ur[urd] = static_cast<std::uint32_t>(old_val & 0xffffffffu);
+                w.ur[urd + 1] = static_cast<std::uint32_t>(old_val >> 32);
             }
             return Status::success();
         }
         case 0x13b2: {  // CAS.64: uniform shared atomic compare-and-swap
-            const auto urd_v = shape::op_value(inst, "URd");
-            const bool has_urb = shape::op_lookup(inst, "URb") != nullptr;
-            const auto urc_v = shape::op_value(inst, "URc");
+            const auto& d =
+                *static_cast<const shape::DecodedSYNCS6*>(&inst);
+            const std::uint64_t urd = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.ops[1]));  // URd
             if (addr > cta->shared.size() || addr + 8 > cta->shared.size()) {
                 if (fault) {
                     *fault = Fault(FaultKind::kIllegalMemoryAccess,
@@ -4125,10 +3958,10 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                 old_val |= static_cast<std::uint64_t>(cta->shared[addr + i])
                            << (8 * i);
             const std::uint64_t cmp =
-                urc_v ? read_ur_pair_slot(w, inst, "URc") : 0;
+                read_ur_pair_ov(w, d.ops[5]);  // URc
             if (old_val == cmp) {
                 const std::uint64_t new_val =
-                    has_urb ? read_ur_pair_slot(w, inst, "URb") : 0;
+                    read_ur_pair_ov(w, d.ops[4]);  // URb
                 for (int i = 0; i < 8; ++i)
                     cta->shared[addr + i] =
                         static_cast<std::uint8_t>((new_val >> (8 * i)) & 0xff);
@@ -4138,17 +3971,17 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                     cta->mbarriers.erase(addr);
                 }
             }
-            if (urd_v) {
-                const std::uint64_t u = static_cast<std::uint64_t>(*urd_v);
-                if (u != 255 && u + 1 < kNumUrs) {
-                    w.ur[u] = static_cast<std::uint32_t>(old_val & 0xffffffffu);
-                    w.ur[u + 1] = static_cast<std::uint32_t>(old_val >> 32);
-                }
+            if (urd != 255 && urd + 1 < kNumUrs) {
+                w.ur[urd] = static_cast<std::uint32_t>(old_val & 0xffffffffu);
+                w.ur[urd + 1] = static_cast<std::uint32_t>(old_val >> 32);
             }
             return Status::success();
         }
         case 0x19b2: {  // LD.64: uniform shared load
-            const auto urd_v = shape::op_value(inst, "URd");
+            const auto& d =
+                *static_cast<const shape::DecodedSYNCS4*>(&inst);
+            const std::uint64_t urd = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.ops[1]));  // URd
             if (addr > cta->shared.size() || addr + 8 > cta->shared.size()) {
                 if (fault) {
                     *fault = Fault(FaultKind::kIllegalMemoryAccess,
@@ -4161,12 +3994,9 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             std::uint64_t v = 0;
             for (int i = 0; i < 8; ++i)
                 v |= static_cast<std::uint64_t>(cta->shared[addr + i]) << (8 * i);
-            if (urd_v) {
-                const std::uint64_t u = static_cast<std::uint64_t>(*urd_v);
-                if (u != 255 && u + 1 < kNumUrs) {
-                    w.ur[u] = static_cast<std::uint32_t>(v & 0xffffffffu);
-                    w.ur[u + 1] = static_cast<std::uint32_t>(v >> 32);
-                }
+            if (urd != 255 && urd + 1 < kNumUrs) {
+                w.ur[urd] = static_cast<std::uint32_t>(v & 0xffffffffu);
+                w.ur[urd + 1] = static_cast<std::uint32_t>(v >> 32);
             }
             return Status::success();
         }
@@ -4187,15 +4017,16 @@ Status Interpreter::do_arrives(WarpState& w, const DecodedInstruction& inst,
                                std::uint64_t pc,
                                std::optional<Fault>* fault) {
     CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
-    const bool has_urc = shape::op_lookup(inst, "Ra_URc") != nullptr;
-    const auto ra_off_v = shape::op_value(inst, "Ra_offset");
-    const std::uint64_t base =
-        has_urc ? read_ur_slot(w, inst, "Ra_URc") : 0;
-    const std::int64_t off = ra_off_v.value_or(0);
+    // Layout: [Ra,Ra_URc,Ra_offset] — the shared target is [URc + off].
+    const auto& d = *static_cast<const shape::DecodedARRIVES3*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const std::uint64_t base = read_ur_ov(w, ops[1]);  // Ra_URc
+    const std::int64_t off =
+        shape::operand_value_as_i64(ops[2]);  // Ra_offset
     const std::uint32_t addr = static_cast<std::uint32_t>(
         base + static_cast<std::uint64_t>(off));
 
-    const std::uint64_t barop = slot_value(inst, "barop").value_or(0);
+    const std::uint64_t barop = static_cast<std::uint64_t>(d.barop);
     auto* st = mbarrier_at(cta, addr, /*create_if_missing=*/true);
     if (!st) {
         if (fault) {
@@ -4300,8 +4131,10 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
     if (op == 0x9b7) {
         if (!cta.async_open.copies.empty() || cta.async_open.committed_bytes) {
             cta.async_groups.push_back(cta.async_open);
-            const auto wr = slot_value(inst, "dst_wr_sb").value_or(0);
-            if (wr < cta.sb_group_count.size()) cta.sb_group_count[wr]++;
+            const auto wr = inst.schedule.dst_wr_sb;
+            if (wr >= 0 &&
+                wr < static_cast<int>(cta.sb_group_count.size()))
+                cta.sb_group_count[wr]++;
             cta.async_open = {};
         }
         return Status::success();
@@ -4314,9 +4147,16 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
         return Status::success();
     }
 
-    const auto urb_v = shape::op_value(inst, "URb");
-    const auto ura_v = shape::op_value(inst, "URa");
-    if (!urb_v || !ura_v) {
+    // URb (coordinate block base) / URa (128-bit descriptor pointer pair) sit
+    // at ops[1]/ops[2] in every UTMALDG/UTMASTG/UTMAREDG form (the desc forms
+    // append desc/URe at [3]/[4]).
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
+    if (static_cast<shape::OperandKind>(ops[1].kind) !=
+            shape::OperandKind::kUniformRegister ||
+        static_cast<shape::OperandKind>(ops[2].kind) !=
+            shape::OperandKind::kUniformRegister) {
         if (fault) {
             *fault = Fault(FaultKind::kUnsupportedInstruction,
                            "TMA op missing URb/URa operands")
@@ -4325,8 +4165,9 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
         }
         return Status::failure(Error::internal("memory fault"));
     }
-    const std::uint32_t urb_idx = static_cast<std::uint32_t>(*urb_v);
-    const std::uint64_t desc_ptr = read_ur_pair_slot(w, inst, "URa");
+    const std::uint32_t urb_idx = static_cast<std::uint32_t>(
+        shape::operand_value_as_i64(ops[1]));
+    const std::uint64_t desc_ptr = read_ur_pair_ov(w, ops[2]);
 
     // Read the 128-byte descriptor from global memory.
     std::uint8_t blob[128] = {0};
@@ -4523,10 +4364,15 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
     }
 
     // Store / reduce direction: shared -> global.
-    // RedOp (UTMAREDG): Pnz [89:87].
+    // RedOp (UTMAREDG): the `op` modifier member (RedOp enum, bits[89:87]).
     std::uint32_t redop = 0;
-    if (op == 0x13b6) redop = static_cast<std::uint32_t>(
-        slot_value(inst, "Pnz").value_or(0));
+    if (op == 0x13b6) {
+        redop = (mf.n_ops == 3)
+                    ? static_cast<std::uint32_t>(
+                          static_cast<const shape::DecodedUTMAREDG3*>(&inst)->op)
+                    : static_cast<std::uint32_t>(
+                          static_cast<const shape::DecodedUTMAREDG5*>(&inst)->op);
+    }
     std::vector<LaneByteRange> shared_ranges;
     std::vector<LaneByteRange> global_ranges;
     for (std::size_t k = 0; k < acc.global.size(); ++k) {
@@ -4722,12 +4568,24 @@ void Interpreter::record_coupled_l1_to_shared(const WarpState& w,
     ev.element_width = element_width;
     ev.issue_tick = ir.issue_tick;
     ev.coupled_l1_to_shared = true;
-    // Phase 8 refinement: the LDGSTS cache-policy contract.  The `loc` FORMAT
-    // slot discriminates LOC@ACCESS (default, L1 allocate) from LOC@BYPASS
-    // (the .cg / L1-bypass path).  The estimator honors it: "cg" marks the
-    // SharedWf / conflict counters unsupported on the profiler path.
+    // Phase 8 refinement: the LDGSTS cache-policy contract.  The `loc` typed
+    // member (LOC enum) discriminates LOC@ACCESS (default, L1 allocate) from
+    // LOC@BYPASS (the .cg / L1-bypass path).  The estimator honors it: "cg"
+    // marks the SharedWf / conflict counters unsupported on the profiler path.
     ev.variant_class = isa::variant_class_name(inst.variant_class);
-    const bool l1_bypass = slot_value(inst, "loc").value_or(1) == 0;
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    std::uint64_t loc = 1;
+    if (mf.n_ops == 6) {
+        loc = static_cast<std::uint64_t>(
+            static_cast<const shape::DecodedLDGSTS6*>(&inst)->loc);
+    } else if (mf.n_ops == 7) {
+        loc = static_cast<std::uint64_t>(
+            static_cast<const shape::DecodedLDGSTS7*>(&inst)->loc);
+    } else {
+        loc = static_cast<std::uint64_t>(
+            static_cast<const shape::DecodedLDGSTS8*>(&inst)->loc);
+    }
+    const bool l1_bypass = loc == 0;
     ev.cache_policy = l1_bypass ? "cg" : "default";
     ev.miss_path = l1_bypass ? "l1-bypass" : "l1-access";
     // High-2: an address-computation failure (silent-wrap-guard tripped) makes

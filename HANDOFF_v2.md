@@ -257,3 +257,35 @@ the not-yet-migrated syncs/tma families (~60 remaining call sites).
    `write_pred_slot`/`read_addr_pair_slot`/`read_ur_pair_slot`/`write_rd_slot`,
    the anonymous `slot_value`, `offset_value`, `field_value`/`raw_field_bits`.
 3. Re-run Debug + ASan + TSan gates (36/36 each); update this doc.
+
+**DONE (2026-08 session, commits <pending>; Debug + ASan + TSan gates 36/36):**
+- **do_syncs**: all 9 opcode cases read typed members + positional ops[] via
+  per-case casts (`DecodedSYNCS0/3/4/5/6`).  The shared target is resolved
+  uniformly: uniform forms (EXCH/CAS/LD) use `[URa,URa_offset]` at [2]/[3];
+  non-uniform forms place the trio `[Ra,Ra_URc,Ra_offset]` at the tail
+  (Rb-carrying arrives/phasechk leave ops[nops-1] = Rb).  ARRIVE vs TCNT is
+  split by nops (5 vs 4); `Pu` (PHASECHK) reads ops[0] positionally.
+- **do_arrives**: `DecodedARRIVES3` positional [Ra,Ra_URc,Ra_offset] + `barop`
+  member.
+- **do_tma**: `UTMACMDFLUSH` counts on `inst.schedule.dst_wr_sb` (the
+  generated ScheduleWord field — the old `slot_value("dst_wr_sb")` never
+  resolved (schedule slot, not FORMAT) and always counted 0); `UTMAREDG`
+  reads the `RedOp` typed member `op` (the old `Pnz` name was never a slot —
+  reduce op always faulted to ADD); URb/URa + descriptor pair read ops[1]/[2]
+  positionally.
+- **MEMBAR**: `sco` read from the `DecodedMEMBAR0` typed member, gated on
+  `variant_class` (`membar_`/`membar_async_` only; the tma form has no sco
+  field and keeps the default gpu scope).
+- **loc** (LDGSTS cache policy in `record_coupled_l1_to_shared`): per-nops
+  cast to `DecodedLDGSTS6/7/8`.
+- **resolve_mem_addr LDC/LDCU**: fully positional by opcode (0xb82/0x13ac/
+  0x15ac/0x17ac/0x19ac/0x1bac/0x1dac; 0x1582 LDC.UR has no bank/base/off
+  roles, same as the old slot-name fallthrough).
+- **deleted** all listed dead helpers + `field_value`/`raw_field_bits`
+  (S2R `imm8` is the surfaced `SRa` role; BAR `barname` is a typed member);
+  interpreter.cpp no longer includes `decoded_access.hpp` (the bridge remains
+  for cli/main.cpp + tests/test_decoder.cpp decode paths).
+- Latent-bug fixes folded in (behavior changes, gates-stable): the uniform
+  SYNCS offset is `ops[ra_pos+1]` not `+2` (EXCH.64 was addressing 12 bytes
+  past the barrier); `UTMACMDFLUSH`/`UTMAREDG` now use the real field values
+  instead of the never-resolved slot names.
