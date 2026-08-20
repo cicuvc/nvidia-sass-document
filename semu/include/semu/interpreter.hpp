@@ -644,6 +644,31 @@ private:
                       std::uint64_t pc, std::optional<Fault>* fault);
     Status do_tma(WarpState& w, const DecodedInstruction& inst,
                   std::uint64_t pc, std::optional<Fault>* fault);
+    // --- Phase 9 subset: TMA family (one handler per instruction) --------
+    struct TmaPrepare {
+        std::uint32_t urb_idx = 0;
+        std::uint32_t smem_src = 0;   // store direction: shared source
+        std::uint32_t dst_smem = 0;   // load direction: shared destination
+        std::uint32_t mbar_addr = 0;
+        TileAccessSet acc;
+    };
+    Status prepare_tma(WarpState& w, const DecodedInstruction& inst,
+                       std::uint64_t pc, std::optional<Fault>* fault,
+                       bool is_load, TmaPrepare* out);
+    Status tma_store_core(WarpState& w, const DecodedInstruction& inst,
+                          std::uint64_t pc, std::optional<Fault>* fault,
+                          const TmaPrepare& prep, std::uint32_t redop,
+                          bool is_redg);
+    Status do_utmacmdflush(WarpState& w, const DecodedInstruction& inst,
+                           std::uint64_t pc);
+    Status do_utmacctl(WarpState& w, const DecodedInstruction& inst,
+                       std::uint64_t pc);
+    Status do_utmaldg(WarpState& w, const DecodedInstruction& inst,
+                      std::uint64_t pc, std::optional<Fault>* fault);
+    Status do_utmastg(WarpState& w, const DecodedInstruction& inst,
+                      std::uint64_t pc, std::optional<Fault>* fault);
+    Status do_utmaredg(WarpState& w, const DecodedInstruction& inst,
+                       std::uint64_t pc, std::optional<Fault>* fault);
     // Functional LDGSTS (cp.async): perform the global->shared copy per
     // active lane and accumulate committed bytes into the CTA's open async
     // group.  Also records the trace-only coupled prediction (kept from the
@@ -849,6 +874,28 @@ private:
     Status do_tensor(WarpState& w, std::uint32_t mask,
                      const DecodedInstruction& inst, std::uint64_t pc,
                      std::optional<Fault>* fault);
+    // --- Phase 9 tensor core (one handler per mnemonic) -------------------
+    Status tensor_unsupported(const WarpState& w,
+                              const DecodedInstruction& inst,
+                              std::uint64_t pc, std::uint32_t mask,
+                              std::optional<Fault>* fault,
+                              const std::string& why);
+    Status tensor_lane_core(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst, std::uint64_t pc,
+                            std::optional<Fault>* fault,
+                            const shape::OperandValue* ops,
+                            const tensor::Shape& shape, tensor::Format fmt,
+                            bool need_uri, bool has_re, bool has_rh,
+                            int mode);
+    Status do_hmma(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst, std::uint64_t pc,
+                   std::optional<Fault>* fault);
+    Status do_qmma(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst, std::uint64_t pc,
+                   std::optional<Fault>* fault);
+    Status do_omma(WarpState& w, std::uint32_t mask,
+                   const DecodedInstruction& inst, std::uint64_t pc,
+                   std::optional<Fault>* fault);
     // Per-lane compute helpers (single lane value in, value out).
     std::uint64_t compute_value(const DecodedInstruction& inst,
                                 const WarpState& w, const ThreadState& t,

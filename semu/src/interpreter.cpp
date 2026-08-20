@@ -4218,38 +4218,21 @@ std::uint64_t Interpreter::warp_linear_id(const WarpState& w) const {
 //
 // All are decode-only safe: an unparseable descriptor / im2col / swizzle tile
 // faults as kNotSupported rather than fabricating a wrong copy.
-Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
-                           std::uint64_t pc, std::optional<Fault>* fault) {
-    const std::uint16_t op = semu::opcode_of(inst.word.lo, inst.word.hi);
-    CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
-    const std::uint64_t warp_linear = warp_linear_id(w);
+// ===========================================================================
+// Phase 9 subset: TMA family — one handler per instruction (plan-b refactor).
+// prepare_tma fetches/parses the 128-byte tensor-map descriptor + coordinate
+// block and expands the tile; do_utmaldg/do_utmastg/do_utmaredg then run the
+// direction-specific copy; flush/ctl are standalone no-ops.
+// ===========================================================================
 
-    // UTMACMDFLUSH (0x9b7): commit_group for the TMA bulk-async-group path.
-    // Same counted-scoreboard bookkeeping as LDGDEPBAR (seal the open group on
-    // the target SB).
-    if (op == 0x9b7) {
-        if (!cta.async_open.copies.empty() || cta.async_open.committed_bytes) {
-            cta.async_groups.push_back(cta.async_open);
-            const auto wr = inst.schedule.dst_wr_sb;
-            if (wr >= 0 &&
-                wr < static_cast<int>(cta.sb_group_count.size()))
-                cta.sb_group_count[wr]++;
-            cta.async_open = {};
-        }
-        return Status::success();
-    }
-    // UTMACCTL (0x19b9 / 0x9b9): tensor-map descriptor cache control
-    // (fence.proxy.tensormap / prefetch.tensormap).  The CPU model reads the
-    // descriptor fresh from global every time, so invalidate/prefetch are
-    // functional no-ops.
-    if (op == 0x19b9 || op == 0x9b9) {
-        return Status::success();
-    }
-
-    // URb (coordinate block base) / URa (128-bit descriptor pointer pair) sit
-    // at ops[1]/ops[2] in every UTMALDG/UTMASTG/UTMAREDG form (the desc forms
-    // append desc/URe at [3]/[4]).
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+// URb (coordinate block base) / URa (128-bit descriptor pointer pair) sit at
+// ops[1]/ops[2] in every UTMALDG/UTMASTG/UTMAREDG form (the desc forms append
+// desc/URe at [3]/[4]).  Fetches the descriptor, parses the tensor map,
+// reads the coordinate block from URb and expands the tile.  On success `out`
+// carries the committed access set + the direction-specific URb fields.
+Status Interpreter::prepare_tma(WarpState& w, const DecodedInstruction& inst,
+                                std::uint64_t pc, std::optional<Fault>* fault,
+                                bool is_load, TmaPrepare* out) {
     const shape::OperandValue* ops =
         shape::operand_values_by_variant(inst.shape_variant, &inst);
     if (static_cast<shape::OperandKind>(ops[1].kind) !=
@@ -4316,10 +4299,9 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
         return Status::failure(Error::internal("memory fault"));
     }
 
-    // Read the coordinate block from URb.  UTMALDG (load): block starts with
+    // Coordinate block from URb.  UTMALDG (load): block starts with
     // {dst smem, mbarrier addr, coords...}.  UTMASTG/UTMAREDG (store):
     // {src smem, coords...} (no mbarrier slot).
-    const bool is_load = (op == 0x15b4 || op == 0x13b4);
     const std::uint32_t coord_slot_offset = is_load ? 2 : 1;
     std::uint32_t coords[5] = {0, 0, 0, 0, 0};
     std::uint32_t smem_src = 0;   // store direction: shared source
@@ -4347,131 +4329,25 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
         }
         return Status::failure(Error::internal("memory fault"));
     }
-    TileAccessSet acc = expanded.value();
+    out->urb_idx = urb_idx;
+    out->smem_src = smem_src;
+    out->dst_smem = dst_smem;
+    out->mbar_addr = mbar_addr;
+    out->acc = expanded.value();
+    return Status::success();
+}
 
-    if (is_load) {
-        // UTMALDG: global -> shared.  Copy every element; the shared side is
-        // contiguous (row-major box) starting at dst_smem.
-        std::vector<LaneByteRange> shared_ranges;
-        std::vector<LaneByteRange> global_ranges;
-        for (std::size_t k = 0; k < acc.global.size(); ++k) {
-            const std::uint64_t g = acc.global[k];
-            const std::uint64_t s = dst_smem + acc.shared[k];
-            MemValue val{};
-            Status st = memory_->ldg(DevicePtr{0}, g, 0,
-                                     MemWidthInfo{acc.element_bytes, false,
-                                                  true},
-                                     val);
-            if (st.failed()) {
-                if (fault) {
-                    *fault = memory_error_to_fault(
-                                 st.error(), pc,
-                                 static_cast<std::uint32_t>(w.warp_id))
-                                 .set_active_mask(0xffffffffu);
-                }
-                return Status::failure(Error::internal("memory fault"));
-            }
-            if (s > cta.shared.size() ||
-                acc.element_bytes > cta.shared.size() - s) {
-                if (fault) {
-                    *fault = Fault(FaultKind::kIllegalMemoryAccess,
-                                   "UTMALDG shared destination out of bounds")
-                                 .set_pc(pc)
-                                 .set_warp(static_cast<std::uint32_t>(w.warp_id));
-                }
-                return Status::failure(Error::internal("memory fault"));
-            }
-            for (std::uint32_t i = 0; i < acc.element_bytes; ++i) {
-                cta.shared[s + i] =
-                    static_cast<std::uint8_t>((val[i / 4] >> (8 * (i % 4))) &
-                                              0xff);
-            }
-        }
-        // Completion: decrement the mbarrier's pending tx by the tile bytes
-        // (cp.async.bulk.tensor ... mbarrier::complete_tx::bytes).
-        if (mbar_addr != 0) {
-            auto* st = mbarrier_at(cta, mbar_addr, /*create_if_missing=*/true);
-            if (!st) {
-                if (fault) {
-                    *fault = Fault(FaultKind::kIllegalMemoryAccess,
-                                   "UTMALDG mbarrier out of shared window")
-                                 .set_pc(pc)
-                                 .set_warp(static_cast<std::uint32_t>(w.warp_id));
-                }
-                return Status::failure(Error::internal("memory fault"));
-            }
-            const std::uint64_t tile_bytes =
-                acc.global.size() * acc.element_bytes;
-            MbarrierResult r =
-                mbarrier_arrive(st, 0, tile_bytes, /*tx_is_complete=*/true);
-            if (r.fault) {
-                if (fault) {
-                    *fault = Fault(FaultKind::kIllegalMemoryAccess, r.error)
-                                 .set_pc(pc)
-                                 .set_warp(static_cast<std::uint32_t>(w.warp_id));
-                }
-                return Status::failure(Error::internal("memory fault"));
-            }
-            const std::uint64_t nw = st->encode();
-            if (mbar_addr <= cta.shared.size() &&
-                mbar_addr + 8 <= cta.shared.size()) {
-                for (int i = 0; i < 8; ++i)
-                    cta.shared[mbar_addr + i] =
-                        static_cast<std::uint8_t>((nw >> (8 * i)) & 0xff);
-            }
-        }
-        // Profiler / race observability: the committed access set.
-        if (options_.model.l1tex == L1TexMode::kTraceOnly) {
-            for (std::size_t k = 0; k < acc.global.size(); ++k) {
-                if (k >= kLanesPerWarp) break;
-                shared_ranges.push_back(
-                    {dst_smem + acc.shared[k], acc.element_bytes, true});
-                global_ranges.push_back({acc.global[k], acc.element_bytes, true});
-            }
-            MemoryEvent ev;
-            ev.kind = MemoryEventKind::kL1TexIssue;
-            ev.instruction = executed_;
-            ev.cta = static_cast<std::uint32_t>(w.cta_id);
-            ev.warp = static_cast<std::uint32_t>(w.warp_id);
-            ev.pc = pc;
-            ev.mnemonic = "UTMALDG";
-            ev.request_kind = "tma-load";
-            ev.element_width = acc.element_bytes;
-            ev.address_space = EventAddressSpace::kShared;
-            ev.is_write = true;
-            ev.lane_ranges = shared_ranges;
-            ev.subcore = subcore_mapper_.map(warp_linear).id;
-            ev.sm = sm_of_cta(static_cast<std::uint32_t>(w.cta_id));
-            memory_events_.push_back(std::move(ev));
-            MemoryEvent gev;
-            gev.kind = MemoryEventKind::kL1TexIssue;
-            gev.instruction = executed_;
-            gev.cta = static_cast<std::uint32_t>(w.cta_id);
-            gev.warp = static_cast<std::uint32_t>(w.warp_id);
-            gev.pc = pc;
-            gev.mnemonic = "UTMALDG";
-            gev.request_kind = "tma-load-read";
-            gev.element_width = acc.element_bytes;
-            gev.address_space = EventAddressSpace::kGlobal;
-            gev.is_write = false;
-            gev.lane_ranges = global_ranges;
-            gev.subcore = subcore_mapper_.map(warp_linear).id;
-            gev.sm = sm_of_cta(static_cast<std::uint32_t>(w.cta_id));
-            memory_events_.push_back(std::move(gev));
-        }
-        return Status::success();
-    }
-
-    // Store / reduce direction: shared -> global.
-    // RedOp (UTMAREDG): the `op` modifier member (RedOp enum, bits[89:87]).
-    std::uint32_t redop = 0;
-    if (op == 0x13b6) {
-        redop = (mf.n_ops == 3)
-                    ? static_cast<std::uint32_t>(
-                          static_cast<const shape::DecodedUTMAREDG3*>(&inst)->op)
-                    : static_cast<std::uint32_t>(
-                          static_cast<const shape::DecodedUTMAREDG5*>(&inst)->op);
-    }
+// Store/reduce direction (shared -> global), shared by UTMASTG (plain store)
+// and UTMAREDG (atomic reduce).  Emits the trace-only profiler events.
+Status Interpreter::tma_store_core(WarpState& w, const DecodedInstruction& inst,
+                                   std::uint64_t pc,
+                                   std::optional<Fault>* fault,
+                                   const TmaPrepare& prep, std::uint32_t redop,
+                                   bool is_redg) {
+    CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
+    const std::uint64_t warp_linear = warp_linear_id(w);
+    const TileAccessSet& acc = prep.acc;
+    const std::uint64_t smem_src = prep.smem_src;
     std::vector<LaneByteRange> shared_ranges;
     std::vector<LaneByteRange> global_ranges;
     for (std::size_t k = 0; k < acc.global.size(); ++k) {
@@ -4491,7 +4367,7 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
             src[i / 4] |= static_cast<std::uint32_t>(cta.shared[s + i])
                           << (8 * (i % 4));
         }
-        if (op == 0x13b6) {  // UTMAREDG: atomic reduce into global
+        if (is_redg) {  // UTMAREDG: atomic reduce into global
             // The element type is u32 in the verified tests (the descriptor's
             // dtype drives it); a non-4-byte reduce is decode-only.
             if (acc.element_bytes != 4) {
@@ -4581,6 +4457,193 @@ Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
         memory_events_.push_back(std::move(gev));
     }
     return Status::success();
+}
+
+Status Interpreter::do_utmacmdflush(WarpState& w, const DecodedInstruction& inst,
+                                    std::uint64_t pc) {
+    (void)pc;
+    // UTMACMDFLUSH (0x9b7): commit_group for the TMA bulk-async-group path.
+    // Same counted-scoreboard bookkeeping as LDGDEPBAR (seal the open group on
+    // the target SB).
+    CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
+    if (!cta.async_open.copies.empty() || cta.async_open.committed_bytes) {
+        cta.async_groups.push_back(cta.async_open);
+        const auto wr = inst.schedule.dst_wr_sb;
+        if (wr >= 0 && wr < static_cast<int>(cta.sb_group_count.size()))
+            cta.sb_group_count[wr]++;
+        cta.async_open = {};
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_utmacctl(WarpState& w, const DecodedInstruction& inst,
+                                std::uint64_t pc) {
+    (void)w; (void)inst; (void)pc;
+    // UTMACCTL (0x19b9 / 0x9b9): tensor-map descriptor cache control
+    // (fence.proxy.tensormap / prefetch.tensormap).  The CPU model reads the
+    // descriptor fresh from global every time, so invalidate/prefetch are
+    // functional no-ops.
+    return Status::success();
+}
+
+Status Interpreter::do_utmaldg(WarpState& w, const DecodedInstruction& inst,
+                               std::uint64_t pc,
+                               std::optional<Fault>* fault) {
+    CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
+    const std::uint64_t warp_linear = warp_linear_id(w);
+    TmaPrepare prep;
+    Status ps = prepare_tma(w, inst, pc, fault, /*is_load=*/true, &prep);
+    if (ps.failed()) return ps;
+    const TileAccessSet& acc = prep.acc;
+    // UTMALDG: global -> shared.  Copy every element; the shared side is
+    // contiguous (row-major box) starting at dst_smem.
+    std::vector<LaneByteRange> shared_ranges;
+    std::vector<LaneByteRange> global_ranges;
+    for (std::size_t k = 0; k < acc.global.size(); ++k) {
+        const std::uint64_t g = acc.global[k];
+        const std::uint64_t s = prep.dst_smem + acc.shared[k];
+        MemValue val{};
+        Status st = memory_->ldg(DevicePtr{0}, g, 0,
+                                 MemWidthInfo{acc.element_bytes, false, true},
+                                 val);
+        if (st.failed()) {
+            if (fault) {
+                *fault = memory_error_to_fault(
+                             st.error(), pc,
+                             static_cast<std::uint32_t>(w.warp_id))
+                             .set_active_mask(0xffffffffu);
+            }
+            return Status::failure(Error::internal("memory fault"));
+        }
+        if (s > cta.shared.size() || acc.element_bytes > cta.shared.size() - s) {
+            if (fault) {
+                *fault = Fault(FaultKind::kIllegalMemoryAccess,
+                               "UTMALDG shared destination out of bounds")
+                             .set_pc(pc)
+                             .set_warp(static_cast<std::uint32_t>(w.warp_id));
+            }
+            return Status::failure(Error::internal("memory fault"));
+        }
+        for (std::uint32_t i = 0; i < acc.element_bytes; ++i) {
+            cta.shared[s + i] =
+                static_cast<std::uint8_t>((val[i / 4] >> (8 * (i % 4))) &
+                                          0xff);
+        }
+    }
+    // Completion: decrement the mbarrier's pending tx by the tile bytes
+    // (cp.async.bulk.tensor ... mbarrier::complete_tx::bytes).
+    if (prep.mbar_addr != 0) {
+        auto* st = mbarrier_at(cta, prep.mbar_addr, /*create_if_missing=*/true);
+        if (!st) {
+            if (fault) {
+                *fault = Fault(FaultKind::kIllegalMemoryAccess,
+                               "UTMALDG mbarrier out of shared window")
+                             .set_pc(pc)
+                             .set_warp(static_cast<std::uint32_t>(w.warp_id));
+            }
+            return Status::failure(Error::internal("memory fault"));
+        }
+        const std::uint64_t tile_bytes = acc.global.size() * acc.element_bytes;
+        MbarrierResult r =
+            mbarrier_arrive(st, 0, tile_bytes, /*tx_is_complete=*/true);
+        if (r.fault) {
+            if (fault) {
+                *fault = Fault(FaultKind::kIllegalMemoryAccess, r.error)
+                             .set_pc(pc)
+                             .set_warp(static_cast<std::uint32_t>(w.warp_id));
+            }
+            return Status::failure(Error::internal("memory fault"));
+        }
+        const std::uint64_t nw = st->encode();
+        if (prep.mbar_addr <= cta.shared.size() &&
+            prep.mbar_addr + 8 <= cta.shared.size()) {
+            for (int i = 0; i < 8; ++i)
+                cta.shared[prep.mbar_addr + i] =
+                    static_cast<std::uint8_t>((nw >> (8 * i)) & 0xff);
+        }
+    }
+    // Profiler / race observability: the committed access set.
+    if (options_.model.l1tex == L1TexMode::kTraceOnly) {
+        for (std::size_t k = 0; k < acc.global.size(); ++k) {
+            if (k >= kLanesPerWarp) break;
+            shared_ranges.push_back(
+                {prep.dst_smem + acc.shared[k], acc.element_bytes, true});
+            global_ranges.push_back({acc.global[k], acc.element_bytes, true});
+        }
+        MemoryEvent ev;
+        ev.kind = MemoryEventKind::kL1TexIssue;
+        ev.instruction = executed_;
+        ev.cta = static_cast<std::uint32_t>(w.cta_id);
+        ev.warp = static_cast<std::uint32_t>(w.warp_id);
+        ev.pc = pc;
+        ev.mnemonic = "UTMALDG";
+        ev.request_kind = "tma-load";
+        ev.element_width = acc.element_bytes;
+        ev.address_space = EventAddressSpace::kShared;
+        ev.is_write = true;
+        ev.lane_ranges = shared_ranges;
+        ev.subcore = subcore_mapper_.map(warp_linear).id;
+        ev.sm = sm_of_cta(static_cast<std::uint32_t>(w.cta_id));
+        memory_events_.push_back(std::move(ev));
+        MemoryEvent gev;
+        gev.kind = MemoryEventKind::kL1TexIssue;
+        gev.instruction = executed_;
+        gev.cta = static_cast<std::uint32_t>(w.cta_id);
+        gev.warp = static_cast<std::uint32_t>(w.warp_id);
+        gev.pc = pc;
+        gev.mnemonic = "UTMALDG";
+        gev.request_kind = "tma-load-read";
+        gev.element_width = acc.element_bytes;
+        gev.address_space = EventAddressSpace::kGlobal;
+        gev.is_write = false;
+        gev.lane_ranges = global_ranges;
+        gev.subcore = subcore_mapper_.map(warp_linear).id;
+        gev.sm = sm_of_cta(static_cast<std::uint32_t>(w.cta_id));
+        memory_events_.push_back(std::move(gev));
+    }
+    return Status::success();
+}
+
+Status Interpreter::do_utmastg(WarpState& w, const DecodedInstruction& inst,
+                               std::uint64_t pc,
+                               std::optional<Fault>* fault) {
+    TmaPrepare prep;
+    Status ps = prepare_tma(w, inst, pc, fault, /*is_load=*/false, &prep);
+    if (ps.failed()) return ps;
+    return tma_store_core(w, inst, pc, fault, prep, 0, /*is_redg=*/false);
+}
+
+Status Interpreter::do_utmaredg(WarpState& w, const DecodedInstruction& inst,
+                                std::uint64_t pc,
+                                std::optional<Fault>* fault) {
+    TmaPrepare prep;
+    Status ps = prepare_tma(w, inst, pc, fault, /*is_load=*/false, &prep);
+    if (ps.failed()) return ps;
+    // RedOp (UTMAREDG): the `op` modifier member (RedOp enum, bits[89:87]).
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint32_t redop =
+        (mf.n_ops == 3)
+            ? static_cast<std::uint32_t>(
+                  static_cast<const shape::DecodedUTMAREDG3*>(&inst)->op)
+            : static_cast<std::uint32_t>(
+                  static_cast<const shape::DecodedUTMAREDG5*>(&inst)->op);
+    return tma_store_core(w, inst, pc, fault, prep, redop, /*is_redg=*/true);
+}
+
+Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
+                           std::uint64_t pc, std::optional<Fault>* fault) {
+    // NOTE: temporary dispatcher — the plan-b refactor replaces this with
+    // the unified mnemonic switch in execute_group (final commit).
+    switch (inst.mnemonic) {
+        case isa::Mnemonic::kUTMALDG:      return do_utmaldg(w, inst, pc, fault);
+        case isa::Mnemonic::kUTMASTG:      return do_utmastg(w, inst, pc, fault);
+        case isa::Mnemonic::kUTMAREDG:     return do_utmaredg(w, inst, pc, fault);
+        case isa::Mnemonic::kUTMACMDFLUSH: return do_utmacmdflush(w, inst, pc);
+        case isa::Mnemonic::kUTMACCTL:     return do_utmacctl(w, inst, pc);
+        default:
+            break;
+    }
+    return do_unsupported(w, inst, pc, 0xffffffffu, fault);
 }
 
 // Phase 6 Step 2B: trace-only subcore issue event.  Records the warp's stable
@@ -4941,171 +5004,56 @@ std::uint32_t Interpreter::special_register_value(SpecialReg sr,
 // after the MMA faults 0x715 on SM120; the interpreter is synchronous, so it
 // does not need the padding itself, but hand-written tests keep the NOPs to
 // stay faithful to the hardware contract (see AGENTS.md / ASSEMBLER_MANUAL.md).
-Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
-                              const DecodedInstruction& inst, std::uint64_t pc,
-                              std::optional<Fault>* fault) {
-    const isa::Mnemonic m = inst.mnemonic;
-    // Cast to the concrete shape by (mnemonic, nops) and pull every modifier
-    // the dispatch below needs into locals.  The variant-CLASS gates stay as
-    // enum comparisons (sparse / rowcol / scale variants are rejected).
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
-    const shape::OperandValue* ops = nullptr;
-    std::uint64_t size = 0, dstfmt = 0, srcfmt = 0;
-    std::uint64_t sfa = 0, sfb = 0, sf = 0, ssz = 1;
-    bool need_uri = false;
-    bool has_re = false, has_rh = false, has_uri = false;
-    if (m == isa::Mnemonic::kHMMA) {
-        if (nops == 5) {
-            const auto& d = *static_cast<const shape::DecodedHMMA5*>(&inst);
-            ops = d.ops;
-            size = static_cast<std::uint64_t>(d.size);
-            srcfmt = static_cast<std::uint64_t>(d.srcfmt);
-            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
-        } else {
-            const auto& d = *static_cast<const shape::DecodedHMMA7*>(&inst);
-            ops = d.ops;
-            size = static_cast<std::uint64_t>(d.size);
-            srcfmt = static_cast<std::uint64_t>(d.srcfmt);
-            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
-            has_re = true;
-        }
-    } else if (m == isa::Mnemonic::kQMMA) {
-        if (nops == 5) {
-            const auto& d = *static_cast<const shape::DecodedQMMA5*>(&inst);
-            ops = d.ops;
-            size = static_cast<std::uint64_t>(d.size);
-            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
-            sfa = static_cast<std::uint64_t>(d.srcFmtA);
-            sfb = static_cast<std::uint64_t>(d.srcFmtB);
-        } else if (nops == 7) {
-            const auto& d = *static_cast<const shape::DecodedQMMA7*>(&inst);
-            ops = d.ops;
-            size = static_cast<std::uint64_t>(d.size);
-            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
-            sfa = static_cast<std::uint64_t>(d.srcFmtA);
-            sfb = static_cast<std::uint64_t>(d.srcFmtB);
-            has_re = true;
-        } else if (nops == 8) {
-            const auto& d = *static_cast<const shape::DecodedQMMA8*>(&inst);
-            ops = d.ops;
-            size = static_cast<std::uint64_t>(d.size);
-            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
-            sfa = static_cast<std::uint64_t>(d.srcFmtA);
-            sfb = static_cast<std::uint64_t>(d.srcFmtB);
-            sf = static_cast<std::uint64_t>(d.sf);
-            ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
-            need_uri = true;
-            has_re = has_rh = has_uri = true;
-        } else {
-            const auto& d = *static_cast<const shape::DecodedQMMA9*>(&inst);
-            ops = d.ops;
-            size = static_cast<std::uint64_t>(d.size);
-            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
-            sfa = static_cast<std::uint64_t>(d.srcFmtA);
-            sfb = static_cast<std::uint64_t>(d.srcFmtB);
-            sf = static_cast<std::uint64_t>(d.sf);
-            ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
-            need_uri = true;
-            has_re = has_rh = has_uri = true;
-        }
-    } else {  // OMMA.SF (mxfp4 block-scaled)
-        if (nops == 8) {
-            const auto& d = *static_cast<const shape::DecodedOMMA8*>(&inst);
-            ops = d.ops;
-            sf = static_cast<std::uint64_t>(d.sf);
-            ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
-            sfa = static_cast<std::uint64_t>(d.srcFmtA);
-            sfb = static_cast<std::uint64_t>(d.srcFmtB);
-        } else {
-            const auto& d = *static_cast<const shape::DecodedOMMA9*>(&inst);
-            ops = d.ops;
-            sf = static_cast<std::uint64_t>(d.sf);
-            ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
-            sfa = static_cast<std::uint64_t>(d.srcFmtA);
-            sfb = static_cast<std::uint64_t>(d.srcFmtB);
-        }
-        need_uri = true;
-        has_re = has_rh = has_uri = true;
-    }
+// ===========================================================================
+// Phase 9 tensor core — one handler per mnemonic (plan-b refactor).  The
+// per-lane fragment compute is the shared `tensor_lane_core` (mode:
+// 0=HMMA 1=QMMA 2=OMMA); each do_<MNEMONIC> casts its concrete shape, applies
+// the dense-shape gates and resolves tensor::Shape/Format.
+// ===========================================================================
 
-    // Resolve the shape + source format for this instruction.
-    tensor::Shape shape;
-    tensor::Format fmt = tensor::Format::kBf16;
+// Unsupported tensor variant fault (sparse / indexedRF / rowcol / scale /
+// F16-accumulator alternatives are decode-only).
+Status Interpreter::tensor_unsupported(const WarpState& w,
+                                       const DecodedInstruction& inst,
+                                       std::uint64_t pc, std::uint32_t mask,
+                                       std::optional<Fault>* fault,
+                                       const std::string& why) {
+    Fault f(FaultKind::kUnsupportedInstruction,
+            "instruction '" + std::string(isa::mnemonic_name(inst.mnemonic)) +
+                "' (" +
+                std::string(isa::variant_class_name(inst.variant_class)) +
+                ") " + why +
+                " is decode-only (not implemented) at pc 0x" +
+                std::to_string(pc));
+    f.set_warp(static_cast<std::uint32_t>(w.warp_id))
+        .set_pc(pc)
+        .set_active_mask(mask)
+        .set_instruction(inst.word);
+    if (fault) *fault = std::move(f);
+    return Status::failure(Error::internal("interpreter fault"));
+}
 
-    const isa::VariantClass cls = inst.variant_class;
-    const auto unsupported =
-        [&](const std::string& why) -> Status {
-            Fault f(FaultKind::kUnsupportedInstruction,
-                    "instruction '" + std::string(isa::mnemonic_name(m)) + "' (" + std::string(isa::variant_class_name(cls)) + ") " + why +
-                        " is decode-only (not implemented) at pc 0x" +
-                        std::to_string(pc));
-            f.set_warp(static_cast<std::uint32_t>(w.warp_id))
-                .set_pc(pc)
-                .set_active_mask(mask)
-                .set_instruction(inst.word);
-            if (fault) *fault = std::move(f);
-            return Status::failure(Error::internal("interpreter fault"));
-        };
-
-    if (m == isa::Mnemonic::kHMMA) {
-        // Dense HMMA (hmma_x8_): size 0=k8 / 1=k16 / 2=k4(TF32), srcfmt
-        // 0=F16 1=BF16 2=TF32 3=E6M9, dstfmt 0=F16 1=F32 accumulator.
-        if (cls != isa::VariantClass::khmma_x8_) return unsupported("(sparse/indexedRF variant)");
-        if (dstfmt != 1) return unsupported("(F16 accumulator)");
-        if (srcfmt > 1) return unsupported("(TF32/E6M9 source)");
-        if (!tensor::hmma_shape(static_cast<int>(size),
-                                static_cast<int>(srcfmt), &shape)) {
-            return unsupported("(shape)");
-        }
-        fmt = (srcfmt == 1) ? tensor::Format::kBf16 : tensor::Format::kF16;
-    } else if (m == isa::Mnemonic::kQMMA) {
-        // Dense QMMA (qmma_): size 0=k16 / 1=k32, dstfmt(ntz) 0=F16 1=F32.
-        if (cls != isa::VariantClass::kqmma_) return unsupported("(sparse/rowcol/scale variant)");
-        if (dstfmt != 1) return unsupported("(F16 accumulator)");
-        if (!tensor::qmma_shape(static_cast<int>(size), &shape)) {
-            return unsupported("(shape)");
-        }
-        // SM120 QMMA srcFmt mapping (verified against real hardware on RTX
-        // 5090, CUDA 13.1: field value drives the SRCFMTA_qmma enum in the
-        // spec).  E4M3=0 E5M2=1 E3M4=2 E3M2=3 E2M3=4.  Field 5 is named
-        // E2M1 in the spec but empirically behaves EXACTLY like field 4
-        // (E2M3) on sm120 (identical D words on byte-level probes) — no
-        // distinct E2M1 QMMA format exists on this hardware.
-        switch (sfa) {
-            case 0: fmt = tensor::Format::kFp8E4M3; break;
-            case 1: fmt = tensor::Format::kFp8E5M2; break;
-            case 2: fmt = tensor::Format::kFp8E3M4; break;
-            case 3: fmt = tensor::Format::kFp8E3M2; break;
-            case 4:
-            case 5: fmt = tensor::Format::kFp8E2M3; break;
-            default: return unsupported("(srcFmtA)");
-        }
-    } else {  // OMMA.SF (mxfp4 block-scaled)
-        if (cls != isa::VariantClass::komma_scale_) return unsupported("(sparse/scale variant)");
-        // Only the verified 2X-scale E8 e2m1 configuration is implemented.
-        if (sf != 0) return unsupported("(non-E8 scale)");
-        if (ssz != 1) return unsupported("(4X scale vector)");
-        if (sfa != 0 || sfb != 0) return unsupported("(E0M3 source)");
-        if (!tensor::omma_shape(&shape)) return unsupported("(shape)");
-        need_uri = true;
-        fmt = tensor::Format::kFp8E4M3;  // unused for gdfs; kept for symmetry
-    }
-
+// Shared per-lane fragment execution: reads the A/B/C fragment register
+// groups, runs the dense kernel for `mode`, writes the D group.
+Status Interpreter::tensor_lane_core(WarpState& w, std::uint32_t mask,
+                                     const DecodedInstruction& inst,
+                                     std::uint64_t pc,
+                                     std::optional<Fault>* fault,
+                                     const shape::OperandValue* ops,
+                                     const tensor::Shape& shape,
+                                     tensor::Format fmt, bool need_uri,
+                                     bool has_re, bool has_rh, int mode) {
+    if (!ops) return tensor_unsupported(w, inst, pc, mask, fault,
+                                        "(operands)");
     const std::int64_t rd_v = shape::operand_value_as_i64(ops[0]);
     const std::int64_t ra_v = shape::operand_value_as_i64(ops[1]);
     const std::int64_t rb_v = shape::operand_value_as_i64(ops[2]);
     const std::int64_t rc_v = shape::operand_value_as_i64(ops[3]);
-    if (!ops) {
-        return unsupported("(operands)");
-    }
 
     // OMMA selection register: only sel=0 is verified legal on SM120.
     if (need_uri) {
-        std::uint32_t sel = 0;
-        if (has_uri) {
-            sel = read_ur_ov(w, ops[7]);  // URZ (255) reads as 0
-        }
+        const std::uint32_t sel =
+            read_ur_ov(w, ops[7]);  // URZ (255) reads as 0
         if (sel != 0) {
             Fault f(FaultKind::kUnsupportedInstruction,
                     "OMMA.SF selector URi != 0 is decode-only (only sel=0 is "
@@ -5145,20 +5093,22 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
         }
 
         std::uint32_t out[4] = {0};
-        if (m == isa::Mnemonic::kHMMA) {
+        if (mode == 0) {  // HMMA
             if (shape.k == 16) {
                 tensor::hmma_k16(a, b, c, fmt, out);
             } else {
                 tensor::hmma_k8(a, b, c, fmt, out);
             }
-        } else if (m == isa::Mnemonic::kQMMA) {
+        } else if (mode == 1) {  // QMMA
             if (shape.k == 32) {
                 tensor::qmma_k32(a, b, c, fmt, out);
             } else {
                 tensor::qmma_k16(a, b, c, fmt, out);
             }
-        } else {
-            if (!has_re || !has_rh) return unsupported("(missing Re/Rh)");
+        } else {  // OMMA (mxfp4 block-scaled)
+            if (!has_re || !has_rh)
+                return tensor_unsupported(w, inst, pc, mask, fault,
+                                          "(missing Re/Rh)");
             std::uint32_t re = read_reg_ov(t, ops[5]);
             std::uint32_t rh = read_reg_ov(t, ops[6]);
             const std::uint32_t sel = 0;  // validated above
@@ -5174,7 +5124,188 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
     return Status::success();
 }
 
-// ===========================================================================
+Status Interpreter::do_hmma(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst, std::uint64_t pc,
+                            std::optional<Fault>* fault) {
+    // Dense HMMA (hmma_x8_): size 0=k8 / 1=k16 / 2=k4(TF32), srcfmt
+    // 0=F16 1=BF16 2=TF32 3=E6M9, dstfmt 0=F16 1=F32 accumulator.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t size = 0, srcfmt = 0, dstfmt = 0;
+    bool has_re = false;
+    if (nops == 5) {
+        const auto& d = *static_cast<const shape::DecodedHMMA5*>(&inst);
+        ops = d.ops;
+        size = static_cast<std::uint64_t>(d.size);
+        srcfmt = static_cast<std::uint64_t>(d.srcfmt);
+        dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+    } else {
+        const auto& d = *static_cast<const shape::DecodedHMMA7*>(&inst);
+        ops = d.ops;
+        size = static_cast<std::uint64_t>(d.size);
+        srcfmt = static_cast<std::uint64_t>(d.srcfmt);
+        dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+        has_re = true;
+    }
+    if (inst.variant_class != isa::VariantClass::khmma_x8_)
+        return tensor_unsupported(w, inst, pc, mask, fault,
+                                  "(sparse/indexedRF variant)");
+    if (dstfmt != 1)
+        return tensor_unsupported(w, inst, pc, mask, fault,
+                                  "(F16 accumulator)");
+    if (srcfmt > 1)
+        return tensor_unsupported(w, inst, pc, mask, fault,
+                                  "(TF32/E6M9 source)");
+    tensor::Shape shape;
+    if (!tensor::hmma_shape(static_cast<int>(size),
+                            static_cast<int>(srcfmt), &shape)) {
+        return tensor_unsupported(w, inst, pc, mask, fault, "(shape)");
+    }
+    const tensor::Format fmt =
+        (srcfmt == 1) ? tensor::Format::kBf16 : tensor::Format::kF16;
+    return tensor_lane_core(w, mask, inst, pc, fault, ops, shape, fmt, false,
+                            has_re, false, 0);
+}
+
+Status Interpreter::do_qmma(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst, std::uint64_t pc,
+                            std::optional<Fault>* fault) {
+    // Dense QMMA (qmma_): size 0=k16 / 1=k32, dstfmt(ntz) 0=F16 1=F32.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t size = 0, dstfmt = 0;
+    std::uint64_t sfa = 0, sfb = 0, sf = 0, ssz = 1;
+    bool need_uri = false;
+    bool has_re = false, has_rh = false;
+    if (nops == 5) {
+        const auto& d = *static_cast<const shape::DecodedQMMA5*>(&inst);
+        ops = d.ops;
+        size = static_cast<std::uint64_t>(d.size);
+        dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+        sfa = static_cast<std::uint64_t>(d.srcFmtA);
+        sfb = static_cast<std::uint64_t>(d.srcFmtB);
+    } else if (nops == 7) {
+        const auto& d = *static_cast<const shape::DecodedQMMA7*>(&inst);
+        ops = d.ops;
+        size = static_cast<std::uint64_t>(d.size);
+        dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+        sfa = static_cast<std::uint64_t>(d.srcFmtA);
+        sfb = static_cast<std::uint64_t>(d.srcFmtB);
+        has_re = true;
+    } else if (nops == 8) {
+        const auto& d = *static_cast<const shape::DecodedQMMA8*>(&inst);
+        ops = d.ops;
+        size = static_cast<std::uint64_t>(d.size);
+        dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+        sfa = static_cast<std::uint64_t>(d.srcFmtA);
+        sfb = static_cast<std::uint64_t>(d.srcFmtB);
+        sf = static_cast<std::uint64_t>(d.sf);
+        ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
+        need_uri = true;
+        has_re = has_rh = true;
+    } else {
+        const auto& d = *static_cast<const shape::DecodedQMMA9*>(&inst);
+        ops = d.ops;
+        size = static_cast<std::uint64_t>(d.size);
+        dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+        sfa = static_cast<std::uint64_t>(d.srcFmtA);
+        sfb = static_cast<std::uint64_t>(d.srcFmtB);
+        sf = static_cast<std::uint64_t>(d.sf);
+        ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
+        need_uri = true;
+        has_re = has_rh = true;
+    }
+    if (inst.variant_class != isa::VariantClass::kqmma_)
+        return tensor_unsupported(w, inst, pc, mask, fault,
+                                  "(sparse/rowcol/scale variant)");
+    if (dstfmt != 1)
+        return tensor_unsupported(w, inst, pc, mask, fault,
+                                  "(F16 accumulator)");
+    tensor::Shape shape;
+    if (!tensor::qmma_shape(static_cast<int>(size), &shape)) {
+        return tensor_unsupported(w, inst, pc, mask, fault, "(shape)");
+    }
+    tensor::Format fmt = tensor::Format::kFp8E4M3;
+    // SM120 QMMA srcFmt mapping (verified against real hardware on RTX
+    // 5090, CUDA 13.1: field value drives the SRCFMTA_qmma enum in the
+    // spec).  E4M3=0 E5M2=1 E3M4=2 E3M2=3 E2M3=4.  Field 5 is named
+    // E2M1 in the spec but empirically behaves EXACTLY like field 4
+    // (E2M3) on sm120 — no distinct E2M1 QMMA format exists here.
+    switch (sfa) {
+        case 0: fmt = tensor::Format::kFp8E4M3; break;
+        case 1: fmt = tensor::Format::kFp8E5M2; break;
+        case 2: fmt = tensor::Format::kFp8E3M4; break;
+        case 3: fmt = tensor::Format::kFp8E3M2; break;
+        case 4:
+        case 5: fmt = tensor::Format::kFp8E2M3; break;
+        default: return tensor_unsupported(w, inst, pc, mask, fault,
+                                           "(srcFmtA)");
+    }
+    (void)sf; (void)ssz; (void)sfb;  // scale-vector fields: decode-gated above
+    return tensor_lane_core(w, mask, inst, pc, fault, ops, shape, fmt,
+                            need_uri, has_re, has_rh, 1);
+}
+
+Status Interpreter::do_omma(WarpState& w, std::uint32_t mask,
+                            const DecodedInstruction& inst, std::uint64_t pc,
+                            std::optional<Fault>* fault) {
+    // OMMA.SF (mxfp4 block-scaled): only the verified 2X-scale E8 e2m1
+    // configuration is implemented (gpu_waiver — see capability manifest).
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t sf = 0, ssz = 1, sfa = 0, sfb = 0;
+    if (nops == 8) {
+        const auto& d = *static_cast<const shape::DecodedOMMA8*>(&inst);
+        ops = d.ops;
+        sf = static_cast<std::uint64_t>(d.sf);
+        ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
+        sfa = static_cast<std::uint64_t>(d.srcFmtA);
+        sfb = static_cast<std::uint64_t>(d.srcFmtB);
+    } else {
+        const auto& d = *static_cast<const shape::DecodedOMMA9*>(&inst);
+        ops = d.ops;
+        sf = static_cast<std::uint64_t>(d.sf);
+        ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
+        sfa = static_cast<std::uint64_t>(d.srcFmtA);
+        sfb = static_cast<std::uint64_t>(d.srcFmtB);
+    }
+    if (inst.variant_class != isa::VariantClass::komma_scale_)
+        return tensor_unsupported(w, inst, pc, mask, fault,
+                                  "(sparse/scale variant)");
+    if (sf != 0) return tensor_unsupported(w, inst, pc, mask, fault,
+                                           "(non-E8 scale)");
+    if (ssz != 1) return tensor_unsupported(w, inst, pc, mask, fault,
+                                            "(4X scale vector)");
+    if (sfa != 0 || sfb != 0) return tensor_unsupported(w, inst, pc, mask,
+                                                        fault,
+                                                        "(E0M3 source)");
+    tensor::Shape shape;
+    if (!tensor::omma_shape(&shape)) {
+        return tensor_unsupported(w, inst, pc, mask, fault, "(shape)");
+    }
+    const tensor::Format fmt = tensor::Format::kFp8E4M3;  // unused for gdfs
+    return tensor_lane_core(w, mask, inst, pc, fault, ops, shape, fmt, true,
+                            true, true, 2);
+}
+
+Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
+                              const DecodedInstruction& inst, std::uint64_t pc,
+                              std::optional<Fault>* fault) {
+    // NOTE: temporary dispatcher — the plan-b refactor replaces this with
+    // the unified mnemonic switch in execute_group (final commit).
+    switch (inst.mnemonic) {
+        case isa::Mnemonic::kHMMA: return do_hmma(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kQMMA: return do_qmma(w, mask, inst, pc, fault);
+        case isa::Mnemonic::kOMMA: return do_omma(w, mask, inst, pc, fault);
+        default:
+            break;
+    }
+    return do_unsupported(w, inst, pc, mask, fault);
+}
+
 // Phase 5 compute — one function per instruction (2b-3 plan-b + refactor).
 // Per-instruction entry points with a small number of shared per-lane cores
 // (the core is parameterized by the instruction's extracted operands/modifiers;
