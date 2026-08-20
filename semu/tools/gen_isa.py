@@ -1235,6 +1235,14 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
         modseen = shape_members(members, enum_types)
         for mname, (tyid, _src) in modseen.items():
             L.append(f"    {tyid} {mname};")
+        # 2b-3 plan-b: subclass flags set at fill time from the variant CLASS
+        # name (X/wide/hi/imm64/fp traits), so the interpreter can dispatch
+        # without string or slot-id lookups.
+        L.append("    std::uint8_t subclass;  // generated semantic flags")
+        if mn == "BAR":
+            # The barrier-id encoding (barname field) is not a FORMAT slot;
+            # expose it as a typed member for do_bar.
+            L.append("    std::uint8_t barname;  // unsurfaced barrier-id field")
         L.append("};")
 
     # ---- per-variant operand-role manifest (aligned to kVariants index) ----
@@ -1279,6 +1287,27 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     L.append("}  // namespace semu::shape")
     L.append("")
     out.write_text("\n".join(L), encoding="utf-8")
+
+
+# Semantic subclass bits injected into the typed Decoded* at fill time (2b-3
+# plan b): variants whose CLASS name carries a dispatch-relevant trait that has
+# no FORMAT-slot/typed-member representation get a compile-time-set flag.  The
+# interpreter reads `inst.subclass & <bit>` -- no string/int lookup.
+_lookup_subclass = {
+    "_x": 1,
+    "wide": 2,
+    "hi": 4,
+    "imm64": 8,
+    "_fp": 16,
+}
+
+
+def variant_subclass(cls: str) -> int:
+    bits = 0
+    for key, bit in _lookup_subclass.items():
+        if key in cls:
+            bits |= bit
+    return bits
 
 
 def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
@@ -1334,19 +1363,20 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
         type_name = f"Decoded{cident(mn)}{nops}"
         roles = shape_operand_roles(v)
         L.append(f"    case {vi}: {{")
+        L.append(f"        auto& out = *static_cast<{type_name}*>(void_out);")
         if grp_has_mods[g]:
             L.append(f"        shape_fill_mods_grp{g}(in, void_out);")
-        if roles:
-            L.append(f"        auto& out = *static_cast<{type_name}*>(void_out);")
-            for p, r in enumerate(roles):
-                kind = OPERAND_KIND.get(r["type"], "kSpecial")
-                L.append(f"        out.ops[{p}].kind = static_cast<std::uint8_t>("
-                         f"OperandKind::{kind});")
-                L.append(f"        out.ops[{p}].flags = in.flags({cq(r['name'])});")
-                L.append(f"        operand_set_value(out.ops[{p}], "
-                         f"OperandKind::{kind}, in.value({cq(r['name'])}));")
-        else:
-            L.append("        (void)void_out; (void)in;")
+        L.append(f"        out.subclass = {variant_subclass(v['class'])};")
+        if mn == "BAR":
+            L.append(f"        out.barname = static_cast<std::uint8_t>("
+                     f"in.value(\"barname\"));")
+        for p, r in enumerate(roles):
+            kind = OPERAND_KIND.get(r["type"], "kSpecial")
+            L.append(f"        out.ops[{p}].kind = static_cast<std::uint8_t>("
+                     f"OperandKind::{kind});")
+            L.append(f"        out.ops[{p}].flags = in.flags({cq(r['name'])});")
+            L.append(f"        operand_set_value(out.ops[{p}], "
+                     f"OperandKind::{kind}, in.value({cq(r['name'])}));")
         L.append("        break;")
         L.append("    }")
     L.append("    }")

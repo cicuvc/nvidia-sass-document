@@ -2125,12 +2125,14 @@ struct DecodedMOV2 : DecodedInstruction {
     OperandValue ops[2];
     ONLY64 size;
     SPILLONLY nonconformity;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMOV3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV3>(*this);
     }
     OperandValue ops[3];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedP2R4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2138,6 +2140,7 @@ struct DecodedP2R4 : DecodedInstruction {
     }
     OperandValue ops[4];
     B3B0 insert;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedR2P3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2145,6 +2148,7 @@ struct DecodedR2P3 : DecodedInstruction {
     }
     OperandValue ops[3];
     B3B0 a_bsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSEL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2152,6 +2156,7 @@ struct DecodedSEL4 : DecodedInstruction {
     }
     OperandValue ops[4];
     ONLY64 size;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFSEL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2159,6 +2164,7 @@ struct DecodedFSEL4 : DecodedInstruction {
     }
     OperandValue ops[4];
     FTZ ftz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFMNMX4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2168,6 +2174,7 @@ struct DecodedFMNMX4 : DecodedInstruction {
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFMNMX5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2178,6 +2185,7 @@ struct DecodedFMNMX5 : DecodedInstruction {
     NAN nan;
     XORSIGN xorsign;
     IS_AONLY is_A;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFSET4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2188,6 +2196,7 @@ struct DecodedFSET4 : DecodedInstruction {
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFSET3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2197,6 +2206,7 @@ struct DecodedFSET3 : DecodedInstruction {
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFSETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2206,6 +2216,7 @@ struct DecodedFSETP5 : DecodedInstruction {
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFSETP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2214,6 +2225,7 @@ struct DecodedFSETP3 : DecodedInstruction {
     OperandValue ops[3];
     FCMP fcomp;
     FTZ ftz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedISETP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2224,6 +2236,7 @@ struct DecodedISETP6 : DecodedInstruction {
     FMT_64_DIST fmt;
     Bop bop;
     EXONLY ex;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedISETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2233,6 +2246,7 @@ struct DecodedISETP5 : DecodedInstruction {
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedISETP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2242,6 +2256,7 @@ struct DecodedISETP4 : DecodedInstruction {
     ICmpAll icmp;
     FMT_64_DIST fmt;
     EXONLY ex;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedISETP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2250,12 +2265,14 @@ struct DecodedISETP3 : DecodedInstruction {
     OperandValue ops[3];
     ICmpAll icmp;
     FMT_64_DIST fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIADD36 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIADD36>(*this);
     }
     OperandValue ops[6];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIADD38 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2263,12 +2280,14 @@ struct DecodedIADD38 : DecodedInstruction {
     }
     OperandValue ops[8];
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedISCADD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISCADD5>(*this);
     }
     OperandValue ops[5];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLEA6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2278,6 +2297,7 @@ struct DecodedLEA6 : DecodedInstruction {
     HIONLY_lea hilo;
     XONLY X;
     SX32ONLY sx32;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLEA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2286,6 +2306,7 @@ struct DecodedLEA5 : DecodedInstruction {
     OperandValue ops[5];
     HIONLY_lea hilo;
     SX32ONLY sx32;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLEA7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2294,6 +2315,7 @@ struct DecodedLEA7 : DecodedInstruction {
     OperandValue ops[7];
     HIONLY_lea hilo;
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLOP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2302,6 +2324,7 @@ struct DecodedLOP5 : DecodedInstruction {
     OperandValue ops[5];
     LOP lop;
     LOP_POP pop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLOP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2309,6 +2332,7 @@ struct DecodedLOP4 : DecodedInstruction {
     }
     OperandValue ops[4];
     LOP lop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLOP37 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2317,6 +2341,7 @@ struct DecodedLOP37 : DecodedInstruction {
     OperandValue ops[7];
     LUTOnly lut;
     LOP_POP pop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLOP36 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2326,6 +2351,7 @@ struct DecodedLOP36 : DecodedInstruction {
     LUTOnly lut;
     LOP lop;
     LOP_POP pop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLOP35 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2333,12 +2359,14 @@ struct DecodedLOP35 : DecodedInstruction {
     }
     OperandValue ops[5];
     LOP lop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIABS2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIABS2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPRMT4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2346,6 +2374,7 @@ struct DecodedPRMT4 : DecodedInstruction {
     }
     OperandValue ops[4];
     PMode pmode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMNMX7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2353,6 +2382,7 @@ struct DecodedIMNMX7 : DecodedInstruction {
     }
     OperandValue ops[7];
     FMT_64_DIST fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMNMX6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2360,6 +2390,7 @@ struct DecodedIMNMX6 : DecodedInstruction {
     }
     OperandValue ops[6];
     FMT_64_DIST fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSHF4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2370,6 +2401,7 @@ struct DecodedSHF4 : DecodedInstruction {
     CWMode cw;
     FMT_shf fmt;
     HILO hilo;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSHL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2377,6 +2409,7 @@ struct DecodedSHL3 : DecodedInstruction {
     }
     OperandValue ops[3];
     CWMode cw;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSHR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2385,6 +2418,7 @@ struct DecodedSHR3 : DecodedInstruction {
     OperandValue ops[3];
     CWMode cw;
     FMT_S32_U32 fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSGXT3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2393,6 +2427,7 @@ struct DecodedSGXT3 : DecodedInstruction {
     OperandValue ops[3];
     CWMode cw;
     FMT fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBMSK3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2400,6 +2435,7 @@ struct DecodedBMSK3 : DecodedInstruction {
     }
     OperandValue ops[3];
     CWMode cw;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPLOP35 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2410,6 +2446,7 @@ struct DecodedPLOP35 : DecodedInstruction {
     SIGNONLY sign_b;
     SIGNONLY sign_c;
     SIGNONLY sign_a;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPLOP37 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2420,6 +2457,7 @@ struct DecodedPLOP37 : DecodedInstruction {
     SIGNONLY sign_b;
     SIGNONLY sign_c;
     SIGNONLY sign_a;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFMUL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2430,6 +2468,7 @@ struct DecodedFMUL3 : DecodedInstruction {
     Scale scale;
     Round1 rnd;
     SAT sat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFADD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2439,6 +2478,7 @@ struct DecodedFADD3 : DecodedInstruction {
     FTZ ftz;
     Round1 rnd;
     SAT sat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFHADD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2449,6 +2489,7 @@ struct DecodedFHADD3 : DecodedInstruction {
     Round1 rnd;
     SAT sat;
     EXTRACT extract_a;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFFMA4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2458,6 +2499,7 @@ struct DecodedFFMA4 : DecodedInstruction {
     FMZ_hfma2 fmz;
     Round1 rnd;
     SAT sat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFHFMA4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2469,6 +2511,7 @@ struct DecodedFHFMA4 : DecodedInstruction {
     SAT sat;
     EXTRACT extract_a;
     EXTRACT extract_b;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMAD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2478,6 +2521,7 @@ struct DecodedIMAD4 : DecodedInstruction {
     LOOnly wide;
     FMT fmt;
     PSEUDO_OPCODE pseudo_opcode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMAD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2488,6 +2532,7 @@ struct DecodedIMAD5 : DecodedInstruction {
     PSEUDO_OPCODE pseudo_opcode;
     FMT fmt;
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMUL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2496,6 +2541,7 @@ struct DecodedIMUL3 : DecodedInstruction {
     OperandValue ops[3];
     LOOnly wide;
     FMT fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMAD6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2506,6 +2552,7 @@ struct DecodedIMAD6 : DecodedInstruction {
     FMT fmt;
     XONLY X;
     PSEUDO_OPCODE pseudo_opcode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMUL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2514,6 +2561,7 @@ struct DecodedIMUL4 : DecodedInstruction {
     OperandValue ops[4];
     WIDEONLY wide;
     FMT fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIDP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2523,6 +2571,7 @@ struct DecodedIDP4 : DecodedInstruction {
     MODE_2ALO_2AHI mode;
     SRCFMT16A SrcAFmt;
     SRCFMT_U8_S8 SrcBFmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIDP4A4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2531,6 +2580,7 @@ struct DecodedIDP4A4 : DecodedInstruction {
     OperandValue ops[4];
     SRCFMT_U8_S8 SrcAFmt;
     SRCFMT_U8_S8 SrcBFmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDMUL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2538,6 +2588,7 @@ struct DecodedDMUL3 : DecodedInstruction {
     }
     OperandValue ops[3];
     Round1 rnd;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDADD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2545,6 +2596,7 @@ struct DecodedDADD3 : DecodedInstruction {
     }
     OperandValue ops[3];
     Round1 rnd;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDSETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2553,6 +2605,7 @@ struct DecodedDSETP5 : DecodedInstruction {
     OperandValue ops[5];
     DSETP_FCMP test;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDSETP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2560,6 +2613,7 @@ struct DecodedDSETP3 : DecodedInstruction {
     }
     OperandValue ops[3];
     DSETP_FCMP test;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDFMA4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2567,6 +2621,7 @@ struct DecodedDFMA4 : DecodedInstruction {
     }
     OperandValue ops[4];
     Round1 rnd;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCLMAD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2574,6 +2629,7 @@ struct DecodedCLMAD4 : DecodedInstruction {
     }
     OperandValue ops[4];
     HILO hilo;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHADD23 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2585,6 +2641,7 @@ struct DecodedHADD23 : DecodedInstruction {
     SAT sat;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHFMA24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2605,6 +2662,7 @@ struct DecodedHFMA24 : DecodedInstruction {
     ISWZA iswzB_as_C;
     NONE iswzC_as_B_forced_H1_H0;
     NONE iswzB_as_C_forced_H1_H0;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHFMA25 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2625,6 +2683,7 @@ struct DecodedHFMA25 : DecodedInstruction {
     NONE iswzC_as_B_forced_H1_H0;
     NONE iswzB_as_C_forced_H1_H0;
     ISWZA iswzB_as_C;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMUL23 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2636,6 +2695,7 @@ struct DecodedHMUL23 : DecodedInstruction {
     SAT sat;
     ISWZA iswzA;
     ISWZA iswzB;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHSET24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2649,6 +2709,7 @@ struct DecodedHSET24 : DecodedInstruction {
     Bop bop;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHSET23 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2661,6 +2722,7 @@ struct DecodedHSET23 : DecodedInstruction {
     FTZ ftz;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHSETP25 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2674,6 +2736,7 @@ struct DecodedHSETP25 : DecodedInstruction {
     Bop bop;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHSETP24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2686,6 +2749,7 @@ struct DecodedHSETP24 : DecodedInstruction {
     FTZ ftz;
     ISWZA iswzA;
     ISWZA iswzB_as_C;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2693,6 +2757,7 @@ struct DecodedIADD4 : DecodedInstruction {
     }
     OperandValue ops[4];
     ONLY64 size;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIADD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2701,6 +2766,7 @@ struct DecodedIADD5 : DecodedInstruction {
     OperandValue ops[5];
     ONLY64 size;
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedVIADD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2709,6 +2775,7 @@ struct DecodedVIADD3 : DecodedInstruction {
     OperandValue ops[3];
     FMT_viadd fmt;
     ISAT isat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2721,6 +2788,7 @@ struct DecodedIMMA5 : DecodedInstruction {
     SAT SAT_;
     ROWONLY row_A;
     COLONLY col_B;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMMA7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2735,6 +2803,7 @@ struct DecodedIMMA7 : DecodedInstruction {
     SAT SAT_;
     ROWONLY row_A;
     COLONLY col_B;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedI2I2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2744,6 +2813,7 @@ struct DecodedI2I2 : DecodedInstruction {
     DSTFMT_i2i dstfmt;
     S32ONLY_i2i srcfmt;
     SATONLY SAT;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedI2IP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2754,6 +2824,7 @@ struct DecodedI2IP4 : DecodedInstruction {
     S32ONLY_i2i srcfmt;
     SATRELU satrelu;
     ONLY24 extract_limited;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMOVM2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2762,6 +2833,7 @@ struct DecodedMOVM2 : DecodedInstruction {
     OperandValue ops[2];
     MOVM_SZ sz;
     MOVM_MODE mode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMMA7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2773,6 +2845,7 @@ struct DecodedHMMA7 : DecodedInstruction {
     SIZE_1688_16816_16832 size;
     FloatNo64 dstfmt;
     SRCFMT srcfmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2782,6 +2855,7 @@ struct DecodedHMMA5 : DecodedInstruction {
     SIZE_1688_16816_1684 size;
     FloatNo64 dstfmt;
     SRCFMT srcfmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedF2FP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2796,6 +2870,7 @@ struct DecodedF2FP2 : DecodedInstruction {
     B3B0 selB;
     EXTRACT extract_B;
     SATFINITE satfinite;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedF2FP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2813,6 +2888,7 @@ struct DecodedF2FP3 : DecodedInstruction {
     B3B0 selB;
     ISWZC iswzC;
     EXTRACT extract_B;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedF2FP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2827,6 +2903,7 @@ struct DecodedF2FP4 : DecodedInstruction {
     RNONLY rndMode;
     EXTRACT extract;
     SATNARROW satnarrow;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDMMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2835,6 +2912,7 @@ struct DecodedDMMA5 : DecodedInstruction {
     OperandValue ops[5];
     SIZE_DMMA size;
     Round1 rnd;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMNMX24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2847,6 +2925,7 @@ struct DecodedHMNMX24 : DecodedInstruction {
     XORSIGN xorsign;
     ISWZA iswzA;
     ISWZA iswzB;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMNMX26 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2860,6 +2939,7 @@ struct DecodedHMNMX26 : DecodedInstruction {
     IS_AONLY isA;
     ISWZA iswzA;
     ISWZA iswzB;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedF2IP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2872,6 +2952,7 @@ struct DecodedF2IP4 : DecodedInstruction {
     NTZ ntz;
     RELU relu;
     EXTRACT extract;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedI2FP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2881,6 +2962,7 @@ struct DecodedI2FP2 : DecodedInstruction {
     F32ONLY_i2fp dstfmt;
     SRCFMT_i2fp srcfmt;
     RND_RN_RZ rnd;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedVIMNMX4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2889,6 +2971,7 @@ struct DecodedVIMNMX4 : DecodedInstruction {
     OperandValue ops[4];
     FMT_vimnmx fmt;
     RELU relu;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedQMMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2901,6 +2984,7 @@ struct DecodedQMMA5 : DecodedInstruction {
     SRCFMTA_qmma srcFmtB;
     ROWONLY row_A;
     COLONLY col_B;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedQMMA7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2915,6 +2999,7 @@ struct DecodedQMMA7 : DecodedInstruction {
     SRCFMTA_qmma srcFmtB;
     ROWONLY row_A;
     COLONLY col_B;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedR2UR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2923,6 +3008,7 @@ struct DecodedR2UR3 : DecodedInstruction {
     OperandValue ops[3];
     ORONLY OR;
     NONCONFORMITY_FILL_BROADCAST nonconformity;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFLO3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2931,12 +3017,14 @@ struct DecodedFLO3 : DecodedInstruction {
     OperandValue ops[3];
     FMT fmt;
     SH sh;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBREV2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBREV2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFCHK3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2944,6 +3032,7 @@ struct DecodedFCHK3 : DecodedInstruction {
     }
     OperandValue ops[3];
     ChkMode mode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedF2F2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2954,6 +3043,7 @@ struct DecodedF2F2 : DecodedInstruction {
     DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     Round1 rnd;
     HSEL hsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedF2I2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2966,6 +3056,7 @@ struct DecodedF2I2 : DecodedInstruction {
     Round3 rnd;
     NTZ ntz;
     HSEL hsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedI2F2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2977,6 +3068,7 @@ struct DecodedI2F2 : DecodedInstruction {
     Round1 rnd;
     HSEL hsel;
     B3B0 bsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFRND2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2987,6 +3079,7 @@ struct DecodedFRND2 : DecodedInstruction {
     BF16ONLY_frnd fmt;
     Round3 rnd;
     HSEL hsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMUFU2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -2996,12 +3089,14 @@ struct DecodedMUFU2 : DecodedInstruction {
     MUFU_OP mufuop;
     FMT_F16_BF16 fmt;
     HSEL extract;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPOPC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPOPC2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedB2R2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3009,6 +3104,7 @@ struct DecodedB2R2 : DecodedInstruction {
     }
     OperandValue ops[2];
     BarmdBAR mode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedB2R1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3016,6 +3112,7 @@ struct DecodedB2R1 : DecodedInstruction {
     }
     OperandValue ops[1];
     BarmdWARP mode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBAR2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3024,6 +3121,8 @@ struct DecodedBAR2 : DecodedInstruction {
     OperandValue ops[2];
     BarArv barmode;
     DEFER_BLOCKINGONLY defer_blocking;
+    std::uint8_t subclass;  // generated semantic flags
+    std::uint8_t barname;  // unsurfaced barrier-id field
 };
 struct DecodedBAR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3033,6 +3132,8 @@ struct DecodedBAR3 : DecodedInstruction {
     BarRED barmode;
     Red op;
     DEFER_BLOCKINGONLY defer_blocking;
+    std::uint8_t subclass;  // generated semantic flags
+    std::uint8_t barname;  // unsurfaced barrier-id field
 };
 struct DecodedR2B2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3040,6 +3141,7 @@ struct DecodedR2B2 : DecodedInstruction {
     }
     OperandValue ops[2];
     MODE_BAR_WARP mode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSETCTAID1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3047,6 +3149,7 @@ struct DecodedSETCTAID1 : DecodedInstruction {
     }
     OperandValue ops[1];
     CTA_DIM dim;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedALD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3056,6 +3159,7 @@ struct DecodedALD4 : DecodedInstruction {
     AIO io;
     PHYSONLY p;
     ONLY32 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedALD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3065,6 +3169,7 @@ struct DecodedALD5 : DecodedInstruction {
     AIO io;
     AInteger sz;
     PONLY p;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedAST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3073,6 +3178,7 @@ struct DecodedAST4 : DecodedInstruction {
     OperandValue ops[4];
     PHYSONLY p;
     ONLY32 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedAST5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3081,6 +3187,7 @@ struct DecodedAST5 : DecodedInstruction {
     OperandValue ops[5];
     AInteger sz;
     PONLY p;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedOUT3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3088,6 +3195,7 @@ struct DecodedOUT3 : DecodedInstruction {
     }
     OperandValue ops[3];
     CUTONLY type;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedOUT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3095,6 +3203,7 @@ struct DecodedOUT1 : DecodedInstruction {
     }
     OperandValue ops[1];
     FINALONLY type;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIPA4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3103,6 +3212,7 @@ struct DecodedIPA4 : DecodedInstruction {
     OperandValue ops[4];
     MODE ipaop;
     MSI_CENTER_CENTROID msi;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIPA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3111,6 +3221,7 @@ struct DecodedIPA5 : DecodedInstruction {
     OperandValue ops[5];
     MODE ipaop;
     OFFSETONLY msi;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCCTL0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3121,6 +3232,7 @@ struct DecodedCCTL0 : DecodedInstruction {
     IVALLONLY cop;
     SHALLOWONLY depth;
     LDCUONLY ldcu;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCALL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3131,6 +3243,7 @@ struct DecodedCALL3 : DecodedInstruction {
     CALL_DEPTH depth;
     std::uint8_t rel;
     std::uint8_t rel_imm;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCALL2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3141,6 +3254,7 @@ struct DecodedCALL2 : DecodedInstruction {
     CALL_DEPTH depth;
     std::uint8_t abs;
     std::uint8_t rel_imm;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedWARPSYNC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3150,6 +3264,7 @@ struct DecodedWARPSYNC2 : DecodedInstruction {
     DIV__EXCLUSIVE div;
     ALLOnly all;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedWARPSYNC3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3158,12 +3273,14 @@ struct DecodedWARPSYNC3 : DecodedInstruction {
     OperandValue ops[3];
     COLLECTIVEONLY div;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLEPC1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLEPC1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedRPCMOV2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3171,6 +3288,7 @@ struct DecodedRPCMOV2 : DecodedInstruction {
     }
     OperandValue ops[2];
     ONLY32 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBMOV2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3180,6 +3298,7 @@ struct DecodedBMOV2 : DecodedInstruction {
     ONLY32 sz;
     CLEAR clear;
     PQUAD pquad;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedNANOTRAP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3187,6 +3306,7 @@ struct DecodedNANOTRAP2 : DecodedInstruction {
     }
     OperandValue ops[2];
     RAND rand;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedNANOSLEEP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3196,6 +3316,7 @@ struct DecodedNANOSLEEP2 : DecodedInstruction {
     RAND rand;
     OPTIONAL_WARP warp;
     SYNCS_MOD syncs;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTEX9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3212,6 +3333,7 @@ struct DecodedTEX9 : DecodedInstruction {
     DIV div;
     NODEP nodep;
     SCRONLY scr;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTMML6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3222,6 +3344,7 @@ struct DecodedTMML6 : DecodedInstruction {
     LODOnly lod;
     DIV div;
     NODEP nodep;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTXQ5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3230,6 +3353,7 @@ struct DecodedTXQ5 : DecodedInstruction {
     OperandValue ops[5];
     BONLY b;
     NODEP nodep;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3243,6 +3367,7 @@ struct DecodedLDG5 : DecodedInstruction {
     SEM sem;
     SCO sco;
     PRIVATE private_;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedST3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3255,6 +3380,7 @@ struct DecodedST3 : DecodedInstruction {
     SEM sem;
     SCO sco;
     PRIVATE private_;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3268,6 +3394,7 @@ struct DecodedSTG3 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ORDER order;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3276,6 +3403,7 @@ struct DecodedSTL3 : DecodedInstruction {
     OperandValue ops[3];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3284,6 +3412,7 @@ struct DecodedSTS3 : DecodedInstruction {
     OperandValue ops[3];
     SZ_U8_S8_U16_S16_32_64_128 sz;
     STRIDE stride;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSHFL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3291,6 +3420,7 @@ struct DecodedSHFL5 : DecodedInstruction {
     }
     OperandValue ops[5];
     Shflmd shflmd;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedATOM6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3306,6 +3436,7 @@ struct DecodedATOM6 : DecodedInstruction {
     PRIVATE private_;
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedATOM7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3323,6 +3454,7 @@ struct DecodedATOM7 : DecodedInstruction {
     AtomsOp op;
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedATOMS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3332,6 +3464,7 @@ struct DecodedATOMS4 : DecodedInstruction {
     AtomsOp op;
     ATOMCASSZ sz;
     STRIDE stride;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedREDS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3341,6 +3474,7 @@ struct DecodedREDS3 : DecodedInstruction {
     REDSOP op;
     REDSSIZE sz;
     STRIDE stride;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedATOMS5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3352,12 +3486,14 @@ struct DecodedATOMS5 : DecodedInstruction {
     STRIDE stride;
     AtomsSPIN spin;
     AtomsOp op;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCCTLT0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTLT0>(*this);
     }
     IVALLONLY_cctlt cop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCCTLT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3365,6 +3501,7 @@ struct DecodedCCTLT1 : DecodedInstruction {
     }
     OperandValue ops[1];
     CCTLTOp cop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSUATOM6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3382,6 +3519,7 @@ struct DecodedSUATOM6 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     Clamp1 clamp;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSURED4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3399,6 +3537,7 @@ struct DecodedSURED4 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     Clamp1 clamp;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMATCH3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3407,6 +3546,7 @@ struct DecodedMATCH3 : DecodedInstruction {
     OperandValue ops[3];
     ALLOnly op;
     MATCH_SZ sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMATCH2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3415,6 +3555,7 @@ struct DecodedMATCH2 : DecodedInstruction {
     OperandValue ops[2];
     ANYONLY op;
     MATCH_SZ sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedATOMG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3428,6 +3569,7 @@ struct DecodedATOMG5 : DecodedInstruction {
     SEM sem;
     SCO sco;
     PRIVATE private_;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSYNCS0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3436,6 +3578,7 @@ struct DecodedSYNCS0 : DecodedInstruction {
     FLUSHONLY op;
     CCTLONLY cctl_mode;
     SYNCS_CCTL_OP_ALL cctlop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedATOMG6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3452,6 +3595,7 @@ struct DecodedATOMG6 : DecodedInstruction {
     ATOMICFPOPS op;
     U32ONLY input_reg_sz_32_100_dist;
     ONLY64 input_reg_sz_64_100_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedQSPC3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3460,6 +3604,7 @@ struct DecodedQSPC3 : DecodedInstruction {
     OperandValue ops[3];
     E e;
     QUERY_SPACE space;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedQSPC4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3470,18 +3615,21 @@ struct DecodedQSPC4 : DecodedInstruction {
     QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedGETLMEMBASE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedGETLMEMBASE1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSETLMEMBASE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSETLMEMBASE1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedREDUX2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3490,6 +3638,7 @@ struct DecodedREDUX2 : DecodedInstruction {
     OperandValue ops[2];
     REDUX_OP op;
     FMT sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFENCE0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3498,24 +3647,28 @@ struct DecodedFENCE0 : DecodedInstruction {
     VIEWONLY type;
     ASYNCONLY syncType;
     SONLY memType;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTUOPEN0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUOPEN0>(*this);
     }
     DUAL dual;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTUST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUST4>(*this);
     }
     OperandValue ops[4];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTUCLOSE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUCLOSE1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTULD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3523,17 +3676,20 @@ struct DecodedTTULD5 : DecodedInstruction {
     }
     OperandValue ops[5];
     CLOSE close;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTUGO0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUGO0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTUCCTL0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUCCTL0>(*this);
     }
     IVALLONLY_utmacctl ivall;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFADD32I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3541,6 +3697,7 @@ struct DecodedFADD32I3 : DecodedInstruction {
     }
     OperandValue ops[3];
     FTZ ftz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHADD24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3551,6 +3708,7 @@ struct DecodedHADD24 : DecodedInstruction {
     FTZ ftz;
     SAT sat;
     ISWZA iswzA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHADD2_32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3560,6 +3718,7 @@ struct DecodedHADD2_32I4 : DecodedInstruction {
     FTZ ftz;
     SAT sat;
     ISWZA iswzA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHFMA26 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3576,6 +3735,7 @@ struct DecodedHFMA26 : DecodedInstruction {
     ISWZB iswzC_as_B;
     NONE iswzC_forced_H1_H0;
     ISWZA iswzC;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHSET25 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3588,6 +3748,7 @@ struct DecodedHSET25 : DecodedInstruction {
     FTZ ftz;
     Bop bop;
     ISWZA iswzA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHSETP26 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3600,6 +3761,7 @@ struct DecodedHSETP26 : DecodedInstruction {
     FTZ ftz;
     Bop bop;
     ISWZA iswzA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedQMMA8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3614,6 +3776,7 @@ struct DecodedQMMA8 : DecodedInstruction {
     E8ONLY_mxqmma scalefmt;
     ONLY1X scaleVectorSz;
     REUSE reuse_src_h;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedQMMA9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3630,6 +3793,7 @@ struct DecodedQMMA9 : DecodedInstruction {
     E8ONLY_mxqmma scalefmt;
     ONLY1X scaleVectorSz;
     REUSE reuse_src_h;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMXQMMA8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3644,6 +3808,7 @@ struct DecodedMXQMMA8 : DecodedInstruction {
     E8ONLY_mxqmma scalefmt;
     ONLY1X scaleVectorSz;
     REUSE reuse_src_h;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedOMMA8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3658,6 +3823,7 @@ struct DecodedOMMA8 : DecodedInstruction {
     SCALEFMT scalefmt;
     SCALEVECTORSZ scaleVectorSz;
     REUSE reuse_src_h;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedOMMA9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3674,29 +3840,34 @@ struct DecodedOMMA9 : DecodedInstruction {
     SCALEFMT scalefmt;
     SCALEVECTORSZ scaleVectorSz;
     REUSE reuse_src_h;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMOV64IUR2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV64IUR2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCGAERRBAR0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCGAERRBAR0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPMTRIG2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPMTRIG2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMOV32I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV32I3>(*this);
     }
     OperandValue ops[3];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedP2R2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3704,6 +3875,7 @@ struct DecodedP2R2 : DecodedInstruction {
     }
     OperandValue ops[2];
     B3B0 insert;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCS2R2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3711,6 +3883,7 @@ struct DecodedCS2R2 : DecodedInstruction {
     }
     OperandValue ops[2];
     QInteger sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedVOTE3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3718,6 +3891,7 @@ struct DecodedVOTE3 : DecodedInstruction {
     }
     OperandValue ops[3];
     VoteOp voteop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCSMTEST1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3725,6 +3899,7 @@ struct DecodedCSMTEST1 : DecodedInstruction {
     }
     OperandValue ops[1];
     VOP vtgmode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCSMTEST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3734,6 +3909,7 @@ struct DecodedCSMTEST4 : DecodedInstruction {
     VOP vtgmode;
     CCMP ccmp;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCSMTEST2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3742,6 +3918,7 @@ struct DecodedCSMTEST2 : DecodedInstruction {
     OperandValue ops[2];
     VOP vtgmode;
     CCMP ccmp;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedVOTE_VTG1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3749,6 +3926,7 @@ struct DecodedVOTE_VTG1 : DecodedInstruction {
     }
     OperandValue ops[1];
     VOP vtgmode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedVOTE_VTG4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3758,6 +3936,7 @@ struct DecodedVOTE_VTG4 : DecodedInstruction {
     VOP vtgmode;
     CCMP ccmp;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedVOTE_VTG2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3766,12 +3945,14 @@ struct DecodedVOTE_VTG2 : DecodedInstruction {
     OperandValue ops[2];
     VOP vtgmode;
     CCMP ccmp;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedISCADD32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISCADD32I5>(*this);
     }
     OperandValue ops[5];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLOP32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3780,6 +3961,7 @@ struct DecodedLOP32I5 : DecodedInstruction {
     OperandValue ops[5];
     LOP lop;
     LOP_POP pop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLOP32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3787,6 +3969,7 @@ struct DecodedLOP32I4 : DecodedInstruction {
     }
     OperandValue ops[4];
     LOP lop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPLOP34 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3794,6 +3977,7 @@ struct DecodedPLOP34 : DecodedInstruction {
     }
     OperandValue ops[4];
     PLOP_OP_NOREG lop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPSETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3802,6 +3986,7 @@ struct DecodedPSETP5 : DecodedInstruction {
     OperandValue ops[5];
     PSETP_BOP0 bop0;
     PSETP_BOP0 bop1;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPSETP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3809,6 +3994,7 @@ struct DecodedPSETP3 : DecodedInstruction {
     }
     OperandValue ops[3];
     PSETP_BOP0 bop0;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFMUL32I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3817,6 +4003,7 @@ struct DecodedFMUL32I3 : DecodedInstruction {
     OperandValue ops[3];
     FMZ_hfma2 fmz;
     SAT sat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFSWZADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3826,6 +4013,7 @@ struct DecodedFSWZADD4 : DecodedInstruction {
     FTZ ftz;
     Round1 rnd;
     DIV div;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFFMA32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3834,6 +4022,7 @@ struct DecodedFFMA32I4 : DecodedInstruction {
     OperandValue ops[4];
     FMZ_hfma2 fmz;
     SAT sat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMUL32I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3842,6 +4031,7 @@ struct DecodedIMUL32I3 : DecodedInstruction {
     OperandValue ops[3];
     LOOnly wide;
     FMT fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIMUL32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3850,16 +4040,19 @@ struct DecodedIMUL32I4 : DecodedInstruction {
     OperandValue ops[4];
     WIDEONLY wide;
     FMT fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPREEXIT0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPREEXIT0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedACQBULK0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedACQBULK0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedELECT3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3867,6 +4060,7 @@ struct DecodedELECT3 : DecodedInstruction {
     }
     OperandValue ops[3];
     IGNORE_KILL ignoreKill;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHFMA2_32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3876,6 +4070,7 @@ struct DecodedHFMA2_32I5 : DecodedInstruction {
     FMZ fmz;
     ISWZA iswzA;
     ISWZA iswzC;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMUL24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3886,6 +4081,7 @@ struct DecodedHMUL24 : DecodedInstruction {
     FMZ_hfma2 fmz;
     SAT sat;
     ISWZA iswzA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMUL2_32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3895,12 +4091,14 @@ struct DecodedHMUL2_32I4 : DecodedInstruction {
     FMZ_hfma2 fmz;
     SAT sat;
     ISWZA iswzA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIADD32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIADD32I4>(*this);
     }
     OperandValue ops[4];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIADD32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3908,6 +4106,7 @@ struct DecodedIADD32I5 : DecodedInstruction {
     }
     OperandValue ops[5];
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDSM3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3918,6 +4117,7 @@ struct DecodedLDSM3 : DecodedInstruction {
     LDSM_MODE mode;
     LDSM_NUM num;
     PSEUDO_OP pseudo_op;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMNMX25 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3929,6 +4129,7 @@ struct DecodedHMNMX25 : DecodedInstruction {
     NAN nan;
     XORSIGN xorsign;
     ISWZA iswzA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMNMX27 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3941,6 +4142,7 @@ struct DecodedHMNMX27 : DecodedInstruction {
     XORSIGN xorsign;
     IS_AONLY isA;
     ISWZA iswzA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTSM3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3950,6 +4152,7 @@ struct DecodedSTSM3 : DecodedInstruction {
     STSM_SZ sz;
     STSM_MODE mode;
     LDSM_NUM num;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUVIRTCOUNT2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3959,11 +4162,13 @@ struct DecodedUVIRTCOUNT2 : DecodedInstruction {
     DEALLOCONLY_uvirtcount op;
     SMPOOLONLY pool;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedACQSHMINIT0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedACQSHMINIT0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUMOV3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3971,6 +4176,7 @@ struct DecodedUMOV3 : DecodedInstruction {
     }
     OperandValue ops[3];
     ONLY64_syncs size;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedVOTEU3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3978,6 +4184,7 @@ struct DecodedVOTEU3 : DecodedInstruction {
     }
     OperandValue ops[3];
     VoteOp voteop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUPLOP35 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3985,6 +4192,7 @@ struct DecodedUPLOP35 : DecodedInstruction {
     }
     OperandValue ops[5];
     PLOP_OP_NOREG lop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUPLOP36 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -3995,6 +4203,7 @@ struct DecodedUPLOP36 : DecodedInstruction {
     SIGNONLY sign_b;
     SIGNONLY sign_c;
     SIGNONLY sign_a;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUPLOP38 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4005,6 +4214,7 @@ struct DecodedUPLOP38 : DecodedInstruction {
     SIGNONLY sign_b;
     SIGNONLY sign_c;
     SIGNONLY sign_a;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUPSETP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4013,6 +4223,7 @@ struct DecodedUPSETP6 : DecodedInstruction {
     OperandValue ops[6];
     PSETP_BOP0 bop0;
     PSETP_BOP0 bop1;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUPSETP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4020,6 +4231,7 @@ struct DecodedUPSETP4 : DecodedInstruction {
     }
     OperandValue ops[4];
     PSETP_BOP0 bop0;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCS2UR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4027,17 +4239,20 @@ struct DecodedCS2UR3 : DecodedInstruction {
     }
     OperandValue ops[3];
     QInteger sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedNOP0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedNOP0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedS2R2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedS2R2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDEPBAR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4045,24 +4260,28 @@ struct DecodedDEPBAR3 : DecodedInstruction {
     }
     OperandValue ops[3];
     LEONLY le;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDEPBAR1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDEPBAR1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDEPBAR0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDEPBAR0>(*this);
     }
     ALLOnly le;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedENDCOLLECTIVE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedENDCOLLECTIVE1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedAL2P3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4071,6 +4290,7 @@ struct DecodedAL2P3 : DecodedInstruction {
     OperandValue ops[3];
     AIO io;
     AInteger sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedISBERD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4081,6 +4301,7 @@ struct DecodedISBERD3 : DecodedInstruction {
     BASE base;
     SKEW skew;
     ISBERD_SZ sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPIXLD2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4088,6 +4309,7 @@ struct DecodedPIXLD2 : DecodedInstruction {
     }
     OperandValue ops[2];
     PIXLD_MODE mode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedISBEWR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4098,6 +4320,7 @@ struct DecodedISBEWR3 : DecodedInstruction {
     ISBEWR_BASE base;
     SKEW skew;
     ISBERD_SZ sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBSYNC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4105,6 +4328,7 @@ struct DecodedBSYNC2 : DecodedInstruction {
     }
     OperandValue ops[2];
     RELIABILITY_RELIABLE_RECONVERGENT reliability;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBREAK2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4112,6 +4336,7 @@ struct DecodedBREAK2 : DecodedInstruction {
     }
     OperandValue ops[2];
     RELIABLEONLY reliability;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBSSY3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4120,12 +4345,14 @@ struct DecodedBSSY3 : DecodedInstruction {
     OperandValue ops[3];
     std::uint8_t rel;
     RELIABILITY_RELIABLE_RECONVERGENT reliability;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedYIELD1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedYIELD1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBRA2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4137,6 +4364,7 @@ struct DecodedBRA2 : DecodedInstruction {
     USEL usel;
     NOTTID0 nottid0;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedWARPSYNC1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4144,6 +4372,7 @@ struct DecodedWARPSYNC1 : DecodedInstruction {
     }
     OperandValue ops[1];
     ALLOnly all;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBRX3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4152,6 +4381,7 @@ struct DecodedBRX3 : DecodedInstruction {
     OperandValue ops[3];
     DEPTH depth;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedJMP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4162,6 +4392,7 @@ struct DecodedJMP2 : DecodedInstruction {
     COND__DIV_CONV cond;
     USEL usel;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedJMX3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4170,6 +4401,7 @@ struct DecodedJMX3 : DecodedInstruction {
     OperandValue ops[3];
     DEPTH depth;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedEXIT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4178,6 +4410,7 @@ struct DecodedEXIT1 : DecodedInstruction {
     OperandValue ops[1];
     EXIT_MODE mode;
     NO_ATEXIT no_atexit;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLEPC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4185,11 +4418,13 @@ struct DecodedLEPC2 : DecodedInstruction {
     }
     OperandValue ops[2];
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedRTT0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedRTT0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedRET3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4199,6 +4434,7 @@ struct DecodedRET3 : DecodedInstruction {
     ABSONLY_ret addr;
     RET_DEPTH depth;
     std::uint8_t rel_imm;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedRET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4207,6 +4443,7 @@ struct DecodedRET2 : DecodedInstruction {
     OperandValue ops[2];
     RET_ADDR addr;
     RET_DEPTH depth;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIDE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4214,12 +4451,14 @@ struct DecodedIDE1 : DecodedInstruction {
     }
     OperandValue ops[1];
     IDEAction action;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedKILL1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedKILL1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBPT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4227,6 +4466,7 @@ struct DecodedBPT1 : DecodedInstruction {
     }
     OperandValue ops[1];
     BPT_TRAP_INT bpt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedNANOSLEEP1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4234,6 +4474,7 @@ struct DecodedNANOSLEEP1 : DecodedInstruction {
     }
     OperandValue ops[1];
     CLEARONLY clear;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4247,6 +4488,7 @@ struct DecodedLD4 : DecodedInstruction {
     SEM sem;
     SCO sco;
     PRIVATE private_;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4255,6 +4497,7 @@ struct DecodedLDL3 : DecodedInstruction {
     OperandValue ops[3];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4263,6 +4506,7 @@ struct DecodedLDS3 : DecodedInstruction {
     OperandValue ops[3];
     LDSSIZE sz;
     STRIDE stride;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedREDG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4276,6 +4520,7 @@ struct DecodedREDG3 : DecodedInstruction {
     SEM sem;
     SCO sco;
     PRIVATE private_;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCCTL2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4288,6 +4533,7 @@ struct DecodedCCTL2 : DecodedInstruction {
     LDCONLY ldc;
     SHALLOWONLY depth;
     LDCUONLY ldcu;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCCTL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4298,12 +4544,14 @@ struct DecodedCCTL3 : DecodedInstruction {
     Cache cache;
     PF2ONLY cop;
     QFAULTONLY qfault;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCCTLL0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTLL0>(*this);
     }
     COP_IVALL_WBALL cop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCCTLL2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4311,6 +4559,7 @@ struct DecodedCCTLL2 : DecodedInstruction {
     }
     OperandValue ops[2];
     COP_PF1_PF2_WB_IV_RS cop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMEMBAR0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4319,6 +4568,7 @@ struct DecodedMEMBAR0 : DecodedInstruction {
     MEMBAR_SEM sem;
     SCO_CTA_SM_GPU_SYS_VC_CTAPARTIAL sco;
     ASYNCONLY_membar mmio;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSULD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4337,6 +4587,7 @@ struct DecodedSULD5 : DecodedInstruction {
     DOnly d;
     BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSUST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4355,16 +4606,19 @@ struct DecodedSUST4 : DecodedInstruction {
     DOnly d;
     BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedERRBAR0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedERRBAR0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDGDEPBAR0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDGDEPBAR0>(*this);
     }
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSUQUERY6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4374,12 +4628,14 @@ struct DecodedSUQUERY6 : DecodedInstruction {
     BA ba;
     Dim1 dim;
     UAI uai;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMACMDFLUSH1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMACMDFLUSH1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMACCTL1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4388,18 +4644,21 @@ struct DecodedUTMACCTL1 : DecodedInstruction {
     OperandValue ops[1];
     IVALLONLY_utmacctl ivall;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedS2UR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedS2UR3>(*this);
     }
     OperandValue ops[3];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTUMACROFUSE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUMACROFUSE1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBAR0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4407,6 +4666,8 @@ struct DecodedBAR0 : DecodedInstruction {
     }
     BarSYNCALL barmode;
     DEFER_BLOCKINGONLY defer_blocking;
+    std::uint8_t subclass;  // generated semantic flags
+    std::uint8_t barname;  // unsurfaced barrier-id field
 };
 struct DecodedCCTL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4418,6 +4679,7 @@ struct DecodedCCTL4 : DecodedInstruction {
     IVONLY cop;
     SHALLOWONLY depth;
     LDCUONLY ldcu;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDC5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4426,6 +4688,7 @@ struct DecodedLDC5 : DecodedInstruction {
     OperandValue ops[5];
     SZ_U8_S8_U16_S16_32_64 sz;
     AdMode ad;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUVIADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4434,6 +4697,7 @@ struct DecodedUVIADD4 : DecodedInstruction {
     OperandValue ops[4];
     FMT_viadd fmt;
     ISAT isat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUVIMNMX5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4442,12 +4706,14 @@ struct DecodedUVIMNMX5 : DecodedInstruction {
     OperandValue ops[5];
     FMT_vimnmx fmt;
     RELU relu;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIABS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIABS3>(*this);
     }
     OperandValue ops[3];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUI2I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4457,6 +4723,7 @@ struct DecodedUI2I3 : DecodedInstruction {
     DSTFMT_i2i dstfmt;
     S32ONLY_i2i srcfmt;
     SATONLY SAT;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUI2IP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4467,6 +4734,7 @@ struct DecodedUI2IP5 : DecodedInstruction {
     S32ONLY_i2i srcfmt;
     SATRELU_ui2ip satrelu;
     ONLY24 extract_limited;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFMNMX5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4476,6 +4744,7 @@ struct DecodedUFMNMX5 : DecodedInstruction {
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFMNMX6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4486,6 +4755,7 @@ struct DecodedUFMNMX6 : DecodedInstruction {
     NAN nan;
     XORSIGN xorsign;
     IS_AONLY is_A;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFSEL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4493,6 +4763,7 @@ struct DecodedUFSEL5 : DecodedInstruction {
     }
     OperandValue ops[5];
     FTZ ftz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFSET5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4503,6 +4774,7 @@ struct DecodedUFSET5 : DecodedInstruction {
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFSET4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4512,6 +4784,7 @@ struct DecodedUFSET4 : DecodedInstruction {
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFSETP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4521,6 +4794,7 @@ struct DecodedUFSETP6 : DecodedInstruction {
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFSETP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4529,6 +4803,7 @@ struct DecodedUFSETP4 : DecodedInstruction {
     OperandValue ops[4];
     FCMP fcomp;
     FTZ ftz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4538,6 +4813,7 @@ struct DecodedUFADD4 : DecodedInstruction {
     FTZ ftz;
     Round1 rnd;
     SAT sat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFHADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4548,6 +4824,7 @@ struct DecodedUFHADD4 : DecodedInstruction {
     Round1 rnd;
     SAT sat;
     EXTRACT extract_a;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFFMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4557,6 +4834,7 @@ struct DecodedUFFMA5 : DecodedInstruction {
     FMZ_hfma2 fmz;
     Round1 rnd;
     SAT sat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFHFMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4568,6 +4846,7 @@ struct DecodedUFHFMA5 : DecodedInstruction {
     SAT sat;
     EXTRACT extract_a;
     EXTRACT extract_b;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFMUL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4578,6 +4857,7 @@ struct DecodedUFMUL4 : DecodedInstruction {
     Scale scale;
     Round1 rnd;
     SAT sat;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUF2IP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4590,6 +4870,7 @@ struct DecodedUF2IP5 : DecodedInstruction {
     NTZ ntz;
     RELU relu;
     EXTRACT extract;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUI2F3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4601,6 +4882,7 @@ struct DecodedUI2F3 : DecodedInstruction {
     Round1 rnd;
     HSEL hsel;
     B3B0 bsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUF2F3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4611,6 +4893,7 @@ struct DecodedUF2F3 : DecodedInstruction {
     DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     Round1 rnd;
     HSEL hsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUF2I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4623,6 +4906,7 @@ struct DecodedUF2I3 : DecodedInstruction {
     Round3 rnd;
     NTZ ntz;
     HSEL hsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFRND3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4633,6 +4917,7 @@ struct DecodedUFRND3 : DecodedInstruction {
     BF16ONLY_frnd fmt;
     Round3 rnd;
     HSEL hsel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUI2FP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4642,6 +4927,7 @@ struct DecodedUI2FP3 : DecodedInstruction {
     F32ONLY_i2fp dstfmt;
     SRCFMT_i2fp srcfmt;
     RND_RN_RZ rnd;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIMNMX8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4649,6 +4935,7 @@ struct DecodedUIMNMX8 : DecodedInstruction {
     }
     OperandValue ops[8];
     FMT_64_DIST fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIMNMX7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4656,6 +4943,7 @@ struct DecodedUIMNMX7 : DecodedInstruction {
     }
     OperandValue ops[7];
     FMT_64_DIST fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSEL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4663,6 +4951,7 @@ struct DecodedUSEL5 : DecodedInstruction {
     }
     OperandValue ops[5];
     ONLY64 size;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUISETP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4672,6 +4961,7 @@ struct DecodedUISETP6 : DecodedInstruction {
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUISETP7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4682,6 +4972,7 @@ struct DecodedUISETP7 : DecodedInstruction {
     FMT_64_DIST fmt;
     Bop bop;
     EXONLY ex;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUISETP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4690,6 +4981,7 @@ struct DecodedUISETP4 : DecodedInstruction {
     OperandValue ops[4];
     ICmpAll icmp;
     FMT_64_DIST fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUISETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4699,12 +4991,14 @@ struct DecodedUISETP5 : DecodedInstruction {
     ICmpAll icmp;
     FMT_64_DIST fmt;
     EXONLY ex;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIADD37 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIADD37>(*this);
     }
     OperandValue ops[7];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIADD39 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4712,6 +5006,7 @@ struct DecodedUIADD39 : DecodedInstruction {
     }
     OperandValue ops[9];
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULEA7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4721,6 +5016,7 @@ struct DecodedULEA7 : DecodedInstruction {
     HIONLY_lea hilo;
     XONLY X;
     SX32ONLY sx32;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULEA6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4729,6 +5025,7 @@ struct DecodedULEA6 : DecodedInstruction {
     OperandValue ops[6];
     HIONLY_lea hilo;
     SX32ONLY sx32;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULEA8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4737,6 +5034,7 @@ struct DecodedULEA8 : DecodedInstruction {
     OperandValue ops[8];
     HIONLY_lea hilo;
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULOP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4745,6 +5043,7 @@ struct DecodedULOP6 : DecodedInstruction {
     OperandValue ops[6];
     LOP lop;
     LOP_POP pop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULOP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4752,6 +5051,7 @@ struct DecodedULOP5 : DecodedInstruction {
     }
     OperandValue ops[5];
     LOP lop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULOP38 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4760,6 +5060,7 @@ struct DecodedULOP38 : DecodedInstruction {
     OperandValue ops[8];
     LUTOnly lut;
     LOP_POP pop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULOP37 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4769,6 +5070,7 @@ struct DecodedULOP37 : DecodedInstruction {
     LUTOnly lut;
     LOP lop;
     LOP_POP pop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULOP36 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4776,6 +5078,7 @@ struct DecodedULOP36 : DecodedInstruction {
     }
     OperandValue ops[6];
     LOP lop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUPRMT5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4783,12 +5086,14 @@ struct DecodedUPRMT5 : DecodedInstruction {
     }
     OperandValue ops[5];
     IDXOnly idx;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIADD3_647 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIADD3_647>(*this);
     }
     OperandValue ops[7];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIADD3_649 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4796,6 +5101,7 @@ struct DecodedUIADD3_649 : DecodedInstruction {
     }
     OperandValue ops[9];
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSHF5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4806,6 +5112,7 @@ struct DecodedUSHF5 : DecodedInstruction {
     CWMode cw;
     FMT_shf fmt;
     HILO hilo;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSHL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4813,6 +5120,7 @@ struct DecodedUSHL4 : DecodedInstruction {
     }
     OperandValue ops[4];
     CWMode cw;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSHR4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4821,6 +5129,7 @@ struct DecodedUSHR4 : DecodedInstruction {
     OperandValue ops[4];
     CWMode cw;
     FMT_S32_U32 fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSGXT4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4829,6 +5138,7 @@ struct DecodedUSGXT4 : DecodedInstruction {
     OperandValue ops[4];
     CWMode cw;
     FMT fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUBMSK4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4836,6 +5146,7 @@ struct DecodedUBMSK4 : DecodedInstruction {
     }
     OperandValue ops[4];
     CWMode cw;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIMAD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4844,6 +5155,7 @@ struct DecodedUIMAD5 : DecodedInstruction {
     OperandValue ops[5];
     LOOnly wide;
     FMT fmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIMAD6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4853,6 +5165,7 @@ struct DecodedUIMAD6 : DecodedInstruction {
     LOOnly wide;
     FMT fmt;
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIMAD7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4862,6 +5175,7 @@ struct DecodedUIMAD7 : DecodedInstruction {
     WIDEONLY wide;
     FMT fmt;
     XONLY X;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUF2FP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4875,6 +5189,7 @@ struct DecodedUF2FP3 : DecodedInstruction {
     RNONLY rndMode;
     EXTRACT extract;
     SATFINITE satfinite;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUF2FP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4888,6 +5203,7 @@ struct DecodedUF2FP4 : DecodedInstruction {
     PACK_ABONLY merge;
     RNDMODE_RN_RZ rndMode;
     EXTRACT extract;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUF2FP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4901,6 +5217,7 @@ struct DecodedUF2FP5 : DecodedInstruction {
     PACK_AB_MERGE_CONLY merge;
     RNONLY rndMode;
     EXTRACT extract;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUFLO4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4909,18 +5226,21 @@ struct DecodedUFLO4 : DecodedInstruction {
     OperandValue ops[4];
     FMT fmt;
     SH sh;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUBREV3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBREV3>(*this);
     }
     OperandValue ops[3];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUPOPC3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPOPC3>(*this);
     }
     OperandValue ops[3];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDCU7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4928,6 +5248,7 @@ struct DecodedLDCU7 : DecodedInstruction {
     }
     OperandValue ops[7];
     ONLY256_ldcu sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDCU6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4936,6 +5257,7 @@ struct DecodedLDCU6 : DecodedInstruction {
     OperandValue ops[6];
     ONLY256_ldcu sz;
     TEXUNPACK texunpack;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDTRAM4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4943,6 +5265,7 @@ struct DecodedLDTRAM4 : DecodedInstruction {
     }
     OperandValue ops[4];
     MODE_ldtram mode;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSYNCS6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4951,6 +5274,7 @@ struct DecodedSYNCS6 : DecodedInstruction {
     OperandValue ops[6];
     CASONLY emuop;
     ONLY64_syncs sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMALDG4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4962,6 +5286,7 @@ struct DecodedUTMALDG4 : DecodedInstruction {
     MULTICAST multicast;
     ONLY1CTA cluster_sz;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMALDG6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4973,6 +5298,7 @@ struct DecodedUTMALDG6 : DecodedInstruction {
     MULTICAST multicast;
     ONLY1CTA cluster_sz;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMASTG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4982,6 +5308,7 @@ struct DecodedUTMASTG3 : DecodedInstruction {
     TENSORDIM dim;
     MODE_utmastg mode;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMASTG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -4991,6 +5318,7 @@ struct DecodedUTMASTG5 : DecodedInstruction {
     TENSORDIM dim;
     MODE_utmastg mode;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMAREDG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5001,6 +5329,7 @@ struct DecodedUTMAREDG3 : DecodedInstruction {
     MODE_utmaredg mode;
     RedOp op;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMAREDG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5011,6 +5340,7 @@ struct DecodedUTMAREDG5 : DecodedInstruction {
     MODE_utmaredg mode;
     RedOp op;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMAPF4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5021,6 +5351,7 @@ struct DecodedUTMAPF4 : DecodedInstruction {
     TENSORDIM dim;
     MODE_IM2COL_W mode;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMAPF6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5031,6 +5362,7 @@ struct DecodedUTMAPF6 : DecodedInstruction {
     TENSORDIM dim;
     MODE_IM2COL_W mode;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUBLKCP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5046,6 +5378,7 @@ struct DecodedUBLKCP4 : DecodedInstruction {
     SEM_ublkcp sem;
     SCO sco;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUBLKCP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5061,6 +5394,7 @@ struct DecodedUBLKCP6 : DecodedInstruction {
     SEM_ublkcp sem;
     SCO sco;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUBLKRED4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5074,6 +5408,7 @@ struct DecodedUBLKRED4 : DecodedInstruction {
     SEM_ublkcp sem;
     SCO sco;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUBLKRED6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5087,6 +5422,7 @@ struct DecodedUBLKRED6 : DecodedInstruction {
     SEM_ublkcp sem;
     SCO sco;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUBLKPF3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5095,6 +5431,7 @@ struct DecodedUBLKPF3 : DecodedInstruction {
     OperandValue ops[3];
     L2ONLY cache;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUBLKPF5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5103,18 +5440,21 @@ struct DecodedUBLKPF5 : DecodedInstruction {
     OperandValue ops[5];
     L2ONLY cache;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABARSET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABARSET2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABAR_SET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABAR_SET2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSETMAXREG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5123,6 +5463,7 @@ struct DecodedUSETMAXREG3 : DecodedInstruction {
     OperandValue ops[3];
     TRY_ALLOCONLY mode;
     CTAPOOLONLY pool;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSETMAXREG2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5131,12 +5472,14 @@ struct DecodedUSETMAXREG2 : DecodedInstruction {
     OperandValue ops[2];
     DEALLOCONLY mode;
     CTAPOOLONLY pool;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSETSHMSZ2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSETSHMSZ2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUGETNEXTWORKID3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5145,6 +5488,7 @@ struct DecodedUGETNEXTWORKID3 : DecodedInstruction {
     OperandValue ops[3];
     UGETNEXTWORKID_CAST cast;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUMEMSETS5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5152,18 +5496,21 @@ struct DecodedUMEMSETS5 : DecodedInstruction {
     }
     OperandValue ops[5];
     ONLY64 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULEPC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULEPC2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMOV4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV4>(*this);
     }
     OperandValue ops[4];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIPA6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5172,6 +5519,7 @@ struct DecodedIPA6 : DecodedInstruction {
     OperandValue ops[6];
     MODE ipaop;
     OFFSETONLY msi;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBRA3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5182,6 +5530,7 @@ struct DecodedBRA3 : DecodedInstruction {
     UONLY cond;
     USEL usel;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedJMP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5192,6 +5541,7 @@ struct DecodedJMP3 : DecodedInstruction {
     UONLY cond;
     USEL usel;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSYNCS5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5206,6 +5556,7 @@ struct DecodedSYNCS5 : DecodedInstruction {
     RETVAL_OLDSTATE_TMASK_RED retval;
     OPTOUT optout;
     PARAMTYPE paramtype;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDCU8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5213,6 +5564,7 @@ struct DecodedLDCU8 : DecodedInstruction {
     }
     OperandValue ops[8];
     ONLY256_ldcu sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSYNCS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5226,6 +5578,7 @@ struct DecodedSYNCS4 : DecodedInstruction {
     TRANS64ONLY bartype;
     BarRED retval;
     LDONLY_syncs emuop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMALDG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5236,6 +5589,7 @@ struct DecodedUTMALDG3 : DecodedInstruction {
     MODE_TILED_GATHER4 mode;
     ONLY1CTA cluster_sz;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMALDG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5246,6 +5600,7 @@ struct DecodedUTMALDG5 : DecodedInstruction {
     MODE_TILED_GATHER4 mode;
     ONLY1CTA cluster_sz;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMAPF3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5256,6 +5611,7 @@ struct DecodedUTMAPF3 : DecodedInstruction {
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMAPF5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5266,18 +5622,21 @@ struct DecodedUTMAPF5 : DecodedInstruction {
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABARGET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABARGET2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABAR_GET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABAR_GET2>(*this);
     }
     OperandValue ops[2];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedELECT2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5285,6 +5644,7 @@ struct DecodedELECT2 : DecodedInstruction {
     }
     OperandValue ops[2];
     IGNORE_KILL ignoreKill;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDSM4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5295,6 +5655,7 @@ struct DecodedLDSM4 : DecodedInstruction {
     LDSM_MODE mode;
     LDSM_NUM num;
     PSEUDO_OP pseudo_op;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTSM4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5304,6 +5665,7 @@ struct DecodedSTSM4 : DecodedInstruction {
     STSM_SZ sz;
     STSM_MODE mode;
     LDSM_NUM num;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUP2UR5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5311,6 +5673,7 @@ struct DecodedUP2UR5 : DecodedInstruction {
     }
     OperandValue ops[5];
     B3B0 insert;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUP2UR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5318,6 +5681,7 @@ struct DecodedUP2UR3 : DecodedInstruction {
     }
     OperandValue ops[3];
     B3B0 insert;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUR2UP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5325,6 +5689,7 @@ struct DecodedUR2UP4 : DecodedInstruction {
     }
     OperandValue ops[4];
     B3B0 ur2up_selA;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULOP32I6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5333,6 +5698,7 @@ struct DecodedULOP32I6 : DecodedInstruction {
     OperandValue ops[6];
     LOP lop;
     LOP_POP pop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULOP32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5340,12 +5706,14 @@ struct DecodedULOP32I5 : DecodedInstruction {
     }
     OperandValue ops[5];
     LOP lop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCLEA6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCLEA6>(*this);
     }
     OperandValue ops[6];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBRXU3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5355,6 +5723,7 @@ struct DecodedBRXU3 : DecodedInstruction {
     DEPTH depth;
     COND cond;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedJMXU3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5364,6 +5733,7 @@ struct DecodedJMXU3 : DecodedInstruction {
     DEPTH depth;
     COND cond;
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDG8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5379,6 +5749,7 @@ struct DecodedLDG8 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ONLY64 input_reg_sz_64_bit75_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDG7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5396,6 +5767,7 @@ struct DecodedLDG7 : DecodedInstruction {
     U32ONLY input_reg_sz_32_bit75_dist;
     ONLY64 input_reg_sz_64_bit75_dist;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTG7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5411,6 +5783,7 @@ struct DecodedSTG7 : DecodedInstruction {
     PRIVATE private_;
     ORDER order;
     ONLY64 input_reg_sz_64_bit75_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTG6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5427,6 +5800,7 @@ struct DecodedSTG6 : DecodedInstruction {
     ORDER order;
     U32ONLY input_reg_sz_32_bit75_dist;
     ONLY64 input_reg_sz_64_bit75_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLD6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5441,6 +5815,7 @@ struct DecodedLD6 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5456,6 +5831,7 @@ struct DecodedLD5 : DecodedInstruction {
     PRIVATE private_;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDG6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5471,6 +5847,7 @@ struct DecodedLDG6 : DecodedInstruction {
     PRIVATE private_;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5479,6 +5856,7 @@ struct DecodedLDL5 : DecodedInstruction {
     OperandValue ops[5];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5487,6 +5865,7 @@ struct DecodedLDL4 : DecodedInstruction {
     OperandValue ops[4];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5495,6 +5874,7 @@ struct DecodedLDS4 : DecodedInstruction {
     OperandValue ops[4];
     LDSSIZE sz;
     STRIDE stride;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedST5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5508,6 +5888,7 @@ struct DecodedST5 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5522,6 +5903,7 @@ struct DecodedST4 : DecodedInstruction {
     PRIVATE private_;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5536,6 +5918,7 @@ struct DecodedSTG5 : DecodedInstruction {
     PRIVATE private_;
     ORDER order;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTG4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5551,6 +5934,7 @@ struct DecodedSTG4 : DecodedInstruction {
     ORDER order;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5559,6 +5943,7 @@ struct DecodedSTL5 : DecodedInstruction {
     OperandValue ops[5];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5567,6 +5952,7 @@ struct DecodedSTL4 : DecodedInstruction {
     OperandValue ops[4];
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5575,6 +5961,7 @@ struct DecodedSTS4 : DecodedInstruction {
     OperandValue ops[4];
     SZ_U8_S8_U16_S16_32_64_128 sz;
     STRIDE stride;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedATOM8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5589,6 +5976,7 @@ struct DecodedATOM8 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ONLY64 input_reg_sz_64_100_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedREDS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5598,6 +5986,7 @@ struct DecodedREDS4 : DecodedInstruction {
     REDSOP op;
     REDSSIZE sz;
     STRIDE stride;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedREDG4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5613,6 +6002,7 @@ struct DecodedREDG4 : DecodedInstruction {
     PRIVATE private_;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedREDG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5627,6 +6017,7 @@ struct DecodedREDG5 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedATOMG7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5641,6 +6032,7 @@ struct DecodedATOMG7 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ONLY64 input_reg_sz_64_100_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDGMC4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5656,6 +6048,7 @@ struct DecodedLDGMC4 : DecodedInstruction {
     ONLY64 input_reg_sz_64_dist;
     LDGMC_FP_OP fpOp;
     LDGMC_FP_SIZES fpSz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDGMC5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5670,6 +6063,7 @@ struct DecodedLDGMC5 : DecodedInstruction {
     ONLY64 input_reg_sz_64_dist;
     LDGMC_FP_OP fpOp;
     LDGMC_FP_SIZES fpSz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedQSPC5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5680,6 +6074,7 @@ struct DecodedQSPC5 : DecodedInstruction {
     QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDCU5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5688,6 +6083,7 @@ struct DecodedLDCU5 : DecodedInstruction {
     OperandValue ops[5];
     SZ_U8_S8_U16_S16_32_64_128 sz;
     TEXUNPACK texunpack;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDCU4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5696,6 +6092,7 @@ struct DecodedLDCU4 : DecodedInstruction {
     OperandValue ops[4];
     SZ_U8_S8_U16_S16_32_64_128 sz;
     TEXUNPACK texunpack;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedARRIVES3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5705,6 +6102,7 @@ struct DecodedARRIVES3 : DecodedInstruction {
     LDGSTSBARONLY arrive;
     CInteger_64 sz;
     BAROP barop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSYNCS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5713,6 +6111,7 @@ struct DecodedSYNCS3 : DecodedInstruction {
     OperandValue ops[3];
     CCTLONLY cctl_mode;
     SYNCS_CCTL_OP cctlop;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMACCTL2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5721,6 +6120,7 @@ struct DecodedUTMACCTL2 : DecodedInstruction {
     OperandValue ops[2];
     COP_utmacctl cop;
     ONEONLY one;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABARARV1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5728,6 +6128,7 @@ struct DecodedUCGABARARV1 : DecodedInstruction {
     }
     OperandValue ops[1];
     SYNCALL syncall;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABAR_ARV1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5735,6 +6136,7 @@ struct DecodedUCGABAR_ARV1 : DecodedInstruction {
     }
     OperandValue ops[1];
     SYNCALL syncall;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSETSHMSZ1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5742,6 +6144,7 @@ struct DecodedUSETSHMSZ1 : DecodedInstruction {
     }
     OperandValue ops[1];
     FLUSHONLY_usetshmsz flush;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedULEPC3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5749,6 +6152,7 @@ struct DecodedULEPC3 : DecodedInstruction {
     }
     OperandValue ops[3];
     std::uint8_t rel;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTEX8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5765,6 +6169,7 @@ struct DecodedTEX8 : DecodedInstruction {
     DIV div;
     NODEP nodep;
     SCRONLY scr;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTLD48 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5780,6 +6185,7 @@ struct DecodedTLD48 : DecodedInstruction {
     COP cop;
     NODEP nodep;
     SCRONLY scr;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTLD8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5796,6 +6202,7 @@ struct DecodedTLD8 : DecodedInstruction {
     CL cl;
     NODEP nodep;
     SCRONLY scr;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTXD8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5809,6 +6216,7 @@ struct DecodedTXD8 : DecodedInstruction {
     UAI uai;
     COP cop;
     NODEP nodep;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFOOTPRINT6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5822,6 +6230,7 @@ struct DecodedFOOTPRINT6 : DecodedInstruction {
     DIV div;
     NODEP nodep;
     SCRONLY scr;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDGSTS6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5839,6 +6248,7 @@ struct DecodedLDGSTS6 : DecodedInstruction {
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
     U32ONLY input_reg_sz_32_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDGSTS8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5855,6 +6265,7 @@ struct DecodedLDGSTS8 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSUQUERY7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5864,6 +6275,7 @@ struct DecodedSUQUERY7 : DecodedInstruction {
     BA ba;
     Dim1 dim;
     UAI uai;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSTAS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5873,6 +6285,7 @@ struct DecodedSTAS4 : DecodedInstruction {
     SZ_32_64_128 sz;
     ONLY64 input_reg_sz_64_dist;
     U32ONLY input_reg_sz_32_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedREDAS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5883,18 +6296,21 @@ struct DecodedREDAS4 : DecodedInstruction {
     REDAS_SZ sz;
     ONLY64 input_reg_sz_64_dist;
     U32ONLY input_reg_sz_32_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABARWAIT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABARWAIT1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABAR_WAIT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABAR_WAIT1>(*this);
     }
     OperandValue ops[1];
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMMA9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5906,6 +6322,7 @@ struct DecodedHMMA9 : DecodedInstruction {
     SIZE_1688_16816_16832 size;
     FloatNo64 dstfmt;
     SRCFMT srcfmt;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTLD49 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5921,6 +6338,7 @@ struct DecodedTLD49 : DecodedInstruction {
     COP cop;
     NODEP nodep;
     BONLY b;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTLD9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5937,6 +6355,7 @@ struct DecodedTLD9 : DecodedInstruction {
     CL cl;
     NODEP nodep;
     BONLY b;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTMML7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5947,6 +6366,7 @@ struct DecodedTMML7 : DecodedInstruction {
     DIV div;
     NODEP nodep;
     BONLY b;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTXD9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5960,6 +6380,7 @@ struct DecodedTXD9 : DecodedInstruction {
     COP cop;
     NODEP nodep;
     BONLY b;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTXQ6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5968,6 +6389,7 @@ struct DecodedTXQ6 : DecodedInstruction {
     OperandValue ops[6];
     NODEP nodep;
     BONLY b;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFOOTPRINT7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5981,6 +6403,7 @@ struct DecodedFOOTPRINT7 : DecodedInstruction {
     DIV div;
     NODEP nodep;
     SCRONLY scr;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSUATOM7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -5998,6 +6421,7 @@ struct DecodedSUATOM7 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     Clamp1 clamp;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSULD6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -6016,6 +6440,7 @@ struct DecodedSULD6 : DecodedInstruction {
     DOnly d;
     BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSUST5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -6034,6 +6459,7 @@ struct DecodedSUST5 : DecodedInstruction {
     DOnly d;
     BA ba;
     SZ_U8_S8_U16_S16_32_64_128 sz;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSURED5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -6051,6 +6477,7 @@ struct DecodedSURED5 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     Clamp1 clamp;
+    std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDGSTS7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
@@ -6067,6 +6494,7 @@ struct DecodedLDGSTS7 : DecodedInstruction {
     SCO sco;
     PRIVATE private_;
     ONLY64 input_reg_sz_64_dist;
+    std::uint8_t subclass;  // generated semantic flags
 };
 
 // Per-variant operand-role manifest (indexed by isa_data kVariants

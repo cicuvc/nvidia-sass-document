@@ -2568,8 +2568,9 @@ inline void shape_fill_mods_grp424(const FillIn& in, void* void_out) {
 inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) {
     switch (vi) {
     case 0: {
-        shape_fill_mods_grp0(in, void_out);
         auto& out = *static_cast<DecodedMOV2*>(void_out);
+        shape_fill_mods_grp0(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2580,6 +2581,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1: {
         auto& out = *static_cast<DecodedMOV3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2592,8 +2594,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 2: {
-        shape_fill_mods_grp2(in, void_out);
         auto& out = *static_cast<DecodedP2R4*>(void_out);
+        shape_fill_mods_grp2(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2609,8 +2612,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 3: {
-        shape_fill_mods_grp3(in, void_out);
         auto& out = *static_cast<DecodedR2P3*>(void_out);
+        shape_fill_mods_grp3(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("PR");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("PR"));
@@ -2623,8 +2627,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 4: {
-        shape_fill_mods_grp4(in, void_out);
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        shape_fill_mods_grp4(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2640,8 +2645,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 5: {
-        shape_fill_mods_grp5(in, void_out);
         auto& out = *static_cast<DecodedFSEL4*>(void_out);
+        shape_fill_mods_grp5(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2657,8 +2663,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 6: {
-        shape_fill_mods_grp6(in, void_out);
         auto& out = *static_cast<DecodedFMNMX4*>(void_out);
+        shape_fill_mods_grp6(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2674,8 +2681,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 7: {
-        shape_fill_mods_grp7(in, void_out);
         auto& out = *static_cast<DecodedFMNMX5*>(void_out);
+        shape_fill_mods_grp7(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2694,8 +2702,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 8: {
-        shape_fill_mods_grp8(in, void_out);
         auto& out = *static_cast<DecodedFSET4*>(void_out);
+        shape_fill_mods_grp8(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2711,8 +2720,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 9: {
-        shape_fill_mods_grp9(in, void_out);
         auto& out = *static_cast<DecodedFSET3*>(void_out);
+        shape_fill_mods_grp9(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2725,8 +2735,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 10: {
-        shape_fill_mods_grp10(in, void_out);
         auto& out = *static_cast<DecodedFSETP5*>(void_out);
+        shape_fill_mods_grp10(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2745,8 +2756,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 11: {
-        shape_fill_mods_grp11(in, void_out);
         auto& out = *static_cast<DecodedFSETP3*>(void_out);
+        shape_fill_mods_grp11(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2759,8 +2771,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 12: {
-        shape_fill_mods_grp12(in, void_out);
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        shape_fill_mods_grp12(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2782,8 +2795,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 13: {
-        shape_fill_mods_grp13(in, void_out);
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        shape_fill_mods_grp13(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2802,8 +2816,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 14: {
-        shape_fill_mods_grp14(in, void_out);
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        shape_fill_mods_grp14(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2819,8 +2834,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 15: {
-        shape_fill_mods_grp15(in, void_out);
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        shape_fill_mods_grp15(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2833,8 +2849,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 16: {
-        shape_fill_mods_grp12(in, void_out);
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        shape_fill_mods_grp12(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2856,8 +2873,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 17: {
-        shape_fill_mods_grp13(in, void_out);
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        shape_fill_mods_grp13(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2876,8 +2894,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 18: {
-        shape_fill_mods_grp14(in, void_out);
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        shape_fill_mods_grp14(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2893,8 +2912,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 19: {
-        shape_fill_mods_grp15(in, void_out);
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        shape_fill_mods_grp15(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -2908,6 +2928,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 20: {
         auto& out = *static_cast<DecodedIADD36*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2929,8 +2950,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 21: {
-        shape_fill_mods_grp17(in, void_out);
         auto& out = *static_cast<DecodedIADD38*>(void_out);
+        shape_fill_mods_grp17(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2959,6 +2981,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 22: {
         auto& out = *static_cast<DecodedISCADD5*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -2977,8 +3000,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 23: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3000,8 +3024,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 24: {
-        shape_fill_mods_grp20(in, void_out);
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        shape_fill_mods_grp20(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3020,8 +3045,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 25: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3043,8 +3069,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 26: {
-        shape_fill_mods_grp21(in, void_out);
         auto& out = *static_cast<DecodedLEA7*>(void_out);
+        shape_fill_mods_grp21(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3069,8 +3096,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 27: {
-        shape_fill_mods_grp20(in, void_out);
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        shape_fill_mods_grp20(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3089,8 +3117,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 28: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3112,8 +3141,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 29: {
-        shape_fill_mods_grp22(in, void_out);
         auto& out = *static_cast<DecodedLOP5*>(void_out);
+        shape_fill_mods_grp22(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3132,8 +3162,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 30: {
-        shape_fill_mods_grp23(in, void_out);
         auto& out = *static_cast<DecodedLOP4*>(void_out);
+        shape_fill_mods_grp23(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3149,8 +3180,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 31: {
-        shape_fill_mods_grp24(in, void_out);
         auto& out = *static_cast<DecodedLOP37*>(void_out);
+        shape_fill_mods_grp24(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3175,8 +3207,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 32: {
-        shape_fill_mods_grp25(in, void_out);
         auto& out = *static_cast<DecodedLOP36*>(void_out);
+        shape_fill_mods_grp25(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3198,8 +3231,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 33: {
-        shape_fill_mods_grp25(in, void_out);
         auto& out = *static_cast<DecodedLOP36*>(void_out);
+        shape_fill_mods_grp25(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3221,8 +3255,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 34: {
-        shape_fill_mods_grp26(in, void_out);
         auto& out = *static_cast<DecodedLOP35*>(void_out);
+        shape_fill_mods_grp26(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3242,6 +3277,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 35: {
         auto& out = *static_cast<DecodedIABS2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3251,8 +3287,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 36: {
-        shape_fill_mods_grp28(in, void_out);
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        shape_fill_mods_grp28(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3268,8 +3305,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 37: {
-        shape_fill_mods_grp29(in, void_out);
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        shape_fill_mods_grp29(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3294,8 +3332,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 38: {
-        shape_fill_mods_grp30(in, void_out);
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        shape_fill_mods_grp30(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3317,8 +3356,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 39: {
-        shape_fill_mods_grp29(in, void_out);
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        shape_fill_mods_grp29(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3343,8 +3383,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 40: {
-        shape_fill_mods_grp30(in, void_out);
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        shape_fill_mods_grp30(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3366,8 +3407,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 41: {
-        shape_fill_mods_grp31(in, void_out);
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        shape_fill_mods_grp31(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3383,8 +3425,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 42: {
-        shape_fill_mods_grp32(in, void_out);
         auto& out = *static_cast<DecodedSHL3*>(void_out);
+        shape_fill_mods_grp32(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3397,8 +3440,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 43: {
-        shape_fill_mods_grp33(in, void_out);
         auto& out = *static_cast<DecodedSHR3*>(void_out);
+        shape_fill_mods_grp33(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3411,8 +3455,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 44: {
-        shape_fill_mods_grp34(in, void_out);
         auto& out = *static_cast<DecodedSGXT3*>(void_out);
+        shape_fill_mods_grp34(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3425,8 +3470,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 45: {
-        shape_fill_mods_grp35(in, void_out);
         auto& out = *static_cast<DecodedBMSK3*>(void_out);
+        shape_fill_mods_grp35(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3439,8 +3485,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 46: {
-        shape_fill_mods_grp36(in, void_out);
         auto& out = *static_cast<DecodedPLOP35*>(void_out);
+        shape_fill_mods_grp36(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3459,8 +3506,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 47: {
-        shape_fill_mods_grp37(in, void_out);
         auto& out = *static_cast<DecodedPLOP37*>(void_out);
+        shape_fill_mods_grp37(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3485,8 +3533,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 48: {
-        shape_fill_mods_grp36(in, void_out);
         auto& out = *static_cast<DecodedPLOP35*>(void_out);
+        shape_fill_mods_grp36(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3505,8 +3554,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 49: {
-        shape_fill_mods_grp37(in, void_out);
         auto& out = *static_cast<DecodedPLOP37*>(void_out);
+        shape_fill_mods_grp37(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3531,8 +3581,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 50: {
-        shape_fill_mods_grp36(in, void_out);
         auto& out = *static_cast<DecodedPLOP35*>(void_out);
+        shape_fill_mods_grp36(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3551,8 +3602,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 51: {
-        shape_fill_mods_grp37(in, void_out);
         auto& out = *static_cast<DecodedPLOP37*>(void_out);
+        shape_fill_mods_grp37(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -3577,8 +3629,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 52: {
-        shape_fill_mods_grp38(in, void_out);
         auto& out = *static_cast<DecodedFMUL3*>(void_out);
+        shape_fill_mods_grp38(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3591,8 +3644,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 53: {
-        shape_fill_mods_grp39(in, void_out);
         auto& out = *static_cast<DecodedFADD3*>(void_out);
+        shape_fill_mods_grp39(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3605,8 +3659,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 54: {
-        shape_fill_mods_grp40(in, void_out);
         auto& out = *static_cast<DecodedFHADD3*>(void_out);
+        shape_fill_mods_grp40(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3619,8 +3674,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 55: {
-        shape_fill_mods_grp41(in, void_out);
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        shape_fill_mods_grp41(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3636,8 +3692,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 56: {
-        shape_fill_mods_grp42(in, void_out);
         auto& out = *static_cast<DecodedFHFMA4*>(void_out);
+        shape_fill_mods_grp42(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3653,8 +3710,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 57: {
-        shape_fill_mods_grp43(in, void_out);
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        shape_fill_mods_grp43(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3670,8 +3728,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 58: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3690,8 +3749,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 59: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3710,8 +3770,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 60: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3730,8 +3791,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 61: {
-        shape_fill_mods_grp45(in, void_out);
         auto& out = *static_cast<DecodedIMUL3*>(void_out);
+        shape_fill_mods_grp45(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3744,8 +3806,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 62: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3764,8 +3827,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 63: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3784,8 +3848,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 64: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3807,8 +3872,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 65: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3830,8 +3896,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 66: {
-        shape_fill_mods_grp47(in, void_out);
         auto& out = *static_cast<DecodedIMUL4*>(void_out);
+        shape_fill_mods_grp47(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3847,8 +3914,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 67: {
-        shape_fill_mods_grp48(in, void_out);
         auto& out = *static_cast<DecodedIDP4*>(void_out);
+        shape_fill_mods_grp48(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3864,8 +3932,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 68: {
-        shape_fill_mods_grp48(in, void_out);
         auto& out = *static_cast<DecodedIDP4*>(void_out);
+        shape_fill_mods_grp48(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3881,8 +3950,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 69: {
-        shape_fill_mods_grp49(in, void_out);
         auto& out = *static_cast<DecodedIDP4A4*>(void_out);
+        shape_fill_mods_grp49(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3898,8 +3968,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 70: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3918,8 +3989,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 71: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3938,8 +4010,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 72: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3961,8 +4034,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 73: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3984,8 +4058,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 74: {
-        shape_fill_mods_grp50(in, void_out);
         auto& out = *static_cast<DecodedDMUL3*>(void_out);
+        shape_fill_mods_grp50(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -3998,8 +4073,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 75: {
-        shape_fill_mods_grp51(in, void_out);
         auto& out = *static_cast<DecodedDADD3*>(void_out);
+        shape_fill_mods_grp51(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4012,8 +4088,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 76: {
-        shape_fill_mods_grp52(in, void_out);
         auto& out = *static_cast<DecodedDSETP5*>(void_out);
+        shape_fill_mods_grp52(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -4032,8 +4109,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 77: {
-        shape_fill_mods_grp53(in, void_out);
         auto& out = *static_cast<DecodedDSETP3*>(void_out);
+        shape_fill_mods_grp53(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -4046,8 +4124,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 78: {
-        shape_fill_mods_grp54(in, void_out);
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        shape_fill_mods_grp54(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4063,8 +4142,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 79: {
-        shape_fill_mods_grp55(in, void_out);
         auto& out = *static_cast<DecodedCLMAD4*>(void_out);
+        shape_fill_mods_grp55(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4080,8 +4160,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 80: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4094,8 +4175,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 81: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4108,8 +4190,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 82: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4122,8 +4205,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 83: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4136,8 +4220,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 84: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4153,8 +4238,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 85: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4170,8 +4256,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 86: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4187,8 +4274,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 87: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4207,8 +4295,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 88: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4227,8 +4316,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 89: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4247,8 +4337,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 90: {
-        shape_fill_mods_grp59(in, void_out);
         auto& out = *static_cast<DecodedHMUL23*>(void_out);
+        shape_fill_mods_grp59(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4261,8 +4352,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 91: {
-        shape_fill_mods_grp59(in, void_out);
         auto& out = *static_cast<DecodedHMUL23*>(void_out);
+        shape_fill_mods_grp59(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4275,8 +4367,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 92: {
-        shape_fill_mods_grp60(in, void_out);
         auto& out = *static_cast<DecodedHSET24*>(void_out);
+        shape_fill_mods_grp60(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4292,8 +4385,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 93: {
-        shape_fill_mods_grp60(in, void_out);
         auto& out = *static_cast<DecodedHSET24*>(void_out);
+        shape_fill_mods_grp60(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4309,8 +4403,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 94: {
-        shape_fill_mods_grp61(in, void_out);
         auto& out = *static_cast<DecodedHSET23*>(void_out);
+        shape_fill_mods_grp61(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4323,8 +4418,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 95: {
-        shape_fill_mods_grp61(in, void_out);
         auto& out = *static_cast<DecodedHSET23*>(void_out);
+        shape_fill_mods_grp61(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4337,8 +4433,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 96: {
-        shape_fill_mods_grp62(in, void_out);
         auto& out = *static_cast<DecodedHSETP25*>(void_out);
+        shape_fill_mods_grp62(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -4357,8 +4454,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 97: {
-        shape_fill_mods_grp62(in, void_out);
         auto& out = *static_cast<DecodedHSETP25*>(void_out);
+        shape_fill_mods_grp62(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -4377,8 +4475,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 98: {
-        shape_fill_mods_grp63(in, void_out);
         auto& out = *static_cast<DecodedHSETP24*>(void_out);
+        shape_fill_mods_grp63(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -4394,8 +4493,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 99: {
-        shape_fill_mods_grp63(in, void_out);
         auto& out = *static_cast<DecodedHSETP24*>(void_out);
+        shape_fill_mods_grp63(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -4411,8 +4511,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 100: {
-        shape_fill_mods_grp64(in, void_out);
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        shape_fill_mods_grp64(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4428,8 +4529,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 101: {
-        shape_fill_mods_grp65(in, void_out);
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        shape_fill_mods_grp65(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4448,8 +4550,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 102: {
-        shape_fill_mods_grp64(in, void_out);
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        shape_fill_mods_grp64(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4465,8 +4568,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 103: {
-        shape_fill_mods_grp65(in, void_out);
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        shape_fill_mods_grp65(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4485,8 +4589,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 104: {
-        shape_fill_mods_grp66(in, void_out);
         auto& out = *static_cast<DecodedVIADD3*>(void_out);
+        shape_fill_mods_grp66(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4499,8 +4604,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 105: {
-        shape_fill_mods_grp67(in, void_out);
         auto& out = *static_cast<DecodedIMMA5*>(void_out);
+        shape_fill_mods_grp67(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4519,8 +4625,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 106: {
-        shape_fill_mods_grp68(in, void_out);
         auto& out = *static_cast<DecodedIMMA7*>(void_out);
+        shape_fill_mods_grp68(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4545,8 +4652,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 107: {
-        shape_fill_mods_grp69(in, void_out);
         auto& out = *static_cast<DecodedI2I2*>(void_out);
+        shape_fill_mods_grp69(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4556,8 +4664,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 108: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4573,8 +4682,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 109: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4590,8 +4700,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 110: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4607,8 +4718,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 111: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4624,8 +4736,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 112: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4641,8 +4754,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 113: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4658,8 +4772,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 114: {
-        shape_fill_mods_grp71(in, void_out);
         auto& out = *static_cast<DecodedMOVM2*>(void_out);
+        shape_fill_mods_grp71(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4669,8 +4784,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 115: {
-        shape_fill_mods_grp72(in, void_out);
         auto& out = *static_cast<DecodedHMMA7*>(void_out);
+        shape_fill_mods_grp72(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4695,8 +4811,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 116: {
-        shape_fill_mods_grp73(in, void_out);
         auto& out = *static_cast<DecodedHMMA5*>(void_out);
+        shape_fill_mods_grp73(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4715,8 +4832,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 117: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4726,8 +4844,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 118: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4737,8 +4856,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 119: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4748,8 +4868,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 120: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4762,8 +4883,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 121: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4776,8 +4898,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 122: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4790,8 +4913,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 123: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4804,8 +4928,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 124: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4818,8 +4943,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 125: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4835,8 +4961,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 126: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4852,8 +4979,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 127: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4869,8 +4997,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 128: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4883,8 +5012,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 129: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4897,8 +5027,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 130: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4908,8 +5039,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 131: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4919,8 +5051,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 132: {
-        shape_fill_mods_grp77(in, void_out);
         auto& out = *static_cast<DecodedDMMA5*>(void_out);
+        shape_fill_mods_grp77(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4939,8 +5072,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 133: {
-        shape_fill_mods_grp78(in, void_out);
         auto& out = *static_cast<DecodedHMNMX24*>(void_out);
+        shape_fill_mods_grp78(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4956,8 +5090,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 134: {
-        shape_fill_mods_grp78(in, void_out);
         auto& out = *static_cast<DecodedHMNMX24*>(void_out);
+        shape_fill_mods_grp78(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4973,8 +5108,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 135: {
-        shape_fill_mods_grp79(in, void_out);
         auto& out = *static_cast<DecodedHMNMX26*>(void_out);
+        shape_fill_mods_grp79(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -4996,8 +5132,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 136: {
-        shape_fill_mods_grp79(in, void_out);
         auto& out = *static_cast<DecodedHMNMX26*>(void_out);
+        shape_fill_mods_grp79(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5019,8 +5156,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 137: {
-        shape_fill_mods_grp80(in, void_out);
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        shape_fill_mods_grp80(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5036,8 +5174,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 138: {
-        shape_fill_mods_grp81(in, void_out);
         auto& out = *static_cast<DecodedI2FP2*>(void_out);
+        shape_fill_mods_grp81(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5047,8 +5186,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 139: {
-        shape_fill_mods_grp82(in, void_out);
         auto& out = *static_cast<DecodedVIMNMX4*>(void_out);
+        shape_fill_mods_grp82(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5064,8 +5204,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 140: {
-        shape_fill_mods_grp83(in, void_out);
         auto& out = *static_cast<DecodedQMMA5*>(void_out);
+        shape_fill_mods_grp83(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5084,8 +5225,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 141: {
-        shape_fill_mods_grp83(in, void_out);
         auto& out = *static_cast<DecodedQMMA5*>(void_out);
+        shape_fill_mods_grp83(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5104,8 +5246,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 142: {
-        shape_fill_mods_grp84(in, void_out);
         auto& out = *static_cast<DecodedQMMA7*>(void_out);
+        shape_fill_mods_grp84(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5130,8 +5273,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 143: {
-        shape_fill_mods_grp84(in, void_out);
         auto& out = *static_cast<DecodedQMMA7*>(void_out);
+        shape_fill_mods_grp84(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5156,8 +5300,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 144: {
-        shape_fill_mods_grp85(in, void_out);
         auto& out = *static_cast<DecodedR2UR3*>(void_out);
+        shape_fill_mods_grp85(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -5170,8 +5315,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 145: {
-        shape_fill_mods_grp85(in, void_out);
         auto& out = *static_cast<DecodedR2UR3*>(void_out);
+        shape_fill_mods_grp85(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -5184,8 +5330,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 146: {
-        shape_fill_mods_grp85(in, void_out);
         auto& out = *static_cast<DecodedR2UR3*>(void_out);
+        shape_fill_mods_grp85(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -5198,8 +5345,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 147: {
-        shape_fill_mods_grp85(in, void_out);
         auto& out = *static_cast<DecodedR2UR3*>(void_out);
+        shape_fill_mods_grp85(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -5212,8 +5360,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 148: {
-        shape_fill_mods_grp86(in, void_out);
         auto& out = *static_cast<DecodedFLO3*>(void_out);
+        shape_fill_mods_grp86(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5227,6 +5376,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 149: {
         auto& out = *static_cast<DecodedBREV2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5236,8 +5386,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 150: {
-        shape_fill_mods_grp88(in, void_out);
         auto& out = *static_cast<DecodedFCHK3*>(void_out);
+        shape_fill_mods_grp88(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -5250,8 +5401,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 151: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5261,8 +5413,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 152: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5272,8 +5425,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 153: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5283,8 +5437,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 154: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5294,8 +5449,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 155: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5305,8 +5461,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 156: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5316,8 +5473,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 157: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5327,8 +5485,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 158: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5338,8 +5497,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 159: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5349,8 +5509,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 160: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5360,8 +5521,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 161: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5371,8 +5533,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 162: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5382,8 +5545,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 163: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5393,8 +5557,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 164: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5404,8 +5569,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 165: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5415,8 +5581,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 166: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5426,8 +5593,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 167: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5437,8 +5605,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 168: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5448,8 +5617,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 169: {
-        shape_fill_mods_grp93(in, void_out);
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        shape_fill_mods_grp93(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5459,8 +5629,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 170: {
-        shape_fill_mods_grp93(in, void_out);
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        shape_fill_mods_grp93(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5470,8 +5641,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 171: {
-        shape_fill_mods_grp93(in, void_out);
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        shape_fill_mods_grp93(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5482,6 +5654,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 172: {
         auto& out = *static_cast<DecodedPOPC2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5491,8 +5664,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 173: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5502,8 +5676,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 174: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5513,8 +5688,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 175: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5524,8 +5700,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 176: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5535,8 +5712,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 177: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5546,8 +5724,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 178: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5557,8 +5736,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 179: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5568,8 +5748,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 180: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5579,8 +5760,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 181: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5590,8 +5772,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 182: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5601,8 +5784,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 183: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5612,8 +5796,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 184: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5623,8 +5808,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 185: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5634,8 +5820,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 186: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5645,8 +5832,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 187: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5656,8 +5844,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 188: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5667,8 +5856,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 189: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5678,8 +5868,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 190: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5689,8 +5880,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 191: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5700,8 +5892,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 192: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5711,8 +5904,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 193: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5722,8 +5916,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 194: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5733,8 +5928,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 195: {
-        shape_fill_mods_grp95(in, void_out);
         auto& out = *static_cast<DecodedB2R2*>(void_out);
+        shape_fill_mods_grp95(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5744,8 +5940,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 196: {
-        shape_fill_mods_grp95(in, void_out);
         auto& out = *static_cast<DecodedB2R2*>(void_out);
+        shape_fill_mods_grp95(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5755,16 +5952,19 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 197: {
-        shape_fill_mods_grp96(in, void_out);
         auto& out = *static_cast<DecodedB2R1*>(void_out);
+        shape_fill_mods_grp96(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
         break;
     }
     case 198: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -5774,8 +5974,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 199: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -5788,8 +5990,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 200: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -5802,8 +6006,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 201: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -5816,8 +6022,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 202: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -5827,8 +6035,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 203: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -5838,8 +6048,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 204: {
-        shape_fill_mods_grp99(in, void_out);
         auto& out = *static_cast<DecodedR2B2*>(void_out);
+        shape_fill_mods_grp99(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("barname");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("barname"));
@@ -5849,16 +6060,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 205: {
-        shape_fill_mods_grp100(in, void_out);
         auto& out = *static_cast<DecodedSETCTAID1*>(void_out);
+        shape_fill_mods_grp100(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
         break;
     }
     case 206: {
-        shape_fill_mods_grp101(in, void_out);
         auto& out = *static_cast<DecodedALD4*>(void_out);
+        shape_fill_mods_grp101(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5874,8 +6087,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 207: {
-        shape_fill_mods_grp102(in, void_out);
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        shape_fill_mods_grp102(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5894,8 +6108,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 208: {
-        shape_fill_mods_grp102(in, void_out);
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        shape_fill_mods_grp102(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5914,8 +6129,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 209: {
-        shape_fill_mods_grp102(in, void_out);
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        shape_fill_mods_grp102(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -5934,8 +6150,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 210: {
-        shape_fill_mods_grp103(in, void_out);
         auto& out = *static_cast<DecodedAST4*>(void_out);
+        shape_fill_mods_grp103(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("srcAttr");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("srcAttr"));
@@ -5951,8 +6168,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 211: {
-        shape_fill_mods_grp104(in, void_out);
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        shape_fill_mods_grp104(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("srcAttr");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("srcAttr"));
@@ -5971,8 +6189,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 212: {
-        shape_fill_mods_grp104(in, void_out);
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        shape_fill_mods_grp104(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("srcAttr");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("srcAttr"));
@@ -5991,8 +6210,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 213: {
-        shape_fill_mods_grp104(in, void_out);
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        shape_fill_mods_grp104(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("srcAttr");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("srcAttr"));
@@ -6011,8 +6231,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 214: {
-        shape_fill_mods_grp105(in, void_out);
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        shape_fill_mods_grp105(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6025,8 +6246,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 215: {
-        shape_fill_mods_grp105(in, void_out);
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        shape_fill_mods_grp105(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6039,8 +6261,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 216: {
-        shape_fill_mods_grp105(in, void_out);
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        shape_fill_mods_grp105(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6053,16 +6276,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 217: {
-        shape_fill_mods_grp106(in, void_out);
         auto& out = *static_cast<DecodedOUT1*>(void_out);
+        shape_fill_mods_grp106(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
         break;
     }
     case 218: {
-        shape_fill_mods_grp107(in, void_out);
         auto& out = *static_cast<DecodedIPA4*>(void_out);
+        shape_fill_mods_grp107(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6078,8 +6303,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 219: {
-        shape_fill_mods_grp108(in, void_out);
         auto& out = *static_cast<DecodedIPA5*>(void_out);
+        shape_fill_mods_grp108(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6098,18 +6324,21 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 220: {
+        auto& out = *static_cast<DecodedCCTL0*>(void_out);
         shape_fill_mods_grp109(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 221: {
+        auto& out = *static_cast<DecodedCCTL0*>(void_out);
         shape_fill_mods_grp109(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 222: {
-        shape_fill_mods_grp110(in, void_out);
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        shape_fill_mods_grp110(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6122,8 +6351,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 223: {
-        shape_fill_mods_grp110(in, void_out);
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        shape_fill_mods_grp110(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6136,8 +6366,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 224: {
-        shape_fill_mods_grp110(in, void_out);
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        shape_fill_mods_grp110(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6150,8 +6381,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 225: {
-        shape_fill_mods_grp111(in, void_out);
         auto& out = *static_cast<DecodedCALL2*>(void_out);
+        shape_fill_mods_grp111(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6161,8 +6393,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 226: {
-        shape_fill_mods_grp112(in, void_out);
         auto& out = *static_cast<DecodedWARPSYNC2*>(void_out);
+        shape_fill_mods_grp112(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6172,8 +6405,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 227: {
-        shape_fill_mods_grp113(in, void_out);
         auto& out = *static_cast<DecodedWARPSYNC3*>(void_out);
+        shape_fill_mods_grp113(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6186,8 +6420,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 228: {
-        shape_fill_mods_grp113(in, void_out);
         auto& out = *static_cast<DecodedWARPSYNC3*>(void_out);
+        shape_fill_mods_grp113(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6201,14 +6436,16 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 229: {
         auto& out = *static_cast<DecodedLEPC1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
         break;
     }
     case 230: {
-        shape_fill_mods_grp115(in, void_out);
         auto& out = *static_cast<DecodedRPCMOV2*>(void_out);
+        shape_fill_mods_grp115(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("RpcN");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("RpcN"));
@@ -6218,8 +6455,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 231: {
-        shape_fill_mods_grp115(in, void_out);
         auto& out = *static_cast<DecodedRPCMOV2*>(void_out);
+        shape_fill_mods_grp115(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6229,8 +6467,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 232: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6240,8 +6479,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 233: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("cbu_state");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("cbu_state"));
@@ -6251,8 +6491,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 234: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("atexit_pc");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("atexit_pc"));
@@ -6262,8 +6503,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 235: {
-        shape_fill_mods_grp117(in, void_out);
         auto& out = *static_cast<DecodedNANOTRAP2*>(void_out);
+        shape_fill_mods_grp117(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6273,8 +6515,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 236: {
-        shape_fill_mods_grp118(in, void_out);
         auto& out = *static_cast<DecodedNANOSLEEP2*>(void_out);
+        shape_fill_mods_grp118(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -6284,8 +6527,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 237: {
-        shape_fill_mods_grp119(in, void_out);
         auto& out = *static_cast<DecodedTEX9*>(void_out);
+        shape_fill_mods_grp119(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6316,8 +6560,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 238: {
-        shape_fill_mods_grp119(in, void_out);
         auto& out = *static_cast<DecodedTEX9*>(void_out);
+        shape_fill_mods_grp119(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6348,8 +6593,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 239: {
-        shape_fill_mods_grp120(in, void_out);
         auto& out = *static_cast<DecodedTMML6*>(void_out);
+        shape_fill_mods_grp120(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -6371,8 +6617,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 240: {
-        shape_fill_mods_grp121(in, void_out);
         auto& out = *static_cast<DecodedTXQ5*>(void_out);
+        shape_fill_mods_grp121(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -6391,8 +6638,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 241: {
-        shape_fill_mods_grp122(in, void_out);
         auto& out = *static_cast<DecodedLDG5*>(void_out);
+        shape_fill_mods_grp122(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6411,8 +6659,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 242: {
-        shape_fill_mods_grp122(in, void_out);
         auto& out = *static_cast<DecodedLDG5*>(void_out);
+        shape_fill_mods_grp122(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6431,8 +6680,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 243: {
-        shape_fill_mods_grp123(in, void_out);
         auto& out = *static_cast<DecodedST3*>(void_out);
+        shape_fill_mods_grp123(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6445,8 +6695,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 244: {
-        shape_fill_mods_grp123(in, void_out);
         auto& out = *static_cast<DecodedST3*>(void_out);
+        shape_fill_mods_grp123(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6459,8 +6710,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 245: {
-        shape_fill_mods_grp124(in, void_out);
         auto& out = *static_cast<DecodedSTG3*>(void_out);
+        shape_fill_mods_grp124(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6473,8 +6725,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 246: {
-        shape_fill_mods_grp124(in, void_out);
         auto& out = *static_cast<DecodedSTG3*>(void_out);
+        shape_fill_mods_grp124(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6487,8 +6740,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 247: {
-        shape_fill_mods_grp125(in, void_out);
         auto& out = *static_cast<DecodedSTL3*>(void_out);
+        shape_fill_mods_grp125(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6501,8 +6755,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 248: {
-        shape_fill_mods_grp125(in, void_out);
         auto& out = *static_cast<DecodedSTL3*>(void_out);
+        shape_fill_mods_grp125(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6515,8 +6770,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 249: {
-        shape_fill_mods_grp126(in, void_out);
         auto& out = *static_cast<DecodedSTS3*>(void_out);
+        shape_fill_mods_grp126(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6529,8 +6785,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 250: {
-        shape_fill_mods_grp126(in, void_out);
         auto& out = *static_cast<DecodedSTS3*>(void_out);
+        shape_fill_mods_grp126(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6543,8 +6800,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 251: {
-        shape_fill_mods_grp127(in, void_out);
         auto& out = *static_cast<DecodedSHFL5*>(void_out);
+        shape_fill_mods_grp127(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6563,8 +6821,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 252: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6586,8 +6845,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 253: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6609,8 +6869,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 254: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6635,8 +6896,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 255: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6661,8 +6923,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 256: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6687,8 +6950,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 257: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6713,8 +6977,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 258: {
-        shape_fill_mods_grp130(in, void_out);
         auto& out = *static_cast<DecodedATOMS4*>(void_out);
+        shape_fill_mods_grp130(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6730,8 +6995,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 259: {
-        shape_fill_mods_grp130(in, void_out);
         auto& out = *static_cast<DecodedATOMS4*>(void_out);
+        shape_fill_mods_grp130(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6747,8 +7013,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 260: {
-        shape_fill_mods_grp131(in, void_out);
         auto& out = *static_cast<DecodedREDS3*>(void_out);
+        shape_fill_mods_grp131(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6761,8 +7028,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 261: {
-        shape_fill_mods_grp131(in, void_out);
         auto& out = *static_cast<DecodedREDS3*>(void_out);
+        shape_fill_mods_grp131(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6775,8 +7043,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 262: {
-        shape_fill_mods_grp132(in, void_out);
         auto& out = *static_cast<DecodedATOMS5*>(void_out);
+        shape_fill_mods_grp132(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6795,8 +7064,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 263: {
-        shape_fill_mods_grp132(in, void_out);
         auto& out = *static_cast<DecodedATOMS5*>(void_out);
+        shape_fill_mods_grp132(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6815,8 +7085,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 264: {
-        shape_fill_mods_grp132(in, void_out);
         auto& out = *static_cast<DecodedATOMS5*>(void_out);
+        shape_fill_mods_grp132(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6835,8 +7106,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 265: {
-        shape_fill_mods_grp132(in, void_out);
         auto& out = *static_cast<DecodedATOMS5*>(void_out);
+        shape_fill_mods_grp132(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6855,21 +7127,24 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 266: {
+        auto& out = *static_cast<DecodedCCTLT0*>(void_out);
         shape_fill_mods_grp133(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 267: {
-        shape_fill_mods_grp134(in, void_out);
         auto& out = *static_cast<DecodedCCTLT1*>(void_out);
+        shape_fill_mods_grp134(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
         break;
     }
     case 268: {
-        shape_fill_mods_grp135(in, void_out);
         auto& out = *static_cast<DecodedSUATOM6*>(void_out);
+        shape_fill_mods_grp135(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6891,8 +7166,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 269: {
-        shape_fill_mods_grp135(in, void_out);
         auto& out = *static_cast<DecodedSUATOM6*>(void_out);
+        shape_fill_mods_grp135(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6914,8 +7190,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 270: {
-        shape_fill_mods_grp136(in, void_out);
         auto& out = *static_cast<DecodedSURED4*>(void_out);
+        shape_fill_mods_grp136(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -6931,8 +7208,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 271: {
-        shape_fill_mods_grp137(in, void_out);
         auto& out = *static_cast<DecodedMATCH3*>(void_out);
+        shape_fill_mods_grp137(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6945,8 +7223,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 272: {
-        shape_fill_mods_grp138(in, void_out);
         auto& out = *static_cast<DecodedMATCH2*>(void_out);
+        shape_fill_mods_grp138(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -6956,8 +7235,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 273: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -6979,8 +7259,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 274: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7002,8 +7283,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 275: {
-        shape_fill_mods_grp139(in, void_out);
         auto& out = *static_cast<DecodedATOMG5*>(void_out);
+        shape_fill_mods_grp139(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7022,8 +7304,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 276: {
-        shape_fill_mods_grp139(in, void_out);
         auto& out = *static_cast<DecodedATOMG5*>(void_out);
+        shape_fill_mods_grp139(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7042,13 +7325,15 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 277: {
+        auto& out = *static_cast<DecodedSYNCS0*>(void_out);
         shape_fill_mods_grp140(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 278: {
-        shape_fill_mods_grp139(in, void_out);
         auto& out = *static_cast<DecodedATOMG5*>(void_out);
+        shape_fill_mods_grp139(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7067,8 +7352,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 279: {
-        shape_fill_mods_grp139(in, void_out);
         auto& out = *static_cast<DecodedATOMG5*>(void_out);
+        shape_fill_mods_grp139(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7087,8 +7373,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 280: {
-        shape_fill_mods_grp141(in, void_out);
         auto& out = *static_cast<DecodedATOMG6*>(void_out);
+        shape_fill_mods_grp141(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7110,8 +7397,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 281: {
-        shape_fill_mods_grp141(in, void_out);
         auto& out = *static_cast<DecodedATOMG6*>(void_out);
+        shape_fill_mods_grp141(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7133,8 +7421,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 282: {
-        shape_fill_mods_grp142(in, void_out);
         auto& out = *static_cast<DecodedQSPC3*>(void_out);
+        shape_fill_mods_grp142(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7147,8 +7436,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 283: {
-        shape_fill_mods_grp142(in, void_out);
         auto& out = *static_cast<DecodedQSPC3*>(void_out);
+        shape_fill_mods_grp142(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7161,8 +7451,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 284: {
-        shape_fill_mods_grp142(in, void_out);
         auto& out = *static_cast<DecodedQSPC3*>(void_out);
+        shape_fill_mods_grp142(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7175,8 +7466,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 285: {
-        shape_fill_mods_grp142(in, void_out);
         auto& out = *static_cast<DecodedQSPC3*>(void_out);
+        shape_fill_mods_grp142(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7189,8 +7481,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 286: {
-        shape_fill_mods_grp143(in, void_out);
         auto& out = *static_cast<DecodedQSPC4*>(void_out);
+        shape_fill_mods_grp143(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7206,8 +7499,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 287: {
-        shape_fill_mods_grp143(in, void_out);
         auto& out = *static_cast<DecodedQSPC4*>(void_out);
+        shape_fill_mods_grp143(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7224,6 +7518,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 288: {
         auto& out = *static_cast<DecodedGETLMEMBASE1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7231,14 +7526,16 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 289: {
         auto& out = *static_cast<DecodedSETLMEMBASE1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
         break;
     }
     case 290: {
-        shape_fill_mods_grp146(in, void_out);
         auto& out = *static_cast<DecodedREDUX2*>(void_out);
+        shape_fill_mods_grp146(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
         out.ops[0].flags = in.flags("URd");
         operand_set_value(out.ops[0], OperandKind::kUniformRegister, in.value("URd"));
@@ -7248,22 +7545,26 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 291: {
+        auto& out = *static_cast<DecodedFENCE0*>(void_out);
         shape_fill_mods_grp147(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 292: {
+        auto& out = *static_cast<DecodedFENCE0*>(void_out);
         shape_fill_mods_grp147(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 293: {
+        auto& out = *static_cast<DecodedTTUOPEN0*>(void_out);
         shape_fill_mods_grp148(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 294: {
         auto& out = *static_cast<DecodedTTUST4*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("ttuAddr");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("ttuAddr"));
@@ -7280,14 +7581,16 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 295: {
         auto& out = *static_cast<DecodedTTUCLOSE1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
         break;
     }
     case 296: {
-        shape_fill_mods_grp151(in, void_out);
         auto& out = *static_cast<DecodedTTULD5*>(void_out);
+        shape_fill_mods_grp151(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7306,8 +7609,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 297: {
-        shape_fill_mods_grp151(in, void_out);
         auto& out = *static_cast<DecodedTTULD5*>(void_out);
+        shape_fill_mods_grp151(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7326,17 +7630,20 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 298: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedTTUGO0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 299: {
+        auto& out = *static_cast<DecodedTTUCCTL0*>(void_out);
         shape_fill_mods_grp153(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 300: {
-        shape_fill_mods_grp0(in, void_out);
         auto& out = *static_cast<DecodedMOV2*>(void_out);
+        shape_fill_mods_grp0(in, void_out);
+        out.subclass = 8;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7346,8 +7653,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 301: {
-        shape_fill_mods_grp4(in, void_out);
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        shape_fill_mods_grp4(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7363,8 +7671,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 302: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7386,8 +7695,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 303: {
-        shape_fill_mods_grp21(in, void_out);
         auto& out = *static_cast<DecodedLEA7*>(void_out);
+        shape_fill_mods_grp21(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7412,8 +7722,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 304: {
-        shape_fill_mods_grp28(in, void_out);
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        shape_fill_mods_grp28(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7429,8 +7740,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 305: {
-        shape_fill_mods_grp31(in, void_out);
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        shape_fill_mods_grp31(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7446,8 +7758,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 306: {
-        shape_fill_mods_grp32(in, void_out);
         auto& out = *static_cast<DecodedSHL3*>(void_out);
+        shape_fill_mods_grp32(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7460,8 +7773,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 307: {
-        shape_fill_mods_grp39(in, void_out);
         auto& out = *static_cast<DecodedFADD3*>(void_out);
+        shape_fill_mods_grp39(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7474,8 +7788,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 308: {
-        shape_fill_mods_grp154(in, void_out);
         auto& out = *static_cast<DecodedFADD32I3*>(void_out);
+        shape_fill_mods_grp154(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7488,8 +7803,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 309: {
-        shape_fill_mods_grp41(in, void_out);
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        shape_fill_mods_grp41(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7505,8 +7821,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 310: {
-        shape_fill_mods_grp43(in, void_out);
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        shape_fill_mods_grp43(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7522,8 +7839,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 311: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7542,8 +7860,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 312: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7562,8 +7881,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 313: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7582,8 +7902,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 314: {
-        shape_fill_mods_grp51(in, void_out);
         auto& out = *static_cast<DecodedDADD3*>(void_out);
+        shape_fill_mods_grp51(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7596,8 +7917,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 315: {
-        shape_fill_mods_grp52(in, void_out);
         auto& out = *static_cast<DecodedDSETP5*>(void_out);
+        shape_fill_mods_grp52(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7616,8 +7938,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 316: {
-        shape_fill_mods_grp53(in, void_out);
         auto& out = *static_cast<DecodedDSETP3*>(void_out);
+        shape_fill_mods_grp53(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7630,8 +7953,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 317: {
-        shape_fill_mods_grp54(in, void_out);
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        shape_fill_mods_grp54(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7647,8 +7971,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 318: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7661,8 +7986,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 319: {
-        shape_fill_mods_grp155(in, void_out);
         auto& out = *static_cast<DecodedHADD24*>(void_out);
+        shape_fill_mods_grp155(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7678,8 +8004,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 320: {
-        shape_fill_mods_grp155(in, void_out);
         auto& out = *static_cast<DecodedHADD24*>(void_out);
+        shape_fill_mods_grp155(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7695,8 +8022,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 321: {
-        shape_fill_mods_grp155(in, void_out);
         auto& out = *static_cast<DecodedHADD24*>(void_out);
+        shape_fill_mods_grp155(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7712,8 +8040,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 322: {
-        shape_fill_mods_grp156(in, void_out);
         auto& out = *static_cast<DecodedHADD2_32I4*>(void_out);
+        shape_fill_mods_grp156(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7729,8 +8058,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 323: {
-        shape_fill_mods_grp156(in, void_out);
         auto& out = *static_cast<DecodedHADD2_32I4*>(void_out);
+        shape_fill_mods_grp156(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7746,8 +8076,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 324: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7766,8 +8097,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 325: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7786,8 +8118,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 326: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7806,8 +8139,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 327: {
-        shape_fill_mods_grp157(in, void_out);
         auto& out = *static_cast<DecodedHFMA26*>(void_out);
+        shape_fill_mods_grp157(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7829,8 +8163,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 328: {
-        shape_fill_mods_grp157(in, void_out);
         auto& out = *static_cast<DecodedHFMA26*>(void_out);
+        shape_fill_mods_grp157(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7852,8 +8187,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 329: {
-        shape_fill_mods_grp157(in, void_out);
         auto& out = *static_cast<DecodedHFMA26*>(void_out);
+        shape_fill_mods_grp157(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7875,8 +8211,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 330: {
-        shape_fill_mods_grp158(in, void_out);
         auto& out = *static_cast<DecodedHSET25*>(void_out);
+        shape_fill_mods_grp158(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7895,8 +8232,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 331: {
-        shape_fill_mods_grp158(in, void_out);
         auto& out = *static_cast<DecodedHSET25*>(void_out);
+        shape_fill_mods_grp158(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7915,8 +8253,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 332: {
-        shape_fill_mods_grp60(in, void_out);
         auto& out = *static_cast<DecodedHSET24*>(void_out);
+        shape_fill_mods_grp60(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7932,8 +8271,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 333: {
-        shape_fill_mods_grp60(in, void_out);
         auto& out = *static_cast<DecodedHSET24*>(void_out);
+        shape_fill_mods_grp60(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -7949,8 +8289,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 334: {
-        shape_fill_mods_grp159(in, void_out);
         auto& out = *static_cast<DecodedHSETP26*>(void_out);
+        shape_fill_mods_grp159(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7972,8 +8313,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 335: {
-        shape_fill_mods_grp159(in, void_out);
         auto& out = *static_cast<DecodedHSETP26*>(void_out);
+        shape_fill_mods_grp159(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -7995,8 +8337,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 336: {
-        shape_fill_mods_grp62(in, void_out);
         auto& out = *static_cast<DecodedHSETP25*>(void_out);
+        shape_fill_mods_grp62(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8015,8 +8358,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 337: {
-        shape_fill_mods_grp62(in, void_out);
         auto& out = *static_cast<DecodedHSETP25*>(void_out);
+        shape_fill_mods_grp62(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8035,8 +8379,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 338: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8049,8 +8394,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 339: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8063,8 +8409,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 340: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8077,8 +8424,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 341: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8094,8 +8442,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 342: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8111,8 +8460,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 343: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8128,8 +8478,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 344: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8142,8 +8493,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 345: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8156,8 +8508,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 346: {
-        shape_fill_mods_grp80(in, void_out);
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        shape_fill_mods_grp80(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8173,8 +8526,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 347: {
-        shape_fill_mods_grp160(in, void_out);
         auto& out = *static_cast<DecodedQMMA8*>(void_out);
+        shape_fill_mods_grp160(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8202,8 +8556,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 348: {
-        shape_fill_mods_grp161(in, void_out);
         auto& out = *static_cast<DecodedQMMA9*>(void_out);
+        shape_fill_mods_grp161(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8234,8 +8589,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 349: {
-        shape_fill_mods_grp162(in, void_out);
         auto& out = *static_cast<DecodedMXQMMA8*>(void_out);
+        shape_fill_mods_grp162(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8263,8 +8619,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 350: {
-        shape_fill_mods_grp163(in, void_out);
         auto& out = *static_cast<DecodedOMMA8*>(void_out);
+        shape_fill_mods_grp163(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8292,8 +8649,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 351: {
-        shape_fill_mods_grp164(in, void_out);
         auto& out = *static_cast<DecodedOMMA9*>(void_out);
+        shape_fill_mods_grp164(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8324,8 +8682,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 352: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -8335,8 +8695,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 353: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -8349,8 +8711,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 354: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -8363,8 +8727,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 355: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -8377,8 +8743,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 356: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -8388,8 +8756,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 357: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -8400,6 +8770,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 358: {
         auto& out = *static_cast<DecodedMOV64IUR2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8409,8 +8780,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 359: {
-        shape_fill_mods_grp127(in, void_out);
         auto& out = *static_cast<DecodedSHFL5*>(void_out);
+        shape_fill_mods_grp127(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8429,8 +8801,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 360: {
-        shape_fill_mods_grp132(in, void_out);
         auto& out = *static_cast<DecodedATOMS5*>(void_out);
+        shape_fill_mods_grp132(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8449,8 +8822,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 361: {
-        shape_fill_mods_grp132(in, void_out);
         auto& out = *static_cast<DecodedATOMS5*>(void_out);
+        shape_fill_mods_grp132(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8469,12 +8843,14 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 362: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedCGAERRBAR0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 363: {
-        shape_fill_mods_grp4(in, void_out);
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        shape_fill_mods_grp4(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8490,8 +8866,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 364: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8504,8 +8881,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 365: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8519,6 +8897,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 366: {
         auto& out = *static_cast<DecodedPMTRIG2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -8529,6 +8908,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 367: {
         auto& out = *static_cast<DecodedMOV3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8542,6 +8922,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 368: {
         auto& out = *static_cast<DecodedMOV32I3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8554,8 +8935,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 369: {
-        shape_fill_mods_grp2(in, void_out);
         auto& out = *static_cast<DecodedP2R4*>(void_out);
+        shape_fill_mods_grp2(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8571,8 +8953,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 370: {
-        shape_fill_mods_grp169(in, void_out);
         auto& out = *static_cast<DecodedP2R2*>(void_out);
+        shape_fill_mods_grp169(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8582,8 +8965,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 371: {
-        shape_fill_mods_grp3(in, void_out);
         auto& out = *static_cast<DecodedR2P3*>(void_out);
+        shape_fill_mods_grp3(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("PR");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("PR"));
@@ -8596,8 +8980,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 372: {
-        shape_fill_mods_grp170(in, void_out);
         auto& out = *static_cast<DecodedCS2R2*>(void_out);
+        shape_fill_mods_grp170(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8607,8 +8992,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 373: {
-        shape_fill_mods_grp171(in, void_out);
         auto& out = *static_cast<DecodedVOTE3*>(void_out);
+        shape_fill_mods_grp171(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8621,8 +9007,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 374: {
-        shape_fill_mods_grp4(in, void_out);
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        shape_fill_mods_grp4(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8638,8 +9025,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 375: {
-        shape_fill_mods_grp5(in, void_out);
         auto& out = *static_cast<DecodedFSEL4*>(void_out);
+        shape_fill_mods_grp5(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8655,8 +9043,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 376: {
-        shape_fill_mods_grp6(in, void_out);
         auto& out = *static_cast<DecodedFMNMX4*>(void_out);
+        shape_fill_mods_grp6(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8672,8 +9061,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 377: {
-        shape_fill_mods_grp7(in, void_out);
         auto& out = *static_cast<DecodedFMNMX5*>(void_out);
+        shape_fill_mods_grp7(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8692,8 +9082,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 378: {
-        shape_fill_mods_grp8(in, void_out);
         auto& out = *static_cast<DecodedFSET4*>(void_out);
+        shape_fill_mods_grp8(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8709,8 +9100,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 379: {
-        shape_fill_mods_grp9(in, void_out);
         auto& out = *static_cast<DecodedFSET3*>(void_out);
+        shape_fill_mods_grp9(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8723,8 +9115,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 380: {
-        shape_fill_mods_grp10(in, void_out);
         auto& out = *static_cast<DecodedFSETP5*>(void_out);
+        shape_fill_mods_grp10(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8743,8 +9136,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 381: {
-        shape_fill_mods_grp11(in, void_out);
         auto& out = *static_cast<DecodedFSETP3*>(void_out);
+        shape_fill_mods_grp11(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8757,8 +9151,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 382: {
-        shape_fill_mods_grp12(in, void_out);
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        shape_fill_mods_grp12(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8780,8 +9175,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 383: {
-        shape_fill_mods_grp13(in, void_out);
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        shape_fill_mods_grp13(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8800,8 +9196,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 384: {
-        shape_fill_mods_grp14(in, void_out);
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        shape_fill_mods_grp14(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8817,8 +9214,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 385: {
-        shape_fill_mods_grp15(in, void_out);
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        shape_fill_mods_grp15(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8831,8 +9229,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 386: {
-        shape_fill_mods_grp12(in, void_out);
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        shape_fill_mods_grp12(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8854,8 +9253,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 387: {
-        shape_fill_mods_grp13(in, void_out);
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        shape_fill_mods_grp13(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8874,8 +9274,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 388: {
-        shape_fill_mods_grp14(in, void_out);
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        shape_fill_mods_grp14(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8891,8 +9292,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 389: {
-        shape_fill_mods_grp15(in, void_out);
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        shape_fill_mods_grp15(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8905,16 +9307,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 390: {
-        shape_fill_mods_grp172(in, void_out);
         auto& out = *static_cast<DecodedCSMTEST1*>(void_out);
+        shape_fill_mods_grp172(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sa");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sa"));
         break;
     }
     case 391: {
-        shape_fill_mods_grp173(in, void_out);
         auto& out = *static_cast<DecodedCSMTEST4*>(void_out);
+        shape_fill_mods_grp173(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8930,8 +9334,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 392: {
-        shape_fill_mods_grp174(in, void_out);
         auto& out = *static_cast<DecodedCSMTEST2*>(void_out);
+        shape_fill_mods_grp174(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8941,16 +9346,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 393: {
-        shape_fill_mods_grp175(in, void_out);
         auto& out = *static_cast<DecodedVOTE_VTG1*>(void_out);
+        shape_fill_mods_grp175(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sa");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sa"));
         break;
     }
     case 394: {
-        shape_fill_mods_grp176(in, void_out);
         auto& out = *static_cast<DecodedVOTE_VTG4*>(void_out);
+        shape_fill_mods_grp176(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8966,8 +9373,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 395: {
-        shape_fill_mods_grp177(in, void_out);
         auto& out = *static_cast<DecodedVOTE_VTG2*>(void_out);
+        shape_fill_mods_grp177(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -8978,6 +9386,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 396: {
         auto& out = *static_cast<DecodedIADD36*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -8999,8 +9408,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 397: {
-        shape_fill_mods_grp17(in, void_out);
         auto& out = *static_cast<DecodedIADD38*>(void_out);
+        shape_fill_mods_grp17(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9029,6 +9439,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 398: {
         auto& out = *static_cast<DecodedISCADD5*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9048,6 +9459,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 399: {
         auto& out = *static_cast<DecodedISCADD32I5*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9066,8 +9478,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 400: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9089,8 +9502,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 401: {
-        shape_fill_mods_grp20(in, void_out);
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        shape_fill_mods_grp20(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9109,8 +9523,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 402: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9132,8 +9547,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 403: {
-        shape_fill_mods_grp21(in, void_out);
         auto& out = *static_cast<DecodedLEA7*>(void_out);
+        shape_fill_mods_grp21(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9158,8 +9574,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 404: {
-        shape_fill_mods_grp20(in, void_out);
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        shape_fill_mods_grp20(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9178,8 +9595,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 405: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9201,8 +9619,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 406: {
-        shape_fill_mods_grp22(in, void_out);
         auto& out = *static_cast<DecodedLOP5*>(void_out);
+        shape_fill_mods_grp22(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9221,8 +9640,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 407: {
-        shape_fill_mods_grp23(in, void_out);
         auto& out = *static_cast<DecodedLOP4*>(void_out);
+        shape_fill_mods_grp23(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9238,8 +9658,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 408: {
-        shape_fill_mods_grp25(in, void_out);
         auto& out = *static_cast<DecodedLOP36*>(void_out);
+        shape_fill_mods_grp25(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9261,8 +9682,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 409: {
-        shape_fill_mods_grp26(in, void_out);
         auto& out = *static_cast<DecodedLOP35*>(void_out);
+        shape_fill_mods_grp26(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9281,8 +9703,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 410: {
-        shape_fill_mods_grp24(in, void_out);
         auto& out = *static_cast<DecodedLOP37*>(void_out);
+        shape_fill_mods_grp24(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9307,8 +9730,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 411: {
-        shape_fill_mods_grp25(in, void_out);
         auto& out = *static_cast<DecodedLOP36*>(void_out);
+        shape_fill_mods_grp25(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9330,8 +9754,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 412: {
-        shape_fill_mods_grp179(in, void_out);
         auto& out = *static_cast<DecodedLOP32I5*>(void_out);
+        shape_fill_mods_grp179(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9350,8 +9775,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 413: {
-        shape_fill_mods_grp180(in, void_out);
         auto& out = *static_cast<DecodedLOP32I4*>(void_out);
+        shape_fill_mods_grp180(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9368,6 +9794,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 414: {
         auto& out = *static_cast<DecodedIABS2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9377,8 +9804,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 415: {
-        shape_fill_mods_grp28(in, void_out);
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        shape_fill_mods_grp28(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9394,8 +9822,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 416: {
-        shape_fill_mods_grp29(in, void_out);
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        shape_fill_mods_grp29(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9420,8 +9849,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 417: {
-        shape_fill_mods_grp30(in, void_out);
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        shape_fill_mods_grp30(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9443,8 +9873,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 418: {
-        shape_fill_mods_grp29(in, void_out);
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        shape_fill_mods_grp29(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9469,8 +9900,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 419: {
-        shape_fill_mods_grp30(in, void_out);
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        shape_fill_mods_grp30(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9492,8 +9924,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 420: {
-        shape_fill_mods_grp31(in, void_out);
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        shape_fill_mods_grp31(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9509,8 +9942,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 421: {
-        shape_fill_mods_grp32(in, void_out);
         auto& out = *static_cast<DecodedSHL3*>(void_out);
+        shape_fill_mods_grp32(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9523,8 +9957,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 422: {
-        shape_fill_mods_grp33(in, void_out);
         auto& out = *static_cast<DecodedSHR3*>(void_out);
+        shape_fill_mods_grp33(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9537,8 +9972,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 423: {
-        shape_fill_mods_grp34(in, void_out);
         auto& out = *static_cast<DecodedSGXT3*>(void_out);
+        shape_fill_mods_grp34(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9551,8 +9987,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 424: {
-        shape_fill_mods_grp35(in, void_out);
         auto& out = *static_cast<DecodedBMSK3*>(void_out);
+        shape_fill_mods_grp35(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9565,8 +10002,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 425: {
-        shape_fill_mods_grp181(in, void_out);
         auto& out = *static_cast<DecodedPLOP34*>(void_out);
+        shape_fill_mods_grp181(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9582,8 +10020,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 426: {
-        shape_fill_mods_grp181(in, void_out);
         auto& out = *static_cast<DecodedPLOP34*>(void_out);
+        shape_fill_mods_grp181(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9599,8 +10038,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 427: {
-        shape_fill_mods_grp36(in, void_out);
         auto& out = *static_cast<DecodedPLOP35*>(void_out);
+        shape_fill_mods_grp36(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9619,8 +10059,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 428: {
-        shape_fill_mods_grp36(in, void_out);
         auto& out = *static_cast<DecodedPLOP35*>(void_out);
+        shape_fill_mods_grp36(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9639,8 +10080,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 429: {
-        shape_fill_mods_grp37(in, void_out);
         auto& out = *static_cast<DecodedPLOP37*>(void_out);
+        shape_fill_mods_grp37(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9665,8 +10107,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 430: {
-        shape_fill_mods_grp37(in, void_out);
         auto& out = *static_cast<DecodedPLOP37*>(void_out);
+        shape_fill_mods_grp37(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9691,8 +10134,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 431: {
-        shape_fill_mods_grp182(in, void_out);
         auto& out = *static_cast<DecodedPSETP5*>(void_out);
+        shape_fill_mods_grp182(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9711,8 +10155,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 432: {
-        shape_fill_mods_grp183(in, void_out);
         auto& out = *static_cast<DecodedPSETP3*>(void_out);
+        shape_fill_mods_grp183(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9725,8 +10170,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 433: {
-        shape_fill_mods_grp182(in, void_out);
         auto& out = *static_cast<DecodedPSETP5*>(void_out);
+        shape_fill_mods_grp182(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -9745,8 +10191,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 434: {
-        shape_fill_mods_grp38(in, void_out);
         auto& out = *static_cast<DecodedFMUL3*>(void_out);
+        shape_fill_mods_grp38(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9759,8 +10206,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 435: {
-        shape_fill_mods_grp184(in, void_out);
         auto& out = *static_cast<DecodedFMUL32I3*>(void_out);
+        shape_fill_mods_grp184(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9773,8 +10221,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 436: {
-        shape_fill_mods_grp185(in, void_out);
         auto& out = *static_cast<DecodedFSWZADD4*>(void_out);
+        shape_fill_mods_grp185(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9790,8 +10239,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 437: {
-        shape_fill_mods_grp41(in, void_out);
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        shape_fill_mods_grp41(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9807,8 +10257,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 438: {
-        shape_fill_mods_grp186(in, void_out);
         auto& out = *static_cast<DecodedFFMA32I4*>(void_out);
+        shape_fill_mods_grp186(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9824,8 +10275,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 439: {
-        shape_fill_mods_grp43(in, void_out);
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        shape_fill_mods_grp43(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9841,8 +10293,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 440: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9861,8 +10314,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 441: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9881,8 +10335,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 442: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9901,8 +10356,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 443: {
-        shape_fill_mods_grp45(in, void_out);
         auto& out = *static_cast<DecodedIMUL3*>(void_out);
+        shape_fill_mods_grp45(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9915,8 +10371,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 444: {
-        shape_fill_mods_grp187(in, void_out);
         auto& out = *static_cast<DecodedIMUL32I3*>(void_out);
+        shape_fill_mods_grp187(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9929,8 +10386,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 445: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9949,8 +10407,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 446: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9969,8 +10428,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 447: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -9992,8 +10452,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 448: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10015,8 +10476,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 449: {
-        shape_fill_mods_grp47(in, void_out);
         auto& out = *static_cast<DecodedIMUL4*>(void_out);
+        shape_fill_mods_grp47(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10032,8 +10494,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 450: {
-        shape_fill_mods_grp188(in, void_out);
         auto& out = *static_cast<DecodedIMUL32I4*>(void_out);
+        shape_fill_mods_grp188(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10049,8 +10512,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 451: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10069,8 +10533,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 452: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10089,8 +10554,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 453: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10112,8 +10578,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 454: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10135,8 +10602,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 455: {
-        shape_fill_mods_grp50(in, void_out);
         auto& out = *static_cast<DecodedDMUL3*>(void_out);
+        shape_fill_mods_grp50(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10149,8 +10617,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 456: {
-        shape_fill_mods_grp54(in, void_out);
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        shape_fill_mods_grp54(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10166,16 +10635,19 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 457: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedPREEXIT0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 458: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedACQBULK0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 459: {
-        shape_fill_mods_grp191(in, void_out);
         auto& out = *static_cast<DecodedELECT3*>(void_out);
+        shape_fill_mods_grp191(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -10188,8 +10660,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 460: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10208,8 +10681,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 461: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10228,8 +10702,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 462: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10248,8 +10723,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 463: {
-        shape_fill_mods_grp157(in, void_out);
         auto& out = *static_cast<DecodedHFMA26*>(void_out);
+        shape_fill_mods_grp157(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10271,8 +10747,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 464: {
-        shape_fill_mods_grp157(in, void_out);
         auto& out = *static_cast<DecodedHFMA26*>(void_out);
+        shape_fill_mods_grp157(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10294,8 +10771,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 465: {
-        shape_fill_mods_grp157(in, void_out);
         auto& out = *static_cast<DecodedHFMA26*>(void_out);
+        shape_fill_mods_grp157(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10317,8 +10795,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 466: {
-        shape_fill_mods_grp192(in, void_out);
         auto& out = *static_cast<DecodedHFMA2_32I5*>(void_out);
+        shape_fill_mods_grp192(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10337,8 +10816,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 467: {
-        shape_fill_mods_grp192(in, void_out);
         auto& out = *static_cast<DecodedHFMA2_32I5*>(void_out);
+        shape_fill_mods_grp192(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10357,8 +10837,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 468: {
-        shape_fill_mods_grp193(in, void_out);
         auto& out = *static_cast<DecodedHMUL24*>(void_out);
+        shape_fill_mods_grp193(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10374,8 +10855,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 469: {
-        shape_fill_mods_grp193(in, void_out);
         auto& out = *static_cast<DecodedHMUL24*>(void_out);
+        shape_fill_mods_grp193(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10391,8 +10873,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 470: {
-        shape_fill_mods_grp194(in, void_out);
         auto& out = *static_cast<DecodedHMUL2_32I4*>(void_out);
+        shape_fill_mods_grp194(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10408,8 +10891,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 471: {
-        shape_fill_mods_grp194(in, void_out);
         auto& out = *static_cast<DecodedHMUL2_32I4*>(void_out);
+        shape_fill_mods_grp194(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10425,8 +10909,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 472: {
-        shape_fill_mods_grp64(in, void_out);
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        shape_fill_mods_grp64(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10442,8 +10927,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 473: {
-        shape_fill_mods_grp65(in, void_out);
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        shape_fill_mods_grp65(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10462,8 +10948,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 474: {
-        shape_fill_mods_grp64(in, void_out);
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        shape_fill_mods_grp64(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10479,8 +10966,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 475: {
-        shape_fill_mods_grp65(in, void_out);
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        shape_fill_mods_grp65(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10500,6 +10988,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 476: {
         auto& out = *static_cast<DecodedIADD32I4*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10515,8 +11004,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 477: {
-        shape_fill_mods_grp196(in, void_out);
         auto& out = *static_cast<DecodedIADD32I5*>(void_out);
+        shape_fill_mods_grp196(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10535,8 +11025,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 478: {
-        shape_fill_mods_grp66(in, void_out);
         auto& out = *static_cast<DecodedVIADD3*>(void_out);
+        shape_fill_mods_grp66(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10549,8 +11040,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 479: {
-        shape_fill_mods_grp69(in, void_out);
         auto& out = *static_cast<DecodedI2I2*>(void_out);
+        shape_fill_mods_grp69(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10560,8 +11052,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 480: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10577,8 +11070,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 481: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10594,8 +11088,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 482: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10611,8 +11106,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 483: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10628,8 +11124,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 484: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10645,8 +11142,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 485: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10662,8 +11160,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 486: {
-        shape_fill_mods_grp197(in, void_out);
         auto& out = *static_cast<DecodedLDSM3*>(void_out);
+        shape_fill_mods_grp197(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10676,8 +11175,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 487: {
-        shape_fill_mods_grp197(in, void_out);
         auto& out = *static_cast<DecodedLDSM3*>(void_out);
+        shape_fill_mods_grp197(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10690,8 +11190,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 488: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10701,8 +11202,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 489: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10712,8 +11214,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 490: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10723,8 +11226,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 491: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10737,8 +11241,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 492: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10751,8 +11256,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 493: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10765,8 +11271,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 494: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10779,8 +11286,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 495: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10793,8 +11301,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 496: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10810,8 +11319,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 497: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10827,8 +11337,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 498: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10844,8 +11355,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 499: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10858,8 +11370,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 500: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10872,8 +11385,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 501: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10883,8 +11397,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 502: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10894,8 +11409,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 503: {
-        shape_fill_mods_grp198(in, void_out);
         auto& out = *static_cast<DecodedHMNMX25*>(void_out);
+        shape_fill_mods_grp198(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10914,8 +11430,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 504: {
-        shape_fill_mods_grp198(in, void_out);
         auto& out = *static_cast<DecodedHMNMX25*>(void_out);
+        shape_fill_mods_grp198(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10934,8 +11451,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 505: {
-        shape_fill_mods_grp199(in, void_out);
         auto& out = *static_cast<DecodedHMNMX27*>(void_out);
+        shape_fill_mods_grp199(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10960,8 +11478,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 506: {
-        shape_fill_mods_grp199(in, void_out);
         auto& out = *static_cast<DecodedHMNMX27*>(void_out);
+        shape_fill_mods_grp199(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -10986,8 +11505,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 507: {
-        shape_fill_mods_grp80(in, void_out);
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        shape_fill_mods_grp80(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11003,8 +11523,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 508: {
-        shape_fill_mods_grp200(in, void_out);
         auto& out = *static_cast<DecodedSTSM3*>(void_out);
+        shape_fill_mods_grp200(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -11017,8 +11538,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 509: {
-        shape_fill_mods_grp81(in, void_out);
         auto& out = *static_cast<DecodedI2FP2*>(void_out);
+        shape_fill_mods_grp81(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11028,8 +11550,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 510: {
-        shape_fill_mods_grp81(in, void_out);
         auto& out = *static_cast<DecodedI2FP2*>(void_out);
+        shape_fill_mods_grp81(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11039,8 +11562,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 511: {
-        shape_fill_mods_grp82(in, void_out);
         auto& out = *static_cast<DecodedVIMNMX4*>(void_out);
+        shape_fill_mods_grp82(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11056,8 +11580,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 512: {
-        shape_fill_mods_grp201(in, void_out);
         auto& out = *static_cast<DecodedUVIRTCOUNT2*>(void_out);
+        shape_fill_mods_grp201(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11067,8 +11592,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 513: {
-        shape_fill_mods_grp201(in, void_out);
         auto& out = *static_cast<DecodedUVIRTCOUNT2*>(void_out);
+        shape_fill_mods_grp201(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11078,12 +11604,14 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 514: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedACQSHMINIT0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 515: {
-        shape_fill_mods_grp203(in, void_out);
         auto& out = *static_cast<DecodedUMOV3*>(void_out);
+        shape_fill_mods_grp203(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11096,8 +11624,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 516: {
-        shape_fill_mods_grp204(in, void_out);
         auto& out = *static_cast<DecodedVOTEU3*>(void_out);
+        shape_fill_mods_grp204(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
         out.ops[0].flags = in.flags("URd");
         operand_set_value(out.ops[0], OperandKind::kUniformRegister, in.value("URd"));
@@ -11110,8 +11639,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 517: {
-        shape_fill_mods_grp205(in, void_out);
         auto& out = *static_cast<DecodedUPLOP35*>(void_out);
+        shape_fill_mods_grp205(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11130,8 +11660,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 518: {
-        shape_fill_mods_grp206(in, void_out);
         auto& out = *static_cast<DecodedUPLOP36*>(void_out);
+        shape_fill_mods_grp206(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11153,8 +11684,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 519: {
-        shape_fill_mods_grp207(in, void_out);
         auto& out = *static_cast<DecodedUPLOP38*>(void_out);
+        shape_fill_mods_grp207(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11182,8 +11714,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 520: {
-        shape_fill_mods_grp208(in, void_out);
         auto& out = *static_cast<DecodedUPSETP6*>(void_out);
+        shape_fill_mods_grp208(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11205,8 +11738,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 521: {
-        shape_fill_mods_grp209(in, void_out);
         auto& out = *static_cast<DecodedUPSETP4*>(void_out);
+        shape_fill_mods_grp209(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11222,8 +11756,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 522: {
-        shape_fill_mods_grp210(in, void_out);
         auto& out = *static_cast<DecodedCS2UR3*>(void_out);
+        shape_fill_mods_grp210(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -11236,8 +11771,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 523: {
-        shape_fill_mods_grp86(in, void_out);
         auto& out = *static_cast<DecodedFLO3*>(void_out);
+        shape_fill_mods_grp86(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11251,6 +11787,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 524: {
         auto& out = *static_cast<DecodedBREV2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11260,8 +11797,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 525: {
-        shape_fill_mods_grp88(in, void_out);
         auto& out = *static_cast<DecodedFCHK3*>(void_out);
+        shape_fill_mods_grp88(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -11274,8 +11812,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 526: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11285,8 +11824,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 527: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11296,8 +11836,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 528: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11307,8 +11848,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 529: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11318,8 +11860,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 530: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11329,8 +11872,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 531: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11340,8 +11884,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 532: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11351,8 +11896,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 533: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11362,8 +11908,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 534: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11373,8 +11920,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 535: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11384,8 +11932,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 536: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11395,8 +11944,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 537: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11406,8 +11956,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 538: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11417,8 +11968,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 539: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11428,8 +11980,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 540: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11439,8 +11992,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 541: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11450,8 +12004,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 542: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11461,8 +12016,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 543: {
-        shape_fill_mods_grp93(in, void_out);
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        shape_fill_mods_grp93(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11472,8 +12028,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 544: {
-        shape_fill_mods_grp93(in, void_out);
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        shape_fill_mods_grp93(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11484,6 +12041,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 545: {
         auto& out = *static_cast<DecodedPOPC2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11493,8 +12051,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 546: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11504,8 +12063,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 547: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11515,8 +12075,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 548: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11526,8 +12087,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 549: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11537,8 +12099,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 550: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11548,8 +12111,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 551: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11559,8 +12123,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 552: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11570,8 +12135,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 553: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11581,8 +12147,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 554: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11592,8 +12159,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 555: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11603,8 +12171,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 556: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11614,8 +12183,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 557: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11625,8 +12195,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 558: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11636,8 +12207,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 559: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11647,8 +12219,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 560: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11658,8 +12231,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 561: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11669,8 +12243,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 562: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11680,8 +12255,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 563: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11691,8 +12267,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 564: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11702,8 +12279,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 565: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11713,8 +12291,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 566: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11724,8 +12303,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 567: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11735,8 +12315,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 568: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11746,11 +12327,13 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 569: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedNOP0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 570: {
         auto& out = *static_cast<DecodedS2R2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11760,8 +12343,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 571: {
-        shape_fill_mods_grp213(in, void_out);
         auto& out = *static_cast<DecodedDEPBAR3*>(void_out);
+        shape_fill_mods_grp213(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("sbidx");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("sbidx"));
@@ -11775,26 +12359,31 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 572: {
         auto& out = *static_cast<DecodedDEPBAR1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("scoreboard_list");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("scoreboard_list"));
         break;
     }
     case 573: {
+        auto& out = *static_cast<DecodedDEPBAR0*>(void_out);
         shape_fill_mods_grp215(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 574: {
         auto& out = *static_cast<DecodedENDCOLLECTIVE1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
         break;
     }
     case 575: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -11804,8 +12393,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 576: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -11818,8 +12409,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 577: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -11832,8 +12425,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 578: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -11846,8 +12441,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 579: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -11857,8 +12454,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 580: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -11868,8 +12467,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 581: {
-        shape_fill_mods_grp217(in, void_out);
         auto& out = *static_cast<DecodedAL2P3*>(void_out);
+        shape_fill_mods_grp217(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11882,8 +12482,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 582: {
-        shape_fill_mods_grp217(in, void_out);
         auto& out = *static_cast<DecodedAL2P3*>(void_out);
+        shape_fill_mods_grp217(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11896,8 +12497,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 583: {
-        shape_fill_mods_grp218(in, void_out);
         auto& out = *static_cast<DecodedISBERD3*>(void_out);
+        shape_fill_mods_grp218(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11910,8 +12512,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 584: {
-        shape_fill_mods_grp105(in, void_out);
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        shape_fill_mods_grp105(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11924,8 +12527,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 585: {
-        shape_fill_mods_grp219(in, void_out);
         auto& out = *static_cast<DecodedPIXLD2*>(void_out);
+        shape_fill_mods_grp219(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11935,8 +12539,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 586: {
-        shape_fill_mods_grp108(in, void_out);
         auto& out = *static_cast<DecodedIPA5*>(void_out);
+        shape_fill_mods_grp108(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -11955,8 +12560,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 587: {
-        shape_fill_mods_grp220(in, void_out);
         auto& out = *static_cast<DecodedISBEWR3*>(void_out);
+        shape_fill_mods_grp220(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -11969,8 +12575,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 588: {
-        shape_fill_mods_grp221(in, void_out);
         auto& out = *static_cast<DecodedBSYNC2*>(void_out);
+        shape_fill_mods_grp221(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -11980,8 +12587,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 589: {
-        shape_fill_mods_grp221(in, void_out);
         auto& out = *static_cast<DecodedBSYNC2*>(void_out);
+        shape_fill_mods_grp221(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -11991,8 +12599,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 590: {
-        shape_fill_mods_grp222(in, void_out);
         auto& out = *static_cast<DecodedBREAK2*>(void_out);
+        shape_fill_mods_grp222(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12002,8 +12611,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 591: {
-        shape_fill_mods_grp222(in, void_out);
         auto& out = *static_cast<DecodedBREAK2*>(void_out);
+        shape_fill_mods_grp222(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12013,8 +12623,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 592: {
-        shape_fill_mods_grp111(in, void_out);
         auto& out = *static_cast<DecodedCALL2*>(void_out);
+        shape_fill_mods_grp111(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12024,8 +12635,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 593: {
-        shape_fill_mods_grp111(in, void_out);
         auto& out = *static_cast<DecodedCALL2*>(void_out);
+        shape_fill_mods_grp111(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12035,8 +12647,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 594: {
-        shape_fill_mods_grp111(in, void_out);
         auto& out = *static_cast<DecodedCALL2*>(void_out);
+        shape_fill_mods_grp111(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12046,8 +12659,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 595: {
-        shape_fill_mods_grp223(in, void_out);
         auto& out = *static_cast<DecodedBSSY3*>(void_out);
+        shape_fill_mods_grp223(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12060,8 +12674,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 596: {
-        shape_fill_mods_grp223(in, void_out);
         auto& out = *static_cast<DecodedBSSY3*>(void_out);
+        shape_fill_mods_grp223(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12074,8 +12689,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 597: {
-        shape_fill_mods_grp223(in, void_out);
         auto& out = *static_cast<DecodedBSSY3*>(void_out);
+        shape_fill_mods_grp223(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12088,8 +12704,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 598: {
-        shape_fill_mods_grp223(in, void_out);
         auto& out = *static_cast<DecodedBSSY3*>(void_out);
+        shape_fill_mods_grp223(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12103,14 +12720,16 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 599: {
         auto& out = *static_cast<DecodedYIELD1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
         break;
     }
     case 600: {
-        shape_fill_mods_grp225(in, void_out);
         auto& out = *static_cast<DecodedBRA2*>(void_out);
+        shape_fill_mods_grp225(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12120,8 +12739,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 601: {
-        shape_fill_mods_grp225(in, void_out);
         auto& out = *static_cast<DecodedBRA2*>(void_out);
+        shape_fill_mods_grp225(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12131,8 +12751,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 602: {
-        shape_fill_mods_grp225(in, void_out);
         auto& out = *static_cast<DecodedBRA2*>(void_out);
+        shape_fill_mods_grp225(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12142,8 +12763,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 603: {
-        shape_fill_mods_grp225(in, void_out);
         auto& out = *static_cast<DecodedBRA2*>(void_out);
+        shape_fill_mods_grp225(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12153,16 +12775,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 604: {
-        shape_fill_mods_grp226(in, void_out);
         auto& out = *static_cast<DecodedWARPSYNC1*>(void_out);
+        shape_fill_mods_grp226(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
         break;
     }
     case 605: {
-        shape_fill_mods_grp112(in, void_out);
         auto& out = *static_cast<DecodedWARPSYNC2*>(void_out);
+        shape_fill_mods_grp112(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12172,8 +12796,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 606: {
-        shape_fill_mods_grp112(in, void_out);
         auto& out = *static_cast<DecodedWARPSYNC2*>(void_out);
+        shape_fill_mods_grp112(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12183,8 +12808,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 607: {
-        shape_fill_mods_grp227(in, void_out);
         auto& out = *static_cast<DecodedBRX3*>(void_out);
+        shape_fill_mods_grp227(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12197,8 +12823,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 608: {
-        shape_fill_mods_grp227(in, void_out);
         auto& out = *static_cast<DecodedBRX3*>(void_out);
+        shape_fill_mods_grp227(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12211,8 +12838,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 609: {
-        shape_fill_mods_grp228(in, void_out);
         auto& out = *static_cast<DecodedJMP2*>(void_out);
+        shape_fill_mods_grp228(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12222,8 +12850,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 610: {
-        shape_fill_mods_grp228(in, void_out);
         auto& out = *static_cast<DecodedJMP2*>(void_out);
+        shape_fill_mods_grp228(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12233,8 +12862,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 611: {
-        shape_fill_mods_grp228(in, void_out);
         auto& out = *static_cast<DecodedJMP2*>(void_out);
+        shape_fill_mods_grp228(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12244,8 +12874,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 612: {
-        shape_fill_mods_grp228(in, void_out);
         auto& out = *static_cast<DecodedJMP2*>(void_out);
+        shape_fill_mods_grp228(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12255,8 +12886,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 613: {
-        shape_fill_mods_grp229(in, void_out);
         auto& out = *static_cast<DecodedJMX3*>(void_out);
+        shape_fill_mods_grp229(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12269,8 +12901,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 614: {
-        shape_fill_mods_grp229(in, void_out);
         auto& out = *static_cast<DecodedJMX3*>(void_out);
+        shape_fill_mods_grp229(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12283,16 +12916,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 615: {
-        shape_fill_mods_grp230(in, void_out);
         auto& out = *static_cast<DecodedEXIT1*>(void_out);
+        shape_fill_mods_grp230(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
         break;
     }
     case 616: {
-        shape_fill_mods_grp231(in, void_out);
         auto& out = *static_cast<DecodedLEPC2*>(void_out);
+        shape_fill_mods_grp231(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12302,8 +12937,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 617: {
-        shape_fill_mods_grp231(in, void_out);
         auto& out = *static_cast<DecodedLEPC2*>(void_out);
+        shape_fill_mods_grp231(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12313,12 +12949,14 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 618: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedRTT0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 619: {
-        shape_fill_mods_grp233(in, void_out);
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        shape_fill_mods_grp233(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12331,8 +12969,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 620: {
-        shape_fill_mods_grp233(in, void_out);
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        shape_fill_mods_grp233(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12345,8 +12984,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 621: {
-        shape_fill_mods_grp233(in, void_out);
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        shape_fill_mods_grp233(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12359,8 +12999,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 622: {
-        shape_fill_mods_grp234(in, void_out);
         auto& out = *static_cast<DecodedRET2*>(void_out);
+        shape_fill_mods_grp234(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12370,16 +13011,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 623: {
-        shape_fill_mods_grp235(in, void_out);
         auto& out = *static_cast<DecodedIDE1*>(void_out);
+        shape_fill_mods_grp235(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
         break;
     }
     case 624: {
-        shape_fill_mods_grp115(in, void_out);
         auto& out = *static_cast<DecodedRPCMOV2*>(void_out);
+        shape_fill_mods_grp115(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("RpcN");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("RpcN"));
@@ -12389,8 +13032,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 625: {
-        shape_fill_mods_grp115(in, void_out);
         auto& out = *static_cast<DecodedRPCMOV2*>(void_out);
+        shape_fill_mods_grp115(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("Rpc");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("Rpc"));
@@ -12400,8 +13044,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 626: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("cbu_state");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("cbu_state"));
@@ -12411,8 +13056,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 627: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("atexit_pc");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("atexit_pc"));
@@ -12422,8 +13068,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 628: {
-        shape_fill_mods_grp117(in, void_out);
         auto& out = *static_cast<DecodedNANOTRAP2*>(void_out);
+        shape_fill_mods_grp117(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12434,30 +13081,34 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 629: {
         auto& out = *static_cast<DecodedKILL1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
         break;
     }
     case 630: {
-        shape_fill_mods_grp237(in, void_out);
         auto& out = *static_cast<DecodedBPT1*>(void_out);
+        shape_fill_mods_grp237(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
         break;
     }
     case 631: {
-        shape_fill_mods_grp237(in, void_out);
         auto& out = *static_cast<DecodedBPT1*>(void_out);
+        shape_fill_mods_grp237(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
         break;
     }
     case 632: {
-        shape_fill_mods_grp118(in, void_out);
         auto& out = *static_cast<DecodedNANOSLEEP2*>(void_out);
+        shape_fill_mods_grp118(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -12467,16 +13118,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 633: {
-        shape_fill_mods_grp238(in, void_out);
         auto& out = *static_cast<DecodedNANOSLEEP1*>(void_out);
+        shape_fill_mods_grp238(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
         break;
     }
     case 634: {
-        shape_fill_mods_grp239(in, void_out);
         auto& out = *static_cast<DecodedLD4*>(void_out);
+        shape_fill_mods_grp239(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12492,8 +13145,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 635: {
-        shape_fill_mods_grp239(in, void_out);
         auto& out = *static_cast<DecodedLD4*>(void_out);
+        shape_fill_mods_grp239(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12509,8 +13163,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 636: {
-        shape_fill_mods_grp240(in, void_out);
         auto& out = *static_cast<DecodedLDL3*>(void_out);
+        shape_fill_mods_grp240(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12523,8 +13178,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 637: {
-        shape_fill_mods_grp240(in, void_out);
         auto& out = *static_cast<DecodedLDL3*>(void_out);
+        shape_fill_mods_grp240(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12537,8 +13193,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 638: {
-        shape_fill_mods_grp241(in, void_out);
         auto& out = *static_cast<DecodedLDS3*>(void_out);
+        shape_fill_mods_grp241(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12551,8 +13208,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 639: {
-        shape_fill_mods_grp241(in, void_out);
         auto& out = *static_cast<DecodedLDS3*>(void_out);
+        shape_fill_mods_grp241(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12565,8 +13223,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 640: {
-        shape_fill_mods_grp127(in, void_out);
         auto& out = *static_cast<DecodedSHFL5*>(void_out);
+        shape_fill_mods_grp127(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -12585,8 +13244,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 641: {
-        shape_fill_mods_grp242(in, void_out);
         auto& out = *static_cast<DecodedREDG3*>(void_out);
+        shape_fill_mods_grp242(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12599,8 +13259,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 642: {
-        shape_fill_mods_grp242(in, void_out);
         auto& out = *static_cast<DecodedREDG3*>(void_out);
+        shape_fill_mods_grp242(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12613,13 +13274,15 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 643: {
+        auto& out = *static_cast<DecodedCCTL0*>(void_out);
         shape_fill_mods_grp109(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 644: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12629,8 +13292,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 645: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12640,8 +13304,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 646: {
-        shape_fill_mods_grp244(in, void_out);
         auto& out = *static_cast<DecodedCCTL3*>(void_out);
+        shape_fill_mods_grp244(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -12654,8 +13319,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 647: {
-        shape_fill_mods_grp244(in, void_out);
         auto& out = *static_cast<DecodedCCTL3*>(void_out);
+        shape_fill_mods_grp244(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12668,8 +13334,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 648: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12679,8 +13346,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 649: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12690,8 +13358,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 650: {
-        shape_fill_mods_grp244(in, void_out);
         auto& out = *static_cast<DecodedCCTL3*>(void_out);
+        shape_fill_mods_grp244(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -12704,8 +13373,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 651: {
-        shape_fill_mods_grp244(in, void_out);
         auto& out = *static_cast<DecodedCCTL3*>(void_out);
+        shape_fill_mods_grp244(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12718,23 +13388,27 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 652: {
+        auto& out = *static_cast<DecodedCCTL0*>(void_out);
         shape_fill_mods_grp109(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 653: {
+        auto& out = *static_cast<DecodedCCTL0*>(void_out);
         shape_fill_mods_grp109(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 654: {
+        auto& out = *static_cast<DecodedCCTLL0*>(void_out);
         shape_fill_mods_grp245(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 655: {
-        shape_fill_mods_grp246(in, void_out);
         auto& out = *static_cast<DecodedCCTLL2*>(void_out);
+        shape_fill_mods_grp246(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12744,8 +13418,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 656: {
-        shape_fill_mods_grp246(in, void_out);
         auto& out = *static_cast<DecodedCCTLL2*>(void_out);
+        shape_fill_mods_grp246(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12755,23 +13430,27 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 657: {
+        auto& out = *static_cast<DecodedMEMBAR0*>(void_out);
         shape_fill_mods_grp247(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 658: {
+        auto& out = *static_cast<DecodedMEMBAR0*>(void_out);
         shape_fill_mods_grp247(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 659: {
+        auto& out = *static_cast<DecodedMEMBAR0*>(void_out);
         shape_fill_mods_grp247(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 660: {
-        shape_fill_mods_grp248(in, void_out);
         auto& out = *static_cast<DecodedSULD5*>(void_out);
+        shape_fill_mods_grp248(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -12790,8 +13469,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 661: {
-        shape_fill_mods_grp248(in, void_out);
         auto& out = *static_cast<DecodedSULD5*>(void_out);
+        shape_fill_mods_grp248(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -12810,8 +13490,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 662: {
-        shape_fill_mods_grp249(in, void_out);
         auto& out = *static_cast<DecodedSUST4*>(void_out);
+        shape_fill_mods_grp249(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12827,8 +13508,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 663: {
-        shape_fill_mods_grp249(in, void_out);
         auto& out = *static_cast<DecodedSUST4*>(void_out);
+        shape_fill_mods_grp249(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12844,8 +13526,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 664: {
-        shape_fill_mods_grp242(in, void_out);
         auto& out = *static_cast<DecodedREDG3*>(void_out);
+        shape_fill_mods_grp242(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12858,8 +13541,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 665: {
-        shape_fill_mods_grp242(in, void_out);
         auto& out = *static_cast<DecodedREDG3*>(void_out);
+        shape_fill_mods_grp242(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -12872,21 +13556,25 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 666: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedERRBAR0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 667: {
-        (void)void_out; (void)in;
+        auto& out = *static_cast<DecodedLDGDEPBAR0*>(void_out);
+        out.subclass = 0;
         break;
     }
     case 668: {
+        auto& out = *static_cast<DecodedSYNCS0*>(void_out);
         shape_fill_mods_grp140(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
         break;
     }
     case 669: {
-        shape_fill_mods_grp252(in, void_out);
         auto& out = *static_cast<DecodedSUQUERY6*>(void_out);
+        shape_fill_mods_grp252(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -12909,22 +13597,25 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 670: {
         auto& out = *static_cast<DecodedUTMACMDFLUSH1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
         break;
     }
     case 671: {
-        shape_fill_mods_grp254(in, void_out);
         auto& out = *static_cast<DecodedUTMACCTL1*>(void_out);
+        shape_fill_mods_grp254(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
         break;
     }
     case 672: {
-        shape_fill_mods_grp254(in, void_out);
         auto& out = *static_cast<DecodedUTMACCTL1*>(void_out);
+        shape_fill_mods_grp254(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -12932,6 +13623,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 673: {
         auto& out = *static_cast<DecodedS2UR3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -12945,14 +13637,16 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 674: {
         auto& out = *static_cast<DecodedTTUMACROFUSE1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
         break;
     }
     case 675: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12965,8 +13659,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 676: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -12979,8 +13674,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 677: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -12990,8 +13687,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 678: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -13004,8 +13703,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 679: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -13018,8 +13719,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 680: {
-        shape_fill_mods_grp98(in, void_out);
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        shape_fill_mods_grp98(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -13032,18 +13735,24 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 681: {
+        auto& out = *static_cast<DecodedBAR0*>(void_out);
         shape_fill_mods_grp257(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         break;
     }
     case 682: {
+        auto& out = *static_cast<DecodedBAR0*>(void_out);
         shape_fill_mods_grp257(in, void_out);
-        (void)void_out; (void)in;
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         break;
     }
     case 683: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -13053,8 +13762,10 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 684: {
-        shape_fill_mods_grp97(in, void_out);
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        shape_fill_mods_grp97(in, void_out);
+        out.subclass = 0;
+        out.barname = static_cast<std::uint8_t>(in.value("barname"));
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.ops[0].flags = in.flags("Sb");
         operand_set_value(out.ops[0], OperandKind::kUImm, in.value("Sb"));
@@ -13064,8 +13775,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 685: {
-        shape_fill_mods_grp258(in, void_out);
         auto& out = *static_cast<DecodedCCTL4*>(void_out);
+        shape_fill_mods_grp258(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("Sa");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("Sa"));
@@ -13081,8 +13793,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 686: {
-        shape_fill_mods_grp259(in, void_out);
         auto& out = *static_cast<DecodedLDC5*>(void_out);
+        shape_fill_mods_grp259(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -13101,8 +13814,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 687: {
-        shape_fill_mods_grp259(in, void_out);
         auto& out = *static_cast<DecodedLDC5*>(void_out);
+        shape_fill_mods_grp259(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -13121,8 +13835,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 688: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -13135,8 +13850,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 689: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -13149,8 +13865,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 690: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("barReg");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("barReg"));
@@ -13160,8 +13877,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 691: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("barReg");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("barReg"));
@@ -13171,8 +13889,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 692: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("cbu_state");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("cbu_state"));
@@ -13182,8 +13901,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 693: {
-        shape_fill_mods_grp127(in, void_out);
         auto& out = *static_cast<DecodedSHFL5*>(void_out);
+        shape_fill_mods_grp127(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -13202,8 +13922,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 694: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -13216,8 +13937,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 695: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -13230,8 +13952,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 696: {
-        shape_fill_mods_grp260(in, void_out);
         auto& out = *static_cast<DecodedUVIADD4*>(void_out);
+        shape_fill_mods_grp260(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13247,8 +13970,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 697: {
-        shape_fill_mods_grp261(in, void_out);
         auto& out = *static_cast<DecodedUVIMNMX5*>(void_out);
+        shape_fill_mods_grp261(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13268,6 +13992,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 698: {
         auto& out = *static_cast<DecodedUIABS3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13280,8 +14005,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 699: {
-        shape_fill_mods_grp263(in, void_out);
         auto& out = *static_cast<DecodedUI2I3*>(void_out);
+        shape_fill_mods_grp263(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13294,8 +14020,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 700: {
-        shape_fill_mods_grp264(in, void_out);
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        shape_fill_mods_grp264(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13314,8 +14041,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 701: {
-        shape_fill_mods_grp264(in, void_out);
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        shape_fill_mods_grp264(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13334,8 +14062,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 702: {
-        shape_fill_mods_grp264(in, void_out);
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        shape_fill_mods_grp264(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13354,8 +14083,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 703: {
-        shape_fill_mods_grp265(in, void_out);
         auto& out = *static_cast<DecodedUFMNMX5*>(void_out);
+        shape_fill_mods_grp265(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13374,8 +14104,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 704: {
-        shape_fill_mods_grp266(in, void_out);
         auto& out = *static_cast<DecodedUFMNMX6*>(void_out);
+        shape_fill_mods_grp266(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13397,8 +14128,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 705: {
-        shape_fill_mods_grp267(in, void_out);
         auto& out = *static_cast<DecodedUFSEL5*>(void_out);
+        shape_fill_mods_grp267(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13417,8 +14149,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 706: {
-        shape_fill_mods_grp268(in, void_out);
         auto& out = *static_cast<DecodedUFSET5*>(void_out);
+        shape_fill_mods_grp268(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13437,8 +14170,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 707: {
-        shape_fill_mods_grp269(in, void_out);
         auto& out = *static_cast<DecodedUFSET4*>(void_out);
+        shape_fill_mods_grp269(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13454,8 +14188,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 708: {
-        shape_fill_mods_grp270(in, void_out);
         auto& out = *static_cast<DecodedUFSETP6*>(void_out);
+        shape_fill_mods_grp270(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13477,8 +14212,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 709: {
-        shape_fill_mods_grp271(in, void_out);
         auto& out = *static_cast<DecodedUFSETP4*>(void_out);
+        shape_fill_mods_grp271(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13494,8 +14230,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 710: {
-        shape_fill_mods_grp272(in, void_out);
         auto& out = *static_cast<DecodedUFADD4*>(void_out);
+        shape_fill_mods_grp272(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13511,8 +14248,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 711: {
-        shape_fill_mods_grp273(in, void_out);
         auto& out = *static_cast<DecodedUFHADD4*>(void_out);
+        shape_fill_mods_grp273(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13528,8 +14266,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 712: {
-        shape_fill_mods_grp274(in, void_out);
         auto& out = *static_cast<DecodedUFFMA5*>(void_out);
+        shape_fill_mods_grp274(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13548,8 +14287,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 713: {
-        shape_fill_mods_grp275(in, void_out);
         auto& out = *static_cast<DecodedUFHFMA5*>(void_out);
+        shape_fill_mods_grp275(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13568,8 +14308,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 714: {
-        shape_fill_mods_grp276(in, void_out);
         auto& out = *static_cast<DecodedUFMUL4*>(void_out);
+        shape_fill_mods_grp276(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13585,8 +14326,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 715: {
-        shape_fill_mods_grp277(in, void_out);
         auto& out = *static_cast<DecodedUF2IP5*>(void_out);
+        shape_fill_mods_grp277(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13605,8 +14347,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 716: {
-        shape_fill_mods_grp278(in, void_out);
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        shape_fill_mods_grp278(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13619,8 +14362,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 717: {
-        shape_fill_mods_grp278(in, void_out);
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        shape_fill_mods_grp278(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13633,8 +14377,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 718: {
-        shape_fill_mods_grp278(in, void_out);
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        shape_fill_mods_grp278(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13647,8 +14392,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 719: {
-        shape_fill_mods_grp279(in, void_out);
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        shape_fill_mods_grp279(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13661,8 +14407,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 720: {
-        shape_fill_mods_grp279(in, void_out);
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        shape_fill_mods_grp279(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13675,8 +14422,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 721: {
-        shape_fill_mods_grp279(in, void_out);
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        shape_fill_mods_grp279(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13689,8 +14437,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 722: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13703,8 +14452,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 723: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13717,8 +14467,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 724: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13731,8 +14482,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 725: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13745,8 +14497,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 726: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13759,8 +14512,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 727: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13773,8 +14527,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 728: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13787,8 +14542,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 729: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13801,8 +14557,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 730: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13815,8 +14572,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 731: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13829,8 +14587,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 732: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13843,8 +14602,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 733: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13857,8 +14617,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 734: {
-        shape_fill_mods_grp282(in, void_out);
         auto& out = *static_cast<DecodedUI2FP3*>(void_out);
+        shape_fill_mods_grp282(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13871,8 +14632,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 735: {
-        shape_fill_mods_grp283(in, void_out);
         auto& out = *static_cast<DecodedUIMNMX8*>(void_out);
+        shape_fill_mods_grp283(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13900,8 +14662,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 736: {
-        shape_fill_mods_grp284(in, void_out);
         auto& out = *static_cast<DecodedUIMNMX7*>(void_out);
+        shape_fill_mods_grp284(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13926,8 +14689,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 737: {
-        shape_fill_mods_grp283(in, void_out);
         auto& out = *static_cast<DecodedUIMNMX8*>(void_out);
+        shape_fill_mods_grp283(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13955,8 +14719,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 738: {
-        shape_fill_mods_grp284(in, void_out);
         auto& out = *static_cast<DecodedUIMNMX7*>(void_out);
+        shape_fill_mods_grp284(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -13981,8 +14746,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 739: {
-        shape_fill_mods_grp285(in, void_out);
         auto& out = *static_cast<DecodedUSEL5*>(void_out);
+        shape_fill_mods_grp285(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14001,8 +14767,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 740: {
-        shape_fill_mods_grp286(in, void_out);
         auto& out = *static_cast<DecodedUISETP6*>(void_out);
+        shape_fill_mods_grp286(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14024,8 +14791,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 741: {
-        shape_fill_mods_grp287(in, void_out);
         auto& out = *static_cast<DecodedUISETP7*>(void_out);
+        shape_fill_mods_grp287(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14050,8 +14818,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 742: {
-        shape_fill_mods_grp288(in, void_out);
         auto& out = *static_cast<DecodedUISETP4*>(void_out);
+        shape_fill_mods_grp288(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14067,8 +14836,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 743: {
-        shape_fill_mods_grp289(in, void_out);
         auto& out = *static_cast<DecodedUISETP5*>(void_out);
+        shape_fill_mods_grp289(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14087,8 +14857,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 744: {
-        shape_fill_mods_grp286(in, void_out);
         auto& out = *static_cast<DecodedUISETP6*>(void_out);
+        shape_fill_mods_grp286(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14110,8 +14881,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 745: {
-        shape_fill_mods_grp287(in, void_out);
         auto& out = *static_cast<DecodedUISETP7*>(void_out);
+        shape_fill_mods_grp287(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14136,8 +14908,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 746: {
-        shape_fill_mods_grp288(in, void_out);
         auto& out = *static_cast<DecodedUISETP4*>(void_out);
+        shape_fill_mods_grp288(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14153,8 +14926,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 747: {
-        shape_fill_mods_grp289(in, void_out);
         auto& out = *static_cast<DecodedUISETP5*>(void_out);
+        shape_fill_mods_grp289(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14174,6 +14948,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 748: {
         auto& out = *static_cast<DecodedUIADD37*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14198,8 +14973,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 749: {
-        shape_fill_mods_grp291(in, void_out);
         auto& out = *static_cast<DecodedUIADD39*>(void_out);
+        shape_fill_mods_grp291(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14230,8 +15006,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 750: {
-        shape_fill_mods_grp292(in, void_out);
         auto& out = *static_cast<DecodedULEA7*>(void_out);
+        shape_fill_mods_grp292(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14256,8 +15033,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 751: {
-        shape_fill_mods_grp293(in, void_out);
         auto& out = *static_cast<DecodedULEA6*>(void_out);
+        shape_fill_mods_grp293(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14279,8 +15057,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 752: {
-        shape_fill_mods_grp292(in, void_out);
         auto& out = *static_cast<DecodedULEA7*>(void_out);
+        shape_fill_mods_grp292(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14305,8 +15084,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 753: {
-        shape_fill_mods_grp294(in, void_out);
         auto& out = *static_cast<DecodedULEA8*>(void_out);
+        shape_fill_mods_grp294(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14334,8 +15114,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 754: {
-        shape_fill_mods_grp293(in, void_out);
         auto& out = *static_cast<DecodedULEA6*>(void_out);
+        shape_fill_mods_grp293(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14357,8 +15138,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 755: {
-        shape_fill_mods_grp292(in, void_out);
         auto& out = *static_cast<DecodedULEA7*>(void_out);
+        shape_fill_mods_grp292(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14383,8 +15165,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 756: {
-        shape_fill_mods_grp295(in, void_out);
         auto& out = *static_cast<DecodedULOP6*>(void_out);
+        shape_fill_mods_grp295(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14406,8 +15189,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 757: {
-        shape_fill_mods_grp296(in, void_out);
         auto& out = *static_cast<DecodedULOP5*>(void_out);
+        shape_fill_mods_grp296(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14426,8 +15210,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 758: {
-        shape_fill_mods_grp297(in, void_out);
         auto& out = *static_cast<DecodedULOP38*>(void_out);
+        shape_fill_mods_grp297(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14455,8 +15240,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 759: {
-        shape_fill_mods_grp298(in, void_out);
         auto& out = *static_cast<DecodedULOP37*>(void_out);
+        shape_fill_mods_grp298(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14481,8 +15267,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 760: {
-        shape_fill_mods_grp298(in, void_out);
         auto& out = *static_cast<DecodedULOP37*>(void_out);
+        shape_fill_mods_grp298(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14507,8 +15294,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 761: {
-        shape_fill_mods_grp299(in, void_out);
         auto& out = *static_cast<DecodedULOP36*>(void_out);
+        shape_fill_mods_grp299(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14530,8 +15318,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 762: {
-        shape_fill_mods_grp300(in, void_out);
         auto& out = *static_cast<DecodedUPRMT5*>(void_out);
+        shape_fill_mods_grp300(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14551,6 +15340,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 763: {
         auto& out = *static_cast<DecodedUIADD3_647*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14575,8 +15365,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 764: {
-        shape_fill_mods_grp302(in, void_out);
         auto& out = *static_cast<DecodedUIADD3_649*>(void_out);
+        shape_fill_mods_grp302(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14607,8 +15398,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 765: {
-        shape_fill_mods_grp303(in, void_out);
         auto& out = *static_cast<DecodedUSHF5*>(void_out);
+        shape_fill_mods_grp303(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14627,8 +15419,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 766: {
-        shape_fill_mods_grp304(in, void_out);
         auto& out = *static_cast<DecodedUSHL4*>(void_out);
+        shape_fill_mods_grp304(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14644,8 +15437,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 767: {
-        shape_fill_mods_grp305(in, void_out);
         auto& out = *static_cast<DecodedUSHR4*>(void_out);
+        shape_fill_mods_grp305(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14661,8 +15455,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 768: {
-        shape_fill_mods_grp306(in, void_out);
         auto& out = *static_cast<DecodedUSGXT4*>(void_out);
+        shape_fill_mods_grp306(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14678,8 +15473,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 769: {
-        shape_fill_mods_grp307(in, void_out);
         auto& out = *static_cast<DecodedUBMSK4*>(void_out);
+        shape_fill_mods_grp307(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14695,8 +15491,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 770: {
-        shape_fill_mods_grp206(in, void_out);
         auto& out = *static_cast<DecodedUPLOP36*>(void_out);
+        shape_fill_mods_grp206(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14718,8 +15515,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 771: {
-        shape_fill_mods_grp207(in, void_out);
         auto& out = *static_cast<DecodedUPLOP38*>(void_out);
+        shape_fill_mods_grp207(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14747,8 +15545,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 772: {
-        shape_fill_mods_grp206(in, void_out);
         auto& out = *static_cast<DecodedUPLOP36*>(void_out);
+        shape_fill_mods_grp206(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14770,8 +15569,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 773: {
-        shape_fill_mods_grp207(in, void_out);
         auto& out = *static_cast<DecodedUPLOP38*>(void_out);
+        shape_fill_mods_grp207(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14799,8 +15599,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 774: {
-        shape_fill_mods_grp206(in, void_out);
         auto& out = *static_cast<DecodedUPLOP36*>(void_out);
+        shape_fill_mods_grp206(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14822,8 +15623,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 775: {
-        shape_fill_mods_grp207(in, void_out);
         auto& out = *static_cast<DecodedUPLOP38*>(void_out);
+        shape_fill_mods_grp207(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14851,8 +15653,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 776: {
-        shape_fill_mods_grp308(in, void_out);
         auto& out = *static_cast<DecodedUIMAD5*>(void_out);
+        shape_fill_mods_grp308(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14871,8 +15674,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 777: {
-        shape_fill_mods_grp309(in, void_out);
         auto& out = *static_cast<DecodedUIMAD6*>(void_out);
+        shape_fill_mods_grp309(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14894,8 +15698,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 778: {
-        shape_fill_mods_grp309(in, void_out);
         auto& out = *static_cast<DecodedUIMAD6*>(void_out);
+        shape_fill_mods_grp309(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14917,8 +15722,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 779: {
-        shape_fill_mods_grp310(in, void_out);
         auto& out = *static_cast<DecodedUIMAD7*>(void_out);
+        shape_fill_mods_grp310(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14943,8 +15749,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 780: {
-        shape_fill_mods_grp309(in, void_out);
         auto& out = *static_cast<DecodedUIMAD6*>(void_out);
+        shape_fill_mods_grp309(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14966,8 +15773,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 781: {
-        shape_fill_mods_grp310(in, void_out);
         auto& out = *static_cast<DecodedUIMAD7*>(void_out);
+        shape_fill_mods_grp310(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -14992,8 +15800,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 782: {
-        shape_fill_mods_grp311(in, void_out);
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        shape_fill_mods_grp311(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15006,8 +15815,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 783: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15023,8 +15833,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 784: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15040,8 +15851,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 785: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15057,8 +15869,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 786: {
-        shape_fill_mods_grp313(in, void_out);
         auto& out = *static_cast<DecodedUF2FP5*>(void_out);
+        shape_fill_mods_grp313(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15077,8 +15890,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 787: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15094,8 +15908,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 788: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15111,8 +15926,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 789: {
-        shape_fill_mods_grp311(in, void_out);
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        shape_fill_mods_grp311(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15125,8 +15941,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 790: {
-        shape_fill_mods_grp311(in, void_out);
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        shape_fill_mods_grp311(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15139,8 +15956,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 791: {
-        shape_fill_mods_grp314(in, void_out);
         auto& out = *static_cast<DecodedUFLO4*>(void_out);
+        shape_fill_mods_grp314(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15157,6 +15975,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 792: {
         auto& out = *static_cast<DecodedUBREV3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15170,6 +15989,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 793: {
         auto& out = *static_cast<DecodedUPOPC3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15182,8 +16002,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 794: {
-        shape_fill_mods_grp317(in, void_out);
         auto& out = *static_cast<DecodedLDCU7*>(void_out);
+        shape_fill_mods_grp317(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15208,8 +16029,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 795: {
-        shape_fill_mods_grp318(in, void_out);
         auto& out = *static_cast<DecodedLDCU6*>(void_out);
+        shape_fill_mods_grp318(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15231,8 +16053,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 796: {
-        shape_fill_mods_grp319(in, void_out);
         auto& out = *static_cast<DecodedLDTRAM4*>(void_out);
+        shape_fill_mods_grp319(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -15248,8 +16071,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 797: {
-        shape_fill_mods_grp320(in, void_out);
         auto& out = *static_cast<DecodedSYNCS6*>(void_out);
+        shape_fill_mods_grp320(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15271,8 +16095,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 798: {
-        shape_fill_mods_grp321(in, void_out);
         auto& out = *static_cast<DecodedUTMALDG4*>(void_out);
+        shape_fill_mods_grp321(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15288,8 +16113,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 799: {
-        shape_fill_mods_grp322(in, void_out);
         auto& out = *static_cast<DecodedUTMALDG6*>(void_out);
+        shape_fill_mods_grp322(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15311,8 +16137,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 800: {
-        shape_fill_mods_grp321(in, void_out);
         auto& out = *static_cast<DecodedUTMALDG4*>(void_out);
+        shape_fill_mods_grp321(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15328,8 +16155,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 801: {
-        shape_fill_mods_grp322(in, void_out);
         auto& out = *static_cast<DecodedUTMALDG6*>(void_out);
+        shape_fill_mods_grp322(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15351,8 +16179,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 802: {
-        shape_fill_mods_grp323(in, void_out);
         auto& out = *static_cast<DecodedUTMASTG3*>(void_out);
+        shape_fill_mods_grp323(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15365,8 +16194,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 803: {
-        shape_fill_mods_grp324(in, void_out);
         auto& out = *static_cast<DecodedUTMASTG5*>(void_out);
+        shape_fill_mods_grp324(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15385,8 +16215,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 804: {
-        shape_fill_mods_grp323(in, void_out);
         auto& out = *static_cast<DecodedUTMASTG3*>(void_out);
+        shape_fill_mods_grp323(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15399,8 +16230,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 805: {
-        shape_fill_mods_grp324(in, void_out);
         auto& out = *static_cast<DecodedUTMASTG5*>(void_out);
+        shape_fill_mods_grp324(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15419,8 +16251,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 806: {
-        shape_fill_mods_grp325(in, void_out);
         auto& out = *static_cast<DecodedUTMAREDG3*>(void_out);
+        shape_fill_mods_grp325(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15433,8 +16266,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 807: {
-        shape_fill_mods_grp326(in, void_out);
         auto& out = *static_cast<DecodedUTMAREDG5*>(void_out);
+        shape_fill_mods_grp326(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15453,8 +16287,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 808: {
-        shape_fill_mods_grp325(in, void_out);
         auto& out = *static_cast<DecodedUTMAREDG3*>(void_out);
+        shape_fill_mods_grp325(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15467,8 +16302,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 809: {
-        shape_fill_mods_grp326(in, void_out);
         auto& out = *static_cast<DecodedUTMAREDG5*>(void_out);
+        shape_fill_mods_grp326(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15487,8 +16323,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 810: {
-        shape_fill_mods_grp327(in, void_out);
         auto& out = *static_cast<DecodedUTMAPF4*>(void_out);
+        shape_fill_mods_grp327(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15504,8 +16341,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 811: {
-        shape_fill_mods_grp328(in, void_out);
         auto& out = *static_cast<DecodedUTMAPF6*>(void_out);
+        shape_fill_mods_grp328(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15527,8 +16365,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 812: {
-        shape_fill_mods_grp327(in, void_out);
         auto& out = *static_cast<DecodedUTMAPF4*>(void_out);
+        shape_fill_mods_grp327(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15544,8 +16383,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 813: {
-        shape_fill_mods_grp328(in, void_out);
         auto& out = *static_cast<DecodedUTMAPF6*>(void_out);
+        shape_fill_mods_grp328(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15567,8 +16407,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 814: {
-        shape_fill_mods_grp329(in, void_out);
         auto& out = *static_cast<DecodedUBLKCP4*>(void_out);
+        shape_fill_mods_grp329(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15584,8 +16425,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 815: {
-        shape_fill_mods_grp330(in, void_out);
         auto& out = *static_cast<DecodedUBLKCP6*>(void_out);
+        shape_fill_mods_grp330(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15607,8 +16449,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 816: {
-        shape_fill_mods_grp330(in, void_out);
         auto& out = *static_cast<DecodedUBLKCP6*>(void_out);
+        shape_fill_mods_grp330(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15630,8 +16473,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 817: {
-        shape_fill_mods_grp329(in, void_out);
         auto& out = *static_cast<DecodedUBLKCP4*>(void_out);
+        shape_fill_mods_grp329(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15647,8 +16491,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 818: {
-        shape_fill_mods_grp331(in, void_out);
         auto& out = *static_cast<DecodedUBLKRED4*>(void_out);
+        shape_fill_mods_grp331(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15664,8 +16509,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 819: {
-        shape_fill_mods_grp332(in, void_out);
         auto& out = *static_cast<DecodedUBLKRED6*>(void_out);
+        shape_fill_mods_grp332(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15687,8 +16533,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 820: {
-        shape_fill_mods_grp332(in, void_out);
         auto& out = *static_cast<DecodedUBLKRED6*>(void_out);
+        shape_fill_mods_grp332(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15710,8 +16557,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 821: {
-        shape_fill_mods_grp331(in, void_out);
         auto& out = *static_cast<DecodedUBLKRED4*>(void_out);
+        shape_fill_mods_grp331(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15727,8 +16575,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 822: {
-        shape_fill_mods_grp333(in, void_out);
         auto& out = *static_cast<DecodedUBLKPF3*>(void_out);
+        shape_fill_mods_grp333(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15741,8 +16590,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 823: {
-        shape_fill_mods_grp334(in, void_out);
         auto& out = *static_cast<DecodedUBLKPF5*>(void_out);
+        shape_fill_mods_grp334(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15761,8 +16611,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 824: {
-        shape_fill_mods_grp333(in, void_out);
         auto& out = *static_cast<DecodedUBLKPF3*>(void_out);
+        shape_fill_mods_grp333(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15775,8 +16626,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 825: {
-        shape_fill_mods_grp334(in, void_out);
         auto& out = *static_cast<DecodedUBLKPF5*>(void_out);
+        shape_fill_mods_grp334(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15796,6 +16648,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 826: {
         auto& out = *static_cast<DecodedUCGABARSET2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15806,6 +16659,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 827: {
         auto& out = *static_cast<DecodedUCGABAR_SET2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15815,8 +16669,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 828: {
-        shape_fill_mods_grp337(in, void_out);
         auto& out = *static_cast<DecodedUSETMAXREG3*>(void_out);
+        shape_fill_mods_grp337(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15829,8 +16684,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 829: {
-        shape_fill_mods_grp338(in, void_out);
         auto& out = *static_cast<DecodedUSETMAXREG2*>(void_out);
+        shape_fill_mods_grp338(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15841,6 +16697,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 830: {
         auto& out = *static_cast<DecodedUSETSHMSZ2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15850,8 +16707,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 831: {
-        shape_fill_mods_grp340(in, void_out);
         auto& out = *static_cast<DecodedUGETNEXTWORKID3*>(void_out);
+        shape_fill_mods_grp340(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15864,8 +16722,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 832: {
-        shape_fill_mods_grp340(in, void_out);
         auto& out = *static_cast<DecodedUGETNEXTWORKID3*>(void_out);
+        shape_fill_mods_grp340(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15878,8 +16737,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 833: {
-        shape_fill_mods_grp341(in, void_out);
         auto& out = *static_cast<DecodedUMEMSETS5*>(void_out);
+        shape_fill_mods_grp341(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15899,6 +16759,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 834: {
         auto& out = *static_cast<DecodedULEPC2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15908,8 +16769,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 835: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -15922,8 +16784,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 836: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -15936,8 +16799,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 837: {
-        shape_fill_mods_grp201(in, void_out);
         auto& out = *static_cast<DecodedUVIRTCOUNT2*>(void_out);
+        shape_fill_mods_grp201(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15947,8 +16811,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 838: {
-        shape_fill_mods_grp201(in, void_out);
         auto& out = *static_cast<DecodedUVIRTCOUNT2*>(void_out);
+        shape_fill_mods_grp201(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15958,8 +16823,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 839: {
-        shape_fill_mods_grp272(in, void_out);
         auto& out = *static_cast<DecodedUFADD4*>(void_out);
+        shape_fill_mods_grp272(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15975,8 +16841,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 840: {
-        shape_fill_mods_grp274(in, void_out);
         auto& out = *static_cast<DecodedUFFMA5*>(void_out);
+        shape_fill_mods_grp274(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -15995,8 +16862,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 841: {
-        shape_fill_mods_grp277(in, void_out);
         auto& out = *static_cast<DecodedUF2IP5*>(void_out);
+        shape_fill_mods_grp277(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16016,6 +16884,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 842: {
         auto& out = *static_cast<DecodedMOV4*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("indexURd");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("indexURd"));
@@ -16031,8 +16900,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 843: {
-        shape_fill_mods_grp203(in, void_out);
         auto& out = *static_cast<DecodedUMOV3*>(void_out);
+        shape_fill_mods_grp203(in, void_out);
+        out.subclass = 8;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16045,8 +16915,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 844: {
-        shape_fill_mods_grp285(in, void_out);
         auto& out = *static_cast<DecodedUSEL5*>(void_out);
+        shape_fill_mods_grp285(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16065,8 +16936,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 845: {
-        shape_fill_mods_grp292(in, void_out);
         auto& out = *static_cast<DecodedULEA7*>(void_out);
+        shape_fill_mods_grp292(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16091,8 +16963,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 846: {
-        shape_fill_mods_grp294(in, void_out);
         auto& out = *static_cast<DecodedULEA8*>(void_out);
+        shape_fill_mods_grp294(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16120,8 +16993,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 847: {
-        shape_fill_mods_grp303(in, void_out);
         auto& out = *static_cast<DecodedUSHF5*>(void_out);
+        shape_fill_mods_grp303(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16140,8 +17014,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 848: {
-        shape_fill_mods_grp304(in, void_out);
         auto& out = *static_cast<DecodedUSHL4*>(void_out);
+        shape_fill_mods_grp304(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16157,8 +17032,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 849: {
-        shape_fill_mods_grp308(in, void_out);
         auto& out = *static_cast<DecodedUIMAD5*>(void_out);
+        shape_fill_mods_grp308(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16177,8 +17053,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 850: {
-        shape_fill_mods_grp309(in, void_out);
         auto& out = *static_cast<DecodedUIMAD6*>(void_out);
+        shape_fill_mods_grp309(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16200,8 +17077,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 851: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16217,8 +17095,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 852: {
-        shape_fill_mods_grp313(in, void_out);
         auto& out = *static_cast<DecodedUF2FP5*>(void_out);
+        shape_fill_mods_grp313(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16237,8 +17116,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 853: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16254,8 +17134,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 854: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16271,8 +17152,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 855: {
-        shape_fill_mods_grp102(in, void_out);
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        shape_fill_mods_grp102(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16291,8 +17173,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 856: {
-        shape_fill_mods_grp102(in, void_out);
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        shape_fill_mods_grp102(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16311,8 +17194,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 857: {
-        shape_fill_mods_grp104(in, void_out);
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        shape_fill_mods_grp104(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("srcAttr");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("srcAttr"));
@@ -16331,8 +17215,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 858: {
-        shape_fill_mods_grp104(in, void_out);
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        shape_fill_mods_grp104(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("srcAttr");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("srcAttr"));
@@ -16351,8 +17236,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 859: {
-        shape_fill_mods_grp108(in, void_out);
         auto& out = *static_cast<DecodedIPA5*>(void_out);
+        shape_fill_mods_grp108(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16371,8 +17257,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 860: {
-        shape_fill_mods_grp344(in, void_out);
         auto& out = *static_cast<DecodedIPA6*>(void_out);
+        shape_fill_mods_grp344(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16394,8 +17281,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 861: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
         out.ops[0].flags = in.flags("URa");
         operand_set_value(out.ops[0], OperandKind::kUniformRegister, in.value("URa"));
@@ -16405,8 +17293,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 862: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
         out.ops[0].flags = in.flags("URa");
         operand_set_value(out.ops[0], OperandKind::kUniformRegister, in.value("URa"));
@@ -16416,8 +17305,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 863: {
-        shape_fill_mods_grp345(in, void_out);
         auto& out = *static_cast<DecodedBRA3*>(void_out);
+        shape_fill_mods_grp345(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -16430,8 +17320,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 864: {
-        shape_fill_mods_grp345(in, void_out);
         auto& out = *static_cast<DecodedBRA3*>(void_out);
+        shape_fill_mods_grp345(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -16444,8 +17335,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 865: {
-        shape_fill_mods_grp346(in, void_out);
         auto& out = *static_cast<DecodedJMP3*>(void_out);
+        shape_fill_mods_grp346(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -16458,8 +17350,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 866: {
-        shape_fill_mods_grp346(in, void_out);
         auto& out = *static_cast<DecodedJMP3*>(void_out);
+        shape_fill_mods_grp346(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -16472,8 +17365,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 867: {
-        shape_fill_mods_grp259(in, void_out);
         auto& out = *static_cast<DecodedLDC5*>(void_out);
+        shape_fill_mods_grp259(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16492,8 +17386,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 868: {
-        shape_fill_mods_grp259(in, void_out);
         auto& out = *static_cast<DecodedLDC5*>(void_out);
+        shape_fill_mods_grp259(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16512,8 +17407,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 869: {
-        shape_fill_mods_grp347(in, void_out);
         auto& out = *static_cast<DecodedSYNCS5*>(void_out);
+        shape_fill_mods_grp347(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -16532,8 +17428,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 870: {
-        shape_fill_mods_grp348(in, void_out);
         auto& out = *static_cast<DecodedLDCU8*>(void_out);
+        shape_fill_mods_grp348(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16561,8 +17458,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 871: {
-        shape_fill_mods_grp349(in, void_out);
         auto& out = *static_cast<DecodedSYNCS4*>(void_out);
+        shape_fill_mods_grp349(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16578,8 +17476,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 872: {
-        shape_fill_mods_grp347(in, void_out);
         auto& out = *static_cast<DecodedSYNCS5*>(void_out);
+        shape_fill_mods_grp347(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16598,8 +17497,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 873: {
-        shape_fill_mods_grp350(in, void_out);
         auto& out = *static_cast<DecodedUTMALDG3*>(void_out);
+        shape_fill_mods_grp350(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16612,8 +17512,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 874: {
-        shape_fill_mods_grp351(in, void_out);
         auto& out = *static_cast<DecodedUTMALDG5*>(void_out);
+        shape_fill_mods_grp351(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16632,8 +17533,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 875: {
-        shape_fill_mods_grp350(in, void_out);
         auto& out = *static_cast<DecodedUTMALDG3*>(void_out);
+        shape_fill_mods_grp350(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16646,8 +17548,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 876: {
-        shape_fill_mods_grp351(in, void_out);
         auto& out = *static_cast<DecodedUTMALDG5*>(void_out);
+        shape_fill_mods_grp351(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16666,8 +17569,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 877: {
-        shape_fill_mods_grp352(in, void_out);
         auto& out = *static_cast<DecodedUTMAPF3*>(void_out);
+        shape_fill_mods_grp352(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16680,8 +17584,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 878: {
-        shape_fill_mods_grp353(in, void_out);
         auto& out = *static_cast<DecodedUTMAPF5*>(void_out);
+        shape_fill_mods_grp353(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16700,8 +17605,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 879: {
-        shape_fill_mods_grp352(in, void_out);
         auto& out = *static_cast<DecodedUTMAPF3*>(void_out);
+        shape_fill_mods_grp352(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16714,8 +17620,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 880: {
-        shape_fill_mods_grp353(in, void_out);
         auto& out = *static_cast<DecodedUTMAPF5*>(void_out);
+        shape_fill_mods_grp353(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16735,6 +17642,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 881: {
         auto& out = *static_cast<DecodedUCGABARGET2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16745,6 +17653,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 882: {
         auto& out = *static_cast<DecodedUCGABAR_GET2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16754,8 +17663,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 883: {
-        shape_fill_mods_grp258(in, void_out);
         auto& out = *static_cast<DecodedCCTL4*>(void_out);
+        shape_fill_mods_grp258(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("Sa");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("Sa"));
@@ -16771,8 +17681,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 884: {
-        shape_fill_mods_grp258(in, void_out);
         auto& out = *static_cast<DecodedCCTL4*>(void_out);
+        shape_fill_mods_grp258(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("Sa");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("Sa"));
@@ -16788,8 +17699,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 885: {
-        shape_fill_mods_grp318(in, void_out);
         auto& out = *static_cast<DecodedLDCU6*>(void_out);
+        shape_fill_mods_grp318(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16811,8 +17723,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 886: {
-        shape_fill_mods_grp191(in, void_out);
         auto& out = *static_cast<DecodedELECT3*>(void_out);
+        shape_fill_mods_grp191(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -16825,8 +17738,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 887: {
-        shape_fill_mods_grp356(in, void_out);
         auto& out = *static_cast<DecodedELECT2*>(void_out);
+        shape_fill_mods_grp356(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -16836,8 +17750,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 888: {
-        shape_fill_mods_grp357(in, void_out);
         auto& out = *static_cast<DecodedLDSM4*>(void_out);
+        shape_fill_mods_grp357(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16853,8 +17768,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 889: {
-        shape_fill_mods_grp357(in, void_out);
         auto& out = *static_cast<DecodedLDSM4*>(void_out);
+        shape_fill_mods_grp357(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -16870,8 +17786,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 890: {
-        shape_fill_mods_grp358(in, void_out);
         auto& out = *static_cast<DecodedSTSM4*>(void_out);
+        shape_fill_mods_grp358(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -16887,8 +17804,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 891: {
-        shape_fill_mods_grp260(in, void_out);
         auto& out = *static_cast<DecodedUVIADD4*>(void_out);
+        shape_fill_mods_grp260(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16904,8 +17822,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 892: {
-        shape_fill_mods_grp261(in, void_out);
         auto& out = *static_cast<DecodedUVIMNMX5*>(void_out);
+        shape_fill_mods_grp261(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16925,6 +17844,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 893: {
         auto& out = *static_cast<DecodedUIABS3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16937,8 +17857,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 894: {
-        shape_fill_mods_grp263(in, void_out);
         auto& out = *static_cast<DecodedUI2I3*>(void_out);
+        shape_fill_mods_grp263(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16951,8 +17872,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 895: {
-        shape_fill_mods_grp264(in, void_out);
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        shape_fill_mods_grp264(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16971,8 +17893,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 896: {
-        shape_fill_mods_grp264(in, void_out);
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        shape_fill_mods_grp264(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -16991,8 +17914,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 897: {
-        shape_fill_mods_grp264(in, void_out);
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        shape_fill_mods_grp264(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17011,8 +17935,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 898: {
-        shape_fill_mods_grp265(in, void_out);
         auto& out = *static_cast<DecodedUFMNMX5*>(void_out);
+        shape_fill_mods_grp265(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17031,8 +17956,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 899: {
-        shape_fill_mods_grp266(in, void_out);
         auto& out = *static_cast<DecodedUFMNMX6*>(void_out);
+        shape_fill_mods_grp266(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17054,8 +17980,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 900: {
-        shape_fill_mods_grp267(in, void_out);
         auto& out = *static_cast<DecodedUFSEL5*>(void_out);
+        shape_fill_mods_grp267(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17074,8 +18001,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 901: {
-        shape_fill_mods_grp268(in, void_out);
         auto& out = *static_cast<DecodedUFSET5*>(void_out);
+        shape_fill_mods_grp268(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17094,8 +18022,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 902: {
-        shape_fill_mods_grp269(in, void_out);
         auto& out = *static_cast<DecodedUFSET4*>(void_out);
+        shape_fill_mods_grp269(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17111,8 +18040,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 903: {
-        shape_fill_mods_grp270(in, void_out);
         auto& out = *static_cast<DecodedUFSETP6*>(void_out);
+        shape_fill_mods_grp270(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17134,8 +18064,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 904: {
-        shape_fill_mods_grp271(in, void_out);
         auto& out = *static_cast<DecodedUFSETP4*>(void_out);
+        shape_fill_mods_grp271(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17151,8 +18082,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 905: {
-        shape_fill_mods_grp274(in, void_out);
         auto& out = *static_cast<DecodedUFFMA5*>(void_out);
+        shape_fill_mods_grp274(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17171,8 +18103,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 906: {
-        shape_fill_mods_grp276(in, void_out);
         auto& out = *static_cast<DecodedUFMUL4*>(void_out);
+        shape_fill_mods_grp276(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17188,8 +18121,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 907: {
-        shape_fill_mods_grp277(in, void_out);
         auto& out = *static_cast<DecodedUF2IP5*>(void_out);
+        shape_fill_mods_grp277(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17208,8 +18142,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 908: {
-        shape_fill_mods_grp278(in, void_out);
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        shape_fill_mods_grp278(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17222,8 +18157,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 909: {
-        shape_fill_mods_grp278(in, void_out);
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        shape_fill_mods_grp278(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17236,8 +18172,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 910: {
-        shape_fill_mods_grp279(in, void_out);
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        shape_fill_mods_grp279(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17250,8 +18187,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 911: {
-        shape_fill_mods_grp279(in, void_out);
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        shape_fill_mods_grp279(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17264,8 +18202,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 912: {
-        shape_fill_mods_grp279(in, void_out);
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        shape_fill_mods_grp279(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17278,8 +18217,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 913: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17292,8 +18232,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 914: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17306,8 +18247,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 915: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17320,8 +18262,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 916: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17334,8 +18277,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 917: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17348,8 +18292,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 918: {
-        shape_fill_mods_grp280(in, void_out);
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        shape_fill_mods_grp280(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17362,8 +18307,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 919: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17376,8 +18322,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 920: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17390,8 +18337,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 921: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17404,8 +18352,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 922: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17418,8 +18367,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 923: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17432,8 +18382,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 924: {
-        shape_fill_mods_grp281(in, void_out);
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        shape_fill_mods_grp281(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17446,8 +18397,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 925: {
-        shape_fill_mods_grp282(in, void_out);
         auto& out = *static_cast<DecodedUI2FP3*>(void_out);
+        shape_fill_mods_grp282(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17460,8 +18412,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 926: {
-        shape_fill_mods_grp282(in, void_out);
         auto& out = *static_cast<DecodedUI2FP3*>(void_out);
+        shape_fill_mods_grp282(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17475,6 +18428,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 927: {
         auto& out = *static_cast<DecodedMOV4*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("indexURd");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("indexURd"));
@@ -17490,8 +18444,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 928: {
-        shape_fill_mods_grp359(in, void_out);
         auto& out = *static_cast<DecodedUP2UR5*>(void_out);
+        shape_fill_mods_grp359(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17510,8 +18465,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 929: {
-        shape_fill_mods_grp360(in, void_out);
         auto& out = *static_cast<DecodedUP2UR3*>(void_out);
+        shape_fill_mods_grp360(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17524,8 +18480,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 930: {
-        shape_fill_mods_grp361(in, void_out);
         auto& out = *static_cast<DecodedUR2UP4*>(void_out);
+        shape_fill_mods_grp361(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17541,8 +18498,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 931: {
-        shape_fill_mods_grp283(in, void_out);
         auto& out = *static_cast<DecodedUIMNMX8*>(void_out);
+        shape_fill_mods_grp283(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17570,8 +18528,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 932: {
-        shape_fill_mods_grp284(in, void_out);
         auto& out = *static_cast<DecodedUIMNMX7*>(void_out);
+        shape_fill_mods_grp284(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17596,8 +18555,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 933: {
-        shape_fill_mods_grp283(in, void_out);
         auto& out = *static_cast<DecodedUIMNMX8*>(void_out);
+        shape_fill_mods_grp283(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17625,8 +18585,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 934: {
-        shape_fill_mods_grp284(in, void_out);
         auto& out = *static_cast<DecodedUIMNMX7*>(void_out);
+        shape_fill_mods_grp284(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17651,8 +18612,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 935: {
-        shape_fill_mods_grp285(in, void_out);
         auto& out = *static_cast<DecodedUSEL5*>(void_out);
+        shape_fill_mods_grp285(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17671,8 +18633,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 936: {
-        shape_fill_mods_grp286(in, void_out);
         auto& out = *static_cast<DecodedUISETP6*>(void_out);
+        shape_fill_mods_grp286(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17694,8 +18657,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 937: {
-        shape_fill_mods_grp287(in, void_out);
         auto& out = *static_cast<DecodedUISETP7*>(void_out);
+        shape_fill_mods_grp287(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17720,8 +18684,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 938: {
-        shape_fill_mods_grp288(in, void_out);
         auto& out = *static_cast<DecodedUISETP4*>(void_out);
+        shape_fill_mods_grp288(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17737,8 +18702,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 939: {
-        shape_fill_mods_grp289(in, void_out);
         auto& out = *static_cast<DecodedUISETP5*>(void_out);
+        shape_fill_mods_grp289(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17757,8 +18723,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 940: {
-        shape_fill_mods_grp286(in, void_out);
         auto& out = *static_cast<DecodedUISETP6*>(void_out);
+        shape_fill_mods_grp286(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17780,8 +18747,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 941: {
-        shape_fill_mods_grp287(in, void_out);
         auto& out = *static_cast<DecodedUISETP7*>(void_out);
+        shape_fill_mods_grp287(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17806,8 +18774,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 942: {
-        shape_fill_mods_grp288(in, void_out);
         auto& out = *static_cast<DecodedUISETP4*>(void_out);
+        shape_fill_mods_grp288(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17823,8 +18792,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 943: {
-        shape_fill_mods_grp289(in, void_out);
         auto& out = *static_cast<DecodedUISETP5*>(void_out);
+        shape_fill_mods_grp289(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17844,6 +18814,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 944: {
         auto& out = *static_cast<DecodedUIADD37*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17868,8 +18839,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 945: {
-        shape_fill_mods_grp291(in, void_out);
         auto& out = *static_cast<DecodedUIADD39*>(void_out);
+        shape_fill_mods_grp291(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17900,8 +18872,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 946: {
-        shape_fill_mods_grp292(in, void_out);
         auto& out = *static_cast<DecodedULEA7*>(void_out);
+        shape_fill_mods_grp292(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17926,8 +18899,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 947: {
-        shape_fill_mods_grp293(in, void_out);
         auto& out = *static_cast<DecodedULEA6*>(void_out);
+        shape_fill_mods_grp293(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17949,8 +18923,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 948: {
-        shape_fill_mods_grp292(in, void_out);
         auto& out = *static_cast<DecodedULEA7*>(void_out);
+        shape_fill_mods_grp292(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -17975,8 +18950,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 949: {
-        shape_fill_mods_grp294(in, void_out);
         auto& out = *static_cast<DecodedULEA8*>(void_out);
+        shape_fill_mods_grp294(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18004,8 +18980,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 950: {
-        shape_fill_mods_grp293(in, void_out);
         auto& out = *static_cast<DecodedULEA6*>(void_out);
+        shape_fill_mods_grp293(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18027,8 +19004,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 951: {
-        shape_fill_mods_grp292(in, void_out);
         auto& out = *static_cast<DecodedULEA7*>(void_out);
+        shape_fill_mods_grp292(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18053,8 +19031,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 952: {
-        shape_fill_mods_grp295(in, void_out);
         auto& out = *static_cast<DecodedULOP6*>(void_out);
+        shape_fill_mods_grp295(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18076,8 +19055,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 953: {
-        shape_fill_mods_grp296(in, void_out);
         auto& out = *static_cast<DecodedULOP5*>(void_out);
+        shape_fill_mods_grp296(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18096,8 +19076,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 954: {
-        shape_fill_mods_grp298(in, void_out);
         auto& out = *static_cast<DecodedULOP37*>(void_out);
+        shape_fill_mods_grp298(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18122,8 +19103,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 955: {
-        shape_fill_mods_grp299(in, void_out);
         auto& out = *static_cast<DecodedULOP36*>(void_out);
+        shape_fill_mods_grp299(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18145,8 +19127,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 956: {
-        shape_fill_mods_grp297(in, void_out);
         auto& out = *static_cast<DecodedULOP38*>(void_out);
+        shape_fill_mods_grp297(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18174,8 +19157,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 957: {
-        shape_fill_mods_grp298(in, void_out);
         auto& out = *static_cast<DecodedULOP37*>(void_out);
+        shape_fill_mods_grp298(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18200,8 +19184,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 958: {
-        shape_fill_mods_grp362(in, void_out);
         auto& out = *static_cast<DecodedULOP32I6*>(void_out);
+        shape_fill_mods_grp362(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18223,8 +19208,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 959: {
-        shape_fill_mods_grp363(in, void_out);
         auto& out = *static_cast<DecodedULOP32I5*>(void_out);
+        shape_fill_mods_grp363(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18243,8 +19229,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 960: {
-        shape_fill_mods_grp300(in, void_out);
         auto& out = *static_cast<DecodedUPRMT5*>(void_out);
+        shape_fill_mods_grp300(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18264,6 +19251,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 961: {
         auto& out = *static_cast<DecodedUIADD3_647*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18288,8 +19276,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 962: {
-        shape_fill_mods_grp302(in, void_out);
         auto& out = *static_cast<DecodedUIADD3_649*>(void_out);
+        shape_fill_mods_grp302(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18320,8 +19309,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 963: {
-        shape_fill_mods_grp303(in, void_out);
         auto& out = *static_cast<DecodedUSHF5*>(void_out);
+        shape_fill_mods_grp303(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18340,8 +19330,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 964: {
-        shape_fill_mods_grp304(in, void_out);
         auto& out = *static_cast<DecodedUSHL4*>(void_out);
+        shape_fill_mods_grp304(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18357,8 +19348,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 965: {
-        shape_fill_mods_grp305(in, void_out);
         auto& out = *static_cast<DecodedUSHR4*>(void_out);
+        shape_fill_mods_grp305(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18374,8 +19366,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 966: {
-        shape_fill_mods_grp306(in, void_out);
         auto& out = *static_cast<DecodedUSGXT4*>(void_out);
+        shape_fill_mods_grp306(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18391,8 +19384,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 967: {
-        shape_fill_mods_grp307(in, void_out);
         auto& out = *static_cast<DecodedUBMSK4*>(void_out);
+        shape_fill_mods_grp307(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18408,8 +19402,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 968: {
-        shape_fill_mods_grp308(in, void_out);
         auto& out = *static_cast<DecodedUIMAD5*>(void_out);
+        shape_fill_mods_grp308(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18428,8 +19423,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 969: {
-        shape_fill_mods_grp309(in, void_out);
         auto& out = *static_cast<DecodedUIMAD6*>(void_out);
+        shape_fill_mods_grp309(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18451,8 +19447,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 970: {
-        shape_fill_mods_grp309(in, void_out);
         auto& out = *static_cast<DecodedUIMAD6*>(void_out);
+        shape_fill_mods_grp309(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18474,8 +19471,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 971: {
-        shape_fill_mods_grp310(in, void_out);
         auto& out = *static_cast<DecodedUIMAD7*>(void_out);
+        shape_fill_mods_grp310(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18500,8 +19498,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 972: {
-        shape_fill_mods_grp309(in, void_out);
         auto& out = *static_cast<DecodedUIMAD6*>(void_out);
+        shape_fill_mods_grp309(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18523,8 +19522,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 973: {
-        shape_fill_mods_grp310(in, void_out);
         auto& out = *static_cast<DecodedUIMAD7*>(void_out);
+        shape_fill_mods_grp310(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18549,8 +19549,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 974: {
-        shape_fill_mods_grp311(in, void_out);
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        shape_fill_mods_grp311(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18563,8 +19564,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 975: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18580,8 +19582,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 976: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18597,8 +19600,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 977: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18614,8 +19618,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 978: {
-        shape_fill_mods_grp313(in, void_out);
         auto& out = *static_cast<DecodedUF2FP5*>(void_out);
+        shape_fill_mods_grp313(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18634,8 +19639,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 979: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18651,8 +19657,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 980: {
-        shape_fill_mods_grp312(in, void_out);
         auto& out = *static_cast<DecodedUF2FP4*>(void_out);
+        shape_fill_mods_grp312(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18668,8 +19675,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 981: {
-        shape_fill_mods_grp311(in, void_out);
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        shape_fill_mods_grp311(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18682,8 +19690,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 982: {
-        shape_fill_mods_grp311(in, void_out);
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        shape_fill_mods_grp311(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18697,6 +19706,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 983: {
         auto& out = *static_cast<DecodedUCLEA6*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18718,8 +19728,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 984: {
-        shape_fill_mods_grp314(in, void_out);
         auto& out = *static_cast<DecodedUFLO4*>(void_out);
+        shape_fill_mods_grp314(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18736,6 +19747,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 985: {
         auto& out = *static_cast<DecodedUBREV3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18749,6 +19761,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 986: {
         auto& out = *static_cast<DecodedUPOPC3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -18761,8 +19774,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 987: {
-        shape_fill_mods_grp344(in, void_out);
         auto& out = *static_cast<DecodedIPA6*>(void_out);
+        shape_fill_mods_grp344(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -18784,8 +19798,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 988: {
-        shape_fill_mods_grp110(in, void_out);
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        shape_fill_mods_grp110(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18798,8 +19813,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 989: {
-        shape_fill_mods_grp110(in, void_out);
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        shape_fill_mods_grp110(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18812,8 +19828,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 990: {
-        shape_fill_mods_grp110(in, void_out);
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        shape_fill_mods_grp110(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18826,8 +19843,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 991: {
-        shape_fill_mods_grp111(in, void_out);
         auto& out = *static_cast<DecodedCALL2*>(void_out);
+        shape_fill_mods_grp111(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18837,8 +19855,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 992: {
-        shape_fill_mods_grp345(in, void_out);
         auto& out = *static_cast<DecodedBRA3*>(void_out);
+        shape_fill_mods_grp345(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18851,8 +19870,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 993: {
-        shape_fill_mods_grp345(in, void_out);
         auto& out = *static_cast<DecodedBRA3*>(void_out);
+        shape_fill_mods_grp345(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18865,8 +19885,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 994: {
-        shape_fill_mods_grp346(in, void_out);
         auto& out = *static_cast<DecodedJMP3*>(void_out);
+        shape_fill_mods_grp346(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18879,8 +19900,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 995: {
-        shape_fill_mods_grp346(in, void_out);
         auto& out = *static_cast<DecodedJMP3*>(void_out);
+        shape_fill_mods_grp346(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18893,8 +19915,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 996: {
-        shape_fill_mods_grp233(in, void_out);
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        shape_fill_mods_grp233(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18907,8 +19930,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 997: {
-        shape_fill_mods_grp233(in, void_out);
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        shape_fill_mods_grp233(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18921,8 +19945,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 998: {
-        shape_fill_mods_grp233(in, void_out);
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        shape_fill_mods_grp233(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18935,8 +19960,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 999: {
-        shape_fill_mods_grp234(in, void_out);
         auto& out = *static_cast<DecodedRET2*>(void_out);
+        shape_fill_mods_grp234(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18946,8 +19972,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1000: {
-        shape_fill_mods_grp365(in, void_out);
         auto& out = *static_cast<DecodedBRXU3*>(void_out);
+        shape_fill_mods_grp365(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18960,8 +19987,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1001: {
-        shape_fill_mods_grp365(in, void_out);
         auto& out = *static_cast<DecodedBRXU3*>(void_out);
+        shape_fill_mods_grp365(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18974,8 +20002,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1002: {
-        shape_fill_mods_grp366(in, void_out);
         auto& out = *static_cast<DecodedJMXU3*>(void_out);
+        shape_fill_mods_grp366(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -18988,8 +20017,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1003: {
-        shape_fill_mods_grp366(in, void_out);
         auto& out = *static_cast<DecodedJMXU3*>(void_out);
+        shape_fill_mods_grp366(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -19002,8 +20032,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1004: {
-        shape_fill_mods_grp367(in, void_out);
         auto& out = *static_cast<DecodedLDG8*>(void_out);
+        shape_fill_mods_grp367(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -19031,8 +20062,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1005: {
-        shape_fill_mods_grp367(in, void_out);
         auto& out = *static_cast<DecodedLDG8*>(void_out);
+        shape_fill_mods_grp367(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -19060,8 +20092,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1006: {
-        shape_fill_mods_grp368(in, void_out);
         auto& out = *static_cast<DecodedLDG7*>(void_out);
+        shape_fill_mods_grp368(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -19086,8 +20119,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1007: {
-        shape_fill_mods_grp368(in, void_out);
         auto& out = *static_cast<DecodedLDG7*>(void_out);
+        shape_fill_mods_grp368(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -19112,8 +20146,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1008: {
-        shape_fill_mods_grp368(in, void_out);
         auto& out = *static_cast<DecodedLDG7*>(void_out);
+        shape_fill_mods_grp368(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -19138,8 +20173,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1009: {
-        shape_fill_mods_grp368(in, void_out);
         auto& out = *static_cast<DecodedLDG7*>(void_out);
+        shape_fill_mods_grp368(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -19164,8 +20200,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1010: {
-        shape_fill_mods_grp368(in, void_out);
         auto& out = *static_cast<DecodedLDG7*>(void_out);
+        shape_fill_mods_grp368(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -19190,8 +20227,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1011: {
-        shape_fill_mods_grp368(in, void_out);
         auto& out = *static_cast<DecodedLDG7*>(void_out);
+        shape_fill_mods_grp368(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -19216,8 +20254,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1012: {
-        shape_fill_mods_grp369(in, void_out);
         auto& out = *static_cast<DecodedSTG7*>(void_out);
+        shape_fill_mods_grp369(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kDesc);
         out.ops[0].flags = in.flags("memoryDescriptor");
         operand_set_value(out.ops[0], OperandKind::kDesc, in.value("memoryDescriptor"));
@@ -19242,8 +20281,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1013: {
-        shape_fill_mods_grp370(in, void_out);
         auto& out = *static_cast<DecodedSTG6*>(void_out);
+        shape_fill_mods_grp370(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19265,8 +20305,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1014: {
-        shape_fill_mods_grp370(in, void_out);
         auto& out = *static_cast<DecodedSTG6*>(void_out);
+        shape_fill_mods_grp370(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19288,8 +20329,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1015: {
-        shape_fill_mods_grp370(in, void_out);
         auto& out = *static_cast<DecodedSTG6*>(void_out);
+        shape_fill_mods_grp370(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19311,8 +20353,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1016: {
-        shape_fill_mods_grp371(in, void_out);
         auto& out = *static_cast<DecodedLD6*>(void_out);
+        shape_fill_mods_grp371(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -19334,8 +20377,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1017: {
-        shape_fill_mods_grp372(in, void_out);
         auto& out = *static_cast<DecodedLD5*>(void_out);
+        shape_fill_mods_grp372(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -19354,8 +20398,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1018: {
-        shape_fill_mods_grp372(in, void_out);
         auto& out = *static_cast<DecodedLD5*>(void_out);
+        shape_fill_mods_grp372(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -19374,8 +20419,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1019: {
-        shape_fill_mods_grp372(in, void_out);
         auto& out = *static_cast<DecodedLD5*>(void_out);
+        shape_fill_mods_grp372(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -19394,8 +20440,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1020: {
-        shape_fill_mods_grp368(in, void_out);
         auto& out = *static_cast<DecodedLDG7*>(void_out);
+        shape_fill_mods_grp368(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19420,8 +20467,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1021: {
-        shape_fill_mods_grp373(in, void_out);
         auto& out = *static_cast<DecodedLDG6*>(void_out);
+        shape_fill_mods_grp373(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19443,8 +20491,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1022: {
-        shape_fill_mods_grp373(in, void_out);
         auto& out = *static_cast<DecodedLDG6*>(void_out);
+        shape_fill_mods_grp373(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19466,8 +20515,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1023: {
-        shape_fill_mods_grp373(in, void_out);
         auto& out = *static_cast<DecodedLDG6*>(void_out);
+        shape_fill_mods_grp373(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19489,8 +20539,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1024: {
-        shape_fill_mods_grp374(in, void_out);
         auto& out = *static_cast<DecodedLDL5*>(void_out);
+        shape_fill_mods_grp374(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -19509,8 +20560,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1025: {
-        shape_fill_mods_grp375(in, void_out);
         auto& out = *static_cast<DecodedLDL4*>(void_out);
+        shape_fill_mods_grp375(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -19526,8 +20578,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1026: {
-        shape_fill_mods_grp376(in, void_out);
         auto& out = *static_cast<DecodedLDS4*>(void_out);
+        shape_fill_mods_grp376(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -19543,8 +20596,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1027: {
-        shape_fill_mods_grp377(in, void_out);
         auto& out = *static_cast<DecodedST5*>(void_out);
+        shape_fill_mods_grp377(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kDesc);
         out.ops[0].flags = in.flags("memoryDescriptor");
         operand_set_value(out.ops[0], OperandKind::kDesc, in.value("memoryDescriptor"));
@@ -19563,8 +20617,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1028: {
-        shape_fill_mods_grp378(in, void_out);
         auto& out = *static_cast<DecodedST4*>(void_out);
+        shape_fill_mods_grp378(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19580,8 +20635,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1029: {
-        shape_fill_mods_grp378(in, void_out);
         auto& out = *static_cast<DecodedST4*>(void_out);
+        shape_fill_mods_grp378(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19597,8 +20653,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1030: {
-        shape_fill_mods_grp378(in, void_out);
         auto& out = *static_cast<DecodedST4*>(void_out);
+        shape_fill_mods_grp378(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19614,8 +20671,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1031: {
-        shape_fill_mods_grp379(in, void_out);
         auto& out = *static_cast<DecodedSTG5*>(void_out);
+        shape_fill_mods_grp379(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kDesc);
         out.ops[0].flags = in.flags("memoryDescriptor");
         operand_set_value(out.ops[0], OperandKind::kDesc, in.value("memoryDescriptor"));
@@ -19634,8 +20692,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1032: {
-        shape_fill_mods_grp380(in, void_out);
         auto& out = *static_cast<DecodedSTG4*>(void_out);
+        shape_fill_mods_grp380(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19651,8 +20710,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1033: {
-        shape_fill_mods_grp380(in, void_out);
         auto& out = *static_cast<DecodedSTG4*>(void_out);
+        shape_fill_mods_grp380(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19668,8 +20728,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1034: {
-        shape_fill_mods_grp380(in, void_out);
         auto& out = *static_cast<DecodedSTG4*>(void_out);
+        shape_fill_mods_grp380(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19685,8 +20746,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1035: {
-        shape_fill_mods_grp381(in, void_out);
         auto& out = *static_cast<DecodedSTL5*>(void_out);
+        shape_fill_mods_grp381(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kDesc);
         out.ops[0].flags = in.flags("memoryDescriptor");
         operand_set_value(out.ops[0], OperandKind::kDesc, in.value("memoryDescriptor"));
@@ -19705,8 +20767,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1036: {
-        shape_fill_mods_grp382(in, void_out);
         auto& out = *static_cast<DecodedSTL4*>(void_out);
+        shape_fill_mods_grp382(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19722,8 +20785,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1037: {
-        shape_fill_mods_grp383(in, void_out);
         auto& out = *static_cast<DecodedSTS4*>(void_out);
+        shape_fill_mods_grp383(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19739,8 +20803,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1038: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19765,8 +20830,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1039: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19791,8 +20857,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1040: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19817,8 +20884,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1041: {
-        shape_fill_mods_grp384(in, void_out);
         auto& out = *static_cast<DecodedATOM8*>(void_out);
+        shape_fill_mods_grp384(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19846,8 +20914,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1042: {
-        shape_fill_mods_grp132(in, void_out);
         auto& out = *static_cast<DecodedATOMS5*>(void_out);
+        shape_fill_mods_grp132(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -19866,8 +20935,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1043: {
-        shape_fill_mods_grp385(in, void_out);
         auto& out = *static_cast<DecodedREDS4*>(void_out);
+        shape_fill_mods_grp385(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19883,8 +20953,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1044: {
-        shape_fill_mods_grp386(in, void_out);
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        shape_fill_mods_grp386(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19900,8 +20971,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1045: {
-        shape_fill_mods_grp386(in, void_out);
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        shape_fill_mods_grp386(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19917,8 +20989,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1046: {
-        shape_fill_mods_grp386(in, void_out);
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        shape_fill_mods_grp386(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -19934,8 +21007,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1047: {
-        shape_fill_mods_grp387(in, void_out);
         auto& out = *static_cast<DecodedREDG5*>(void_out);
+        shape_fill_mods_grp387(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kDesc);
         out.ops[0].flags = in.flags("memoryDescriptor");
         operand_set_value(out.ops[0], OperandKind::kDesc, in.value("memoryDescriptor"));
@@ -19954,8 +21028,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1048: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -19980,8 +21055,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1049: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20006,8 +21082,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1050: {
-        shape_fill_mods_grp129(in, void_out);
         auto& out = *static_cast<DecodedATOM7*>(void_out);
+        shape_fill_mods_grp129(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20032,8 +21109,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1051: {
-        shape_fill_mods_grp384(in, void_out);
         auto& out = *static_cast<DecodedATOM8*>(void_out);
+        shape_fill_mods_grp384(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20061,8 +21139,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1052: {
-        shape_fill_mods_grp141(in, void_out);
         auto& out = *static_cast<DecodedATOMG6*>(void_out);
+        shape_fill_mods_grp141(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20084,8 +21163,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1053: {
-        shape_fill_mods_grp141(in, void_out);
         auto& out = *static_cast<DecodedATOMG6*>(void_out);
+        shape_fill_mods_grp141(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20107,8 +21187,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1054: {
-        shape_fill_mods_grp141(in, void_out);
         auto& out = *static_cast<DecodedATOMG6*>(void_out);
+        shape_fill_mods_grp141(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20130,8 +21211,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1055: {
-        shape_fill_mods_grp388(in, void_out);
         auto& out = *static_cast<DecodedATOMG7*>(void_out);
+        shape_fill_mods_grp388(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20156,8 +21238,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1056: {
-        shape_fill_mods_grp389(in, void_out);
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        shape_fill_mods_grp389(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20173,8 +21256,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1057: {
-        shape_fill_mods_grp389(in, void_out);
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        shape_fill_mods_grp389(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20190,8 +21274,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1058: {
-        shape_fill_mods_grp389(in, void_out);
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        shape_fill_mods_grp389(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20207,8 +21292,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1059: {
-        shape_fill_mods_grp390(in, void_out);
         auto& out = *static_cast<DecodedLDGMC5*>(void_out);
+        shape_fill_mods_grp390(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20227,8 +21313,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1060: {
-        shape_fill_mods_grp389(in, void_out);
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        shape_fill_mods_grp389(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20244,8 +21331,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1061: {
-        shape_fill_mods_grp389(in, void_out);
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        shape_fill_mods_grp389(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20261,8 +21349,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1062: {
-        shape_fill_mods_grp389(in, void_out);
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        shape_fill_mods_grp389(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20278,8 +21367,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1063: {
-        shape_fill_mods_grp390(in, void_out);
         auto& out = *static_cast<DecodedLDGMC5*>(void_out);
+        shape_fill_mods_grp390(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20298,8 +21388,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1064: {
-        shape_fill_mods_grp386(in, void_out);
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        shape_fill_mods_grp386(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -20315,8 +21406,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1065: {
-        shape_fill_mods_grp386(in, void_out);
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        shape_fill_mods_grp386(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -20332,8 +21424,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1066: {
-        shape_fill_mods_grp386(in, void_out);
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        shape_fill_mods_grp386(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -20349,8 +21442,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1067: {
-        shape_fill_mods_grp387(in, void_out);
         auto& out = *static_cast<DecodedREDG5*>(void_out);
+        shape_fill_mods_grp387(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kDesc);
         out.ops[0].flags = in.flags("memoryDescriptor");
         operand_set_value(out.ops[0], OperandKind::kDesc, in.value("memoryDescriptor"));
@@ -20369,8 +21463,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1068: {
-        shape_fill_mods_grp347(in, void_out);
         auto& out = *static_cast<DecodedSYNCS5*>(void_out);
+        shape_fill_mods_grp347(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20389,8 +21484,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1069: {
-        shape_fill_mods_grp349(in, void_out);
         auto& out = *static_cast<DecodedSYNCS4*>(void_out);
+        shape_fill_mods_grp349(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -20406,8 +21502,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1070: {
-        shape_fill_mods_grp141(in, void_out);
         auto& out = *static_cast<DecodedATOMG6*>(void_out);
+        shape_fill_mods_grp141(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20429,8 +21526,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1071: {
-        shape_fill_mods_grp141(in, void_out);
         auto& out = *static_cast<DecodedATOMG6*>(void_out);
+        shape_fill_mods_grp141(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20452,8 +21550,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1072: {
-        shape_fill_mods_grp141(in, void_out);
         auto& out = *static_cast<DecodedATOMG6*>(void_out);
+        shape_fill_mods_grp141(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20475,8 +21574,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1073: {
-        shape_fill_mods_grp388(in, void_out);
         auto& out = *static_cast<DecodedATOMG7*>(void_out);
+        shape_fill_mods_grp388(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20501,8 +21601,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1074: {
-        shape_fill_mods_grp143(in, void_out);
         auto& out = *static_cast<DecodedQSPC4*>(void_out);
+        shape_fill_mods_grp143(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20518,8 +21619,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1075: {
-        shape_fill_mods_grp143(in, void_out);
         auto& out = *static_cast<DecodedQSPC4*>(void_out);
+        shape_fill_mods_grp143(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20535,8 +21637,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1076: {
-        shape_fill_mods_grp143(in, void_out);
         auto& out = *static_cast<DecodedQSPC4*>(void_out);
+        shape_fill_mods_grp143(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20552,8 +21655,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1077: {
-        shape_fill_mods_grp143(in, void_out);
         auto& out = *static_cast<DecodedQSPC4*>(void_out);
+        shape_fill_mods_grp143(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20569,8 +21673,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1078: {
-        shape_fill_mods_grp143(in, void_out);
         auto& out = *static_cast<DecodedQSPC4*>(void_out);
+        shape_fill_mods_grp143(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20586,8 +21691,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1079: {
-        shape_fill_mods_grp143(in, void_out);
         auto& out = *static_cast<DecodedQSPC4*>(void_out);
+        shape_fill_mods_grp143(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20603,8 +21709,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1080: {
-        shape_fill_mods_grp391(in, void_out);
         auto& out = *static_cast<DecodedQSPC5*>(void_out);
+        shape_fill_mods_grp391(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20623,8 +21730,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1081: {
-        shape_fill_mods_grp391(in, void_out);
         auto& out = *static_cast<DecodedQSPC5*>(void_out);
+        shape_fill_mods_grp391(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20643,8 +21751,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1082: {
-        shape_fill_mods_grp391(in, void_out);
         auto& out = *static_cast<DecodedQSPC5*>(void_out);
+        shape_fill_mods_grp391(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -20663,8 +21772,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1083: {
-        shape_fill_mods_grp392(in, void_out);
         auto& out = *static_cast<DecodedLDCU5*>(void_out);
+        shape_fill_mods_grp392(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20683,8 +21793,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1084: {
-        shape_fill_mods_grp393(in, void_out);
         auto& out = *static_cast<DecodedLDCU4*>(void_out);
+        shape_fill_mods_grp393(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20700,8 +21811,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1085: {
-        shape_fill_mods_grp394(in, void_out);
         auto& out = *static_cast<DecodedARRIVES3*>(void_out);
+        shape_fill_mods_grp394(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -20714,8 +21826,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1086: {
-        shape_fill_mods_grp395(in, void_out);
         auto& out = *static_cast<DecodedSYNCS3*>(void_out);
+        shape_fill_mods_grp395(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -20728,8 +21841,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1087: {
-        shape_fill_mods_grp349(in, void_out);
         auto& out = *static_cast<DecodedSYNCS4*>(void_out);
+        shape_fill_mods_grp349(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20745,8 +21859,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1088: {
-        shape_fill_mods_grp396(in, void_out);
         auto& out = *static_cast<DecodedUTMACCTL2*>(void_out);
+        shape_fill_mods_grp396(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20756,8 +21871,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1089: {
-        shape_fill_mods_grp396(in, void_out);
         auto& out = *static_cast<DecodedUTMACCTL2*>(void_out);
+        shape_fill_mods_grp396(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20767,24 +21883,27 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1090: {
-        shape_fill_mods_grp397(in, void_out);
         auto& out = *static_cast<DecodedUCGABARARV1*>(void_out);
+        shape_fill_mods_grp397(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
         break;
     }
     case 1091: {
-        shape_fill_mods_grp398(in, void_out);
         auto& out = *static_cast<DecodedUCGABAR_ARV1*>(void_out);
+        shape_fill_mods_grp398(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
         break;
     }
     case 1092: {
-        shape_fill_mods_grp337(in, void_out);
         auto& out = *static_cast<DecodedUSETMAXREG3*>(void_out);
+        shape_fill_mods_grp337(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20797,8 +21916,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1093: {
-        shape_fill_mods_grp338(in, void_out);
         auto& out = *static_cast<DecodedUSETMAXREG2*>(void_out);
+        shape_fill_mods_grp338(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20808,8 +21928,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1094: {
-        shape_fill_mods_grp399(in, void_out);
         auto& out = *static_cast<DecodedUSETSHMSZ1*>(void_out);
+        shape_fill_mods_grp399(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20817,6 +21938,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1095: {
         auto& out = *static_cast<DecodedUSETSHMSZ2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20826,8 +21948,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1096: {
-        shape_fill_mods_grp400(in, void_out);
         auto& out = *static_cast<DecodedULEPC3*>(void_out);
+        shape_fill_mods_grp400(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20840,8 +21963,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1097: {
-        shape_fill_mods_grp400(in, void_out);
         auto& out = *static_cast<DecodedULEPC3*>(void_out);
+        shape_fill_mods_grp400(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20854,8 +21978,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1098: {
-        shape_fill_mods_grp258(in, void_out);
         auto& out = *static_cast<DecodedCCTL4*>(void_out);
+        shape_fill_mods_grp258(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("Sa");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("Sa"));
@@ -20871,8 +21996,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1099: {
-        shape_fill_mods_grp318(in, void_out);
         auto& out = *static_cast<DecodedLDCU6*>(void_out);
+        shape_fill_mods_grp318(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -20894,8 +22020,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1100: {
-        shape_fill_mods_grp0(in, void_out);
         auto& out = *static_cast<DecodedMOV2*>(void_out);
+        shape_fill_mods_grp0(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20906,6 +22033,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1101: {
         auto& out = *static_cast<DecodedMOV3*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20918,8 +22046,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1102: {
-        shape_fill_mods_grp0(in, void_out);
         auto& out = *static_cast<DecodedMOV2*>(void_out);
+        shape_fill_mods_grp0(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20929,8 +22058,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1103: {
-        shape_fill_mods_grp2(in, void_out);
         auto& out = *static_cast<DecodedP2R4*>(void_out);
+        shape_fill_mods_grp2(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20946,8 +22076,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1104: {
-        shape_fill_mods_grp3(in, void_out);
         auto& out = *static_cast<DecodedR2P3*>(void_out);
+        shape_fill_mods_grp3(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("PR");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("PR"));
@@ -20960,8 +22091,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1105: {
-        shape_fill_mods_grp4(in, void_out);
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        shape_fill_mods_grp4(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20977,8 +22109,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1106: {
-        shape_fill_mods_grp5(in, void_out);
         auto& out = *static_cast<DecodedFSEL4*>(void_out);
+        shape_fill_mods_grp5(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -20994,8 +22127,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1107: {
-        shape_fill_mods_grp6(in, void_out);
         auto& out = *static_cast<DecodedFMNMX4*>(void_out);
+        shape_fill_mods_grp6(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21011,8 +22145,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1108: {
-        shape_fill_mods_grp7(in, void_out);
         auto& out = *static_cast<DecodedFMNMX5*>(void_out);
+        shape_fill_mods_grp7(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21031,8 +22166,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1109: {
-        shape_fill_mods_grp8(in, void_out);
         auto& out = *static_cast<DecodedFSET4*>(void_out);
+        shape_fill_mods_grp8(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21048,8 +22184,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1110: {
-        shape_fill_mods_grp9(in, void_out);
         auto& out = *static_cast<DecodedFSET3*>(void_out);
+        shape_fill_mods_grp9(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21062,8 +22199,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1111: {
-        shape_fill_mods_grp10(in, void_out);
         auto& out = *static_cast<DecodedFSETP5*>(void_out);
+        shape_fill_mods_grp10(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21082,8 +22220,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1112: {
-        shape_fill_mods_grp11(in, void_out);
         auto& out = *static_cast<DecodedFSETP3*>(void_out);
+        shape_fill_mods_grp11(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21096,8 +22235,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1113: {
-        shape_fill_mods_grp12(in, void_out);
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        shape_fill_mods_grp12(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21119,8 +22259,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1114: {
-        shape_fill_mods_grp13(in, void_out);
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        shape_fill_mods_grp13(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21139,8 +22280,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1115: {
-        shape_fill_mods_grp14(in, void_out);
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        shape_fill_mods_grp14(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21156,8 +22298,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1116: {
-        shape_fill_mods_grp15(in, void_out);
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        shape_fill_mods_grp15(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21170,8 +22313,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1117: {
-        shape_fill_mods_grp12(in, void_out);
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        shape_fill_mods_grp12(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21193,8 +22337,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1118: {
-        shape_fill_mods_grp13(in, void_out);
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        shape_fill_mods_grp13(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21213,8 +22358,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1119: {
-        shape_fill_mods_grp14(in, void_out);
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        shape_fill_mods_grp14(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21230,8 +22376,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1120: {
-        shape_fill_mods_grp15(in, void_out);
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        shape_fill_mods_grp15(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21245,6 +22392,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1121: {
         auto& out = *static_cast<DecodedIADD36*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21266,8 +22414,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1122: {
-        shape_fill_mods_grp17(in, void_out);
         auto& out = *static_cast<DecodedIADD38*>(void_out);
+        shape_fill_mods_grp17(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21296,6 +22445,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1123: {
         auto& out = *static_cast<DecodedISCADD5*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21314,8 +22464,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1124: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21337,8 +22488,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1125: {
-        shape_fill_mods_grp20(in, void_out);
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        shape_fill_mods_grp20(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21357,8 +22509,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1126: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21380,8 +22533,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1127: {
-        shape_fill_mods_grp21(in, void_out);
         auto& out = *static_cast<DecodedLEA7*>(void_out);
+        shape_fill_mods_grp21(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21406,8 +22560,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1128: {
-        shape_fill_mods_grp20(in, void_out);
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        shape_fill_mods_grp20(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21426,8 +22581,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1129: {
-        shape_fill_mods_grp19(in, void_out);
         auto& out = *static_cast<DecodedLEA6*>(void_out);
+        shape_fill_mods_grp19(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21449,8 +22605,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1130: {
-        shape_fill_mods_grp22(in, void_out);
         auto& out = *static_cast<DecodedLOP5*>(void_out);
+        shape_fill_mods_grp22(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21469,8 +22626,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1131: {
-        shape_fill_mods_grp23(in, void_out);
         auto& out = *static_cast<DecodedLOP4*>(void_out);
+        shape_fill_mods_grp23(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21486,8 +22644,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1132: {
-        shape_fill_mods_grp24(in, void_out);
         auto& out = *static_cast<DecodedLOP37*>(void_out);
+        shape_fill_mods_grp24(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21512,8 +22671,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1133: {
-        shape_fill_mods_grp25(in, void_out);
         auto& out = *static_cast<DecodedLOP36*>(void_out);
+        shape_fill_mods_grp25(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21535,8 +22695,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1134: {
-        shape_fill_mods_grp25(in, void_out);
         auto& out = *static_cast<DecodedLOP36*>(void_out);
+        shape_fill_mods_grp25(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21558,8 +22719,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1135: {
-        shape_fill_mods_grp26(in, void_out);
         auto& out = *static_cast<DecodedLOP35*>(void_out);
+        shape_fill_mods_grp26(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21579,6 +22741,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1136: {
         auto& out = *static_cast<DecodedIABS2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21588,8 +22751,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1137: {
-        shape_fill_mods_grp28(in, void_out);
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        shape_fill_mods_grp28(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21605,8 +22769,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1138: {
-        shape_fill_mods_grp29(in, void_out);
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        shape_fill_mods_grp29(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21631,8 +22796,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1139: {
-        shape_fill_mods_grp30(in, void_out);
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        shape_fill_mods_grp30(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21654,8 +22820,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1140: {
-        shape_fill_mods_grp29(in, void_out);
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        shape_fill_mods_grp29(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21680,8 +22847,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1141: {
-        shape_fill_mods_grp30(in, void_out);
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        shape_fill_mods_grp30(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21703,8 +22871,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1142: {
-        shape_fill_mods_grp31(in, void_out);
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        shape_fill_mods_grp31(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21720,8 +22889,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1143: {
-        shape_fill_mods_grp32(in, void_out);
         auto& out = *static_cast<DecodedSHL3*>(void_out);
+        shape_fill_mods_grp32(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21734,8 +22904,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1144: {
-        shape_fill_mods_grp33(in, void_out);
         auto& out = *static_cast<DecodedSHR3*>(void_out);
+        shape_fill_mods_grp33(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21748,8 +22919,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1145: {
-        shape_fill_mods_grp34(in, void_out);
         auto& out = *static_cast<DecodedSGXT3*>(void_out);
+        shape_fill_mods_grp34(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21762,8 +22934,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1146: {
-        shape_fill_mods_grp35(in, void_out);
         auto& out = *static_cast<DecodedBMSK3*>(void_out);
+        shape_fill_mods_grp35(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21776,8 +22949,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1147: {
-        shape_fill_mods_grp36(in, void_out);
         auto& out = *static_cast<DecodedPLOP35*>(void_out);
+        shape_fill_mods_grp36(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21796,8 +22970,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1148: {
-        shape_fill_mods_grp37(in, void_out);
         auto& out = *static_cast<DecodedPLOP37*>(void_out);
+        shape_fill_mods_grp37(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21822,8 +22997,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1149: {
-        shape_fill_mods_grp36(in, void_out);
         auto& out = *static_cast<DecodedPLOP35*>(void_out);
+        shape_fill_mods_grp36(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21842,8 +23018,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1150: {
-        shape_fill_mods_grp37(in, void_out);
         auto& out = *static_cast<DecodedPLOP37*>(void_out);
+        shape_fill_mods_grp37(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21868,8 +23045,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1151: {
-        shape_fill_mods_grp36(in, void_out);
         auto& out = *static_cast<DecodedPLOP35*>(void_out);
+        shape_fill_mods_grp36(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21888,8 +23066,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1152: {
-        shape_fill_mods_grp37(in, void_out);
         auto& out = *static_cast<DecodedPLOP37*>(void_out);
+        shape_fill_mods_grp37(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -21914,8 +23093,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1153: {
-        shape_fill_mods_grp38(in, void_out);
         auto& out = *static_cast<DecodedFMUL3*>(void_out);
+        shape_fill_mods_grp38(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21928,8 +23108,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1154: {
-        shape_fill_mods_grp41(in, void_out);
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        shape_fill_mods_grp41(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21945,8 +23126,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1155: {
-        shape_fill_mods_grp42(in, void_out);
         auto& out = *static_cast<DecodedFHFMA4*>(void_out);
+        shape_fill_mods_grp42(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21962,8 +23144,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1156: {
-        shape_fill_mods_grp43(in, void_out);
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        shape_fill_mods_grp43(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21979,8 +23162,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1157: {
-        shape_fill_mods_grp43(in, void_out);
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        shape_fill_mods_grp43(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -21996,8 +23180,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1158: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22016,8 +23201,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1159: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22036,8 +23222,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1160: {
-        shape_fill_mods_grp45(in, void_out);
         auto& out = *static_cast<DecodedIMUL3*>(void_out);
+        shape_fill_mods_grp45(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22050,8 +23237,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1161: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22070,8 +23258,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1162: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22090,8 +23279,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1163: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22113,8 +23303,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1164: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22136,8 +23327,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1165: {
-        shape_fill_mods_grp47(in, void_out);
         auto& out = *static_cast<DecodedIMUL4*>(void_out);
+        shape_fill_mods_grp47(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22153,8 +23345,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1166: {
-        shape_fill_mods_grp48(in, void_out);
         auto& out = *static_cast<DecodedIDP4*>(void_out);
+        shape_fill_mods_grp48(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22170,8 +23363,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1167: {
-        shape_fill_mods_grp48(in, void_out);
         auto& out = *static_cast<DecodedIDP4*>(void_out);
+        shape_fill_mods_grp48(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22187,8 +23381,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1168: {
-        shape_fill_mods_grp49(in, void_out);
         auto& out = *static_cast<DecodedIDP4A4*>(void_out);
+        shape_fill_mods_grp49(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22204,8 +23399,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1169: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22224,8 +23420,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1170: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22244,8 +23441,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1171: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22267,8 +23465,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1172: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22290,8 +23489,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1173: {
-        shape_fill_mods_grp50(in, void_out);
         auto& out = *static_cast<DecodedDMUL3*>(void_out);
+        shape_fill_mods_grp50(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22304,8 +23504,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1174: {
-        shape_fill_mods_grp54(in, void_out);
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        shape_fill_mods_grp54(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22321,8 +23522,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1175: {
-        shape_fill_mods_grp55(in, void_out);
         auto& out = *static_cast<DecodedCLMAD4*>(void_out);
+        shape_fill_mods_grp55(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22338,8 +23540,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1176: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22355,8 +23558,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1177: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22372,8 +23576,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1178: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22389,8 +23594,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1179: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22409,8 +23615,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1180: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22429,8 +23636,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1181: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22449,8 +23657,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1182: {
-        shape_fill_mods_grp59(in, void_out);
         auto& out = *static_cast<DecodedHMUL23*>(void_out);
+        shape_fill_mods_grp59(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22463,8 +23672,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1183: {
-        shape_fill_mods_grp59(in, void_out);
         auto& out = *static_cast<DecodedHMUL23*>(void_out);
+        shape_fill_mods_grp59(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22477,8 +23687,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1184: {
-        shape_fill_mods_grp64(in, void_out);
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        shape_fill_mods_grp64(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22494,8 +23705,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1185: {
-        shape_fill_mods_grp65(in, void_out);
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        shape_fill_mods_grp65(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22514,8 +23726,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1186: {
-        shape_fill_mods_grp64(in, void_out);
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        shape_fill_mods_grp64(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22531,8 +23744,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1187: {
-        shape_fill_mods_grp65(in, void_out);
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        shape_fill_mods_grp65(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22551,8 +23765,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1188: {
-        shape_fill_mods_grp66(in, void_out);
         auto& out = *static_cast<DecodedVIADD3*>(void_out);
+        shape_fill_mods_grp66(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22565,8 +23780,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1189: {
-        shape_fill_mods_grp69(in, void_out);
         auto& out = *static_cast<DecodedI2I2*>(void_out);
+        shape_fill_mods_grp69(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22576,8 +23792,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1190: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22593,8 +23810,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1191: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22610,8 +23828,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1192: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22627,8 +23846,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1193: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22644,8 +23864,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1194: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22661,8 +23882,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1195: {
-        shape_fill_mods_grp70(in, void_out);
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        shape_fill_mods_grp70(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22678,8 +23900,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1196: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22689,8 +23912,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1197: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22700,8 +23924,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1198: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22711,8 +23936,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1199: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22725,8 +23951,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1200: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22739,8 +23966,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1201: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22753,8 +23981,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1202: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22767,8 +23996,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1203: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22781,8 +24011,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1204: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22798,8 +24029,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1205: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22815,8 +24047,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1206: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22832,8 +24065,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1207: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22846,8 +24080,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1208: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22860,8 +24095,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1209: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22871,8 +24107,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1210: {
-        shape_fill_mods_grp74(in, void_out);
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        shape_fill_mods_grp74(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22882,8 +24119,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1211: {
-        shape_fill_mods_grp78(in, void_out);
         auto& out = *static_cast<DecodedHMNMX24*>(void_out);
+        shape_fill_mods_grp78(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22899,8 +24137,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1212: {
-        shape_fill_mods_grp78(in, void_out);
         auto& out = *static_cast<DecodedHMNMX24*>(void_out);
+        shape_fill_mods_grp78(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22916,8 +24155,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1213: {
-        shape_fill_mods_grp79(in, void_out);
         auto& out = *static_cast<DecodedHMNMX26*>(void_out);
+        shape_fill_mods_grp79(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22939,8 +24179,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1214: {
-        shape_fill_mods_grp79(in, void_out);
         auto& out = *static_cast<DecodedHMNMX26*>(void_out);
+        shape_fill_mods_grp79(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22962,8 +24203,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1215: {
-        shape_fill_mods_grp80(in, void_out);
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        shape_fill_mods_grp80(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22979,8 +24221,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1216: {
-        shape_fill_mods_grp81(in, void_out);
         auto& out = *static_cast<DecodedI2FP2*>(void_out);
+        shape_fill_mods_grp81(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -22990,8 +24233,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1217: {
-        shape_fill_mods_grp82(in, void_out);
         auto& out = *static_cast<DecodedVIMNMX4*>(void_out);
+        shape_fill_mods_grp82(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23008,6 +24252,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1218: {
         auto& out = *static_cast<DecodedMOV4*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23023,8 +24268,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1219: {
-        shape_fill_mods_grp203(in, void_out);
         auto& out = *static_cast<DecodedUMOV3*>(void_out);
+        shape_fill_mods_grp203(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -23037,8 +24283,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1220: {
-        shape_fill_mods_grp203(in, void_out);
         auto& out = *static_cast<DecodedUMOV3*>(void_out);
+        shape_fill_mods_grp203(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -23051,8 +24298,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1221: {
-        shape_fill_mods_grp359(in, void_out);
         auto& out = *static_cast<DecodedUP2UR5*>(void_out);
+        shape_fill_mods_grp359(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -23071,8 +24319,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1222: {
-        shape_fill_mods_grp361(in, void_out);
         auto& out = *static_cast<DecodedUR2UP4*>(void_out);
+        shape_fill_mods_grp361(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -23088,8 +24337,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1223: {
-        shape_fill_mods_grp285(in, void_out);
         auto& out = *static_cast<DecodedUSEL5*>(void_out);
+        shape_fill_mods_grp285(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -23109,6 +24359,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1224: {
         auto& out = *static_cast<DecodedUCLEA6*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -23130,8 +24381,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1225: {
-        shape_fill_mods_grp86(in, void_out);
         auto& out = *static_cast<DecodedFLO3*>(void_out);
+        shape_fill_mods_grp86(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23145,6 +24397,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1226: {
         auto& out = *static_cast<DecodedBREV2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23154,8 +24407,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1227: {
-        shape_fill_mods_grp88(in, void_out);
         auto& out = *static_cast<DecodedFCHK3*>(void_out);
+        shape_fill_mods_grp88(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23168,8 +24422,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1228: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23179,8 +24434,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1229: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23190,8 +24446,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1230: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23201,8 +24458,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1231: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23212,8 +24470,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1232: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23223,8 +24482,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1233: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23234,8 +24494,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1234: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23245,8 +24506,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1235: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23256,8 +24518,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1236: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23267,8 +24530,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1237: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23278,8 +24542,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1238: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23289,8 +24554,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1239: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23300,8 +24566,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1240: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23311,8 +24578,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1241: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23322,8 +24590,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1242: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23333,8 +24602,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1243: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23344,8 +24614,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1244: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23355,8 +24626,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1245: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23366,8 +24638,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1246: {
-        shape_fill_mods_grp93(in, void_out);
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        shape_fill_mods_grp93(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23377,8 +24650,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1247: {
-        shape_fill_mods_grp93(in, void_out);
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        shape_fill_mods_grp93(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23388,8 +24662,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1248: {
-        shape_fill_mods_grp93(in, void_out);
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        shape_fill_mods_grp93(in, void_out);
+        out.subclass = 16;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23400,6 +24675,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1249: {
         auto& out = *static_cast<DecodedPOPC2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23409,8 +24685,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1250: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23420,8 +24697,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1251: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23431,8 +24709,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1252: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23442,8 +24721,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1253: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23453,8 +24733,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1254: {
-        shape_fill_mods_grp89(in, void_out);
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        shape_fill_mods_grp89(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23464,8 +24745,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1255: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23475,8 +24757,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1256: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23486,8 +24769,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1257: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23497,8 +24781,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1258: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23508,8 +24793,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1259: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23519,8 +24805,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1260: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23530,8 +24817,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1261: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23541,8 +24829,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1262: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23552,8 +24841,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1263: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23563,8 +24853,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1264: {
-        shape_fill_mods_grp90(in, void_out);
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        shape_fill_mods_grp90(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23574,8 +24865,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1265: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23585,8 +24877,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1266: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23596,8 +24889,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1267: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23607,8 +24901,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1268: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23618,8 +24913,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1269: {
-        shape_fill_mods_grp91(in, void_out);
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        shape_fill_mods_grp91(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23629,8 +24925,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1270: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23640,8 +24937,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1271: {
-        shape_fill_mods_grp92(in, void_out);
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        shape_fill_mods_grp92(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23651,8 +24949,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1272: {
-        shape_fill_mods_grp213(in, void_out);
         auto& out = *static_cast<DecodedDEPBAR3*>(void_out);
+        shape_fill_mods_grp213(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("sbidx");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("sbidx"));
@@ -23665,8 +24964,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1273: {
-        shape_fill_mods_grp105(in, void_out);
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        shape_fill_mods_grp105(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -23679,8 +24979,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1274: {
-        shape_fill_mods_grp115(in, void_out);
         auto& out = *static_cast<DecodedRPCMOV2*>(void_out);
+        shape_fill_mods_grp115(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("RpcN");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("RpcN"));
@@ -23690,8 +24991,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1275: {
-        shape_fill_mods_grp115(in, void_out);
         auto& out = *static_cast<DecodedRPCMOV2*>(void_out);
+        shape_fill_mods_grp115(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("Rpc");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("Rpc"));
@@ -23701,8 +25003,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1276: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("cbu_state");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("cbu_state"));
@@ -23712,8 +25015,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1277: {
-        shape_fill_mods_grp116(in, void_out);
         auto& out = *static_cast<DecodedBMOV2*>(void_out);
+        shape_fill_mods_grp116(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("atexit_pc");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("atexit_pc"));
@@ -23723,8 +25027,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1278: {
-        shape_fill_mods_grp117(in, void_out);
         auto& out = *static_cast<DecodedNANOTRAP2*>(void_out);
+        shape_fill_mods_grp117(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -23734,8 +25039,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1279: {
-        shape_fill_mods_grp118(in, void_out);
         auto& out = *static_cast<DecodedNANOSLEEP2*>(void_out);
+        shape_fill_mods_grp118(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pp");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pp"));
@@ -23745,8 +25051,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1280: {
-        shape_fill_mods_grp401(in, void_out);
         auto& out = *static_cast<DecodedTEX8*>(void_out);
+        shape_fill_mods_grp401(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23774,8 +25081,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1281: {
-        shape_fill_mods_grp401(in, void_out);
         auto& out = *static_cast<DecodedTEX8*>(void_out);
+        shape_fill_mods_grp401(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23803,8 +25111,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1282: {
-        shape_fill_mods_grp402(in, void_out);
         auto& out = *static_cast<DecodedTLD48*>(void_out);
+        shape_fill_mods_grp402(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23832,8 +25141,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1283: {
-        shape_fill_mods_grp402(in, void_out);
         auto& out = *static_cast<DecodedTLD48*>(void_out);
+        shape_fill_mods_grp402(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23861,8 +25171,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1284: {
-        shape_fill_mods_grp403(in, void_out);
         auto& out = *static_cast<DecodedTLD8*>(void_out);
+        shape_fill_mods_grp403(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23890,8 +25201,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1285: {
-        shape_fill_mods_grp403(in, void_out);
         auto& out = *static_cast<DecodedTLD8*>(void_out);
+        shape_fill_mods_grp403(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23919,8 +25231,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1286: {
-        shape_fill_mods_grp404(in, void_out);
         auto& out = *static_cast<DecodedTXD8*>(void_out);
+        shape_fill_mods_grp404(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23948,8 +25261,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1287: {
-        shape_fill_mods_grp405(in, void_out);
         auto& out = *static_cast<DecodedFOOTPRINT6*>(void_out);
+        shape_fill_mods_grp405(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23971,8 +25285,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1288: {
-        shape_fill_mods_grp405(in, void_out);
         auto& out = *static_cast<DecodedFOOTPRINT6*>(void_out);
+        shape_fill_mods_grp405(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -23994,8 +25309,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1289: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24005,8 +25321,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1290: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24016,8 +25333,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1291: {
-        shape_fill_mods_grp244(in, void_out);
         auto& out = *static_cast<DecodedCCTL3*>(void_out);
+        shape_fill_mods_grp244(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -24030,8 +25348,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1292: {
-        shape_fill_mods_grp244(in, void_out);
         auto& out = *static_cast<DecodedCCTL3*>(void_out);
+        shape_fill_mods_grp244(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24044,8 +25363,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1293: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24055,8 +25375,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1294: {
-        shape_fill_mods_grp243(in, void_out);
         auto& out = *static_cast<DecodedCCTL2*>(void_out);
+        shape_fill_mods_grp243(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24066,8 +25387,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1295: {
-        shape_fill_mods_grp244(in, void_out);
         auto& out = *static_cast<DecodedCCTL3*>(void_out);
+        shape_fill_mods_grp244(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -24080,8 +25402,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1296: {
-        shape_fill_mods_grp244(in, void_out);
         auto& out = *static_cast<DecodedCCTL3*>(void_out);
+        shape_fill_mods_grp244(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24094,8 +25417,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1297: {
-        shape_fill_mods_grp246(in, void_out);
         auto& out = *static_cast<DecodedCCTLL2*>(void_out);
+        shape_fill_mods_grp246(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24105,8 +25429,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1298: {
-        shape_fill_mods_grp246(in, void_out);
         auto& out = *static_cast<DecodedCCTLL2*>(void_out);
+        shape_fill_mods_grp246(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24116,16 +25441,18 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1299: {
-        shape_fill_mods_grp134(in, void_out);
         auto& out = *static_cast<DecodedCCTLT1*>(void_out);
+        shape_fill_mods_grp134(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
         out.ops[0].flags = in.flags("URb");
         operand_set_value(out.ops[0], OperandKind::kUniformRegister, in.value("URb"));
         break;
     }
     case 1300: {
-        shape_fill_mods_grp348(in, void_out);
         auto& out = *static_cast<DecodedLDCU8*>(void_out);
+        shape_fill_mods_grp348(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -24153,8 +25480,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1301: {
-        shape_fill_mods_grp406(in, void_out);
         auto& out = *static_cast<DecodedLDGSTS6*>(void_out);
+        shape_fill_mods_grp406(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -24176,8 +25504,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1302: {
-        shape_fill_mods_grp407(in, void_out);
         auto& out = *static_cast<DecodedLDGSTS8*>(void_out);
+        shape_fill_mods_grp407(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -24205,8 +25534,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1303: {
-        shape_fill_mods_grp406(in, void_out);
         auto& out = *static_cast<DecodedLDGSTS6*>(void_out);
+        shape_fill_mods_grp406(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -24228,8 +25558,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1304: {
-        shape_fill_mods_grp408(in, void_out);
         auto& out = *static_cast<DecodedSUQUERY7*>(void_out);
+        shape_fill_mods_grp408(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -24254,8 +25585,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1305: {
-        shape_fill_mods_grp409(in, void_out);
         auto& out = *static_cast<DecodedSTAS4*>(void_out);
+        shape_fill_mods_grp409(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24271,8 +25603,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1306: {
-        shape_fill_mods_grp409(in, void_out);
         auto& out = *static_cast<DecodedSTAS4*>(void_out);
+        shape_fill_mods_grp409(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24288,8 +25621,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1307: {
-        shape_fill_mods_grp409(in, void_out);
         auto& out = *static_cast<DecodedSTAS4*>(void_out);
+        shape_fill_mods_grp409(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24305,8 +25639,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1308: {
-        shape_fill_mods_grp410(in, void_out);
         auto& out = *static_cast<DecodedREDAS4*>(void_out);
+        shape_fill_mods_grp410(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24322,8 +25657,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1309: {
-        shape_fill_mods_grp410(in, void_out);
         auto& out = *static_cast<DecodedREDAS4*>(void_out);
+        shape_fill_mods_grp410(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24339,8 +25675,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1310: {
-        shape_fill_mods_grp410(in, void_out);
         auto& out = *static_cast<DecodedREDAS4*>(void_out);
+        shape_fill_mods_grp410(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -24357,6 +25694,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1311: {
         auto& out = *static_cast<DecodedUCGABARWAIT1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
@@ -24364,14 +25702,16 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1312: {
         auto& out = *static_cast<DecodedUCGABAR_WAIT1*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.ops[0].flags = in.flags("UPg");
         operand_set_value(out.ops[0], OperandKind::kUniformPredicate, in.value("UPg"));
         break;
     }
     case 1313: {
-        shape_fill_mods_grp4(in, void_out);
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        shape_fill_mods_grp4(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24387,8 +25727,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1314: {
-        shape_fill_mods_grp28(in, void_out);
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        shape_fill_mods_grp28(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24404,8 +25745,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1315: {
-        shape_fill_mods_grp31(in, void_out);
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        shape_fill_mods_grp31(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24421,8 +25763,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1316: {
-        shape_fill_mods_grp39(in, void_out);
         auto& out = *static_cast<DecodedFADD3*>(void_out);
+        shape_fill_mods_grp39(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24435,8 +25778,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1317: {
-        shape_fill_mods_grp40(in, void_out);
         auto& out = *static_cast<DecodedFHADD3*>(void_out);
+        shape_fill_mods_grp40(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24449,8 +25793,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1318: {
-        shape_fill_mods_grp41(in, void_out);
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        shape_fill_mods_grp41(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24466,8 +25811,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1319: {
-        shape_fill_mods_grp42(in, void_out);
         auto& out = *static_cast<DecodedFHFMA4*>(void_out);
+        shape_fill_mods_grp42(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24483,8 +25829,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1320: {
-        shape_fill_mods_grp43(in, void_out);
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        shape_fill_mods_grp43(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24500,8 +25847,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1321: {
-        shape_fill_mods_grp43(in, void_out);
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        shape_fill_mods_grp43(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24517,8 +25865,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1322: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24537,8 +25886,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1323: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24557,8 +25907,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1324: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24577,8 +25928,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1325: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 2;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24597,8 +25949,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1326: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24620,8 +25973,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1327: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 3;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24643,8 +25997,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1328: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24663,8 +26018,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1329: {
-        shape_fill_mods_grp44(in, void_out);
         auto& out = *static_cast<DecodedIMAD5*>(void_out);
+        shape_fill_mods_grp44(in, void_out);
+        out.subclass = 4;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24683,8 +26039,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1330: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24706,8 +26063,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1331: {
-        shape_fill_mods_grp46(in, void_out);
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        shape_fill_mods_grp46(in, void_out);
+        out.subclass = 5;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24729,8 +26087,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1332: {
-        shape_fill_mods_grp51(in, void_out);
         auto& out = *static_cast<DecodedDADD3*>(void_out);
+        shape_fill_mods_grp51(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24743,8 +26102,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1333: {
-        shape_fill_mods_grp52(in, void_out);
         auto& out = *static_cast<DecodedDSETP5*>(void_out);
+        shape_fill_mods_grp52(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -24763,8 +26123,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1334: {
-        shape_fill_mods_grp53(in, void_out);
         auto& out = *static_cast<DecodedDSETP3*>(void_out);
+        shape_fill_mods_grp53(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -24777,8 +26138,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1335: {
-        shape_fill_mods_grp54(in, void_out);
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        shape_fill_mods_grp54(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24794,8 +26156,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1336: {
-        shape_fill_mods_grp55(in, void_out);
         auto& out = *static_cast<DecodedCLMAD4*>(void_out);
+        shape_fill_mods_grp55(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24811,8 +26174,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1337: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24825,8 +26189,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1338: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24839,8 +26204,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1339: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24853,8 +26219,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1340: {
-        shape_fill_mods_grp56(in, void_out);
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        shape_fill_mods_grp56(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24867,8 +26234,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1341: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24884,8 +26252,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1342: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24901,8 +26270,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1343: {
-        shape_fill_mods_grp57(in, void_out);
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        shape_fill_mods_grp57(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24918,8 +26288,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1344: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24938,8 +26309,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1345: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24958,8 +26330,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1346: {
-        shape_fill_mods_grp58(in, void_out);
         auto& out = *static_cast<DecodedHFMA25*>(void_out);
+        shape_fill_mods_grp58(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24978,8 +26351,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1347: {
-        shape_fill_mods_grp60(in, void_out);
         auto& out = *static_cast<DecodedHSET24*>(void_out);
+        shape_fill_mods_grp60(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -24995,8 +26369,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1348: {
-        shape_fill_mods_grp60(in, void_out);
         auto& out = *static_cast<DecodedHSET24*>(void_out);
+        shape_fill_mods_grp60(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25012,8 +26387,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1349: {
-        shape_fill_mods_grp61(in, void_out);
         auto& out = *static_cast<DecodedHSET23*>(void_out);
+        shape_fill_mods_grp61(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25026,8 +26402,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1350: {
-        shape_fill_mods_grp61(in, void_out);
         auto& out = *static_cast<DecodedHSET23*>(void_out);
+        shape_fill_mods_grp61(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25040,8 +26417,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1351: {
-        shape_fill_mods_grp62(in, void_out);
         auto& out = *static_cast<DecodedHSETP25*>(void_out);
+        shape_fill_mods_grp62(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25060,8 +26438,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1352: {
-        shape_fill_mods_grp62(in, void_out);
         auto& out = *static_cast<DecodedHSETP25*>(void_out);
+        shape_fill_mods_grp62(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25080,8 +26459,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1353: {
-        shape_fill_mods_grp63(in, void_out);
         auto& out = *static_cast<DecodedHSETP24*>(void_out);
+        shape_fill_mods_grp63(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25097,8 +26477,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1354: {
-        shape_fill_mods_grp63(in, void_out);
         auto& out = *static_cast<DecodedHSETP24*>(void_out);
+        shape_fill_mods_grp63(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25114,8 +26495,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1355: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25128,8 +26510,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1356: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25142,8 +26525,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1357: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25156,8 +26540,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1358: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25173,8 +26558,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1359: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25190,8 +26576,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1360: {
-        shape_fill_mods_grp76(in, void_out);
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        shape_fill_mods_grp76(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25207,8 +26594,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1361: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25221,8 +26609,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1362: {
-        shape_fill_mods_grp75(in, void_out);
         auto& out = *static_cast<DecodedF2FP3*>(void_out);
+        shape_fill_mods_grp75(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25235,8 +26624,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1363: {
-        shape_fill_mods_grp80(in, void_out);
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        shape_fill_mods_grp80(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25252,8 +26642,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1364: {
-        shape_fill_mods_grp413(in, void_out);
         auto& out = *static_cast<DecodedHMMA9*>(void_out);
+        shape_fill_mods_grp413(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("indexURd");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("indexURd"));
@@ -25284,8 +26675,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1365: {
-        shape_fill_mods_grp72(in, void_out);
         auto& out = *static_cast<DecodedHMMA7*>(void_out);
+        shape_fill_mods_grp72(in, void_out);
+        out.subclass = 1;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ops[0].flags = in.flags("indexURd");
         operand_set_value(out.ops[0], OperandKind::kSpecial, in.value("indexURd"));
@@ -25311,6 +26703,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1366: {
         auto& out = *static_cast<DecodedMOV64IUR2*>(void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -25320,8 +26713,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1367: {
-        shape_fill_mods_grp119(in, void_out);
         auto& out = *static_cast<DecodedTEX9*>(void_out);
+        shape_fill_mods_grp119(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25352,8 +26746,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1368: {
-        shape_fill_mods_grp119(in, void_out);
         auto& out = *static_cast<DecodedTEX9*>(void_out);
+        shape_fill_mods_grp119(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25384,8 +26779,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1369: {
-        shape_fill_mods_grp414(in, void_out);
         auto& out = *static_cast<DecodedTLD49*>(void_out);
+        shape_fill_mods_grp414(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25416,8 +26812,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1370: {
-        shape_fill_mods_grp414(in, void_out);
         auto& out = *static_cast<DecodedTLD49*>(void_out);
+        shape_fill_mods_grp414(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25448,8 +26845,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1371: {
-        shape_fill_mods_grp414(in, void_out);
         auto& out = *static_cast<DecodedTLD49*>(void_out);
+        shape_fill_mods_grp414(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25480,8 +26878,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1372: {
-        shape_fill_mods_grp414(in, void_out);
         auto& out = *static_cast<DecodedTLD49*>(void_out);
+        shape_fill_mods_grp414(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25512,8 +26911,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1373: {
-        shape_fill_mods_grp415(in, void_out);
         auto& out = *static_cast<DecodedTLD9*>(void_out);
+        shape_fill_mods_grp415(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25544,8 +26944,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1374: {
-        shape_fill_mods_grp415(in, void_out);
         auto& out = *static_cast<DecodedTLD9*>(void_out);
+        shape_fill_mods_grp415(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25576,8 +26977,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1375: {
-        shape_fill_mods_grp415(in, void_out);
         auto& out = *static_cast<DecodedTLD9*>(void_out);
+        shape_fill_mods_grp415(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25608,8 +27010,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1376: {
-        shape_fill_mods_grp415(in, void_out);
         auto& out = *static_cast<DecodedTLD9*>(void_out);
+        shape_fill_mods_grp415(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25640,8 +27043,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1377: {
-        shape_fill_mods_grp416(in, void_out);
         auto& out = *static_cast<DecodedTMML7*>(void_out);
+        shape_fill_mods_grp416(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -25666,8 +27070,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1378: {
-        shape_fill_mods_grp416(in, void_out);
         auto& out = *static_cast<DecodedTMML7*>(void_out);
+        shape_fill_mods_grp416(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -25692,8 +27097,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1379: {
-        shape_fill_mods_grp417(in, void_out);
         auto& out = *static_cast<DecodedTXD9*>(void_out);
+        shape_fill_mods_grp417(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25724,8 +27130,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1380: {
-        shape_fill_mods_grp417(in, void_out);
         auto& out = *static_cast<DecodedTXD9*>(void_out);
+        shape_fill_mods_grp417(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25756,8 +27163,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1381: {
-        shape_fill_mods_grp418(in, void_out);
         auto& out = *static_cast<DecodedTXQ6*>(void_out);
+        shape_fill_mods_grp418(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -25779,8 +27187,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1382: {
-        shape_fill_mods_grp418(in, void_out);
         auto& out = *static_cast<DecodedTXQ6*>(void_out);
+        shape_fill_mods_grp418(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd2");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd2"));
@@ -25802,8 +27211,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1383: {
-        shape_fill_mods_grp419(in, void_out);
         auto& out = *static_cast<DecodedFOOTPRINT7*>(void_out);
+        shape_fill_mods_grp419(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25828,8 +27238,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1384: {
-        shape_fill_mods_grp419(in, void_out);
         auto& out = *static_cast<DecodedFOOTPRINT7*>(void_out);
+        shape_fill_mods_grp419(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25854,8 +27265,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1385: {
-        shape_fill_mods_grp419(in, void_out);
         auto& out = *static_cast<DecodedFOOTPRINT7*>(void_out);
+        shape_fill_mods_grp419(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25880,8 +27292,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1386: {
-        shape_fill_mods_grp419(in, void_out);
         auto& out = *static_cast<DecodedFOOTPRINT7*>(void_out);
+        shape_fill_mods_grp419(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25906,8 +27319,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1387: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25929,8 +27343,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1388: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25952,8 +27367,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1389: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25975,8 +27391,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1390: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -25998,8 +27415,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1391: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26021,8 +27439,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1392: {
-        shape_fill_mods_grp128(in, void_out);
         auto& out = *static_cast<DecodedATOM6*>(void_out);
+        shape_fill_mods_grp128(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26044,8 +27463,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1393: {
-        shape_fill_mods_grp130(in, void_out);
         auto& out = *static_cast<DecodedATOMS4*>(void_out);
+        shape_fill_mods_grp130(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -26061,8 +27481,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1394: {
-        shape_fill_mods_grp130(in, void_out);
         auto& out = *static_cast<DecodedATOMS4*>(void_out);
+        shape_fill_mods_grp130(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rd");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rd"));
@@ -26078,8 +27499,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1395: {
-        shape_fill_mods_grp135(in, void_out);
         auto& out = *static_cast<DecodedSUATOM6*>(void_out);
+        shape_fill_mods_grp135(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26101,8 +27523,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1396: {
-        shape_fill_mods_grp420(in, void_out);
         auto& out = *static_cast<DecodedSUATOM7*>(void_out);
+        shape_fill_mods_grp420(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26127,8 +27550,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1397: {
-        shape_fill_mods_grp135(in, void_out);
         auto& out = *static_cast<DecodedSUATOM6*>(void_out);
+        shape_fill_mods_grp135(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26150,8 +27574,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1398: {
-        shape_fill_mods_grp420(in, void_out);
         auto& out = *static_cast<DecodedSUATOM7*>(void_out);
+        shape_fill_mods_grp420(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26176,8 +27601,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1399: {
-        shape_fill_mods_grp248(in, void_out);
         auto& out = *static_cast<DecodedSULD5*>(void_out);
+        shape_fill_mods_grp248(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26196,8 +27622,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1400: {
-        shape_fill_mods_grp421(in, void_out);
         auto& out = *static_cast<DecodedSULD6*>(void_out);
+        shape_fill_mods_grp421(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26219,8 +27646,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1401: {
-        shape_fill_mods_grp248(in, void_out);
         auto& out = *static_cast<DecodedSULD5*>(void_out);
+        shape_fill_mods_grp248(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26239,8 +27667,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1402: {
-        shape_fill_mods_grp421(in, void_out);
         auto& out = *static_cast<DecodedSULD6*>(void_out);
+        shape_fill_mods_grp421(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
@@ -26262,8 +27691,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1403: {
-        shape_fill_mods_grp249(in, void_out);
         auto& out = *static_cast<DecodedSUST4*>(void_out);
+        shape_fill_mods_grp249(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -26279,8 +27709,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1404: {
-        shape_fill_mods_grp422(in, void_out);
         auto& out = *static_cast<DecodedSUST5*>(void_out);
+        shape_fill_mods_grp422(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -26299,8 +27730,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1405: {
-        shape_fill_mods_grp249(in, void_out);
         auto& out = *static_cast<DecodedSUST4*>(void_out);
+        shape_fill_mods_grp249(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -26316,8 +27748,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1406: {
-        shape_fill_mods_grp422(in, void_out);
         auto& out = *static_cast<DecodedSUST5*>(void_out);
+        shape_fill_mods_grp422(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -26336,8 +27769,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1407: {
-        shape_fill_mods_grp136(in, void_out);
         auto& out = *static_cast<DecodedSURED4*>(void_out);
+        shape_fill_mods_grp136(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -26353,8 +27787,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1408: {
-        shape_fill_mods_grp423(in, void_out);
         auto& out = *static_cast<DecodedSURED5*>(void_out);
+        shape_fill_mods_grp423(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Ra");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Ra"));
@@ -26373,8 +27808,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1409: {
-        shape_fill_mods_grp406(in, void_out);
         auto& out = *static_cast<DecodedLDGSTS6*>(void_out);
+        shape_fill_mods_grp406(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -26396,8 +27832,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1410: {
-        shape_fill_mods_grp406(in, void_out);
         auto& out = *static_cast<DecodedLDGSTS6*>(void_out);
+        shape_fill_mods_grp406(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -26419,8 +27856,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1411: {
-        shape_fill_mods_grp424(in, void_out);
         auto& out = *static_cast<DecodedLDGSTS7*>(void_out);
+        shape_fill_mods_grp424(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -26445,8 +27883,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1412: {
-        shape_fill_mods_grp406(in, void_out);
         auto& out = *static_cast<DecodedLDGSTS6*>(void_out);
+        shape_fill_mods_grp406(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.ops[0].flags = in.flags("Rb");
         operand_set_value(out.ops[0], OperandKind::kRegister, in.value("Rb"));
@@ -26468,8 +27907,9 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
         break;
     }
     case 1413: {
-        shape_fill_mods_grp252(in, void_out);
         auto& out = *static_cast<DecodedSUQUERY6*>(void_out);
+        shape_fill_mods_grp252(in, void_out);
+        out.subclass = 0;
         out.ops[0].kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.ops[0].flags = in.flags("Pu");
         operand_set_value(out.ops[0], OperandKind::kPredicate, in.value("Pu"));
