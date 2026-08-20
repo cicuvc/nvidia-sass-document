@@ -472,6 +472,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=str(REPO / "sm120.json"))
     ap.add_argument("--out", default="/tmp/semu_corpus.json")
+    ap.add_argument("--hpp", default=None,
+                    help="also emit a C++ corpus header (isa_corpus.hpp)")
     args = ap.parse_args()
 
     db = json.load(open(args.db))
@@ -495,6 +497,26 @@ def main() -> int:
     enc_ok = sum(1 for r in rows if r["encoded"])
     print(f"wrote {args.out}: {enc_ok}/{len(rows)} variants encoded "
           f"({fail} unsolved)")
+
+    if args.hpp:
+        L = ["// Generated file -- do not edit.  Regenerate with:",
+             "//   python3 semu/tools/gen_corpus.py --hpp",
+             "#pragma once", "",
+             "#include <cstdint>", "",
+             "namespace semu::corpus {",
+             "struct Word { std::uint64_t lo, hi; const char* cls; };",
+             "inline constexpr std::uint32_t kNumCorpus = %d;" % len(rows),
+             "inline const Word kWords[kNumCorpus] = {"]
+        for r in rows:
+            L.append(f"    {{0x{r['lo'] & 0xFFFFFFFFFFFFFFFF:016x}ULL, "
+                     f"0x{r['hi'] & 0xFFFFFFFFFFFFFFFF:016x}ULL, "
+                     f"{json.dumps(r['variant_class'])}}},")
+        L.append("};")
+        L.append("")
+        L.append("}  // namespace semu::corpus")
+        L.append("")
+        Path(args.hpp).write_text("\n".join(L), encoding="utf-8")
+        print(f"wrote {args.hpp}")
     return 0
 
 

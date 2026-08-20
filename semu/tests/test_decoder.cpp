@@ -6,6 +6,7 @@
 #include <semu/decoder.hpp>
 #include <isa_shapes.hpp>       // typed-IR schema (regenerate with --shapes)
 #include <isa_shapes_fill.hpp>  // 2a: per-variant typed fill (equivalence path)
+#include <isa_corpus.hpp>       // whole-ISA corpus (gen_corpus.py --hpp)
 #include <cstddef>
 #include <cstdio>
 #include <string>
@@ -195,6 +196,9 @@ std::uint64_t op_raw(const shape::OperandValue& o, shape::OperandKind k) {
         case shape::OperandKind::kPredicate:
         case shape::OperandKind::kUniformPredicate: return o.v.pred_idx;
         case shape::OperandKind::kSImm: return static_cast<std::uint64_t>(o.v.simm64);
+        case shape::OperandKind::kFImm16: return o.v.uimm16;
+        case shape::OperandKind::kFImm32: return o.v.uimm32;
+        case shape::OperandKind::kFImm64: return o.v.uimm64;
         case shape::OperandKind::kDesc: return o.v.desc;
         default: return o.v.uimm64;
     }
@@ -256,6 +260,58 @@ TEST(typed_fill_matches_generic_decode) {
             CHECK_EQ(d.ops[p].v.uimm64,
                      static_cast<std::uint64_t>(fi.value(mf.ops[p].slot)));
     }
+}
+
+// Whole-ISA typed-fill equivalence: for every corpus word that decodes
+// uniquely, the generated fill must reproduce the live slot_values/operands in
+// the typed Decoded* ops[] (read back generically: ops[] is the first member,
+// i.e. at offset 0, in every derived Decoded<Mnemonic><Ops>).
+TEST(typed_fill_matches_across_corpus) {
+    const auto& dec = Decoder::instance();
+    alignas(16) std::byte buf[512];
+    std::uint32_t checked = 0;
+    for (std::uint32_t w = 0; w < semu::corpus::kNumCorpus; ++w) {
+        const auto& cw = semu::corpus::kWords[w];
+        DecodeResult r = dec.decode(cw.lo, cw.hi);
+        if (!r.is_unique()) continue;
+        const auto& inst = r.instruction();
+        const std::uint32_t idx =
+            variant_index_of(isa::variant_class_name(inst.variant_class));
+        if (idx >= isa::kNumVariants) continue;
+        const auto& mf = shape::kShapeManifests[idx];
+        if (mf.n_ops == 0) { checked++; continue; }
+        FillFromDecoded fi(inst);
+        shape::fill_by_variant(idx, fi, buf);
+        const auto* ops = reinterpret_cast<const shape::OperandValue*>(buf);
+        for (std::uint8_t p = 0; p < mf.n_ops; ++p) {
+            const shape::OperandKind k = mf.ops[p].kind;
+            const std::uint64_t got = op_raw(ops[p], k);
+            const std::uint64_t want =
+                static_cast<std::uint64_t>(fi.value(mf.ops[p].slot));
+            if (got != want) {
+                std::fprintf(stderr,
+                    "corpus[%u] %s slot[%u]=%s got=%llu want=%llu\n",
+                    w, isa::variant_class_name(inst.variant_class), p,
+                    mf.ops[p].slot, (unsigned long long)got,
+                    (unsigned long long)want);
+                CHECK(false);
+                break;
+            }
+            if (ops[p].flags != fi.flags(mf.ops[p].slot)) {
+                std::fprintf(stderr,
+                    "corpus[%u] %s slot[%u]=%s flags got=%u want=%u\n",
+                    w, isa::variant_class_name(inst.variant_class), p,
+                    mf.ops[p].slot, ops[p].flags,
+                    fi.flags(mf.ops[p].slot));
+                CHECK(false);
+                break;
+            }
+        }
+        ++checked;
+    }
+    // The corpus gate proves 1414/1414 unique; we must have checked them all.
+    CHECK_EQ(static_cast<int>(checked),
+             static_cast<int>(semu::corpus::kNumCorpus));
 }
 
 int main(int argc, char** argv) {
