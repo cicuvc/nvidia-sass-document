@@ -631,19 +631,12 @@ private:
                         std::uint64_t pc);
     Status do_cctl(WarpState& w, const DecodedInstruction& inst,
                    std::uint64_t pc);
-    // Temporary family dispatcher (removed when execute_group gains the
-    // unified mnemonic switch).
-    Status do_memory(WarpState& w, std::uint32_t mask,
-                     const DecodedInstruction& inst, std::uint64_t pc,
-                     std::optional<Fault>* fault);
     // Phase 9 subset: async / mbarrier / TMA instruction families.
     Status do_syncs(WarpState& w, std::uint32_t mask,
                     const DecodedInstruction& inst, std::uint64_t pc,
                     std::optional<Fault>* fault);
     Status do_arrives(WarpState& w, const DecodedInstruction& inst,
                       std::uint64_t pc, std::optional<Fault>* fault);
-    Status do_tma(WarpState& w, const DecodedInstruction& inst,
-                  std::uint64_t pc, std::optional<Fault>* fault);
     // --- Phase 9 subset: TMA family (one handler per instruction) --------
     struct TmaPrepare {
         std::uint32_t urb_idx = 0;
@@ -859,11 +852,6 @@ private:
                    const DecodedInstruction& inst);
     Status do_prmt(WarpState& w, std::uint32_t mask,
                    const DecodedInstruction& inst);
-    // Temporary family dispatcher (removed when execute_group gains the
-    // unified mnemonic switch).
-    Status do_compute(WarpState& w, std::uint32_t mask,
-                      const DecodedInstruction& inst, std::uint64_t pc,
-                      std::optional<Fault>* fault);
     // Phase 9 tensor core: HMMA (0x23c) / QMMA (0x27a) / OMMA (0x47f).
     // Functional for the dense F32-accumulator shapes the tensor engine
     // implements; the sparse / rowcol / scaled-variant alternatives and the
@@ -871,9 +859,6 @@ private:
     // NOT scoreboarded on hardware (COUPLED_MATH): programs must insert the
     // required NOP padding before reading D (the interpreter is synchronous
     // so this is a program contract, not a simulator requirement).
-    Status do_tensor(WarpState& w, std::uint32_t mask,
-                     const DecodedInstruction& inst, std::uint64_t pc,
-                     std::optional<Fault>* fault);
     // --- Phase 9 tensor core (one handler per mnemonic) -------------------
     Status tensor_unsupported(const WarpState& w,
                               const DecodedInstruction& inst,

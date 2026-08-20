@@ -42,7 +42,6 @@ constexpr std::uint64_t kSrNctaidX = 43, kSrNctaidY = 44, kSrNctaidZ = 45;
 constexpr std::uint64_t kSrSmId = 46, kSrSmemBase = 47;
 
 // Named barrier opcodes (from sm120.json BAR variants).
-constexpr std::uint16_t kOpBarSync = 0xb1d;
 
 // Phase 6 Step 2D: replay a buffered race-event log into a RaceDetector in a
 // deterministic order (sorted by (cta_id, ordinal)), independent of host
@@ -1200,118 +1199,179 @@ Status Interpreter::execute_group(int cta_idx, int warp, std::uint64_t pc,
             // identifies hot basic blocks by byte PC).  Guarded by a single
             // branch when disabled.
             if (options_.collect_hotspots) ++pc_hotspots_[pc];
-            const std::uint16_t op = semu::opcode_of(inst.word.lo, inst.word.hi);
-            switch (op) {
-                case 0x947: return do_bra(ws, exec_mask, inst, pc, fault);   // BRA
-                case 0x949: return do_bra(ws, exec_mask, inst, pc, fault); // BRX
-                case 0x94a: return do_bra(ws, exec_mask, inst, pc, fault); // JMP
-                case 0x94c: return do_bra(ws, exec_mask, inst, pc, fault); // JMX
-                case 0x945: return do_bssy(ws, inst, pc, exec_mask, fault); // BSSY
-                case 0x941: return do_bsync(ws, inst, pc, exec_mask, fault); // BSYNC
-                case 0x94d: return do_exit(ws, inst, mask, pc);         // EXIT
-                case 0x919: return do_s2r(ws, inst, exec_mask, pc, fault); // S2R
-                case 0x9c3: return do_s2ur(ws, inst, pc, fault);        // S2UR
-                case kOpBarSync: return do_bar(ws, inst, exec_mask, pc, fault); // BAR.SYNC
-                case 0x918: return Status::success();                    // NOP
+            // Unified per-instruction dispatch (plan-b refactor): every
+            // implemented mnemonic has its own handler.  The decoded Mnemonic
+            // is unique per instruction; no family falls through a generic
+            // dispatcher anymore.  Anything not listed here is decode-only
+            // and faults as unsupported.
+            switch (inst.mnemonic) {
+                // ---- control flow ------------------------------------------
+                case isa::Mnemonic::kBRA:
+                case isa::Mnemonic::kBRX:
+                case isa::Mnemonic::kJMP:
+                case isa::Mnemonic::kJMX:
+                    return do_bra(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kBSSY:
+                    return do_bssy(ws, inst, pc, exec_mask, fault);
+                case isa::Mnemonic::kBSYNC:
+                    return do_bsync(ws, inst, pc, exec_mask, fault);
+                case isa::Mnemonic::kEXIT:
+                    return do_exit(ws, inst, mask, pc);
+                case isa::Mnemonic::kS2R:
+                    return do_s2r(ws, inst, exec_mask, pc, fault);
+                case isa::Mnemonic::kS2UR:
+                    return do_s2ur(ws, inst, pc, fault);
+                case isa::Mnemonic::kBAR:
+                    return do_bar(ws, inst, exec_mask, pc, fault);
+                case isa::Mnemonic::kNOP:
+                    return Status::success();
+                // ---- uniform-register ALU --------------------------------
+                case isa::Mnemonic::kMOV:
+                    return do_mov(ws, exec_mask, inst, pc);
+                case isa::Mnemonic::kUMOV:
+                    return do_umov(ws, inst, pc);
+                case isa::Mnemonic::kUIADD3:
+                    return do_uiadd3(ws, inst, pc);
+                case isa::Mnemonic::kUSHF:
+                    return do_ushf(ws, inst, pc);
+                case isa::Mnemonic::kIADD3:
+                    return do_iadd3(ws, exec_mask, inst, pc);
+                case isa::Mnemonic::kISETP:
+                    return do_isetp(ws, exec_mask, inst, pc);
+                case isa::Mnemonic::kIMAD:
+                    return do_imad(ws, exec_mask, inst, pc, fault);
+                // ---- memory (one handler per instruction) ----------------
+                case isa::Mnemonic::kLDG:
+                    return do_ldg(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kSTG:
+                    return do_stg(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kLDS:
+                    return do_lds(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kSTS:
+                    return do_sts(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kLDL:
+                    return do_ldl(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kSTL:
+                    return do_stl(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kLDC:
+                    return do_ldc(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kLDCU:
+                    return do_ldcu(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kATOM:
+                    return do_atom(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kATOMS:
+                    return do_atoms(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kREDS:
+                    return do_reds(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kATOMG:
+                    return do_atomg(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kREDG:
+                    return do_redg(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kMEMBAR:
+                    return do_membar(ws, inst);
+                case isa::Mnemonic::kFENCE:
+                    return do_fence(ws);
+                case isa::Mnemonic::kERRBAR:
+                    return do_errbar(ws, inst, pc);
+                case isa::Mnemonic::kCGAERRBAR:
+                    return do_cgaerrbar(ws, inst, pc);
+                case isa::Mnemonic::kCCTL:
+                    return do_cctl(ws, inst, pc);
+                case isa::Mnemonic::kDEPBAR:
+                    do_depbar(ws, inst, pc);
+                    return Status::success();
+                case isa::Mnemonic::kLDGDEPBAR:
+                    do_ldgdepbar(ws, inst, pc);
+                    return Status::success();
+                case isa::Mnemonic::kLDGSTS:
+                    return do_ldgsts(ws, exec_mask, inst, pc, fault);
+                // ---- mbarrier / TMA families -------------------------------
+                case isa::Mnemonic::kSYNCS:
+                    return do_syncs(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kARRIVES:
+                    return do_arrives(ws, inst, pc, fault);
+                case isa::Mnemonic::kUTMALDG:
+                    return do_utmaldg(ws, inst, pc, fault);
+                case isa::Mnemonic::kUTMASTG:
+                    return do_utmastg(ws, inst, pc, fault);
+                case isa::Mnemonic::kUTMAREDG:
+                    return do_utmaredg(ws, inst, pc, fault);
+                case isa::Mnemonic::kUTMACMDFLUSH:
+                    return do_utmacmdflush(ws, inst, pc);
+                case isa::Mnemonic::kUTMACCTL:
+                    return do_utmacctl(ws, inst, pc);
+                // ---- tensor core -------------------------------------------
+                case isa::Mnemonic::kHMMA:
+                    return do_hmma(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kQMMA:
+                    return do_qmma(ws, exec_mask, inst, pc, fault);
+                case isa::Mnemonic::kOMMA:
+                    return do_omma(ws, exec_mask, inst, pc, fault);
+                // ---- compute (one handler per instruction) -----------------
+                case isa::Mnemonic::kFADD:
+                    return do_fadd(ws, exec_mask, inst);
+                case isa::Mnemonic::kFMUL:
+                    return do_fmul(ws, exec_mask, inst);
+                case isa::Mnemonic::kFFMA:
+                    return do_ffma(ws, exec_mask, inst);
+                case isa::Mnemonic::kDADD:
+                    return do_dadd(ws, exec_mask, inst);
+                case isa::Mnemonic::kDMUL:
+                    return do_dmul(ws, exec_mask, inst);
+                case isa::Mnemonic::kDFMA:
+                    return do_dfma(ws, exec_mask, inst);
+                case isa::Mnemonic::kFSETP:
+                    return do_fsetp(ws, exec_mask, inst);
+                case isa::Mnemonic::kFSET:
+                    return do_fset(ws, exec_mask, inst);
+                case isa::Mnemonic::kFMNMX:
+                    return do_fmnmx(ws, exec_mask, inst);
+                case isa::Mnemonic::kFSEL:
+                    return do_fsel(ws, exec_mask, inst);
+                case isa::Mnemonic::kF2F:
+                    return do_f2f(ws, exec_mask, inst);
+                case isa::Mnemonic::kI2F:
+                    return do_i2f(ws, exec_mask, inst);
+                case isa::Mnemonic::kF2I:
+                    return do_f2i(ws, exec_mask, inst);
+                case isa::Mnemonic::kFRND:
+                    return do_frnd(ws, exec_mask, inst);
+                case isa::Mnemonic::kP2R:
+                    return do_p2r(ws, exec_mask, inst);
+                case isa::Mnemonic::kVOTE:
+                    return do_vote(ws, exec_mask, inst);
+                case isa::Mnemonic::kELECT:
+                    return do_elect(ws, exec_mask, inst);
+                case isa::Mnemonic::kREDUX:
+                    return do_redux(ws, exec_mask, inst);
+                case isa::Mnemonic::kSHFL:
+                    return do_shfl(ws, exec_mask, inst);
+                case isa::Mnemonic::kLOP3:
+                    return do_lop3(ws, exec_mask, inst);
+                case isa::Mnemonic::kLOP:
+                    return do_lop(ws, exec_mask, inst);
+                case isa::Mnemonic::kSHF:
+                    return do_shf(ws, exec_mask, inst);
+                case isa::Mnemonic::kIABS:
+                    return do_iabs(ws, exec_mask, inst);
+                case isa::Mnemonic::kIMNMX:
+                    return do_imnmx(ws, exec_mask, inst);
+                case isa::Mnemonic::kISCADD:
+                    return do_iscadd(ws, exec_mask, inst);
+                case isa::Mnemonic::kLEA:
+                    return do_lea(ws, exec_mask, inst);
+                case isa::Mnemonic::kPOPC:
+                    return do_popc(ws, exec_mask, inst);
+                case isa::Mnemonic::kFLO:
+                    return do_flo(ws, exec_mask, inst);
+                case isa::Mnemonic::kBMSK:
+                    return do_bmsk(ws, exec_mask, inst);
+                case isa::Mnemonic::kPRMT:
+                    return do_prmt(ws, exec_mask, inst);
                 default:
-                    if (op == 0x202 || op == 0x402 || op == 0x802 ||
-                        op == 0x1c02) {  // MOV / MOV64 / MOV imm / MOV UR
-                        return do_mov(ws, exec_mask, inst, pc);
-                    }
-                    // Phase 9 subset: uniform-register ALU (needed to build
-                    // mbarrier init words / TMA coordinate blocks).
-                    if (op == 0x882 || op == 0x1c82 || op == 0x1482) {  // UMOV
-                        return do_umov(ws, inst, pc);
-                    }
-                    if (op == 0x1890 || op == 0x1290) {  // UIADD3
-                        return do_uiadd3(ws, inst, pc);
-                    }
-                    if (op == 0x1899 || op == 0x1499 || op == 0x1299) {  // USHF
-                        return do_ushf(ws, inst, pc);
-                    }
-                    if (op == 0x810 || op == 0x210 || op == 0x1c10) {  // IADD3
-                        return do_iadd3(ws, exec_mask, inst, pc);
-                    }
-                    if (op == 0x20c || op == 0x80c || op == 0x1c0c) {  // ISETP
-                        return do_isetp(ws, exec_mask, inst, pc);
-                    }
-                    if (op == 0x224 || op == 0x824 || op == 0x424 ||
-                        op == 0x1c24 || op == 0x1e24 ||
-                        op == 0x225 || op == 0x825 || op == 0x425 ||
-                        op == 0x1c25 || op == 0x1e25 ||
-                        op == 0x227 || op == 0x827 || op == 0x427 ||
-                        op == 0x1c27 || op == 0x1e27) {  // IMAD/IMAD.WIDE/IMAD.HI
-                        return do_imad(ws, exec_mask, inst, pc, fault);
-                    }
-                    // ---- Phase 6 memory / sync ----------------------------
-                    if (op == 0x381 || op == 0x1981 || op == 0x197e) {  // LDG
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x386 || op == 0x1986 || op == 0x197f) {  // STG
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x384 || op == 0x984 || op == 0x1984) {  // LDS
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x388 || op == 0x988 || op == 0x1988) {  // STS
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x382 || op == 0xb82 || op == 0x1582 ||
-                        op == 0x1d82 || op == 0x13ac || op == 0x15ac ||
-                        op == 0x17ac || op == 0x19ac || op == 0x1bac ||
-                        op == 0x1dac) {
-                        return do_memory(ws, exec_mask, inst, pc, fault);  // LDC / LDCU
-                    }
-                    if (op == 0x383 || op == 0x983 || op == 0x1983) {  // LDL
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x387 || op == 0x987 || op == 0x1987) {  // STL
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x38a || op == 0x38b || op == 0x3a2 ||
-                        op == 0x198a || op == 0x19a2 || op == 0x1f8a ||
-                        op == 0x38c || op == 0x38d || op == 0x198c ||
-                        op == 0x1f8c || op == 0x58d ||
-                        op == 0x3a8 || op == 0x19a8 || op == 0x3a3 ||
-                        op == 0x19a3 || op == 0x3a9 ||
-                        op == 0x9a6 || op == 0x19a6) {  // ATOM/ATOMS/RED/REDS + ATOMG/REDG
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x992 || op == 0x3c6) {  // MEMBAR / FENCE
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x9ab || op == 0x5ab || op == 0x98f ||
-                        op == 0x1d8f) {  // ERRBAR / CGAERRBAR / CCTL
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x91a || op == 0x1d1a || op == 0x9af) {
-                        return do_memory(ws, exec_mask, inst, pc, fault);  // DEPBAR / LDGDEPBAR
-                    }
-                    if (op == 0x1fae || op == 0x1dae) {  // LDGSTS (cp.async)
-                        return do_memory(ws, exec_mask, inst, pc, fault);
-                    }
-                    // ---- Phase 9 subset: mbarrier / TMA families ----------
-                    if (op == 0x19a7 || op == 0x15a7 || op == 0x19b1 ||
-                        op == 0x9b1 || op == 0x15b1 || op == 0x15b2 ||
-                        op == 0x13b2 || op == 0x19b2 || op == 0x3a7) {  // SYNCS
-                        return do_syncs(ws, exec_mask, inst, pc, fault);
-                    }
-                    if (op == 0x19b0) {  // ARRIVES (cp.async.mbarrier.arrive)
-                        return do_arrives(ws, inst, pc, fault);
-                    }
-                    if (op == 0x15b4 || op == 0x13b4 || op == 0x13b5 ||
-                        op == 0x13b6 || op == 0x9b7 || op == 0x19b9 ||
-                        op == 0x9b9) {  // UTMALDG / UTMASTG / UTMAREDG /
-                                        // UTMACMDFLUSH / UTMACCTL
-                        return do_tma(ws, inst, pc, fault);
-                    }
-                    // ---- Phase 9 tensor core ------------------------------
-                    if (op == 0x23c || op == 0x27a || op == 0x47f) {
-                        // HMMA / QMMA / OMMA (dense F32-accumulator shapes).
-                        return do_tensor(ws, exec_mask, inst, pc, fault);
-                    }
-                    return do_compute(ws, exec_mask, inst, pc, fault);
+                    return do_unsupported(ws, inst, pc, exec_mask, fault);
             }
+
         }
     return Status::success();
 }
@@ -3413,45 +3473,6 @@ Status Interpreter::do_cctl(WarpState& w, const DecodedInstruction& inst,
     return Status::success();
 }
 
-Status Interpreter::do_memory(WarpState& w, std::uint32_t mask,
-                              const DecodedInstruction& inst,
-                              std::uint64_t pc,
-                              std::optional<Fault>* fault) {
-    // NOTE: temporary dispatcher — the plan-b refactor replaces this with
-    // the unified mnemonic switch in execute_group (final commit).
-    switch (inst.mnemonic) {
-        case isa::Mnemonic::kLDG:     return do_ldg(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kSTG:     return do_stg(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kLDS:     return do_lds(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kSTS:     return do_sts(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kLDL:     return do_ldl(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kSTL:     return do_stl(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kLDC:     return do_ldc(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kLDCU:    return do_ldcu(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kATOM:    return do_atom(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kATOMS:   return do_atoms(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kREDS:    return do_reds(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kATOMG:   return do_atomg(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kREDG:    return do_redg(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kMEMBAR:  return do_membar(w, inst);
-        case isa::Mnemonic::kFENCE:   return do_fence(w);
-        case isa::Mnemonic::kERRBAR:  return do_errbar(w, inst, pc);
-        case isa::Mnemonic::kCGAERRBAR: return do_cgaerrbar(w, inst, pc);
-        case isa::Mnemonic::kCCTL:    return do_cctl(w, inst, pc);
-        case isa::Mnemonic::kDEPBAR:
-            do_depbar(w, inst, pc);
-            return Status::success();
-        case isa::Mnemonic::kLDGDEPBAR:
-            do_ldgdepbar(w, inst, pc);
-            return Status::success();
-        case isa::Mnemonic::kBAR:     return do_bar(w, inst, mask, pc, fault);
-        case isa::Mnemonic::kLDGSTS:  return do_ldgsts(w, mask, inst, pc, fault);
-        default:
-            break;
-    }
-    return do_unsupported(w, inst, pc, mask, fault);
-}
-
 // Deterministic CTA -> SM mapping (High-3): with simulated_sm_count > 1 the
 // CTA's SM is cta % count (explicit multi-SM topology shared by the race, L2
 // and subcore layers); with 1 the launch's env_.sm_id applies.
@@ -4630,22 +4651,6 @@ Status Interpreter::do_utmaredg(WarpState& w, const DecodedInstruction& inst,
     return tma_store_core(w, inst, pc, fault, prep, redop, /*is_redg=*/true);
 }
 
-Status Interpreter::do_tma(WarpState& w, const DecodedInstruction& inst,
-                           std::uint64_t pc, std::optional<Fault>* fault) {
-    // NOTE: temporary dispatcher — the plan-b refactor replaces this with
-    // the unified mnemonic switch in execute_group (final commit).
-    switch (inst.mnemonic) {
-        case isa::Mnemonic::kUTMALDG:      return do_utmaldg(w, inst, pc, fault);
-        case isa::Mnemonic::kUTMASTG:      return do_utmastg(w, inst, pc, fault);
-        case isa::Mnemonic::kUTMAREDG:     return do_utmaredg(w, inst, pc, fault);
-        case isa::Mnemonic::kUTMACMDFLUSH: return do_utmacmdflush(w, inst, pc);
-        case isa::Mnemonic::kUTMACCTL:     return do_utmacctl(w, inst, pc);
-        default:
-            break;
-    }
-    return do_unsupported(w, inst, pc, 0xffffffffu, fault);
-}
-
 // Phase 6 Step 2B: trace-only subcore issue event.  Records the warp's stable
 
 // Phase 6 Step 2B: trace-only subcore issue event.  Records the warp's stable
@@ -4937,7 +4942,7 @@ bool interpreter_handles(const DecodedInstruction& inst) {
     if (m == isa::Mnemonic::kMOV || m == isa::Mnemonic::kIADD3 || m == isa::Mnemonic::kISETP || m == isa::Mnemonic::kIMAD) {
         return true;
     }
-    // Phase 6 memory (do_memory).  LDGSTS is now functional (cp.async).
+    // Phase 6 memory (per-instruction handlers; LDGSTS is functional).
     if (m == isa::Mnemonic::kLDG || m == isa::Mnemonic::kSTG || m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kSTS ||
         m == isa::Mnemonic::kLDC || m == isa::Mnemonic::kLDCU || m == isa::Mnemonic::kLDL || m == isa::Mnemonic::kSTL ||
         m == isa::Mnemonic::kATOM || m == isa::Mnemonic::kATOMS || std::strcmp(isa::mnemonic_name(m), "RED") == 0 || m == isa::Mnemonic::kREDS ||
@@ -4954,14 +4959,14 @@ bool interpreter_handles(const DecodedInstruction& inst) {
         m == isa::Mnemonic::kUTMACCTL) {
         return true;
     }
-    // Phase 9 tensor core: HMMA / QMMA / OMMA dense F32-accumulator shapes
-    // (do_tensor).  Sparse/rowcol/scale alternatives and the F16 accumulator
-    // fault at runtime (do_tensor dispatches on the decoded variant class /
+    // Phase 9 tensor core: HMMA / QMMA / OMMA dense F32-accumulator shapes.
+    // Sparse/rowcol/scale alternatives and the F16 accumulator fault at runtime
+    // (do_hmma/do_qmma/do_omma dispatch on the decoded variant class /
     // modifier slots).
     if (m == isa::Mnemonic::kHMMA || m == isa::Mnemonic::kQMMA || m == isa::Mnemonic::kOMMA) {
         return true;
     }
-    // Phase 5 compute (do_compute).
+    // Phase 5 compute (per-instruction handlers).
     if (m == isa::Mnemonic::kFADD || m == isa::Mnemonic::kFMUL || m == isa::Mnemonic::kFFMA || m == isa::Mnemonic::kDADD ||
         m == isa::Mnemonic::kDMUL || m == isa::Mnemonic::kDFMA || m == isa::Mnemonic::kFSETP || m == isa::Mnemonic::kFSET ||
         m == isa::Mnemonic::kFMNMX || m == isa::Mnemonic::kFSEL || m == isa::Mnemonic::kF2F || m == isa::Mnemonic::kI2F ||
@@ -5289,21 +5294,6 @@ Status Interpreter::do_omma(WarpState& w, std::uint32_t mask,
     const tensor::Format fmt = tensor::Format::kFp8E4M3;  // unused for gdfs
     return tensor_lane_core(w, mask, inst, pc, fault, ops, shape, fmt, true,
                             true, true, 2);
-}
-
-Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
-                              const DecodedInstruction& inst, std::uint64_t pc,
-                              std::optional<Fault>* fault) {
-    // NOTE: temporary dispatcher — the plan-b refactor replaces this with
-    // the unified mnemonic switch in execute_group (final commit).
-    switch (inst.mnemonic) {
-        case isa::Mnemonic::kHMMA: return do_hmma(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kQMMA: return do_qmma(w, mask, inst, pc, fault);
-        case isa::Mnemonic::kOMMA: return do_omma(w, mask, inst, pc, fault);
-        default:
-            break;
-    }
-    return do_unsupported(w, inst, pc, mask, fault);
 }
 
 // Phase 5 compute — one function per instruction (2b-3 plan-b + refactor).
@@ -6511,50 +6501,6 @@ Status Interpreter::do_prmt(WarpState& w, std::uint32_t mask,
     // PRMT [Rd,Ra,2nd,3rd].
     const auto* ops = static_cast<const shape::DecodedPRMT4*>(&inst)->ops;
     return bitops_core(w, mask, ops, 1, 2, 0, 3);
-}
-
-Status Interpreter::do_compute(WarpState& w, std::uint32_t mask,
-                               const DecodedInstruction& inst,
-                               std::uint64_t pc,
-                               std::optional<Fault>* fault) {
-    // NOTE: temporary dispatcher — the plan-b refactor replaces this with
-    // the unified mnemonic switch in execute_group (final commit).
-    switch (inst.mnemonic) {
-        case isa::Mnemonic::kFADD:  return do_fadd(w, mask, inst);
-        case isa::Mnemonic::kFMUL:  return do_fmul(w, mask, inst);
-        case isa::Mnemonic::kFFMA:  return do_ffma(w, mask, inst);
-        case isa::Mnemonic::kDADD:  return do_dadd(w, mask, inst);
-        case isa::Mnemonic::kDMUL:  return do_dmul(w, mask, inst);
-        case isa::Mnemonic::kDFMA:  return do_dfma(w, mask, inst);
-        case isa::Mnemonic::kFSETP: return do_fsetp(w, mask, inst);
-        case isa::Mnemonic::kFSET:  return do_fset(w, mask, inst);
-        case isa::Mnemonic::kFMNMX: return do_fmnmx(w, mask, inst);
-        case isa::Mnemonic::kFSEL:  return do_fsel(w, mask, inst);
-        case isa::Mnemonic::kF2F:   return do_f2f(w, mask, inst);
-        case isa::Mnemonic::kI2F:   return do_i2f(w, mask, inst);
-        case isa::Mnemonic::kF2I:   return do_f2i(w, mask, inst);
-        case isa::Mnemonic::kFRND:  return do_frnd(w, mask, inst);
-        case isa::Mnemonic::kP2R:   return do_p2r(w, mask, inst);
-        case isa::Mnemonic::kVOTE:  return do_vote(w, mask, inst);
-        case isa::Mnemonic::kELECT: return do_elect(w, mask, inst);
-        case isa::Mnemonic::kREDUX: return do_redux(w, mask, inst);
-        case isa::Mnemonic::kSHFL:  return do_shfl(w, mask, inst);
-        case isa::Mnemonic::kLOP3:  return do_lop3(w, mask, inst);
-        case isa::Mnemonic::kLOP:   return do_lop(w, mask, inst);
-        case isa::Mnemonic::kSHF:   return do_shf(w, mask, inst);
-        case isa::Mnemonic::kIABS:  return do_iabs(w, mask, inst);
-        case isa::Mnemonic::kIMNMX: return do_imnmx(w, mask, inst);
-        case isa::Mnemonic::kISCADD:return do_iscadd(w, mask, inst);
-        case isa::Mnemonic::kLEA:   return do_lea(w, mask, inst);
-        case isa::Mnemonic::kPOPC:  return do_popc(w, mask, inst);
-        case isa::Mnemonic::kFLO:   return do_flo(w, mask, inst);
-        case isa::Mnemonic::kBMSK:  return do_bmsk(w, mask, inst);
-        case isa::Mnemonic::kPRMT:  return do_prmt(w, mask, inst);
-        default:
-            break;
-    }
-    // ---- fault for unsupported --------------------------------------------------
-    return do_unsupported(w, inst, pc, mask, fault);
 }
 
 Status Interpreter::do_unsupported(WarpState& w,
