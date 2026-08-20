@@ -2229,112 +2229,136 @@ std::uint32_t src_value(const WarpState& w, const ThreadState& t,
 Status Interpreter::do_mov(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc) {
     (void)pc;
-    auto rd = shape::op_value(inst, "Rd");
-    if (!rd) {
-        Fault f(FaultKind::kInternal, "MOV missing Rd");
-        f.set_warp(static_cast<std::uint32_t>(w.warp_id));
-        return Status::failure(Error::internal("MOV missing Rd"));
-    }
-    // MOV Rd, Rb (reg), MOV Rd, URb (uniform), or MOV Rd, imm (Sb slot).
-    const bool has_rb = shape::op_lookup(inst, "Rb") != nullptr;
-    const bool has_urb = shape::op_lookup(inst, "URb") != nullptr;
-    const auto imm = shape::slot_value(inst, "Sb");
-    std::uint32_t src = 0;
-    if (has_urb) {
-        src = read_ur_slot(w, inst, "URb");
-    } else if (has_rb) {
-        src = read_reg_slot(w.threads[0], inst, "Rb");
-    } else if (imm) {
-        src = static_cast<std::uint32_t>(*imm);
-    }
+    const isa::Mnemonic m = inst.mnemonic;
+    // Cast by mnemonic/operand count: MOV32I [Rd,Sb,PixMaskU04];
+    // MOV2 [Rd,src]; MOV3 [Rd,src,PixMaskU04].
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const shape::OperandValue* ops =
+        (m == isa::Mnemonic::kMOV32I)
+            ? static_cast<const shape::DecodedMOV32I3*>(&inst)->ops
+            : (mf.n_ops == 3)
+                  ? static_cast<const shape::DecodedMOV3*>(&inst)->ops
+                  : static_cast<const shape::DecodedMOV2*>(&inst)->ops;
+    const std::uint64_t rd =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+    const auto sk = static_cast<shape::OperandKind>(ops[1].kind);
+    // Register sources are per-lane; uniform/immediate are warp-wide.
+    const std::uint32_t hoisted =
+        (sk != shape::OperandKind::kRegister)
+            ? src_value(w, w.threads[0], ops[1]) : 0;
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        // Per-lane source for reg form; uniform source is warp-wide.
-        std::uint32_t s =
-            (has_urb || !has_rb) ? src : read_reg_slot(t, inst, "Rb");
-        t.gpr[static_cast<std::size_t>(*rd)] = s;
+        const std::uint32_t s =
+            (sk == shape::OperandKind::kRegister)
+                ? src_value(w, t, ops[1]) : hoisted;
+        if (rd != 255 && rd < kNumGprs) t.gpr[rd] = s;
     }
     return Status::success();
 }
 
-// UMOV (uniform move): URd = imm (0x882) / URd = URb (0x1c82) /
-// URd:URd+1 = 64-bit imm (0x1482).
+// UMOV (uniform move): URd = imm / URd = URb / URd:URd+1 = 64-bit imm.
 Status Interpreter::do_umov(WarpState& w, const DecodedInstruction& inst,
                             std::uint64_t pc) {
     (void)pc;
-    const auto urd_v = shape::op_value(inst, "URd");
-    if (!urd_v) return Status::success();
-    const std::uint64_t u = static_cast<std::uint64_t>(*urd_v);
+    // Roles: [UPg, URd, source].  imm64 is a generated subclass flag.
+    const auto& d = *static_cast<const shape::DecodedUMOV3*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const std::uint64_t u =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
     if (u == 255 || u >= kNumUrs) return Status::success();
-    const bool has_urb = shape::op_lookup(inst, "URb") != nullptr;
-    const auto sb = shape::op_value(inst, "Sb");
-    std::uint32_t val = 0;
-    if (has_urb) {
-        val = read_ur_slot(w, inst, "URb");
-    } else if (sb) {
-        val = static_cast<std::uint32_t>(*sb);
-    }
+    const bool is_imm64 = (d.subclass & 8) != 0;
+    const std::uint32_t val = static_cast<std::uint32_t>(
+        shape::operand_value_as_i64(ops[2]));
     w.ur[static_cast<std::size_t>(u)] = val;
     // imm64 form writes the 64-bit immediate to URd:URd+1.
-    if (std::strstr(isa::variant_class_name(inst.variant_class), "imm64") !=
-            nullptr &&
-        sb && u + 1 < kNumUrs) {
+    if (is_imm64 && u + 1 < kNumUrs) {
         w.ur[static_cast<std::size_t>(u + 1)] =
-            static_cast<std::uint32_t>(static_cast<std::uint64_t>(*sb) >> 32);
+            static_cast<std::uint32_t>(
+                static_cast<std::uint64_t>(
+                    shape::operand_value_as_i64(ops[2])) >>
+                32);
     }
     return Status::success();
 }
 
 // UIADD3 (uniform): URd = URa + URb + URc (with optional negate / RIR imm).
 // URc == 255 (UZ, the encoder's "no third reg" pin) means the addend comes
-// from the Sb immediate instead (Phase 9 subset: building mbarrier init
-// words as "UR12 = 0x100000 - 1").
+// from the Sb immediate (pos5) instead.  Roles: [UPg,URd,UPu,UPv,URa,
+// <URb|Sb>,URc(,UPp,UPq)].
 Status Interpreter::do_uiadd3(WarpState& w, const DecodedInstruction& inst,
                               std::uint64_t pc) {
     (void)pc;
-    const auto urd_v = shape::op_value(inst, "URd");
-    if (!urd_v) return Status::success();
-    const std::uint64_t u = static_cast<std::uint64_t>(*urd_v);
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops =
+        (nops == 9)
+            ? static_cast<const shape::DecodedUIADD39*>(&inst)->ops
+            : static_cast<const shape::DecodedUIADD37*>(&inst)->ops;
+    const std::uint64_t u =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
     if (u == 255 || u >= kNumUrs) return Status::success();
-    const auto ura_v = shape::op_value(inst, "URa");
-    const auto urb_v = shape::op_value(inst, "URb");
-    const auto urc_v = shape::op_value(inst, "URc");
-    const auto sb_v = shape::op_value(inst, "Sb");
     std::uint32_t a = 0;
-    if (ura_v && *ura_v != 255) {
-        a = read_ur_slot(w, inst, "URa");
-        if (shape::op_flag(inst, "URa", 0)) a = ~a + 1;
+    if (static_cast<shape::OperandKind>(ops[4].kind) ==
+        shape::OperandKind::kUniformRegister) {
+        const std::uint64_t av =
+            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[4]));
+        if (av != 255) {
+            a = read_ur_ov(w, ops[4]);
+            if (ops[4].flags & 1) a = ~a + 1;
+        }
     }
     std::uint32_t b = 0;
-    if (urb_v && *urb_v != 255) b = read_ur_slot(w, inst, "URb");
+    if (static_cast<shape::OperandKind>(ops[5].kind) ==
+        shape::OperandKind::kUniformRegister) {
+        const std::uint64_t bv =
+            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[5]));
+        if (bv != 255) b = read_ur_ov(w, ops[5]);
+    }
     std::uint32_t c = 0;
-    if (urc_v && *urc_v != 255) {
-        c = read_ur_slot(w, inst, "URc");
-        if (shape::op_flag(inst, "URc", 0)) c = ~c + 1;
-    } else if (sb_v) {
-        c = static_cast<std::uint32_t>(*sb_v);
-        if (shape::op_flag(inst, "Sb", 0)) c = ~c + 1;
+    const bool urc_ok =
+        static_cast<shape::OperandKind>(ops[6].kind) ==
+            shape::OperandKind::kUniformRegister &&
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[6])) !=
+            255;
+    if (urc_ok) {
+        c = read_ur_ov(w, ops[6]);
+        if (ops[6].flags & 1) c = ~c + 1;
+    } else {
+        const auto kk = static_cast<shape::OperandKind>(ops[5].kind);
+        if (kk == shape::OperandKind::kUImm ||
+            kk == shape::OperandKind::kSImm) {
+            c = static_cast<std::uint32_t>(
+                shape::operand_value_as_i64(ops[5]));
+            if (ops[5].flags & 1) c = ~c + 1;
+        }
     }
     w.ur[static_cast<std::size_t>(u)] = a + b + c;
     return Status::success();
 }
 
-// USHF (uniform shift): URd = URa << Sb (or >> for the R form).  The shift
-// amount lives in the Sb immediate slot (bits[63:32]) and the direction in
-// the SDIR modifier, encoded at bit76 (memdesc): L = 0, R = 1.
+// USHF (uniform shift): URd = URa << 2nd (or >> for the R form).  The
+// direction lives in the SDIR modifier encoded at bit76 (memdesc): L=0, R=1.
 Status Interpreter::do_ushf(WarpState& w, const DecodedInstruction& inst,
                             std::uint64_t pc) {
     (void)pc;
-    const auto urd_v = shape::op_value(inst, "URd");
-    if (!urd_v) return Status::success();
-    const std::uint64_t u = static_cast<std::uint64_t>(*urd_v);
+    // Roles: [UPg, URd, URa, <URb|Sb>, URc].
+    const auto& d = *static_cast<const shape::DecodedUSHF5*>(&inst);
+    const shape::OperandValue* ops = d.ops;
+    const std::uint64_t u =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
     if (u == 255 || u >= kNumUrs) return Status::success();
-    if (!shape::op_lookup(inst, "URa")) return Status::success();
-    std::uint32_t a = read_ur_slot(w, inst, "URa");
-    const auto sb = shape::op_value(inst, "Sb");
-    const std::uint32_t s = sb ? static_cast<std::uint32_t>(*sb) : 0;
+    if (static_cast<shape::OperandKind>(ops[2].kind) !=
+        shape::OperandKind::kUniformRegister)
+        return Status::success();
+    std::uint32_t a = read_ur_ov(w, ops[2]);
+    const auto sk = static_cast<shape::OperandKind>(ops[3].kind);
+    const std::uint32_t s =
+        (sk == shape::OperandKind::kUImm ||
+         sk == shape::OperandKind::kSImm)
+            ? static_cast<std::uint32_t>(shape::operand_value_as_i64(ops[3]))
+            : 0;
     // SDIR: L=0 / R=1 at bit76 of the 128-bit word.
     const bool shift_right = ((inst.word.hi >> 12) & 1) != 0;
     w.ur[static_cast<std::size_t>(u)] =
@@ -2346,38 +2370,24 @@ Status Interpreter::do_iadd3(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst,
                              std::uint64_t pc) {
     (void)pc;
-    auto rd = shape::op_value(inst, "Rd");
-    if (!rd) {
-        Fault f(FaultKind::kInternal, "IADD3 missing Rd");
-        f.set_warp(static_cast<std::uint32_t>(w.warp_id));
-        return Status::failure(Error::internal("IADD3 missing Rd"));
-    }
-    const bool has_ra = shape::op_lookup(inst, "Ra") != nullptr;
-    const bool has_rb = shape::op_lookup(inst, "Rb") != nullptr;
-    const bool has_rc = shape::op_lookup(inst, "Rc") != nullptr;
-    const bool ra_neg =
-        has_ra ? shape::op_flag(inst, "Ra", 0)
-               : shape::slot_value(inst, "e").value_or(0) != 0;
-    const bool rc_neg =
-        has_rc ? shape::op_flag(inst, "Rc", 0)
-               : shape::slot_value(inst, "sz").value_or(0) != 0;
-    const auto sb = shape::slot_value(inst, "Sb");
+    // 6-op: [Rd,Pu,Pv,Ra,2nd,3rd]; 8-op adds [Pp,Pq] (X carry).
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops =
+        (nops == 8)
+            ? static_cast<const shape::DecodedIADD38*>(&inst)->ops
+            : static_cast<const shape::DecodedIADD36*>(&inst)->ops;
+    const std::uint64_t rd =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = has_ra ? read_reg_slot(t, inst, "Ra") : 0;
-        std::uint32_t b = 0;
-        if (has_rb) {
-            b = read_reg_slot(t, inst, "Rb");
-        } else if (sb) {
-            b = static_cast<std::uint32_t>(sign_extend(*sb, 32));
-        }
-        std::uint32_t c = has_rc ? read_reg_slot(t, inst, "Rc") : 0;
-        (void)ra_neg;
-        (void)rc_neg;
-        // read_reg_slot already applies the operand negate/absolute flags.
-        t.gpr[static_cast<std::size_t>(*rd)] = a + b + c;
+        std::uint32_t a = read_reg_ov(t, ops[3]);
+        std::uint32_t b = src_value(w, t, ops[4]);
+        std::uint32_t c = read_reg_ov(t, ops[5]);
+        // read_reg_ov/ src_value already apply the negate/absolute flags.
+        if (rd != 255 && rd < kNumGprs) t.gpr[rd] = a + b + c;
     }
     return Status::success();
 }
@@ -2386,38 +2396,45 @@ Status Interpreter::do_isetp(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst,
                              std::uint64_t pc) {
     (void)pc;
-    auto pd = shape::slot_value(inst, "Pu");  // destination predicate
-    if (!pd) {
-        Fault f(FaultKind::kInternal, "ISETP missing Pu");
-        f.set_warp(static_cast<std::uint32_t>(w.warp_id));
-        return Status::failure(Error::internal("ISETP missing Pu"));
+    // Layouts: 6 [Pu,Pv,Ra,2nd,Pp,Pr]; 5 [Pu,Pv,Ra,2nd,Pp];
+    //          4 [Pu,Ra,2nd,Pr]; 3 [Pu,Ra,2nd].  bop exists only on 6/5-op.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t icmp = 0, bop = 0;
+    if (nops == 6) {
+        const auto& d = *static_cast<const shape::DecodedISETP6*>(&inst);
+        ops = d.ops;
+        icmp = static_cast<std::uint64_t>(d.icmp);
+        bop = static_cast<std::uint64_t>(d.bop);
+    } else if (nops == 5) {
+        const auto& d = *static_cast<const shape::DecodedISETP5*>(&inst);
+        ops = d.ops;
+        icmp = static_cast<std::uint64_t>(d.icmp);
+        bop = static_cast<std::uint64_t>(d.bop);
+    } else if (nops == 4) {
+        const auto& d = *static_cast<const shape::DecodedISETP4*>(&inst);
+        ops = d.ops;
+        icmp = static_cast<std::uint64_t>(d.icmp);
+    } else {
+        const auto& d = *static_cast<const shape::DecodedISETP3*>(&inst);
+        ops = d.ops;
+        icmp = static_cast<std::uint64_t>(d.icmp);
     }
-    // Comparison from the icmp (ICmpAll) field: F=0 LT=1 EQ=2 LE=3
-    // GT=4 NE=5 GE=6 T=7.
-    const std::uint64_t cmp = [&]() -> std::uint64_t {
-        if (auto v = shape::slot_value(inst, "icmp")) return *v;
-        if (auto v = shape::slot_value(inst, "dstfmt")) return *v;
-        return 1;
-    }();
-    const std::uint64_t bop = shape::slot_value(inst, "bop").value_or(0);
-    const bool has_pv = shape::op_lookup(inst, "Pv") != nullptr;
-    const bool has_pp = shape::op_lookup(inst, "Pp") != nullptr;
-    const int pnum = static_cast<int>(*pd);
-    const auto pv_v = shape::op_value(inst, "Pv");
-    const auto sb = shape::slot_value(inst, "Sb");
+    const bool rich = (nops >= 5);  // Pv + Pp present
+    const int ra_pos = rich ? 2 : 1;
+    const int second_pos = ra_pos + 1;
+    const int pp_pos = rich ? 4 : -1;
+    const int pnum = static_cast<int>(shape::operand_value_as_i64(ops[0]));
+    const auto pv_v = rich ? shape::operand_value_as_i64(ops[1]) : 0;
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_slot(t, inst, "Ra");
-        std::uint32_t b = 0;
-        if (sb) {
-            b = static_cast<std::uint32_t>(*sb);
-        } else {
-            b = read_reg_slot(t, inst, "Rb");
-        }
+        std::uint32_t a = read_reg_ov(t, ops[ra_pos]);
+        std::uint32_t b = src_value(w, t, ops[second_pos]);
         bool r = false;
-        switch (cmp) {
+        switch (icmp) {
             case 0: r = false; break;  // F
             case 1: r = a < b; break;
             case 2: r = a == b; break;
@@ -2430,7 +2447,7 @@ Status Interpreter::do_isetp(WarpState& w, std::uint32_t mask,
         }
         // Bop combines the comparison with Pp (AND/OR/XOR).
         bool ppv = true;
-        if (has_pp) read_pred_slot(t, inst, "Pp", &ppv);
+        if (pp_pos >= 0) read_pred_ov(t, ops[pp_pos], &ppv);
         switch (bop) {
             case 0: r = r && ppv; break;
             case 1: r = r || ppv; break;
@@ -2438,7 +2455,8 @@ Status Interpreter::do_isetp(WarpState& w, std::uint32_t mask,
             default: break;
         }
         if (pnum < 7) t.pred[static_cast<std::size_t>(pnum)] = r;
-        if (has_pv && pv_v && *pv_v < 7) t.pred[static_cast<std::size_t>(*pv_v)] = !r;
+        if (rich && pv_v < 7)
+            t.pred[static_cast<std::size_t>(pv_v)] = !r;
     }
     return Status::success();
 }
@@ -2448,27 +2466,39 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
                             std::uint64_t pc,
                             std::optional<Fault>* fault) {
     (void)pc;
-    auto rd = shape::op_value(inst, "Rd");
-    if (!rd) {
-        Fault f(FaultKind::kInternal, "IMAD missing Rd");
-        f.set_warp(static_cast<std::uint32_t>(w.warp_id));
-        return Status::failure(Error::internal("IMAD missing Rd"));
+    // Layouts: plain 4-op [Rd,Ra,2nd,3rd]; x adds Pp (5-op); wide/hi 5-op
+    // [Rd,Pu,Ra,2nd,3rd] (+Pp for x); pseudo's GetPseudoOp sits at the tail.
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t fmt = 1;
+    std::uint8_t subclass = 0;
+    if (nops == 4) {
+        const auto& d = *static_cast<const shape::DecodedIMAD4*>(&inst);
+        ops = d.ops;
+        fmt = static_cast<std::uint64_t>(d.fmt);
+        subclass = d.subclass;
+    } else if (nops == 5) {
+        const auto& d = *static_cast<const shape::DecodedIMAD5*>(&inst);
+        ops = d.ops;
+        fmt = static_cast<std::uint64_t>(d.fmt);
+        subclass = d.subclass;
+    } else {
+        const auto& d = *static_cast<const shape::DecodedIMAD6*>(&inst);
+        ops = d.ops;
+        fmt = static_cast<std::uint64_t>(d.fmt);
+        subclass = d.subclass;
     }
-    // IMAD Rd, Ra, Rb, Rc (also used as MOV via IMAD.MOV).
-    const bool has_ra = shape::op_lookup(inst, "Ra") != nullptr;
-    const bool has_rb = shape::op_lookup(inst, "Rb") != nullptr;
-    const bool has_rc = shape::op_lookup(inst, "Rc") != nullptr;
-    const auto ra_v = shape::op_value(inst, "Ra");
-    // The decoder reports every IMAD width variant under mnemonic "IMAD";
-    // the WIDE/HI distinction lives in the variant class.
-    const bool is_wide = std::strstr(isa::variant_class_name(inst.variant_class), "wide") != nullptr ||
-                         std::strstr(isa::variant_class_name(inst.variant_class), "hi") != nullptr;
-    const bool is_hi = std::strstr(isa::variant_class_name(inst.variant_class), "hi") != nullptr;
+    const std::uint64_t rd =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+    // The WIDE/HI distinction lives in the generated subclass flags.
+    const bool is_wide = (subclass & 2) != 0;
+    const bool is_hi = (subclass & 4) != 0;
     // The X-extended forms (IMAD.X / IMAD.WIDE.X / IMAD.HI.X) add carry-in
     // (from the [!]Pp predicate) and carry-out (to Pu) semantics that Phase 5
     // does not implement or verify.  Degrade them explicitly to unsupported
     // instead of silently computing a carry-less result.
-    const bool is_x = std::strstr(isa::variant_class_name(inst.variant_class), "_x") != nullptr;
+    const bool is_x = (subclass & 1) != 0;
     if (is_x) {
         Fault f(FaultKind::kUnsupportedInstruction,
                 "instruction '" + std::string(isa::mnemonic_name(inst.mnemonic)) + "' (" + std::string(isa::variant_class_name(inst.variant_class)) +
@@ -2490,11 +2520,10 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
             // Ra/Rb are 32-bit; Rc is a full 64-bit register pair that is
             // used verbatim (its high half is already the 64-bit value; we
             // must NOT re-sign-extend from the low half's bit 31).
-            const std::uint32_t au =
-                has_ra ? read_reg_slot(t, inst, "Ra") : 0;
-            const std::uint32_t bu =
-                has_rb ? read_reg_slot(t, inst, "Rb") : 0;
-            const bool sign = shape::slot_value(inst, "fmt").value_or(1) != 0;
+            const int ra_pos = 2;  // wide/hi layout: Rd, Pu, Ra, 2nd, 3rd
+            const std::uint32_t au = read_reg_ov(t, ops[ra_pos]);
+            const std::uint32_t bu = src_value(w, t, ops[ra_pos + 1]);
+            const bool sign = fmt != 0;
             // 32x32 -> 64-bit product bit pattern.  Signed mode sign-extends
             // the two 32-bit inputs to int64; |int32|^2 <= 2^62 so the int64
             // product never overflows.  Unsigned mode uses uint64 widths.
@@ -2508,9 +2537,10 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
                        static_cast<std::uint64_t>(bu);
             }
             std::uint64_t c = 0;
-            const auto rc_v = shape::op_value(inst, "Rc");
-            if (rc_v) {
-                const std::uint64_t r = static_cast<std::uint64_t>(*rc_v);
+            const auto ck = static_cast<shape::OperandKind>(ops[ra_pos + 2].kind);
+            if (ck == shape::OperandKind::kRegister) {
+                const std::uint64_t r = static_cast<std::uint64_t>(
+                    shape::operand_value_as_i64(ops[ra_pos + 2]));
                 if (r != 255 && r < kNumGprs - 1) {
                     c = t.gpr[r] |
                         (static_cast<std::uint64_t>(t.gpr[r + 1]) << 32);
@@ -2518,25 +2548,25 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
             }
             // Modular 64-bit addition (no signed-overflow UB).
             const std::uint64_t out = prod + c;
-            const std::uint64_t r = *rd;
-            if (r == 255 || r >= kNumGprs) continue;
+            if (rd == 255 || rd >= kNumGprs) continue;
             if (is_hi) {
-                t.gpr[r] = static_cast<std::uint32_t>(out >> 32);
+                t.gpr[rd] = static_cast<std::uint32_t>(out >> 32);
             } else {  // IMAD.WIDE / IMAD.WIDE.X
-                if (r + 1 >= kNumGprs) continue;
-                t.gpr[r] = static_cast<std::uint32_t>(out & 0xffffffffu);
-                t.gpr[r + 1] = static_cast<std::uint32_t>(out >> 32);
+                if (rd + 1 >= kNumGprs) continue;
+                t.gpr[rd] = static_cast<std::uint32_t>(out & 0xffffffffu);
+                t.gpr[rd + 1] = static_cast<std::uint32_t>(out >> 32);
             }
             continue;
         }
-        std::uint32_t a = has_ra ? read_reg_slot(t, inst, "Ra") : 0;
-        std::uint32_t b = has_rb ? read_reg_slot(t, inst, "Rb") : 0;
-        std::uint32_t c = has_rc ? read_reg_slot(t, inst, "Rc") : 0;
+        const int ra_pos = 1;  // plain layout: Rd, Ra, 2nd, 3rd
+        std::uint32_t a = read_reg_ov(t, ops[ra_pos]);
+        std::uint32_t b = src_value(w, t, ops[ra_pos + 1]);
+        std::uint32_t c = read_reg_ov(t, ops[ra_pos + 2]);
         // IMAD.MOV: Ra=RZ -> just move c.
-        if (ra_v && *ra_v == 255) {
-            t.gpr[static_cast<std::size_t>(*rd)] = c;
+        if (shape::operand_value_as_i64(ops[ra_pos]) == 255) {
+            if (rd != 255 && rd < kNumGprs) t.gpr[rd] = c;
         } else {
-            t.gpr[static_cast<std::size_t>(*rd)] = a * b + c;
+            if (rd != 255 && rd < kNumGprs) t.gpr[rd] = a * b + c;
         }
     }
     return Status::success();
@@ -3316,8 +3346,8 @@ void Interpreter::do_ldgdepbar(WarpState& w, const DecodedInstruction& inst,
     if (!cta.async_open.copies.empty() || cta.async_open.committed_bytes > 0) {
         // Seal into the committed group list (observable async state).
         cta.async_groups.push_back(cta.async_open);
-        const auto wr = slot_value(inst, "dst_wr_sb").value_or(0);
-        if (wr < cta.sb_group_count.size()) {
+        const auto wr = inst.schedule.dst_wr_sb;
+        if (wr < static_cast<int>(cta.sb_group_count.size())) {
             cta.sb_group_count[wr]++;
         }
         cta.async_open = {};
@@ -3330,10 +3360,23 @@ void Interpreter::do_ldgdepbar(WarpState& w, const DecodedInstruction& inst,
 void Interpreter::do_depbar(WarpState& w, const DecodedInstruction& inst,
                             std::uint64_t pc) {
     (void)pc;
+    // Roles: 3-op [sbidx, cnt, scoreboard_list] (+le member); 1-op
+    // [scoreboard_list]; 0-op all (le only).
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    std::uint64_t le = 0, sbidx = 0, cnt = 0;
+    if (mf.n_ops == 3) {
+        const auto& d = *static_cast<const shape::DecodedDEPBAR3*>(&inst);
+        le = static_cast<std::uint64_t>(d.le);
+        sbidx = static_cast<std::uint64_t>(shape::operand_value_as_i64(d.ops[0]));
+        cnt = static_cast<std::uint64_t>(shape::operand_value_as_i64(d.ops[1]));
+    } else if (mf.n_ops == 1) {
+        const auto& d = *static_cast<const shape::DecodedDEPBAR1*>(&inst);
+        (void)d;
+    } else {
+        const auto& d = *static_cast<const shape::DecodedDEPBAR0*>(&inst);
+        le = static_cast<std::uint64_t>(d.le);
+    }
     CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
-    const auto le = slot_value(inst, "le").value_or(0);
-    const auto sbidx = slot_value(inst, "sbidx").value_or(0);
-    const auto cnt = slot_value(inst, "cnt").value_or(0);
     if (le && sbidx < cta.sb_group_count.size()) {
         // Drain (seal->complete) groups until SBn's count <= cnt.  The copies
         // are already in shared; only the group tally is adjusted.
@@ -4494,20 +4537,93 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
                               const DecodedInstruction& inst, std::uint64_t pc,
                               std::optional<Fault>* fault) {
     const isa::Mnemonic m = inst.mnemonic;
-    const auto rd_v = shape::op_value(inst, "Rd");
-    if (!rd_v) {
-        *fault = Fault(FaultKind::kInternal, "tensor op missing Rd")
-                     .set_pc(pc)
-                     .set_warp(static_cast<std::uint32_t>(w.warp_id))
-                     .set_active_mask(mask)
-                     .set_instruction(inst.word);
-        return Status::failure(Error::internal("tensor op missing Rd"));
+    // Cast to the concrete shape by (mnemonic, nops) and pull every modifier
+    // the dispatch below needs into locals.  The variant-CLASS gates stay as
+    // enum comparisons (sparse / rowcol / scale variants are rejected).
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const shape::OperandValue* ops = nullptr;
+    std::uint64_t size = 0, dstfmt = 0, srcfmt = 0;
+    std::uint64_t sfa = 0, sfb = 0, sf = 0, ssz = 1;
+    bool need_uri = false;
+    bool has_re = false, has_rh = false, has_uri = false;
+    if (m == isa::Mnemonic::kHMMA) {
+        if (nops == 5) {
+            const auto& d = *static_cast<const shape::DecodedHMMA5*>(&inst);
+            ops = d.ops;
+            size = static_cast<std::uint64_t>(d.size);
+            srcfmt = static_cast<std::uint64_t>(d.srcfmt);
+            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+        } else {
+            const auto& d = *static_cast<const shape::DecodedHMMA7*>(&inst);
+            ops = d.ops;
+            size = static_cast<std::uint64_t>(d.size);
+            srcfmt = static_cast<std::uint64_t>(d.srcfmt);
+            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+            has_re = true;
+        }
+    } else if (m == isa::Mnemonic::kQMMA) {
+        if (nops == 5) {
+            const auto& d = *static_cast<const shape::DecodedQMMA5*>(&inst);
+            ops = d.ops;
+            size = static_cast<std::uint64_t>(d.size);
+            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+            sfa = static_cast<std::uint64_t>(d.srcFmtA);
+            sfb = static_cast<std::uint64_t>(d.srcFmtB);
+        } else if (nops == 7) {
+            const auto& d = *static_cast<const shape::DecodedQMMA7*>(&inst);
+            ops = d.ops;
+            size = static_cast<std::uint64_t>(d.size);
+            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+            sfa = static_cast<std::uint64_t>(d.srcFmtA);
+            sfb = static_cast<std::uint64_t>(d.srcFmtB);
+            has_re = true;
+        } else if (nops == 8) {
+            const auto& d = *static_cast<const shape::DecodedQMMA8*>(&inst);
+            ops = d.ops;
+            size = static_cast<std::uint64_t>(d.size);
+            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+            sfa = static_cast<std::uint64_t>(d.srcFmtA);
+            sfb = static_cast<std::uint64_t>(d.srcFmtB);
+            sf = static_cast<std::uint64_t>(d.sf);
+            ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
+            need_uri = true;
+            has_re = has_rh = has_uri = true;
+        } else {
+            const auto& d = *static_cast<const shape::DecodedQMMA9*>(&inst);
+            ops = d.ops;
+            size = static_cast<std::uint64_t>(d.size);
+            dstfmt = static_cast<std::uint64_t>(d.dstfmt);
+            sfa = static_cast<std::uint64_t>(d.srcFmtA);
+            sfb = static_cast<std::uint64_t>(d.srcFmtB);
+            sf = static_cast<std::uint64_t>(d.sf);
+            ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
+            need_uri = true;
+            has_re = has_rh = has_uri = true;
+        }
+    } else {  // OMMA.SF (mxfp4 block-scaled)
+        if (nops == 8) {
+            const auto& d = *static_cast<const shape::DecodedOMMA8*>(&inst);
+            ops = d.ops;
+            sf = static_cast<std::uint64_t>(d.sf);
+            ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
+            sfa = static_cast<std::uint64_t>(d.srcFmtA);
+            sfb = static_cast<std::uint64_t>(d.srcFmtB);
+        } else {
+            const auto& d = *static_cast<const shape::DecodedOMMA9*>(&inst);
+            ops = d.ops;
+            sf = static_cast<std::uint64_t>(d.sf);
+            ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
+            sfa = static_cast<std::uint64_t>(d.srcFmtA);
+            sfb = static_cast<std::uint64_t>(d.srcFmtB);
+        }
+        need_uri = true;
+        has_re = has_rh = has_uri = true;
     }
 
     // Resolve the shape + source format for this instruction.
     tensor::Shape shape;
     tensor::Format fmt = tensor::Format::kBf16;
-    bool need_uri = false;
 
     const isa::VariantClass cls = inst.variant_class;
     const auto unsupported =
@@ -4528,9 +4644,6 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
         // Dense HMMA (hmma_x8_): size 0=k8 / 1=k16 / 2=k4(TF32), srcfmt
         // 0=F16 1=BF16 2=TF32 3=E6M9, dstfmt 0=F16 1=F32 accumulator.
         if (cls != isa::VariantClass::khmma_x8_) return unsupported("(sparse/indexedRF variant)");
-        const std::uint64_t size = slot_value(inst, "size").value_or(0);
-        const std::uint64_t srcfmt = slot_value(inst, "srcfmt").value_or(0);
-        const std::uint64_t dstfmt = slot_value(inst, "dstfmt").value_or(0);
         if (dstfmt != 1) return unsupported("(F16 accumulator)");
         if (srcfmt > 1) return unsupported("(TF32/E6M9 source)");
         if (!tensor::hmma_shape(static_cast<int>(size),
@@ -4541,10 +4654,7 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
     } else if (m == isa::Mnemonic::kQMMA) {
         // Dense QMMA (qmma_): size 0=k16 / 1=k32, dstfmt(ntz) 0=F16 1=F32.
         if (cls != isa::VariantClass::kqmma_) return unsupported("(sparse/rowcol/scale variant)");
-        const std::uint64_t size = slot_value(inst, "size").value_or(0);
-        const std::uint64_t dstfmt = slot_value(inst, "dstfmt").value_or(0);
         if (dstfmt != 1) return unsupported("(F16 accumulator)");
-        const std::uint64_t sfa = slot_value(inst, "srcFmtA").value_or(0);
         if (!tensor::qmma_shape(static_cast<int>(size), &shape)) {
             return unsupported("(shape)");
         }
@@ -4566,10 +4676,6 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
     } else {  // OMMA.SF (mxfp4 block-scaled)
         if (cls != isa::VariantClass::komma_scale_) return unsupported("(sparse/scale variant)");
         // Only the verified 2X-scale E8 e2m1 configuration is implemented.
-        const std::uint64_t sf = slot_value(inst, "scalefmt").value_or(0);
-        const std::uint64_t ssz = slot_value(inst, "scaleVectorSz").value_or(1);
-        const std::uint64_t sfa = slot_value(inst, "srcFmtA").value_or(0);
-        const std::uint64_t sfb = slot_value(inst, "srcFmtB").value_or(0);
         if (sf != 0) return unsupported("(non-E8 scale)");
         if (ssz != 1) return unsupported("(4X scale vector)");
         if (sfa != 0 || sfb != 0) return unsupported("(E0M3 source)");
@@ -4578,20 +4684,20 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
         fmt = tensor::Format::kFp8E4M3;  // unused for gdfs; kept for symmetry
     }
 
-    const auto ra_v = shape::op_value(inst, "Ra");
-    const auto rb_v = shape::op_value(inst, "Rb");
-    const auto rc_v = shape::op_value(inst, "Rc");
-    const bool has_re = shape::op_lookup(inst, "Re") != nullptr;
-    const bool has_rh = shape::op_lookup(inst, "Rh") != nullptr;
-    const bool has_uri = shape::op_lookup(inst, "URi") != nullptr;
-    if (!ra_v || !rb_v || !rc_v || !rd_v) {
+    const std::int64_t rd_v = shape::operand_value_as_i64(ops[0]);
+    const std::int64_t ra_v = shape::operand_value_as_i64(ops[1]);
+    const std::int64_t rb_v = shape::operand_value_as_i64(ops[2]);
+    const std::int64_t rc_v = shape::operand_value_as_i64(ops[3]);
+    if (!ops) {
         return unsupported("(operands)");
     }
 
     // OMMA selection register: only sel=0 is verified legal on SM120.
     if (need_uri) {
         std::uint32_t sel = 0;
-        if (has_uri) sel = read_ur_slot(w, inst, "URi");
+        if (has_uri) {
+            sel = read_ur_ov(w, ops[7]);  // URZ (255) reads as 0
+        }
         if (sel != 0) {
             Fault f(FaultKind::kUnsupportedInstruction,
                     "OMMA.SF selector URi != 0 is decode-only (only sel=0 is "
@@ -4606,10 +4712,10 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
     // Fragment register base indices (RZ reads as 0; base + width must stay in
     // range per the CONDITIONS — a misaligned/overflowing group already
     // decodes as OOR_REG_ERROR / MISALIGNED_REG_ERROR in the decoder).
-    const int rd_base = static_cast<int>(*rd_v);
-    const int ra_base = static_cast<int>(*ra_v);
-    const int rb_base = static_cast<int>(*rb_v);
-    const int rc_base = static_cast<int>(*rc_v);
+    const int rd_base = static_cast<int>(rd_v);
+    const int ra_base = static_cast<int>(ra_v);
+    const int rb_base = static_cast<int>(rb_v);
+    const int rc_base = static_cast<int>(rc_v);
 
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
@@ -4645,8 +4751,8 @@ Status Interpreter::do_tensor(WarpState& w, std::uint32_t mask,
             }
         } else {
             if (!has_re || !has_rh) return unsupported("(missing Re/Rh)");
-            std::uint32_t re = read_reg_slot(t, inst, "Re");
-            std::uint32_t rh = read_reg_slot(t, inst, "Rh");
+            std::uint32_t re = read_reg_ov(t, ops[5]);
+            std::uint32_t rh = read_reg_ov(t, ops[6]);
             const std::uint32_t sel = 0;  // validated above
             tensor::omma_k64(a, b, c, re, rh, sel, out);
         }
