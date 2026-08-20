@@ -183,53 +183,38 @@ storage, that test effectively asserts main == expectations. Add:
 
 ## 7. Current status / next operation
 
-The tree is **2b-3 nearly final**: all interpreter families read the typed
-`Decoded*` storage (`shape::op_value`/`op_kind`/`op_flag` + the typed slot
-readers); `operands`/`modifiers`/`slot_values` vectors and the `Operand`
-struct/`operand_cache` are DELETED; `render_instruction` no longer builds
-generic vectors (modifiers render on demand); CLI/tests migrated.  Debug and
-ASan gates 36/36.  **Only `raw_fields` remains** on the base.
+**2b is FINAL — done-good met.**  All interpreter families read the typed
+`Decoded*` storage; ALL four generic vectors (`operands`/`modifiers`/
+`slot_values`/`raw_fields`) plus the `Operand` struct and `operand_cache` are
+deleted from `DecodedInstruction`; `render_instruction` builds no generic
+vectors (modifiers render on demand from the decode context); the few
+unsurfaced ENCODING fields (S2R `imm8`, BAR `barname`) are read straight from
+the word via `field_value` (interpreter.cpp).  **Debug / ASan / TSan gates are
+green 36/36.**  ABI remains v4; the freeze-marker tests were updated.
 
-DONE (committed: d206a4a, 3c2cb2e, 7ec42dd, 2e0c2a9):
-- `decoded_access.hpp` accessors (`op_lookup/op_value/op_kind/op_flag` +
-  `shape::slot_value`); typed slot readers `read_reg_slot`/`read_ur_slot`/
-  `read_pred_slot`/`write_pred_slot`/`write_rd_slot`/`read_addr_pair_slot`/
-  `read_ur_pair_slot`/`bind_reg_slot` in interpreter.cpp.
-- All interpreter families migrated (uniform/ALU, do_tensor, do_compute,
-  do_memory + resolve_mem_addr, do_ldgsts, do_syncs, do_arrives, do_tma).
-- Deleted `operands`/`modifiers`/`slot_values`/`operand_cache`/`Operand`;
-  render_disasm_text builds modifiers from DecodeCtx; tests + CLI updated.
+Committed: d206a4a, 3c2cb2e, 7ec42dd, 2e0c2a9, 20dac82 (+ docs 379e42d,
+beb79c4).
 
-PENDING (next session):
-1. **raw_fields deletion (final slice).**  `field_value` (interpreter.cpp) is
-   the only consumer; call sites: branch_target (sImm/Sa/Sb/Ra/Ra_offset),
-   special_reg (imm8), do_bssy/do_bsync (barReg), do_s2r/do_s2ur,
-   do_bar (barname).  All are surfaced slots EXCEPT **S2R/S2UR `imm8`** and
-   **BAR `barname`** (verified: `shape::slot_value("imm8")` and
-   `slot_value("barname")` return nullopt).  Plan: migrate the surfaced ones
-   to `shape::op_value`/`slot_value` (branch_target's `sImm` slot is already
-   sign-extended; the 56-bit re-extend becomes idempotent), then handle
-   imm8/barname via direct word-bit extraction in `special_reg`/`do_bar`
-   (bit positions from the variant's `ENCODING` fields) and delete
-   `raw_fields` + `field_value`.  Then rerun Debug/ASan/TSan.
-2. Run the **TSan gate** (not yet re-run since the vector deletion; the
-   earlier TSan gate run aborted on the slow tree).
-3. Optional polish per done-good: the anonymous `slot_value` shim in
-   interpreter.cpp is redundant with `shape::slot_value` — can be
-   aliased/removed after everything is on the typed path.
-
-Note for the next session: the do_compute migration preserved pre-existing
-(untested) slot-name quirks exactly — ISCADD still reads the shift from
-"Ra_offset" (absent role; shift stays 0), FRND still reads "Ra" (absent;
-read stays 0), FFMA/FSETP F32-immediate operands are still excluded from the
-UImm/SImm immediate path.  Fixing those is separate follow-up work, NOT part
-of the migration.
+Remaining (optional, NOT required for 2b):
+1. Optional polish: the anonymous `slot_value` shim in interpreter.cpp is
+   redundant with `shape::slot_value` — can be aliased/removed.
+2. Pre-existing (untested) slot-name quirks preserved by the do_compute
+   migration — fixing them is separate follow-up work: ISCADD still reads the
+   shift from an absent "Ra_offset" role (shift stays 0); FRND still reads an
+   absent "Ra" (source stays 0); FFMA/FSETP F32-bit immediates (kFImm32) are
+   still excluded from the UImm/SImm immediate path.
+3. A future slice could specialize hot interpreter paths further (direct
+   typed-member modifier reads instead of the generated `slot_value_by_variant`
+   string lookup) — the 2b design keeps the generated reader as the typed
+   bridge.
 
 ## 8. Done-good definition for 2b
+**MET (2026-08 session; Debug/ASan/TSan 36/36).**
 - `DecodedInstruction` has no `operands/modifiers/slot_values/raw_fields` vectors.
 - decode allocates/consumes the typed `Decoded*` via `PredecodedWord::inst`.
 - interpreter reads operands positionally / modifier members typed (no per-opname
   scan; no `const Operand*`).
 - ABI v4; freeze-marker tests updated.
 - Three trees (Debug/ASan/TSan) pass the full 36-item gate; whole-corpus
-  typed-fill interception no longer needed as a separate duplicate path.
+  typed-fill interception no longer needed as a separate duplicate path
+  (it now intercepts the actual typed main storage).
