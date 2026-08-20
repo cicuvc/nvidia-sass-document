@@ -79,9 +79,9 @@ public:
                 (void)inst.variant_class;
                 (void)inst.guard_pred;
                 (void)inst.guard_not;
-                (void)inst.operands.size();
-                (void)inst.modifiers.size();
-                (void)inst.slot_values.size();
+                // 2b-3: the generic operands/modifiers/slot_values vectors
+                // were removed; the typed decoded storage is the JIT surface.
+                (void)inst.shape_variant;
                 (void)inst.schedule.stall;
                 (void)semu::Decoder::instance()
                     .disassemble(inst.word, /*full=*/true)
@@ -150,10 +150,9 @@ TEST(api_compile_decoded_ir_smoke) {
     CHECK(inst.variant_class != semu::isa::VariantClass::kUnknown);
     (void)inst.guard_pred;
     (void)inst.guard_not;
-    (void)inst.operands;
-    (void)inst.modifiers;
-    (void)inst.slot_values;
-    (void)inst.raw_fields;
+    // 2b-3: the generic vectors were removed; typed storage is the JIT
+    // surface (shape_variant indexes kShapeManifests / typed ops[]).
+    (void)inst.shape_variant;
     (void)inst.schedule;
     (void)semu::Decoder::instance().disassemble(inst.word);
     (void)semu::Decoder::instance().disassemble(inst.word, /*full=*/true);

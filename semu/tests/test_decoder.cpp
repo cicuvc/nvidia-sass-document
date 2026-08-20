@@ -4,6 +4,7 @@
 // corpus round-trip / ambiguity gates.
 
 #include <semu/decoder.hpp>
+#include <semu/decoded_access.hpp>
 #include <isa_shapes.hpp>       // typed-IR schema (regenerate with --shapes)
 #include <isa_shapes_fill.hpp>  // 2a: per-variant typed fill (equivalence path)
 #include <isa_corpus.hpp>       // whole-ISA corpus (gen_corpus.py --hpp)
@@ -147,10 +148,10 @@ TEST(decoder_pr_operand_rendered) {
     }
 }
 
-// Typed-IR schema (isa_shapes.hpp): the per-variant operand-role manifest must
-// agree with the live decoder's operand accounting -- for a decoded word, the
-// manifest role count (ops[] length) equals inst.operands.size(), and each
-// role's kind matches the decoded Operand.kind.
+// Typed-IR schema (isa_shapes.hpp): the per-variant operand-role manifest is
+// what the typed ops[] array is filled by; for a decoded word the manifest is
+// the ONLY operand accounting (the generic operands vector was removed with
+// the 2b-3 migration).
 TEST(shape_manifest_matches_decoded_operands) {
     const auto& dec = Decoder::instance();
     const Vec kV[] = {
@@ -173,30 +174,43 @@ TEST(shape_manifest_matches_decoded_operands) {
         const char* prev = isa::variant_class_name(isa::kVariants[idx].variant_class);
         (void)prev;
         const auto& mf = shape::kShapeManifests[idx];
-        CHECK_EQ(static_cast<int>(mf.n_ops), static_cast<int>(inst.operands.size()));
+        // The typed Decoded* ops[] length must equal the manifest role count
+        // (the decoded dynamic type was allocated through make_by_variant +
+        // filled through fill_by_variant, so the two agree by construction).
+        const auto* ops = shape::operand_values_by_variant(
+            inst.shape_variant, &inst);
+        if (mf.n_ops == 0) {
+            continue;  // no operands to verify
+        }
+        CHECK(ops != nullptr);
+        if (!ops) continue;
+        for (std::uint16_t p = 0; p < mf.n_ops; ++p) {
+            CHECK_EQ(static_cast<int>(ops[p].kind),
+                     static_cast<int>(mf.ops[p].kind));
+        }
     }
 }
 
 // 2a equivalence: populating the typed Decoded<Mnemonic><N> (ops[] union +
 // typed modifier members) from a decoded word's slot values must agree with
-// the live (generic) decoder's slot_values/operands.
+// the typed main-storage object the decoder produced.  FillIn now reads the
+// typed-form storage (2b-3: the generic slot_values/operands vectors were
+// removed), so this is a whole-corpus typed-fill interception: fill a fresh
+// buffer from the SAME decoded word and compare ops[]/modifiers against the
+// decoder's own typed Decoded*.
 namespace {
 struct FillFromDecoded : shape::FillIn {
     const DecodedInstruction& d;
     explicit FillFromDecoded(const DecodedInstruction& d) : d(d) {}
     std::int64_t value(const char* s) const override {
-        for (const auto& [n, v] : d.slot_values)
-            if (n == s) return static_cast<std::int64_t>(v);
-        for (const auto& o : d.operands)
-            if (o.slot == s) return o.value;
+        if (auto v = shape::slot_value(d, s))
+            return static_cast<std::int64_t>(*v);
         return 0;
     }
     std::uint8_t flags(const char* s) const override {
-        for (const auto& o : d.operands)
-            if (o.slot == s)
-                return static_cast<std::uint8_t>(
-                    o.negated | (o.absolute << 1) | (o.pred_not << 2));
-        return 0;
+        return static_cast<std::uint8_t>(
+            shape::op_flag(d, s, 0) | (shape::op_flag(d, s, 1) << 1) |
+            (shape::op_flag(d, s, 2) << 2));
     }
 };
 

@@ -12,16 +12,6 @@
 
 namespace semu {
 
-struct Operand {
-    std::string slot;
-    std::string kind;
-    std::string text;
-    std::int64_t value = 0;
-    bool negated = false;
-    bool absolute = false;
-    bool pred_not = false;
-};
-
 struct ScheduleWord {
     int dst_wr_sb = 7;
     int src_rel_sb = 7;
@@ -44,14 +34,13 @@ public:
     int guard_pred = 7;
     bool guard_not = false;
 
-    // Temporary 2b bridge. The typed derived object is already the main
-    // storage; the interpreter still consumes these until the next slice.
-    std::vector<Operand> operands;
-    std::vector<std::string> modifiers;
+    // 2b-3: the generic operands/modifiers/slot_values vectors and the
+    // bounded Operand cache were removed with the typed migration; only the
+    // schedule word and the raw encoded fields remain on the base.  raw_fields
+    // is still consumed by field_value for a few genuinely unsurfaced raw
+    // fields (S2R imm8 / BAR barname) — see HANDOFF_v2.md §7 before deleting.
     ScheduleWord schedule;
     std::vector<std::pair<std::string, std::uint64_t>> raw_fields;
-    std::vector<std::pair<std::string, std::uint64_t>> slot_values;
-    mutable std::array<Operand, 9> operand_cache{};
 
     virtual ~DecodedInstruction() = default;
     virtual std::unique_ptr<DecodedInstruction> clone() const {

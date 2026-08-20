@@ -730,66 +730,8 @@ std::vector<std::string> render_ops(const isa::Variant* v,
     return ops;
 }
 
-// Collect typed operand slots (slot name, raw value, negate/absolute/not
-// flags) for the interpreter.  Every non-modifier, non-schedule, non-guard
-// slot that the format names as an operand is included once.  Schedule and
-// control slots (REQ/RD/WR/USCHED_INFO/BATCH_T/PM_PRED/BITSET/UImm) are
-// excluded.
-void collect_operands(const isa::Variant* v, const DecodeCtx& ctx,
-                      std::vector<Operand>* out) {
-    std::set<std::string> used;
-    for (std::size_t i = 0; i < v->nslots; ++i) {
-        const isa::Slot& s = v->slots[i];
-        const std::string name = s.name;
-        if (s.modifier || name == "Pg" || is_sched_slot(name) ||
-            used.count(name)) {
-            continue;
-        }
-        used.insert(name);
-        Operand op;
-        op.slot = name;
-        op.kind = s.type;
-        auto val = do_slot_value(ctx, name);
-        if (val) {
-            op.value = *val;
-            // SImm / RSImm operand VALUES are stored SIGN-EXTENDED (matching
-            // render_imm's display): a 24-bit Ra_offset encoding 0xFFFFE0 is
-            // -0x20, not +0xFFFFE0.  Without this the interpreter's memory
-            // address arithmetic would add the raw positive value and push
-            // negative displacements out of bounds.
-            if (std::strcmp(s.type, "SImm") == 0 ||
-                std::strcmp(s.type, "RSImm") == 0) {
-                const isa::Field* f = field_for_slot(ctx, name);
-                int width = field_width(f);
-                if (width == 0) width = 32;
-                op.value = sign_ext(*val, width);
-            }
-        }
-        op.negated = slot_attr_val(ctx, name, "negate") != 0;
-        op.absolute = slot_attr_val(ctx, name, "absolute") != 0;
-        op.pred_not = slot_attr_val(ctx, name, "not") != 0;
-        out->push_back(std::move(op));
-    }
-}
-
-// Collect every non-schedule FORMAT slot value (modifiers included) under its
-// slot name.  Used by the interpreter for modifier dispatch.
-void collect_slot_values(const isa::Variant* v, const DecodeCtx& ctx,
-                         std::vector<std::pair<std::string, std::uint64_t>>*
-                             out) {
-    for (std::size_t i = 0; i < v->nslots; ++i) {
-        const isa::Slot& s = v->slots[i];
-        const std::string name = s.name;
-        if (name == "Pg" || is_sched_slot(name)) continue;
-        auto val = do_slot_value(ctx, name);
-        if (!val) continue;
-        bool seen = false;
-        for (const auto& [n, _] : *out) {
-            if (n == name) { seen = true; break; }
-        }
-        if (!seen) out->emplace_back(name, static_cast<std::uint64_t>(*val));
-    }
-}
+// 2b-3: the generic operand / slot-value vectors were removed with the typed
+// migration; render_instruction no longer collects them.
 
 }  // namespace
 
@@ -846,9 +788,6 @@ std::unique_ptr<DecodedInstruction> render_instruction(
         inst->raw_fields.emplace_back(f->name, val);
     }
 
-    collect_operands(v, ctx, &inst->operands);
-    collect_slot_values(v, ctx, &inst->slot_values);
-
     // schedule word
     auto fv = [&ctx](const char* name, std::int64_t dflt) -> std::int64_t {
         for (const auto& [f, val] : ctx.fields) {
@@ -873,7 +812,19 @@ std::unique_ptr<DecodedInstruction> render_instruction(
     }
     inst->guard_not = slot_attr_val(ctx, "Pg", "not") != 0;
 
-    // modifiers
+    ContextFillIn in(v, ctx);
+    shape::fill_by_variant(vi, in, inst.get());
+
+    // (Disassembly text is NOT rendered here -- it is produced on demand by
+    // render_disasm_text so the per-instruction decode path never builds
+    // strings only an infrequent consumer (debugger/CLI/trace) reads.)
+    return inst;
+}
+
+// 2b-3: modifiers are rendered from the decode context on demand, not stored
+// on the instruction (the generic `modifiers` vector was removed).
+std::string render_modifiers(const isa::Variant* v, const DecodeCtx& ctx) {
+    std::string mods;
     for (std::uint16_t si = 0; si < v->nslots; ++si) {
         const isa::Slot& s = v->slots[si];
         if (!s.modifier || is_sched_slot(s.name)) continue;
@@ -892,17 +843,11 @@ std::unique_ptr<DecodedInstruction> render_instruction(
             nm = isa_data().enum_first(s.type);
         }
         if (nm && !nm->empty()) {
-            inst->modifiers.push_back("." + *nm);
+            mods += ".";
+            mods += *nm;
         }
     }
-
-    ContextFillIn in(v, ctx);
-    shape::fill_by_variant(vi, in, inst.get());
-
-    // (Disassembly text is NOT rendered here -- it is produced on demand by
-    // render_disasm_text so the per-instruction decode path never builds
-    // strings only an infrequent consumer (debugger/CLI/trace) reads.)
-    return inst;
+    return mods;
 }
 
 std::string render_disasm_text(const isa::Variant* v, const DecodeCtx& ctx,
@@ -914,8 +859,7 @@ std::string render_disasm_text(const isa::Variant* v, const DecodeCtx& ctx,
         opstr += ops[i];
     }
 
-    std::string mods;
-    for (const auto& m : inst.modifiers) mods += m;
+    std::string mods = render_modifiers(v, ctx);
 
     std::string out =
         std::string(isa::mnemonic_name(inst.mnemonic)) + mods + " " + opstr;

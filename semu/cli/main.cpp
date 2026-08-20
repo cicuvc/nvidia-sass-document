@@ -3,6 +3,7 @@
 #include <semu/cubin.hpp>
 #include <semu/debugger.hpp>
 #include <semu/decoder.hpp>
+#include <semu/decoded_access.hpp>
 #include <semu/interpreter.hpp>
 #include <semu/profiler.hpp>
 #include <semu/status.hpp>
@@ -145,34 +146,52 @@ int run_disasm(int argc, char** argv) {
 
 // GAP-10: machine-readable decode for structured comparison against
 // cuobjdump.  `semu decode-json <lo> <hi>` prints one JSON object per line
-// (or a single object for the one-word form):
-//   {"mnemonic", "variant_class", "guard", "guard_not",
-//    "modifiers": [...], "operands": [{"slot","kind","text","value",
-//    "negated","absolute","pred_not"}, ...]}
+// (or a single object for the one-word form).  2b-3: the generic
+// operands/modifiers vectors were removed; the operands array is now built
+// from the typed ops[] via the per-variant ShapeManifest, and the normalized
+// text comes from Decoder::disassemble (the cuobjdump-format contract).
 int run_decode_json(int argc, char** argv) {
     const auto& dec = semu::Decoder::instance();
-    auto print_inst = [](const semu::DecodedInstruction& inst) {
+    auto print_inst = [&dec](const semu::DecodedInstruction& inst) {
         std::printf("{\"mnemonic\":\"%s\",\"variant_class\":\"%s\","
                     "\"guard\":%d,\"guard_not\":%d,\"modifiers\":[",
-                    semu::isa::mnemonic_name(inst.mnemonic), semu::isa::variant_class_name(inst.variant_class),
+                    semu::isa::mnemonic_name(inst.mnemonic),
+                    semu::isa::variant_class_name(inst.variant_class),
                     inst.guard_pred, inst.guard_not ? 1 : 0);
-        for (std::size_t i = 0; i < inst.modifiers.size(); ++i) {
-            if (i) std::printf(",");
-            std::printf("\"%s\"", inst.modifiers[i].c_str());
+        // Typed modifiers: report the variant's format modifiers with values
+        // resolved through the generated per-variant reader.
+        bool first = true;
+        for (std::uint16_t si = 0;
+             si < semu::isa::kVariants[inst.shape_variant].nslots; ++si) {
+            const auto& s = semu::isa::kVariants[inst.shape_variant].slots[si];
+            if (!s.modifier) continue;
+            auto v = semu::shape::slot_value(inst, s.name);
+            if (!v) continue;
+            if (!first) std::printf(",");
+            first = false;
+            std::printf("{\"slot\":\"%s\",\"type\":\"%s\","
+                        "\"value\":%llu}",
+                        s.name, s.type, static_cast<unsigned long long>(*v));
         }
         std::printf("],\"operands\":[");
-        for (std::size_t i = 0; i < inst.operands.size(); ++i) {
-            const auto& o = inst.operands[i];
-            if (i) std::printf(",");
-            std::printf("{\"slot\":\"%s\",\"kind\":\"%s\",\"text\":\"%s\","
-                        "\"value\":%lld,\"negated\":%d,\"absolute\":%d,"
-                        "\"pred_not\":%d}",
-                        o.slot.c_str(), o.kind.c_str(), o.text.c_str(),
-                        static_cast<long long>(o.value),
-                        o.negated ? 1 : 0, o.absolute ? 1 : 0,
-                        o.pred_not ? 1 : 0);
+        // Typed operands: per-variant ShapeManifest roles + typed ops[].
+        if (inst.shape_variant < semu::isa::kNumVariants) {
+            const auto& mf = semu::shape::kShapeManifests[inst.shape_variant];
+            const auto* ops = semu::shape::operand_values_by_variant(
+                inst.shape_variant, &inst);
+            for (std::uint16_t p = 0; p < mf.n_ops; ++p) {
+                if (p) std::printf(",");
+                const auto& role = mf.ops[p];
+                std::printf("{\"slot\":\"%s\",\"kind\":%d,"
+                            "\"value\":%lld,\"flags\":%u}",
+                            role.slot, static_cast<int>(role.kind),
+                            static_cast<long long>(ops
+                                ? semu::shape::operand_value_as_i64(ops[p]) : 0),
+                            ops ? static_cast<unsigned>(ops[p].flags) : 0u);
+            }
         }
-        std::printf("]}\n");
+        std::printf("],\"disasm\":\"%s\"}\n",
+                    dec.disassemble(inst.word).c_str());
     };
     if (argc >= 4) {
         const std::uint64_t lo = std::strtoull(argv[2], nullptr, 0);
