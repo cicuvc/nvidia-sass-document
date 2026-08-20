@@ -196,8 +196,10 @@ Committed: d206a4a, 3c2cb2e, 7ec42dd, 2e0c2a9, 20dac82 (+ docs 379e42d,
 beb79c4).
 
 Remaining (optional, NOT required for 2b):
-1. Optional polish: the anonymous `slot_value` shim in interpreter.cpp is
-   redundant with `shape::slot_value` — can be aliased/removed.
+1. ~~Optional polish: the anonymous `slot_value` shim in interpreter.cpp is
+   redundant with `shape::slot_value` — can be aliased/removed.~~ DONE in the
+   plan-b final slice (382b5e4): the shim was deleted with every other
+   slot-name reader.
 2. Pre-existing (untested) slot-name quirks preserved by the do_compute
    migration — fixing them is separate follow-up work: ISCADD still reads the
    shift from an absent "Ra_offset" role (shift stays 0); FRND still reads an
