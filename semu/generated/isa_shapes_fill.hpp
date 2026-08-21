@@ -3005,6 +3005,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     switch (vi) {
     case 0: {
         auto& out = *static_cast<DecodedMOV2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp0(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3017,6 +3018,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1: {
         auto& out = *static_cast<DecodedMOV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -3031,6 +3033,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 2: {
         auto& out = *static_cast<DecodedP2R4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp2(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3049,6 +3052,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 3: {
         auto& out = *static_cast<DecodedR2P3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp3(in, void_out);
         out.subclass = 0;
         out.PR.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -3064,6 +3068,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 4: {
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp4(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3082,6 +3087,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 5: {
         auto& out = *static_cast<DecodedFSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp5(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3100,6 +3106,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 6: {
         auto& out = *static_cast<DecodedFMNMX4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp6(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3118,6 +3125,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 7: {
         auto& out = *static_cast<DecodedFMNMX5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp7(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3139,6 +3147,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 8: {
         auto& out = *static_cast<DecodedFSET4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp8(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3157,6 +3166,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 9: {
         auto& out = *static_cast<DecodedFSET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp9(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3172,6 +3182,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 10: {
         auto& out = *static_cast<DecodedFSETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp10(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3193,6 +3204,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 11: {
         auto& out = *static_cast<DecodedFSETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp11(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3208,6 +3220,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 12: {
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp12(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3232,6 +3245,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 13: {
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp13(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3253,6 +3267,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 14: {
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp14(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3271,6 +3286,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 15: {
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp15(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3286,6 +3302,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 16: {
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp12(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3310,6 +3327,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 17: {
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp13(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3331,6 +3349,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 18: {
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp14(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3349,6 +3368,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 19: {
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp15(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3364,6 +3384,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 20: {
         auto& out = *static_cast<DecodedIADD36*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -3387,6 +3408,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 21: {
         auto& out = *static_cast<DecodedIADD38*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp17(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3417,6 +3439,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 22: {
         auto& out = *static_cast<DecodedISCADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -3437,6 +3460,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 23: {
         auto& out = *static_cast<DecodedLEA6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp19(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3461,6 +3485,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 24: {
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp21(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3482,6 +3507,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 25: {
         auto& out = *static_cast<DecodedLEA6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp20(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3506,6 +3532,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 26: {
         auto& out = *static_cast<DecodedLEA7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp22(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3533,6 +3560,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 27: {
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp21(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3554,6 +3582,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 28: {
         auto& out = *static_cast<DecodedLEA6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp20(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3578,6 +3607,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 29: {
         auto& out = *static_cast<DecodedLOP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp23(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3599,6 +3629,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 30: {
         auto& out = *static_cast<DecodedLOP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp24(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3617,6 +3648,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 31: {
         auto& out = *static_cast<DecodedLOP37*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp25(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3644,6 +3676,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 32: {
         auto& out = *static_cast<DecodedLOP36_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp27(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3668,6 +3701,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 33: {
         auto& out = *static_cast<DecodedLOP36_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp26(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3692,6 +3726,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 34: {
         auto& out = *static_cast<DecodedLOP35*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp28(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3713,6 +3748,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 35: {
         auto& out = *static_cast<DecodedIABS2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -3724,6 +3760,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 36: {
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp30(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3742,6 +3779,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 37: {
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp31(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3769,6 +3807,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 38: {
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp32(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3793,6 +3832,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 39: {
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp31(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3820,6 +3860,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 40: {
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp32(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3844,6 +3885,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 41: {
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp33(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3862,6 +3904,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 42: {
         auto& out = *static_cast<DecodedSHL3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp35(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3877,6 +3920,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 43: {
         auto& out = *static_cast<DecodedSHR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp36(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3892,6 +3936,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 44: {
         auto& out = *static_cast<DecodedSGXT3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp37(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3907,6 +3952,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 45: {
         auto& out = *static_cast<DecodedBMSK3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp38(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -3922,6 +3968,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 46: {
         auto& out = *static_cast<DecodedPLOP35_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp41(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3943,6 +3990,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 47: {
         auto& out = *static_cast<DecodedPLOP37_2*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp46(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3970,6 +4018,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 48: {
         auto& out = *static_cast<DecodedPLOP35_3*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp42(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -3991,6 +4040,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 49: {
         auto& out = *static_cast<DecodedPLOP37_3*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp47(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4018,6 +4068,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 50: {
         auto& out = *static_cast<DecodedPLOP35_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp43(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4039,6 +4090,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 51: {
         auto& out = *static_cast<DecodedPLOP37_4*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp48(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4066,6 +4118,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 52: {
         auto& out = *static_cast<DecodedFMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp49(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4081,6 +4134,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 53: {
         auto& out = *static_cast<DecodedFADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp50(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4096,6 +4150,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 54: {
         auto& out = *static_cast<DecodedFHADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp51(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4111,6 +4166,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 55: {
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp52(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4129,6 +4185,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 56: {
         auto& out = *static_cast<DecodedFHFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp53(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4147,6 +4204,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 57: {
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp54(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4165,6 +4223,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 58: {
         auto& out = *static_cast<DecodedIMAD5_3*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp58(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4186,6 +4245,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 59: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4207,6 +4267,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 60: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4228,6 +4289,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 61: {
         auto& out = *static_cast<DecodedIMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp60(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4243,6 +4305,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 62: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4264,6 +4327,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 63: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4285,6 +4349,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 64: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 3;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4309,6 +4374,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 65: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 3;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4333,6 +4399,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 66: {
         auto& out = *static_cast<DecodedIMUL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp62(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4351,6 +4418,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 67: {
         auto& out = *static_cast<DecodedIDP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp63(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4369,6 +4437,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 68: {
         auto& out = *static_cast<DecodedIDP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp63(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4387,6 +4456,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 69: {
         auto& out = *static_cast<DecodedIDP4A4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp64(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4405,6 +4475,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 70: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4426,6 +4497,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 71: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4447,6 +4519,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 72: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4471,6 +4544,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 73: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4495,6 +4569,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 74: {
         auto& out = *static_cast<DecodedDMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp65(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4510,6 +4585,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 75: {
         auto& out = *static_cast<DecodedDADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp66(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4525,6 +4601,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 76: {
         auto& out = *static_cast<DecodedDSETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp67(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4546,6 +4623,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 77: {
         auto& out = *static_cast<DecodedDSETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp68(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4561,6 +4639,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 78: {
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp69(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4579,6 +4658,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 79: {
         auto& out = *static_cast<DecodedCLMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp70(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4597,6 +4677,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 80: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4612,6 +4693,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 81: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4627,6 +4709,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 82: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4642,6 +4725,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 83: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4657,6 +4741,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 84: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4675,6 +4760,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 85: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4693,6 +4779,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 86: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4711,6 +4798,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 87: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4732,6 +4820,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 88: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4753,6 +4842,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 89: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4774,6 +4864,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 90: {
         auto& out = *static_cast<DecodedHMUL23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp76(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4789,6 +4880,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 91: {
         auto& out = *static_cast<DecodedHMUL23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp76(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4804,6 +4896,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 92: {
         auto& out = *static_cast<DecodedHSET24_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp77(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4822,6 +4915,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 93: {
         auto& out = *static_cast<DecodedHSET24_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp77(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4840,6 +4934,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 94: {
         auto& out = *static_cast<DecodedHSET23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp79(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4855,6 +4950,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 95: {
         auto& out = *static_cast<DecodedHSET23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp79(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4870,6 +4966,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 96: {
         auto& out = *static_cast<DecodedHSETP25_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp80(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4891,6 +4988,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 97: {
         auto& out = *static_cast<DecodedHSETP25_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp80(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4912,6 +5010,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 98: {
         auto& out = *static_cast<DecodedHSETP24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp82(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4930,6 +5029,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 99: {
         auto& out = *static_cast<DecodedHSETP24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp82(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -4948,6 +5048,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 100: {
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp83(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4966,6 +5067,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 101: {
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp84(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -4987,6 +5089,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 102: {
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp83(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5005,6 +5108,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 103: {
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp84(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5026,6 +5130,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 104: {
         auto& out = *static_cast<DecodedVIADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp85(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5041,6 +5146,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 105: {
         auto& out = *static_cast<DecodedIMMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp86(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5062,6 +5168,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 106: {
         auto& out = *static_cast<DecodedIMMA7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp87(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5089,6 +5196,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 107: {
         auto& out = *static_cast<DecodedI2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp88(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5101,6 +5209,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 108: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5119,6 +5228,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 109: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5137,6 +5247,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 110: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5155,6 +5266,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 111: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5173,6 +5285,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 112: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5191,6 +5304,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 113: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5209,6 +5323,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 114: {
         auto& out = *static_cast<DecodedMOVM2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp90(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5221,6 +5336,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 115: {
         auto& out = *static_cast<DecodedHMMA7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp91(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5248,6 +5364,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 116: {
         auto& out = *static_cast<DecodedHMMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp93(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5269,6 +5386,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 117: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5281,6 +5399,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 118: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5293,6 +5412,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 119: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5305,6 +5425,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 120: {
         auto& out = *static_cast<DecodedF2FP3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp95(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5320,6 +5441,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 121: {
         auto& out = *static_cast<DecodedF2FP3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp95(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5335,6 +5457,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 122: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5350,6 +5473,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 123: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5365,6 +5489,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 124: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5380,6 +5505,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 125: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5398,6 +5524,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 126: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5416,6 +5543,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 127: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5434,6 +5562,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 128: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5449,6 +5578,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 129: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5464,6 +5594,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 130: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5476,6 +5607,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 131: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5488,6 +5620,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 132: {
         auto& out = *static_cast<DecodedDMMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp98(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5509,6 +5642,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 133: {
         auto& out = *static_cast<DecodedHMNMX24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp99(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5527,6 +5661,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 134: {
         auto& out = *static_cast<DecodedHMNMX24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp99(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5545,6 +5680,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 135: {
         auto& out = *static_cast<DecodedHMNMX26*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp100(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5569,6 +5705,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 136: {
         auto& out = *static_cast<DecodedHMNMX26*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp100(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5593,6 +5730,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 137: {
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp101(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5611,6 +5749,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 138: {
         auto& out = *static_cast<DecodedI2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp102(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5623,6 +5762,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 139: {
         auto& out = *static_cast<DecodedVIMNMX4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp103(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5641,6 +5781,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 140: {
         auto& out = *static_cast<DecodedQMMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp104(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5662,6 +5803,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 141: {
         auto& out = *static_cast<DecodedQMMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp104(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5683,6 +5825,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 142: {
         auto& out = *static_cast<DecodedQMMA7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp105(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5710,6 +5853,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 143: {
         auto& out = *static_cast<DecodedQMMA7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp105(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5737,6 +5881,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 144: {
         auto& out = *static_cast<DecodedR2UR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp106(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -5752,6 +5897,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 145: {
         auto& out = *static_cast<DecodedR2UR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp106(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -5767,6 +5913,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 146: {
         auto& out = *static_cast<DecodedR2UR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp106(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -5782,6 +5929,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 147: {
         auto& out = *static_cast<DecodedR2UR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp106(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -5797,6 +5945,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 148: {
         auto& out = *static_cast<DecodedFLO3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp107(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5812,6 +5961,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 149: {
         auto& out = *static_cast<DecodedBREV2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -5823,6 +5973,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 150: {
         auto& out = *static_cast<DecodedFCHK3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp109(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -5838,6 +5989,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 151: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5850,6 +6002,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 152: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5862,6 +6015,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 153: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5874,6 +6028,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 154: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5886,6 +6041,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 155: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5898,6 +6054,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 156: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5910,6 +6067,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 157: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5922,6 +6080,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 158: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5934,6 +6093,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 159: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5946,6 +6106,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 160: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5958,6 +6119,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 161: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5970,6 +6132,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 162: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5982,6 +6145,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 163: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -5994,6 +6158,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 164: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6006,6 +6171,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 165: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6018,6 +6184,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 166: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6030,6 +6197,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 167: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6042,6 +6210,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 168: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6054,6 +6223,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 169: {
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp114(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6066,6 +6236,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 170: {
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp114(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6078,6 +6249,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 171: {
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp114(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6090,6 +6262,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 172: {
         auto& out = *static_cast<DecodedPOPC2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -6101,6 +6274,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 173: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6113,6 +6287,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 174: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6125,6 +6300,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 175: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6137,6 +6313,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 176: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6149,6 +6326,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 177: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6161,6 +6339,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 178: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6173,6 +6352,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 179: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6185,6 +6365,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 180: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6197,6 +6378,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 181: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6209,6 +6391,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 182: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6221,6 +6404,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 183: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6233,6 +6417,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 184: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6245,6 +6430,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 185: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6257,6 +6443,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 186: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6269,6 +6456,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 187: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6281,6 +6469,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 188: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6293,6 +6482,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 189: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6305,6 +6495,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 190: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6317,6 +6508,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 191: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6329,6 +6521,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 192: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6341,6 +6534,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 193: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6353,6 +6547,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 194: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6365,6 +6560,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 195: {
         auto& out = *static_cast<DecodedB2R2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp117(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6377,6 +6573,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 196: {
         auto& out = *static_cast<DecodedB2R2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp116(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6389,6 +6586,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 197: {
         auto& out = *static_cast<DecodedB2R1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp118(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6398,6 +6596,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 198: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -6411,6 +6610,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 199: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -6427,6 +6627,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 200: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -6443,6 +6644,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 201: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -6459,6 +6661,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 202: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -6472,6 +6675,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 203: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -6485,6 +6689,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 204: {
         auto& out = *static_cast<DecodedR2B2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp121(in, void_out);
         out.subclass = 0;
         out.barname.kind = static_cast<std::uint8_t>(OperandKind::kUImm);
@@ -6497,6 +6702,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 205: {
         auto& out = *static_cast<DecodedSETCTAID1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp122(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6506,6 +6712,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 206: {
         auto& out = *static_cast<DecodedALD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp123(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6524,6 +6731,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 207: {
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp124(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6545,6 +6753,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 208: {
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp124(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6566,6 +6775,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 209: {
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp124(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6587,6 +6797,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 210: {
         auto& out = *static_cast<DecodedAST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp125(in, void_out);
         out.subclass = 0;
         out.srcAttr.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -6605,6 +6816,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 211: {
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp126(in, void_out);
         out.subclass = 0;
         out.srcAttr.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -6626,6 +6838,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 212: {
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp126(in, void_out);
         out.subclass = 0;
         out.srcAttr.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -6647,6 +6860,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 213: {
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp126(in, void_out);
         out.subclass = 0;
         out.srcAttr.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -6668,6 +6882,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 214: {
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp127(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6683,6 +6898,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 215: {
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp127(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6698,6 +6914,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 216: {
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp127(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6713,6 +6930,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 217: {
         auto& out = *static_cast<DecodedOUT1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp128(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6722,6 +6940,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 218: {
         auto& out = *static_cast<DecodedIPA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp129(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6740,6 +6959,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 219: {
         auto& out = *static_cast<DecodedIPA5_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp131(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6761,18 +6981,21 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 220: {
         auto& out = *static_cast<DecodedCCTL0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp132(in, void_out);
         out.subclass = 0;
         break;
     }
     case 221: {
         auto& out = *static_cast<DecodedCCTL0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp132(in, void_out);
         out.subclass = 0;
         break;
     }
     case 222: {
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp133(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6788,6 +7011,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 223: {
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp133(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6803,6 +7027,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 224: {
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp133(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6818,6 +7043,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 225: {
         auto& out = *static_cast<DecodedCALL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp135(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6830,6 +7056,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 226: {
         auto& out = *static_cast<DecodedWARPSYNC2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp136(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6842,6 +7069,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 227: {
         auto& out = *static_cast<DecodedWARPSYNC3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp138(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6857,6 +7085,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 228: {
         auto& out = *static_cast<DecodedWARPSYNC3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp138(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6872,6 +7101,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 229: {
         auto& out = *static_cast<DecodedLEPC1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -6880,6 +7110,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 230: {
         auto& out = *static_cast<DecodedRPCMOV2_2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp142(in, void_out);
         out.subclass = 0;
         out.RpcN.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -6892,6 +7123,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 231: {
         auto& out = *static_cast<DecodedRPCMOV2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp140(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6904,6 +7136,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 232: {
         auto& out = *static_cast<DecodedBMOV2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp143(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -6916,6 +7149,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 233: {
         auto& out = *static_cast<DecodedBMOV2_4*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp147(in, void_out);
         out.subclass = 0;
         out.cbu_state.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -6928,6 +7162,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 234: {
         auto& out = *static_cast<DecodedBMOV2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp144(in, void_out);
         out.subclass = 0;
         out.atexit_pc.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -6940,6 +7175,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 235: {
         auto& out = *static_cast<DecodedNANOTRAP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp149(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6952,6 +7188,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 236: {
         auto& out = *static_cast<DecodedNANOSLEEP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp150(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6964,6 +7201,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 237: {
         auto& out = *static_cast<DecodedTEX9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp151(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -6997,6 +7235,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 238: {
         auto& out = *static_cast<DecodedTEX9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp151(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7030,6 +7269,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 239: {
         auto& out = *static_cast<DecodedTMML6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp152(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7054,6 +7294,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 240: {
         auto& out = *static_cast<DecodedTXQ5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp153(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7075,6 +7316,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 241: {
         auto& out = *static_cast<DecodedLDG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp154(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7096,6 +7338,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 242: {
         auto& out = *static_cast<DecodedLDG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp154(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7117,6 +7360,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 243: {
         auto& out = *static_cast<DecodedST3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp155(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7132,6 +7376,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 244: {
         auto& out = *static_cast<DecodedST3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp155(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7147,6 +7392,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 245: {
         auto& out = *static_cast<DecodedSTG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp156(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7162,6 +7408,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 246: {
         auto& out = *static_cast<DecodedSTG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp156(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7177,6 +7424,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 247: {
         auto& out = *static_cast<DecodedSTL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp157(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7192,6 +7440,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 248: {
         auto& out = *static_cast<DecodedSTL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp157(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7207,6 +7456,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 249: {
         auto& out = *static_cast<DecodedSTS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp158(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7222,6 +7472,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 250: {
         auto& out = *static_cast<DecodedSTS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp158(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7237,6 +7488,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 251: {
         auto& out = *static_cast<DecodedSHFL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp159(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7258,6 +7510,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 252: {
         auto& out = *static_cast<DecodedATOM6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp161(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7282,6 +7535,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 253: {
         auto& out = *static_cast<DecodedATOM6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp161(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7306,6 +7560,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 254: {
         auto& out = *static_cast<DecodedATOM7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp163(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7333,6 +7588,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 255: {
         auto& out = *static_cast<DecodedATOM7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp163(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7360,6 +7616,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 256: {
         auto& out = *static_cast<DecodedATOM7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp163(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7387,6 +7644,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 257: {
         auto& out = *static_cast<DecodedATOM7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp163(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7414,6 +7672,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 258: {
         auto& out = *static_cast<DecodedATOMS4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp165(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7432,6 +7691,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 259: {
         auto& out = *static_cast<DecodedATOMS4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp165(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7450,6 +7710,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 260: {
         auto& out = *static_cast<DecodedREDS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp166(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7465,6 +7726,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 261: {
         auto& out = *static_cast<DecodedREDS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp166(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7480,6 +7742,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 262: {
         auto& out = *static_cast<DecodedATOMS5_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp169(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7501,6 +7764,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 263: {
         auto& out = *static_cast<DecodedATOMS5_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp169(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7522,6 +7786,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 264: {
         auto& out = *static_cast<DecodedATOMS5_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp169(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7543,6 +7808,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 265: {
         auto& out = *static_cast<DecodedATOMS5_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp169(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7564,12 +7830,14 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 266: {
         auto& out = *static_cast<DecodedCCTLT0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp170(in, void_out);
         out.subclass = 0;
         break;
     }
     case 267: {
         auto& out = *static_cast<DecodedCCTLT1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp171(in, void_out);
         out.subclass = 0;
         out.b.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7579,6 +7847,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 268: {
         auto& out = *static_cast<DecodedSUATOM6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp172(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7603,6 +7872,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 269: {
         auto& out = *static_cast<DecodedSUATOM6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp172(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7627,6 +7897,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 270: {
         auto& out = *static_cast<DecodedSURED4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp173(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7645,6 +7916,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 271: {
         auto& out = *static_cast<DecodedMATCH3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp174(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7660,6 +7932,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 272: {
         auto& out = *static_cast<DecodedMATCH2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp175(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7672,6 +7945,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 273: {
         auto& out = *static_cast<DecodedATOM6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp161(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7696,6 +7970,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 274: {
         auto& out = *static_cast<DecodedATOM6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp161(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7720,6 +7995,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 275: {
         auto& out = *static_cast<DecodedATOMG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp176(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7741,6 +8017,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 276: {
         auto& out = *static_cast<DecodedATOMG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp176(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7762,12 +8039,14 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 277: {
         auto& out = *static_cast<DecodedSYNCS0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp177(in, void_out);
         out.subclass = 0;
         break;
     }
     case 278: {
         auto& out = *static_cast<DecodedATOMG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp176(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7789,6 +8068,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 279: {
         auto& out = *static_cast<DecodedATOMG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp176(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7810,6 +8090,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 280: {
         auto& out = *static_cast<DecodedATOMG6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp179(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7834,6 +8115,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 281: {
         auto& out = *static_cast<DecodedATOMG6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp179(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7858,6 +8140,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 282: {
         auto& out = *static_cast<DecodedQSPC3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp180(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7873,6 +8156,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 283: {
         auto& out = *static_cast<DecodedQSPC3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp180(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7888,6 +8172,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 284: {
         auto& out = *static_cast<DecodedQSPC3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp181(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7903,6 +8188,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 285: {
         auto& out = *static_cast<DecodedQSPC3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp181(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -7918,6 +8204,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 286: {
         auto& out = *static_cast<DecodedQSPC4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp182(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7936,6 +8223,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 287: {
         auto& out = *static_cast<DecodedQSPC4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp182(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -7954,6 +8242,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 288: {
         auto& out = *static_cast<DecodedGETLMEMBASE1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -7962,6 +8251,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 289: {
         auto& out = *static_cast<DecodedSETLMEMBASE1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Ra.flags = in.flags("Ra");
@@ -7970,6 +8260,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 290: {
         auto& out = *static_cast<DecodedREDUX2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp187(in, void_out);
         out.subclass = 0;
         out.URd.kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
@@ -7982,24 +8273,28 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 291: {
         auto& out = *static_cast<DecodedFENCE0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp188(in, void_out);
         out.subclass = 0;
         break;
     }
     case 292: {
         auto& out = *static_cast<DecodedFENCE0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp188(in, void_out);
         out.subclass = 0;
         break;
     }
     case 293: {
         auto& out = *static_cast<DecodedTTUOPEN0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp189(in, void_out);
         out.subclass = 0;
         break;
     }
     case 294: {
         auto& out = *static_cast<DecodedTTUST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.ttuAddr.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.ttuAddr.flags = in.flags("ttuAddr");
@@ -8017,6 +8312,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 295: {
         auto& out = *static_cast<DecodedTTUCLOSE1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.Pu.flags = in.flags("Pu");
@@ -8025,6 +8321,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 296: {
         auto& out = *static_cast<DecodedTTULD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp192(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -8046,6 +8343,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 297: {
         auto& out = *static_cast<DecodedTTULD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp192(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -8067,17 +8365,20 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 298: {
         auto& out = *static_cast<DecodedTTUGO0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 299: {
         auto& out = *static_cast<DecodedTTUCCTL0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp194(in, void_out);
         out.subclass = 0;
         break;
     }
     case 300: {
         auto& out = *static_cast<DecodedMOV2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp0(in, void_out);
         out.subclass = 8;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8090,6 +8391,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 301: {
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp4(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8108,6 +8410,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 302: {
         auto& out = *static_cast<DecodedLEA6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp19(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8132,6 +8435,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 303: {
         auto& out = *static_cast<DecodedLEA7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp22(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8159,6 +8463,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 304: {
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp30(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8177,6 +8482,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 305: {
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp33(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8195,6 +8501,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 306: {
         auto& out = *static_cast<DecodedSHL3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp34(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8210,6 +8517,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 307: {
         auto& out = *static_cast<DecodedFADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp50(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8225,6 +8533,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 308: {
         auto& out = *static_cast<DecodedFADD32I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp195(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8240,6 +8549,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 309: {
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp52(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8258,6 +8568,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 310: {
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp54(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8276,6 +8587,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 311: {
         auto& out = *static_cast<DecodedIMAD5_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp57(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8297,6 +8609,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 312: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8318,6 +8631,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 313: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8339,6 +8653,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 314: {
         auto& out = *static_cast<DecodedDADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp66(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8354,6 +8669,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 315: {
         auto& out = *static_cast<DecodedDSETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp67(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -8375,6 +8691,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 316: {
         auto& out = *static_cast<DecodedDSETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp68(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -8390,6 +8707,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 317: {
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp69(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8408,6 +8726,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 318: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8423,6 +8742,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 319: {
         auto& out = *static_cast<DecodedHADD24_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp196(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8441,6 +8761,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 320: {
         auto& out = *static_cast<DecodedHADD24_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp197(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8459,6 +8780,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 321: {
         auto& out = *static_cast<DecodedHADD24_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp197(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8477,6 +8799,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 322: {
         auto& out = *static_cast<DecodedHADD2_32I4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp198(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8495,6 +8818,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 323: {
         auto& out = *static_cast<DecodedHADD2_32I4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp198(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8513,6 +8837,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 324: {
         auto& out = *static_cast<DecodedHFMA25_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp75(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8534,6 +8859,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 325: {
         auto& out = *static_cast<DecodedHFMA25_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp75(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8555,6 +8881,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 326: {
         auto& out = *static_cast<DecodedHFMA25_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp75(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8576,6 +8903,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 327: {
         auto& out = *static_cast<DecodedHFMA26_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp200(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8600,6 +8928,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 328: {
         auto& out = *static_cast<DecodedHFMA26_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp200(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8624,6 +8953,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 329: {
         auto& out = *static_cast<DecodedHFMA26_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp200(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8648,6 +8978,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 330: {
         auto& out = *static_cast<DecodedHSET25*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp201(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8669,6 +9000,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 331: {
         auto& out = *static_cast<DecodedHSET25*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp201(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8690,6 +9022,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 332: {
         auto& out = *static_cast<DecodedHSET24_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp78(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8708,6 +9041,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 333: {
         auto& out = *static_cast<DecodedHSET24_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp78(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8726,6 +9060,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 334: {
         auto& out = *static_cast<DecodedHSETP26*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp202(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -8750,6 +9085,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 335: {
         auto& out = *static_cast<DecodedHSETP26*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp202(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -8774,6 +9110,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 336: {
         auto& out = *static_cast<DecodedHSETP25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp81(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -8795,6 +9132,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 337: {
         auto& out = *static_cast<DecodedHSETP25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp81(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -8816,6 +9154,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 338: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8831,6 +9170,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 339: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8846,6 +9186,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 340: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8861,6 +9202,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 341: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8879,6 +9221,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 342: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8897,6 +9240,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 343: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8915,6 +9259,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 344: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8930,6 +9275,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 345: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8945,6 +9291,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 346: {
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp101(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8963,6 +9310,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 347: {
         auto& out = *static_cast<DecodedQMMA8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp203(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -8993,6 +9341,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 348: {
         auto& out = *static_cast<DecodedQMMA9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp204(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9026,6 +9375,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 349: {
         auto& out = *static_cast<DecodedMXQMMA8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp205(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9056,6 +9406,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 350: {
         auto& out = *static_cast<DecodedOMMA8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp206(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9086,6 +9437,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 351: {
         auto& out = *static_cast<DecodedOMMA9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp207(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9119,6 +9471,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 352: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -9132,6 +9485,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 353: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -9148,6 +9502,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 354: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -9164,6 +9519,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 355: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -9180,6 +9536,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 356: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -9193,6 +9550,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 357: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -9206,6 +9564,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 358: {
         auto& out = *static_cast<DecodedMOV64IUR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -9217,6 +9576,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 359: {
         auto& out = *static_cast<DecodedSHFL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp159(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9238,6 +9598,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 360: {
         auto& out = *static_cast<DecodedATOMS5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp167(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9259,6 +9620,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 361: {
         auto& out = *static_cast<DecodedATOMS5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp167(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9280,11 +9642,13 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 362: {
         auto& out = *static_cast<DecodedCGAERRBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 363: {
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp4(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9303,6 +9667,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 364: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9318,6 +9683,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 365: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9333,6 +9699,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 366: {
         auto& out = *static_cast<DecodedPMTRIG2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.Pp.flags = in.flags("Pp");
@@ -9344,6 +9711,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 367: {
         auto& out = *static_cast<DecodedMOV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -9358,6 +9726,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 368: {
         auto& out = *static_cast<DecodedMOV32I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -9372,6 +9741,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 369: {
         auto& out = *static_cast<DecodedP2R4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp2(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9390,6 +9760,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 370: {
         auto& out = *static_cast<DecodedP2R2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp212(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9402,6 +9773,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 371: {
         auto& out = *static_cast<DecodedR2P3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp3(in, void_out);
         out.subclass = 0;
         out.PR.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -9417,6 +9789,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 372: {
         auto& out = *static_cast<DecodedCS2R2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp213(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9429,6 +9802,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 373: {
         auto& out = *static_cast<DecodedVOTE3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp214(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9444,6 +9818,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 374: {
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp4(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9462,6 +9837,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 375: {
         auto& out = *static_cast<DecodedFSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp5(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9480,6 +9856,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 376: {
         auto& out = *static_cast<DecodedFMNMX4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp6(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9498,6 +9875,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 377: {
         auto& out = *static_cast<DecodedFMNMX5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp7(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9519,6 +9897,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 378: {
         auto& out = *static_cast<DecodedFSET4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp8(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9537,6 +9916,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 379: {
         auto& out = *static_cast<DecodedFSET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp9(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9552,6 +9932,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 380: {
         auto& out = *static_cast<DecodedFSETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp10(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9573,6 +9954,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 381: {
         auto& out = *static_cast<DecodedFSETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp11(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9588,6 +9970,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 382: {
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp12(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9612,6 +9995,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 383: {
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp13(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9633,6 +10017,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 384: {
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp14(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9651,6 +10036,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 385: {
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp15(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9666,6 +10052,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 386: {
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp12(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9690,6 +10077,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 387: {
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp13(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9711,6 +10099,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 388: {
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp14(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9729,6 +10118,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 389: {
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp15(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9744,6 +10134,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 390: {
         auto& out = *static_cast<DecodedCSMTEST1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp215(in, void_out);
         out.subclass = 0;
         out.Sa.kind = static_cast<std::uint8_t>(OperandKind::kUImm);
@@ -9753,6 +10144,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 391: {
         auto& out = *static_cast<DecodedCSMTEST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp216(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9771,6 +10163,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 392: {
         auto& out = *static_cast<DecodedCSMTEST2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp217(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9783,6 +10176,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 393: {
         auto& out = *static_cast<DecodedVOTE_VTG1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp218(in, void_out);
         out.subclass = 0;
         out.Sa.kind = static_cast<std::uint8_t>(OperandKind::kUImm);
@@ -9792,6 +10186,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 394: {
         auto& out = *static_cast<DecodedVOTE_VTG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp219(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9810,6 +10205,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 395: {
         auto& out = *static_cast<DecodedVOTE_VTG2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp220(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -9822,6 +10218,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 396: {
         auto& out = *static_cast<DecodedIADD36*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -9845,6 +10242,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 397: {
         auto& out = *static_cast<DecodedIADD38*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp17(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9875,6 +10273,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 398: {
         auto& out = *static_cast<DecodedISCADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -9895,6 +10294,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 399: {
         auto& out = *static_cast<DecodedISCADD32I5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -9915,6 +10315,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 400: {
         auto& out = *static_cast<DecodedLEA6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp19(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9939,6 +10340,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 401: {
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp21(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9960,6 +10362,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 402: {
         auto& out = *static_cast<DecodedLEA6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp20(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -9984,6 +10387,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 403: {
         auto& out = *static_cast<DecodedLEA7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp22(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10011,6 +10415,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 404: {
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp21(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10032,6 +10437,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 405: {
         auto& out = *static_cast<DecodedLEA6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp20(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10056,6 +10462,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 406: {
         auto& out = *static_cast<DecodedLOP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp23(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10077,6 +10484,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 407: {
         auto& out = *static_cast<DecodedLOP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp24(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10095,6 +10503,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 408: {
         auto& out = *static_cast<DecodedLOP36_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp26(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10119,6 +10528,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 409: {
         auto& out = *static_cast<DecodedLOP35*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp28(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10140,6 +10550,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 410: {
         auto& out = *static_cast<DecodedLOP37*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp25(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10167,6 +10578,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 411: {
         auto& out = *static_cast<DecodedLOP36_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp27(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10191,6 +10603,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 412: {
         auto& out = *static_cast<DecodedLOP32I5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp222(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10212,6 +10625,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 413: {
         auto& out = *static_cast<DecodedLOP32I4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp223(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10230,6 +10644,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 414: {
         auto& out = *static_cast<DecodedIABS2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -10241,6 +10656,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 415: {
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp30(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10259,6 +10675,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 416: {
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp31(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10286,6 +10703,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 417: {
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp32(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10310,6 +10728,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 418: {
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp31(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10337,6 +10756,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 419: {
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp32(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10361,6 +10781,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 420: {
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp33(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10379,6 +10800,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 421: {
         auto& out = *static_cast<DecodedSHL3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp35(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10394,6 +10816,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 422: {
         auto& out = *static_cast<DecodedSHR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp36(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10409,6 +10832,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 423: {
         auto& out = *static_cast<DecodedSGXT3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp37(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10424,6 +10848,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 424: {
         auto& out = *static_cast<DecodedBMSK3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp38(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10439,6 +10864,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 425: {
         auto& out = *static_cast<DecodedPLOP34_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp224(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10457,6 +10883,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 426: {
         auto& out = *static_cast<DecodedPLOP34_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp225(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10475,6 +10902,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 427: {
         auto& out = *static_cast<DecodedPLOP35_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp39(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10496,6 +10924,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 428: {
         auto& out = *static_cast<DecodedPLOP35_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp40(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10517,6 +10946,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 429: {
         auto& out = *static_cast<DecodedPLOP37_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp44(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10544,6 +10974,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 430: {
         auto& out = *static_cast<DecodedPLOP37_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp45(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10571,6 +11002,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 431: {
         auto& out = *static_cast<DecodedPSETP5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp226(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10592,6 +11024,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 432: {
         auto& out = *static_cast<DecodedPSETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp228(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10607,6 +11040,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 433: {
         auto& out = *static_cast<DecodedPSETP5_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp227(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -10628,6 +11062,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 434: {
         auto& out = *static_cast<DecodedFMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp49(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10643,6 +11078,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 435: {
         auto& out = *static_cast<DecodedFMUL32I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp229(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10658,6 +11094,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 436: {
         auto& out = *static_cast<DecodedFSWZADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp230(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10676,6 +11113,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 437: {
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp52(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10694,6 +11132,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 438: {
         auto& out = *static_cast<DecodedFFMA32I4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp231(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10712,6 +11151,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 439: {
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp54(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10730,6 +11170,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 440: {
         auto& out = *static_cast<DecodedIMAD5_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp56(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10751,6 +11192,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 441: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10772,6 +11214,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 442: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10793,6 +11236,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 443: {
         auto& out = *static_cast<DecodedIMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp60(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10808,6 +11252,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 444: {
         auto& out = *static_cast<DecodedIMUL32I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp232(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10823,6 +11268,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 445: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10844,6 +11290,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 446: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10865,6 +11312,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 447: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 3;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10889,6 +11337,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 448: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 3;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10913,6 +11362,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 449: {
         auto& out = *static_cast<DecodedIMUL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp62(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10931,6 +11381,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 450: {
         auto& out = *static_cast<DecodedIMUL32I4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp233(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10949,6 +11400,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 451: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10970,6 +11422,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 452: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -10991,6 +11444,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 453: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11015,6 +11469,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 454: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11039,6 +11494,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 455: {
         auto& out = *static_cast<DecodedDMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp65(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11054,6 +11510,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 456: {
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp69(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11072,16 +11529,19 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 457: {
         auto& out = *static_cast<DecodedPREEXIT0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 458: {
         auto& out = *static_cast<DecodedACQBULK0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 459: {
         auto& out = *static_cast<DecodedELECT3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp236(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -11097,6 +11557,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 460: {
         auto& out = *static_cast<DecodedHFMA25_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp73(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11118,6 +11579,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 461: {
         auto& out = *static_cast<DecodedHFMA25_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp73(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11139,6 +11601,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 462: {
         auto& out = *static_cast<DecodedHFMA25_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp73(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11160,6 +11623,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 463: {
         auto& out = *static_cast<DecodedHFMA26_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp199(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11184,6 +11648,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 464: {
         auto& out = *static_cast<DecodedHFMA26_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp199(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11208,6 +11673,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 465: {
         auto& out = *static_cast<DecodedHFMA26_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp199(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11232,6 +11698,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 466: {
         auto& out = *static_cast<DecodedHFMA2_32I5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp238(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11253,6 +11720,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 467: {
         auto& out = *static_cast<DecodedHFMA2_32I5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp238(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11274,6 +11742,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 468: {
         auto& out = *static_cast<DecodedHMUL24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp239(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11292,6 +11761,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 469: {
         auto& out = *static_cast<DecodedHMUL24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp239(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11310,6 +11780,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 470: {
         auto& out = *static_cast<DecodedHMUL2_32I4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp240(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11328,6 +11799,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 471: {
         auto& out = *static_cast<DecodedHMUL2_32I4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp240(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11346,6 +11818,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 472: {
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp83(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11364,6 +11837,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 473: {
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp84(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11385,6 +11859,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 474: {
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp83(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11403,6 +11878,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 475: {
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp84(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11424,6 +11900,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 476: {
         auto& out = *static_cast<DecodedIADD32I4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -11441,6 +11918,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 477: {
         auto& out = *static_cast<DecodedIADD32I5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp242(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11462,6 +11940,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 478: {
         auto& out = *static_cast<DecodedVIADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp85(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11477,6 +11956,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 479: {
         auto& out = *static_cast<DecodedI2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp88(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11489,6 +11969,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 480: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11507,6 +11988,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 481: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11525,6 +12007,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 482: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11543,6 +12026,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 483: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11561,6 +12045,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 484: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11579,6 +12064,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 485: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11597,6 +12083,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 486: {
         auto& out = *static_cast<DecodedLDSM3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp243(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11612,6 +12099,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 487: {
         auto& out = *static_cast<DecodedLDSM3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp243(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11627,6 +12115,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 488: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11639,6 +12128,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 489: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11651,6 +12141,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 490: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11663,6 +12154,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 491: {
         auto& out = *static_cast<DecodedF2FP3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp95(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11678,6 +12170,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 492: {
         auto& out = *static_cast<DecodedF2FP3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp95(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11693,6 +12186,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 493: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11708,6 +12202,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 494: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11723,6 +12218,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 495: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11738,6 +12234,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 496: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11756,6 +12253,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 497: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11774,6 +12272,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 498: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11792,6 +12291,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 499: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11807,6 +12307,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 500: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11822,6 +12323,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 501: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11834,6 +12336,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 502: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11846,6 +12349,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 503: {
         auto& out = *static_cast<DecodedHMNMX25*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp244(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11867,6 +12371,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 504: {
         auto& out = *static_cast<DecodedHMNMX25*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp244(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11888,6 +12393,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 505: {
         auto& out = *static_cast<DecodedHMNMX27*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp245(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11915,6 +12421,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 506: {
         auto& out = *static_cast<DecodedHMNMX27*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp245(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11942,6 +12449,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 507: {
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp101(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11960,6 +12468,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 508: {
         auto& out = *static_cast<DecodedSTSM3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp246(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11975,6 +12484,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 509: {
         auto& out = *static_cast<DecodedI2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp102(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11987,6 +12497,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 510: {
         auto& out = *static_cast<DecodedI2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp102(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -11999,6 +12510,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 511: {
         auto& out = *static_cast<DecodedVIMNMX4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp103(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12017,6 +12529,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 512: {
         auto& out = *static_cast<DecodedUVIRTCOUNT2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp247(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12029,6 +12542,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 513: {
         auto& out = *static_cast<DecodedUVIRTCOUNT2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp247(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12041,11 +12555,13 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 514: {
         auto& out = *static_cast<DecodedACQSHMINIT0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 515: {
         auto& out = *static_cast<DecodedUMOV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp250(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12061,6 +12577,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 516: {
         auto& out = *static_cast<DecodedVOTEU3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp251(in, void_out);
         out.subclass = 0;
         out.URd.kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
@@ -12076,6 +12593,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 517: {
         auto& out = *static_cast<DecodedUPLOP35*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp252(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12097,6 +12615,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 518: {
         auto& out = *static_cast<DecodedUPLOP36_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp253(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12121,6 +12640,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 519: {
         auto& out = *static_cast<DecodedUPLOP38_0*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp257(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12151,6 +12671,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 520: {
         auto& out = *static_cast<DecodedUPSETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp261(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12175,6 +12696,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 521: {
         auto& out = *static_cast<DecodedUPSETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp262(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12193,6 +12715,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 522: {
         auto& out = *static_cast<DecodedCS2UR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp263(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -12208,6 +12731,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 523: {
         auto& out = *static_cast<DecodedFLO3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp107(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12223,6 +12747,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 524: {
         auto& out = *static_cast<DecodedBREV2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -12234,6 +12759,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 525: {
         auto& out = *static_cast<DecodedFCHK3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp109(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -12249,6 +12775,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 526: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12261,6 +12788,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 527: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12273,6 +12801,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 528: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12285,6 +12814,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 529: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12297,6 +12827,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 530: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12309,6 +12840,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 531: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12321,6 +12853,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 532: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12333,6 +12866,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 533: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12345,6 +12879,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 534: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12357,6 +12892,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 535: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12369,6 +12905,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 536: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12381,6 +12918,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 537: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12393,6 +12931,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 538: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12405,6 +12944,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 539: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12417,6 +12957,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 540: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12429,6 +12970,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 541: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12441,6 +12983,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 542: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12453,6 +12996,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 543: {
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp114(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12465,6 +13009,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 544: {
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp114(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12477,6 +13022,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 545: {
         auto& out = *static_cast<DecodedPOPC2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -12488,6 +13034,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 546: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12500,6 +13047,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 547: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12512,6 +13060,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 548: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12524,6 +13073,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 549: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12536,6 +13086,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 550: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12548,6 +13099,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 551: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12560,6 +13112,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 552: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12572,6 +13125,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 553: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12584,6 +13138,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 554: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12596,6 +13151,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 555: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12608,6 +13164,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 556: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12620,6 +13177,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 557: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12632,6 +13190,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 558: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12644,6 +13203,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 559: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12656,6 +13216,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 560: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12668,6 +13229,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 561: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12680,6 +13242,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 562: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12692,6 +13255,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 563: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12704,6 +13268,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 564: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12716,6 +13281,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 565: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12728,6 +13294,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 566: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12740,6 +13307,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 567: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12752,6 +13320,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 568: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12764,11 +13333,13 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 569: {
         auto& out = *static_cast<DecodedNOP0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 570: {
         auto& out = *static_cast<DecodedS2R2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -12780,6 +13351,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 571: {
         auto& out = *static_cast<DecodedDEPBAR3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp267(in, void_out);
         out.subclass = 0;
         out.sbidx.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -12795,6 +13367,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 572: {
         auto& out = *static_cast<DecodedDEPBAR1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.scoreboard_list.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.scoreboard_list.flags = in.flags("scoreboard_list");
@@ -12803,12 +13376,14 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 573: {
         auto& out = *static_cast<DecodedDEPBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp269(in, void_out);
         out.subclass = 0;
         break;
     }
     case 574: {
         auto& out = *static_cast<DecodedENDCOLLECTIVE1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.Pp.flags = in.flags("Pp");
@@ -12817,6 +13392,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 575: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -12830,6 +13406,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 576: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -12846,6 +13423,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 577: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -12862,6 +13440,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 578: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -12878,6 +13457,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 579: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -12891,6 +13471,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 580: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -12904,6 +13485,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 581: {
         auto& out = *static_cast<DecodedAL2P3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp271(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12919,6 +13501,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 582: {
         auto& out = *static_cast<DecodedAL2P3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp271(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12934,6 +13517,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 583: {
         auto& out = *static_cast<DecodedISBERD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp272(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12949,6 +13533,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 584: {
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp127(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12964,6 +13549,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 585: {
         auto& out = *static_cast<DecodedPIXLD2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp273(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12976,6 +13562,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 586: {
         auto& out = *static_cast<DecodedIPA5_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp131(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -12997,6 +13584,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 587: {
         auto& out = *static_cast<DecodedISBEWR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp274(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13012,6 +13600,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 588: {
         auto& out = *static_cast<DecodedBSYNC2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp275(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13024,6 +13613,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 589: {
         auto& out = *static_cast<DecodedBSYNC2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp275(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13036,6 +13626,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 590: {
         auto& out = *static_cast<DecodedBREAK2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp276(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13048,6 +13639,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 591: {
         auto& out = *static_cast<DecodedBREAK2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp276(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13060,6 +13652,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 592: {
         auto& out = *static_cast<DecodedCALL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp134(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13072,6 +13665,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 593: {
         auto& out = *static_cast<DecodedCALL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp134(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13084,6 +13678,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 594: {
         auto& out = *static_cast<DecodedCALL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp134(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13096,6 +13691,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 595: {
         auto& out = *static_cast<DecodedBSSY3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp277(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13111,6 +13707,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 596: {
         auto& out = *static_cast<DecodedBSSY3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp277(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13126,6 +13723,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 597: {
         auto& out = *static_cast<DecodedBSSY3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp277(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13141,6 +13739,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 598: {
         auto& out = *static_cast<DecodedBSSY3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp277(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13156,6 +13755,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 599: {
         auto& out = *static_cast<DecodedYIELD1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.Pp.flags = in.flags("Pp");
@@ -13164,6 +13764,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 600: {
         auto& out = *static_cast<DecodedBRA2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp279(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13176,6 +13777,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 601: {
         auto& out = *static_cast<DecodedBRA2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp279(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13188,6 +13790,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 602: {
         auto& out = *static_cast<DecodedBRA2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp279(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13200,6 +13803,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 603: {
         auto& out = *static_cast<DecodedBRA2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp279(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13212,6 +13816,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 604: {
         auto& out = *static_cast<DecodedWARPSYNC1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp280(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13221,6 +13826,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 605: {
         auto& out = *static_cast<DecodedWARPSYNC2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp137(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13233,6 +13839,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 606: {
         auto& out = *static_cast<DecodedWARPSYNC2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp137(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13245,6 +13852,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 607: {
         auto& out = *static_cast<DecodedBRX3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp281(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13260,6 +13868,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 608: {
         auto& out = *static_cast<DecodedBRX3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp281(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13275,6 +13884,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 609: {
         auto& out = *static_cast<DecodedJMP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp282(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13287,6 +13897,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 610: {
         auto& out = *static_cast<DecodedJMP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp282(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13299,6 +13910,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 611: {
         auto& out = *static_cast<DecodedJMP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp282(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13311,6 +13923,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 612: {
         auto& out = *static_cast<DecodedJMP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp282(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13323,6 +13936,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 613: {
         auto& out = *static_cast<DecodedJMX3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp283(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13338,6 +13952,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 614: {
         auto& out = *static_cast<DecodedJMX3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp283(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13353,6 +13968,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 615: {
         auto& out = *static_cast<DecodedEXIT1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp284(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13362,6 +13978,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 616: {
         auto& out = *static_cast<DecodedLEPC2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp285(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13374,6 +13991,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 617: {
         auto& out = *static_cast<DecodedLEPC2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp285(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13386,11 +14004,13 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 618: {
         auto& out = *static_cast<DecodedRTT0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 619: {
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp287(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13406,6 +14026,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 620: {
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp287(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13421,6 +14042,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 621: {
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp287(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13436,6 +14058,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 622: {
         auto& out = *static_cast<DecodedRET2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp288(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13448,6 +14071,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 623: {
         auto& out = *static_cast<DecodedIDE1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp289(in, void_out);
         out.subclass = 0;
         out.Sb.kind = static_cast<std::uint8_t>(OperandKind::kUImm);
@@ -13457,6 +14081,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 624: {
         auto& out = *static_cast<DecodedRPCMOV2_2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp142(in, void_out);
         out.subclass = 0;
         out.RpcN.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -13469,6 +14094,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 625: {
         auto& out = *static_cast<DecodedRPCMOV2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp141(in, void_out);
         out.subclass = 0;
         out.Rpc.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -13481,6 +14107,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 626: {
         auto& out = *static_cast<DecodedBMOV2_4*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp147(in, void_out);
         out.subclass = 0;
         out.cbu_state.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -13493,6 +14120,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 627: {
         auto& out = *static_cast<DecodedBMOV2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp144(in, void_out);
         out.subclass = 0;
         out.atexit_pc.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -13505,6 +14133,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 628: {
         auto& out = *static_cast<DecodedNANOTRAP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp149(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13517,6 +14146,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 629: {
         auto& out = *static_cast<DecodedKILL1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
         out.Pp.flags = in.flags("Pp");
@@ -13525,6 +14155,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 630: {
         auto& out = *static_cast<DecodedBPT1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp291(in, void_out);
         out.subclass = 0;
         out.Sb.kind = static_cast<std::uint8_t>(OperandKind::kUImm);
@@ -13534,6 +14165,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 631: {
         auto& out = *static_cast<DecodedBPT1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp291(in, void_out);
         out.subclass = 0;
         out.Sb.kind = static_cast<std::uint8_t>(OperandKind::kUImm);
@@ -13543,6 +14175,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 632: {
         auto& out = *static_cast<DecodedNANOSLEEP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp150(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13555,6 +14188,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 633: {
         auto& out = *static_cast<DecodedNANOSLEEP1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp292(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13564,6 +14198,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 634: {
         auto& out = *static_cast<DecodedLD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp293(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13582,6 +14217,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 635: {
         auto& out = *static_cast<DecodedLD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp293(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13600,6 +14236,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 636: {
         auto& out = *static_cast<DecodedLDL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp294(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13615,6 +14252,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 637: {
         auto& out = *static_cast<DecodedLDL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp294(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13630,6 +14268,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 638: {
         auto& out = *static_cast<DecodedLDS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp295(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13645,6 +14284,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 639: {
         auto& out = *static_cast<DecodedLDS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp295(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13660,6 +14300,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 640: {
         auto& out = *static_cast<DecodedSHFL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp159(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13681,6 +14322,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 641: {
         auto& out = *static_cast<DecodedREDG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp296(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13696,6 +14338,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 642: {
         auto& out = *static_cast<DecodedREDG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp296(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13711,12 +14354,14 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 643: {
         auto& out = *static_cast<DecodedCCTL0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp132(in, void_out);
         out.subclass = 0;
         break;
     }
     case 644: {
         auto& out = *static_cast<DecodedCCTL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp298(in, void_out);
         out.subclass = 0;
         out.a.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13729,6 +14374,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 645: {
         auto& out = *static_cast<DecodedCCTL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp298(in, void_out);
         out.subclass = 0;
         out.a.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13741,6 +14387,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 646: {
         auto& out = *static_cast<DecodedCCTL3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp300(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13756,6 +14403,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 647: {
         auto& out = *static_cast<DecodedCCTL3_3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp302(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13771,6 +14419,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 648: {
         auto& out = *static_cast<DecodedCCTL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp298(in, void_out);
         out.subclass = 0;
         out.a.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13783,6 +14432,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 649: {
         auto& out = *static_cast<DecodedCCTL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp298(in, void_out);
         out.subclass = 0;
         out.a.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13795,6 +14445,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 650: {
         auto& out = *static_cast<DecodedCCTL3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp300(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13810,6 +14461,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 651: {
         auto& out = *static_cast<DecodedCCTL3_3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp302(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13825,24 +14477,28 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 652: {
         auto& out = *static_cast<DecodedCCTL0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp132(in, void_out);
         out.subclass = 0;
         break;
     }
     case 653: {
         auto& out = *static_cast<DecodedCCTL0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp132(in, void_out);
         out.subclass = 0;
         break;
     }
     case 654: {
         auto& out = *static_cast<DecodedCCTLL0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp303(in, void_out);
         out.subclass = 0;
         break;
     }
     case 655: {
         auto& out = *static_cast<DecodedCCTLL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp305(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13855,6 +14511,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 656: {
         auto& out = *static_cast<DecodedCCTLL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp305(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13867,24 +14524,28 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 657: {
         auto& out = *static_cast<DecodedMEMBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp306(in, void_out);
         out.subclass = 0;
         break;
     }
     case 658: {
         auto& out = *static_cast<DecodedMEMBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp306(in, void_out);
         out.subclass = 0;
         break;
     }
     case 659: {
         auto& out = *static_cast<DecodedMEMBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp306(in, void_out);
         out.subclass = 0;
         break;
     }
     case 660: {
         auto& out = *static_cast<DecodedSULD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp307(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13906,6 +14567,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 661: {
         auto& out = *static_cast<DecodedSULD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp307(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -13927,6 +14589,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 662: {
         auto& out = *static_cast<DecodedSUST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp308(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13945,6 +14608,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 663: {
         auto& out = *static_cast<DecodedSUST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp308(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13963,6 +14627,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 664: {
         auto& out = *static_cast<DecodedREDG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp296(in, void_out);
         out.subclass = 16;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13978,6 +14643,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 665: {
         auto& out = *static_cast<DecodedREDG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp296(in, void_out);
         out.subclass = 16;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -13993,22 +14659,26 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 666: {
         auto& out = *static_cast<DecodedERRBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 667: {
         auto& out = *static_cast<DecodedLDGDEPBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         break;
     }
     case 668: {
         auto& out = *static_cast<DecodedSYNCS0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp177(in, void_out);
         out.subclass = 0;
         break;
     }
     case 669: {
         auto& out = *static_cast<DecodedSUQUERY6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp311(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -14033,6 +14703,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 670: {
         auto& out = *static_cast<DecodedUTMACMDFLUSH1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -14041,6 +14712,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 671: {
         auto& out = *static_cast<DecodedUTMACCTL1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp313(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14050,6 +14722,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 672: {
         auto& out = *static_cast<DecodedUTMACCTL1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp313(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14059,6 +14732,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 673: {
         auto& out = *static_cast<DecodedS2UR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -14073,6 +14747,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 674: {
         auto& out = *static_cast<DecodedTTUMACROFUSE1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Sb.kind = static_cast<std::uint8_t>(OperandKind::kUImm);
         out.Sb.flags = in.flags("Sb");
@@ -14081,6 +14756,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 675: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -14096,6 +14772,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 676: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -14111,6 +14788,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 677: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -14124,6 +14802,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 678: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -14140,6 +14819,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 679: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -14156,6 +14836,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 680: {
         auto& out = *static_cast<DecodedBAR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp120(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -14172,6 +14853,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 681: {
         auto& out = *static_cast<DecodedBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp316(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -14179,6 +14861,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 682: {
         auto& out = *static_cast<DecodedBAR0*>(void_out);
+        out.n_ops = 0;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp316(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -14186,6 +14869,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 683: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -14199,6 +14883,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 684: {
         auto& out = *static_cast<DecodedBAR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp119(in, void_out);
         out.subclass = 0;
         out.barname = static_cast<std::uint8_t>(in.value("barname"));
@@ -14212,6 +14897,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 685: {
         auto& out = *static_cast<DecodedCCTL4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp317(in, void_out);
         out.subclass = 0;
         out.Sa.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -14230,6 +14916,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 686: {
         auto& out = *static_cast<DecodedLDC5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp319(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -14251,6 +14938,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 687: {
         auto& out = *static_cast<DecodedLDC5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp319(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -14272,6 +14960,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 688: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -14287,6 +14976,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 689: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -14302,6 +14992,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 690: {
         auto& out = *static_cast<DecodedBMOV2_2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp145(in, void_out);
         out.subclass = 0;
         out.barReg.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -14314,6 +15005,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 691: {
         auto& out = *static_cast<DecodedBMOV2_3*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp146(in, void_out);
         out.subclass = 0;
         out.barReg.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -14326,6 +15018,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 692: {
         auto& out = *static_cast<DecodedBMOV2_5*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp148(in, void_out);
         out.subclass = 0;
         out.cbu_state.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -14338,6 +15031,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 693: {
         auto& out = *static_cast<DecodedSHFL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp159(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -14359,6 +15053,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 694: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -14374,6 +15069,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 695: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -14389,6 +15085,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 696: {
         auto& out = *static_cast<DecodedUVIADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp321(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14407,6 +15104,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 697: {
         auto& out = *static_cast<DecodedUVIMNMX5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp322(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14428,6 +15126,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 698: {
         auto& out = *static_cast<DecodedUIABS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -14442,6 +15141,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 699: {
         auto& out = *static_cast<DecodedUI2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp324(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14457,6 +15157,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 700: {
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp325(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14478,6 +15179,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 701: {
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp325(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14499,6 +15201,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 702: {
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp325(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14520,6 +15223,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 703: {
         auto& out = *static_cast<DecodedUFMNMX5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp326(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14541,6 +15245,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 704: {
         auto& out = *static_cast<DecodedUFMNMX6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp327(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14565,6 +15270,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 705: {
         auto& out = *static_cast<DecodedUFSEL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp328(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14586,6 +15292,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 706: {
         auto& out = *static_cast<DecodedUFSET5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp329(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14607,6 +15314,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 707: {
         auto& out = *static_cast<DecodedUFSET4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp330(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14625,6 +15333,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 708: {
         auto& out = *static_cast<DecodedUFSETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp331(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14649,6 +15358,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 709: {
         auto& out = *static_cast<DecodedUFSETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp332(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14667,6 +15377,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 710: {
         auto& out = *static_cast<DecodedUFADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp333(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14685,6 +15396,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 711: {
         auto& out = *static_cast<DecodedUFHADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp334(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14703,6 +15415,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 712: {
         auto& out = *static_cast<DecodedUFFMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp335(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14724,6 +15437,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 713: {
         auto& out = *static_cast<DecodedUFHFMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp336(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14745,6 +15459,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 714: {
         auto& out = *static_cast<DecodedUFMUL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp337(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14763,6 +15478,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 715: {
         auto& out = *static_cast<DecodedUF2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp338(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14784,6 +15500,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 716: {
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp339(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14799,6 +15516,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 717: {
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp339(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14814,6 +15532,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 718: {
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp339(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14829,6 +15548,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 719: {
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp340(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14844,6 +15564,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 720: {
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp340(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14859,6 +15580,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 721: {
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp340(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14874,6 +15596,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 722: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14889,6 +15612,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 723: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14904,6 +15628,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 724: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14919,6 +15644,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 725: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14934,6 +15660,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 726: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14949,6 +15676,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 727: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14964,6 +15692,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 728: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14979,6 +15708,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 729: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -14994,6 +15724,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 730: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15009,6 +15740,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 731: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15024,6 +15756,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 732: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15039,6 +15772,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 733: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15054,6 +15788,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 734: {
         auto& out = *static_cast<DecodedUI2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp343(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15069,6 +15804,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 735: {
         auto& out = *static_cast<DecodedUIMNMX8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp344(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15099,6 +15835,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 736: {
         auto& out = *static_cast<DecodedUIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp345(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15126,6 +15863,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 737: {
         auto& out = *static_cast<DecodedUIMNMX8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp344(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15156,6 +15894,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 738: {
         auto& out = *static_cast<DecodedUIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp345(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15183,6 +15922,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 739: {
         auto& out = *static_cast<DecodedUSEL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp346(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15204,6 +15944,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 740: {
         auto& out = *static_cast<DecodedUISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp347(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15228,6 +15969,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 741: {
         auto& out = *static_cast<DecodedUISETP7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp348(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15255,6 +15997,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 742: {
         auto& out = *static_cast<DecodedUISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp349(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15273,6 +16016,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 743: {
         auto& out = *static_cast<DecodedUISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp350(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15294,6 +16038,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 744: {
         auto& out = *static_cast<DecodedUISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp347(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15318,6 +16063,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 745: {
         auto& out = *static_cast<DecodedUISETP7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp348(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15345,6 +16091,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 746: {
         auto& out = *static_cast<DecodedUISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp349(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15363,6 +16110,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 747: {
         auto& out = *static_cast<DecodedUISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp350(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15384,6 +16132,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 748: {
         auto& out = *static_cast<DecodedUIADD37*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -15410,6 +16159,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 749: {
         auto& out = *static_cast<DecodedUIADD39*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp352(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15443,6 +16193,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 750: {
         auto& out = *static_cast<DecodedULEA7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp353(in, void_out);
         out.subclass = 4;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15470,6 +16221,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 751: {
         auto& out = *static_cast<DecodedULEA6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp355(in, void_out);
         out.subclass = 4;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15494,6 +16246,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 752: {
         auto& out = *static_cast<DecodedULEA7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp354(in, void_out);
         out.subclass = 5;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15521,6 +16274,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 753: {
         auto& out = *static_cast<DecodedULEA8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp356(in, void_out);
         out.subclass = 5;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15551,6 +16305,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 754: {
         auto& out = *static_cast<DecodedULEA6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp355(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15575,6 +16330,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 755: {
         auto& out = *static_cast<DecodedULEA7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp354(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15602,6 +16358,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 756: {
         auto& out = *static_cast<DecodedULOP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp357(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15626,6 +16383,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 757: {
         auto& out = *static_cast<DecodedULOP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp358(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15647,6 +16405,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 758: {
         auto& out = *static_cast<DecodedULOP38*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp359(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15677,6 +16436,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 759: {
         auto& out = *static_cast<DecodedULOP37_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp361(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15704,6 +16464,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 760: {
         auto& out = *static_cast<DecodedULOP37_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp360(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15731,6 +16492,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 761: {
         auto& out = *static_cast<DecodedULOP36*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp362(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15755,6 +16517,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 762: {
         auto& out = *static_cast<DecodedUPRMT5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp363(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15776,6 +16539,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 763: {
         auto& out = *static_cast<DecodedUIADD3_647*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -15802,6 +16566,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 764: {
         auto& out = *static_cast<DecodedUIADD3_649*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp365(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15835,6 +16600,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 765: {
         auto& out = *static_cast<DecodedUSHF5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp366(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15856,6 +16622,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 766: {
         auto& out = *static_cast<DecodedUSHL4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp368(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15874,6 +16641,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 767: {
         auto& out = *static_cast<DecodedUSHR4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp369(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15892,6 +16660,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 768: {
         auto& out = *static_cast<DecodedUSGXT4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp370(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15910,6 +16679,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 769: {
         auto& out = *static_cast<DecodedUBMSK4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp371(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15928,6 +16698,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 770: {
         auto& out = *static_cast<DecodedUPLOP36_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp254(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15952,6 +16723,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 771: {
         auto& out = *static_cast<DecodedUPLOP38_1*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp258(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -15982,6 +16754,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 772: {
         auto& out = *static_cast<DecodedUPLOP36_2*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp255(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16006,6 +16779,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 773: {
         auto& out = *static_cast<DecodedUPLOP38_2*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp259(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16036,6 +16810,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 774: {
         auto& out = *static_cast<DecodedUPLOP36_3*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp256(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16060,6 +16835,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 775: {
         auto& out = *static_cast<DecodedUPLOP38_3*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp260(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16090,6 +16866,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 776: {
         auto& out = *static_cast<DecodedUIMAD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp372(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16111,6 +16888,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 777: {
         auto& out = *static_cast<DecodedUIMAD6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp374(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16135,6 +16913,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 778: {
         auto& out = *static_cast<DecodedUIMAD6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp373(in, void_out);
         out.subclass = 2;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16159,6 +16938,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 779: {
         auto& out = *static_cast<DecodedUIMAD7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp375(in, void_out);
         out.subclass = 3;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16186,6 +16966,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 780: {
         auto& out = *static_cast<DecodedUIMAD6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp373(in, void_out);
         out.subclass = 4;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16210,6 +16991,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 781: {
         auto& out = *static_cast<DecodedUIMAD7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp375(in, void_out);
         out.subclass = 5;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16237,6 +17019,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 782: {
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp376(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16252,6 +17035,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 783: {
         auto& out = *static_cast<DecodedUF2FP4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp377(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16270,6 +17054,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 784: {
         auto& out = *static_cast<DecodedUF2FP4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp377(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16288,6 +17073,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 785: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16306,6 +17092,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 786: {
         auto& out = *static_cast<DecodedUF2FP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp379(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16327,6 +17114,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 787: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16345,6 +17133,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 788: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16363,6 +17152,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 789: {
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp376(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16378,6 +17168,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 790: {
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp376(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16393,6 +17184,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 791: {
         auto& out = *static_cast<DecodedUFLO4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp380(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16411,6 +17203,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 792: {
         auto& out = *static_cast<DecodedUBREV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -16425,6 +17218,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 793: {
         auto& out = *static_cast<DecodedUPOPC3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -16439,6 +17233,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 794: {
         auto& out = *static_cast<DecodedLDCU7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp383(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16466,6 +17261,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 795: {
         auto& out = *static_cast<DecodedLDCU6_2*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp386(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16490,6 +17286,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 796: {
         auto& out = *static_cast<DecodedLDTRAM4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp387(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -16508,6 +17305,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 797: {
         auto& out = *static_cast<DecodedSYNCS6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp388(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16532,6 +17330,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 798: {
         auto& out = *static_cast<DecodedUTMALDG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp389(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16550,6 +17349,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 799: {
         auto& out = *static_cast<DecodedUTMALDG6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp390(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16574,6 +17374,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 800: {
         auto& out = *static_cast<DecodedUTMALDG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp389(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16592,6 +17393,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 801: {
         auto& out = *static_cast<DecodedUTMALDG6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp390(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16616,6 +17418,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 802: {
         auto& out = *static_cast<DecodedUTMASTG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp391(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16631,6 +17434,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 803: {
         auto& out = *static_cast<DecodedUTMASTG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp392(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16652,6 +17456,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 804: {
         auto& out = *static_cast<DecodedUTMASTG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp391(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16667,6 +17472,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 805: {
         auto& out = *static_cast<DecodedUTMASTG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp392(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16688,6 +17494,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 806: {
         auto& out = *static_cast<DecodedUTMAREDG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp393(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16703,6 +17510,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 807: {
         auto& out = *static_cast<DecodedUTMAREDG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp394(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16724,6 +17532,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 808: {
         auto& out = *static_cast<DecodedUTMAREDG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp393(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16739,6 +17548,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 809: {
         auto& out = *static_cast<DecodedUTMAREDG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp394(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16760,6 +17570,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 810: {
         auto& out = *static_cast<DecodedUTMAPF4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp395(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16778,6 +17589,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 811: {
         auto& out = *static_cast<DecodedUTMAPF6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp396(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16802,6 +17614,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 812: {
         auto& out = *static_cast<DecodedUTMAPF4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp395(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16820,6 +17633,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 813: {
         auto& out = *static_cast<DecodedUTMAPF6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp396(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16844,6 +17658,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 814: {
         auto& out = *static_cast<DecodedUBLKCP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp397(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16862,6 +17677,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 815: {
         auto& out = *static_cast<DecodedUBLKCP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp398(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16886,6 +17702,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 816: {
         auto& out = *static_cast<DecodedUBLKCP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp398(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16910,6 +17727,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 817: {
         auto& out = *static_cast<DecodedUBLKCP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp397(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16928,6 +17746,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 818: {
         auto& out = *static_cast<DecodedUBLKRED4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp399(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16946,6 +17765,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 819: {
         auto& out = *static_cast<DecodedUBLKRED6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp400(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16970,6 +17790,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 820: {
         auto& out = *static_cast<DecodedUBLKRED6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp400(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -16994,6 +17815,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 821: {
         auto& out = *static_cast<DecodedUBLKRED4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp399(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17012,6 +17834,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 822: {
         auto& out = *static_cast<DecodedUBLKPF3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp401(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17027,6 +17850,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 823: {
         auto& out = *static_cast<DecodedUBLKPF5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp402(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17048,6 +17872,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 824: {
         auto& out = *static_cast<DecodedUBLKPF3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp401(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17063,6 +17888,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 825: {
         auto& out = *static_cast<DecodedUBLKPF5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp402(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17084,6 +17910,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 826: {
         auto& out = *static_cast<DecodedUCGABARSET2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -17095,6 +17922,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 827: {
         auto& out = *static_cast<DecodedUCGABAR_SET2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -17106,6 +17934,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 828: {
         auto& out = *static_cast<DecodedUSETMAXREG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp405(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17121,6 +17950,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 829: {
         auto& out = *static_cast<DecodedUSETMAXREG2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp406(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17133,6 +17963,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 830: {
         auto& out = *static_cast<DecodedUSETSHMSZ2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -17144,6 +17975,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 831: {
         auto& out = *static_cast<DecodedUGETNEXTWORKID3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp408(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17159,6 +17991,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 832: {
         auto& out = *static_cast<DecodedUGETNEXTWORKID3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp408(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17174,6 +18007,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 833: {
         auto& out = *static_cast<DecodedUMEMSETS5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp409(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17195,6 +18029,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 834: {
         auto& out = *static_cast<DecodedULEPC2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -17206,6 +18041,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 835: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17221,6 +18057,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 836: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17236,6 +18073,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 837: {
         auto& out = *static_cast<DecodedUVIRTCOUNT2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp248(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17248,6 +18086,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 838: {
         auto& out = *static_cast<DecodedUVIRTCOUNT2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp248(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17260,6 +18099,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 839: {
         auto& out = *static_cast<DecodedUFADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp333(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17278,6 +18118,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 840: {
         auto& out = *static_cast<DecodedUFFMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp335(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17299,6 +18140,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 841: {
         auto& out = *static_cast<DecodedUF2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp338(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17320,6 +18162,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 842: {
         auto& out = *static_cast<DecodedMOV4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.indexURd.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.indexURd.flags = in.flags("indexURd");
@@ -17337,6 +18180,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 843: {
         auto& out = *static_cast<DecodedUMOV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp250(in, void_out);
         out.subclass = 8;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17352,6 +18196,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 844: {
         auto& out = *static_cast<DecodedUSEL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp346(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17373,6 +18218,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 845: {
         auto& out = *static_cast<DecodedULEA7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp353(in, void_out);
         out.subclass = 4;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17400,6 +18246,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 846: {
         auto& out = *static_cast<DecodedULEA8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp356(in, void_out);
         out.subclass = 5;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17430,6 +18277,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 847: {
         auto& out = *static_cast<DecodedUSHF5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp366(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17451,6 +18299,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 848: {
         auto& out = *static_cast<DecodedUSHL4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp367(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17469,6 +18318,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 849: {
         auto& out = *static_cast<DecodedUIMAD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp372(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17490,6 +18340,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 850: {
         auto& out = *static_cast<DecodedUIMAD6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp374(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17514,6 +18365,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 851: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17532,6 +18384,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 852: {
         auto& out = *static_cast<DecodedUF2FP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp379(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17553,6 +18406,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 853: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17571,6 +18425,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 854: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17589,6 +18444,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 855: {
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp124(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17610,6 +18466,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 856: {
         auto& out = *static_cast<DecodedALD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp124(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17631,6 +18488,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 857: {
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp126(in, void_out);
         out.subclass = 0;
         out.srcAttr.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -17652,6 +18510,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 858: {
         auto& out = *static_cast<DecodedAST5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp126(in, void_out);
         out.subclass = 0;
         out.srcAttr.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -17673,6 +18532,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 859: {
         auto& out = *static_cast<DecodedIPA5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp130(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17694,6 +18554,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 860: {
         auto& out = *static_cast<DecodedIPA6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp413(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17718,6 +18579,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 861: {
         auto& out = *static_cast<DecodedCCTL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp298(in, void_out);
         out.subclass = 0;
         out.a.kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
@@ -17730,6 +18592,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 862: {
         auto& out = *static_cast<DecodedCCTL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp298(in, void_out);
         out.subclass = 0;
         out.a.kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
@@ -17742,6 +18605,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 863: {
         auto& out = *static_cast<DecodedBRA3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp414(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -17757,6 +18621,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 864: {
         auto& out = *static_cast<DecodedBRA3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp414(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -17772,6 +18637,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 865: {
         auto& out = *static_cast<DecodedJMP3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp416(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -17787,6 +18653,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 866: {
         auto& out = *static_cast<DecodedJMP3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp416(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -17802,6 +18669,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 867: {
         auto& out = *static_cast<DecodedLDC5_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp320(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17823,6 +18691,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 868: {
         auto& out = *static_cast<DecodedLDC5_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp320(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17844,6 +18713,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 869: {
         auto& out = *static_cast<DecodedSYNCS5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp418(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -17865,6 +18735,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 870: {
         auto& out = *static_cast<DecodedLDCU8_1*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp422(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17895,6 +18766,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 871: {
         auto& out = *static_cast<DecodedSYNCS4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp423(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -17913,6 +18785,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 872: {
         auto& out = *static_cast<DecodedSYNCS5_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp420(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17934,6 +18807,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 873: {
         auto& out = *static_cast<DecodedUTMALDG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp426(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17949,6 +18823,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 874: {
         auto& out = *static_cast<DecodedUTMALDG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp427(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17970,6 +18845,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 875: {
         auto& out = *static_cast<DecodedUTMALDG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp426(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -17985,6 +18861,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 876: {
         auto& out = *static_cast<DecodedUTMALDG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp427(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18006,6 +18883,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 877: {
         auto& out = *static_cast<DecodedUTMAPF3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp428(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18021,6 +18899,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 878: {
         auto& out = *static_cast<DecodedUTMAPF5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp429(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18042,6 +18921,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 879: {
         auto& out = *static_cast<DecodedUTMAPF3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp428(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18057,6 +18937,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 880: {
         auto& out = *static_cast<DecodedUTMAPF5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp429(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18078,6 +18959,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 881: {
         auto& out = *static_cast<DecodedUCGABARGET2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -18089,6 +18971,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 882: {
         auto& out = *static_cast<DecodedUCGABAR_GET2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -18100,6 +18983,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 883: {
         auto& out = *static_cast<DecodedCCTL4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp318(in, void_out);
         out.subclass = 0;
         out.Sa.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -18118,6 +19002,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 884: {
         auto& out = *static_cast<DecodedCCTL4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp318(in, void_out);
         out.subclass = 0;
         out.Sa.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -18136,6 +19021,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 885: {
         auto& out = *static_cast<DecodedLDCU6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp384(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18160,6 +19046,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 886: {
         auto& out = *static_cast<DecodedELECT3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp237(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -18175,6 +19062,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 887: {
         auto& out = *static_cast<DecodedELECT2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp432(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -18187,6 +19075,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 888: {
         auto& out = *static_cast<DecodedLDSM4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp433(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -18205,6 +19094,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 889: {
         auto& out = *static_cast<DecodedLDSM4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp433(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -18223,6 +19113,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 890: {
         auto& out = *static_cast<DecodedSTSM4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp434(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -18241,6 +19132,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 891: {
         auto& out = *static_cast<DecodedUVIADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp321(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18259,6 +19151,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 892: {
         auto& out = *static_cast<DecodedUVIMNMX5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp322(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18280,6 +19173,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 893: {
         auto& out = *static_cast<DecodedUIABS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -18294,6 +19188,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 894: {
         auto& out = *static_cast<DecodedUI2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp324(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18309,6 +19204,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 895: {
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp325(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18330,6 +19226,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 896: {
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp325(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18351,6 +19248,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 897: {
         auto& out = *static_cast<DecodedUI2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp325(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18372,6 +19270,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 898: {
         auto& out = *static_cast<DecodedUFMNMX5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp326(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18393,6 +19292,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 899: {
         auto& out = *static_cast<DecodedUFMNMX6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp327(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18417,6 +19317,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 900: {
         auto& out = *static_cast<DecodedUFSEL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp328(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18438,6 +19339,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 901: {
         auto& out = *static_cast<DecodedUFSET5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp329(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18459,6 +19361,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 902: {
         auto& out = *static_cast<DecodedUFSET4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp330(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18477,6 +19380,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 903: {
         auto& out = *static_cast<DecodedUFSETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp331(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18501,6 +19405,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 904: {
         auto& out = *static_cast<DecodedUFSETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp332(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18519,6 +19424,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 905: {
         auto& out = *static_cast<DecodedUFFMA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp335(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18540,6 +19446,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 906: {
         auto& out = *static_cast<DecodedUFMUL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp337(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18558,6 +19465,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 907: {
         auto& out = *static_cast<DecodedUF2IP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp338(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18579,6 +19487,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 908: {
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp339(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18594,6 +19503,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 909: {
         auto& out = *static_cast<DecodedUI2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp339(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18609,6 +19519,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 910: {
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp340(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18624,6 +19535,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 911: {
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp340(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18639,6 +19551,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 912: {
         auto& out = *static_cast<DecodedUF2F3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp340(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18654,6 +19567,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 913: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18669,6 +19583,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 914: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18684,6 +19599,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 915: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18699,6 +19615,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 916: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18714,6 +19631,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 917: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18729,6 +19647,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 918: {
         auto& out = *static_cast<DecodedUF2I3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp341(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18744,6 +19663,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 919: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18759,6 +19679,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 920: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18774,6 +19695,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 921: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18789,6 +19711,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 922: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18804,6 +19727,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 923: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18819,6 +19743,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 924: {
         auto& out = *static_cast<DecodedUFRND3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp342(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18834,6 +19759,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 925: {
         auto& out = *static_cast<DecodedUI2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp343(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18849,6 +19775,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 926: {
         auto& out = *static_cast<DecodedUI2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp343(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18864,6 +19791,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 927: {
         auto& out = *static_cast<DecodedMOV4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.indexURd.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
         out.indexURd.flags = in.flags("indexURd");
@@ -18881,6 +19809,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 928: {
         auto& out = *static_cast<DecodedUP2UR5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp435(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18902,6 +19831,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 929: {
         auto& out = *static_cast<DecodedUP2UR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp436(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18917,6 +19847,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 930: {
         auto& out = *static_cast<DecodedUR2UP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp437(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18935,6 +19866,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 931: {
         auto& out = *static_cast<DecodedUIMNMX8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp344(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18965,6 +19897,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 932: {
         auto& out = *static_cast<DecodedUIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp345(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -18992,6 +19925,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 933: {
         auto& out = *static_cast<DecodedUIMNMX8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp344(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19022,6 +19956,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 934: {
         auto& out = *static_cast<DecodedUIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp345(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19049,6 +19984,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 935: {
         auto& out = *static_cast<DecodedUSEL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp346(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19070,6 +20006,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 936: {
         auto& out = *static_cast<DecodedUISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp347(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19094,6 +20031,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 937: {
         auto& out = *static_cast<DecodedUISETP7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp348(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19121,6 +20059,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 938: {
         auto& out = *static_cast<DecodedUISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp349(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19139,6 +20078,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 939: {
         auto& out = *static_cast<DecodedUISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp350(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19160,6 +20100,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 940: {
         auto& out = *static_cast<DecodedUISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp347(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19184,6 +20125,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 941: {
         auto& out = *static_cast<DecodedUISETP7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp348(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19211,6 +20153,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 942: {
         auto& out = *static_cast<DecodedUISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp349(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19229,6 +20172,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 943: {
         auto& out = *static_cast<DecodedUISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp350(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19250,6 +20194,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 944: {
         auto& out = *static_cast<DecodedUIADD37*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -19276,6 +20221,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 945: {
         auto& out = *static_cast<DecodedUIADD39*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp352(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19309,6 +20255,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 946: {
         auto& out = *static_cast<DecodedULEA7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp353(in, void_out);
         out.subclass = 4;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19336,6 +20283,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 947: {
         auto& out = *static_cast<DecodedULEA6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp355(in, void_out);
         out.subclass = 4;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19360,6 +20308,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 948: {
         auto& out = *static_cast<DecodedULEA7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp354(in, void_out);
         out.subclass = 5;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19387,6 +20336,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 949: {
         auto& out = *static_cast<DecodedULEA8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp356(in, void_out);
         out.subclass = 5;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19417,6 +20367,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 950: {
         auto& out = *static_cast<DecodedULEA6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp355(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19441,6 +20392,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 951: {
         auto& out = *static_cast<DecodedULEA7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp354(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19468,6 +20420,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 952: {
         auto& out = *static_cast<DecodedULOP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp357(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19492,6 +20445,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 953: {
         auto& out = *static_cast<DecodedULOP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp358(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19513,6 +20467,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 954: {
         auto& out = *static_cast<DecodedULOP37_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp360(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19540,6 +20495,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 955: {
         auto& out = *static_cast<DecodedULOP36*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp362(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19564,6 +20520,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 956: {
         auto& out = *static_cast<DecodedULOP38*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp359(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19594,6 +20551,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 957: {
         auto& out = *static_cast<DecodedULOP37_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp361(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19621,6 +20579,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 958: {
         auto& out = *static_cast<DecodedULOP32I6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp438(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19645,6 +20604,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 959: {
         auto& out = *static_cast<DecodedULOP32I5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp439(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19666,6 +20626,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 960: {
         auto& out = *static_cast<DecodedUPRMT5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp363(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19687,6 +20648,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 961: {
         auto& out = *static_cast<DecodedUIADD3_647*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -19713,6 +20675,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 962: {
         auto& out = *static_cast<DecodedUIADD3_649*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp365(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19746,6 +20709,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 963: {
         auto& out = *static_cast<DecodedUSHF5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp366(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19767,6 +20731,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 964: {
         auto& out = *static_cast<DecodedUSHL4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp368(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19785,6 +20750,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 965: {
         auto& out = *static_cast<DecodedUSHR4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp369(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19803,6 +20769,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 966: {
         auto& out = *static_cast<DecodedUSGXT4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp370(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19821,6 +20788,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 967: {
         auto& out = *static_cast<DecodedUBMSK4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp371(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19839,6 +20807,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 968: {
         auto& out = *static_cast<DecodedUIMAD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp372(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19860,6 +20829,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 969: {
         auto& out = *static_cast<DecodedUIMAD6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp374(in, void_out);
         out.subclass = 1;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19884,6 +20854,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 970: {
         auto& out = *static_cast<DecodedUIMAD6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp373(in, void_out);
         out.subclass = 2;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19908,6 +20879,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 971: {
         auto& out = *static_cast<DecodedUIMAD7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp375(in, void_out);
         out.subclass = 3;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19935,6 +20907,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 972: {
         auto& out = *static_cast<DecodedUIMAD6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp373(in, void_out);
         out.subclass = 4;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19959,6 +20932,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 973: {
         auto& out = *static_cast<DecodedUIMAD7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp375(in, void_out);
         out.subclass = 5;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -19986,6 +20960,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 974: {
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp376(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20001,6 +20976,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 975: {
         auto& out = *static_cast<DecodedUF2FP4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp377(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20019,6 +20995,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 976: {
         auto& out = *static_cast<DecodedUF2FP4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp377(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20037,6 +21014,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 977: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20055,6 +21033,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 978: {
         auto& out = *static_cast<DecodedUF2FP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp379(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20076,6 +21055,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 979: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20094,6 +21074,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 980: {
         auto& out = *static_cast<DecodedUF2FP4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp378(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20112,6 +21093,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 981: {
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp376(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20127,6 +21109,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 982: {
         auto& out = *static_cast<DecodedUF2FP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp376(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20142,6 +21125,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 983: {
         auto& out = *static_cast<DecodedUCLEA6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -20165,6 +21149,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 984: {
         auto& out = *static_cast<DecodedUFLO4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp380(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -20183,6 +21168,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 985: {
         auto& out = *static_cast<DecodedUBREV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -20197,6 +21183,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 986: {
         auto& out = *static_cast<DecodedUPOPC3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -20211,6 +21198,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 987: {
         auto& out = *static_cast<DecodedIPA6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp413(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20235,6 +21223,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 988: {
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp133(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20250,6 +21239,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 989: {
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp133(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20265,6 +21255,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 990: {
         auto& out = *static_cast<DecodedCALL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp133(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20280,6 +21271,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 991: {
         auto& out = *static_cast<DecodedCALL2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp135(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20292,6 +21284,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 992: {
         auto& out = *static_cast<DecodedBRA3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp415(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20307,6 +21300,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 993: {
         auto& out = *static_cast<DecodedBRA3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp415(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20322,6 +21316,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 994: {
         auto& out = *static_cast<DecodedJMP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp417(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20337,6 +21332,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 995: {
         auto& out = *static_cast<DecodedJMP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp417(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20352,6 +21348,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 996: {
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp287(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20367,6 +21364,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 997: {
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp287(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20382,6 +21380,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 998: {
         auto& out = *static_cast<DecodedRET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp287(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20397,6 +21396,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 999: {
         auto& out = *static_cast<DecodedRET2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp288(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20409,6 +21409,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1000: {
         auto& out = *static_cast<DecodedBRXU3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp441(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20424,6 +21425,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1001: {
         auto& out = *static_cast<DecodedBRXU3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp441(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20439,6 +21441,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1002: {
         auto& out = *static_cast<DecodedJMXU3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp442(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20454,6 +21457,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1003: {
         auto& out = *static_cast<DecodedJMXU3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp442(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20469,6 +21473,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1004: {
         auto& out = *static_cast<DecodedLDG8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp443(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20499,6 +21504,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1005: {
         auto& out = *static_cast<DecodedLDG8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp443(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20529,6 +21535,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1006: {
         auto& out = *static_cast<DecodedLDG7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp445(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20556,6 +21563,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1007: {
         auto& out = *static_cast<DecodedLDG7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp445(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20583,6 +21591,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1008: {
         auto& out = *static_cast<DecodedLDG7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp445(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20610,6 +21619,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1009: {
         auto& out = *static_cast<DecodedLDG7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp445(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20637,6 +21647,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1010: {
         auto& out = *static_cast<DecodedLDG7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp445(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20664,6 +21675,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1011: {
         auto& out = *static_cast<DecodedLDG7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp445(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20691,6 +21703,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1012: {
         auto& out = *static_cast<DecodedSTG7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp446(in, void_out);
         out.subclass = 0;
         out.memoryDescriptor.kind = static_cast<std::uint8_t>(OperandKind::kDesc);
@@ -20718,6 +21731,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1013: {
         auto& out = *static_cast<DecodedSTG6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp447(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20742,6 +21756,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1014: {
         auto& out = *static_cast<DecodedSTG6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp447(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20766,6 +21781,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1015: {
         auto& out = *static_cast<DecodedSTG6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp447(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20790,6 +21806,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1016: {
         auto& out = *static_cast<DecodedLD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp448(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20814,6 +21831,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1017: {
         auto& out = *static_cast<DecodedLD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp449(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20835,6 +21853,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1018: {
         auto& out = *static_cast<DecodedLD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp449(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20856,6 +21875,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1019: {
         auto& out = *static_cast<DecodedLD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp449(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20877,6 +21897,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1020: {
         auto& out = *static_cast<DecodedLDG7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp444(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20904,6 +21925,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1021: {
         auto& out = *static_cast<DecodedLDG6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp450(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20928,6 +21950,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1022: {
         auto& out = *static_cast<DecodedLDG6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp450(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20952,6 +21975,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1023: {
         auto& out = *static_cast<DecodedLDG6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp450(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -20976,6 +22000,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1024: {
         auto& out = *static_cast<DecodedLDL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp451(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -20997,6 +22022,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1025: {
         auto& out = *static_cast<DecodedLDL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp452(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21015,6 +22041,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1026: {
         auto& out = *static_cast<DecodedLDS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp453(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21033,6 +22060,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1027: {
         auto& out = *static_cast<DecodedST5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp454(in, void_out);
         out.subclass = 0;
         out.memoryDescriptor.kind = static_cast<std::uint8_t>(OperandKind::kDesc);
@@ -21054,6 +22082,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1028: {
         auto& out = *static_cast<DecodedST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp455(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21072,6 +22101,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1029: {
         auto& out = *static_cast<DecodedST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp455(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21090,6 +22120,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1030: {
         auto& out = *static_cast<DecodedST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp455(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21108,6 +22139,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1031: {
         auto& out = *static_cast<DecodedSTG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp456(in, void_out);
         out.subclass = 0;
         out.memoryDescriptor.kind = static_cast<std::uint8_t>(OperandKind::kDesc);
@@ -21129,6 +22161,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1032: {
         auto& out = *static_cast<DecodedSTG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp457(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21147,6 +22180,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1033: {
         auto& out = *static_cast<DecodedSTG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp457(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21165,6 +22199,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1034: {
         auto& out = *static_cast<DecodedSTG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp457(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21183,6 +22218,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1035: {
         auto& out = *static_cast<DecodedSTL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp458(in, void_out);
         out.subclass = 0;
         out.memoryDescriptor.kind = static_cast<std::uint8_t>(OperandKind::kDesc);
@@ -21204,6 +22240,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1036: {
         auto& out = *static_cast<DecodedSTL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp459(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21222,6 +22259,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1037: {
         auto& out = *static_cast<DecodedSTS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp460(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21240,6 +22278,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1038: {
         auto& out = *static_cast<DecodedATOM7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp162(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21267,6 +22306,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1039: {
         auto& out = *static_cast<DecodedATOM7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp162(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21294,6 +22334,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1040: {
         auto& out = *static_cast<DecodedATOM7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp162(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21321,6 +22362,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1041: {
         auto& out = *static_cast<DecodedATOM8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp461(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21351,6 +22393,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1042: {
         auto& out = *static_cast<DecodedATOMS5_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp168(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21372,6 +22415,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1043: {
         auto& out = *static_cast<DecodedREDS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp462(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21390,6 +22434,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1044: {
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp463(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21408,6 +22453,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1045: {
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp463(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21426,6 +22472,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1046: {
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp463(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21444,6 +22491,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1047: {
         auto& out = *static_cast<DecodedREDG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp464(in, void_out);
         out.subclass = 0;
         out.memoryDescriptor.kind = static_cast<std::uint8_t>(OperandKind::kDesc);
@@ -21465,6 +22513,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1048: {
         auto& out = *static_cast<DecodedATOM7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp162(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21492,6 +22541,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1049: {
         auto& out = *static_cast<DecodedATOM7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp162(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21519,6 +22569,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1050: {
         auto& out = *static_cast<DecodedATOM7_0*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp162(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21546,6 +22597,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1051: {
         auto& out = *static_cast<DecodedATOM8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp461(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21576,6 +22628,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1052: {
         auto& out = *static_cast<DecodedATOMG6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp178(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21600,6 +22653,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1053: {
         auto& out = *static_cast<DecodedATOMG6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp178(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21624,6 +22678,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1054: {
         auto& out = *static_cast<DecodedATOMG6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp178(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21648,6 +22703,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1055: {
         auto& out = *static_cast<DecodedATOMG7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp465(in, void_out);
         out.subclass = 16;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21675,6 +22731,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1056: {
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp466(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21693,6 +22750,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1057: {
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp466(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21711,6 +22769,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1058: {
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp466(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21729,6 +22788,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1059: {
         auto& out = *static_cast<DecodedLDGMC5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp467(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21750,6 +22810,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1060: {
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp466(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21768,6 +22829,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1061: {
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp466(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21786,6 +22848,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1062: {
         auto& out = *static_cast<DecodedLDGMC4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp466(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21804,6 +22867,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1063: {
         auto& out = *static_cast<DecodedLDGMC5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp467(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21825,6 +22889,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1064: {
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp463(in, void_out);
         out.subclass = 16;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21843,6 +22908,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1065: {
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp463(in, void_out);
         out.subclass = 16;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21861,6 +22927,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1066: {
         auto& out = *static_cast<DecodedREDG4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp463(in, void_out);
         out.subclass = 16;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21879,6 +22946,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1067: {
         auto& out = *static_cast<DecodedREDG5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp464(in, void_out);
         out.subclass = 16;
         out.memoryDescriptor.kind = static_cast<std::uint8_t>(OperandKind::kDesc);
@@ -21900,6 +22968,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1068: {
         auto& out = *static_cast<DecodedSYNCS5_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp419(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21921,6 +22990,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1069: {
         auto& out = *static_cast<DecodedSYNCS4_2*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp425(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -21939,6 +23009,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1070: {
         auto& out = *static_cast<DecodedATOMG6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp178(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21963,6 +23034,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1071: {
         auto& out = *static_cast<DecodedATOMG6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp178(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -21987,6 +23059,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1072: {
         auto& out = *static_cast<DecodedATOMG6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp178(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22011,6 +23084,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1073: {
         auto& out = *static_cast<DecodedATOMG7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp465(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22038,6 +23112,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1074: {
         auto& out = *static_cast<DecodedQSPC4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp183(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22056,6 +23131,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1075: {
         auto& out = *static_cast<DecodedQSPC4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp183(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22074,6 +23150,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1076: {
         auto& out = *static_cast<DecodedQSPC4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp183(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22092,6 +23169,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1077: {
         auto& out = *static_cast<DecodedQSPC4_2*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp184(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22110,6 +23188,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1078: {
         auto& out = *static_cast<DecodedQSPC4_2*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp184(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22128,6 +23207,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1079: {
         auto& out = *static_cast<DecodedQSPC4_2*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp184(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22146,6 +23226,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1080: {
         auto& out = *static_cast<DecodedQSPC5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp468(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22167,6 +23248,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1081: {
         auto& out = *static_cast<DecodedQSPC5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp468(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22188,6 +23270,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1082: {
         auto& out = *static_cast<DecodedQSPC5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp468(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22209,6 +23292,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1083: {
         auto& out = *static_cast<DecodedLDCU5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp469(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22230,6 +23314,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1084: {
         auto& out = *static_cast<DecodedLDCU4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp470(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22248,6 +23333,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1085: {
         auto& out = *static_cast<DecodedARRIVES3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp471(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22263,6 +23349,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1086: {
         auto& out = *static_cast<DecodedSYNCS3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp472(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22278,6 +23365,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1087: {
         auto& out = *static_cast<DecodedSYNCS4_1*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp424(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22296,6 +23384,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1088: {
         auto& out = *static_cast<DecodedUTMACCTL2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp473(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22308,6 +23397,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1089: {
         auto& out = *static_cast<DecodedUTMACCTL2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp473(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22320,6 +23410,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1090: {
         auto& out = *static_cast<DecodedUCGABARARV1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp474(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22329,6 +23420,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1091: {
         auto& out = *static_cast<DecodedUCGABAR_ARV1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp475(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22338,6 +23430,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1092: {
         auto& out = *static_cast<DecodedUSETMAXREG3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp405(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22353,6 +23446,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1093: {
         auto& out = *static_cast<DecodedUSETMAXREG2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp406(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22365,6 +23459,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1094: {
         auto& out = *static_cast<DecodedUSETSHMSZ1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp476(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22374,6 +23469,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1095: {
         auto& out = *static_cast<DecodedUSETSHMSZ2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -22385,6 +23481,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1096: {
         auto& out = *static_cast<DecodedULEPC3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp477(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22400,6 +23497,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1097: {
         auto& out = *static_cast<DecodedULEPC3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp477(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22415,6 +23513,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1098: {
         auto& out = *static_cast<DecodedCCTL4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp317(in, void_out);
         out.subclass = 0;
         out.Sa.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -22433,6 +23532,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1099: {
         auto& out = *static_cast<DecodedLDCU6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp385(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -22457,6 +23557,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1100: {
         auto& out = *static_cast<DecodedMOV2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp0(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22469,6 +23570,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1101: {
         auto& out = *static_cast<DecodedMOV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -22483,6 +23585,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1102: {
         auto& out = *static_cast<DecodedMOV2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp0(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22495,6 +23598,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1103: {
         auto& out = *static_cast<DecodedP2R4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp2(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22513,6 +23617,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1104: {
         auto& out = *static_cast<DecodedR2P3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp3(in, void_out);
         out.subclass = 0;
         out.PR.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -22528,6 +23633,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1105: {
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp4(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22546,6 +23652,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1106: {
         auto& out = *static_cast<DecodedFSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp5(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22564,6 +23671,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1107: {
         auto& out = *static_cast<DecodedFMNMX4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp6(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22582,6 +23690,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1108: {
         auto& out = *static_cast<DecodedFMNMX5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp7(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22603,6 +23712,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1109: {
         auto& out = *static_cast<DecodedFSET4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp8(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22621,6 +23731,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1110: {
         auto& out = *static_cast<DecodedFSET3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp9(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22636,6 +23747,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1111: {
         auto& out = *static_cast<DecodedFSETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp10(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22657,6 +23769,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1112: {
         auto& out = *static_cast<DecodedFSETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp11(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22672,6 +23785,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1113: {
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp12(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22696,6 +23810,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1114: {
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp13(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22717,6 +23832,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1115: {
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp14(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22735,6 +23851,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1116: {
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp15(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22750,6 +23867,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1117: {
         auto& out = *static_cast<DecodedISETP6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp12(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22774,6 +23892,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1118: {
         auto& out = *static_cast<DecodedISETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp13(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22795,6 +23914,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1119: {
         auto& out = *static_cast<DecodedISETP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp14(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22813,6 +23933,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1120: {
         auto& out = *static_cast<DecodedISETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp15(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -22828,6 +23949,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1121: {
         auto& out = *static_cast<DecodedIADD36*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -22851,6 +23973,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1122: {
         auto& out = *static_cast<DecodedIADD38*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp17(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22881,6 +24004,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1123: {
         auto& out = *static_cast<DecodedISCADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -22901,6 +24025,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1124: {
         auto& out = *static_cast<DecodedLEA6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp19(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22925,6 +24050,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1125: {
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp21(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22946,6 +24072,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1126: {
         auto& out = *static_cast<DecodedLEA6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp20(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22970,6 +24097,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1127: {
         auto& out = *static_cast<DecodedLEA7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp22(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -22997,6 +24125,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1128: {
         auto& out = *static_cast<DecodedLEA5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp21(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23018,6 +24147,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1129: {
         auto& out = *static_cast<DecodedLEA6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp20(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23042,6 +24172,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1130: {
         auto& out = *static_cast<DecodedLOP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp23(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23063,6 +24194,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1131: {
         auto& out = *static_cast<DecodedLOP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp24(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23081,6 +24213,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1132: {
         auto& out = *static_cast<DecodedLOP37*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp25(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23108,6 +24241,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1133: {
         auto& out = *static_cast<DecodedLOP36_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp27(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23132,6 +24266,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1134: {
         auto& out = *static_cast<DecodedLOP36_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp26(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23156,6 +24291,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1135: {
         auto& out = *static_cast<DecodedLOP35*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp28(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23177,6 +24313,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1136: {
         auto& out = *static_cast<DecodedIABS2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -23188,6 +24325,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1137: {
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp30(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23206,6 +24344,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1138: {
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp31(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23233,6 +24372,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1139: {
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp32(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23257,6 +24397,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1140: {
         auto& out = *static_cast<DecodedIMNMX7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp31(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23284,6 +24425,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1141: {
         auto& out = *static_cast<DecodedIMNMX6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp32(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23308,6 +24450,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1142: {
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp33(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23326,6 +24469,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1143: {
         auto& out = *static_cast<DecodedSHL3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp35(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23341,6 +24485,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1144: {
         auto& out = *static_cast<DecodedSHR3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp36(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23356,6 +24501,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1145: {
         auto& out = *static_cast<DecodedSGXT3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp37(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23371,6 +24517,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1146: {
         auto& out = *static_cast<DecodedBMSK3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp38(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23386,6 +24533,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1147: {
         auto& out = *static_cast<DecodedPLOP35_2*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp41(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23407,6 +24555,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1148: {
         auto& out = *static_cast<DecodedPLOP37_2*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp46(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23434,6 +24583,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1149: {
         auto& out = *static_cast<DecodedPLOP35_3*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp42(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23455,6 +24605,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1150: {
         auto& out = *static_cast<DecodedPLOP37_3*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp47(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23482,6 +24633,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1151: {
         auto& out = *static_cast<DecodedPLOP35_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp43(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23503,6 +24655,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1152: {
         auto& out = *static_cast<DecodedPLOP37_4*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp48(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -23530,6 +24683,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1153: {
         auto& out = *static_cast<DecodedFMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp49(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23545,6 +24699,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1154: {
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp52(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23563,6 +24718,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1155: {
         auto& out = *static_cast<DecodedFHFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp53(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23581,6 +24737,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1156: {
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp54(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23599,6 +24756,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1157: {
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp54(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23617,6 +24775,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1158: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23638,6 +24797,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1159: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23659,6 +24819,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1160: {
         auto& out = *static_cast<DecodedIMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp60(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23674,6 +24835,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1161: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23695,6 +24857,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1162: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23716,6 +24879,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1163: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 3;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23740,6 +24904,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1164: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 3;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23764,6 +24929,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1165: {
         auto& out = *static_cast<DecodedIMUL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp62(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23782,6 +24948,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1166: {
         auto& out = *static_cast<DecodedIDP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp63(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23800,6 +24967,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1167: {
         auto& out = *static_cast<DecodedIDP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp63(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23818,6 +24986,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1168: {
         auto& out = *static_cast<DecodedIDP4A4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp64(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23836,6 +25005,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1169: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23857,6 +25027,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1170: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23878,6 +25049,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1171: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23902,6 +25074,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1172: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23926,6 +25099,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1173: {
         auto& out = *static_cast<DecodedDMUL3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp65(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23941,6 +25115,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1174: {
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp69(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23959,6 +25134,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1175: {
         auto& out = *static_cast<DecodedCLMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp70(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23977,6 +25153,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1176: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -23995,6 +25172,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1177: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24013,6 +25191,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1178: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24031,6 +25210,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1179: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24052,6 +25232,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1180: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24073,6 +25254,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1181: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24094,6 +25276,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1182: {
         auto& out = *static_cast<DecodedHMUL23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp76(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24109,6 +25292,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1183: {
         auto& out = *static_cast<DecodedHMUL23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp76(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24124,6 +25308,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1184: {
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp83(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24142,6 +25327,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1185: {
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp84(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24163,6 +25349,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1186: {
         auto& out = *static_cast<DecodedIADD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp83(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24181,6 +25368,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1187: {
         auto& out = *static_cast<DecodedIADD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp84(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24202,6 +25390,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1188: {
         auto& out = *static_cast<DecodedVIADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp85(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24217,6 +25406,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1189: {
         auto& out = *static_cast<DecodedI2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp88(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24229,6 +25419,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1190: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24247,6 +25438,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1191: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24265,6 +25457,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1192: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24283,6 +25476,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1193: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24301,6 +25495,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1194: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24319,6 +25514,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1195: {
         auto& out = *static_cast<DecodedI2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp89(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24337,6 +25533,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1196: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24349,6 +25546,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1197: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24361,6 +25559,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1198: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24373,6 +25572,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1199: {
         auto& out = *static_cast<DecodedF2FP3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp95(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24388,6 +25588,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1200: {
         auto& out = *static_cast<DecodedF2FP3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp95(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24403,6 +25604,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1201: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24418,6 +25620,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1202: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24433,6 +25636,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1203: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24448,6 +25652,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1204: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24466,6 +25671,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1205: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24484,6 +25690,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1206: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24502,6 +25709,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1207: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24517,6 +25725,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1208: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24532,6 +25741,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1209: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24544,6 +25754,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1210: {
         auto& out = *static_cast<DecodedF2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp94(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24556,6 +25767,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1211: {
         auto& out = *static_cast<DecodedHMNMX24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp99(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24574,6 +25786,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1212: {
         auto& out = *static_cast<DecodedHMNMX24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp99(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24592,6 +25805,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1213: {
         auto& out = *static_cast<DecodedHMNMX26*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp100(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24616,6 +25830,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1214: {
         auto& out = *static_cast<DecodedHMNMX26*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp100(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24640,6 +25855,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1215: {
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp101(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24658,6 +25874,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1216: {
         auto& out = *static_cast<DecodedI2FP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp102(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24670,6 +25887,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1217: {
         auto& out = *static_cast<DecodedVIMNMX4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp103(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24688,6 +25906,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1218: {
         auto& out = *static_cast<DecodedMOV4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -24705,6 +25924,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1219: {
         auto& out = *static_cast<DecodedUMOV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp250(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -24720,6 +25940,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1220: {
         auto& out = *static_cast<DecodedUMOV3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp250(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -24735,6 +25956,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1221: {
         auto& out = *static_cast<DecodedUP2UR5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp435(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -24756,6 +25978,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1222: {
         auto& out = *static_cast<DecodedUR2UP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp437(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -24774,6 +25997,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1223: {
         auto& out = *static_cast<DecodedUSEL5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp346(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -24795,6 +26019,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1224: {
         auto& out = *static_cast<DecodedUCLEA6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -24818,6 +26043,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1225: {
         auto& out = *static_cast<DecodedFLO3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp107(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24833,6 +26059,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1226: {
         auto& out = *static_cast<DecodedBREV2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -24844,6 +26071,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1227: {
         auto& out = *static_cast<DecodedFCHK3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp109(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -24859,6 +26087,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1228: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24871,6 +26100,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1229: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24883,6 +26113,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1230: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24895,6 +26126,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1231: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24907,6 +26139,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1232: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24919,6 +26152,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1233: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24931,6 +26165,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1234: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24943,6 +26178,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1235: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24955,6 +26191,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1236: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24967,6 +26204,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1237: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24979,6 +26217,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1238: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -24991,6 +26230,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1239: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25003,6 +26243,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1240: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25015,6 +26256,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1241: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25027,6 +26269,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1242: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25039,6 +26282,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1243: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25051,6 +26295,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1244: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25063,6 +26308,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1245: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25075,6 +26321,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1246: {
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp114(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25087,6 +26334,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1247: {
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp114(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25099,6 +26347,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1248: {
         auto& out = *static_cast<DecodedMUFU2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp114(in, void_out);
         out.subclass = 16;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25111,6 +26360,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1249: {
         auto& out = *static_cast<DecodedPOPC2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -25122,6 +26372,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1250: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25134,6 +26385,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1251: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25146,6 +26398,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1252: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25158,6 +26411,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1253: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25170,6 +26424,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1254: {
         auto& out = *static_cast<DecodedF2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp110(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25182,6 +26437,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1255: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25194,6 +26450,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1256: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25206,6 +26463,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1257: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25218,6 +26476,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1258: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25230,6 +26489,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1259: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25242,6 +26502,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1260: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25254,6 +26515,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1261: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25266,6 +26528,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1262: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25278,6 +26541,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1263: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25290,6 +26554,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1264: {
         auto& out = *static_cast<DecodedF2I2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp111(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25302,6 +26567,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1265: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25314,6 +26580,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1266: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25326,6 +26593,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1267: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25338,6 +26606,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1268: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25350,6 +26619,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1269: {
         auto& out = *static_cast<DecodedI2F2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp112(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25362,6 +26632,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1270: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25374,6 +26645,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1271: {
         auto& out = *static_cast<DecodedFRND2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp113(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25386,6 +26658,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1272: {
         auto& out = *static_cast<DecodedDEPBAR3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp266(in, void_out);
         out.subclass = 0;
         out.sbidx.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -25401,6 +26674,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1273: {
         auto& out = *static_cast<DecodedOUT3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp127(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25416,6 +26690,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1274: {
         auto& out = *static_cast<DecodedRPCMOV2_2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp142(in, void_out);
         out.subclass = 0;
         out.RpcN.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -25428,6 +26703,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1275: {
         auto& out = *static_cast<DecodedRPCMOV2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp141(in, void_out);
         out.subclass = 0;
         out.Rpc.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -25440,6 +26716,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1276: {
         auto& out = *static_cast<DecodedBMOV2_4*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp147(in, void_out);
         out.subclass = 0;
         out.cbu_state.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -25452,6 +26729,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1277: {
         auto& out = *static_cast<DecodedBMOV2_1*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp144(in, void_out);
         out.subclass = 0;
         out.atexit_pc.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -25464,6 +26742,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1278: {
         auto& out = *static_cast<DecodedNANOTRAP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp149(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25476,6 +26755,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1279: {
         auto& out = *static_cast<DecodedNANOSLEEP2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp150(in, void_out);
         out.subclass = 0;
         out.Pp.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25488,6 +26768,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1280: {
         auto& out = *static_cast<DecodedTEX8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp478(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25518,6 +26799,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1281: {
         auto& out = *static_cast<DecodedTEX8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp478(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25548,6 +26830,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1282: {
         auto& out = *static_cast<DecodedTLD48*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp479(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25578,6 +26861,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1283: {
         auto& out = *static_cast<DecodedTLD48*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp479(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25608,6 +26892,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1284: {
         auto& out = *static_cast<DecodedTLD8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp480(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25638,6 +26923,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1285: {
         auto& out = *static_cast<DecodedTLD8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp480(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25668,6 +26954,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1286: {
         auto& out = *static_cast<DecodedTXD8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp481(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25698,6 +26985,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1287: {
         auto& out = *static_cast<DecodedFOOTPRINT6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp482(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25722,6 +27010,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1288: {
         auto& out = *static_cast<DecodedFOOTPRINT6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp482(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25746,6 +27035,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1289: {
         auto& out = *static_cast<DecodedCCTL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp297(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25758,6 +27048,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1290: {
         auto& out = *static_cast<DecodedCCTL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp297(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25770,6 +27061,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1291: {
         auto& out = *static_cast<DecodedCCTL3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp299(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25785,6 +27077,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1292: {
         auto& out = *static_cast<DecodedCCTL3_2*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp301(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25800,6 +27093,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1293: {
         auto& out = *static_cast<DecodedCCTL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp297(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25812,6 +27106,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1294: {
         auto& out = *static_cast<DecodedCCTL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp297(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25824,6 +27119,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1295: {
         auto& out = *static_cast<DecodedCCTL3_0*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp299(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -25839,6 +27135,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1296: {
         auto& out = *static_cast<DecodedCCTL3_2*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp301(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25854,6 +27151,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1297: {
         auto& out = *static_cast<DecodedCCTLL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp304(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25866,6 +27164,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1298: {
         auto& out = *static_cast<DecodedCCTLL2_0*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp304(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25878,6 +27177,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1299: {
         auto& out = *static_cast<DecodedCCTLT1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp171(in, void_out);
         out.subclass = 0;
         out.b.kind = static_cast<std::uint8_t>(OperandKind::kUniformRegister);
@@ -25887,6 +27187,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1300: {
         auto& out = *static_cast<DecodedLDCU8_0*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp421(in, void_out);
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
@@ -25917,6 +27218,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1301: {
         auto& out = *static_cast<DecodedLDGSTS6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp483(in, void_out);
         out.subclass = 0;
         out.Rb.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25941,6 +27243,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1302: {
         auto& out = *static_cast<DecodedLDGSTS8*>(void_out);
+        out.n_ops = 8;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp485(in, void_out);
         out.subclass = 0;
         out.Rb.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25971,6 +27274,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1303: {
         auto& out = *static_cast<DecodedLDGSTS6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp483(in, void_out);
         out.subclass = 0;
         out.Rb.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -25995,6 +27299,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1304: {
         auto& out = *static_cast<DecodedSUQUERY7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp486(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -26022,6 +27327,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1305: {
         auto& out = *static_cast<DecodedSTAS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp487(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26040,6 +27346,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1306: {
         auto& out = *static_cast<DecodedSTAS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp487(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26058,6 +27365,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1307: {
         auto& out = *static_cast<DecodedSTAS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp487(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26076,6 +27384,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1308: {
         auto& out = *static_cast<DecodedREDAS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp488(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26094,6 +27403,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1309: {
         auto& out = *static_cast<DecodedREDAS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp488(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26112,6 +27422,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1310: {
         auto& out = *static_cast<DecodedREDAS4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp488(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26130,6 +27441,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1311: {
         auto& out = *static_cast<DecodedUCGABARWAIT1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -26138,6 +27450,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1312: {
         auto& out = *static_cast<DecodedUCGABAR_WAIT1*>(void_out);
+        out.n_ops = 1;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.UPg.kind = static_cast<std::uint8_t>(OperandKind::kUniformPredicate);
         out.UPg.flags = in.flags("UPg");
@@ -26146,6 +27459,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1313: {
         auto& out = *static_cast<DecodedSEL4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp4(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26164,6 +27478,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1314: {
         auto& out = *static_cast<DecodedPRMT4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp30(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26182,6 +27497,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1315: {
         auto& out = *static_cast<DecodedSHF4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp33(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26200,6 +27516,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1316: {
         auto& out = *static_cast<DecodedFADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp50(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26215,6 +27532,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1317: {
         auto& out = *static_cast<DecodedFHADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp51(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26230,6 +27548,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1318: {
         auto& out = *static_cast<DecodedFFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp52(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26248,6 +27567,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1319: {
         auto& out = *static_cast<DecodedFHFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp53(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26266,6 +27586,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1320: {
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp54(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26284,6 +27605,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1321: {
         auto& out = *static_cast<DecodedIMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp54(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26302,6 +27624,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1322: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26323,6 +27646,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1323: {
         auto& out = *static_cast<DecodedIMAD5_4*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp59(in, void_out);
         out.subclass = 1;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26344,6 +27668,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1324: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26365,6 +27690,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1325: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 2;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26386,6 +27712,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1326: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 3;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26410,6 +27737,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1327: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 3;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26434,6 +27762,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1328: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26455,6 +27784,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1329: {
         auto& out = *static_cast<DecodedIMAD5_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp55(in, void_out);
         out.subclass = 4;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26476,6 +27806,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1330: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26500,6 +27831,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1331: {
         auto& out = *static_cast<DecodedIMAD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp61(in, void_out);
         out.subclass = 5;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26524,6 +27856,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1332: {
         auto& out = *static_cast<DecodedDADD3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp66(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26539,6 +27872,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1333: {
         auto& out = *static_cast<DecodedDSETP5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp67(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -26560,6 +27894,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1334: {
         auto& out = *static_cast<DecodedDSETP3*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp68(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -26575,6 +27910,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1335: {
         auto& out = *static_cast<DecodedDFMA4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp69(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26593,6 +27929,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1336: {
         auto& out = *static_cast<DecodedCLMAD4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp70(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26611,6 +27948,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1337: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26626,6 +27964,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1338: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26641,6 +27980,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1339: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26656,6 +27996,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1340: {
         auto& out = *static_cast<DecodedHADD23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp71(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26671,6 +28012,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1341: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26689,6 +28031,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1342: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26707,6 +28050,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1343: {
         auto& out = *static_cast<DecodedHFMA24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp72(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26725,6 +28069,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1344: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26746,6 +28091,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1345: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26767,6 +28113,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1346: {
         auto& out = *static_cast<DecodedHFMA25_1*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp74(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26788,6 +28135,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1347: {
         auto& out = *static_cast<DecodedHSET24_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp77(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26806,6 +28154,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1348: {
         auto& out = *static_cast<DecodedHSET24_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp77(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26824,6 +28173,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1349: {
         auto& out = *static_cast<DecodedHSET23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp79(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26839,6 +28189,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1350: {
         auto& out = *static_cast<DecodedHSET23*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp79(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26854,6 +28205,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1351: {
         auto& out = *static_cast<DecodedHSETP25_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp80(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -26875,6 +28227,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1352: {
         auto& out = *static_cast<DecodedHSETP25_0*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp80(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -26896,6 +28249,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1353: {
         auto& out = *static_cast<DecodedHSETP24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp82(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -26914,6 +28268,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1354: {
         auto& out = *static_cast<DecodedHSETP24*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp82(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -26932,6 +28287,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1355: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26947,6 +28303,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1356: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26962,6 +28319,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1357: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26977,6 +28335,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1358: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -26995,6 +28354,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1359: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27013,6 +28373,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1360: {
         auto& out = *static_cast<DecodedF2FP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp97(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27031,6 +28392,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1361: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27046,6 +28408,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1362: {
         auto& out = *static_cast<DecodedF2FP3_1*>(void_out);
+        out.n_ops = 3;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp96(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27061,6 +28424,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1363: {
         auto& out = *static_cast<DecodedF2IP4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp101(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27079,6 +28443,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1364: {
         auto& out = *static_cast<DecodedHMMA9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp491(in, void_out);
         out.subclass = 0;
         out.indexURd.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -27112,6 +28477,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1365: {
         auto& out = *static_cast<DecodedHMMA7_1*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp92(in, void_out);
         out.subclass = 1;
         out.indexURd.kind = static_cast<std::uint8_t>(OperandKind::kSpecial);
@@ -27139,6 +28505,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1366: {
         auto& out = *static_cast<DecodedMOV64IUR2*>(void_out);
+        out.n_ops = 2;  // base-field count (set at fill time for the interpreter)
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
         out.Rd.flags = in.flags("Rd");
@@ -27150,6 +28517,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1367: {
         auto& out = *static_cast<DecodedTEX9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp151(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27183,6 +28551,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1368: {
         auto& out = *static_cast<DecodedTEX9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp151(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27216,6 +28585,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1369: {
         auto& out = *static_cast<DecodedTLD49*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp492(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27249,6 +28619,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1370: {
         auto& out = *static_cast<DecodedTLD49*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp492(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27282,6 +28653,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1371: {
         auto& out = *static_cast<DecodedTLD49*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp492(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27315,6 +28687,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1372: {
         auto& out = *static_cast<DecodedTLD49*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp492(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27348,6 +28721,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1373: {
         auto& out = *static_cast<DecodedTLD9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp493(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27381,6 +28755,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1374: {
         auto& out = *static_cast<DecodedTLD9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp493(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27414,6 +28789,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1375: {
         auto& out = *static_cast<DecodedTLD9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp493(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27447,6 +28823,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1376: {
         auto& out = *static_cast<DecodedTLD9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp493(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27480,6 +28857,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1377: {
         auto& out = *static_cast<DecodedTMML7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp494(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27507,6 +28885,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1378: {
         auto& out = *static_cast<DecodedTMML7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp494(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27534,6 +28913,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1379: {
         auto& out = *static_cast<DecodedTXD9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp495(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27567,6 +28947,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1380: {
         auto& out = *static_cast<DecodedTXD9*>(void_out);
+        out.n_ops = 9;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp495(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27600,6 +28981,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1381: {
         auto& out = *static_cast<DecodedTXQ6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp496(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27624,6 +29006,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1382: {
         auto& out = *static_cast<DecodedTXQ6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp496(in, void_out);
         out.subclass = 0;
         out.Rd2.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27648,6 +29031,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1383: {
         auto& out = *static_cast<DecodedFOOTPRINT7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp497(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27675,6 +29059,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1384: {
         auto& out = *static_cast<DecodedFOOTPRINT7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp497(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27702,6 +29087,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1385: {
         auto& out = *static_cast<DecodedFOOTPRINT7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp497(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27729,6 +29115,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1386: {
         auto& out = *static_cast<DecodedFOOTPRINT7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp497(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27756,6 +29143,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1387: {
         auto& out = *static_cast<DecodedATOM6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp160(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27780,6 +29168,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1388: {
         auto& out = *static_cast<DecodedATOM6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp160(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27804,6 +29193,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1389: {
         auto& out = *static_cast<DecodedATOM6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp160(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27828,6 +29218,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1390: {
         auto& out = *static_cast<DecodedATOM6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp160(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27852,6 +29243,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1391: {
         auto& out = *static_cast<DecodedATOM6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp160(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27876,6 +29268,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1392: {
         auto& out = *static_cast<DecodedATOM6_0*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp160(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27900,6 +29293,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1393: {
         auto& out = *static_cast<DecodedATOMS4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp164(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27918,6 +29312,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1394: {
         auto& out = *static_cast<DecodedATOMS4_0*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp164(in, void_out);
         out.subclass = 0;
         out.Rd.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -27936,6 +29331,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1395: {
         auto& out = *static_cast<DecodedSUATOM6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp172(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27960,6 +29356,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1396: {
         auto& out = *static_cast<DecodedSUATOM7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp498(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -27987,6 +29384,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1397: {
         auto& out = *static_cast<DecodedSUATOM6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp172(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -28011,6 +29409,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1398: {
         auto& out = *static_cast<DecodedSUATOM7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp498(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -28038,6 +29437,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1399: {
         auto& out = *static_cast<DecodedSULD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp307(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -28059,6 +29459,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1400: {
         auto& out = *static_cast<DecodedSULD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp499(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -28083,6 +29484,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1401: {
         auto& out = *static_cast<DecodedSULD5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp307(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -28104,6 +29506,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1402: {
         auto& out = *static_cast<DecodedSULD6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp499(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);
@@ -28128,6 +29531,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1403: {
         auto& out = *static_cast<DecodedSUST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp308(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28146,6 +29550,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1404: {
         auto& out = *static_cast<DecodedSUST5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp500(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28167,6 +29572,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1405: {
         auto& out = *static_cast<DecodedSUST4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp308(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28185,6 +29591,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1406: {
         auto& out = *static_cast<DecodedSUST5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp500(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28206,6 +29613,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1407: {
         auto& out = *static_cast<DecodedSURED4*>(void_out);
+        out.n_ops = 4;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp173(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28224,6 +29632,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1408: {
         auto& out = *static_cast<DecodedSURED5*>(void_out);
+        out.n_ops = 5;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp501(in, void_out);
         out.subclass = 0;
         out.Ra.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28245,6 +29654,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1409: {
         auto& out = *static_cast<DecodedLDGSTS6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp484(in, void_out);
         out.subclass = 0;
         out.Rb.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28269,6 +29679,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1410: {
         auto& out = *static_cast<DecodedLDGSTS6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp484(in, void_out);
         out.subclass = 0;
         out.Rb.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28293,6 +29704,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1411: {
         auto& out = *static_cast<DecodedLDGSTS7*>(void_out);
+        out.n_ops = 7;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp502(in, void_out);
         out.subclass = 0;
         out.Rb.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28320,6 +29732,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1412: {
         auto& out = *static_cast<DecodedLDGSTS6_1*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp484(in, void_out);
         out.subclass = 0;
         out.Rb.kind = static_cast<std::uint8_t>(OperandKind::kRegister);
@@ -28344,6 +29757,7 @@ inline void fill_by_variant(std::uint32_t vi, const FillIn& in, void* void_out) 
     }
     case 1413: {
         auto& out = *static_cast<DecodedSUQUERY6*>(void_out);
+        out.n_ops = 6;  // base-field count (set at fill time for the interpreter)
         shape_fill_mods_grp311(in, void_out);
         out.subclass = 0;
         out.Pu.kind = static_cast<std::uint8_t>(OperandKind::kPredicate);

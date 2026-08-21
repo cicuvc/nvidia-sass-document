@@ -37,7 +37,7 @@ public:
     explicit OperandFields(const DecodedInstruction& inst) {
         const std::uint32_t vi = inst.shape_variant;
         if (vi >= isa::kNumVariants) return;
-        n_ = shape::kShapeManifests[vi].n_ops;
+        n_ = inst.n_ops;
         for (std::uint16_t p = 0; p < n_; ++p)
             f_[p] = shape::operand_field(vi, &inst, p);
     }
@@ -1471,7 +1471,7 @@ std::optional<std::uint64_t> Interpreter::branch_target(
     const DecodedInstruction& inst, std::uint64_t pc,
     ThreadState& t) const {
     const isa::Mnemonic m = inst.mnemonic;
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+
     // Ops access is the per-variant generic array (BRA3/JMP3 split into
     // uniform-pred vs uniform-target structs by shapes_poly_config.py; the
     // target/displacement role stays at the same position in both).
@@ -1483,7 +1483,7 @@ std::optional<std::uint64_t> Interpreter::branch_target(
         // with it).  The typed fill sign-extends it, so BRA's 56-bit
         // two's-complement sImm reads as e.g. -12 directly.
         std::int64_t imm = 0;
-        if (mf.n_ops == 3) {
+        if (inst.n_ops == 3) {
             imm = shape::operand_value_as_i64(ops[2]);
         } else {
             imm = shape::operand_value_as_i64(ops[1]);
@@ -1574,9 +1574,9 @@ std::optional<SpecialReg> Interpreter::special_reg(
     const DecodedInstruction& inst) const {
     // S2R/S2UR encode the special register in the SRa operand role (the
     // `imm8` ENCODING field; the typed schema surfaces it as ops[last]).
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+
     std::uint64_t v = 0;
-    if (mf.n_ops == 3) {  // S2UR: UPg, URd, SRa
+    if (inst.n_ops == 3) {  // S2UR: UPg, URd, SRa
         v = static_cast<std::uint64_t>(shape::operand_value_as_i64(
             static_cast<const shape::DecodedS2UR3*>(&inst)->SRa));
     } else {  // S2R: Rd, SRa
@@ -1899,9 +1899,9 @@ Status Interpreter::do_bar(WarpState& w, const DecodedInstruction& inst,
     (void)fault;
     // BAR.SYNC n: all participating warps arrive at barrier n; the warp
     // waits (suspended) until every warp in the CTA has arrived.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+
     const std::uint64_t bid =
-        (mf.n_ops == 3)
+        (inst.n_ops == 3)
             ? static_cast<std::uint64_t>(
                   static_cast<const shape::DecodedBAR3*>(&inst)->barname)
             : static_cast<std::uint64_t>(
@@ -2259,8 +2259,7 @@ Status Interpreter::do_isetp(WarpState& w, std::uint32_t mask,
     (void)pc;
     // Layouts: 6 [Pu,Pv,Ra,2nd,Pp,Pr]; 5 [Pu,Pv,Ra,2nd,Pp];
     //          4 [Pu,Ra,2nd,Pr]; 3 [Pu,Ra,2nd].  bop exists only on 6/5-op.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t icmp = 0, bop = 0;
     if (nops == 6) {
@@ -2325,8 +2324,7 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
     (void)pc;
     // Layouts: plain 4-op [Rd,Ra,2nd,3rd]; x adds Pp (5-op); wide/hi 5-op
     // [Rd,Pu,Ra,2nd,3rd] (+Pp for x); pseudo's GetPseudoOp sits at the tail.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t fmt = 1;
     std::uint8_t subclass = 0;
@@ -2470,8 +2468,7 @@ MemWidthInfo mem_sz(const DecodedInstruction& inst) {
     // All memory/atomic families carry the `sz` modifier member; resolve it
     // by casting to the concrete shape (mnemonic + operand count) — no
     // slot-name lookup.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     std::uint64_t sz = 4;
     switch (inst.mnemonic) {
         case isa::Mnemonic::kLDG:
@@ -2597,8 +2594,7 @@ std::optional<AtomicOp> decode_atomic_op(const DecodedInstruction& inst) {
     // FP atomic (ATOMICFPOPS) variants are marked by the generated subclass
     // fp bit; they are not implemented.  op/sz are typed members resolved by
     // (mnemonic, nops) cast.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     std::uint64_t opv = 0, szv = 0;
     std::uint8_t subclass = 0;
     switch (inst.mnemonic) {
@@ -2764,8 +2760,7 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
     (void)w;
     (void)fault;
     const isa::Mnemonic m = inst.mnemonic;
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     MemWidthInfo wi = mem_sz(inst);
     *width_out = wi.bytes;
@@ -3282,7 +3277,7 @@ Status Interpreter::do_ldg(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_stg(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     std::uint64_t rb_r = 255;
     if (nops == 3) {
@@ -3349,8 +3344,7 @@ Status Interpreter::do_ldcu(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_atom(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
     const OperandFields ops(inst);
     if (nops == 7) {
@@ -3384,8 +3378,7 @@ Status Interpreter::do_atom(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_atoms(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst, std::uint64_t pc,
                              std::optional<Fault>* fault) {
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
     const OperandFields ops(inst);
     if (nops == 5) {
@@ -3408,7 +3401,7 @@ Status Interpreter::do_atoms(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_reds(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     if (nops == 4) {
         const auto& o = *static_cast<const shape::DecodedREDS4*>(&inst);
@@ -3425,8 +3418,7 @@ Status Interpreter::do_reds(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst, std::uint64_t pc,
                              std::optional<Fault>* fault) {
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     if (nops == 5) {
         const auto& o = *static_cast<const shape::DecodedATOMG5*>(&inst);
@@ -3462,7 +3454,7 @@ Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_redg(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     if (nops == 3) {
         const auto& o = *static_cast<const shape::DecodedREDG3*>(&inst);
@@ -3676,8 +3668,7 @@ Status Interpreter::do_ldgsts(WarpState& w, std::uint32_t mask,
     // [Rb,Rb_URc,Rb_offset,memdesc,Ra_URd,Ra,Ra_offset,Pnz]; 7-op desc_RRU
     // [Rb,Rb_offset,memdesc,Ra_URc,Ra,Ra_offset,Pnz].  Distinguish by the
     // kind of ops[1] (uniform register => A/memdesc, immediate => B/desc_RRU).
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     const bool has_urc =
         static_cast<shape::OperandKind>(ops[1].kind) ==
@@ -3831,10 +3822,10 @@ void Interpreter::do_depbar(WarpState& w, const DecodedInstruction& inst,
     (void)pc;
     // Roles: 3-op [sbidx, cnt, scoreboard_list] (+le member); 1-op
     // [scoreboard_list]; 0-op all (le only).
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+
     const OperandFields ops(inst);
     std::uint64_t le = 0, sbidx = 0, cnt = 0;
-    if (mf.n_ops == 3) {
+    if (inst.n_ops == 3) {
         // DEPBAR3 splits into depbar_ur_ (_0: [sbidx,URb,..]) and depbar__LE
         // (_1: [sbidx,cnt,..]); both carry the `le` member and the count role
         // at ops[1].
@@ -3845,7 +3836,7 @@ void Interpreter::do_depbar(WarpState& w, const DecodedInstruction& inst,
                        static_cast<const shape::DecodedDEPBAR3_1*>(&inst)->le);
         sbidx = static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
         cnt = static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
-    } else if (mf.n_ops == 1) {
+    } else if (inst.n_ops == 1) {
         const auto& d = *static_cast<const shape::DecodedDEPBAR1*>(&inst);
         (void)d;
     } else {
@@ -3910,8 +3901,7 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
     //   EXCH     0x15b2/5op [UPg,URd,URa,URa_offset,URb]
     //   CAS      0x13b2/6op [UPg,URd,URa,URa_offset,URb,URc]
     //   LD.64    0x19b2/4op [UPg,URd,URa,URa_offset]
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     // Shared target = [Ra + URc + Ra_offset] (Ra is RZ for mbarrier ops);
     // the uniform forms use [URa + URa_offset].  The offset trio sits at the
@@ -4733,9 +4723,9 @@ Status Interpreter::do_utmaredg(WarpState& w, const DecodedInstruction& inst,
     Status ps = prepare_tma(w, inst, pc, fault, /*is_load=*/false, &prep);
     if (ps.failed()) return ps;
     // RedOp (UTMAREDG): the `op` modifier member (RedOp enum, bits[89:87]).
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+
     const std::uint32_t redop =
-        (mf.n_ops == 3)
+        (inst.n_ops == 3)
             ? static_cast<std::uint32_t>(
                   static_cast<const shape::DecodedUTMAREDG3*>(&inst)->op)
             : static_cast<std::uint32_t>(
@@ -4832,16 +4822,16 @@ void Interpreter::record_coupled_l1_to_shared(const WarpState& w,
     // LOC@BYPASS (the .cg / L1-bypass path).  The estimator honors it: "cg"
     // marks the SharedWf / conflict counters unsupported on the profiler path.
     ev.variant_class = isa::variant_class_name(inst.variant_class);
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+
     std::uint64_t loc = 1;
-    if (mf.n_ops == 6) {
+    if (inst.n_ops == 6) {
         // LDGSTS6 split: 0 = RUR, 1 = RR32U/RR64U (same `loc` member).
         loc = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
                   ? static_cast<std::uint64_t>(
                         static_cast<const shape::DecodedLDGSTS6_0*>(&inst)->loc)
                   : static_cast<std::uint64_t>(
                         static_cast<const shape::DecodedLDGSTS6_1*>(&inst)->loc);
-    } else if (mf.n_ops == 7) {
+    } else if (inst.n_ops == 7) {
         loc = static_cast<std::uint64_t>(
             static_cast<const shape::DecodedLDGSTS7*>(&inst)->loc);
     } else {
@@ -5228,8 +5218,7 @@ Status Interpreter::do_hmma(WarpState& w, std::uint32_t mask,
                             std::optional<Fault>* fault) {
     // Dense HMMA (hmma_x8_): size 0=k8 / 1=k16 / 2=k4(TF32), srcfmt
     // 0=F16 1=BF16 2=TF32 3=E6M9, dstfmt 0=F16 1=F32 accumulator.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t size = 0, srcfmt = 0, dstfmt = 0;
     bool has_re = false;
@@ -5271,8 +5260,7 @@ Status Interpreter::do_qmma(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
     // Dense QMMA (qmma_): size 0=k16 / 1=k32, dstfmt(ntz) 0=F16 1=F32.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t size = 0, dstfmt = 0;
     std::uint64_t sfa = 0, sfb = 0, sf = 0, ssz = 1;
@@ -5348,8 +5336,7 @@ Status Interpreter::do_omma(WarpState& w, std::uint32_t mask,
                             std::optional<Fault>* fault) {
     // OMMA.SF (mxfp4 block-scaled): only the verified 2X-scale E8 e2m1
     // configuration is implemented (gpu_waiver — see capability manifest).
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t sf = 0, ssz = 1, sfa = 0, sfb = 0;
     if (nops == 8) {
@@ -5677,8 +5664,7 @@ Status Interpreter::do_fsetp(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst) {
     // FSETP Pu, Pv, Ra, Rb/Sb, Pp (bop combines with Pp; simple 3-op
     // form has no Pv/Pp).  FSETP5=[Pu,Pv,Ra,2nd,Pp]  FSETP3=[Pu,Ra,2nd].
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     std::uint64_t fcomp = 0, bop = 0;
     bool ftz = false;
     int ra_pos = 1;
@@ -5704,8 +5690,7 @@ Status Interpreter::do_fset(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     // FSET  Rd, Ra, Rb/Sb, Pp  (Rd = 0x3f800000 or 0).
     // FSET4=[Rd,Ra,2nd,Pp]     FSET3=[Rd,Ra,2nd].
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     if (nops == 4) {
         const auto& d = *static_cast<const shape::DecodedFSET4*>(&inst);
         return fset_core(w, mask, inst, nops,
@@ -5724,8 +5709,7 @@ Status Interpreter::do_fmnmx(WarpState& w, std::uint32_t mask,
     // FMNMX Rd[, Pu], Ra, Rb/Sb, Pp  (Pp: PT=min, !PT=max; .NAN
     // propagate; XORSIGN: result sign = sign(Ra) XOR sign(Rb)).
     // 4-op form: [Rd,Ra,2nd,Pp]; 5-op form: [Rd,Pu,Ra,2nd,Pp].
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t nan = 0, xorsign_val = 0;
     bool ftz = false;
@@ -6319,8 +6303,7 @@ Status Interpreter::do_lop3(WarpState& w, std::uint32_t mask,
     // LOP3 Rd, Ra, Rb/Sb, Rc, imm8 — 3-input logic with 8-bit LUT.
     // Positional layout: [Pu, Rd, Ra, 2nd, Rc(, imm8|Pp(, Pp))].  pos5 is
     // imm8 (UImm) on the LUT forms or Pp (Predicate) on the no-LUT forms.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     if (nops == 7) {
     } else if (nops == 6) {
@@ -6342,8 +6325,7 @@ Status Interpreter::do_lop(WarpState& w, std::uint32_t mask,
     // LOP  Rd, Ra, Rb/Sb — AND/OR/XOR/PASS_B (2-input op mapped to the
     // matching 3-input truth table with Rc=0): AND=0x80, OR=0xfe,
     // XOR=0x96, PASS_B=0xcc.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t lop = 0;
     lop = (nops == 5)
@@ -6457,8 +6439,7 @@ Status Interpreter::do_lea(WarpState& w, std::uint32_t mask,
     //   HI: Rd = high32((Ra << N) + 2nd + Rc)
     // Layouts: 5-op [Rd,Pu,Ra,2nd,scaleU5]; 6-op +Rc; 7-op +Pp.  scaleU5
     // sits at pos4 (5-op) or pos5 (6/7-op); Rc only on the 6/7-op forms.
-    const auto& mf = shape::kShapeManifests[inst.shape_variant];
-    const std::uint16_t nops = mf.n_ops;
+    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t hilo = 0;
     int scale_pos = 4;      // scaleU5 position for the (n, 5)/7-op layouts

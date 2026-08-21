@@ -22,6 +22,7 @@
 #include <semu/decoded_base.hpp>
 #include <isa_shapes.hpp>
 #include <isa_shapes_fill.hpp>
+#include <isa_manifest.hpp>  // ShapeManifest/kShapeManifests (decode bridge)
 
 namespace semu::shape {
 

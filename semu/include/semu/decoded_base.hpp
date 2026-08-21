@@ -27,6 +27,9 @@ public:
     isa::VariantClass variant_class = isa::VariantClass::kUnknown;
     isa::Pipe pipe = isa::Pipe::kUnknown;
     std::uint32_t shape_variant = 0xFFFFFFFFu;
+    // Operand role count (named operand fields), set at fill time.  The
+    // interpreter uses this instead of the decode-side ShapeManifest.
+    std::uint8_t n_ops = 0;
     int guard_pred = 7;
     bool guard_not = false;
 

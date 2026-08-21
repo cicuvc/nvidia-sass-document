@@ -6,6 +6,7 @@
 #include <semu/decoder.hpp>
 #include <semu/decoded_access.hpp>
 #include <isa_shapes.hpp>       // typed-IR schema (regenerate with --shapes)
+#include <isa_manifest.hpp>    // ShapeManifest/kShapeManifests (decode bridge)
 #include <isa_shapes_fill.hpp>  // 2a: per-variant typed fill (equivalence path)
 #include <isa_corpus.hpp>       // whole-ISA corpus (gen_corpus.py --hpp)
 #include <cstddef>

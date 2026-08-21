@@ -1379,16 +1379,65 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     L.append("    " + ", ".join(str(s) for s in variant_split))
     L.append("};")
 
-    # ---- per-variant operand-role manifest (aligned to kVariants index) ----
-    # Each operand slot of a variant -> (position in ops[], OperandKind).  This
-    # is what decode uses to fill a derived Decoded* ops[] positionally from the
-    # decoded slot map.
     L.append("")
+    L.append("}  // namespace semu::shape")
+    L.append("")
+    L.append("// The per-variant operand-role manifest (ShapeManifest /")
+    L.append("// kShapeManifests / kShapeRoles_*) lives in isa_manifest.hpp — a")
+    L.append("// decode/CLI/test bridge header NOT included by the interpreter,")
+    L.append("// which reads n_ops from DecodedInstruction::n_ops (set at fill")
+    L.append("// time) instead.")
+    L.append("")
+    out.write_text("\n".join(L), encoding="utf-8")
+
+
+# Semantic subclass bits injected into the typed Decoded* at fill time (2b-3
+# plan b): variants whose CLASS name carries a dispatch-relevant trait that has
+# no FORMAT-slot/typed-member representation get a compile-time-set flag.  The
+# interpreter reads `inst.subclass & <bit>` -- no string/int lookup.
+_lookup_subclass = {
+    "_x": 1,
+    "wide": 2,
+    "hi": 4,
+    "imm64": 8,
+    "_fp": 16,
+}
+
+
+def variant_subclass(cls: str) -> int:
+    bits = 0
+    for key, bit in _lookup_subclass.items():
+        if key in cls:
+            bits |= bit
+    return bits
+
+
+def emit_manifest_hpp(out: Path, db: dict, variants: list) -> None:
+    """Emit isa_manifest.hpp: the per-variant operand-role manifest used by
+    the decode/CLI/test bridge (decoded_access.hpp op_lookup, cli decode-json,
+    test_decoder equivalence).  Deliberately NOT included by the interpreter
+    (isa_shapes.hpp has it removed; the interpreter reads n_ops from
+    DecodedInstruction::n_ops instead)."""
+    L = []
+    L.append("// Generated file -- do not edit.  Regenerate with:")
+    L.append("//   python3 semu/tools/gen_isa.py --shapes")
+    L.append("//")
     L.append("// Per-variant operand-role manifest (indexed by isa_data kVariants")
-    L.append("// index).  pos = position in the derived type's ops[] array.")
+    L.append("// index): slot name -> position in the named operand fields /")
+    L.append("// OperandKind.  Interface header for the decode/CLI/test bridge;")
+    L.append("// the interpreter does NOT include this file.")
+    L.append("#pragma once")
+    L.append("")
+    L.append("#include <cstdint>")
+    L.append("#include <cstring>")
+    L.append("#include <semu/decoded_base.hpp>")
+    L.append("#include <isa_shapes.hpp>")
+    L.append("")
+    L.append("namespace semu::shape {")
+    L.append("")
     L.append("struct ShapeOpRole {")
     L.append("    const char* slot;   // FORMAT slot name (e.g. \"Rd\", \"Rb\")")
-    L.append("    std::uint8_t pos;   // position in ops[]")
+    L.append("    std::uint8_t pos;   // position in the named operand fields")
     L.append("    OperandKind kind;   // OperandKind")
     L.append("};")
     L.append("static_assert(sizeof(ShapeOpRole) <= 16);")
@@ -1421,27 +1470,6 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     L.append("}  // namespace semu::shape")
     L.append("")
     out.write_text("\n".join(L), encoding="utf-8")
-
-
-# Semantic subclass bits injected into the typed Decoded* at fill time (2b-3
-# plan b): variants whose CLASS name carries a dispatch-relevant trait that has
-# no FORMAT-slot/typed-member representation get a compile-time-set flag.  The
-# interpreter reads `inst.subclass & <bit>` -- no string/int lookup.
-_lookup_subclass = {
-    "_x": 1,
-    "wide": 2,
-    "hi": 4,
-    "imm64": 8,
-    "_fp": 16,
-}
-
-
-def variant_subclass(cls: str) -> int:
-    bits = 0
-    for key, bit in _lookup_subclass.items():
-        if key in cls:
-            bits |= bit
-    return bits
 
 
 def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
@@ -1497,6 +1525,8 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
         roles = shape_operand_roles(v)
         L.append(f"    case {vi}: {{")
         L.append(f"        auto& out = *static_cast<{type_name}*>(void_out);")
+        L.append(f"        out.n_ops = {len(roles)};  // base-field count (set"
+                  f" at fill time for the interpreter)")
         if grp_has_mods[g]:
             L.append(f"        shape_fill_mods_grp{g}(in, void_out);")
         L.append(f"        out.subclass = {variant_subclass(v['class'])};")
@@ -1619,6 +1649,7 @@ def main() -> int:
     if args.shapes:
         emit_shapes_hpp(out_dir / "isa_shapes.hpp", db, variants)
         emit_shapes_fill(out_dir / "isa_shapes_fill.hpp", db, variants)
+        emit_manifest_hpp(out_dir / "isa_manifest.hpp", db, variants)
         print(f"wrote {out_dir / 'isa_shapes.hpp'} + isa_shapes_fill.hpp (schema/2a)")
 
     multi = sum(1 for op in range(8192)

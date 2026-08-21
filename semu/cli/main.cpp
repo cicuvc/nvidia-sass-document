@@ -4,6 +4,7 @@
 #include <semu/debugger.hpp>
 #include <semu/decoder.hpp>
 #include <semu/decoded_access.hpp>
+#include <isa_manifest.hpp>    // ShapeManifest/kShapeManifests (decode bridge)
 #include <semu/interpreter.hpp>
 #include <semu/profiler.hpp>
 #include <semu/status.hpp>
