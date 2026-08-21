@@ -1370,14 +1370,6 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
             L.append("    std::uint8_t barname;  // unsurfaced barrier-id field")
         L.append("};")
 
-    # Per-variant split ordinal (-1 = single struct).  The interpreter uses
-    # this to pick the concrete split type of a decoded instruction.
-    L.append("")
-    L.append("// kShapeSplitByVariant[vi]: split ordinal of the variant's decoded")
-    L.append("// struct within its (mnemonic, nops) group; -1 = no split.")
-    L.append("inline constexpr std::int8_t kShapeSplitByVariant[] = {")
-    L.append("    " + ", ".join(str(s) for s in variant_split))
-    L.append("};")
 
     L.append("")
     L.append("}  // namespace semu::shape")

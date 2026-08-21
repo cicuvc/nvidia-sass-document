@@ -780,9 +780,9 @@ private:
                            const DecodedInstruction& inst, int op,
                            semu::fp::Rnd rnd);
     Status fset_core(WarpState& w, std::uint32_t mask,
-                     const DecodedInstruction& inst, std::uint16_t nops,
+                     const DecodedInstruction& inst,
                      std::uint64_t fcomp, std::uint64_t bop, bool ftz,
-                     int ra_pos, int pp_pos, bool dest_is_pred);
+                     int ra_pos, int pp_pos, bool dest_is_pred, bool has_pv);
     Status cvtx_core(WarpState& w, std::uint32_t mask,
                      const DecodedInstruction& inst,
                      semu::fp::Rnd rnd, bool ftz,

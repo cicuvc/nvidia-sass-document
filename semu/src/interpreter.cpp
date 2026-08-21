@@ -1483,7 +1483,12 @@ std::optional<std::uint64_t> Interpreter::branch_target(
         // with it).  The typed fill sign-extends it, so BRA's 56-bit
         // two's-complement sImm reads as e.g. -12 directly.
         std::int64_t imm = 0;
-        if (inst.n_ops == 3) {
+        // The 3-op forms are the uniform-pred/UR-target forms (BRA 0x1547/
+        // 0x1947, JMP 0x1550/0x194a) — the target is the LAST role; the 2-op
+        // plain forms end one earlier.
+        const std::uint16_t op2 = semu::opcode_of(inst.word.lo, inst.word.hi);
+        if (op2 == 0x1547 || op2 == 0x1947 || op2 == 0x1550 ||
+            op2 == 0x194a) {
             imm = shape::operand_value_as_i64(ops[2]);
         } else {
             imm = shape::operand_value_as_i64(ops[1]);
@@ -1576,7 +1581,7 @@ std::optional<SpecialReg> Interpreter::special_reg(
     // `imm8` ENCODING field; the typed schema surfaces it as ops[last]).
 
     std::uint64_t v = 0;
-    if (inst.n_ops == 3) {  // S2UR: UPg, URd, SRa
+    if (inst.mnemonic == isa::Mnemonic::kS2UR) {  // UPg, URd, SRa
         v = static_cast<std::uint64_t>(shape::operand_value_as_i64(
             static_cast<const shape::DecodedS2UR3*>(&inst)->SRa));
     } else {  // S2R: Rd, SRa
@@ -1900,8 +1905,23 @@ Status Interpreter::do_bar(WarpState& w, const DecodedInstruction& inst,
     // BAR.SYNC n: all participating warps arrive at barrier n; the warp
     // waits (suspended) until every warp in the CTA has arrived.
 
+    // BAR3 (RED/SCAN forms) vs BAR2 (ARV/SYNC forms): the barrier-id field is
+    // a typed member of the concrete struct — select by variant class.
+    const bool is_bar3 =
+        inst.variant_class == isa::VariantClass::kbar__RED_II_optionalCount_II ||
+        inst.variant_class == isa::VariantClass::kbar__RED_IR_optionalCount_IR ||
+        inst.variant_class == isa::VariantClass::kbar__RED_RI_optionalCount_RI ||
+        inst.variant_class == isa::VariantClass::kbar__RED_RR_RR ||
+        inst.variant_class == isa::VariantClass::kbar__RED_dfrBlk_II_optionalCount_II ||
+        inst.variant_class == isa::VariantClass::kbar__RED_dfrBlk_IR_optionalCount_IR ||
+        inst.variant_class == isa::VariantClass::kbar__RED_dfrBlk_RI_optionalCount_RI ||
+        inst.variant_class == isa::VariantClass::kbar__RED_dfrBlk_RR_RR ||
+        inst.variant_class == isa::VariantClass::kbar__SCAN_II_II ||
+        inst.variant_class == isa::VariantClass::kbar__SCAN_IR_IR ||
+        inst.variant_class == isa::VariantClass::kbar__SCAN_RI_RI ||
+        inst.variant_class == isa::VariantClass::kbar__SCAN_RR_RR;
     const std::uint64_t bid =
-        (inst.n_ops == 3)
+        is_bar3
             ? static_cast<std::uint64_t>(
                   static_cast<const shape::DecodedBAR3*>(&inst)->barname)
             : static_cast<std::uint64_t>(
@@ -2257,27 +2277,50 @@ Status Interpreter::do_isetp(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst,
                              std::uint64_t pc) {
     (void)pc;
-    // Layouts: 6 [Pu,Pv,Ra,2nd,Pp,Pr]; 5 [Pu,Pv,Ra,2nd,Pp];
-    //          4 [Pu,Ra,2nd,Pr]; 3 [Pu,Ra,2nd].  bop exists only on 6/5-op.
-    const std::uint16_t nops = inst.n_ops;
+    // Layouts (by variant class): 6 [Pu,Pv,Ra,2nd,Pp,Pr]; 5 [Pu,Pv,Ra,2nd,
+    // Pp]; 4 [Pu,Ra,2nd,Pr]; 3 [Pu,Ra,2nd].  The non-simple forms
+    // (kisetp*__*, _EX/_noEX) carry Pv+Pp and bop; the simple forms do not.
     OperandFields ops(inst);
     std::uint64_t icmp = 0, bop = 0;
-    if (nops == 6) {
-        const auto& d = *static_cast<const shape::DecodedISETP6*>(&inst);
-        icmp = static_cast<std::uint64_t>(d.icmp);
-        bop = static_cast<std::uint64_t>(d.bop);
-    } else if (nops == 5) {
-        const auto& d = *static_cast<const shape::DecodedISETP5*>(&inst);
-        icmp = static_cast<std::uint64_t>(d.icmp);
-        bop = static_cast<std::uint64_t>(d.bop);
-    } else if (nops == 4) {
-        const auto& d = *static_cast<const shape::DecodedISETP4*>(&inst);
-        icmp = static_cast<std::uint64_t>(d.icmp);
+    const bool rich =
+        (inst.variant_class == isa::VariantClass::kisetp__RRR_RRR_noEX ||
+         inst.variant_class == isa::VariantClass::kisetp__RUR_RUR_noEX ||
+         inst.variant_class == isa::VariantClass::kisetp__RsIR_RIR_noEX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RRR_RRR_noEX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RUR_RUR_noEX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RsIR_RIR_noEX ||
+         inst.variant_class == isa::VariantClass::kisetp__RRR_RRR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp__RUR_RUR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp__RsIR_RIR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RRR_RRR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RUR_RUR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RsIR_RIR_EX);
+    const bool ex =
+        (inst.variant_class == isa::VariantClass::kisetp__RRR_RRR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp__RUR_RUR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp__RsIR_RIR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RRR_RRR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RUR_RUR_EX ||
+         inst.variant_class == isa::VariantClass::kisetp_64__RsIR_RIR_EX);
+    if (rich) {
+        if (ex) {
+            const auto& d = *static_cast<const shape::DecodedISETP6*>(&inst);
+            icmp = static_cast<std::uint64_t>(d.icmp);
+            bop = static_cast<std::uint64_t>(d.bop);
+        } else {
+            const auto& d = *static_cast<const shape::DecodedISETP5*>(&inst);
+            icmp = static_cast<std::uint64_t>(d.icmp);
+            bop = static_cast<std::uint64_t>(d.bop);
+        }
     } else {
-        const auto& d = *static_cast<const shape::DecodedISETP3*>(&inst);
-        icmp = static_cast<std::uint64_t>(d.icmp);
+        if (ex) {
+            const auto& d = *static_cast<const shape::DecodedISETP4*>(&inst);
+            icmp = static_cast<std::uint64_t>(d.icmp);
+        } else {
+            const auto& d = *static_cast<const shape::DecodedISETP3*>(&inst);
+            icmp = static_cast<std::uint64_t>(d.icmp);
+        }
     }
-    const bool rich = (nops >= 5);  // Pv + Pp present
     const int ra_pos = rich ? 2 : 1;
     const int second_pos = ra_pos + 1;
     const int pp_pos = rich ? 4 : -1;
@@ -2322,52 +2365,65 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
                             std::uint64_t pc,
                             std::optional<Fault>* fault) {
     (void)pc;
-    // Layouts: plain 4-op [Rd,Ra,2nd,3rd]; x adds Pp (5-op); wide/hi 5-op
-    // [Rd,Pu,Ra,2nd,3rd] (+Pp for x); pseudo's GetPseudoOp sits at the tail.
-    const std::uint16_t nops = inst.n_ops;
+    // Layouts by variant class: plain kimad__* (4-op), kimad_*_x/...x_pseudo
+    // (5-op .X), kimad_wide__/kimad_hi__ (5-op with Pu; IMAD5 splits), the
+    // IMAD5 getpseudo forms (GetPseudoOp tail), and kimad_wide_x/hi_x (6-op).
+    const isa::VariantClass cls = inst.variant_class;
     OperandFields ops(inst);
     std::uint64_t fmt = 1;
     std::uint8_t subclass = 0;
-    if (nops == 4) {
+    if (cls == isa::VariantClass::kimad__RRR_RRR ||
+        cls == isa::VariantClass::kimad__RRU_RRU ||
+        cls == isa::VariantClass::kimad__RRsI_RRI ||
+        cls == isa::VariantClass::kimad__RUR_RUR ||
+        cls == isa::VariantClass::kimad__RsIR_RIR ||
+        cls == isa::VariantClass::kimad_pseudo__RRU_RRU ||
+        cls == isa::VariantClass::kimad_pseudo__RUR_RUR) {
         const auto& d = *static_cast<const shape::DecodedIMAD4*>(&inst);
         fmt = static_cast<std::uint64_t>(d.fmt);
         subclass = d.subclass;
-    } else if (nops == 5) {
-        // IMAD5 is split into 5 structs (x/wide/hi/pseudo layouts); every
-        // split carries the same `fmt`/`subclass` members.
-        switch (shape::kShapeSplitByVariant[inst.shape_variant]) {
-            case 0:
-                fmt = static_cast<std::uint64_t>(
-                    static_cast<const shape::DecodedIMAD5_0*>(&inst)->fmt);
-                subclass = static_cast<const shape::DecodedIMAD5_0*>(&inst)->subclass;
-                break;
-            case 1:
-                fmt = static_cast<std::uint64_t>(
-                    static_cast<const shape::DecodedIMAD5_1*>(&inst)->fmt);
-                subclass = static_cast<const shape::DecodedIMAD5_1*>(&inst)->subclass;
-                break;
-            case 2:
-                fmt = static_cast<std::uint64_t>(
-                    static_cast<const shape::DecodedIMAD5_2*>(&inst)->fmt);
-                subclass = static_cast<const shape::DecodedIMAD5_2*>(&inst)->subclass;
-                break;
-            case 3:
-                fmt = static_cast<std::uint64_t>(
-                    static_cast<const shape::DecodedIMAD5_3*>(&inst)->fmt);
-                subclass = static_cast<const shape::DecodedIMAD5_3*>(&inst)->subclass;
-                break;
-            default:
-                fmt = static_cast<std::uint64_t>(
-                    static_cast<const shape::DecodedIMAD5_4*>(&inst)->fmt);
-                subclass = static_cast<const shape::DecodedIMAD5_4*>(&inst)->subclass;
-                break;
-        }
-    } else {
+    } else if (cls == isa::VariantClass::kimad_wide_x__RRR_RRR ||
+               cls == isa::VariantClass::kimad_wide_x__RRU_RRU ||
+               cls == isa::VariantClass::kimad_wide_x__RUR_RUR ||
+               cls == isa::VariantClass::kimad_wide_x__RsIR_RIR ||
+               cls == isa::VariantClass::kimad_hi_x__RRR_RRR ||
+               cls == isa::VariantClass::kimad_hi_x__RRU_RRU ||
+               cls == isa::VariantClass::kimad_hi_x__RUR_RUR ||
+               cls == isa::VariantClass::kimad_hi_x__RsIR_RIR) {
         const auto& d = *static_cast<const shape::DecodedIMAD6*>(&inst);
         fmt = static_cast<std::uint64_t>(d.fmt);
         subclass = d.subclass;
+    } else if (cls == isa::VariantClass::kimad_pseudo__RsIR_RIR) {
+        const auto& d = *static_cast<const shape::DecodedIMAD5_1*>(&inst);
+        fmt = static_cast<std::uint64_t>(d.fmt);
+        subclass = d.subclass;
+    } else if (cls == isa::VariantClass::kimad_pseudo__RRsI_RRI) {
+        const auto& d = *static_cast<const shape::DecodedIMAD5_2*>(&inst);
+        fmt = static_cast<std::uint64_t>(d.fmt);
+        subclass = d.subclass;
+    } else if (cls == isa::VariantClass::kimad_pseudo__RRR_RRR) {
+        const auto& d = *static_cast<const shape::DecodedIMAD5_3*>(&inst);
+        fmt = static_cast<std::uint64_t>(d.fmt);
+        subclass = d.subclass;
+    } else if (cls == isa::VariantClass::kimad_x__RRR_RRR ||
+               cls == isa::VariantClass::kimad_x__RRU_RRU ||
+               cls == isa::VariantClass::kimad_x__RRsI_RRI ||
+               cls == isa::VariantClass::kimad_x__RUR_RUR ||
+               cls == isa::VariantClass::kimad_x__RsIR_RIR ||
+               cls == isa::VariantClass::kimad_x_pseudo__RRR_RRR ||
+               cls == isa::VariantClass::kimad_x_pseudo__RRU_RRU ||
+               cls == isa::VariantClass::kimad_x_pseudo__RRsI_RRI ||
+               cls == isa::VariantClass::kimad_x_pseudo__RUR_RUR ||
+               cls == isa::VariantClass::kimad_x_pseudo__RsIR_RIR) {
+        const auto& d = *static_cast<const shape::DecodedIMAD5_4*>(&inst);
+        fmt = static_cast<std::uint64_t>(d.fmt);
+        subclass = d.subclass;
+    } else {  // kimad_wide__* / kimgad_hi__* (+ *_pseudo): IMAD5 split 0
+        const auto& d = *static_cast<const shape::DecodedIMAD5_0*>(&inst);
+        fmt = static_cast<std::uint64_t>(d.fmt);
+        subclass = d.subclass;
     }
-    const std::uint64_t rd =
+const std::uint64_t rd =
         static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
     // The WIDE/HI distinction lives in the generated subclass flags.
     const bool is_wide = (subclass & 2) != 0;
@@ -2465,115 +2521,172 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
 namespace {
 
 MemWidthInfo mem_sz(const DecodedInstruction& inst) {
-    // All memory/atomic families carry the `sz` modifier member; resolve it
-    // by casting to the concrete shape (mnemonic + operand count) — no
-    // slot-name lookup.
-    const std::uint16_t nops = inst.n_ops;
+    // All memory/atomic families carry the `sz` modifier member; the concrete
+    // shape (mnemonic + form) is chosen by VARIANT CLASS — no operand count.
+    const isa::VariantClass cls = inst.variant_class;
     std::uint64_t sz = 4;
     switch (inst.mnemonic) {
         case isa::Mnemonic::kLDG:
-            if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG5*>(&inst)->sz);
-            else if (nops == 7) {
-                // LDG7 split: 0 = memdesc, 1 = 256-bit uniform.
-                sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                         ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG7_0*>(&inst)->sz)
-                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG7_1*>(&inst)->sz);
-            } else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG8*>(&inst)->sz);
+            if (cls == isa::VariantClass::kldg__sImmOffset ||
+                cls == isa::VariantClass::kldg__uImmOffset) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG5*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldg_256_memdesc__Ra64 ||
+                       cls == isa::VariantClass::kldg_256_rml2_memdesc__Ra64) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG8*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldg_memdesc__Ra64) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG7_0*>(&inst)->sz);
+            } else {  // kldg_256_* uniform forms
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG7_1*>(&inst)->sz);
+            }
             break;
         case isa::Mnemonic::kSTG:
-            if (nops == 3) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG3*>(&inst)->sz);
-            else if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG4*>(&inst)->sz);
-            else if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG5*>(&inst)->sz);
-            else if (nops == 6) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG6*>(&inst)->sz);
-            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG7*>(&inst)->sz);
+            if (cls == isa::VariantClass::kstg__sImmOffset ||
+                cls == isa::VariantClass::kstg__uImmOffset) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG3*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kstg_uniform__Ra32 ||
+                       cls == isa::VariantClass::kstg_uniform__Ra64 ||
+                       cls == isa::VariantClass::kstg_uniform__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG4*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kstg_memdesc__Ra64) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG5*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kstg_256_uniform__Ra32 ||
+                       cls == isa::VariantClass::kstg_256_uniform__Ra64 ||
+                       cls == isa::VariantClass::kstg_256_uniform__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG6*>(&inst)->sz);
+            } else {  // kstg_256_memdesc__Ra64
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG7*>(&inst)->sz);
+            }
             break;
         case isa::Mnemonic::kLDS:
-            sz = (nops == 4) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDS4*>(&inst)->sz)
-                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDS3*>(&inst)->sz);
+            sz = (cls == isa::VariantClass::klds_uniform_)
+                     ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDS4*>(&inst)->sz)
+                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDS3*>(&inst)->sz);
             break;
         case isa::Mnemonic::kSTS:
-            sz = (nops == 4) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedSTS4*>(&inst)->sz)
-                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedSTS3*>(&inst)->sz);
+            sz = (cls == isa::VariantClass::ksts_uniform_)
+                     ? static_cast<std::uint64_t>(static_cast<const shape::DecodedSTS4*>(&inst)->sz)
+                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedSTS3*>(&inst)->sz);
             break;
         case isa::Mnemonic::kLDL:
-            if (nops == 3) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL3*>(&inst)->sz);
-            else if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL4*>(&inst)->sz);
-            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL5*>(&inst)->sz);
+            if (cls == isa::VariantClass::kldl_uniform_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL4*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldl_memdesc_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL5*>(&inst)->sz);
+            } else {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL3*>(&inst)->sz);
+            }
             break;
         case isa::Mnemonic::kSTL: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTL3*>(&inst)->sz); break;
         case isa::Mnemonic::kLDC:
-            // LDC5 split: 0 = LDC [Sa_bank,Ra,..], 1 = LDC.UR [URa,Rb,..].
-            sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                     ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDC5_0*>(&inst)->sz)
-                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDC5_1*>(&inst)->sz);
+            // kldc__* (LDC [Sa_bank,Ra,..]) vs kldc_ur__* (LDC.UR [URa,Rb,..]).
+            sz = (cls == isa::VariantClass::kldc_ur__URRzI ||
+                  cls == isa::VariantClass::kldc_ur__URnonRzI)
+                     ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDC5_1*>(&inst)->sz)
+                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDC5_0*>(&inst)->sz);
             break;
         case isa::Mnemonic::kLDCU:
-            if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU4*>(&inst)->sz);
-            else if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU5*>(&inst)->sz);
-            else if (nops == 6) {
-                // LDCU6 split: 0/1 = const RCR/RCxR, 2 = 256-ur-offset.
-                switch (shape::kShapeSplitByVariant[inst.shape_variant]) {
-                    case 0: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_0*>(&inst)->sz); break;
-                    case 1: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_1*>(&inst)->sz); break;
-                    default: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_2*>(&inst)->sz); break;
-                }
-            } else if (nops == 7) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU7*>(&inst)->sz);
-            else {
-                // LDCU8 split: 0 = 256-const-RCR, 1 = 256-const-RCxR.
-                sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                         ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU8_0*>(&inst)->sz)
-                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU8_1*>(&inst)->sz);
+            if (cls == isa::VariantClass::kldcu_ur_offs_optional_upx_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU4*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldcu_ur_offs_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU5*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldcu_256_ur_offs_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU7*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldcu_256_ur_offs_optional_upx_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_2*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldcu_const_RCR_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_0*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldcu_const_RCxR_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_1*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldcu_256_const_RCR_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU8_0*>(&inst)->sz);
+            } else {  // kldcu_256_const_RCxR_
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU8_1*>(&inst)->sz);
             }
             break;
         case isa::Mnemonic::kATOM:
-            // ATOM6 split: 0 = .ARRIVE, 1 = int/fp.  ATOM7 split: 0 =
-            // int/fp-uniform, 1 = CAS.
-            sz = (nops == 7)
-                     ? ((shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                            ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sz)
-                            : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sz))
-                     : ((shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                            ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sz)
-                            : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sz));
+            if (cls == isa::VariantClass::katom_cas__RaNonRZ_CAS ||
+                cls == isa::VariantClass::katom_cas__RaNonRZ_CAST ||
+                cls == isa::VariantClass::katom_cas__RaRZ_CAS ||
+                cls == isa::VariantClass::katom_cas__RaRZ_CAST) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::katom_arrive__Ra32_arrive ||
+                       cls == isa::VariantClass::katom_arrive__Ra32_popcinc ||
+                       cls == isa::VariantClass::katom_arrive__Ra64_arrive ||
+                       cls == isa::VariantClass::katom_arrive__Ra64_popcinc ||
+                       cls == isa::VariantClass::katom_arrive__RaRZ_arrive ||
+                       cls == isa::VariantClass::katom_arrive__RaRZ_popcinc) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::katom_fp__RaNonRZ ||
+                       cls == isa::VariantClass::katom_fp__RaRZ ||
+                       cls == isa::VariantClass::katom_int__RaNonRZ ||
+                       cls == isa::VariantClass::katom_int__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sz);
+            } else {  // katom_{int,fp}_uniform__*: ATOM7 split 0
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sz);
+            }
             break;
         case isa::Mnemonic::kATOMS:
-            // ATOMS4 split: 0 = .ARRIVE, 1 = plain.  ATOMS5 split: 0 =
-            // cast-destPu, 1 = uniform, 2 = CAS/cast-destRd.
-            sz = (nops == 5)
-                     ? ((shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                            ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_0*>(&inst)->sz)
-                            : (shape::kShapeSplitByVariant[inst.shape_variant] == 1)
-                                  ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_1*>(&inst)->sz)
-                                  : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_2*>(&inst)->sz))
-                     : ((shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                            ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_0*>(&inst)->sz)
-                            : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_1*>(&inst)->sz));
+            if (cls == isa::VariantClass::katoms_cas__RaNonRZ ||
+                cls == isa::VariantClass::katoms_cas__RaRZ ||
+                cls == isa::VariantClass::katoms_cast_destRd__RaNonRZ ||
+                cls == isa::VariantClass::katoms_cast_destRd__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_2*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::katoms_cast_destPu__RaNonRZ ||
+                       cls == isa::VariantClass::katoms_cast_destPu__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_0*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::katoms_uniform_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_1*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::katoms__RaNonRZ ||
+                       cls == isa::VariantClass::katoms__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_1*>(&inst)->sz);
+            } else {  // katoms_arrive__*: ATOMS4 split 0
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_0*>(&inst)->sz);
+            }
             break;
         case isa::Mnemonic::kATOMG:
-            if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG5*>(&inst)->sz);
-            else if (nops == 6) {
-                // ATOMG6 split: 0 = uniform base, 1 = CAS.
-                sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                         ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sz)
-                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sz);
-            } else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG7*>(&inst)->sz);
+            if (cls == isa::VariantClass::katomg_fp__RaNonRZ ||
+                cls == isa::VariantClass::katomg_fp__RaRZ ||
+                cls == isa::VariantClass::katomg_int__RaNonRZ ||
+                cls == isa::VariantClass::katomg_int__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG5*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::katomg_fp_uniform__memdesc ||
+                       cls == isa::VariantClass::katomg_int_uniform__memdesc) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG7*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::katomg_cas__RaNonRZ ||
+                       cls == isa::VariantClass::katomg_cas__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sz);
+            } else {  // katomg_{int,fp}_uniform__Ra32/64/Rz: ATOMG6 split 0
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sz);
+            }
             break;
         case isa::Mnemonic::kREDG:
-            if (nops == 3) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG3*>(&inst)->sz);
-            else if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG4*>(&inst)->sz);
-            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG5*>(&inst)->sz);
+            if (cls == isa::VariantClass::kredg_fp__RaNonRZ ||
+                cls == isa::VariantClass::kredg_fp__RaRZ ||
+                cls == isa::VariantClass::kredg_int__RaNonRZ ||
+                cls == isa::VariantClass::kredg_int__RaRZ) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG3*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kredg_fp_uniform__memdesc ||
+                       cls == isa::VariantClass::kredg_int_uniform__memdesc) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG5*>(&inst)->sz);
+            } else {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG4*>(&inst)->sz);
+            }
             break;
         case isa::Mnemonic::kREDS:
-            sz = (nops == 4) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS4*>(&inst)->sz)
-                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS3*>(&inst)->sz);
+            sz = (cls == isa::VariantClass::katoms_reds_uniform_)
+                     ? static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS4*>(&inst)->sz)
+                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS3*>(&inst)->sz);
             break;
         case isa::Mnemonic::kLDGSTS:
-            if (nops == 7) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS7*>(&inst)->sz);
-            else {
-                // LDGSTS6 split: 0 = RUR, 1 = RR32U/RR64U.
-                sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
-                         ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS6_0*>(&inst)->sz)
-                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS6_1*>(&inst)->sz);
+            if (cls == isa::VariantClass::kldgsts__desc_RRU) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS7*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldgsts_memdesc_) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS8*>(&inst)->sz);
+            } else if (cls == isa::VariantClass::kldgsts__RUR ||
+                       cls == isa::VariantClass::kldgsts_no_ra__RUR) {
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS6_0*>(&inst)->sz);
+            } else {  // kldgsts__RR32U/RR64U, kldgsts_no_ra__RRU
+                sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS6_1*>(&inst)->sz);
             }
             break;
         default:
@@ -2593,101 +2706,113 @@ MemWidthInfo mem_sz(const DecodedInstruction& inst) {
 std::optional<AtomicOp> decode_atomic_op(const DecodedInstruction& inst) {
     // FP atomic (ATOMICFPOPS) variants are marked by the generated subclass
     // fp bit; they are not implemented.  op/sz are typed members resolved by
-    // (mnemonic, nops) cast.
-    const std::uint16_t nops = inst.n_ops;
+    // (mnemonic, variant class) cast — each form has its own concrete type.
+    const isa::VariantClass cls = inst.variant_class;
     std::uint64_t opv = 0, szv = 0;
     std::uint8_t subclass = 0;
     switch (inst.mnemonic) {
         case isa::Mnemonic::kATOM: {
-            // ATOM6 split: 0 = .ARRIVE, 1 = int/fp.  ATOM7 split: 0 =
-            // int/fp-uniform, 1 = CAS.  All carry op/sz/subclass.
-            const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
-            if (nops == 7) {
-                if (split == 0) {
-                    const auto& d = *static_cast<const shape::DecodedATOM7_0*>(&inst);
-                    opv = static_cast<std::uint64_t>(d.op);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                } else {
-                    // ATOM7 CAS split has no `op` member (opv stays 0; the
-                    // caller overrides with kCas when a comparand exists).
-                    const auto& d = *static_cast<const shape::DecodedATOM7_1*>(&inst);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                }
-            } else {
-                if (split == 0) {
-                    const auto& d = *static_cast<const shape::DecodedATOM6_0*>(&inst);
-                    opv = static_cast<std::uint64_t>(d.op);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                } else {
-                    const auto& d = *static_cast<const shape::DecodedATOM6_1*>(&inst);
-                    opv = static_cast<std::uint64_t>(d.op);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                }
+            // ATOM forms: katom_{int,fp}_uniform__* (7-op, op member),
+            // katom_cas__* (7-op CAS, no op), katom_arrive__* (6-op),
+            // katom_{int,fp}__* (6-op).
+            if (cls == isa::VariantClass::katom_int_uniform__Ra32 ||
+                cls == isa::VariantClass::katom_int_uniform__Ra64 ||
+                cls == isa::VariantClass::katom_int_uniform__RaRZ ||
+                cls == isa::VariantClass::katom_fp_uniform__Ra32 ||
+                cls == isa::VariantClass::katom_fp_uniform__Ra64 ||
+                cls == isa::VariantClass::katom_fp_uniform__RaRZ) {
+                const auto& d = *static_cast<const shape::DecodedATOM7_0*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else if (cls == isa::VariantClass::katom_cas__RaNonRZ_CAS ||
+                       cls == isa::VariantClass::katom_cas__RaNonRZ_CAST ||
+                       cls == isa::VariantClass::katom_cas__RaRZ_CAS ||
+                       cls == isa::VariantClass::katom_cas__RaRZ_CAST) {
+                // CAS split has no op member (opv stays 0; overridden with
+                // kCas by the caller when a comparand exists).
+                const auto& d = *static_cast<const shape::DecodedATOM7_1*>(&inst);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else if (cls == isa::VariantClass::katom_arrive__Ra32_arrive ||
+                       cls == isa::VariantClass::katom_arrive__Ra32_popcinc ||
+                       cls == isa::VariantClass::katom_arrive__Ra64_arrive ||
+                       cls == isa::VariantClass::katom_arrive__Ra64_popcinc ||
+                       cls == isa::VariantClass::katom_arrive__RaRZ_arrive ||
+                       cls == isa::VariantClass::katom_arrive__RaRZ_popcinc) {
+                const auto& d = *static_cast<const shape::DecodedATOM6_0*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else {  // katom_{int,fp}__RaNonRZ/RaRZ
+                const auto& d = *static_cast<const shape::DecodedATOM6_1*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
             }
             break;
         }
         case isa::Mnemonic::kATOMS: {
-            // ATOMS4 split: 0 = .ARRIVE, 1 = plain (op member present).
-            // ATOMS5 split: 1 = uniform has `op`; 0 (cast-destPu) and 2
-            // (CAS) carry `cas` instead (opv stays 0 — the caller overrides
-            // with kCas when a CAS comparand is present, as before).
-            const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
-            if (nops == 5) {
-                if (split == 0) {
-                    const auto& d = *static_cast<const shape::DecodedATOMS5_0*>(&inst);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                } else if (split == 1) {
-                    const auto& d = *static_cast<const shape::DecodedATOMS5_1*>(&inst);
-                    opv = static_cast<std::uint64_t>(d.op);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                } else {
-                    const auto& d = *static_cast<const shape::DecodedATOMS5_2*>(&inst);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                }
-            } else {
-                if (split == 0) {
-                    const auto& d = *static_cast<const shape::DecodedATOMS4_0*>(&inst);
-                    opv = static_cast<std::uint64_t>(d.op);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                } else {
-                    const auto& d = *static_cast<const shape::DecodedATOMS4_1*>(&inst);
-                    opv = static_cast<std::uint64_t>(d.op);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                }
+            // ATOMS forms: katoms_cas__*/katoms_cast_destRd__* (5-op CAS, no
+            // op), katoms_cast_destPu__* (5-op, no op), katoms_uniform_
+            // (5-op, op member), katoms__* (4-op plain), katoms_arrive__*
+            // (4-op).
+            if (cls == isa::VariantClass::katoms_cas__RaNonRZ ||
+                cls == isa::VariantClass::katoms_cas__RaRZ ||
+                cls == isa::VariantClass::katoms_cast_destRd__RaNonRZ ||
+                cls == isa::VariantClass::katoms_cast_destRd__RaRZ) {
+                const auto& d = *static_cast<const shape::DecodedATOMS5_2*>(&inst);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else if (cls == isa::VariantClass::katoms_cast_destPu__RaNonRZ ||
+                       cls == isa::VariantClass::katoms_cast_destPu__RaRZ) {
+                const auto& d = *static_cast<const shape::DecodedATOMS5_0*>(&inst);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else if (cls == isa::VariantClass::katoms_uniform_) {
+                const auto& d = *static_cast<const shape::DecodedATOMS5_1*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else if (cls == isa::VariantClass::katoms__RaNonRZ ||
+                       cls == isa::VariantClass::katoms__RaRZ) {
+                const auto& d = *static_cast<const shape::DecodedATOMS4_1*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else {  // katoms_arrive__*
+                const auto& d = *static_cast<const shape::DecodedATOMS4_0*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
             }
             break;
         }
         case isa::Mnemonic::kATOMG: {
-            // ATOMG6 split: 0 = uniform base (op member), 1 = CAS (no op —
-            // opv stays 0, overridden by kCas in the caller).
-            const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
-            if (nops == 5) {
+            // ATOMG forms: katomg_{int,fp}__* (5-op), katomg_*_uniform__
+            // memdesc (7-op), katomg_cas__* (6-op, no op), katomg_*_uniform__
+            // Ra32/64/Rz (6-op, op member).
+            if (cls == isa::VariantClass::katomg_fp__RaNonRZ ||
+                cls == isa::VariantClass::katomg_fp__RaRZ ||
+                cls == isa::VariantClass::katomg_int__RaNonRZ ||
+                cls == isa::VariantClass::katomg_int__RaRZ) {
                 const auto& d = *static_cast<const shape::DecodedATOMG5*>(&inst);
                 opv = static_cast<std::uint64_t>(d.op);
                 szv = static_cast<std::uint64_t>(d.sz);
                 subclass = d.subclass;
-            } else if (nops == 6) {
-                if (split == 0) {
-                    const auto& d = *static_cast<const shape::DecodedATOMG6_0*>(&inst);
-                    opv = static_cast<std::uint64_t>(d.op);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                } else {
-                    const auto& d = *static_cast<const shape::DecodedATOMG6_1*>(&inst);
-                    szv = static_cast<std::uint64_t>(d.sz);
-                    subclass = d.subclass;
-                }
-            } else {
+            } else if (cls == isa::VariantClass::katomg_fp_uniform__memdesc ||
+                       cls == isa::VariantClass::katomg_int_uniform__memdesc) {
                 const auto& d = *static_cast<const shape::DecodedATOMG7*>(&inst);
+                opv = static_cast<std::uint64_t>(d.op);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else if (cls == isa::VariantClass::katomg_cas__RaNonRZ ||
+                       cls == isa::VariantClass::katomg_cas__RaRZ) {
+                const auto& d = *static_cast<const shape::DecodedATOMG6_1*>(&inst);
+                szv = static_cast<std::uint64_t>(d.sz);
+                subclass = d.subclass;
+            } else {  // katomg_{int,fp}_uniform__Ra32/64/Rz: 6-op split 0
+                const auto& d = *static_cast<const shape::DecodedATOMG6_0*>(&inst);
                 opv = static_cast<std::uint64_t>(d.op);
                 szv = static_cast<std::uint64_t>(d.sz);
                 subclass = d.subclass;
@@ -2695,25 +2820,29 @@ std::optional<AtomicOp> decode_atomic_op(const DecodedInstruction& inst) {
             break;
         }
         case isa::Mnemonic::kREDG:
-            if (nops == 3) {
+            if (cls == isa::VariantClass::kredg_fp__RaNonRZ ||
+                cls == isa::VariantClass::kredg_fp__RaRZ ||
+                cls == isa::VariantClass::kredg_int__RaNonRZ ||
+                cls == isa::VariantClass::kredg_int__RaRZ) {
                 const auto& d = *static_cast<const shape::DecodedREDG3*>(&inst);
                 opv = static_cast<std::uint64_t>(d.op);
                 szv = static_cast<std::uint64_t>(d.sz);
                 subclass = d.subclass;
-            } else if (nops == 4) {
-                const auto& d = *static_cast<const shape::DecodedREDG4*>(&inst);
+            } else if (cls == isa::VariantClass::kredg_fp_uniform__memdesc ||
+                       cls == isa::VariantClass::kredg_int_uniform__memdesc) {
+                const auto& d = *static_cast<const shape::DecodedREDG5*>(&inst);
                 opv = static_cast<std::uint64_t>(d.op);
                 szv = static_cast<std::uint64_t>(d.sz);
                 subclass = d.subclass;
             } else {
-                const auto& d = *static_cast<const shape::DecodedREDG5*>(&inst);
+                const auto& d = *static_cast<const shape::DecodedREDG4*>(&inst);
                 opv = static_cast<std::uint64_t>(d.op);
                 szv = static_cast<std::uint64_t>(d.sz);
                 subclass = d.subclass;
             }
             break;
         case isa::Mnemonic::kREDS:
-            if (nops == 4) {
+            if (cls == isa::VariantClass::katoms_reds_uniform_) {
                 const auto& d = *static_cast<const shape::DecodedREDS4*>(&inst);
                 opv = static_cast<std::uint64_t>(d.op);
                 szv = static_cast<std::uint64_t>(d.sz);
@@ -2760,7 +2889,6 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
     (void)w;
     (void)fault;
     const isa::Mnemonic m = inst.mnemonic;
-    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     MemWidthInfo wi = mem_sz(inst);
     *width_out = wi.bytes;
@@ -2769,13 +2897,15 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
         // 5-op [Pu,Rd,Ra,off,Pnz]; uniform 7 [Pu,Rd,Ra,Ra_URb,off,Pnz];
         // memdesc 7/8 [..,memdesc,Ra_URb,Ra,off,..].
         int ra, off;
-        if (nops == 5) {
+        if (inst.variant_class == isa::VariantClass::kldg__sImmOffset ||
+            inst.variant_class == isa::VariantClass::kldg__uImmOffset) {
             ra = 2; off = 3;
-        } else if (static_cast<shape::OperandKind>(ops[2].kind) ==
-                   shape::OperandKind::kRegister) {
-            ra = 2; off = 4;  // uniform 7-op
-        } else {
+        } else if (inst.variant_class == isa::VariantClass::kldg_memdesc__Ra64 ||
+                   inst.variant_class == isa::VariantClass::kldg_256_memdesc__Ra64 ||
+                   inst.variant_class == isa::VariantClass::kldg_256_rml2_memdesc__Ra64) {
             ra = 4; off = 5;  // memdesc 7/8
+        } else {
+            ra = 2; off = 4;  // 256-uniform 7-op
         }
         *addr_out = read_addr_pair_ov(t, ops[ra]);
         *off_out = shape::operand_value_as_i64(ops[off]);
@@ -2786,15 +2916,21 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
         // STG 3 [Ra,off,Rb]; 4 [Ra,Ra_URc,off,Rb]; 5 [memdesc,Ra_URc,Ra,off,Rb];
         // 6 [Ra,Ra_URc,off,Rb,Rb2,word_mask]; 7 +memdesc.  STL is 3-op.
         int ra, off;
-        if (m == isa::Mnemonic::kSTL || nops == 3) {
+        if (m == isa::Mnemonic::kSTL ||
+            inst.variant_class == isa::VariantClass::kstg__sImmOffset ||
+            inst.variant_class == isa::VariantClass::kstg__uImmOffset) {
             ra = 0; off = 1;
-        } else if (nops == 4) {
+        } else if (inst.variant_class == isa::VariantClass::kstg_uniform__Ra32 ||
+                   inst.variant_class == isa::VariantClass::kstg_uniform__Ra64 ||
+                   inst.variant_class == isa::VariantClass::kstg_uniform__RaRZ) {
             ra = 0; off = 2;
-        } else if (nops == 5) {
+        } else if (inst.variant_class == isa::VariantClass::kstg_memdesc__Ra64) {
             ra = 2; off = 3;
-        } else if (nops == 6) {
+        } else if (inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra32 ||
+                   inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra64 ||
+                   inst.variant_class == isa::VariantClass::kstg_256_uniform__RaRZ) {
             ra = 0; off = 2;
-        } else {
+        } else {  // kstg_256_memdesc__Ra64
             ra = 2; off = 3;
         }
         *addr_out = read_addr_pair_ov(t, ops[ra]);
@@ -2806,12 +2942,12 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
     if (m == isa::Mnemonic::kLDL) {
         // 3 [Rd,Ra,off]; 4 [Rd,Ra,Ra_URb,off]; 5 [Rd,memdesc,Ra_URb,Ra,off].
         int ra, off;
-        if (nops == 3) {
-            ra = 1; off = 2;
-        } else if (nops == 4) {
+        if (inst.variant_class == isa::VariantClass::kldl_uniform_) {
             ra = 1; off = 3;
-        } else {
+        } else if (inst.variant_class == isa::VariantClass::kldl_memdesc_) {
             ra = 3; off = 4;
+        } else {  // kldl__sImmOffset/uImmOffset
+            ra = 1; off = 2;
         }
         *addr_out = read_addr_pair_ov(t, ops[ra]);
         *off_out = shape::operand_value_as_i64(ops[off]);
@@ -2823,13 +2959,16 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
         // or 4 [Ra,Ra_URc,off,..].
         int ra, off;
         if (m == isa::Mnemonic::kLDS) {
-            ra = 1; off = (nops == 4) ? 3 : 2;
+            ra = 1;
+            off = (inst.variant_class == isa::VariantClass::klds_uniform_) ? 3 : 2;
         } else if (m == isa::Mnemonic::kSTS) {
-            ra = 0; off = (nops == 4) ? 2 : 1;
+            ra = 0;
+            off = (inst.variant_class == isa::VariantClass::ksts_uniform_) ? 2 : 1;
         } else if (m == isa::Mnemonic::kATOMS) {
             ra = 1; off = 2;
         } else {  // REDS
-            ra = 0; off = (nops == 4) ? 2 : 1;
+            ra = 0;
+            off = (inst.variant_class == isa::VariantClass::katoms_reds_uniform_) ? 2 : 1;
         }
         *addr_out = read_reg_ov(t, ops[ra]);
         *off_out = shape::operand_value_as_i64(ops[off]);
@@ -2898,12 +3037,15 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
     if (m == isa::Mnemonic::kATOMG || m == isa::Mnemonic::kREDG) {
         // 5/6 [Pu,Rd,Ra,off,..] (+Rc for CAS); 7/5 +memdesc prefix.
         int ra, off;
-        if (nops <= 6) {
+        if (inst.variant_class == isa::VariantClass::katomg_fp_uniform__memdesc ||
+            inst.variant_class == isa::VariantClass::katomg_int_uniform__memdesc ||
+            inst.variant_class == isa::VariantClass::kredg_fp_uniform__memdesc ||
+            inst.variant_class == isa::VariantClass::kredg_int_uniform__memdesc) {
+            ra = 4;
+            off = 5;  // memdesc-prefixed forms
+        } else {
             ra = 2;
             off = 3;
-        } else {
-            ra = 4;
-            off = 5;
         }
         *addr_out = read_addr_pair_ov(t, ops[ra]);
         *off_out = shape::operand_value_as_i64(ops[off]);
@@ -3277,14 +3419,19 @@ Status Interpreter::do_ldg(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_stg(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     std::uint64_t rb_r = 255;
-    if (nops == 3) {
+    if (inst.variant_class == isa::VariantClass::kstg__sImmOffset ||
+        inst.variant_class == isa::VariantClass::kstg__uImmOffset) {
         rb_r = mem_ov_idx(ops[2]);
-    } else if (nops == 4 || nops == 6) {
+    } else if (inst.variant_class == isa::VariantClass::kstg_uniform__Ra32 ||
+               inst.variant_class == isa::VariantClass::kstg_uniform__Ra64 ||
+               inst.variant_class == isa::VariantClass::kstg_uniform__RaRZ ||
+               inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra32 ||
+               inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra64 ||
+               inst.variant_class == isa::VariantClass::kstg_256_uniform__RaRZ) {
         rb_r = mem_ov_idx(ops[3]);
-    } else {
+    } else {  // kstg_memdesc__Ra64 / kstg_256_memdesc__Ra64
         rb_r = mem_ov_idx(ops[4]);
     }
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, false,
@@ -3344,66 +3491,112 @@ Status Interpreter::do_ldcu(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_atom(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const std::uint16_t nops = inst.n_ops;
-    const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
+    const isa::VariantClass cls = inst.variant_class;
     const OperandFields ops(inst);
-    if (nops == 7) {
-        // ATOM7 split: 0 = int/fp-uniform [Pu,Rd,Ra,Ra_URc,Ra_offset,Rb,wr],
-        // 1 = CAS [Pu,Rd,Ra,Ra_offset,Rb,Rc,wr].  The positional rd/rb/cas
-        // reads are preserved (uniform-form rb/cas are the old positional
-        // values); sz/sem/sco come from the split struct.
-        const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sz)
-                                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sz);
-        const auto sem = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sem)
-                                      : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sem);
-        const auto sco = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sco)
-                                      : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sco);
+    // ATOM7 (katom_{int,fp}_uniform__* and katom_cas__*) vs ATOM6
+    // (katom_arrive__* and katom_{int,fp}__*); the 7-op uniform form takes
+    // the [..,Ra_URc,Ra_offset,Rb,wr] layout, the 7-op CAS the
+    // [..,Ra_offset,Rb,Rc,wr] layout.
+    if (cls == isa::VariantClass::katom_cas__RaNonRZ_CAS ||
+        cls == isa::VariantClass::katom_cas__RaNonRZ_CAST ||
+        cls == isa::VariantClass::katom_cas__RaRZ_CAS ||
+        cls == isa::VariantClass::katom_cas__RaRZ_CAST) {
+        const auto& d = *static_cast<const shape::DecodedATOM7_1*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
                                   mem_ov_idx(ops[1]), mem_ov_idx(ops[4]),
-                                  mem_ov_idx(ops[5]), sz, sem, sco);
+                                  mem_ov_idx(ops[5]),
+                                  static_cast<std::uint64_t>(d.sz),
+                                  static_cast<std::uint64_t>(d.sem),
+                                  static_cast<std::uint64_t>(d.sco));
     }
-    // ATOM6 split: 0 = .ARRIVE [Pu,Rd,Ra,Ra_URc,Ra_offset,wr], 1 = int/fp
-    // [Pu,Rd,Ra,Ra_offset,Rb,wr].  Positional reads preserved.
-    const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sz)
-                                 : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sz);
-    const auto sem = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sem)
-                                  : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sem);
-    const auto sco = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sco)
-                                  : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sco);
+    if (cls == isa::VariantClass::katom_int_uniform__Ra32 ||
+        cls == isa::VariantClass::katom_int_uniform__Ra64 ||
+        cls == isa::VariantClass::katom_int_uniform__RaRZ ||
+        cls == isa::VariantClass::katom_fp_uniform__Ra32 ||
+        cls == isa::VariantClass::katom_fp_uniform__Ra64 ||
+        cls == isa::VariantClass::katom_fp_uniform__RaRZ) {
+        const auto& d = *static_cast<const shape::DecodedATOM7_0*>(&inst);
+        return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                                  mem_ov_idx(ops[1]), mem_ov_idx(ops[4]),
+                                  mem_ov_idx(ops[5]),
+                                  static_cast<std::uint64_t>(d.sz),
+                                  static_cast<std::uint64_t>(d.sem),
+                                  static_cast<std::uint64_t>(d.sco));
+    }
+    if (cls == isa::VariantClass::katom_arrive__Ra32_arrive ||
+        cls == isa::VariantClass::katom_arrive__Ra32_popcinc ||
+        cls == isa::VariantClass::katom_arrive__Ra64_arrive ||
+        cls == isa::VariantClass::katom_arrive__Ra64_popcinc ||
+        cls == isa::VariantClass::katom_arrive__RaRZ_arrive ||
+        cls == isa::VariantClass::katom_arrive__RaRZ_popcinc) {
+        const auto& d = *static_cast<const shape::DecodedATOM6_0*>(&inst);
+        return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                                  mem_ov_idx(ops[1]), mem_ov_idx(ops[4]), 255,
+                                  static_cast<std::uint64_t>(d.sz),
+                                  static_cast<std::uint64_t>(d.sem),
+                                  static_cast<std::uint64_t>(d.sco));
+    }
+    // katom_{int,fp}__RaNonRZ/RaRZ (6-op plain).
+    const auto& d = *static_cast<const shape::DecodedATOM6_1*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
                               mem_ov_idx(ops[1]), mem_ov_idx(ops[4]), 255,
-                              sz, sem, sco);
+                              static_cast<std::uint64_t>(d.sz),
+                              static_cast<std::uint64_t>(d.sem),
+                              static_cast<std::uint64_t>(d.sco));
 }
 
 Status Interpreter::do_atoms(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst, std::uint64_t pc,
                              std::optional<Fault>* fault) {
-    const std::uint16_t nops = inst.n_ops;
-    const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
+    const isa::VariantClass cls = inst.variant_class;
     const OperandFields ops(inst);
-    if (nops == 5) {
-        // ATOMS5 split: 0 = cast-destPu, 1 = uniform, 2 = CAS/cast-destRd.
-        const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_0*>(&inst)->sz)
-                         : (split == 1) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_1*>(&inst)->sz)
-                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_2*>(&inst)->sz);
+    // ATOMS forms by class: 5-op katoms_cas__*/cast_destRd (CAS, ops[4]=Rc),
+    // katoms_cast_destPu (dest Pu), katoms_uniform_; 4-op katoms__* (plain)
+    // and katoms_arrive__*.
+    if (cls == isa::VariantClass::katoms_cas__RaNonRZ ||
+        cls == isa::VariantClass::katoms_cas__RaRZ ||
+        cls == isa::VariantClass::katoms_cast_destRd__RaNonRZ ||
+        cls == isa::VariantClass::katoms_cast_destRd__RaRZ) {
+        const auto& d = *static_cast<const shape::DecodedATOMS5_2*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
                                   mem_ov_idx(ops[0]), mem_ov_idx(ops[3]),
-                                  mem_ov_idx(ops[4]), sz, 1, 0);
+                                  mem_ov_idx(ops[4]),
+                                  static_cast<std::uint64_t>(d.sz), 1, 0);
     }
-    // ATOMS4 split: 0 = .ARRIVE, 1 = plain (positional reads preserved).
-    const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_0*>(&inst)->sz)
-                                 : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_1*>(&inst)->sz);
+    if (cls == isa::VariantClass::katoms_cast_destPu__RaNonRZ ||
+        cls == isa::VariantClass::katoms_cast_destPu__RaRZ) {
+        const auto& d = *static_cast<const shape::DecodedATOMS5_0*>(&inst);
+        return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                                  mem_ov_idx(ops[0]), mem_ov_idx(ops[3]),
+                                  mem_ov_idx(ops[4]),
+                                  static_cast<std::uint64_t>(d.sz), 1, 0);
+    }
+    if (cls == isa::VariantClass::katoms_uniform_) {
+        const auto& d = *static_cast<const shape::DecodedATOMS5_1*>(&inst);
+        return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                                  mem_ov_idx(ops[0]), mem_ov_idx(ops[3]),
+                                  mem_ov_idx(ops[4]),
+                                  static_cast<std::uint64_t>(d.sz), 1, 0);
+    }
+    if (cls == isa::VariantClass::katoms_arrive__arrive ||
+        cls == isa::VariantClass::katoms_arrive__popcinc) {
+        const auto& d = *static_cast<const shape::DecodedATOMS4_0*>(&inst);
+        return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                                  mem_ov_idx(ops[0]), mem_ov_idx(ops[3]), 255,
+                                  static_cast<std::uint64_t>(d.sz), 1, 0);
+    }
+    // katoms__RaNonRZ / katoms__RaRZ (4-op plain).
+    const auto& d = *static_cast<const shape::DecodedATOMS4_1*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
                               mem_ov_idx(ops[0]), mem_ov_idx(ops[3]), 255,
-                              sz, 1, 0);
+                              static_cast<std::uint64_t>(d.sz), 1, 0);
 }
 
 Status Interpreter::do_reds(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
-    if (nops == 4) {
+    if (inst.variant_class == isa::VariantClass::katoms_reds_uniform_) {
         const auto& o = *static_cast<const shape::DecodedREDS4*>(&inst);
         return mem_ldst_atom_core(
             w, mask, inst, pc, fault, false, true, 255,
@@ -3418,9 +3611,12 @@ Status Interpreter::do_reds(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst, std::uint64_t pc,
                              std::optional<Fault>* fault) {
-    const std::uint16_t nops = inst.n_ops;
+    const isa::VariantClass cls = inst.variant_class;
     const OperandFields ops(inst);
-    if (nops == 5) {
+    if (cls == isa::VariantClass::katomg_fp__RaNonRZ ||
+        cls == isa::VariantClass::katomg_fp__RaRZ ||
+        cls == isa::VariantClass::katomg_int__RaNonRZ ||
+        cls == isa::VariantClass::katomg_int__RaRZ) {
         const auto& o = *static_cast<const shape::DecodedATOMG5*>(&inst);
         return mem_ldst_atom_core(
             w, mask, inst, pc, fault, false, true, mem_ov_idx(ops[1]),
@@ -3428,35 +3624,48 @@ Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
             static_cast<std::uint64_t>(o.sem),
             static_cast<std::uint64_t>(o.sco));
     }
-    if (nops == 6) {
-        // ATOMG6 split: 0 = uniform base, 1 = CAS.  Positional reads
-        // preserved (CAS-form rb/cas at ops[5]).
-        const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
-        const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sz)
-                                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sz);
-        const auto sem = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sem)
-                                      : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sem);
-        const auto sco = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sco)
-                                      : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sco);
+    if (cls == isa::VariantClass::katomg_fp_uniform__memdesc ||
+        cls == isa::VariantClass::katomg_int_uniform__memdesc) {
+        const auto& o = *static_cast<const shape::DecodedATOMG7*>(&inst);
+        return mem_ldst_atom_core(
+            w, mask, inst, pc, fault, false, true, mem_ov_idx(ops[1]),
+            mem_ov_idx(ops[5]), mem_ov_idx(ops[5]),
+            static_cast<std::uint64_t>(o.sz),
+            static_cast<std::uint64_t>(o.sem),
+            static_cast<std::uint64_t>(o.sco));
+    }
+    if (cls == isa::VariantClass::katomg_cas__RaNonRZ ||
+        cls == isa::VariantClass::katomg_cas__RaRZ) {
+        // ATOMG6 CAS: rb/cas at ops[5].
+        const auto& d = *static_cast<const shape::DecodedATOMG6_1*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
                                   mem_ov_idx(ops[1]), mem_ov_idx(ops[5]),
-                                  mem_ov_idx(ops[5]), sz, sem, sco);
+                                  mem_ov_idx(ops[5]),
+                                  static_cast<std::uint64_t>(d.sz),
+                                  static_cast<std::uint64_t>(d.sem),
+                                  static_cast<std::uint64_t>(d.sco));
     }
-    const auto& o = *static_cast<const shape::DecodedATOMG7*>(&inst);
-    return mem_ldst_atom_core(
-        w, mask, inst, pc, fault, false, true, mem_ov_idx(ops[1]),
-        mem_ov_idx(ops[5]), mem_ov_idx(ops[5]),
-        static_cast<std::uint64_t>(o.sz),
-        static_cast<std::uint64_t>(o.sem),
-        static_cast<std::uint64_t>(o.sco));
+    // katomg_{int,fp}_uniform__Ra32/64/Rz (ATOMG6 split 0).
+    const auto& d = *static_cast<const shape::DecodedATOMG6_0*>(&inst);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                              mem_ov_idx(ops[1]), mem_ov_idx(ops[5]),
+                              mem_ov_idx(ops[5]),
+                              static_cast<std::uint64_t>(d.sz),
+                              static_cast<std::uint64_t>(d.sem),
+                              static_cast<std::uint64_t>(d.sco));
 }
 
 Status Interpreter::do_redg(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
-    if (nops == 3) {
+    // REDG forms: kredg_{fp,int}__* (3-op, rb@2), kredg_*_uniform__memdesc
+    // (5-op, rb@4; sz/sem/sco through the REDG4 cast — preserved quirk), and
+    // kredg_*_uniform__Ra32/64/Rz (4-op uniform, rb@3).
+    if (inst.variant_class == isa::VariantClass::kredg_fp__RaNonRZ ||
+        inst.variant_class == isa::VariantClass::kredg_fp__RaRZ ||
+        inst.variant_class == isa::VariantClass::kredg_int__RaNonRZ ||
+        inst.variant_class == isa::VariantClass::kredg_int__RaRZ) {
         const auto& o = *static_cast<const shape::DecodedREDG3*>(&inst);
         return mem_ldst_atom_core(
             w, mask, inst, pc, fault, false, true, 255,
@@ -3464,22 +3673,21 @@ Status Interpreter::do_redg(WarpState& w, std::uint32_t mask,
             static_cast<std::uint64_t>(o.sem),
             static_cast<std::uint64_t>(o.sco));
     }
-    if (nops == 4) {
-        const auto& o = *static_cast<const shape::DecodedREDG4*>(&inst);
+    if (inst.variant_class == isa::VariantClass::kredg_fp_uniform__memdesc ||
+        inst.variant_class == isa::VariantClass::kredg_int_uniform__memdesc) {
+        const auto& o4 = *static_cast<const shape::DecodedREDG4*>(&inst);
         return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, 255,
-            mem_ov_idx(ops[3]), 255, static_cast<std::uint64_t>(o.sz),
-            static_cast<std::uint64_t>(o.sem),
-            static_cast<std::uint64_t>(o.sco));
+            w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(ops[4]),
+            255, static_cast<std::uint64_t>(o4.sz),
+            static_cast<std::uint64_t>(o4.sem),
+            static_cast<std::uint64_t>(o4.sco));
     }
-    // 5-op: rb at ops[4]; sz/sem/sco read via the REDG4 cast exactly like
-    // the pre-refactor switch (preserved quirk).
-    const auto& o4 = *static_cast<const shape::DecodedREDG4*>(&inst);
+    const auto& o = *static_cast<const shape::DecodedREDG4*>(&inst);
     return mem_ldst_atom_core(
-        w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(ops[4]), 255,
-        static_cast<std::uint64_t>(o4.sz),
-        static_cast<std::uint64_t>(o4.sem),
-        static_cast<std::uint64_t>(o4.sco));
+        w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(ops[3]), 255,
+        static_cast<std::uint64_t>(o.sz),
+        static_cast<std::uint64_t>(o.sem),
+        static_cast<std::uint64_t>(o.sco));
 }
 
 Status Interpreter::do_membar(WarpState& w, const DecodedInstruction& inst) {
@@ -3668,17 +3876,22 @@ Status Interpreter::do_ldgsts(WarpState& w, std::uint32_t mask,
     // [Rb,Rb_URc,Rb_offset,memdesc,Ra_URd,Ra,Ra_offset,Pnz]; 7-op desc_RRU
     // [Rb,Rb_offset,memdesc,Ra_URc,Ra,Ra_offset,Pnz].  Distinguish by the
     // kind of ops[1] (uniform register => A/memdesc, immediate => B/desc_RRU).
-    const std::uint16_t nops = inst.n_ops;
     const OperandFields ops(inst);
     const bool has_urc =
         static_cast<shape::OperandKind>(ops[1].kind) ==
         shape::OperandKind::kUniformRegister;
     int ra, rao, rbo;
     std::uint64_t wide = 0, szv = 0;
-    if (nops == 6) {
-        // LDGSTS6 split: 0 = RUR, 1 = RR32U/RR64U (same members).
-        const auto split = shape::kShapeSplitByVariant[inst.shape_variant];
-        if (split == 0) {
+    // Forms: LDGSTS6 (RUR/RR32U/RR64U/no-ra) vs kldgsts__desc_RRU (7-op) and
+    // kldgsts_memdesc_ (8-op).
+    if (inst.variant_class != isa::VariantClass::kldgsts__desc_RRU &&
+        inst.variant_class != isa::VariantClass::kldgsts_memdesc_) {
+        // LDGSTS6: RUR forms (kldgsts__RUR / kldgsts_no_ra__RUR) vs
+        // RR32U/RR64U forms (same members).
+        const bool is_rur =
+            inst.variant_class == isa::VariantClass::kldgsts__RUR ||
+            inst.variant_class == isa::VariantClass::kldgsts_no_ra__RUR;
+        if (is_rur) {
             const auto& d = *static_cast<const shape::DecodedLDGSTS6_0*>(&inst);
             ra = has_urc ? 3 : 2;
             rao = 4;
@@ -3707,7 +3920,8 @@ Status Interpreter::do_ldgsts(WarpState& w, std::uint32_t mask,
     // Uniform base (Ra_URc / Ra_URd) contributes the high 32 bits on the
     // RR/memdesc layouts; the RUR layouts carry none (base stays 0).
     std::uint64_t ur_base = 0;
-    if (nops == 6) {
+    if (inst.variant_class != isa::VariantClass::kldgsts__desc_RRU &&
+        inst.variant_class != isa::VariantClass::kldgsts_memdesc_) {
         if (!has_urc) ur_base = read_ur_pair_ov(w, ops[3]);
     } else {
         ur_base = read_ur_pair_ov(w, has_urc ? ops[4] : ops[3]);
@@ -3825,21 +4039,24 @@ void Interpreter::do_depbar(WarpState& w, const DecodedInstruction& inst,
 
     const OperandFields ops(inst);
     std::uint64_t le = 0, sbidx = 0, cnt = 0;
-    if (inst.n_ops == 3) {
+    // Forms: kdepbar__LE / kdepbar_ur_ = 3-op [sbidx,cnt|URb,..], kdepbar__noLE
+    // = 1-op {S}, kdepbar_all_ = 0-op.
+    if (inst.variant_class == isa::VariantClass::kdepbar__LE ||
+        inst.variant_class == isa::VariantClass::kdepbar_ur_) {
         // DEPBAR3 splits into depbar_ur_ (_0: [sbidx,URb,..]) and depbar__LE
         // (_1: [sbidx,cnt,..]); both carry the `le` member and the count role
         // at ops[1].
-        le = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+        le = (inst.variant_class == isa::VariantClass::kdepbar_ur_)
                  ? static_cast<std::uint64_t>(
                        static_cast<const shape::DecodedDEPBAR3_0*>(&inst)->le)
                  : static_cast<std::uint64_t>(
                        static_cast<const shape::DecodedDEPBAR3_1*>(&inst)->le);
         sbidx = static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
         cnt = static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
-    } else if (inst.n_ops == 1) {
+    } else if (inst.variant_class == isa::VariantClass::kdepbar__noLE) {
         const auto& d = *static_cast<const shape::DecodedDEPBAR1*>(&inst);
         (void)d;
-    } else {
+    } else {  // kdepbar_all_
         const auto& d = *static_cast<const shape::DecodedDEPBAR0*>(&inst);
         le = static_cast<std::uint64_t>(d.le);
     }
@@ -4741,9 +4958,11 @@ Status Interpreter::do_utmaredg(WarpState& w, const DecodedInstruction& inst,
     if (ps.failed()) return ps;
     // RedOp (UTMAREDG): the `op` modifier member (RedOp enum, bits[89:87]).
 
+    const bool is3 =
+        inst.variant_class == isa::VariantClass::kutmaredg__UUU ||
+        inst.variant_class == isa::VariantClass::kutmaredg_one__UUU;
     const std::uint32_t redop =
-        (inst.n_ops == 3)
-            ? static_cast<std::uint32_t>(
+        is3 ? static_cast<std::uint32_t>(
                   static_cast<const shape::DecodedUTMAREDG3*>(&inst)->op)
             : static_cast<std::uint32_t>(
                   static_cast<const shape::DecodedUTMAREDG5*>(&inst)->op);
@@ -4841,19 +5060,24 @@ void Interpreter::record_coupled_l1_to_shared(const WarpState& w,
     ev.variant_class = isa::variant_class_name(inst.variant_class);
 
     std::uint64_t loc = 1;
-    if (inst.n_ops == 6) {
+    if (inst.variant_class == isa::VariantClass::kldgsts__desc_RRU) {
         // LDGSTS6 split: 0 = RUR, 1 = RR32U/RR64U (same `loc` member).
-        loc = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+        loc = (inst.variant_class == isa::VariantClass::kldgsts__RUR ||
+               inst.variant_class == isa::VariantClass::kldgsts_no_ra__RUR)
                   ? static_cast<std::uint64_t>(
                         static_cast<const shape::DecodedLDGSTS6_0*>(&inst)->loc)
                   : static_cast<std::uint64_t>(
                         static_cast<const shape::DecodedLDGSTS6_1*>(&inst)->loc);
-    } else if (inst.n_ops == 7) {
-        loc = static_cast<std::uint64_t>(
-            static_cast<const shape::DecodedLDGSTS7*>(&inst)->loc);
-    } else {
+    } else if (inst.variant_class == isa::VariantClass::kldgsts_memdesc_) {
         loc = static_cast<std::uint64_t>(
             static_cast<const shape::DecodedLDGSTS8*>(&inst)->loc);
+    } else {  // LDGSTS6 (RUR/RR32U/RR64U/no-ra)
+        loc = (inst.variant_class == isa::VariantClass::kldgsts__RUR ||
+               inst.variant_class == isa::VariantClass::kldgsts_no_ra__RUR)
+                  ? static_cast<std::uint64_t>(
+                        static_cast<const shape::DecodedLDGSTS6_0*>(&inst)->loc)
+                  : static_cast<std::uint64_t>(
+                        static_cast<const shape::DecodedLDGSTS6_1*>(&inst)->loc);
     }
     const bool l1_bypass = loc == 0;
     ev.cache_policy = l1_bypass ? "cg" : "default";
@@ -5235,11 +5459,10 @@ Status Interpreter::do_hmma(WarpState& w, std::uint32_t mask,
                             std::optional<Fault>* fault) {
     // Dense HMMA (hmma_x8_): size 0=k8 / 1=k16 / 2=k4(TF32), srcfmt
     // 0=F16 1=BF16 2=TF32 3=E6M9, dstfmt 0=F16 1=F32 accumulator.
-    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t size = 0, srcfmt = 0, dstfmt = 0;
     bool has_re = false;
-    if (nops == 5) {
+    if (inst.variant_class == isa::VariantClass::khmma_x8_) {
         const auto& d = *static_cast<const shape::DecodedHMMA5*>(&inst);
         size = static_cast<std::uint64_t>(d.size);
         srcfmt = static_cast<std::uint64_t>(d.srcfmt);
@@ -5277,26 +5500,29 @@ Status Interpreter::do_qmma(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
     // Dense QMMA (qmma_): size 0=k16 / 1=k32, dstfmt(ntz) 0=F16 1=F32.
-    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t size = 0, dstfmt = 0;
     std::uint64_t sfa = 0, sfb = 0, sf = 0, ssz = 1;
     bool need_uri = false;
     bool has_re = false, has_rh = false;
-    if (nops == 5) {
+    // QMMA forms: kqmma_ / kqmma_rowcol_ (5-op), kqmma_sp_/_sp_rowcol_
+    // (7-op), kqmma_scale_ (8-op), kqmma_sp_scale_ (9-op).
+    if (inst.variant_class == isa::VariantClass::kqmma_ ||
+        inst.variant_class == isa::VariantClass::kqmma_rowcol_) {
         const auto& d = *static_cast<const shape::DecodedQMMA5*>(&inst);
         size = static_cast<std::uint64_t>(d.size);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
         sfa = static_cast<std::uint64_t>(d.srcFmtA);
         sfb = static_cast<std::uint64_t>(d.srcFmtB);
-    } else if (nops == 7) {
+    } else if (inst.variant_class == isa::VariantClass::kqmma_sp_ ||
+               inst.variant_class == isa::VariantClass::kqmma_sp_rowcol_) {
         const auto& d = *static_cast<const shape::DecodedQMMA7*>(&inst);
         size = static_cast<std::uint64_t>(d.size);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
         sfa = static_cast<std::uint64_t>(d.srcFmtA);
         sfb = static_cast<std::uint64_t>(d.srcFmtB);
         has_re = true;
-    } else if (nops == 8) {
+    } else if (inst.variant_class == isa::VariantClass::kqmma_scale_) {
         const auto& d = *static_cast<const shape::DecodedQMMA8*>(&inst);
         size = static_cast<std::uint64_t>(d.size);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
@@ -5353,10 +5579,9 @@ Status Interpreter::do_omma(WarpState& w, std::uint32_t mask,
                             std::optional<Fault>* fault) {
     // OMMA.SF (mxfp4 block-scaled): only the verified 2X-scale E8 e2m1
     // configuration is implemented (gpu_waiver — see capability manifest).
-    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t sf = 0, ssz = 1, sfa = 0, sfb = 0;
-    if (nops == 8) {
+    if (inst.variant_class == isa::VariantClass::komma_scale_) {
         const auto& d = *static_cast<const shape::DecodedOMMA8*>(&inst);
         sf = static_cast<std::uint64_t>(d.sf);
         ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
@@ -5594,9 +5819,9 @@ Status Interpreter::do_dfma(WarpState& w, std::uint32_t mask,
 
 Status Interpreter::fset_core(WarpState& w, std::uint32_t mask,
                               const DecodedInstruction& inst,
-                              std::uint16_t nops, std::uint64_t fcomp,
-                              std::uint64_t bop, bool ftz, int ra_pos,
-                              int pp_pos, bool dest_is_pred) {
+                              std::uint64_t fcomp, std::uint64_t bop,
+                              bool ftz, int ra_pos, int pp_pos,
+                              bool dest_is_pred, bool has_pv) {
     const OperandFields ops(inst);
     const int second_pos = ra_pos + 1;
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
@@ -5669,7 +5894,7 @@ Status Interpreter::fset_core(WarpState& w, std::uint32_t mask,
         if (fast_mode()) note_fast_leaf(false);
         if (dest_is_pred) {
             write_pred_ov(t, ops[0], out);
-            if (nops == 5) write_pred_ov(t, ops[1], outv);
+            if (has_pv) write_pred_ov(t, ops[1], outv);
         } else {  // FSET: Rd = 1.0f or 0.0f (FSET.Rd holds result).
             write_rd_ov(w, t, ops[0], out ? 0x3f800000u : 0u, 0);
         }
@@ -5681,57 +5906,62 @@ Status Interpreter::do_fsetp(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst) {
     // FSETP Pu, Pv, Ra, Rb/Sb, Pp (bop combines with Pp; simple 3-op
     // form has no Pv/Pp).  FSETP5=[Pu,Pv,Ra,2nd,Pp]  FSETP3=[Pu,Ra,2nd].
-    const std::uint16_t nops = inst.n_ops;
+    // 5-op (kfsetp__*) carries Pv/Pp; 3-op (kfsetp_simple__*) does not.
     std::uint64_t fcomp = 0, bop = 0;
     bool ftz = false;
     int ra_pos = 1;
     int pp_pos = -1;
-    if (nops == 5) {
+    if (inst.variant_class == isa::VariantClass::kfsetp__RIR_RIR ||
+        inst.variant_class == isa::VariantClass::kfsetp__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::kfsetp__RUR_RUR) {
         const auto& d = *static_cast<const shape::DecodedFSETP5*>(&inst);
         fcomp = static_cast<std::uint64_t>(d.fcomp);
         bop = static_cast<std::uint64_t>(d.bop);
         ftz = static_cast<int>(d.ftz) != 0;
         ra_pos = 2;
         pp_pos = 4;
-        return fset_core(w, mask, inst, nops, fcomp, bop, ftz, ra_pos,
-                         pp_pos, true);
+        return fset_core(w, mask, inst, fcomp, bop, ftz, ra_pos, pp_pos,
+                         true, true);
     }
     const auto& d = *static_cast<const shape::DecodedFSETP3*>(&inst);
     fcomp = static_cast<std::uint64_t>(d.fcomp);
     ftz = static_cast<int>(d.ftz) != 0;
-    return fset_core(w, mask, inst, nops, fcomp, bop, ftz, ra_pos, pp_pos,
-                     true);
+    return fset_core(w, mask, inst, fcomp, bop, ftz, ra_pos, pp_pos, true,
+                     false);
 }
 
 Status Interpreter::do_fset(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     // FSET  Rd, Ra, Rb/Sb, Pp  (Rd = 0x3f800000 or 0).
-    // FSET4=[Rd,Ra,2nd,Pp]     FSET3=[Rd,Ra,2nd].
-    const std::uint16_t nops = inst.n_ops;
-    if (nops == 4) {
+    // 4-op (kfset__*) carries Pp; 3-op (kfset_simple__*) does not.
+    if (inst.variant_class == isa::VariantClass::kfset__RIR_RIR ||
+        inst.variant_class == isa::VariantClass::kfset__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::kfset__RUR_RUR) {
         const auto& d = *static_cast<const shape::DecodedFSET4*>(&inst);
-        return fset_core(w, mask, inst, nops,
+        return fset_core(w, mask, inst,
                          static_cast<std::uint64_t>(d.fcomp),
                          static_cast<std::uint64_t>(d.bop),
-                         static_cast<int>(d.ftz) != 0, 1, 3, false);
+                         static_cast<int>(d.ftz) != 0, 1, 3, false, false);
     }
     const auto& d = *static_cast<const shape::DecodedFSET3*>(&inst);
-    return fset_core(w, mask, inst, nops,
+    return fset_core(w, mask, inst,
                      static_cast<std::uint64_t>(d.fcomp), 0,
-                     static_cast<int>(d.ftz) != 0, 1, -1, false);
+                     static_cast<int>(d.ftz) != 0, 1, -1, false, false);
 }
 
 Status Interpreter::do_fmnmx(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst) {
     // FMNMX Rd[, Pu], Ra, Rb/Sb, Pp  (Pp: PT=min, !PT=max; .NAN
     // propagate; XORSIGN: result sign = sign(Ra) XOR sign(Rb)).
-    // 4-op form: [Rd,Ra,2nd,Pp]; 5-op form: [Rd,Pu,Ra,2nd,Pp].
-    const std::uint16_t nops = inst.n_ops;
+    // 4-op form: [Rd,Ra,2nd,Pp]; 5-op (kfmnmx_pred__*) form:
+    // [Rd,Pu,Ra,2nd,Pp].
     OperandFields ops(inst);
     std::uint64_t nan = 0, xorsign_val = 0;
     bool ftz = false;
     int ra_pos = 1, pp_pos = 3;
-    if (nops == 5) {
+    if (inst.variant_class == isa::VariantClass::kfmnmx_pred__RIR_RIR ||
+        inst.variant_class == isa::VariantClass::kfmnmx_pred__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::kfmnmx_pred__RUR_RUR) {
         const auto& d = *static_cast<const shape::DecodedFMNMX5*>(&inst);
         nan = static_cast<std::uint64_t>(d.nan);
         xorsign_val = static_cast<std::uint64_t>(d.xorsign);
@@ -6317,20 +6547,15 @@ Status Interpreter::lut_core(WarpState& w, std::uint32_t mask,
 
 Status Interpreter::do_lop3(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
-    // LOP3 Rd, Ra, Rb/Sb, Rc, imm8 — 3-input logic with 8-bit LUT.
-    // Positional layout: [Pu, Rd, Ra, 2nd, Rc(, imm8|Pp(, Pp))].  pos5 is
-    // imm8 (UImm) on the LUT forms or Pp (Predicate) on the no-LUT forms.
-    const std::uint16_t nops = inst.n_ops;
+    // LOP3 Rd, Ra, Rb/Sb, Rc, imm8 — 3-input logic with 8-bit LUT.  The LUT
+    // forms carry imm8 at ops[5] (kUImm); the no-LUT forms put Pp there (and
+    // 5-op has no ops[5] at all).  The operand KIND discriminates the form —
+    // no instruction count needed.
     OperandFields ops(inst);
-    if (nops == 7) {
-    } else if (nops == 6) {
-        // LOP36 split: 0 = no-LUT [..,Rc,Pp], 1 = LUT [..,Rc,imm8] (ops[5]
-        // differs); ops via the per-variant generic array.
-    } else {
-    }
     std::uint32_t lut = 0;
-    if (nops >= 6 && static_cast<shape::OperandKind>(ops[5].kind) ==
-                         shape::OperandKind::kUImm) {
+    if (ops.n() >= 6 &&
+        static_cast<shape::OperandKind>(ops[5].kind) ==
+            shape::OperandKind::kUImm) {
         lut = static_cast<std::uint32_t>(
             shape::operand_value_as_i64(ops[5]));
     }
@@ -6342,10 +6567,12 @@ Status Interpreter::do_lop(WarpState& w, std::uint32_t mask,
     // LOP  Rd, Ra, Rb/Sb — AND/OR/XOR/PASS_B (2-input op mapped to the
     // matching 3-input truth table with Rc=0): AND=0x80, OR=0xfe,
     // XOR=0x96, PASS_B=0xcc.
-    const std::uint16_t nops = inst.n_ops;
     OperandFields ops(inst);
     std::uint64_t lop = 0;
-    lop = (nops == 5)
+    // 5-op forms (klop_imm_ / klop_noimm__*) vs 4-op optional-Pp forms.
+    lop = (inst.variant_class == isa::VariantClass::klop_imm_ ||
+           inst.variant_class == isa::VariantClass::klop_noimm__RRR_RRR ||
+           inst.variant_class == isa::VariantClass::klop_noimm__RUR_RUR)
               ? static_cast<std::uint64_t>(
                     static_cast<const shape::DecodedLOP5*>(&inst)->lop)
               : static_cast<std::uint64_t>(
@@ -6454,34 +6681,45 @@ Status Interpreter::do_lea(WarpState& w, std::uint32_t mask,
     // LEA[.HI][.X] Rd, Pu, Ra, 2nd, [Rc,] scaleU5(, Pp).
     //   LO: Rd = low32((Ra << N) + 2nd)
     //   HI: Rd = high32((Ra << N) + 2nd + Rc)
-    // Layouts: 5-op [Rd,Pu,Ra,2nd,scaleU5]; 6-op +Rc; 7-op +Pp.  scaleU5
-    // sits at pos4 (5-op) or pos5 (6/7-op); Rc only on the 6/7-op forms.
-    const std::uint16_t nops = inst.n_ops;
+    // Layouts (by variant class): 5-op [Rd,Pu,Ra,2nd,scaleU5] (klea_*_imm/
+    // noimm non-x, scaleU5@4, no Rc); 6-op +Rc|scaleU5 or x-form Pp
+    // (LEA6 split 0 = non-x @5, 1 = x-form @4); 7-op +Pp (scaleU5@5).
     OperandFields ops(inst);
     std::uint64_t hilo = 0;
-    int scale_pos = 4;      // scaleU5 position for the (n, 5)/7-op layouts
-    bool has_rc = nops >= 6;
-    if (nops == 5) {
+    int scale_pos = 4;
+    bool has_rc = false;
+    if (inst.variant_class == isa::VariantClass::klea_hi_imm_sx32__RuIR_RIR ||
+        inst.variant_class == isa::VariantClass::klea_hi_noimm_sx32__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::klea_hi_noimm_sx32__RUR_RUR ||
+        inst.variant_class == isa::VariantClass::klea_lo_imm__RuIR_RIR ||
+        inst.variant_class == isa::VariantClass::klea_lo_noimm__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::klea_lo_noimm__RUR_RUR) {
         const auto& d = *static_cast<const shape::DecodedLEA5*>(&inst);
         hilo = static_cast<std::uint64_t>(d.hilo);
-    } else if (nops == 6) {
-        // LEA6 split: 0 = non-x [..,Rc,scaleU5], 1 = x-form [..,scaleU5,Pp]
-        // (no Rc).
-        const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
-        if (split == 0) {
-            const auto& d = *static_cast<const shape::DecodedLEA6_0*>(&inst);
-            hilo = static_cast<std::uint64_t>(d.hilo);
-            scale_pos = 5;
-        } else {
-            const auto& d = *static_cast<const shape::DecodedLEA6_1*>(&inst);
-            hilo = static_cast<std::uint64_t>(d.hilo);
-            has_rc = false;
-            scale_pos = 4;
-        }
+    } else if (inst.variant_class == isa::VariantClass::klea_hi_noimm__RRR_RRR ||
+               inst.variant_class == isa::VariantClass::klea_hi_noimm__RUR_RUR ||
+               inst.variant_class == isa::VariantClass::klea_hi_imm__RRuI_RRI ||
+               inst.variant_class == isa::VariantClass::klea_hi_imm__RuIR_RIR) {
+        // 6-op non-x: [..,Rc,scaleU5] — scaleU5@5, Rc@4 (LEA6 split 0).
+        const auto& d = *static_cast<const shape::DecodedLEA6_0*>(&inst);
+        hilo = static_cast<std::uint64_t>(d.hilo);
+        scale_pos = 5;
+        has_rc = true;
+    } else if (inst.variant_class == isa::VariantClass::klea_hi_noimm_sx32_x__RRR_RRR ||
+               inst.variant_class == isa::VariantClass::klea_hi_noimm_sx32_x__RUR_RUR ||
+               inst.variant_class == isa::VariantClass::klea_hi_imm_sx32_x__RuIR_RIR ||
+               inst.variant_class == isa::VariantClass::klea_lo_imm_x__RuIR_RIR ||
+               inst.variant_class == isa::VariantClass::klea_lo_noimm_x__RRR_RRR ||
+               inst.variant_class == isa::VariantClass::klea_lo_noimm_x__RUR_RUR) {
+        // 6-op x-form: [..,scaleU5,Pp] — scaleU5@4, no Rc (LEA6 split 1).
+        const auto& d = *static_cast<const shape::DecodedLEA6_1*>(&inst);
+        hilo = static_cast<std::uint64_t>(d.hilo);
     } else {
+        // 7-op +Pp: [..,Rc,scaleU5,Pp] — scaleU5@5, Rc@4.
         const auto& d = *static_cast<const shape::DecodedLEA7*>(&inst);
         hilo = static_cast<std::uint64_t>(d.hilo);
         scale_pos = 5;
+        has_rc = true;
     }
     const std::uint64_t scale_v =
         static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[scale_pos]));
