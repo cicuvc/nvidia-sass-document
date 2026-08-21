@@ -5993,21 +5993,25 @@ Status Interpreter::do_fmnmx(WarpState& w, std::uint32_t mask,
     // propagate; XORSIGN: result sign = sign(Ra) XOR sign(Rb)).
     // 4-op form: [Rd,Ra,2nd,Pp]; 5-op (kfmnmx_pred__*) form:
     // [Rd,Pu,Ra,2nd,Pp].
-    OperandFields ops(inst);
     std::uint64_t nan = 0, xorsign_val = 0;
     bool ftz = false;
-    int ra_pos = 1, pp_pos = 3;
+    const shape::OperandValue* rd = nullptr;
+    const shape::OperandValue* rra = nullptr;
+    const shape::OperandValue* rb = nullptr;
+    const shape::OperandValue* rpp = nullptr;
     if (inst.variant_class == isa::VariantClass::kfmnmx_pred__RIR_RIR ||
         inst.variant_class == isa::VariantClass::kfmnmx_pred__RRR_RRR ||
         inst.variant_class == isa::VariantClass::kfmnmx_pred__RUR_RUR) {
+        // 5-op [Rd,Pu,Ra,2nd,Pp]
         const auto& d = *static_cast<const shape::DecodedFMNMX5*>(&inst);
+        rd = &d.Rd; rra = &d.Ra; rb = &d.b; rpp = &d.Pp;
         nan = static_cast<std::uint64_t>(d.nan);
         xorsign_val = static_cast<std::uint64_t>(d.xorsign);
         ftz = static_cast<int>(d.ftz) != 0;
-        ra_pos = 2;
-        pp_pos = 4;
     } else {
+        // 4-op [Rd,Ra,2nd,Pp]
         const auto& d = *static_cast<const shape::DecodedFMNMX4*>(&inst);
+        rd = &d.Rd; rra = &d.Ra; rb = &d.b; rpp = &d.Pp;
         nan = static_cast<std::uint64_t>(d.nan);
         xorsign_val = static_cast<std::uint64_t>(d.xorsign);
         ftz = static_cast<int>(d.ftz) != 0;
@@ -6017,8 +6021,8 @@ Status Interpreter::do_fmnmx(WarpState& w, std::uint32_t mask,
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_ov(t, ops[ra_pos]);
-        std::uint32_t b = src_value(w, t, ops[ra_pos + 1]);
+        std::uint32_t a = read_reg_ov(t, *rra);
+        std::uint32_t b = src_value(w, t, *rb);
         if (ftz) {
             if (fast_mode()) {
                 if (options_.fast_fp_fallback != FastFpFallback::kNone) {
@@ -6036,10 +6040,8 @@ Status Interpreter::do_fmnmx(WarpState& w, std::uint32_t mask,
         // Pp=PT (7) is "min" per the test; !PT is max.  (pred value == 7
         // AND not inverted) is min, anything else is max.
         const std::uint64_t ppv_v =
-            static_cast<std::uint64_t>(shape::operand_value_as_i64(
-                ops[pp_pos]));
-        const bool is_max =
-            !(ppv_v == 7 && !(ops[pp_pos].flags & 4));
+            static_cast<std::uint64_t>(shape::operand_value_as_i64(*rpp));
+        const bool is_max = !(ppv_v == 7 && !(rpp->flags & 4));
         const float fa = std::bit_cast<float>(a);
         const float fb = std::bit_cast<float>(b);
         const bool a_nan = std::isnan(fa);
@@ -6070,7 +6072,7 @@ Status Interpreter::do_fmnmx(WarpState& w, std::uint32_t mask,
             out = (out & 0x7fffffffu) | (ns << 31);
         }
         if (fast_mode()) note_fast_leaf(false);
-        write_rd_ov(w, t, ops[0], out, 0);
+        write_rd_ov(w, t, *rd, out, 0);
     }
     return Status::success();
 }
@@ -6080,14 +6082,12 @@ Status Interpreter::do_fsel(WarpState& w, std::uint32_t mask,
     // FSEL Rd, Ra, Rb/Sb, Pp (select Ra when Pp true, else Rb/Sb).
     // Roles: [Rd, Ra, 2nd, Pp].
     const auto& d = *static_cast<const shape::DecodedFSEL4*>(&inst);
-    const OperandFields ops(inst);
     const bool ftz = static_cast<int>(d.ftz) != 0;
-    const int pp_pos = 3;
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_ov(t, ops[1]);
+        std::uint32_t a = read_reg_ov(t, d.Ra);
         if (ftz) {
             if (fast_mode()) {
                 if (options_.fast_fp_fallback != FastFpFallback::kNone) {
@@ -6100,11 +6100,11 @@ Status Interpreter::do_fsel(WarpState& w, std::uint32_t mask,
                 a = fp::flush_f32(a);
             }
         }
-        std::uint32_t b = src_value(w, t, ops[2]);
+        std::uint32_t b = src_value(w, t, d.b);
         bool p = false;
-        read_pred_ov(t, ops[pp_pos], &p);
+        read_pred_ov(t, d.Pp, &p);
         if (fast_mode()) note_fast_leaf(false);
-        write_rd_ov(w, t, ops[0], p ? a : b, 0);
+        write_rd_ov(w, t, d.Rd, p ? a : b, 0);
     }
     return Status::success();
 }
