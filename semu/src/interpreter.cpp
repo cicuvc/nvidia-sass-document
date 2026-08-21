@@ -6219,23 +6219,22 @@ Status Interpreter::do_f2f(WarpState& w, std::uint32_t mask,
     return Status::success();
 }
 
-Status Interpreter::cvtx_core(WarpState& w, std::uint32_t mask,
-                              const DecodedInstruction& inst, Rnd rnd,
-                              bool ftz, int dstfmt, int srcfmt,
-                              bool is_i2f) {
-    const OperandFields ops(inst);
+Status Interpreter::cvtx_core(WarpState& w, std::uint32_t mask, Rnd rnd,
+                              bool ftz, int dstfmt, int srcfmt, bool is_i2f,
+                              const shape::OperandValue& rd,
+                              const shape::OperandValue& src) {
     const bool sat = false;
     // Source operand: register (Rb/URb) or Sb immediate.
-    const auto src_kind = static_cast<shape::OperandKind>(ops[1].kind);
+    const auto src_kind = static_cast<shape::OperandKind>(src.kind);
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
         const std::uint32_t val =
             (src_kind == shape::OperandKind::kRegister)
-                ? read_reg_ov(t, ops[1])
+                ? read_reg_ov(t, src)
                 : static_cast<std::uint32_t>(
-                      shape::operand_value_as_i64(ops[1]));
+                      shape::operand_value_as_i64(src));
         std::uint64_t out = 0;
         if (fast_mode()) {
             // Phase 5.5 fast conversions.  I2F: RN + F32/F64 destination
@@ -6252,7 +6251,7 @@ Status Interpreter::cvtx_core(WarpState& w, std::uint32_t mask,
                 if (rnd == Rnd::kRn &&
                     fp::fast_i2f(val, f, srcfmt, &fout, &fouthi)) {
                     note_fast_leaf(true);
-                    write_rd_ov(w, t, ops[0], fout, fouthi, f == 2);
+                    write_rd_ov(w, t, rd, fout, fouthi, f == 2);
                     continue;
                 }
                 ++fast_stats_.precise_fallback_ops;
@@ -6261,7 +6260,7 @@ Status Interpreter::cvtx_core(WarpState& w, std::uint32_t mask,
                 if (fp::fast_f2i(val, dstfmt, static_cast<int>(rnd), ftz,
                                  &fout)) {
                     note_fast_leaf(true);
-                    write_rd_ov(w, t, ops[0], fout, 0, false);
+                    write_rd_ov(w, t, rd, fout, 0, false);
                     continue;
                 }
                 ++fast_stats_.precise_fallback_ops;
@@ -6285,7 +6284,7 @@ Status Interpreter::cvtx_core(WarpState& w, std::uint32_t mask,
         }
         // F64 destinations (I2F.F64, dstfmt==3) write a register pair.
         const bool f64_dst = (is_i2f && dstfmt == 3);
-        write_rd_ov(w, t, ops[0], static_cast<std::uint32_t>(out),
+        write_rd_ov(w, t, rd, static_cast<std::uint32_t>(out),
                     static_cast<std::uint32_t>(out >> 32), f64_dst);
     }
     return Status::success();
@@ -6296,19 +6295,19 @@ Status Interpreter::do_i2f(WarpState& w, std::uint32_t mask,
     // Roles: [Rd, source]; source is a register (Rb/URb) or the Sb
     // immediate.  Sat is absent from the schema (was always 0); no ftz.
     const auto& d = *static_cast<const shape::DecodedI2F2*>(&inst);
-    return cvtx_core(w, mask, inst, static_cast<Rnd>(d.rnd), false,
+    return cvtx_core(w, mask, static_cast<Rnd>(d.rnd), false,
                      static_cast<int>(d.dstfmt),
-                     static_cast<int>(d.srcfmt), true);
+                     static_cast<int>(d.srcfmt), true, d.Rd, d.b);
 }
 
 Status Interpreter::do_f2i(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst) {
     // Roles: [Rd, source].  F2I has no sat member (was always 0).
     const auto& d = *static_cast<const shape::DecodedF2I2*>(&inst);
-    return cvtx_core(w, mask, inst, static_cast<Rnd>(d.rnd),
+    return cvtx_core(w, mask, static_cast<Rnd>(d.rnd),
                      static_cast<int>(d.ftz) != 0,
                      static_cast<int>(d.dstfmt),
-                     static_cast<int>(d.srcfmt), false);
+                     static_cast<int>(d.srcfmt), false, d.Rd, d.b);
 }
 
 Status Interpreter::do_frnd(WarpState& w, std::uint32_t mask,
@@ -6526,27 +6525,30 @@ Status Interpreter::do_shfl(WarpState& w, std::uint32_t mask,
 }
 
 Status Interpreter::lut_core(WarpState& w, std::uint32_t mask,
-                             const DecodedInstruction& inst,
-                             std::uint32_t lut) {
-    const OperandFields ops(inst);
+                             std::uint32_t lut,
+                             const shape::OperandValue& rd,
+                             const shape::OperandValue& ra,
+                             const shape::OperandValue& b,
+                             const shape::OperandValue* c3) {
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_ov(t, ops[2]);
-        std::uint32_t b = src_value(w, t, ops[3]);
-        std::uint32_t c = read_reg_ov(t, ops[4]);
+        std::uint32_t a = read_reg_ov(t, ra);
+        std::uint32_t bv = src_value(w, t, b);
+        // LOP (2-input) has no third source; LOP3 passes Rc via c3.
+        const std::uint32_t c = c3 ? read_reg_ov(t, *c3) : 0;
         std::uint32_t out = 0;
         // LOP3 truth-table: bit i = output for input (a,b,c) with a as
         // the index MSB (verified: lut 0xC0 = a&b = bits 6,7).  Index =
         // (a<<2)|(b<<1)|(c<<0).
         for (int bit = 0; bit < 32; ++bit) {
             const int idx = (((a >> bit) & 1) << 2) |
-                            (((b >> bit) & 1) << 1) |
+                            (((bv >> bit) & 1) << 1) |
                             ((c >> bit) & 1);
             if ((lut >> idx) & 1) out |= (1u << bit);
         }
-        write_rd_ov(w, t, ops[1], out, 0);
+        write_rd_ov(w, t, rd, out, 0);
     }
     return Status::success();
 }
@@ -6554,18 +6556,31 @@ Status Interpreter::lut_core(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_lop3(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     // LOP3 Rd, Ra, Rb/Sb, Rc, imm8 — 3-input logic with 8-bit LUT.  The LUT
-    // forms carry imm8 at ops[5] (kUImm); the no-LUT forms put Pp there (and
-    // 5-op has no ops[5] at all).  The operand KIND discriminates the form —
-    // no instruction count needed.
-    OperandFields ops(inst);
+    // forms carry imm8; the no-LUT forms put Pp (and 5-op has no tail).
+    // The shape selects the concrete struct and its named fields.
     std::uint32_t lut = 0;
-    if (ops.n() >= 6 &&
-        static_cast<shape::OperandKind>(ops[5].kind) ==
-            shape::OperandKind::kUImm) {
-        lut = static_cast<std::uint32_t>(
-            shape::operand_value_as_i64(ops[5]));
+    const shape::OperandValue* rd = nullptr;
+    const shape::OperandValue* ra = nullptr;
+    const shape::OperandValue* b = nullptr;
+    const shape::OperandValue* c = nullptr;
+    if (inst.variant_class == isa::VariantClass::klop3_lut__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::klop3_lut__RUR_RUR ||
+        inst.variant_class == isa::VariantClass::klop3_lut__RuIR_RIR) {
+        const auto& d = *static_cast<const shape::DecodedLOP37*>(&inst);
+        lut = static_cast<std::uint32_t>(shape::operand_value_as_i64(d.imm8));
+        return lut_core(w, mask, lut, d.Rd, d.Ra, d.b, &d.Rc);
     }
-    return lut_core(w, mask, inst, lut);
+    if (inst.variant_class == isa::VariantClass::klop3_lut_optionalPp__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::klop3_lut_optionalPp__RUR_RUR ||
+        inst.variant_class == isa::VariantClass::klop3_lut_optionalPp__RuIR_RIR) {
+        const auto& d = *static_cast<const shape::DecodedLOP36_1*>(&inst);
+        lut = static_cast<std::uint32_t>(shape::operand_value_as_i64(d.imm8));
+        return lut_core(w, mask, lut, d.Rd, d.Ra, d.b, &d.Rc);
+    }
+    (void)rd; (void)ra; (void)b; (void)c;
+    // 5/6-op no-LUT and 5-op: base register layout only (no LUT table).
+    const auto& d = *static_cast<const shape::DecodedLOP35*>(&inst);
+    return lut_core(w, mask, lut, d.Rd, d.Ra, d.b, nullptr);
 }
 
 Status Interpreter::do_lop(WarpState& w, std::uint32_t mask,
@@ -6573,16 +6588,20 @@ Status Interpreter::do_lop(WarpState& w, std::uint32_t mask,
     // LOP  Rd, Ra, Rb/Sb — AND/OR/XOR/PASS_B (2-input op mapped to the
     // matching 3-input truth table with Rc=0): AND=0x80, OR=0xfe,
     // XOR=0x96, PASS_B=0xcc.
-    OperandFields ops(inst);
     std::uint64_t lop = 0;
     // 5-op forms (klop_imm_ / klop_noimm__*) vs 4-op optional-Pp forms.
-    lop = (inst.variant_class == isa::VariantClass::klop_imm_ ||
-           inst.variant_class == isa::VariantClass::klop_noimm__RRR_RRR ||
-           inst.variant_class == isa::VariantClass::klop_noimm__RUR_RUR)
-              ? static_cast<std::uint64_t>(
-                    static_cast<const shape::DecodedLOP5*>(&inst)->lop)
-              : static_cast<std::uint64_t>(
-                    static_cast<const shape::DecodedLOP4*>(&inst)->lop);
+    const shape::DecodedLOP5* d5 = nullptr;
+    const shape::DecodedLOP4* d4 = nullptr;
+    if (inst.variant_class == isa::VariantClass::klop_imm_ ||
+        inst.variant_class == isa::VariantClass::klop_noimm__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::klop_noimm__RUR_RUR) {
+        d5 = static_cast<const shape::DecodedLOP5*>(&inst);
+        lop = static_cast<std::uint64_t>(d5->lop);
+    } else {
+        d4 = static_cast<const shape::DecodedLOP4*>(&inst);
+        lop = static_cast<std::uint64_t>(d4->lop);
+    }
+    (void)d4; (void)d5;
     
     std::uint32_t lut = 0;
     switch (lop) {
@@ -6592,7 +6611,8 @@ Status Interpreter::do_lop(WarpState& w, std::uint32_t mask,
         case 3: lut = 0xcc; break;  // PASS_B
         default: break;
     }
-    return lut_core(w, mask, inst, lut);
+    if (d5) return lut_core(w, mask, lut, d5->Rd, d5->Ra, d5->b, nullptr);
+    return lut_core(w, mask, lut, d4->Rd, d4->Ra, d4->b, nullptr);
 }
 
 Status Interpreter::do_shf(WarpState& w, std::uint32_t mask,
@@ -6748,32 +6768,34 @@ Status Interpreter::do_lea(WarpState& w, std::uint32_t mask,
 }
 
 Status Interpreter::bitops_core(WarpState& w, std::uint32_t mask,
-                                const DecodedInstruction& inst, int apos,
-                                int bpos, std::uint64_t cw, int mode) {
-    const OperandFields ops(inst);
+                                std::uint64_t cw, int mode,
+                                const shape::OperandValue& rd,
+                                const shape::OperandValue& a,
+                                const shape::OperandValue* b,
+                                const shape::OperandValue* c3) {
     // mode: 0=POPC 1=FLO 2=BMSK 3=PRMT (op positionally identified).
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_ov(t, ops[apos]);
-        std::uint32_t b = (bpos >= 0) ? src_value(w, t, ops[bpos]) : 0;
+        std::uint32_t av = read_reg_ov(t, a);
+        std::uint32_t bv = b ? src_value(w, t, *b) : 0;
         std::uint32_t out = 0;
         if (mode == 0) {  // POPC
-            out = static_cast<std::uint32_t>(__builtin_popcount(a));
+            out = static_cast<std::uint32_t>(__builtin_popcount(av));
         } else if (mode == 1) {  // FLO
             // FLO = find leading one (like __builtin_clz on the first
             // set bit).  Returns 0xffffffff when input is 0.
-            out = (a == 0) ? 0xffffffffu
-                : static_cast<std::uint32_t>(31 - __builtin_clz(a));
+            out = (av == 0) ? 0xffffffffu
+                : static_cast<std::uint32_t>(31 - __builtin_clz(av));
         } else if (mode == 2) {  // BMSK
             // BMSK[.C/.W] Rd, Ra, Rb: Ra = POSITION, Rb = WIDTH.
             //   Rd = ((1 << width) - 1) << pos (truncated to 32 bits).
             //   .C (clamp, default): pos>=32 -> 0; width>=32 -> all bits
             //      below pos (natural 32-bit truncation).
             //   .W (wrap): pos & 31 and width & 31 first.
-            std::uint32_t pos = a;
-            std::uint32_t width = b;
+            std::uint32_t pos = av;
+            std::uint32_t width = bv;
             const bool wrap = cw != 0;
             if (wrap) {
                 pos &= 31;
@@ -6792,20 +6814,20 @@ Status Interpreter::bitops_core(WarpState& w, std::uint32_t mask,
         } else {  // PRMT
             // PRMT Rd, Ra, 2nd(sel), 3rd — byte permute.  sel[2:0]=src
             // byte, sel[3]=zero/upper, sel[7:4] ignored.  (test_prmt.)
-            const std::uint32_t sel = b;
-            const std::uint32_t srcb = read_reg_ov(t, ops[3]);
+            const std::uint32_t sel = src_value(w, t, *b);
+            const std::uint32_t srcb = read_reg_ov(t, *c3);
             for (int i = 0; i < 4; ++i) {
                 const unsigned c = (sel >> (4 * i)) & 0xf;
                 if (c & 8) {
                     out |= ((c & 4) ? 0xffu : 0u) << (8 * i);
                 } else {
                     const unsigned by = (c & 3) * 8;
-                    out |= ((a >> by) & 0xff) << (8 * i);
+                    out |= ((av >> by) & 0xff) << (8 * i);
                 }
             }
             (void)srcb;
         }
-        write_rd_ov(w, t, ops[0], out, 0);
+        write_rd_ov(w, t, rd, out, 0);
     }
     return Status::success();
 }
@@ -6813,30 +6835,30 @@ Status Interpreter::bitops_core(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_popc(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     // POPC [Rd,src].
-    OperandFields ops(inst);
-    return bitops_core(w, mask, inst, 1, -1, 0, 0);
+    const auto& d = *static_cast<const shape::DecodedPOPC2*>(&inst);
+    return bitops_core(w, mask, 0, 0, d.Rd, d.b, nullptr, nullptr);
 }
 
 Status Interpreter::do_flo(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst) {
     // FLO [Rd,Pu,src].
-    OperandFields ops(inst);
-    return bitops_core(w, mask, inst, 2, -1, 0, 1);
+    const auto& d = *static_cast<const shape::DecodedFLO3*>(&inst);
+    return bitops_core(w, mask, 0, 1, d.Rd, d.b, nullptr, nullptr);
 }
 
 Status Interpreter::do_bmsk(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     // BMSK [Rd,Ra,2nd].
     const auto& d = *static_cast<const shape::DecodedBMSK3*>(&inst);
-    return bitops_core(w, mask, inst, 1, 2,
-                       static_cast<std::uint64_t>(d.cw), 2);
+    return bitops_core(w, mask, static_cast<std::uint64_t>(d.cw), 2,
+                       d.Rd, d.Ra, &d.b, nullptr);
 }
 
 Status Interpreter::do_prmt(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     // PRMT [Rd,Ra,2nd,3rd].
-    OperandFields ops(inst);
-    return bitops_core(w, mask, inst, 1, 2, 0, 3);
+    const auto& d = *static_cast<const shape::DecodedPRMT4*>(&inst);
+    return bitops_core(w, mask, 0, 3, d.Rd, d.Ra, &d.b, &d.c);
 }
 
 Status Interpreter::do_unsupported(WarpState& w,

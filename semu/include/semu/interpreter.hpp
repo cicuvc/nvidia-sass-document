@@ -792,14 +792,21 @@ private:
                      const shape::OperandValue* pv,
                      bool dest_is_pred);
     Status cvtx_core(WarpState& w, std::uint32_t mask,
-                     const DecodedInstruction& inst,
                      semu::fp::Rnd rnd, bool ftz,
-                     int dstfmt, int srcfmt, bool is_i2f);
+                     int dstfmt, int srcfmt, bool is_i2f,
+                     const shape::OperandValue& rd,
+                     const shape::OperandValue& src);
     Status lut_core(WarpState& w, std::uint32_t mask,
-                    const DecodedInstruction& inst, std::uint32_t lut);
+                    std::uint32_t lut, const shape::OperandValue& rd,
+                    const shape::OperandValue& ra,
+                    const shape::OperandValue& b,
+                    const shape::OperandValue* c);
     Status bitops_core(WarpState& w, std::uint32_t mask,
-                       const DecodedInstruction& inst, int apos, int bpos,
-                       std::uint64_t cw, int mode);
+                       std::uint64_t cw, int mode,
+                       const shape::OperandValue& rd,
+                       const shape::OperandValue& a,
+                       const shape::OperandValue* b,
+                       const shape::OperandValue* c);
     Status do_fadd(WarpState& w, std::uint32_t mask,
                    const DecodedInstruction& inst);
     Status do_fmul(WarpState& w, std::uint32_t mask,
