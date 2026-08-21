@@ -3431,75 +3431,83 @@ Status Interpreter::mem_ldst_atom_core(
 Status Interpreter::do_ldg(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    // 5/7/8-op: Rd is ops[1] in every layout (the LDG7 split keeps Rd@1 in
-    // both the 256-uniform and the memdesc struct).
-    const OperandFields ops(inst);
+    // 5/7/8-op: Rd is the second named field in every LDG layout.
+    const auto& d = *static_cast<const shape::DecodedLDG7_0*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
-                              mem_ov_idx(ops[1]), 255, 255, 0, 0, 0);
+                              mem_ov_idx(d.Rd), 255, 255, 0, 0, 0);
 }
+
 
 Status Interpreter::do_stg(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    const OperandFields ops(inst);
     std::uint64_t rb_r = 255;
     if (inst.variant_class == isa::VariantClass::kstg__sImmOffset ||
         inst.variant_class == isa::VariantClass::kstg__uImmOffset) {
-        rb_r = mem_ov_idx(ops[2]);
+        rb_r = mem_ov_idx(
+            static_cast<const shape::DecodedSTG3*>(&inst)->Rb);
     } else if (inst.variant_class == isa::VariantClass::kstg_uniform__Ra32 ||
                inst.variant_class == isa::VariantClass::kstg_uniform__Ra64 ||
                inst.variant_class == isa::VariantClass::kstg_uniform__RaRZ ||
                inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra32 ||
                inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra64 ||
                inst.variant_class == isa::VariantClass::kstg_256_uniform__RaRZ) {
-        rb_r = mem_ov_idx(ops[3]);
+        rb_r = mem_ov_idx(
+            static_cast<const shape::DecodedSTG4*>(&inst)->Rb);
     } else {  // kstg_memdesc__Ra64 / kstg_256_memdesc__Ra64
-        rb_r = mem_ov_idx(ops[4]);
+        rb_r = mem_ov_idx(
+            static_cast<const shape::DecodedSTG5*>(&inst)->Rb);
     }
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, false,
                               255, rb_r, 255, 0, 0, 0);
 }
 
+
 Status Interpreter::do_lds(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    const OperandFields ops(inst);
+    const auto& o = *static_cast<const shape::DecodedLDS3*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
-                              mem_ov_idx(ops[0]), 255, 255, 0, 0, 0);
+                              mem_ov_idx(o.Rd), 255, 255, 0, 0, 0);
 }
+
 
 Status Interpreter::do_sts(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    // 3/4-op: Rb is ops[2] in both layouts.
-    const OperandFields ops(inst);
+    // 3/4-op: Rb is the third named field in both layouts.
+    const auto& o = *static_cast<const shape::DecodedSTS3*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, false,
-                              255, mem_ov_idx(ops[2]), 255, 0, 0, 0);
+                              255, mem_ov_idx(o.Rb), 255, 0, 0, 0);
 }
+
 
 Status Interpreter::do_ldl(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    const OperandFields ops(inst);
+    const auto& o = *static_cast<const shape::DecodedLDL3*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
-                              mem_ov_idx(ops[0]), 255, 255, 0, 0, 0);
+                              mem_ov_idx(o.Rd), 255, 255, 0, 0, 0);
 }
+
 
 Status Interpreter::do_stl(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    const OperandFields ops(inst);
+    const auto& o = *static_cast<const shape::DecodedSTL3*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, false,
-                              255, mem_ov_idx(ops[2]), 255, 0, 0, 0);
+                              255, mem_ov_idx(o.Rb), 255, 0, 0, 0);
 }
+
 
 Status Interpreter::do_ldc(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    const OperandFields ops(inst);
+    const auto& o = *static_cast<const shape::DecodedLDC5_0*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
-                              mem_ov_idx(ops[0]), 255, 255, 0, 0, 0);
+                              mem_ov_idx(o.Rd), 255, 255, 0, 0, 0);
 }
+
 
 Status Interpreter::do_ldcu(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
@@ -3510,23 +3518,19 @@ Status Interpreter::do_ldcu(WarpState& w, std::uint32_t mask,
                               255, 255, 255, 0, 0, 0);
 }
 
+
 Status Interpreter::do_atom(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
     const isa::VariantClass cls = inst.variant_class;
-    const OperandFields ops(inst);
-    // ATOM7 (katom_{int,fp}_uniform__* and katom_cas__*) vs ATOM6
-    // (katom_arrive__* and katom_{int,fp}__*); the 7-op uniform form takes
-    // the [..,Ra_URc,Ra_offset,Rb,wr] layout, the 7-op CAS the
-    // [..,Ra_offset,Rb,Rc,wr] layout.
     if (cls == isa::VariantClass::katom_cas__RaNonRZ_CAS ||
         cls == isa::VariantClass::katom_cas__RaNonRZ_CAST ||
         cls == isa::VariantClass::katom_cas__RaRZ_CAS ||
         cls == isa::VariantClass::katom_cas__RaRZ_CAST) {
         const auto& d = *static_cast<const shape::DecodedATOM7_1*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                                  mem_ov_idx(ops[1]), mem_ov_idx(ops[4]),
-                                  mem_ov_idx(ops[5]),
+                                  mem_ov_idx(d.Rd), mem_ov_idx(d.Rb),
+                                  mem_ov_idx(d.Rc),
                                   static_cast<std::uint64_t>(d.sz),
                                   static_cast<std::uint64_t>(d.sem),
                                   static_cast<std::uint64_t>(d.sco));
@@ -3539,8 +3543,8 @@ Status Interpreter::do_atom(WarpState& w, std::uint32_t mask,
         cls == isa::VariantClass::katom_fp_uniform__RaRZ) {
         const auto& d = *static_cast<const shape::DecodedATOM7_0*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                                  mem_ov_idx(ops[1]), mem_ov_idx(ops[4]),
-                                  mem_ov_idx(ops[5]),
+                                  mem_ov_idx(d.Rd), mem_ov_idx(d.Rb),
+                                  mem_ov_idx(d.Ra_offset),
                                   static_cast<std::uint64_t>(d.sz),
                                   static_cast<std::uint64_t>(d.sem),
                                   static_cast<std::uint64_t>(d.sco));
@@ -3553,96 +3557,94 @@ Status Interpreter::do_atom(WarpState& w, std::uint32_t mask,
         cls == isa::VariantClass::katom_arrive__RaRZ_popcinc) {
         const auto& d = *static_cast<const shape::DecodedATOM6_0*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                                  mem_ov_idx(ops[1]), mem_ov_idx(ops[4]), 255,
-                                  static_cast<std::uint64_t>(d.sz),
+                                  mem_ov_idx(d.Rd), mem_ov_idx(d.Ra_offset),
+                                  255, static_cast<std::uint64_t>(d.sz),
                                   static_cast<std::uint64_t>(d.sem),
                                   static_cast<std::uint64_t>(d.sco));
     }
-    // katom_{int,fp}__RaNonRZ/RaRZ (6-op plain).
+    // katom_{int,fp}__RaNonRZ/RaRZ (6-op plain): rb is the fifth field.
     const auto& d = *static_cast<const shape::DecodedATOM6_1*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                              mem_ov_idx(ops[1]), mem_ov_idx(ops[4]), 255,
+                              mem_ov_idx(d.Rd), mem_ov_idx(d.Rb), 255,
                               static_cast<std::uint64_t>(d.sz),
                               static_cast<std::uint64_t>(d.sem),
                               static_cast<std::uint64_t>(d.sco));
 }
 
+
 Status Interpreter::do_atoms(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst, std::uint64_t pc,
                              std::optional<Fault>* fault) {
     const isa::VariantClass cls = inst.variant_class;
-    const OperandFields ops(inst);
-    // ATOMS forms by class: 5-op katoms_cas__*/cast_destRd (CAS, ops[4]=Rc),
-    // katoms_cast_destPu (dest Pu), katoms_uniform_; 4-op katoms__* (plain)
-    // and katoms_arrive__*.
     if (cls == isa::VariantClass::katoms_cas__RaNonRZ ||
         cls == isa::VariantClass::katoms_cas__RaRZ ||
         cls == isa::VariantClass::katoms_cast_destRd__RaNonRZ ||
         cls == isa::VariantClass::katoms_cast_destRd__RaRZ) {
         const auto& d = *static_cast<const shape::DecodedATOMS5_2*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                                  mem_ov_idx(ops[0]), mem_ov_idx(ops[3]),
-                                  mem_ov_idx(ops[4]),
+                                  mem_ov_idx(d.Rd), mem_ov_idx(d.Rb),
+                                  mem_ov_idx(d.Rc),
                                   static_cast<std::uint64_t>(d.sz), 1, 0);
     }
     if (cls == isa::VariantClass::katoms_cast_destPu__RaNonRZ ||
         cls == isa::VariantClass::katoms_cast_destPu__RaRZ) {
         const auto& d = *static_cast<const shape::DecodedATOMS5_0*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                                  mem_ov_idx(ops[0]), mem_ov_idx(ops[3]),
-                                  mem_ov_idx(ops[4]),
+                                  static_cast<std::uint64_t>(
+                                      shape::operand_value_as_i64(d.Pu)),
+                                  mem_ov_idx(d.Rb), mem_ov_idx(d.Rc),
                                   static_cast<std::uint64_t>(d.sz), 1, 0);
     }
     if (cls == isa::VariantClass::katoms_uniform_) {
         const auto& d = *static_cast<const shape::DecodedATOMS5_1*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                                  mem_ov_idx(ops[0]), mem_ov_idx(ops[3]),
-                                  mem_ov_idx(ops[4]),
+                                  mem_ov_idx(d.Rd), mem_ov_idx(d.Rb),
+                                  mem_ov_idx(d.Ra_offset),
                                   static_cast<std::uint64_t>(d.sz), 1, 0);
     }
     if (cls == isa::VariantClass::katoms_arrive__arrive ||
         cls == isa::VariantClass::katoms_arrive__popcinc) {
         const auto& d = *static_cast<const shape::DecodedATOMS4_0*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                                  mem_ov_idx(ops[0]), mem_ov_idx(ops[3]), 255,
-                                  static_cast<std::uint64_t>(d.sz), 1, 0);
+                                  mem_ov_idx(d.Rd), mem_ov_idx(d.Ra_offset),
+                                  255, static_cast<std::uint64_t>(d.sz), 1, 0);
     }
-    // katoms__RaNonRZ / katoms__RaRZ (4-op plain).
+    // katoms__RaNonRZ / katoms__RaRZ (4-op plain): rb is the last field.
     const auto& d = *static_cast<const shape::DecodedATOMS4_1*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                              mem_ov_idx(ops[0]), mem_ov_idx(ops[3]), 255,
+                              mem_ov_idx(d.Rd), mem_ov_idx(d.Rb), 255,
                               static_cast<std::uint64_t>(d.sz), 1, 0);
 }
+
 
 Status Interpreter::do_reds(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const OperandFields ops(inst);
     if (inst.variant_class == isa::VariantClass::katoms_reds_uniform_) {
         const auto& o = *static_cast<const shape::DecodedREDS4*>(&inst);
         return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, 255,
-            mem_ov_idx(ops[3]), 255, static_cast<std::uint64_t>(o.sz), 1, 0);
+            w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(o.Rb),
+            255, static_cast<std::uint64_t>(o.sz), 1, 0);
     }
     const auto& o = *static_cast<const shape::DecodedREDS3*>(&inst);
     return mem_ldst_atom_core(
-        w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(ops[2]), 255,
+        w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(o.Rb), 255,
         static_cast<std::uint64_t>(o.sz), 1, 0);
 }
+
 
 Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst, std::uint64_t pc,
                              std::optional<Fault>* fault) {
     const isa::VariantClass cls = inst.variant_class;
-    const OperandFields ops(inst);
     if (cls == isa::VariantClass::katomg_fp__RaNonRZ ||
         cls == isa::VariantClass::katomg_fp__RaRZ ||
         cls == isa::VariantClass::katomg_int__RaNonRZ ||
         cls == isa::VariantClass::katomg_int__RaRZ) {
         const auto& o = *static_cast<const shape::DecodedATOMG5*>(&inst);
         return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, mem_ov_idx(ops[1]),
-            mem_ov_idx(ops[4]), 255, static_cast<std::uint64_t>(o.sz),
+            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.Rd),
+            mem_ov_idx(o.Rb), 255, static_cast<std::uint64_t>(o.sz),
             static_cast<std::uint64_t>(o.sem),
             static_cast<std::uint64_t>(o.sco));
     }
@@ -3650,37 +3652,35 @@ Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
         cls == isa::VariantClass::katomg_int_uniform__memdesc) {
         const auto& o = *static_cast<const shape::DecodedATOMG7*>(&inst);
         return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, mem_ov_idx(ops[1]),
-            mem_ov_idx(ops[5]), mem_ov_idx(ops[5]),
+            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.Rd),
+            mem_ov_idx(o.Rb), mem_ov_idx(o.Ra_offset),
             static_cast<std::uint64_t>(o.sz),
             static_cast<std::uint64_t>(o.sem),
             static_cast<std::uint64_t>(o.sco));
     }
     if (cls == isa::VariantClass::katomg_cas__RaNonRZ ||
         cls == isa::VariantClass::katomg_cas__RaRZ) {
-        // ATOMG6 CAS: rb/cas at ops[5].
         const auto& d = *static_cast<const shape::DecodedATOMG6_1*>(&inst);
         return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                                  mem_ov_idx(ops[1]), mem_ov_idx(ops[5]),
-                                  mem_ov_idx(ops[5]),
+                                  mem_ov_idx(d.Rd), mem_ov_idx(d.Rb),
+                                  mem_ov_idx(d.Rc),
                                   static_cast<std::uint64_t>(d.sz),
                                   static_cast<std::uint64_t>(d.sem),
                                   static_cast<std::uint64_t>(d.sco));
     }
-    // katomg_{int,fp}_uniform__Ra32/64/Rz (ATOMG6 split 0).
+    // katomg_{int,fp}_uniform__Ra32/64/Rz (6-op split 0).
     const auto& d = *static_cast<const shape::DecodedATOMG6_0*>(&inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
-                              mem_ov_idx(ops[1]), mem_ov_idx(ops[5]),
-                              mem_ov_idx(ops[5]),
+                              mem_ov_idx(d.Rd), mem_ov_idx(d.Rb), 255,
                               static_cast<std::uint64_t>(d.sz),
                               static_cast<std::uint64_t>(d.sem),
                               static_cast<std::uint64_t>(d.sco));
 }
 
+
 Status Interpreter::do_redg(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const OperandFields ops(inst);
     // REDG forms: kredg_{fp,int}__* (3-op, rb@2), kredg_*_uniform__memdesc
     // (5-op, rb@4; sz/sem/sco through the REDG4 cast — preserved quirk), and
     // kredg_*_uniform__Ra32/64/Rz (4-op uniform, rb@3).
@@ -3690,8 +3690,8 @@ Status Interpreter::do_redg(WarpState& w, std::uint32_t mask,
         inst.variant_class == isa::VariantClass::kredg_int__RaRZ) {
         const auto& o = *static_cast<const shape::DecodedREDG3*>(&inst);
         return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, 255,
-            mem_ov_idx(ops[2]), 255, static_cast<std::uint64_t>(o.sz),
+            w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(o.Rb), 255,
+            static_cast<std::uint64_t>(o.sz),
             static_cast<std::uint64_t>(o.sem),
             static_cast<std::uint64_t>(o.sco));
     }
@@ -3699,18 +3699,19 @@ Status Interpreter::do_redg(WarpState& w, std::uint32_t mask,
         inst.variant_class == isa::VariantClass::kredg_int_uniform__memdesc) {
         const auto& o4 = *static_cast<const shape::DecodedREDG4*>(&inst);
         return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(ops[4]),
+            w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(o4.Rb),
             255, static_cast<std::uint64_t>(o4.sz),
             static_cast<std::uint64_t>(o4.sem),
             static_cast<std::uint64_t>(o4.sco));
     }
     const auto& o = *static_cast<const shape::DecodedREDG4*>(&inst);
     return mem_ldst_atom_core(
-        w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(ops[3]), 255,
+        w, mask, inst, pc, fault, false, true, 255, mem_ov_idx(o.Rb), 255,
         static_cast<std::uint64_t>(o.sz),
         static_cast<std::uint64_t>(o.sem),
         static_cast<std::uint64_t>(o.sco));
 }
+
 
 Status Interpreter::do_membar(WarpState& w, const DecodedInstruction& inst) {
     memory_->membar();
