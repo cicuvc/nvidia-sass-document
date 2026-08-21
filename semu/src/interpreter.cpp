@@ -2911,188 +2911,187 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
     (void)w;
     (void)fault;
     const isa::Mnemonic m = inst.mnemonic;
-    const OperandFields ops(inst);
     MemWidthInfo wi = mem_sz(inst);
     *width_out = wi.bytes;
 
+    // Every memory form has a fixed base/offset pair of NAMED fields; the
+    // form selects the concrete struct (variant class), the fields stay the
+    // same names (Ra / Ra_offset, or URa / Sa_offset for the uniform forms).
     if (m == isa::Mnemonic::kLDG) {
-        // 5-op [Pu,Rd,Ra,off,Pnz]; uniform 7 [Pu,Rd,Ra,Ra_URb,off,Pnz];
-        // memdesc 7/8 [..,memdesc,Ra_URb,Ra,off,..].
-        int ra, off;
+        const shape::OperandValue* baseop = nullptr;
+        const shape::OperandValue* offop = nullptr;
         if (inst.variant_class == isa::VariantClass::kldg__sImmOffset ||
             inst.variant_class == isa::VariantClass::kldg__uImmOffset) {
-            ra = 2; off = 3;
+            const auto& d = *static_cast<const shape::DecodedLDG5*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         } else if (inst.variant_class == isa::VariantClass::kldg_memdesc__Ra64 ||
                    inst.variant_class == isa::VariantClass::kldg_256_memdesc__Ra64 ||
                    inst.variant_class == isa::VariantClass::kldg_256_rml2_memdesc__Ra64) {
-            ra = 4; off = 5;  // memdesc 7/8
-        } else {
-            ra = 2; off = 4;  // 256-uniform 7-op
+            const auto& d = *static_cast<const shape::DecodedLDG8*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
+        } else {  // 256-uniform 7-op
+            const auto& d = *static_cast<const shape::DecodedLDG7_1*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         }
-        *addr_out = read_addr_pair_ov(t, ops[ra]);
-        *off_out = shape::operand_value_as_i64(ops[off]);
+        *addr_out = read_addr_pair_ov(t, *baseop);
+        *off_out = shape::operand_value_as_i64(*offop);
         *space_out = AddressSpace::kGlobal;
         return Status::success();
     }
     if (m == isa::Mnemonic::kSTG || m == isa::Mnemonic::kSTL) {
-        // STG 3 [Ra,off,Rb]; 4 [Ra,Ra_URc,off,Rb]; 5 [memdesc,Ra_URc,Ra,off,Rb];
-        // 6 [Ra,Ra_URc,off,Rb,Rb2,word_mask]; 7 +memdesc.  STL is 3-op.
-        int ra, off;
+        const shape::OperandValue* baseop = nullptr;
+        const shape::OperandValue* offop = nullptr;
         if (m == isa::Mnemonic::kSTL ||
             inst.variant_class == isa::VariantClass::kstg__sImmOffset ||
             inst.variant_class == isa::VariantClass::kstg__uImmOffset) {
-            ra = 0; off = 1;
+            const auto& d = *static_cast<const shape::DecodedSTG3*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         } else if (inst.variant_class == isa::VariantClass::kstg_uniform__Ra32 ||
                    inst.variant_class == isa::VariantClass::kstg_uniform__Ra64 ||
-                   inst.variant_class == isa::VariantClass::kstg_uniform__RaRZ) {
-            ra = 0; off = 2;
-        } else if (inst.variant_class == isa::VariantClass::kstg_memdesc__Ra64) {
-            ra = 2; off = 3;
-        } else if (inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra32 ||
+                   inst.variant_class == isa::VariantClass::kstg_uniform__RaRZ ||
+                   inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra32 ||
                    inst.variant_class == isa::VariantClass::kstg_256_uniform__Ra64 ||
                    inst.variant_class == isa::VariantClass::kstg_256_uniform__RaRZ) {
-            ra = 0; off = 2;
-        } else {  // kstg_256_memdesc__Ra64
-            ra = 2; off = 3;
+            const auto& d = *static_cast<const shape::DecodedSTG4*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
+        } else {  // kstg_memdesc__Ra64 / kstg_256_memdesc__Ra64
+            const auto& d = *static_cast<const shape::DecodedSTG5*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         }
-        *addr_out = read_addr_pair_ov(t, ops[ra]);
-        *off_out = shape::operand_value_as_i64(ops[off]);
+        *addr_out = read_addr_pair_ov(t, *baseop);
+        *off_out = shape::operand_value_as_i64(*offop);
         *space_out = (m == isa::Mnemonic::kSTL) ? AddressSpace::kLocal
                                                 : AddressSpace::kGlobal;
         return Status::success();
     }
     if (m == isa::Mnemonic::kLDL) {
-        // 3 [Rd,Ra,off]; 4 [Rd,Ra,Ra_URb,off]; 5 [Rd,memdesc,Ra_URb,Ra,off].
-        int ra, off;
+        const shape::OperandValue* baseop = nullptr;
+        const shape::OperandValue* offop = nullptr;
         if (inst.variant_class == isa::VariantClass::kldl_uniform_) {
-            ra = 1; off = 3;
+            const auto& d = *static_cast<const shape::DecodedLDL4*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         } else if (inst.variant_class == isa::VariantClass::kldl_memdesc_) {
-            ra = 3; off = 4;
-        } else {  // kldl__sImmOffset/uImmOffset
-            ra = 1; off = 2;
+            const auto& d = *static_cast<const shape::DecodedLDL5*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
+        } else {
+            const auto& d = *static_cast<const shape::DecodedLDL3*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         }
-        *addr_out = read_addr_pair_ov(t, ops[ra]);
-        *off_out = shape::operand_value_as_i64(ops[off]);
+        *addr_out = read_addr_pair_ov(t, *baseop);
+        *off_out = shape::operand_value_as_i64(*offop);
         *space_out = AddressSpace::kLocal;
         return Status::success();
     }
-    if (m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kSTS || m == isa::Mnemonic::kATOMS || m == isa::Mnemonic::kREDS) {
-        // LDS 3 [Rd,Ra,off]; 4 [Rd,Ra,Ra_URb,off].  STS/ATOMS/REDS 3 [Ra,off,..]
-        // or 4 [Ra,Ra_URc,off,..].
-        int ra, off;
+    if (m == isa::Mnemonic::kLDS || m == isa::Mnemonic::kSTS ||
+        m == isa::Mnemonic::kATOMS || m == isa::Mnemonic::kREDS) {
+        const shape::OperandValue* baseop = nullptr;
+        const shape::OperandValue* offop = nullptr;
         if (m == isa::Mnemonic::kLDS) {
-            ra = 1;
-            off = (inst.variant_class == isa::VariantClass::klds_uniform_) ? 3 : 2;
+            const auto& d = *static_cast<const shape::DecodedLDS3*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         } else if (m == isa::Mnemonic::kSTS) {
-            ra = 0;
-            off = (inst.variant_class == isa::VariantClass::ksts_uniform_) ? 2 : 1;
+            const auto& d = *static_cast<const shape::DecodedSTS3*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         } else if (m == isa::Mnemonic::kATOMS) {
-            ra = 1; off = 2;
+            const auto& d = *static_cast<const shape::DecodedATOMS4_1*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         } else {  // REDS
-            ra = 0;
-            off = (inst.variant_class == isa::VariantClass::katoms_reds_uniform_) ? 2 : 1;
+            const auto& d = *static_cast<const shape::DecodedREDS3*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         }
-        *addr_out = read_reg_ov(t, ops[ra]);
-        *off_out = shape::operand_value_as_i64(ops[off]);
+        *addr_out = read_reg_ov(t, *baseop);
+        *off_out = shape::operand_value_as_i64(*offop);
         *space_out = AddressSpace::kShared;
         return Status::success();
     }
     if (m == isa::Mnemonic::kLDC || m == isa::Mnemonic::kLDCU) {
         // Constant: bank (Sa_bank) + base (Ra / URa by form) + offset
-        // (Ra_offset / Sa_offset).  The layouts are form-specific (the offset
-        // operand's ROLE position differs across the ldc/ldcu forms) so this
-        // branch dispatches by opcode — no slot-name lookups:
-        //   0xb82  LDC          [Rd,Sa,Sa_bank,Ra,Ra_offset]
-        //   0x1582 LDC.UR       [Rd,Sa,URa,Rb,Sa_offset]  (bank/base/off absent)
-        //   0x17ac LDCU.CONST   [UPg,URd,Sa,Sa_bank,URa,Sa_offset]
-        //   0x1dac LDCU.256.CONST [UPg,URd2,URd,Sa,Sa_bank,URa,Sa_offset,word_mask]
-        //   0x1bac LDCU.CONST   [UPg,URd,Sa,URa,URb,Sa_offset]   (no bank)
-        //   0x13ac LDCU.256.UR  [UPg,URd2,URd,URa,Sa_offset,(word_mask,UPp)]
-        //   0x19ac LDCU.UR       [UPg,URd,URa,Sa_offset,(UPp)]
-        //   0x15ac LDCU.256.CONST [UPg,URd2,URd,Sa,URa,URb,Sa_offset,word_mask]
+        // (Ra_offset / Sa_offset).  Dispatched by opcode; each form reads its
+        // own named fields.
         const std::uint16_t op = semu::opcode_of(inst.word.lo, inst.word.hi);
         std::uint64_t bank = 0, base_v = 0;
         std::int64_t off = 0;
         switch (op) {
-            case 0xb82:  // Sa_bank/Ra/Ra_offset at [2]/[3]/[4]
-                bank = static_cast<std::uint64_t>(
-                    shape::operand_value_as_i64(ops[2]));
-                base_v = read_reg_ov(t, ops[3]);
-                off = shape::operand_value_as_i64(ops[4]);
+            case 0xb82: {  // LDC [Rd,Sa,Sa_bank,Ra,Ra_offset]
+                const auto& d = *static_cast<const shape::DecodedLDC5_0*>(&inst);
+                bank = static_cast<std::uint64_t>(shape::operand_value_as_i64(d.Sa_bank));
+                base_v = read_reg_ov(t, d.Ra);
+                off = shape::operand_value_as_i64(d.Ra_offset);
                 break;
-            case 0x17ac:  // Sa_bank/URa/Sa_offset at [3]/[4]/[5]
-                bank = static_cast<std::uint64_t>(
-                    shape::operand_value_as_i64(ops[3]));
-                base_v = read_ur_ov(w, ops[4]);
-                off = shape::operand_value_as_i64(ops[5]);
+            }
+            case 0x17ac: {  // LDCU.CONST [UPg,URd,Sa,Sa_bank,URa,Sa_offset]
+                const auto& d = *static_cast<const shape::DecodedLDCU6_0*>(&inst);
+                bank = static_cast<std::uint64_t>(shape::operand_value_as_i64(d.Sa_bank));
+                base_v = read_ur_ov(w, d.URa);
+                off = shape::operand_value_as_i64(d.Sa_offset);
                 break;
-            case 0x1dac:  // Sa_bank/URa/Sa_offset at [4]/[5]/[6]
-                bank = static_cast<std::uint64_t>(
-                    shape::operand_value_as_i64(ops[4]));
-                base_v = read_ur_ov(w, ops[5]);
-                off = shape::operand_value_as_i64(ops[6]);
+            }
+            case 0x1dac: {  // LDCU.256.CONST [..,Sa_bank@4,URa@5,Sa_offset@6]
+                const auto& d = *static_cast<const shape::DecodedLDCU8_0*>(&inst);
+                bank = static_cast<std::uint64_t>(shape::operand_value_as_i64(d.Sa_bank));
+                base_v = read_ur_ov(w, d.URa);
+                off = shape::operand_value_as_i64(d.Sa_offset);
                 break;
-            case 0x1bac:  // URa/Sa_offset at [3]/[5]
-                base_v = read_ur_ov(w, ops[3]);
-                off = shape::operand_value_as_i64(ops[5]);
+            }
+            case 0x1bac: {  // LDCU.CONST [UPg,URd,Sa,URa,URb,Sa_offset]
+                const auto& d = *static_cast<const shape::DecodedLDCU6_1*>(&inst);
+                base_v = read_ur_ov(w, d.URa);
+                off = shape::operand_value_as_i64(d.Sa_offset);
                 break;
-            case 0x13ac:  // URa/Sa_offset at [3]/[4]
-                base_v = read_ur_ov(w, ops[3]);
-                off = shape::operand_value_as_i64(ops[4]);
+            }
+            case 0x13ac: {  // LDCU.256.UR [..,URa@3,Sa_offset@4,..]
+                const auto& d = *static_cast<const shape::DecodedLDCU6_2*>(&inst);
+                base_v = read_ur_ov(w, d.URa);
+                off = shape::operand_value_as_i64(d.Sa_offset);
                 break;
-            case 0x19ac:  // URa/Sa_offset at [2]/[3]
-                base_v = read_ur_ov(w, ops[2]);
-                off = shape::operand_value_as_i64(ops[3]);
+            }
+            case 0x19ac: {  // LDCU.UR [UPg,URd,URa,Sa_offset(,UPp)]
+                const auto& d = *static_cast<const shape::DecodedLDCU5*>(&inst);
+                base_v = read_ur_ov(w, d.URa);
+                off = shape::operand_value_as_i64(d.Sa_offset);
                 break;
-            case 0x15ac:  // URa/Sa_offset at [4]/[6]
-                base_v = read_ur_ov(w, ops[4]);
-                off = shape::operand_value_as_i64(ops[6]);
+            }
+            case 0x15ac: {  // LDCU.256.CONST [..,URa@4,URb@5,Sa_offset@6,..]
+                const auto& d = *static_cast<const shape::DecodedLDCU8_1*>(&inst);
+                base_v = read_ur_ov(w, d.URa);
+                off = shape::operand_value_as_i64(d.Sa_offset);
                 break;
-            default:      // 0x1582 LDC.UR: no Sa_bank/Ra/Ra_offset roles
+            }
+            default:  // 0x1582 LDC.UR: no Sa_bank/Ra/Ra_offset roles
                 break;
         }
-        *addr_out = bank * 0x10000 + base_v +
-                    static_cast<std::uint64_t>(off);
+        *addr_out = bank * 0x10000 + base_v + static_cast<std::uint64_t>(off);
         *space_out = AddressSpace::kConstant;
         return Status::success();
     }
     if (m == isa::Mnemonic::kATOMG || m == isa::Mnemonic::kREDG) {
-        // 5/6 [Pu,Rd,Ra,off,..] (+Rc for CAS); 7/5 +memdesc prefix.
-        int ra, off;
+        const shape::OperandValue* baseop = nullptr;
+        const shape::OperandValue* offop = nullptr;
         if (inst.variant_class == isa::VariantClass::katomg_fp_uniform__memdesc ||
             inst.variant_class == isa::VariantClass::katomg_int_uniform__memdesc ||
             inst.variant_class == isa::VariantClass::kredg_fp_uniform__memdesc ||
             inst.variant_class == isa::VariantClass::kredg_int_uniform__memdesc) {
-            ra = 4;
-            off = 5;  // memdesc-prefixed forms
+            const auto& d = *static_cast<const shape::DecodedATOMG7*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         } else {
-            ra = 2;
-            off = 3;
+            const auto& d = *static_cast<const shape::DecodedATOMG5*>(&inst);
+            baseop = &d.Ra; offop = &d.Ra_offset;
         }
-        *addr_out = read_addr_pair_ov(t, ops[ra]);
-        *off_out = shape::operand_value_as_i64(ops[off]);
+        *addr_out = read_addr_pair_ov(t, *baseop);
+        *off_out = shape::operand_value_as_i64(*offop);
         *space_out = AddressSpace::kGlobal;
         return Status::success();
     }
     if (m == isa::Mnemonic::kATOM) {
-        // 6 [Pu,Rd,Ra,off,Rb,wr]; 7 cas +Rc.  (ATOM6/7 split; ops via the
-        // per-variant generic array.)
-        *addr_out = read_reg_ov(t, ops[2]);
-        *off_out = shape::operand_value_as_i64(ops[3]);
+        const auto& d = *static_cast<const shape::DecodedATOM6_1*>(&inst);
+        *addr_out = read_reg_ov(t, d.Ra);
+        *off_out = shape::operand_value_as_i64(d.Ra_offset);
         *space_out = AddressSpace::kGlobal;
         return Status::success();
     }
     return Status::failure(Error(ErrorCode::kUnimplemented,
                                  "memory address resolve for '" + std::string(isa::mnemonic_name(m)) + "'"));
 }
-
-// ===========================================================================
-// Phase 6 memory — one function per instruction (plan-b refactor).  The
-// load/store/atomic family shares `mem_ldst_atom_core` (the per-lane loop);
-// each do_<MNEMONIC> extracts its register indices + atom meta from the
-// concrete shape and forwards.
-// ===========================================================================
-
 
 // Shared per-lane load/store/atomic loop (the old do_memory body).  The
 // extractable per-instruction part (which GPR holds the dest/source/comparand
@@ -4057,25 +4056,29 @@ void Interpreter::do_ldgdepbar(WarpState& w, const DecodedInstruction& inst,
 void Interpreter::do_depbar(WarpState& w, const DecodedInstruction& inst,
                             std::uint64_t pc) {
     (void)pc;
-    // Roles: 3-op [sbidx, cnt, scoreboard_list] (+le member); 1-op
+    // Roles: 3-op [sbidx, cnt|URb, scoreboard_list] (+le); 1-op
     // [scoreboard_list]; 0-op all (le only).
-
-    const OperandFields ops(inst);
     std::uint64_t le = 0, sbidx = 0, cnt = 0;
-    // Forms: kdepbar__LE / kdepbar_ur_ = 3-op [sbidx,cnt|URb,..], kdepbar__noLE
-    // = 1-op {S}, kdepbar_all_ = 0-op.
     if (inst.variant_class == isa::VariantClass::kdepbar__LE ||
         inst.variant_class == isa::VariantClass::kdepbar_ur_) {
-        // DEPBAR3 splits into depbar_ur_ (_0: [sbidx,URb,..]) and depbar__LE
-        // (_1: [sbidx,cnt,..]); both carry the `le` member and the count role
-        // at ops[1].
-        le = (inst.variant_class == isa::VariantClass::kdepbar_ur_)
-                 ? static_cast<std::uint64_t>(
-                       static_cast<const shape::DecodedDEPBAR3_0*>(&inst)->le)
-                 : static_cast<std::uint64_t>(
-                       static_cast<const shape::DecodedDEPBAR3_1*>(&inst)->le);
-        sbidx = static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
-        cnt = static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
+        // DEPBAR3: depbar_ur_ (_0: [sbidx,URb,..]) vs depbar__LE
+        // (_1: [sbidx,cnt,..]); both carry `le`; the count role is the
+        // second field.
+        if (inst.variant_class == isa::VariantClass::kdepbar_ur_) {
+            const auto& d = *static_cast<const shape::DecodedDEPBAR3_0*>(&inst);
+            le = static_cast<std::uint64_t>(d.le);
+            sbidx = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.sbidx));
+            cnt = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.URb));
+        } else {  // kdepbar__LE
+            const auto& d = *static_cast<const shape::DecodedDEPBAR3_1*>(&inst);
+            le = static_cast<std::uint64_t>(d.le);
+            sbidx = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.sbidx));
+            cnt = static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(d.cnt));
+        }
     } else if (inst.variant_class == isa::VariantClass::kdepbar__noLE) {
         const auto& d = *static_cast<const shape::DecodedDEPBAR1*>(&inst);
         (void)d;
@@ -4085,7 +4088,7 @@ void Interpreter::do_depbar(WarpState& w, const DecodedInstruction& inst,
     }
     CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
     if (le && sbidx < cta.sb_group_count.size()) {
-        // Drain (seal->complete) groups until SBn's count <= cnt.  The copies
+        // Drain (seal->complete) groups until SBn s count <= cnt.  The copies
         // are already in shared; only the group tally is adjusted.
         if (cta.sb_group_count[sbidx] > cnt) {
             std::uint64_t excess = cta.sb_group_count[sbidx] - cnt;
@@ -4101,6 +4104,7 @@ void Interpreter::do_depbar(WarpState& w, const DecodedInstruction& inst,
     }
     if (cnt == 0) memory_->drain();
 }
+
 
 // ---------------------------------------------------------------------------
 // Phase 9 subset: SYNCS (mbarrier) family
@@ -4479,10 +4483,8 @@ Status Interpreter::do_arrives(WarpState& w, const DecodedInstruction& inst,
     CtaState& cta = ctas_[static_cast<std::size_t>(w.local_cta_id)];
     // Layout: [Ra,Ra_URc,Ra_offset] — the shared target is [URc + off].
     const auto& d = *static_cast<const shape::DecodedARRIVES3*>(&inst);
-    const OperandFields ops(inst);
-    const std::uint64_t base = read_ur_ov(w, ops[1]);  // Ra_URc
-    const std::int64_t off =
-        shape::operand_value_as_i64(ops[2]);  // Ra_offset
+    const std::uint64_t base = read_ur_ov(w, d.Ra_URc);
+    const std::int64_t off = shape::operand_value_as_i64(d.Ra_offset);
     const std::uint32_t addr = static_cast<std::uint32_t>(
         base + static_cast<std::uint64_t>(off));
 
@@ -4594,10 +4596,11 @@ std::uint64_t Interpreter::warp_linear_id(const WarpState& w) const {
 Status Interpreter::prepare_tma(WarpState& w, const DecodedInstruction& inst,
                                 std::uint64_t pc, std::optional<Fault>* fault,
                                 bool is_load, TmaPrepare* out) {
-    const OperandFields ops(inst);
-    if (static_cast<shape::OperandKind>(ops[1].kind) !=
+    // URb@1 / URa@2 in every UTMALDG/STG/REDG form (same first named fields).
+    const auto& d = *static_cast<const shape::DecodedUTMALDG3*>(&inst);
+    if (static_cast<shape::OperandKind>(d.URb.kind) !=
             shape::OperandKind::kUniformRegister ||
-        static_cast<shape::OperandKind>(ops[2].kind) !=
+        static_cast<shape::OperandKind>(d.URa.kind) !=
             shape::OperandKind::kUniformRegister) {
         if (fault) {
             *fault = Fault(FaultKind::kUnsupportedInstruction,
@@ -4608,8 +4611,8 @@ Status Interpreter::prepare_tma(WarpState& w, const DecodedInstruction& inst,
         return Status::failure(Error::internal("memory fault"));
     }
     const std::uint32_t urb_idx = static_cast<std::uint32_t>(
-        shape::operand_value_as_i64(ops[1]));
-    const std::uint64_t desc_ptr = read_ur_pair_ov(w, ops[2]);
+        shape::operand_value_as_i64(d.URb));
+    const std::uint64_t desc_ptr = read_ur_pair_ov(w, d.URa);
 
     // Read the 128-byte descriptor from global memory.
     std::uint8_t blob[128] = {0};
@@ -6140,8 +6143,7 @@ Status Interpreter::do_f2f(WarpState& w, std::uint32_t mask,
     // not executed — same as the pre-migration has_rb gate, identified by
     // the operand kind (Register only).
     const auto& d = *static_cast<const shape::DecodedF2F2*>(&inst);
-    const OperandFields ops(inst);
-    if (static_cast<shape::OperandKind>(ops[1].kind) !=
+    if (static_cast<shape::OperandKind>(d.b.kind) !=
         shape::OperandKind::kRegister)
         return Status::success();
     const std::uint64_t fmt =
@@ -6149,9 +6151,9 @@ Status Interpreter::do_f2f(WarpState& w, std::uint32_t mask,
     const Rnd rnd = static_cast<Rnd>(d.rnd);
     const bool ftz = static_cast<int>(d.ftz) != 0;
     const bool sat = false;  // F2F has no SAT modifier (was always 0)
-    const int rb_r = bind_idx_ov(ops[1]);
+    const int rb_r = bind_idx_ov(d.b);
     const std::uint64_t rd_rv =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(d.Rd));
     // Combined fmt codes (DSTFMT_SRCFMT_*): F16.F32=17, BF16.F32=20,
     // F32.F16=10, BF16.F16=12, F16.BF16=33, F32.BF16=34, F64.F16=11,
     // F64.BF16=35, F16.F64=25, F32.F64=26, BF16.F64=28.
@@ -6187,7 +6189,7 @@ Status Interpreter::do_f2f(WarpState& w, std::uint32_t mask,
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t src = read_reg_ov(t, ops[1]);
+        std::uint32_t src = read_reg_ov(t, d.b);
         std::uint32_t out = 0;
         std::uint32_t outhi = 0;
         // Phase 5.5: fast F2F for native host conversions (RN, no
