@@ -773,24 +773,24 @@ private:
     // operands/modifiers) so the per-instruction function is just the
     // concrete-shape cast + forward.
     Status fp32_arith_core(WarpState& w, std::uint32_t mask,
-                           const shape::OperandValue* ops,
+                           const DecodedInstruction& inst,
                            std::uint64_t rd_rv, int op, semu::fp::Rnd rnd,
                            bool flush, bool sat, int fmz_val);
     Status fp64_arith_core(WarpState& w, std::uint32_t mask,
-                           const shape::OperandValue* ops, int op,
+                           const DecodedInstruction& inst, int op,
                            semu::fp::Rnd rnd);
     Status fset_core(WarpState& w, std::uint32_t mask,
-                     const shape::OperandValue* ops, std::uint16_t nops,
+                     const DecodedInstruction& inst, std::uint16_t nops,
                      std::uint64_t fcomp, std::uint64_t bop, bool ftz,
                      int ra_pos, int pp_pos, bool dest_is_pred);
     Status cvtx_core(WarpState& w, std::uint32_t mask,
-                     const shape::OperandValue* ops,
+                     const DecodedInstruction& inst,
                      semu::fp::Rnd rnd, bool ftz,
                      int dstfmt, int srcfmt, bool is_i2f);
     Status lut_core(WarpState& w, std::uint32_t mask,
-                    const shape::OperandValue* ops, std::uint32_t lut);
+                    const DecodedInstruction& inst, std::uint32_t lut);
     Status bitops_core(WarpState& w, std::uint32_t mask,
-                       const shape::OperandValue* ops, int apos, int bpos,
+                       const DecodedInstruction& inst, int apos, int bpos,
                        std::uint64_t cw, int mode);
     Status do_fadd(WarpState& w, std::uint32_t mask,
                    const DecodedInstruction& inst);
@@ -868,7 +868,6 @@ private:
     Status tensor_lane_core(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault,
-                            const shape::OperandValue* ops,
                             const tensor::Shape& shape, tensor::Format fmt,
                             bool need_uri, bool has_re, bool has_rh,
                             int mode);

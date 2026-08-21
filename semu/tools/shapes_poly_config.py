@@ -35,6 +35,7 @@ POLY_GROUPS = {
     ("CCTLL", 2),    # offset vs UR base
     ("DEPBAR", 3),   # LE count-imm vs URb
     ("ELECT", 3),    # Pp source vs URa source
+    ("F2FP", 3),     # f2fp [Rd,Ra,Rb] vs downconvert/merge [Rd,Rb,Rc] naming
     ("HADD2", 4),    # F32i [..,Sb,Sc] vs fixed [..,Sc,Sc1]
     ("HFMA2", 5),    # RRR/relu vs RRI vs RIR pack forms
     ("HFMA2", 6),    # RRI vs RIR + Pp tails
@@ -67,6 +68,7 @@ POLY_GROUPS = {
     ("ULOP3", 7),    # LUT imm8 vs UPp tail
     ("UPLOP3", 6),   # pred/1-reg/2-reg/3-reg operand shapes
     ("UPLOP3", 8),   # pred/1-reg/2-reg/3-reg operand shapes
+    ("UF2FP", 4),    # [UPg,URd,URa,URb] vs [UPg,URd,URb,Sc] vs [UPg,URd,Sb,URc]
     ("USHL", 4),     # Sa/URa shift source
     ("UVIRTCOUNT", 2),  # imm vs UR
     ("WARPSYNC", 2), # Ra vs sImm mask

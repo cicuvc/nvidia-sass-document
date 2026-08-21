@@ -2119,13 +2119,19 @@ enum class XORSIGN : std::int32_t {
 // polyvalent groups declared in shapes_poly_config.py emit one
 // Decoded<Mnemonic><N>_<k> per kind-collapsed role signature, so
 // every struct's ops[] positions are unambiguous.  Operands are
-// positional in the mnemonic's canonical role order; modifiers
-// are typed enum members specific to each instruction.
+// positional role order; modifiers are typed enum members.
+// Every operand is ONE NAMED OperandValue FIELD (no ops[] array):
+// each position has a stable field name across the group's
+// variants (kind-only families {Rb,Sb,URb} etc. collapse to a
+// single field; the OperandValue kind carries register / uniform
+// / immediate at runtime).
 struct DecodedMOV2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     ONLY64 size;
     SPILLONLY nonconformity;
     std::uint8_t subclass;  // generated semantic flags
@@ -2134,14 +2140,21 @@ struct DecodedMOV3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
+    OperandValue PixMaskU04;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedP2R4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedP2R4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pr;
+    OperandValue Ra;
+    OperandValue b;
     B3B0 insert;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2149,7 +2162,10 @@ struct DecodedR2P3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedR2P3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue PR;
+    OperandValue Ra;
+    OperandValue b;
     B3B0 a_bsel;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2157,7 +2173,11 @@ struct DecodedSEL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSEL4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     ONLY64 size;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2165,7 +2185,11 @@ struct DecodedFSEL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFSEL4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     FTZ ftz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2173,7 +2197,11 @@ struct DecodedFMNMX4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFMNMX4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
@@ -2183,7 +2211,12 @@ struct DecodedFMNMX5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFMNMX5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
@@ -2194,7 +2227,11 @@ struct DecodedFSET4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFSET4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
@@ -2205,7 +2242,10 @@ struct DecodedFSET3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFSET3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
@@ -2215,7 +2255,12 @@ struct DecodedFSETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFSETP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
@@ -2225,7 +2270,10 @@ struct DecodedFSETP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFSETP3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
     FCMP fcomp;
     FTZ ftz;
     std::uint8_t subclass;  // generated semantic flags
@@ -2234,7 +2282,13 @@ struct DecodedISETP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISETP6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
+    OperandValue Pr;
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
@@ -2245,7 +2299,12 @@ struct DecodedISETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISETP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
@@ -2255,7 +2314,11 @@ struct DecodedISETP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISETP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pr;
     ICmpAll icmp;
     FMT_64_DIST fmt;
     EXONLY ex;
@@ -2265,7 +2328,10 @@ struct DecodedISETP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISETP3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
     ICmpAll icmp;
     FMT_64_DIST fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -2274,14 +2340,28 @@ struct DecodedIADD36 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIADD36>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIADD38 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIADD38>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
+    OperandValue Pp;
+    OperandValue Pq;
     XONLY X;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2289,14 +2369,25 @@ struct DecodedISCADD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISCADD5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue scaleU5;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLEA6_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLEA6_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
+    OperandValue scaleU5;
     HIONLY_lea hilo;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2304,7 +2395,13 @@ struct DecodedLEA6_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLEA6_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue scaleU5;
+    OperandValue Pp;
     HIONLY_lea hilo;
     XONLY X;
     SX32ONLY sx32;
@@ -2314,7 +2411,12 @@ struct DecodedLEA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLEA5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue scaleU5;
     HIONLY_lea hilo;
     SX32ONLY sx32;
     std::uint8_t subclass;  // generated semantic flags
@@ -2323,7 +2425,14 @@ struct DecodedLEA7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLEA7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
+    OperandValue scaleU5;
+    OperandValue Pp;
     HIONLY_lea hilo;
     XONLY X;
     std::uint8_t subclass;  // generated semantic flags
@@ -2332,7 +2441,12 @@ struct DecodedLOP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLOP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     LOP lop;
     LOP_POP pop;
     std::uint8_t subclass;  // generated semantic flags
@@ -2341,7 +2455,11 @@ struct DecodedLOP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLOP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     LOP lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2349,7 +2467,14 @@ struct DecodedLOP37 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLOP37>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
+    OperandValue imm8;
+    OperandValue Pp;
     LUTOnly lut;
     LOP_POP pop;
     std::uint8_t subclass;  // generated semantic flags
@@ -2358,7 +2483,13 @@ struct DecodedLOP36_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLOP36_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
+    OperandValue Pp;
     LOP lop;
     LOP_POP pop;
     std::uint8_t subclass;  // generated semantic flags
@@ -2367,7 +2498,13 @@ struct DecodedLOP36_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLOP36_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
+    OperandValue imm8;
     LUTOnly lut;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2375,7 +2512,12 @@ struct DecodedLOP35 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLOP35>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
     LOP lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2383,14 +2525,20 @@ struct DecodedIABS2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIABS2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedPRMT4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPRMT4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     PMode pmode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2398,7 +2546,14 @@ struct DecodedIMNMX7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMNMX7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
+    OperandValue Pq;
     FMT_64_DIST fmt;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2406,7 +2561,13 @@ struct DecodedIMNMX6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMNMX6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     FMT_64_DIST fmt;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2414,7 +2575,11 @@ struct DecodedSHF4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSHF4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     SDIR dir;
     CWMode cw;
     FMT_shf fmt;
@@ -2425,7 +2590,10 @@ struct DecodedSHL3_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSHL3_0>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Sa;
+    OperandValue Rb;
     CWMode cw;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2433,7 +2601,10 @@ struct DecodedSHL3_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSHL3_1>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     CWMode cw;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2441,7 +2612,10 @@ struct DecodedSHR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSHR3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     CWMode cw;
     FMT_S32_U32 fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -2450,7 +2624,10 @@ struct DecodedSGXT3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSGXT3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     CWMode cw;
     FMT fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -2459,7 +2636,10 @@ struct DecodedBMSK3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBMSK3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     CWMode cw;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2467,7 +2647,12 @@ struct DecodedPLOP35_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP35_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pp;
+    OperandValue Pq;
+    OperandValue Pr;
+    OperandValue uimm8;
     LUTOnly lut;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2475,7 +2660,12 @@ struct DecodedPLOP35_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP35_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pp;
+    OperandValue Pq;
+    OperandValue UPr;
+    OperandValue uimm8;
     LUTOnly lut;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2483,7 +2673,12 @@ struct DecodedPLOP35_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP35_2>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pp;
+    OperandValue b;
+    OperandValue Pr;
+    OperandValue uimm8;
     LUTOnly lut;
     SIGNONLY sign_b;
     std::uint8_t subclass;  // generated semantic flags
@@ -2492,7 +2687,12 @@ struct DecodedPLOP35_3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP35_3>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pp;
+    OperandValue b;
+    OperandValue Rc;
+    OperandValue uimm8;
     LUTOnly lut;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
@@ -2502,7 +2702,12 @@ struct DecodedPLOP35_4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP35_4>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
+    OperandValue uimm8;
     LUTOnly lut;
     SIGNONLY sign_a;
     SIGNONLY sign_b;
@@ -2513,7 +2718,14 @@ struct DecodedPLOP37_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP37_0>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Pp;
+    OperandValue Pq;
+    OperandValue Pr;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2521,7 +2733,14 @@ struct DecodedPLOP37_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP37_1>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Pp;
+    OperandValue Pq;
+    OperandValue UPr;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2529,7 +2748,14 @@ struct DecodedPLOP37_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP37_2>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Pp;
+    OperandValue b;
+    OperandValue Pr;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     SIGNONLY sign_b;
     std::uint8_t subclass;  // generated semantic flags
@@ -2538,7 +2764,14 @@ struct DecodedPLOP37_3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP37_3>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Pp;
+    OperandValue b;
+    OperandValue Rc;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
@@ -2548,7 +2781,14 @@ struct DecodedPLOP37_4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP37_4>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     SIGNONLY sign_a;
     SIGNONLY sign_b;
@@ -2559,7 +2799,10 @@ struct DecodedFMUL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFMUL3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     FMZ_hfma2 fmz;
     Scale scale;
     Round1 rnd;
@@ -2570,7 +2813,10 @@ struct DecodedFADD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFADD3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue c;
     FTZ ftz;
     Round1 rnd;
     SAT sat;
@@ -2580,7 +2826,10 @@ struct DecodedFHADD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFHADD3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue c;
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
@@ -2591,7 +2840,11 @@ struct DecodedFFMA4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFFMA4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     FMZ_hfma2 fmz;
     Round1 rnd;
     SAT sat;
@@ -2601,7 +2854,11 @@ struct DecodedFHFMA4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFHFMA4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
@@ -2613,7 +2870,11 @@ struct DecodedIMAD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMAD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     LOOnly wide;
     FMT fmt;
     PSEUDO_OPCODE pseudo_opcode;
@@ -2623,7 +2884,12 @@ struct DecodedIMAD5_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMAD5_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     WIDEONLY wide;
     FMT fmt;
     PSEUDO_OPCODE pseudo_opcode;
@@ -2633,7 +2899,12 @@ struct DecodedIMAD5_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMAD5_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Rc;
+    OperandValue GetPseudoOpRIR;
     LOOnly wide;
     PSEUDO_OPCODE pseudo_opcode;
     FMT fmt;
@@ -2643,7 +2914,12 @@ struct DecodedIMAD5_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMAD5_2>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Sc;
+    OperandValue GetPseudoOpRRI;
     LOOnly wide;
     PSEUDO_OPCODE pseudo_opcode;
     FMT fmt;
@@ -2653,7 +2929,12 @@ struct DecodedIMAD5_3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMAD5_3>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue GetPseudoOpRRR;
     LOOnly wide;
     PSEUDO_OPCODE pseudo_opcode;
     FMT fmt;
@@ -2663,7 +2944,12 @@ struct DecodedIMAD5_4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMAD5_4>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
+    OperandValue Pp;
     LOOnly wide;
     FMT fmt;
     XONLY X;
@@ -2674,7 +2960,10 @@ struct DecodedIMUL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMUL3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     LOOnly wide;
     FMT fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -2683,7 +2972,13 @@ struct DecodedIMAD6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMAD6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
+    OperandValue Pp;
     WIDEONLY wide;
     FMT fmt;
     XONLY X;
@@ -2694,7 +2989,11 @@ struct DecodedIMUL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMUL4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
     WIDEONLY wide;
     FMT fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -2703,7 +3002,11 @@ struct DecodedIDP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIDP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
     MODE_2ALO_2AHI mode;
     SRCFMT16A SrcAFmt;
     SRCFMT_U8_S8 SrcBFmt;
@@ -2713,7 +3016,11 @@ struct DecodedIDP4A4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIDP4A4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
     SRCFMT_U8_S8 SrcAFmt;
     SRCFMT_U8_S8 SrcBFmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -2722,7 +3029,10 @@ struct DecodedDMUL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDMUL3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     Round1 rnd;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2730,7 +3040,10 @@ struct DecodedDADD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDADD3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue c;
     Round1 rnd;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2738,7 +3051,12 @@ struct DecodedDSETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDSETP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue c;
+    OperandValue Pp;
     DSETP_FCMP test;
     Bop bop;
     std::uint8_t subclass;  // generated semantic flags
@@ -2747,7 +3065,10 @@ struct DecodedDSETP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDSETP3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue c;
     DSETP_FCMP test;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2755,7 +3076,11 @@ struct DecodedDFMA4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDFMA4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     Round1 rnd;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2763,7 +3088,11 @@ struct DecodedCLMAD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCLMAD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     HILO hilo;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2771,7 +3100,10 @@ struct DecodedHADD23 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHADD23>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue c;
     F32ONLY_hadd2 ofmt;
     FTZ ftz;
     SAT sat;
@@ -2783,7 +3115,11 @@ struct DecodedHFMA24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHFMA24>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     OFMT ofmt;
     FMZ fmz;
     SAT satrelu;
@@ -2804,7 +3140,12 @@ struct DecodedHFMA25_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHFMA25_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Sb1;
+    OperandValue Rc;
     OFMT ofmt;
     FMZ fmz;
     SAT satrelu;
@@ -2819,7 +3160,12 @@ struct DecodedHFMA25_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHFMA25_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
+    OperandValue Pp;
     MMAONLY MMA;
     OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
@@ -2840,7 +3186,12 @@ struct DecodedHFMA25_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHFMA25_2>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Sc;
+    OperandValue Sc1;
     OFMT ofmt;
     FMZ fmz;
     SAT satrelu;
@@ -2855,7 +3206,10 @@ struct DecodedHMUL23 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMUL23>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
     SAT sat;
@@ -2867,7 +3221,11 @@ struct DecodedHSET24_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHSET24_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue c;
+    OperandValue Pp;
     OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
     FCMP cmp;
@@ -2881,7 +3239,11 @@ struct DecodedHSET24_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHSET24_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sc;
+    OperandValue Sc1;
     OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
     FCMP cmp;
@@ -2893,7 +3255,10 @@ struct DecodedHSET23 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHSET23>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue c;
     OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
     FCMP cmp;
@@ -2906,7 +3271,12 @@ struct DecodedHSETP25_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHSETP25_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue c;
+    OperandValue Pp;
     OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
     H_AND h_and;
@@ -2920,7 +3290,12 @@ struct DecodedHSETP25_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHSETP25_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue Sc;
+    OperandValue Sc1;
     OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
     H_AND h_and;
@@ -2932,7 +3307,11 @@ struct DecodedHSETP24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHSETP24>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue c;
     OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
     H_AND h_and;
@@ -2945,7 +3324,11 @@ struct DecodedIADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIADD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
     ONLY64 size;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -2953,7 +3336,12 @@ struct DecodedIADD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIADD5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     ONLY64 size;
     XONLY X;
     std::uint8_t subclass;  // generated semantic flags
@@ -2962,7 +3350,10 @@ struct DecodedVIADD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedVIADD3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     FMT_viadd fmt;
     ISAT isat;
     std::uint8_t subclass;  // generated semantic flags
@@ -2971,7 +3362,12 @@ struct DecodedIMMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMMA5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
     SIZE_16816_16832_imma size;
     SRCFMTA_U8_S8 srcFmtA;
     SRCFMTA_U8_S8 srcFmtB;
@@ -2984,7 +3380,14 @@ struct DecodedIMMA7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMMA7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue id;
     SPONLY sp;
     SPFORMAT spformat;
     SIZE_16832_16864_imma size;
@@ -2999,7 +3402,9 @@ struct DecodedI2I2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedI2I2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     DSTFMT_i2i dstfmt;
     S32ONLY_i2i srcfmt;
     SATONLY SAT;
@@ -3009,7 +3414,11 @@ struct DecodedI2IP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedI2IP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Rc;
     DSTFMT_S4_U4 dstfmt;
     S32ONLY_i2i srcfmt;
     SATRELU satrelu;
@@ -3020,7 +3429,9 @@ struct DecodedMOVM2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOVM2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
     MOVM_SZ sz;
     MOVM_MODE mode;
     std::uint8_t subclass;  // generated semantic flags
@@ -3029,7 +3440,14 @@ struct DecodedHMMA7_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMMA7_0>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue id;
     SPONLY sp;
     SPFORMAT spformat;
     SIZE_1688_16816_16832 size;
@@ -3041,7 +3459,14 @@ struct DecodedHMMA7_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMMA7_1>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue indexURd;
+    OperandValue URd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue indexURc;
+    OperandValue URc;
+    OperandValue UPp;
     SIZE_1688_16816_1684 size;
     FloatNo64 dstfmt;
     SRCFMT srcfmt;
@@ -3051,7 +3476,12 @@ struct DecodedHMMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMMA5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
     SIZE_1688_16816_1684 size;
     FloatNo64 dstfmt;
     SRCFMT srcfmt;
@@ -3061,7 +3491,9 @@ struct DecodedF2FP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedF2FP2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     RELU relu;
     F16ONLY_f2fp dstfmt;
     SRCFMT_E0M3_E2M1 srcfmt;
@@ -3072,17 +3504,36 @@ struct DecodedF2FP2 : DecodedInstruction {
     SATFINITE satfinite;
     std::uint8_t subclass;  // generated semantic flags
 };
-struct DecodedF2FP3 : DecodedInstruction {
+struct DecodedF2FP3_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
-        return std::make_unique<DecodedF2FP3>(*this);
+        return std::make_unique<DecodedF2FP3_0>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     SATFINITE satfinite;
     RELU relu;
     DSTFMT_F16_BF16 dstfmt;
     F32ONLY_f2fp srcfmt;
     PACK_ABONLY merge;
     RNDMODE_RN_RZ rndMode;
+    std::uint8_t subclass;  // generated semantic flags
+};
+struct DecodedF2FP3_1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedF2FP3_1>(*this);
+    }
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
+    OperandValue c;
+    SATFINITEONLY satfinite;
+    RELU relu;
+    DSTFMT_E0M3_E2M1 dstfmt;
+    SRCFMT_F16_BF16 srcfmt;
+    UNPACK_B_MERGE_CONLY merge;
+    RNONLY rndMode;
     EXTRACT extract;
     SATNARROW satnarrow;
     B3B0 selB;
@@ -3094,7 +3545,11 @@ struct DecodedF2FP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedF2FP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     SATFINITEONLY satfinite;
     RELU relu;
     DSTFMT_E0M3_E2M1 dstfmt;
@@ -3109,7 +3564,12 @@ struct DecodedDMMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDMMA5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
     SIZE_DMMA size;
     Round1 rnd;
     std::uint8_t subclass;  // generated semantic flags
@@ -3118,7 +3578,11 @@ struct DecodedHMNMX24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMNMX24>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
     NAN nan;
@@ -3131,7 +3595,13 @@ struct DecodedHMNMX26 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMNMX26>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
     NAN nan;
@@ -3145,7 +3615,11 @@ struct DecodedF2IP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedF2IP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     DSTFMT_U8_S8 dstfmt;
     F32ONLY_hadd2 srcfmt;
     RND_ROUND_TRUNC rnd;
@@ -3158,7 +3632,9 @@ struct DecodedI2FP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedI2FP2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     F32ONLY_i2fp dstfmt;
     SRCFMT_i2fp srcfmt;
     RND_RN_RZ rnd;
@@ -3168,7 +3644,11 @@ struct DecodedVIMNMX4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedVIMNMX4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue Pp;
     FMT_vimnmx fmt;
     RELU relu;
     std::uint8_t subclass;  // generated semantic flags
@@ -3177,7 +3657,12 @@ struct DecodedQMMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQMMA5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
     SIZE_16816_16832 size;
     FloatNo64 dstfmt;
     SRCFMTA_qmma srcFmtA;
@@ -3190,7 +3675,14 @@ struct DecodedQMMA7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQMMA7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue sparseId;
     SPONLY sp;
     SPFORMAT spformat;
     SIZE_16832_16864 size;
@@ -3205,7 +3697,10 @@ struct DecodedR2UR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedR2UR3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue URd;
+    OperandValue Ra;
     ORONLY OR;
     NONCONFORMITY_FILL_BROADCAST nonconformity;
     std::uint8_t subclass;  // generated semantic flags
@@ -3214,7 +3709,10 @@ struct DecodedFLO3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFLO3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue b;
     FMT fmt;
     SH sh;
     std::uint8_t subclass;  // generated semantic flags
@@ -3223,14 +3721,19 @@ struct DecodedBREV2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBREV2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedFCHK3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFCHK3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue b;
     ChkMode mode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3238,7 +3741,9 @@ struct DecodedF2F2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedF2F2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     FTZ ftz;
     DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     Round1 rnd;
@@ -3249,7 +3754,9 @@ struct DecodedF2I2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedF2I2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     FTZ ftz;
     DSTFMT_U8_S8_U16_S16_U32_S32 dstfmt;
     Float16 srcfmt;
@@ -3262,7 +3769,9 @@ struct DecodedI2F2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedI2F2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     DSTFMT_F16_F32_BF16 dstfmt;
     SRCFMT_U16_S16 srcfmt;
     Round1 rnd;
@@ -3274,7 +3783,9 @@ struct DecodedFRND2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFRND2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     FTZ ftz;
     BF16ONLY_frnd fmt;
     Round3 rnd;
@@ -3285,7 +3796,9 @@ struct DecodedMUFU2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMUFU2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     MUFU_OP mufuop;
     FMT_F16_BF16 fmt;
     HSEL extract;
@@ -3295,14 +3808,18 @@ struct DecodedPOPC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPOPC2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedB2R2_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedB2R2_0>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
     BarmdRESULT mode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3310,7 +3827,9 @@ struct DecodedB2R2_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedB2R2_1>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue barname;
     BarmdBAR mode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3318,7 +3837,8 @@ struct DecodedB2R1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedB2R1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
     BarmdWARP mode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3326,7 +3846,9 @@ struct DecodedBAR2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBAR2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue b;
+    OperandValue c;
     BarArv barmode;
     DEFER_BLOCKINGONLY defer_blocking;
     std::uint8_t subclass;  // generated semantic flags
@@ -3336,7 +3858,10 @@ struct DecodedBAR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBAR3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue b;
+    OperandValue c;
+    OperandValue Pp;
     BarRED barmode;
     Red op;
     DEFER_BLOCKINGONLY defer_blocking;
@@ -3347,7 +3872,9 @@ struct DecodedR2B2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedR2B2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue barname;
+    OperandValue Rb;
     MODE_BAR_WARP mode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3355,7 +3882,8 @@ struct DecodedSETCTAID1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSETCTAID1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
     CTA_DIM dim;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3363,7 +3891,11 @@ struct DecodedALD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedALD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue srcAttr;
+    OperandValue Ra;
+    OperandValue Rb;
     AIO io;
     PHYSONLY p;
     ONLY32 sz;
@@ -3373,7 +3905,12 @@ struct DecodedALD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedALD5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue srcAttr;
+    OperandValue a;
+    OperandValue off;
+    OperandValue Rb;
     AIO io;
     AInteger sz;
     PONLY p;
@@ -3383,7 +3920,11 @@ struct DecodedAST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedAST4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue srcAttr;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
     PHYSONLY p;
     ONLY32 sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -3392,7 +3933,12 @@ struct DecodedAST5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedAST5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue srcAttr;
+    OperandValue a;
+    OperandValue off;
+    OperandValue Rb;
+    OperandValue Rc;
     AInteger sz;
     PONLY p;
     std::uint8_t subclass;  // generated semantic flags
@@ -3401,7 +3947,10 @@ struct DecodedOUT3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedOUT3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
     CUTONLY type;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3409,7 +3958,8 @@ struct DecodedOUT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedOUT1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
     FINALONLY type;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3417,7 +3967,11 @@ struct DecodedIPA4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIPA4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue srcAttr;
+    OperandValue attr;
     MODE ipaop;
     MSI_CENTER_CENTROID msi;
     std::uint8_t subclass;  // generated semantic flags
@@ -3426,7 +3980,12 @@ struct DecodedIPA5_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIPA5_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue srcAttr;
+    OperandValue URa;
+    OperandValue URa_offset;
     MODE ipaop;
     MSI_CENTER_CENTROID msi;
     std::uint8_t subclass;  // generated semantic flags
@@ -3435,7 +3994,12 @@ struct DecodedIPA5_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIPA5_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue srcAttr;
+    OperandValue attr;
+    OperandValue b;
     MODE ipaop;
     OFFSETONLY msi;
     std::uint8_t subclass;  // generated semantic flags
@@ -3455,7 +4019,10 @@ struct DecodedCALL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCALL3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue a;
+    OperandValue off;
     std::uint8_t abs;
     CALL_DEPTH depth;
     std::uint8_t rel;
@@ -3466,7 +4033,9 @@ struct DecodedCALL2_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCALL2_0>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue Sa;
     std::uint8_t abs;
     CALL_DEPTH depth;
     std::uint8_t rel;
@@ -3477,7 +4046,9 @@ struct DecodedCALL2_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCALL2_1>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue a;
     std::uint8_t rel;
     CALL_DEPTH depth;
     std::uint8_t subclass;  // generated semantic flags
@@ -3486,7 +4057,9 @@ struct DecodedWARPSYNC2_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedWARPSYNC2_0>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue Ra;
     DIV__EXCLUSIVE div;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3494,7 +4067,9 @@ struct DecodedWARPSYNC2_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedWARPSYNC2_1>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue sImm;
     COLLECTIVEONLY div;
     ALLOnly all;
     std::uint8_t rel;
@@ -3504,7 +4079,10 @@ struct DecodedWARPSYNC3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedWARPSYNC3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue Ra;
+    OperandValue sImm;
     COLLECTIVEONLY div;
     std::uint8_t rel;
     std::uint8_t subclass;  // generated semantic flags
@@ -3513,14 +4091,17 @@ struct DecodedLEPC1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLEPC1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedRPCMOV2_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedRPCMOV2_0>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue RpcN;
     ONLY32 sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3528,7 +4109,9 @@ struct DecodedRPCMOV2_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedRPCMOV2_1>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rpc;
+    OperandValue b;
     ONLY64_syncs sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3536,7 +4119,9 @@ struct DecodedRPCMOV2_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedRPCMOV2_2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue RpcN;
+    OperandValue b;
     ONLY32 sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3544,7 +4129,9 @@ struct DecodedBMOV2_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBMOV2_0>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue cbu_state;
     ONLY32 sz;
     CLEAR clear;
     std::uint8_t subclass;  // generated semantic flags
@@ -3553,7 +4140,9 @@ struct DecodedBMOV2_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBMOV2_1>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue atexit_pc;
+    OperandValue b;
     ONLY64_syncs sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3561,7 +4150,9 @@ struct DecodedBMOV2_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBMOV2_2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue barReg;
+    OperandValue Ba;
     ONLY32 sz;
     CLEARONLY clear;
     std::uint8_t subclass;  // generated semantic flags
@@ -3570,7 +4161,9 @@ struct DecodedBMOV2_3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBMOV2_3>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue barReg;
+    OperandValue cbu_state;
     ONLY32 sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3578,7 +4171,9 @@ struct DecodedBMOV2_4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBMOV2_4>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue cbu_state;
+    OperandValue b;
     ONLY32 sz;
     PQUAD pquad;
     std::uint8_t subclass;  // generated semantic flags
@@ -3587,7 +4182,9 @@ struct DecodedBMOV2_5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBMOV2_5>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue cbu_state;
+    OperandValue barReg;
     ONLY32 sz;
     PQUAD pquad;
     std::uint8_t subclass;  // generated semantic flags
@@ -3596,7 +4193,9 @@ struct DecodedNANOTRAP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedNANOTRAP2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue b;
     RAND rand;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3604,7 +4203,9 @@ struct DecodedNANOSLEEP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedNANOSLEEP2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue b;
     RAND rand;
     OPTIONAL_WARP warp;
     SYNCS_MOD syncs;
@@ -3614,7 +4215,16 @@ struct DecodedTEX9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTEX9>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URc;
+    OperandValue URe;
+    OperandValue paramA;
+    OperandValue wmsk;
     BONLY b;
     RM16 rm16;
     LODLC_tex lodlc;
@@ -3631,7 +4241,13 @@ struct DecodedTMML6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTMML6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue paramA;
+    OperandValue wmsk;
     BONLY b;
     LODOnly lod;
     DIV div;
@@ -3642,7 +4258,12 @@ struct DecodedTXQ5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTXQ5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue query;
+    OperandValue wmsk;
     BONLY b;
     NODEP nodep;
     std::uint8_t subclass;  // generated semantic flags
@@ -3651,7 +4272,12 @@ struct DecodedLDG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDG5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     E e;
     COP cop;
     SP2 sp2;
@@ -3665,7 +4291,10 @@ struct DecodedST3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedST3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     E e;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
@@ -3678,7 +4307,10 @@ struct DecodedSTG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTG3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     E e;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
@@ -3692,7 +4324,10 @@ struct DecodedSTL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTL3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -3701,7 +4336,10 @@ struct DecodedSTS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTS3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     STRIDE stride;
     std::uint8_t subclass;  // generated semantic flags
@@ -3710,7 +4348,12 @@ struct DecodedSHFL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSHFL5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue b;
+    OperandValue c;
     Shflmd shflmd;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3718,7 +4361,13 @@ struct DecodedATOM6_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOM6_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue wr_early;
     EONLY e;
     ARRIVEONLY op;
     COP cop;
@@ -3734,7 +4383,13 @@ struct DecodedATOM6_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOM6_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue wr_early;
     E e;
     AtomsOp op;
     COP cop;
@@ -3748,7 +4403,14 @@ struct DecodedATOM7_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOM7_0>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue wr_early;
     E e;
     AtomsOp op;
     COP cop;
@@ -3764,7 +4426,14 @@ struct DecodedATOM7_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOM7_1>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue wr_early;
     E e;
     CAS cas;
     COP cop;
@@ -3779,7 +4448,11 @@ struct DecodedATOMS4_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMS4_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
     ARRIVEONLY op;
     ONLY64_atom sz;
     STRIDE stride;
@@ -3789,7 +4462,11 @@ struct DecodedATOMS4_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMS4_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     AtomsOp op;
     ATOMCASSZ sz;
     STRIDE stride;
@@ -3799,7 +4476,10 @@ struct DecodedREDS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedREDS3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     REDSOP op;
     REDSSIZE sz;
     STRIDE stride;
@@ -3809,7 +4489,12 @@ struct DecodedATOMS5_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMS5_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue Rc;
     CASTONLY cas;
     AtomsSPIN spin;
     ATOMCASSZ sz;
@@ -3820,7 +4505,12 @@ struct DecodedATOMS5_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMS5_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     AtomsOp op;
     ATOMCASSZ sz;
     STRIDE stride;
@@ -3830,7 +4520,12 @@ struct DecodedATOMS5_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMS5_2>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue Rc;
     CAS cas;
     ATOMCASSZ sz;
     STRIDE stride;
@@ -3848,7 +4543,8 @@ struct DecodedCCTLT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTLT1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue b;
     CCTLTOp cop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -3856,7 +4552,13 @@ struct DecodedSUATOM6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSUATOM6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue c;
+    OperandValue URe;
     DOnly d;
     BA ba;
     Dim1 dim;
@@ -3874,7 +4576,11 @@ struct DecodedSURED4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSURED4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue c;
+    OperandValue URe;
     DOnly d;
     BA ba;
     Dim1 dim;
@@ -3892,7 +4598,10 @@ struct DecodedMATCH3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMATCH3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
     ALLOnly op;
     MATCH_SZ sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -3901,7 +4610,9 @@ struct DecodedMATCH2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMATCH2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
     ANYONLY op;
     MATCH_SZ sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -3910,7 +4621,12 @@ struct DecodedATOMG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMG5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     E e;
     ATOMICFPOPS op;
     COP cop;
@@ -3933,7 +4649,13 @@ struct DecodedATOMG6_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMG6_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     E e;
     ATOMICFPOPS op;
     COP cop;
@@ -3949,7 +4671,13 @@ struct DecodedATOMG6_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMG6_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue Rc;
     E e;
     CAS cas;
     COP cop;
@@ -3963,7 +4691,10 @@ struct DecodedQSPC3_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQSPC3_0>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     E e;
     QUERY_SPACE space;
     std::uint8_t subclass;  // generated semantic flags
@@ -3972,7 +4703,10 @@ struct DecodedQSPC3_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQSPC3_1>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     E e;
     QUERY_SPACE space;
     std::uint8_t subclass;  // generated semantic flags
@@ -3981,7 +4715,11 @@ struct DecodedQSPC4_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQSPC4_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     E e;
     QUERY_SPACE space;
     std::uint8_t subclass;  // generated semantic flags
@@ -3990,7 +4728,11 @@ struct DecodedQSPC4_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQSPC4_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
     E e;
     QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
@@ -4001,7 +4743,11 @@ struct DecodedQSPC4_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQSPC4_2>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
     E e;
     QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
@@ -4012,21 +4758,25 @@ struct DecodedGETLMEMBASE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedGETLMEMBASE1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedSETLMEMBASE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSETLMEMBASE1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedREDUX2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedREDUX2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue URd;
+    OperandValue Ra;
     REDUX_OP op;
     FMT sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -4051,21 +4801,31 @@ struct DecodedTTUST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUST4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue ttuAddr;
+    OperandValue ImmU16;
+    OperandValue Rb;
+    OperandValue Rc;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTUCLOSE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUCLOSE1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTULD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTULD5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue ttuAddr;
+    OperandValue ImmU16;
     CLOSE close;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4086,7 +4846,10 @@ struct DecodedFADD32I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFADD32I3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sc;
     FTZ ftz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4094,7 +4857,11 @@ struct DecodedHADD24_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHADD24_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Sc;
     F32ONLY_hadd2 ofmt;
     FTZ ftz;
     SAT sat;
@@ -4105,7 +4872,11 @@ struct DecodedHADD24_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHADD24_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sc;
+    OperandValue Sc1;
     OFMT_DIST ofmt;
     FTZ ftz;
     SAT sat;
@@ -4116,7 +4887,11 @@ struct DecodedHADD2_32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHADD2_32I4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sc;
+    OperandValue Sc1;
     FTZ ftz;
     SAT sat;
     ISWZA iswzA;
@@ -4126,7 +4901,13 @@ struct DecodedHFMA26_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHFMA26_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Sb1;
+    OperandValue Rc;
+    OperandValue Pp;
     MMAONLY MMA;
     OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
@@ -4141,7 +4922,13 @@ struct DecodedHFMA26_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHFMA26_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Sc;
+    OperandValue Sc1;
+    OperandValue Pp;
     MMAONLY MMA;
     OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
@@ -4156,7 +4943,12 @@ struct DecodedHSET25 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHSET25>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sc;
+    OperandValue Sc1;
+    OperandValue Pp;
     OFMT_F16_V2_BF16_V2 ofmt;
     BVal bval;
     FCMP cmp;
@@ -4169,7 +4961,13 @@ struct DecodedHSETP26 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHSETP26>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue Sc;
+    OperandValue Sc1;
+    OperandValue Pp;
     OFMT_F16_V2_BF16_V2 ofmt;
     FCMP cmp;
     H_AND h_and;
@@ -4182,7 +4980,15 @@ struct DecodedQMMA8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQMMA8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue Rh;
+    OperandValue URi;
     SFONLY sf;
     ONLY16832 size;
     F32ONLY_f2fp dstfmt;
@@ -4197,7 +5003,16 @@ struct DecodedQMMA9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQMMA9>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue Rh;
+    OperandValue URi;
+    OperandValue sparseId;
     SFONLY sf;
     SPONLY sp;
     SPFORMAT spformat;
@@ -4214,7 +5029,15 @@ struct DecodedMXQMMA8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMXQMMA8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue Rh;
+    OperandValue URi;
     SFONLY sf;
     ONLY16832 size;
     F32ONLY_f2fp dstfmt;
@@ -4229,7 +5052,15 @@ struct DecodedOMMA8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedOMMA8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue Rh;
+    OperandValue URi;
     SFONLY sf;
     ONLY16864 size;
     F32ONLY_f2fp dstfmt;
@@ -4244,7 +5075,16 @@ struct DecodedOMMA9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedOMMA9>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue Rh;
+    OperandValue URi;
+    OperandValue sparseId;
     SFONLY sf;
     SPONLY sp;
     SPFORMAT spformat;
@@ -4261,7 +5101,9 @@ struct DecodedMOV64IUR2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV64IUR2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue b;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedCGAERRBAR0 : DecodedInstruction {
@@ -4274,21 +5116,28 @@ struct DecodedPMTRIG2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPMTRIG2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue imm;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMOV32I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV32I3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Sb;
+    OperandValue PixMaskU04;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedP2R2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedP2R2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pr;
     B3B0 insert;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4296,7 +5145,9 @@ struct DecodedCS2R2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCS2R2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue SRa;
     QInteger sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4304,7 +5155,10 @@ struct DecodedVOTE3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedVOTE3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Pp;
     VoteOp voteop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4312,7 +5166,8 @@ struct DecodedCSMTEST1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCSMTEST1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Sa;
     VOP vtgmode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4320,7 +5175,11 @@ struct DecodedCSMTEST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCSMTEST4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Sa;
+    OperandValue Pp;
     VOP vtgmode;
     CCMP ccmp;
     Bop bop;
@@ -4330,7 +5189,9 @@ struct DecodedCSMTEST2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCSMTEST2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Sa;
     VOP vtgmode;
     CCMP ccmp;
     std::uint8_t subclass;  // generated semantic flags
@@ -4339,7 +5200,8 @@ struct DecodedVOTE_VTG1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedVOTE_VTG1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Sa;
     VOP vtgmode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4347,7 +5209,11 @@ struct DecodedVOTE_VTG4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedVOTE_VTG4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Sa;
+    OperandValue Pp;
     VOP vtgmode;
     CCMP ccmp;
     Bop bop;
@@ -4357,7 +5223,9 @@ struct DecodedVOTE_VTG2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedVOTE_VTG2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Sa;
     VOP vtgmode;
     CCMP ccmp;
     std::uint8_t subclass;  // generated semantic flags
@@ -4366,14 +5234,24 @@ struct DecodedISCADD32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISCADD32I5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue scaleU5;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLOP32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLOP32I5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Pp;
     LOP lop;
     LOP_POP pop;
     std::uint8_t subclass;  // generated semantic flags
@@ -4382,7 +5260,11 @@ struct DecodedLOP32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLOP32I4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
     LOP lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4390,7 +5272,11 @@ struct DecodedPLOP34_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP34_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pp;
+    OperandValue Pq;
+    OperandValue Pr;
     PLOP_OP_NOREG lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4398,7 +5284,11 @@ struct DecodedPLOP34_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPLOP34_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pp;
+    OperandValue Pq;
+    OperandValue UPr;
     PLOP_OP_NOREG lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4406,7 +5296,12 @@ struct DecodedPSETP5_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPSETP5_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Pp;
+    OperandValue Pq;
+    OperandValue Pr;
     PSETP_BOP0 bop0;
     PSETP_BOP0 bop1;
     std::uint8_t subclass;  // generated semantic flags
@@ -4415,7 +5310,12 @@ struct DecodedPSETP5_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPSETP5_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Pp;
+    OperandValue Pq;
+    OperandValue UPr;
     PSETP_BOP0 bop0;
     PSETP_BOP0 bop1;
     std::uint8_t subclass;  // generated semantic flags
@@ -4424,7 +5324,10 @@ struct DecodedPSETP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPSETP3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Pp;
+    OperandValue Pq;
     PSETP_BOP0 bop0;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4432,7 +5335,10 @@ struct DecodedFMUL32I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFMUL32I3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
     FMZ_hfma2 fmz;
     SAT sat;
     std::uint8_t subclass;  // generated semantic flags
@@ -4441,7 +5347,11 @@ struct DecodedFSWZADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFSWZADD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rc;
+    OperandValue npCtrl;
     FTZ ftz;
     Round1 rnd;
     DIV div;
@@ -4451,7 +5361,11 @@ struct DecodedFFMA32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFFMA32I4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Rc;
     FMZ_hfma2 fmz;
     SAT sat;
     std::uint8_t subclass;  // generated semantic flags
@@ -4460,7 +5374,10 @@ struct DecodedIMUL32I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMUL32I3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
     LOOnly wide;
     FMT fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -4469,7 +5386,11 @@ struct DecodedIMUL32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIMUL32I4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Sb;
     WIDEONLY wide;
     FMT fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -4490,7 +5411,10 @@ struct DecodedELECT3_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedELECT3_0>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue URd;
+    OperandValue Pp;
     IGNORE_KILL ignoreKill;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4498,7 +5422,10 @@ struct DecodedELECT3_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedELECT3_1>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue URd;
+    OperandValue URa;
     IGNORE_KILL ignoreKill;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4506,7 +5433,12 @@ struct DecodedHFMA2_32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHFMA2_32I5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Sb1;
+    OperandValue Rc;
     FMZ fmz;
     ISWZA iswzA;
     ISWZA iswzC;
@@ -4516,7 +5448,11 @@ struct DecodedHMUL24 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMUL24>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Sb1;
     OFMT_F16_V2_BF16_V2 ofmt;
     FMZ_hfma2 fmz;
     SAT sat;
@@ -4527,7 +5463,11 @@ struct DecodedHMUL2_32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMUL2_32I4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Sb1;
     FMZ_hfma2 fmz;
     SAT sat;
     ISWZA iswzA;
@@ -4537,14 +5477,23 @@ struct DecodedIADD32I4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIADD32I4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Sb;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIADD32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIADD32I5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Pp;
     XONLY X;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4552,7 +5501,10 @@ struct DecodedLDSM3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDSM3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     LDSM_SZ sz;
     LDSM_MODE mode;
     LDSM_NUM num;
@@ -4563,7 +5515,12 @@ struct DecodedHMNMX25 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMNMX25>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Sb1;
+    OperandValue Pp;
     OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
     NAN nan;
@@ -4575,7 +5532,14 @@ struct DecodedHMNMX27 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMNMX27>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue Pv;
+    OperandValue Ra;
+    OperandValue Sb;
+    OperandValue Sb1;
+    OperandValue Pp;
     OFMT_F16_V2_BF16_V2 ofmt;
     FTZ ftz;
     NAN nan;
@@ -4588,7 +5552,10 @@ struct DecodedSTSM3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTSM3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     STSM_SZ sz;
     STSM_MODE mode;
     LDSM_NUM num;
@@ -4598,7 +5565,9 @@ struct DecodedUVIRTCOUNT2_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUVIRTCOUNT2_0>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue Sa;
     DEALLOCONLY_uvirtcount op;
     SMPOOLONLY pool;
     ONEONLY one;
@@ -4608,7 +5577,9 @@ struct DecodedUVIRTCOUNT2_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUVIRTCOUNT2_1>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URa;
     DEALLOCONLY_uvirtcount op;
     SMPOOLONLY pool;
     ONEONLY one;
@@ -4624,7 +5595,10 @@ struct DecodedUMOV3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUMOV3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     ONLY64_syncs size;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4632,7 +5606,10 @@ struct DecodedVOTEU3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedVOTEU3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue Pp;
     VoteOp voteop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4640,7 +5617,12 @@ struct DecodedUPLOP35 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP35>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPp;
+    OperandValue UPq;
+    OperandValue UPr;
     PLOP_OP_NOREG lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4648,7 +5630,13 @@ struct DecodedUPLOP36_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP36_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPp;
+    OperandValue UPq;
+    OperandValue UPr;
+    OperandValue uimm8;
     LUTOnly lut;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4656,7 +5644,13 @@ struct DecodedUPLOP36_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP36_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPp;
+    OperandValue URb;
+    OperandValue UPr;
+    OperandValue uimm8;
     LUTOnly lut;
     SIGNONLY sign_b;
     std::uint8_t subclass;  // generated semantic flags
@@ -4665,7 +5659,13 @@ struct DecodedUPLOP36_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP36_2>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPp;
+    OperandValue URb;
+    OperandValue URc;
+    OperandValue uimm8;
     LUTOnly lut;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
@@ -4675,7 +5675,13 @@ struct DecodedUPLOP36_3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP36_3>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue URb;
+    OperandValue URc;
+    OperandValue uimm8;
     LUTOnly lut;
     SIGNONLY sign_a;
     SIGNONLY sign_b;
@@ -4686,7 +5692,15 @@ struct DecodedUPLOP38_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP38_0>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue UPp;
+    OperandValue UPq;
+    OperandValue UPr;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4694,7 +5708,15 @@ struct DecodedUPLOP38_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP38_1>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue UPp;
+    OperandValue URb;
+    OperandValue UPr;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     SIGNONLY sign_b;
     std::uint8_t subclass;  // generated semantic flags
@@ -4703,7 +5725,15 @@ struct DecodedUPLOP38_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP38_2>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue UPp;
+    OperandValue URb;
+    OperandValue URc;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     SIGNONLY sign_b;
     SIGNONLY sign_c;
@@ -4713,7 +5743,15 @@ struct DecodedUPLOP38_3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPLOP38_3>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URa;
+    OperandValue URb;
+    OperandValue URc;
+    OperandValue uimm8;
+    OperandValue vimm8;
     LUTOnly lut;
     SIGNONLY sign_a;
     SIGNONLY sign_b;
@@ -4724,7 +5762,13 @@ struct DecodedUPSETP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPSETP6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue UPp;
+    OperandValue UPq;
+    OperandValue UPr;
     PSETP_BOP0 bop0;
     PSETP_BOP0 bop1;
     std::uint8_t subclass;  // generated semantic flags
@@ -4733,7 +5777,11 @@ struct DecodedUPSETP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPSETP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPp;
+    OperandValue UPq;
     PSETP_BOP0 bop0;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4741,7 +5789,10 @@ struct DecodedCS2UR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCS2UR3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue SRa;
     QInteger sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4755,14 +5806,19 @@ struct DecodedS2R2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedS2R2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue SRa;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDEPBAR3_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDEPBAR3_0>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue sbidx;
+    OperandValue URb;
+    OperandValue scoreboard_list;
     LEONLY le;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4770,7 +5826,10 @@ struct DecodedDEPBAR3_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDEPBAR3_1>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue sbidx;
+    OperandValue cnt;
+    OperandValue scoreboard_list;
     LEONLY le;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4778,7 +5837,8 @@ struct DecodedDEPBAR1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedDEPBAR1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue scoreboard_list;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedDEPBAR0 : DecodedInstruction {
@@ -4792,14 +5852,18 @@ struct DecodedENDCOLLECTIVE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedENDCOLLECTIVE1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedAL2P3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedAL2P3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     AIO io;
     AInteger sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -4808,7 +5872,10 @@ struct DecodedISBERD3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISBERD3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     AIO io;
     BASE base;
     SKEW skew;
@@ -4819,7 +5886,9 @@ struct DecodedPIXLD2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedPIXLD2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
     PIXLD_MODE mode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4827,7 +5896,10 @@ struct DecodedISBEWR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedISBEWR3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     OONLY io;
     ISBEWR_BASE base;
     SKEW skew;
@@ -4838,7 +5910,9 @@ struct DecodedBSYNC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBSYNC2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue barReg;
     RELIABILITY_RELIABLE_RECONVERGENT reliability;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4846,7 +5920,9 @@ struct DecodedBREAK2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBREAK2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue barReg;
     RELIABLEONLY reliability;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4854,7 +5930,10 @@ struct DecodedBSSY3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBSSY3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue barReg;
+    OperandValue Sa;
     std::uint8_t rel;
     RELIABILITY_RELIABLE_RECONVERGENT reliability;
     std::uint8_t subclass;  // generated semantic flags
@@ -4863,14 +5942,17 @@ struct DecodedYIELD1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedYIELD1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBRA2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBRA2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue sImm;
     DEPTH depth;
     COND__DIV_CONV cond;
     USEL usel;
@@ -4882,7 +5964,8 @@ struct DecodedWARPSYNC1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedWARPSYNC1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
     ALLOnly all;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4890,7 +5973,10 @@ struct DecodedBRX3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBRX3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     DEPTH depth;
     std::uint8_t rel;
     std::uint8_t subclass;  // generated semantic flags
@@ -4899,7 +5985,9 @@ struct DecodedJMP2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedJMP2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue Sa;
     DEPTH depth;
     COND__DIV_CONV cond;
     USEL usel;
@@ -4910,7 +5998,10 @@ struct DecodedJMX3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedJMX3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     DEPTH depth;
     std::uint8_t rel;
     std::uint8_t subclass;  // generated semantic flags
@@ -4919,7 +6010,8 @@ struct DecodedEXIT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedEXIT1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
     EXIT_MODE mode;
     NO_ATEXIT no_atexit;
     std::uint8_t subclass;  // generated semantic flags
@@ -4928,7 +6020,9 @@ struct DecodedLEPC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLEPC2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue sImm58;
     std::uint8_t rel;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4942,7 +6036,10 @@ struct DecodedRET3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedRET3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue a;
+    OperandValue off;
     ABSONLY_ret addr;
     RET_DEPTH depth;
     std::uint8_t rel_imm;
@@ -4952,7 +6049,9 @@ struct DecodedRET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedRET2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue a;
     RET_ADDR addr;
     RET_DEPTH depth;
     std::uint8_t subclass;  // generated semantic flags
@@ -4961,7 +6060,8 @@ struct DecodedIDE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIDE1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Sb;
     IDEAction action;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4969,14 +6069,16 @@ struct DecodedKILL1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedKILL1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBPT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBPT1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Sb;
     BPT_TRAP_INT bpt;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4984,7 +6086,8 @@ struct DecodedNANOSLEEP1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedNANOSLEEP1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
     CLEARONLY clear;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -4992,7 +6095,11 @@ struct DecodedLD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     E e;
     COP cop;
     SP2 sp2;
@@ -5006,7 +6113,10 @@ struct DecodedLDL3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDL3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -5015,7 +6125,10 @@ struct DecodedLDS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDS3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     LDSSIZE sz;
     STRIDE stride;
     std::uint8_t subclass;  // generated semantic flags
@@ -5024,7 +6137,10 @@ struct DecodedREDG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedREDG3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     E e;
     RedOp op;
     COP cop;
@@ -5038,7 +6154,9 @@ struct DecodedCCTL2_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTL2_0>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URb;
     E e;
     Cache cache;
     COP_PF1_WB_IV_RS_PML2_DML2 cop;
@@ -5048,7 +6166,9 @@ struct DecodedCCTL2_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTL2_1>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue a;
+    OperandValue off;
     E e;
     Cache cache;
     COP_PF1_WB_IV_RS_PML2_DML2 cop;
@@ -5061,7 +6181,10 @@ struct DecodedCCTL3_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTL3_0>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Ra_URb;
     E e;
     Cache cache;
     PF2ONLY cop;
@@ -5072,7 +6195,10 @@ struct DecodedCCTL3_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTL3_1>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     E e;
     Cache cache;
     PF2ONLY cop;
@@ -5083,7 +6209,10 @@ struct DecodedCCTL3_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTL3_2>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue sector_count;
     E e;
     Cache cache;
     RML2ONLY cop;
@@ -5093,7 +6222,10 @@ struct DecodedCCTL3_3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTL3_3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue sector_count;
     E e;
     Cache cache;
     RML2ONLY cop;
@@ -5110,7 +6242,9 @@ struct DecodedCCTLL2_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTLL2_0>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URb;
     COP_PF1_PF2_WB_IV_RS cop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5118,7 +6252,9 @@ struct DecodedCCTLL2_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTLL2_1>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_offset;
     COP_PF1_PF2_WB_IV_RS cop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5135,7 +6271,12 @@ struct DecodedSULD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSULD5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue c;
+    OperandValue URe;
     PONLY p;
     Dim1 dim;
     UAI uai;
@@ -5154,7 +6295,11 @@ struct DecodedSUST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSUST4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue c;
+    OperandValue URe;
     PONLY p;
     Dim1 dim;
     UAI uai;
@@ -5185,7 +6330,13 @@ struct DecodedSUQUERY6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSUQUERY6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue queryType;
+    OperandValue c;
+    OperandValue URe;
     BA ba;
     Dim1 dim;
     UAI uai;
@@ -5195,14 +6346,16 @@ struct DecodedUTMACMDFLUSH1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMACMDFLUSH1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUTMACCTL1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMACCTL1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
     IVALLONLY_utmacctl ivall;
     ONEONLY one;
     std::uint8_t subclass;  // generated semantic flags
@@ -5211,14 +6364,18 @@ struct DecodedS2UR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedS2UR3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue SRa;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedTTUMACROFUSE1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTTUMACROFUSE1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue Sb;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBAR0 : DecodedInstruction {
@@ -5234,7 +6391,11 @@ struct DecodedCCTL4_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTL4_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Sa;
+    OperandValue Sa_bank;
+    OperandValue a;
+    OperandValue off;
     CONLY cache;
     LDCONLY ldc;
     IVONLY cop;
@@ -5246,7 +6407,11 @@ struct DecodedCCTL4_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedCCTL4_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Sa;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue Sa_offset;
     CONLY cache;
     LDCONLY ldc;
     IVONLY cop;
@@ -5258,7 +6423,12 @@ struct DecodedLDC5_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDC5_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Sa;
+    OperandValue Sa_bank;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     SZ_U8_S8_U16_S16_32_64 sz;
     AdMode ad;
     std::uint8_t subclass;  // generated semantic flags
@@ -5267,7 +6437,12 @@ struct DecodedLDC5_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDC5_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Sa;
+    OperandValue URa;
+    OperandValue Rb;
+    OperandValue Sa_offset;
     SZ_U8_S8_U16_S16_32_64 sz;
     AdMode ad;
     std::uint8_t subclass;  // generated semantic flags
@@ -5276,7 +6451,11 @@ struct DecodedUVIADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUVIADD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     FMT_viadd fmt;
     ISAT isat;
     std::uint8_t subclass;  // generated semantic flags
@@ -5285,7 +6464,12 @@ struct DecodedUVIMNMX5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUVIMNMX5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     FMT_vimnmx fmt;
     RELU relu;
     std::uint8_t subclass;  // generated semantic flags
@@ -5294,14 +6478,20 @@ struct DecodedUIABS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIABS3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUI2I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUI2I3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     DSTFMT_i2i dstfmt;
     S32ONLY_i2i srcfmt;
     SATONLY SAT;
@@ -5311,7 +6501,12 @@ struct DecodedUI2IP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUI2IP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
     DSTFMT_S4_U4 dstfmt;
     S32ONLY_i2i srcfmt;
     SATRELU_ui2ip satrelu;
@@ -5322,7 +6517,12 @@ struct DecodedUFMNMX5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFMNMX5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
@@ -5332,7 +6532,13 @@ struct DecodedUFMNMX6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFMNMX6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     FTZ ftz;
     NAN nan;
     XORSIGN xorsign;
@@ -5343,7 +6549,12 @@ struct DecodedUFSEL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFSEL5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     FTZ ftz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5351,7 +6562,12 @@ struct DecodedUFSET5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFSET5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
@@ -5362,7 +6578,11 @@ struct DecodedUFSET4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFSET4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     BFONLY bf;
     FCMP fcomp;
     FTZ ftz;
@@ -5372,7 +6592,13 @@ struct DecodedUFSETP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFSETP6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     FCMP fcomp;
     FTZ ftz;
     Bop bop;
@@ -5382,7 +6608,11 @@ struct DecodedUFSETP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFSETP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
     FCMP fcomp;
     FTZ ftz;
     std::uint8_t subclass;  // generated semantic flags
@@ -5391,7 +6621,11 @@ struct DecodedUFADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFADD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue c;
     FTZ ftz;
     Round1 rnd;
     SAT sat;
@@ -5401,7 +6635,11 @@ struct DecodedUFHADD4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFHADD4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue URc;
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
@@ -5412,7 +6650,12 @@ struct DecodedUFFMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFFMA5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue c;
     FMZ_hfma2 fmz;
     Round1 rnd;
     SAT sat;
@@ -5422,7 +6665,12 @@ struct DecodedUFHFMA5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFHFMA5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue URb;
+    OperandValue URc;
     DSTFMT_F16_BF16 mode16;
     Round1 rnd;
     SAT sat;
@@ -5434,7 +6682,11 @@ struct DecodedUFMUL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFMUL4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     FMZ_hfma2 fmz;
     Scale scale;
     Round1 rnd;
@@ -5445,7 +6697,12 @@ struct DecodedUF2IP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUF2IP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue c;
     DSTFMT_U8_S8 dstfmt;
     F32ONLY_hadd2 srcfmt;
     RND_ROUND_TRUNC rnd;
@@ -5458,7 +6715,10 @@ struct DecodedUI2F3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUI2F3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     DSTFMT_F16_F32_BF16 dstfmt;
     SRCFMT_U16_S16 srcfmt;
     Round1 rnd;
@@ -5470,7 +6730,10 @@ struct DecodedUF2F3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUF2F3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     FTZ ftz;
     DSTFMT_SRCFMT_F16F32_BF16F32 dstfmt_srcfmt;
     Round1 rnd;
@@ -5481,7 +6744,10 @@ struct DecodedUF2I3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUF2I3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     FTZ ftz;
     DSTFMT_U8_S8_U16_S16_U32_S32 dstfmt;
     Float16 srcfmt;
@@ -5494,7 +6760,10 @@ struct DecodedUFRND3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFRND3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     FTZ ftz;
     BF16ONLY_frnd fmt;
     Round3 rnd;
@@ -5505,7 +6774,10 @@ struct DecodedUI2FP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUI2FP3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     F32ONLY_i2fp dstfmt;
     SRCFMT_i2fp srcfmt;
     RND_RN_RZ rnd;
@@ -5515,7 +6787,15 @@ struct DecodedUIMNMX8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIMNMX8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
+    OperandValue UPq;
     FMT_64_DIST fmt;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5523,7 +6803,14 @@ struct DecodedUIMNMX7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIMNMX7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     FMT_64_DIST fmt;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5531,7 +6818,12 @@ struct DecodedUSEL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSEL5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     ONLY64 size;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5539,7 +6831,13 @@ struct DecodedUISETP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUISETP6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
@@ -5549,7 +6847,14 @@ struct DecodedUISETP7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUISETP7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
+    OperandValue UPr;
     ICmpAll icmp;
     FMT_64_DIST fmt;
     Bop bop;
@@ -5560,7 +6865,11 @@ struct DecodedUISETP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUISETP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
     ICmpAll icmp;
     FMT_64_DIST fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -5569,7 +6878,12 @@ struct DecodedUISETP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUISETP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPr;
     ICmpAll icmp;
     FMT_64_DIST fmt;
     EXONLY ex;
@@ -5579,14 +6893,30 @@ struct DecodedUIADD37 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIADD37>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIADD39 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIADD39>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
+    OperandValue UPp;
+    OperandValue UPq;
     XONLY X;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5594,7 +6924,14 @@ struct DecodedULEA7_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULEA7_0>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue c;
+    OperandValue scaleU5;
     HIONLY_lea hilo;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5602,7 +6939,14 @@ struct DecodedULEA7_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULEA7_1>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue scaleU5;
+    OperandValue UPp;
     HIONLY_lea hilo;
     XONLY X;
     SX32ONLY sx32;
@@ -5612,7 +6956,13 @@ struct DecodedULEA6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULEA6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue scaleU5;
     HIONLY_lea hilo;
     SX32ONLY sx32;
     std::uint8_t subclass;  // generated semantic flags
@@ -5621,7 +6971,15 @@ struct DecodedULEA8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULEA8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue c;
+    OperandValue scaleU5;
+    OperandValue UPp;
     HIONLY_lea hilo;
     XONLY X;
     std::uint8_t subclass;  // generated semantic flags
@@ -5630,7 +6988,13 @@ struct DecodedULOP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULOP6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue UPp;
     LOP lop;
     LOP_POP pop;
     std::uint8_t subclass;  // generated semantic flags
@@ -5639,7 +7003,12 @@ struct DecodedULOP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULOP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     LOP lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5647,7 +7016,15 @@ struct DecodedULOP38 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULOP38>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
+    OperandValue imm8;
+    OperandValue UPp;
     LUTOnly lut;
     LOP_POP pop;
     std::uint8_t subclass;  // generated semantic flags
@@ -5656,7 +7033,14 @@ struct DecodedULOP37_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULOP37_0>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
+    OperandValue UPp;
     LOP lop;
     LOP_POP pop;
     std::uint8_t subclass;  // generated semantic flags
@@ -5665,7 +7049,14 @@ struct DecodedULOP37_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULOP37_1>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
+    OperandValue imm8;
     LUTOnly lut;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5673,7 +7064,13 @@ struct DecodedULOP36 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULOP36>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
     LOP lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5681,7 +7078,12 @@ struct DecodedUPRMT5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPRMT5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
     IDXOnly idx;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5689,14 +7091,30 @@ struct DecodedUIADD3_647 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIADD3_647>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUIADD3_649 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIADD3_649>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue UPv;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
+    OperandValue UPp;
+    OperandValue UPq;
     XONLY X;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5704,7 +7122,12 @@ struct DecodedUSHF5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSHF5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue c;
     SDIR dir;
     CWMode cw;
     FMT_shf fmt;
@@ -5715,7 +7138,11 @@ struct DecodedUSHL4_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSHL4_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue Sa;
+    OperandValue URb;
     CWMode cw;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5723,7 +7150,11 @@ struct DecodedUSHL4_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSHL4_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     CWMode cw;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5731,7 +7162,11 @@ struct DecodedUSHR4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSHR4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     CWMode cw;
     FMT_S32_U32 fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -5740,7 +7175,11 @@ struct DecodedUSGXT4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSGXT4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     CWMode cw;
     FMT fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -5749,7 +7188,11 @@ struct DecodedUBMSK4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBMSK4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     CWMode cw;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5757,7 +7200,12 @@ struct DecodedUIMAD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIMAD5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue c;
     LOOnly wide;
     FMT fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -5766,7 +7214,13 @@ struct DecodedUIMAD6_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIMAD6_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
     WIDEONLY wide;
     FMT fmt;
     std::uint8_t subclass;  // generated semantic flags
@@ -5775,7 +7229,13 @@ struct DecodedUIMAD6_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIMAD6_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue c;
+    OperandValue UPp;
     LOOnly wide;
     FMT fmt;
     XONLY X;
@@ -5785,7 +7245,14 @@ struct DecodedUIMAD7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUIMAD7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue URc;
+    OperandValue UPp;
     WIDEONLY wide;
     FMT fmt;
     XONLY X;
@@ -5795,7 +7262,10 @@ struct DecodedUF2FP3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUF2FP3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     RELU relu;
     DSTFMT_uf2fp dstfmt;
     SRCFMT_E5M2_E4M3 srcfmt;
@@ -5805,17 +7275,38 @@ struct DecodedUF2FP3 : DecodedInstruction {
     SATFINITE satfinite;
     std::uint8_t subclass;  // generated semantic flags
 };
-struct DecodedUF2FP4 : DecodedInstruction {
+struct DecodedUF2FP4_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
-        return std::make_unique<DecodedUF2FP4>(*this);
+        return std::make_unique<DecodedUF2FP4_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
     SATFINITE satfinite;
     RELU relu;
     DSTFMT_uf2fp dstfmt;
     Float32 srcfmt;
     PACK_ABONLY merge;
     RNDMODE_RN_RZ rndMode;
+    std::uint8_t subclass;  // generated semantic flags
+};
+struct DecodedUF2FP4_1 : DecodedInstruction {
+    std::unique_ptr<DecodedInstruction> clone() const override {
+        return std::make_unique<DecodedUF2FP4_1>(*this);
+    }
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
+    OperandValue c;
+    SATFINITE satfinite;
+    RELU relu;
+    DSTFMT_uf2fp dstfmt;
+    F16ONLY_uf2fp srcfmt;
+    UNPACK_B_MERGE_CONLY merge;
+    RNONLY rndMode;
     EXTRACT extract;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5823,7 +7314,12 @@ struct DecodedUF2FP5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUF2FP5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue c;
     SATFINITE satfinite;
     RELU relu;
     DSTFMT_uf2fp dstfmt;
@@ -5837,7 +7333,11 @@ struct DecodedUFLO4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUFLO4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue b;
     FMT fmt;
     SH sh;
     std::uint8_t subclass;  // generated semantic flags
@@ -5846,21 +7346,34 @@ struct DecodedUBREV3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBREV3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUPOPC3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUPOPC3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue b;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedLDCU7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDCU7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd2;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue Sa_offset;
+    OperandValue word_mask;
+    OperandValue UPp;
     ONLY256_ldcu sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5868,7 +7381,13 @@ struct DecodedLDCU6_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDCU6_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue Sa;
+    OperandValue Sa_bank;
+    OperandValue URa;
+    OperandValue Sa_offset;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     TEXUNPACK texunpack;
     std::uint8_t subclass;  // generated semantic flags
@@ -5877,7 +7396,13 @@ struct DecodedLDCU6_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDCU6_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue Sa;
+    OperandValue URa;
+    OperandValue URb;
+    OperandValue Sa_offset;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     TEXUNPACK texunpack;
     std::uint8_t subclass;  // generated semantic flags
@@ -5886,7 +7411,13 @@ struct DecodedLDCU6_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDCU6_2>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd2;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue Sa_offset;
+    OperandValue word_mask;
     ONLY256_ldcu sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5894,7 +7425,11 @@ struct DecodedLDTRAM4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDTRAM4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue srcAttr;
+    OperandValue URa;
+    OperandValue URa_offset;
     MODE_ldtram mode;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -5902,7 +7437,13 @@ struct DecodedSYNCS6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSYNCS6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue URa_offset;
+    OperandValue URb;
+    OperandValue URc;
     CASONLY emuop;
     ONLY64_syncs sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -5911,7 +7452,11 @@ struct DecodedUTMALDG4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMALDG4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue URc;
     TENSORDIM dim;
     MODE_TILED_IM2COL_W_GATHER4 mode;
     MULTICAST multicast;
@@ -5923,7 +7468,13 @@ struct DecodedUTMALDG6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMALDG6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue URc;
+    OperandValue desc;
+    OperandValue URe;
     TENSORDIM dim;
     MODE_TILED_IM2COL_W_GATHER4 mode;
     MULTICAST multicast;
@@ -5935,7 +7486,10 @@ struct DecodedUTMASTG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMASTG3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
     TENSORDIM dim;
     MODE_utmastg mode;
     ONEONLY one;
@@ -5945,7 +7499,12 @@ struct DecodedUTMASTG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMASTG5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue desc;
+    OperandValue URe;
     TENSORDIM dim;
     MODE_utmastg mode;
     ONEONLY one;
@@ -5955,7 +7514,10 @@ struct DecodedUTMAREDG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMAREDG3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
     TENSORDIM dim;
     MODE_utmaredg mode;
     RedOp op;
@@ -5966,7 +7528,12 @@ struct DecodedUTMAREDG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMAREDG5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue desc;
+    OperandValue URe;
     TENSORDIM dim;
     MODE_utmaredg mode;
     RedOp op;
@@ -5977,7 +7544,11 @@ struct DecodedUTMAPF4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMAPF4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue URc;
     L2ONLY cache;
     TENSORDIM dim;
     MODE_IM2COL_W mode;
@@ -5988,7 +7559,13 @@ struct DecodedUTMAPF6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMAPF6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue URc;
+    OperandValue desc;
+    OperandValue URe;
     L2ONLY cache;
     TENSORDIM dim;
     MODE_IM2COL_W mode;
@@ -5999,7 +7576,11 @@ struct DecodedUBLKCP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBLKCP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue URc;
     DST dst;
     DST src;
     MULTICAST multicast;
@@ -6015,7 +7596,13 @@ struct DecodedUBLKCP6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBLKCP6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue URc;
+    OperandValue desc;
+    OperandValue URe;
     DST dst;
     DST src;
     MULTICAST multicast;
@@ -6031,7 +7618,11 @@ struct DecodedUBLKRED4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBLKRED4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue URc;
     DST dst;
     SONLY_ublkred src;
     RedOp op;
@@ -6045,7 +7636,13 @@ struct DecodedUBLKRED6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBLKRED6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue URc;
+    OperandValue desc;
+    OperandValue URe;
     DST dst;
     SONLY_ublkred src;
     RedOp op;
@@ -6059,7 +7656,10 @@ struct DecodedUBLKPF3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBLKPF3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URa;
+    OperandValue URc;
     L2ONLY cache;
     ONEONLY one;
     std::uint8_t subclass;  // generated semantic flags
@@ -6068,7 +7668,12 @@ struct DecodedUBLKPF5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUBLKPF5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URa;
+    OperandValue URc;
+    OperandValue desc;
+    OperandValue URe;
     L2ONLY cache;
     ONEONLY one;
     std::uint8_t subclass;  // generated semantic flags
@@ -6077,21 +7682,28 @@ struct DecodedUCGABARSET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABARSET2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABAR_SET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABAR_SET2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUSETMAXREG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSETMAXREG3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue b;
     TRY_ALLOCONLY mode;
     CTAPOOLONLY pool;
     std::uint8_t subclass;  // generated semantic flags
@@ -6100,7 +7712,9 @@ struct DecodedUSETMAXREG2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSETMAXREG2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue b;
     DEALLOCONLY mode;
     CTAPOOLONLY pool;
     std::uint8_t subclass;  // generated semantic flags
@@ -6109,14 +7723,19 @@ struct DecodedUSETSHMSZ2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSETSHMSZ2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue b;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUGETNEXTWORKID3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUGETNEXTWORKID3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URa;
+    OperandValue URb;
     UGETNEXTWORKID_CAST cast;
     ONEONLY one;
     std::uint8_t subclass;  // generated semantic flags
@@ -6125,7 +7744,12 @@ struct DecodedUMEMSETS5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUMEMSETS5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URa;
+    OperandValue URa_offset;
+    OperandValue URb;
+    OperandValue URc;
     ONLY64 sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6133,28 +7757,44 @@ struct DecodedULEPC2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULEPC2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMOV4_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV4_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue indexURb;
+    OperandValue URb;
+    OperandValue PixMaskU04;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedMOV4_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedMOV4_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue indexURd;
+    OperandValue URd;
+    OperandValue b;
+    OperandValue PixMaskU04;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedIPA6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedIPA6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Pu;
+    OperandValue srcAttr;
+    OperandValue URa;
+    OperandValue URa_offset;
+    OperandValue b;
     MODE ipaop;
     OFFSETONLY msi;
     std::uint8_t subclass;  // generated semantic flags
@@ -6163,7 +7803,10 @@ struct DecodedBRA3_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBRA3_0>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue UPq;
+    OperandValue sImm;
     DEPTH depth;
     UONLY cond;
     USEL usel;
@@ -6174,7 +7817,10 @@ struct DecodedBRA3_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBRA3_1>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue URb;
+    OperandValue sImm;
     DEPTH depth;
     COND_DIV_CONV cond;
     std::uint8_t rel;
@@ -6184,7 +7830,10 @@ struct DecodedJMP3_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedJMP3_0>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue UPq;
+    OperandValue Sa;
     DEPTH depth;
     UONLY cond;
     USEL usel;
@@ -6195,7 +7844,10 @@ struct DecodedJMP3_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedJMP3_1>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue URb;
+    OperandValue Sa;
     DEPTH depth;
     COND_DIV_CONV_jmp cond;
     std::uint8_t rel;
@@ -6205,7 +7857,12 @@ struct DecodedSYNCS5_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSYNCS5_0>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     PHASECHKONLY op;
     TRANS64ONLY bartype;
     WAIT wait;
@@ -6215,7 +7872,12 @@ struct DecodedSYNCS5_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSYNCS5_1>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     ARRIVEONLY_syncs op;
     TRANS64ONLY bartype;
     RETVAL_OLDSTATE_TMASK_RED retval;
@@ -6227,7 +7889,12 @@ struct DecodedSYNCS5_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSYNCS5_2>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue URa_offset;
+    OperandValue URb;
     EXCHONLY emuop;
     ONLY64_syncs sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -6236,7 +7903,15 @@ struct DecodedLDCU8_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDCU8_0>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd2;
+    OperandValue URd;
+    OperandValue Sa;
+    OperandValue Sa_bank;
+    OperandValue URa;
+    OperandValue Sa_offset;
+    OperandValue word_mask;
     ONLY256_ldcu sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6244,7 +7919,15 @@ struct DecodedLDCU8_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDCU8_1>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd2;
+    OperandValue URd;
+    OperandValue Sa;
+    OperandValue URa;
+    OperandValue URb;
+    OperandValue Sa_offset;
+    OperandValue word_mask;
     ONLY256_ldcu sz;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6252,7 +7935,11 @@ struct DecodedSYNCS4_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSYNCS4_0>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
     LDONLY cctl_mode;
     ONLY64_syncs sz;
     WATCH watch;
@@ -6262,7 +7949,11 @@ struct DecodedSYNCS4_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSYNCS4_1>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue URa_offset;
     LDONLY_syncs emuop;
     ONLY64_syncs sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -6271,7 +7962,11 @@ struct DecodedSYNCS4_2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSYNCS4_2>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     TCNTONLY op;
     TRANS64ONLY bartype;
     BarRED retval;
@@ -6281,7 +7976,10 @@ struct DecodedUTMALDG3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMALDG3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
     ONLY1CTA cluster_sz;
@@ -6292,7 +7990,12 @@ struct DecodedUTMALDG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMALDG5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue desc;
+    OperandValue URe;
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
     ONLY1CTA cluster_sz;
@@ -6303,7 +8006,10 @@ struct DecodedUTMAPF3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMAPF3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
     L2ONLY cache;
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
@@ -6314,7 +8020,12 @@ struct DecodedUTMAPF5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMAPF5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URb;
+    OperandValue URa;
+    OperandValue desc;
+    OperandValue URe;
     L2ONLY cache;
     TENSORDIM dim;
     MODE_TILED_GATHER4 mode;
@@ -6325,21 +8036,27 @@ struct DecodedUCGABARGET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABARGET2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABAR_GET2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABAR_GET2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedELECT2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedELECT2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue URd;
     IGNORE_KILL ignoreKill;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6347,7 +8064,11 @@ struct DecodedLDSM4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDSM4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
     LDSM_SZ sz;
     LDSM_MODE mode;
     LDSM_NUM num;
@@ -6358,7 +8079,11 @@ struct DecodedSTSM4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTSM4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     STSM_SZ sz;
     STSM_MODE mode;
     LDSM_NUM num;
@@ -6368,7 +8093,12 @@ struct DecodedUP2UR5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUP2UR5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPR;
+    OperandValue URa;
+    OperandValue b;
     B3B0 insert;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6376,7 +8106,10 @@ struct DecodedUP2UR3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUP2UR3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPR;
     B3B0 insert;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6384,7 +8117,11 @@ struct DecodedUR2UP4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUR2UP4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPR;
+    OperandValue URa;
+    OperandValue b;
     B3B0 ur2up_selA;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6392,7 +8129,13 @@ struct DecodedULOP32I6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULOP32I6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue Sb;
+    OperandValue UPp;
     LOP lop;
     LOP_POP pop;
     std::uint8_t subclass;  // generated semantic flags
@@ -6401,7 +8144,12 @@ struct DecodedULOP32I5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULOP32I5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue UPu;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue Sb;
     LOP lop;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6409,14 +8157,23 @@ struct DecodedUCLEA6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCLEA6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue UPu;
+    OperandValue URa;
+    OperandValue b;
+    OperandValue constSizeU05;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedBRXU3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedBRXU3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue URa;
+    OperandValue UR_offset;
     DEPTH depth;
     COND cond;
     std::uint8_t rel;
@@ -6426,7 +8183,10 @@ struct DecodedJMXU3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedJMXU3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Pp;
+    OperandValue URa;
+    OperandValue UR_offset;
     DEPTH depth;
     COND cond;
     std::uint8_t rel;
@@ -6436,7 +8196,15 @@ struct DecodedLDG8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDG8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URb;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue word_mask;
+    OperandValue Pnz;
     EONLY e;
     COP cop;
     COP2_EFL2_ENL2_ELL2 cop2;
@@ -6452,7 +8220,14 @@ struct DecodedLDG7_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDG7_0>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URb;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     EONLY e;
     COP cop;
     SP2 sp2;
@@ -6467,7 +8242,14 @@ struct DecodedLDG7_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDG7_1>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
+    OperandValue word_mask;
+    OperandValue Pnz;
     EONLY e;
     COP cop;
     RML2ONLY_ldg cop2;
@@ -6484,7 +8266,14 @@ struct DecodedSTG7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTG7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue Rb2;
+    OperandValue word_mask;
     EONLY e;
     COP cop;
     COP2 cop2;
@@ -6500,7 +8289,13 @@ struct DecodedSTG6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTG6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue Rb2;
+    OperandValue word_mask;
     EONLY e;
     COP cop;
     COP2 cop2;
@@ -6517,7 +8312,13 @@ struct DecodedLD6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLD6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URb;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     EONLY e;
     COP cop;
     SP2 sp2;
@@ -6532,7 +8333,12 @@ struct DecodedLD5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLD5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     E e;
     COP cop;
     SP2 sp2;
@@ -6548,7 +8354,13 @@ struct DecodedLDG6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDG6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     E e;
     COP cop;
     SP2 sp2;
@@ -6564,7 +8376,12 @@ struct DecodedLDL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDL5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URb;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -6573,7 +8390,11 @@ struct DecodedLDL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDL4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -6582,7 +8403,11 @@ struct DecodedLDS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDS4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
     LDSSIZE sz;
     STRIDE stride;
     std::uint8_t subclass;  // generated semantic flags
@@ -6591,7 +8416,12 @@ struct DecodedST5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedST5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     EONLY e;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
@@ -6605,7 +8435,11 @@ struct DecodedST4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedST4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     E e;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
@@ -6620,7 +8454,12 @@ struct DecodedSTG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTG5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     EONLY e;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
@@ -6635,7 +8474,11 @@ struct DecodedSTG4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTG4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     E e;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
@@ -6651,7 +8494,12 @@ struct DecodedSTL5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTL5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -6660,7 +8508,11 @@ struct DecodedSTL4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTL4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     COP cop;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     std::uint8_t subclass;  // generated semantic flags
@@ -6669,7 +8521,11 @@ struct DecodedSTS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTS4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     STRIDE stride;
     std::uint8_t subclass;  // generated semantic flags
@@ -6678,7 +8534,15 @@ struct DecodedATOM8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOM8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
+    OperandValue wr_early;
     EONLY e;
     AtomsOp op;
     COP cop;
@@ -6693,7 +8557,11 @@ struct DecodedREDS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedREDS4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     REDSOP op;
     REDSSIZE sz;
     STRIDE stride;
@@ -6703,7 +8571,11 @@ struct DecodedREDG4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedREDG4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     E e;
     RedOp op;
     COP cop;
@@ -6719,7 +8591,12 @@ struct DecodedREDG5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedREDG5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     EONLY e;
     RedOp op;
     COP cop;
@@ -6734,7 +8611,14 @@ struct DecodedATOMG7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedATOMG7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     EONLY e;
     ATOMICFPOPS op;
     COP cop;
@@ -6749,7 +8633,11 @@ struct DecodedLDGMC4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDGMC4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
     EONLY e;
     INTOP_ADD_MIN_MAX_AND_OR_XOR intOp;
     REDSSIZE intSz;
@@ -6765,7 +8653,12 @@ struct DecodedLDGMC5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDGMC5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Rd;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
     EONLY e;
     INTOP_ADD_MIN_MAX_AND_OR_XOR intOp;
     REDSSIZE intSz;
@@ -6780,7 +8673,12 @@ struct DecodedQSPC5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedQSPC5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Ra_URb;
+    OperandValue Ra_offset;
     E e;
     QUERY_SPACE space;
     U32ONLY input_reg_sz_32_dist;
@@ -6791,7 +8689,12 @@ struct DecodedLDCU5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDCU5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue Sa_offset;
+    OperandValue UPp;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     TEXUNPACK texunpack;
     std::uint8_t subclass;  // generated semantic flags
@@ -6800,7 +8703,11 @@ struct DecodedLDCU4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDCU4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue URa;
+    OperandValue Sa_offset;
     SZ_U8_S8_U16_S16_32_64_128 sz;
     TEXUNPACK texunpack;
     std::uint8_t subclass;  // generated semantic flags
@@ -6809,7 +8716,10 @@ struct DecodedARRIVES3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedARRIVES3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
     LDGSTSBARONLY arrive;
     CInteger_64 sz;
     BAROP barop;
@@ -6819,7 +8729,10 @@ struct DecodedSYNCS3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSYNCS3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
     CCTLONLY cctl_mode;
     SYNCS_CCTL_OP cctlop;
     std::uint8_t subclass;  // generated semantic flags
@@ -6828,7 +8741,9 @@ struct DecodedUTMACCTL2 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUTMACCTL2>(*this);
     }
-    OperandValue ops[2];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URa;
     COP_utmacctl cop;
     ONEONLY one;
     std::uint8_t subclass;  // generated semantic flags
@@ -6837,7 +8752,8 @@ struct DecodedUCGABARARV1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABARARV1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
     SYNCALL syncall;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6845,7 +8761,8 @@ struct DecodedUCGABAR_ARV1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABAR_ARV1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
     SYNCALL syncall;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6853,7 +8770,8 @@ struct DecodedUSETSHMSZ1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUSETSHMSZ1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
     FLUSHONLY_usetshmsz flush;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6861,7 +8779,10 @@ struct DecodedULEPC3 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedULEPC3>(*this);
     }
-    OperandValue ops[3];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
+    OperandValue URd;
+    OperandValue sImm58;
     std::uint8_t rel;
     std::uint8_t subclass;  // generated semantic flags
 };
@@ -6869,7 +8790,15 @@ struct DecodedTEX8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTEX8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URe;
+    OperandValue paramA;
+    OperandValue wmsk;
     BONLY b;
     RM16 rm16;
     LODLC_tex lodlc;
@@ -6886,7 +8815,15 @@ struct DecodedTLD48 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTLD48>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URe;
+    OperandValue paramA;
+    OperandValue wmsk;
     TexComp comp;
     BONLY b;
     RM16 rm16;
@@ -6902,7 +8839,15 @@ struct DecodedTLD8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTLD8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URe;
+    OperandValue paramA;
+    OperandValue wmsk;
     BONLY b;
     RM16 rm16;
     LODLC_tld lodlc;
@@ -6919,7 +8864,15 @@ struct DecodedTXD8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTXD8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URe;
+    OperandValue paramA;
+    OperandValue wmsk;
     BONLY b;
     RM16 rm16;
     LC lc;
@@ -6933,7 +8886,13 @@ struct DecodedFOOTPRINT6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFOOTPRINT6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue paramA;
     BONLY b;
     MODE_FOOTPRINT mode;
     LODCTRL lodctrl;
@@ -6947,7 +8906,13 @@ struct DecodedLDGSTS6_0 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDGSTS6_0>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rb;
+    OperandValue Rb_URc;
+    OperandValue Rb_offset;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     EONLY_ldgsts e;
     LOC loc;
     COP cop;
@@ -6964,7 +8929,13 @@ struct DecodedLDGSTS6_1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDGSTS6_1>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rb;
+    OperandValue Rb_offset;
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     EONLY_ldgsts e;
     LOC loc;
     COP cop;
@@ -6982,7 +8953,15 @@ struct DecodedLDGSTS8 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDGSTS8>(*this);
     }
-    OperandValue ops[8];
+    // Named operand fields (one per role position).
+    OperandValue Rb;
+    OperandValue Rb_URc;
+    OperandValue Rb_offset;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URd;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     EONLY_ldgsts e;
     LOC loc;
     COP cop;
@@ -6999,7 +8978,14 @@ struct DecodedSUQUERY7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSUQUERY7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue queryType;
+    OperandValue Rc;
+    OperandValue URc;
+    OperandValue URe;
     BA ba;
     Dim1 dim;
     UAI uai;
@@ -7009,7 +8995,11 @@ struct DecodedSTAS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSTAS4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     SZ_32_64_128 sz;
     ONLY64 input_reg_sz_64_dist;
     U32ONLY input_reg_sz_32_dist;
@@ -7019,7 +9009,11 @@ struct DecodedREDAS4 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedREDAS4>(*this);
     }
-    OperandValue ops[4];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Ra_URc;
+    OperandValue Ra_offset;
+    OperandValue Rb;
     REDSOP op;
     REDAS_SZ sz;
     ONLY64 input_reg_sz_64_dist;
@@ -7030,21 +9024,32 @@ struct DecodedUCGABARWAIT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABARWAIT1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedUCGABAR_WAIT1 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedUCGABAR_WAIT1>(*this);
     }
-    OperandValue ops[1];
+    // Named operand fields (one per role position).
+    OperandValue UPg;
     std::uint8_t subclass;  // generated semantic flags
 };
 struct DecodedHMMA9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedHMMA9>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue indexURd;
+    OperandValue URd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue indexURc;
+    OperandValue URc;
+    OperandValue UPp;
+    OperandValue Re;
+    OperandValue id;
     SPONLY sp;
     SPFORMAT spformat;
     SIZE_1688_16816_16832 size;
@@ -7056,7 +9061,16 @@ struct DecodedTLD49 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTLD49>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URc;
+    OperandValue URe;
+    OperandValue paramA;
+    OperandValue wmsk;
     SCRONLY scr;
     TexComp comp;
     RM16 rm16;
@@ -7072,7 +9086,16 @@ struct DecodedTLD9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTLD9>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URc;
+    OperandValue URe;
+    OperandValue paramA;
+    OperandValue wmsk;
     SCRONLY scr;
     RM16 rm16;
     LODLC_tld lodlc;
@@ -7089,7 +9112,14 @@ struct DecodedTMML7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTMML7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URc;
+    OperandValue paramA;
+    OperandValue wmsk;
     LODOnly lod;
     DIV div;
     NODEP nodep;
@@ -7100,7 +9130,16 @@ struct DecodedTXD9 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTXD9>(*this);
     }
-    OperandValue ops[9];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URc;
+    OperandValue URe;
+    OperandValue paramA;
+    OperandValue wmsk;
     RM16 rm16;
     LC lc;
     AOFFI aoffi;
@@ -7114,7 +9153,13 @@ struct DecodedTXQ6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedTXQ6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue query;
+    OperandValue URc;
+    OperandValue wmsk;
     NODEP nodep;
     BONLY b;
     std::uint8_t subclass;  // generated semantic flags
@@ -7123,7 +9168,14 @@ struct DecodedFOOTPRINT7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedFOOTPRINT7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd2;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue URc;
+    OperandValue paramA;
     BONLY b;
     MODE_FOOTPRINT mode;
     LODCTRL lodctrl;
@@ -7137,7 +9189,14 @@ struct DecodedSUATOM7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSUATOM7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue URc;
+    OperandValue URe;
     DOnly d;
     BA ba;
     Dim1 dim;
@@ -7155,7 +9214,13 @@ struct DecodedSULD6 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSULD6>(*this);
     }
-    OperandValue ops[6];
+    // Named operand fields (one per role position).
+    OperandValue Pu;
+    OperandValue Rd;
+    OperandValue Ra;
+    OperandValue Rc;
+    OperandValue URc;
+    OperandValue URe;
     PONLY p;
     Dim1 dim;
     UAI uai;
@@ -7174,7 +9239,12 @@ struct DecodedSUST5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSUST5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue URc;
+    OperandValue URe;
     PONLY p;
     Dim1 dim;
     UAI uai;
@@ -7193,7 +9263,12 @@ struct DecodedSURED5 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedSURED5>(*this);
     }
-    OperandValue ops[5];
+    // Named operand fields (one per role position).
+    OperandValue Ra;
+    OperandValue Rb;
+    OperandValue Rc;
+    OperandValue URc;
+    OperandValue URe;
     DOnly d;
     BA ba;
     Dim1 dim;
@@ -7211,7 +9286,14 @@ struct DecodedLDGSTS7 : DecodedInstruction {
     std::unique_ptr<DecodedInstruction> clone() const override {
         return std::make_unique<DecodedLDGSTS7>(*this);
     }
-    OperandValue ops[7];
+    // Named operand fields (one per role position).
+    OperandValue Rb;
+    OperandValue Rb_offset;
+    OperandValue memoryDescriptor;
+    OperandValue Ra_URc;
+    OperandValue Ra;
+    OperandValue Ra_offset;
+    OperandValue Pnz;
     EONLY_ldgsts e;
     LOC loc;
     COP cop;
@@ -7228,7 +9310,7 @@ struct DecodedLDGSTS7 : DecodedInstruction {
 // kShapeSplitByVariant[vi]: split ordinal of the variant's decoded
 // struct within its (mnemonic, nops) group; -1 = no split.
 inline constexpr std::int8_t kShapeSplitByVariant[] = {
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, -1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 2, 2, 3, 3, 4, 4, -1, -1, -1, -1, -1, -1, 3, 4, 4, -1, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, 0, 0, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, 1, 0, -1, -1, -1, 2, 0, 0, 4, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 2, 2, 2, 2, -1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 0, 0, 1, 1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1, -1, -1, 2, 4, 4, -1, -1, -1, -1, -1, 0, 1, 1, -1, -1, 2, 2, 2, 1, 1, 1, -1, -1, 1, 1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, 0, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 0, 1, 0, 1, 0, 1, 0, -1, 1, -1, -1, -1, -1, -1, -1, 1, 4, 4, -1, -1, 0, 0, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 1, 4, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 3, 1, 1, 1, 3, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, -1, -1, 2, 3, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, -1, 1, 0, -1, -1, -1, -1, -1, 1, -1, -1, -1, 1, 1, 2, 2, 3, 3, -1, 1, 0, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, -1, 0, -1, -1, 0, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, 0, -1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 0, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, -1, 1, -1, -1, -1, -1, -1, 0, 0, 0, -1, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 0, 0, 0, -1, 1, 1, 1, 2, 2, 2, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, -1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 2, 2, 3, 3, 4, 4, -1, -1, -1, -1, -1, 4, 4, -1, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 2, 1, 4, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, -1, 0, 0, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 4, 0, 0, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 0, 0, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, -1, 1, -1
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, -1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 2, 2, 3, 3, 4, 4, -1, -1, -1, -1, -1, -1, 3, 4, 4, -1, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, 0, 0, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, 0, 0, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, 1, 0, -1, -1, -1, 2, 0, 0, 4, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 2, 2, 2, 2, -1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 0, 0, 1, 1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, 0, -1, -1, -1, -1, 2, 4, 4, -1, -1, -1, -1, -1, 0, 1, 1, -1, -1, 2, 2, 2, 1, 1, 1, -1, -1, 1, 1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, 0, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 0, 1, 0, 1, 0, 1, 0, -1, 1, -1, -1, -1, -1, -1, -1, 1, 4, 4, -1, -1, 0, 0, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 1, 4, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 3, 1, 1, 1, 3, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 1, 1, 2, 3, 5, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, -1, 1, 0, -1, -1, -1, -1, -1, 1, -1, -1, -1, 1, 1, 2, 2, 3, 3, -1, 1, 0, -1, 0, -1, -1, 0, 0, 1, -1, 1, 1, -1, -1, -1, -1, -1, -1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1, -1, 1, -1, -1, 0, -1, -1, 0, -1, 1, 1, -1, 1, 1, -1, -1, -1, -1, 0, -1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, 0, -1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 0, -1, 0, -1, -1, 0, 0, 1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, -1, 1, -1, -1, -1, -1, -1, 0, 0, 0, -1, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 0, 0, 0, -1, 1, 1, 1, 2, 2, 2, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 1, -1, -1, 1, -1, -1, -1, 1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 2, 2, 3, 3, 4, 4, -1, -1, -1, -1, -1, 4, 4, -1, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 2, 1, 4, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, -1, 0, 0, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 4, 0, 0, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 0, 0, -1, -1, 0, 0, -1, -1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, -1, 1, -1
 };
 
 // Per-variant operand-role manifest (indexed by isa_data kVariants

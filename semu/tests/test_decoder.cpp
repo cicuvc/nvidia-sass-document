@@ -18,7 +18,7 @@ using namespace semu;
 
 // Compile-time smoke for the typed decoded-IR schema (semu/generated/
 // isa_shapes.hpp): the OperandValue union is a fixed, small layout and the
-// per-(mnemonic,operand-count) derived types carry exactly the ops[] array.
+// per-(mnemonic,operand-count) derived types carry named operand fields.
 static_assert(sizeof(shape::OperandValue) <= 16);
 static_assert(sizeof(shape::DecodedFFMA4) >= 4 * sizeof(shape::OperandValue));
 static_assert(sizeof(shape::DecodedLDG5) >= 5 * sizeof(shape::OperandValue));
@@ -149,7 +149,7 @@ TEST(decoder_pr_operand_rendered) {
 }
 
 // Typed-IR schema (isa_shapes.hpp): the per-variant operand-role manifest is
-// what the typed ops[] array is filled by; for a decoded word the manifest is
+// what the typed named operand fields are filled by; for a decoded word the manifest is
 // the ONLY operand accounting (the generic operands vector was removed with
 // the 2b-3 migration).
 TEST(shape_manifest_matches_decoded_operands) {
@@ -174,29 +174,29 @@ TEST(shape_manifest_matches_decoded_operands) {
         const char* prev = isa::variant_class_name(isa::kVariants[idx].variant_class);
         (void)prev;
         const auto& mf = shape::kShapeManifests[idx];
-        // The typed Decoded* ops[] length must equal the manifest role count
+        // The typed Decoded* operand-field count must equal the manifest role count
         // (the decoded dynamic type was allocated through make_by_variant +
         // filled through fill_by_variant, so the two agree by construction).
-        const auto* ops = shape::operand_values_by_variant(
-            inst.shape_variant, &inst);
         if (mf.n_ops == 0) {
             continue;  // no operands to verify
         }
-        CHECK(ops != nullptr);
-        if (!ops) continue;
         for (std::uint16_t p = 0; p < mf.n_ops; ++p) {
-            CHECK_EQ(static_cast<int>(ops[p].kind),
+            const auto* op = shape::operand_field(
+                inst.shape_variant, &inst, p);
+            CHECK(op != nullptr);
+            if (!op) continue;
+            CHECK_EQ(static_cast<int>(op->kind),
                      static_cast<int>(mf.ops[p].kind));
         }
     }
 }
 
-// 2a equivalence: populating the typed Decoded<Mnemonic><N> (ops[] union +
-// typed modifier members) from a decoded word's slot values must agree with
+// 2a equivalence: populating the typed Decoded<Mnemonic><N> (named operand
+// fields + typed modifier members) from a decoded word's slot values must agree with
 // the typed main-storage object the decoder produced.  FillIn now reads the
 // typed-form storage (2b-3: the generic slot_values/operands vectors were
 // removed), so this is a whole-corpus typed-fill interception: fill a fresh
-// buffer from the SAME decoded word and compare ops[]/modifiers against the
+// buffer from the SAME decoded word and compare operand fields/modifiers against the
 // decoder's own typed Decoded*.
 namespace {
 struct FillFromDecoded : shape::FillIn {
@@ -254,10 +254,12 @@ TEST(typed_fill_matches_generic_decode) {
         FillFromDecoded fi(inst);
         shape::fill_by_variant(idx, fi, buf);
         auto& d = *reinterpret_cast<shape::DecodedR2P3*>(buf);
+        // Named fields: PR, Ra, b (position order).
+        const shape::OperandValue* flds[3] = {&d.PR, &d.Ra, &d.b};
         for (std::uint8_t p = 0; p < mf.n_ops; ++p) {
-            CHECK_EQ(op_raw(d.ops[p], mf.ops[p].kind),
+            CHECK_EQ(op_raw(*flds[p], mf.ops[p].kind),
                      static_cast<std::uint64_t>(fi.value(mf.ops[p].slot)));
-            CHECK_EQ(static_cast<int>(d.ops[p].kind),
+            CHECK_EQ(static_cast<int>(flds[p]->kind),
                      static_cast<int>(mf.ops[p].kind));
         }
         CHECK_EQ(static_cast<std::int64_t>(d.a_bsel), fi.value("a_bsel"));
@@ -289,15 +291,17 @@ TEST(typed_fill_matches_generic_decode) {
         FillFromDecoded fi(inst);
         shape::fill_by_variant(idx, fi, buf);
         auto& d = *reinterpret_cast<shape::DecodedBSSY3*>(buf);
+        // Named fields: Pp, barReg, Sa (position order).
+        const shape::OperandValue* flds[3] = {&d.Pp, &d.barReg, &d.Sa};
         for (std::uint8_t p = 0; p < mf.n_ops; ++p)
-            CHECK_EQ(d.ops[p].v.uimm64,
+            CHECK_EQ(flds[p]->v.uimm64,
                      static_cast<std::uint64_t>(fi.value(mf.ops[p].slot)));
     }
 }
 
 // Whole-ISA typed-fill equivalence: for every corpus word that decodes
 // uniquely, the generated fill must reproduce the live slot_values/operands in
-// the typed Decoded* ops[] (read back through generated variant dispatch;
+// the typed Decoded* operand fields (read back through generated variant dispatch;
 // typed shapes now have the common polymorphic base at offset 0).
 TEST(typed_fill_matches_across_corpus) {
     const auto& dec = Decoder::instance();
@@ -316,10 +320,12 @@ TEST(typed_fill_matches_across_corpus) {
         FillFromDecoded fi(inst);
         shape::fill_by_variant(idx, fi, buf);
         const auto* typed = reinterpret_cast<const DecodedInstruction*>(buf);
-        const auto* ops = shape::operand_values_by_variant(idx, typed);
         for (std::uint8_t p = 0; p < mf.n_ops; ++p) {
             const shape::OperandKind k = mf.ops[p].kind;
-            const std::uint64_t got = op_raw(ops[p], k);
+            const shape::OperandValue* op =
+                shape::operand_field(idx, typed, p);
+            if (!op) continue;
+            const std::uint64_t got = op_raw(*op, k);
             const std::uint64_t want =
                 static_cast<std::uint64_t>(fi.value(mf.ops[p].slot));
             if (got != want) {
@@ -331,11 +337,11 @@ TEST(typed_fill_matches_across_corpus) {
                 CHECK(false);
                 break;
             }
-            if (ops[p].flags != fi.flags(mf.ops[p].slot)) {
+            if (op->flags != fi.flags(mf.ops[p].slot)) {
                 std::fprintf(stderr,
                     "corpus[%u] %s slot[%u]=%s flags got=%u want=%u\n",
                     w, isa::variant_class_name(inst.variant_class), p,
-                    mf.ops[p].slot, ops[p].flags,
+                    mf.ops[p].slot, op->flags,
                     fi.flags(mf.ops[p].slot));
                 CHECK(false);
                 break;

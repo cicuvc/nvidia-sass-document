@@ -5,7 +5,7 @@
 // These are the replacement for the former generic `Operand` vectors: every
 // mirrored symbol reads an operand/modifier directly out of the generated
 // typed `Decoded<Mnemonic><Ops>` derived storage through the per-variant
-// ShapeManifest (slot -> position in the typed ops[] array).  There is no
+// ShapeManifest (slot -> position in the named operand fields).  There is no
 // per-instruction vector scan and no `const Operand*`.
 //
 // op_lookup / op_value / op_kind / op_flag resolve an operand ROLE by its
@@ -25,17 +25,17 @@
 
 namespace semu::shape {
 
-// Pointer to the typed operand slot's OperandValue in the derived ops[]
-// array, or nullptr when the slot is not an operand of this variant.
+// Pointer to the typed operand slot's OperandValue field, or nullptr when
+// the slot is not an operand of this variant.  (The derived types store
+// operands as NAMED fields — no ops[] array; the bridge resolves the role's
+// position from the ShapeManifest and reads the generated operand_field.)
 inline const OperandValue* op_lookup(const DecodedInstruction& inst,
                                      const char* slot) {
     if (inst.shape_variant >= isa::kNumVariants) return nullptr;
     const auto& mf = kShapeManifests[inst.shape_variant];
-    const OperandValue* ops =
-        operand_values_by_variant(inst.shape_variant, &inst);
-    if (!ops) return nullptr;
     for (std::uint16_t p = 0; p < mf.n_ops; ++p) {
-        if (std::strcmp(mf.ops[p].slot, slot) == 0) return &ops[p];
+        if (std::strcmp(mf.ops[p].slot, slot) == 0)
+            return operand_field(inst.shape_variant, &inst, p);
     }
     return nullptr;
 }
@@ -71,7 +71,7 @@ inline bool op_flag(const DecodedInstruction& inst, const char* slot,
 }
 
 // Any FORMAT slot value (operands and modifiers) as a uint64.  Resolves
-// through the generated per-variant reader rather than the typed ops[] array
+// through the generated per-variant reader rather than positional fields
 // so modifier member names (which differ per variant) are covered too.
 inline std::optional<std::uint64_t> slot_value(
     const DecodedInstruction& inst, const char* name) {

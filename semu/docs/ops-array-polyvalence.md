@@ -110,13 +110,20 @@ IMPLEMENTED (2026-08): the 50 groups are declared in
 `semu/tools/shapes_poly_config.py` (arch-specific injection at gen_isa
 time); `gen_isa.py --shapes` splits each into one
 `Decoded<Mnemonic><N>_<k>` per kind-collapsed role signature and emits
-`kShapeSplitByVariant[vi]` so every split struct's ops[] positions are
+`kShapeSplitByVariant[vi]` so every split struct's positions are
 unambiguous (verified: 0 unstable positions across the 126 split structs).
-The interpreter's handlers dispatch on the split ordinal only where typed
-members are read; ops arrays go through `operand_values_by_variant`.
 
-- **Stable + kind-only groups**: `ops[i]` → a named field is
-  mechanical.  Name = the single role name (stable) or the semantic role
+**OPS[] ELIMINATED (2026-08):** every `Decoded<Mnemonic><N>`/`_k` struct now
+declares one NAMED `OperandValue` FIELD per role position (name = the
+position's single slot name, or the kind-only family representative:
+`b`/`c`/`a`/`off` for {Rb,Sb,URb} etc. — the kind lives in the field).
+`fill_by_variant`/`slot_value_by_variant` write/read the named fields; the
+generated `operand_field(vi, inst, p)` returns a pointer to field p for the
+decode/CLI/test bridge; the interpreter resolves the fields ONCE per
+instruction into a local `OperandFields` view (per-lane loops read the
+local pointer array — no per-lane lookup, no struct-level ops[] array).
+`operand_values_by_variant` is deleted; decoded_access.hpp's op_lookup
+resolves via the manifest + operand_field.  Name = the single role name (stable) or the semantic role
   for kind-only positions (`src2`/`src3`/`base`/`off` — or keep the
   register name and let the kind live in the field, exactly like
   `OperandValue` today).

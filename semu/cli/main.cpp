@@ -148,7 +148,7 @@ int run_disasm(int argc, char** argv) {
 // cuobjdump.  `semu decode-json <lo> <hi>` prints one JSON object per line
 // (or a single object for the one-word form).  2b-3: the generic
 // operands/modifiers vectors were removed; the operands array is now built
-// from the typed ops[] via the per-variant ShapeManifest, and the normalized
+// from the typed named operand fields via the per-variant ShapeManifest, and the normalized
 // text comes from Decoder::disassemble (the cuobjdump-format contract).
 int run_decode_json(int argc, char** argv) {
     const auto& dec = semu::Decoder::instance();
@@ -174,20 +174,20 @@ int run_decode_json(int argc, char** argv) {
                         s.name, s.type, static_cast<unsigned long long>(*v));
         }
         std::printf("],\"operands\":[");
-        // Typed operands: per-variant ShapeManifest roles + typed ops[].
+        // Typed operands: per-variant ShapeManifest roles -> named fields.
         if (inst.shape_variant < semu::isa::kNumVariants) {
             const auto& mf = semu::shape::kShapeManifests[inst.shape_variant];
-            const auto* ops = semu::shape::operand_values_by_variant(
-                inst.shape_variant, &inst);
             for (std::uint16_t p = 0; p < mf.n_ops; ++p) {
                 if (p) std::printf(",");
                 const auto& role = mf.ops[p];
+                const auto* op = semu::shape::operand_field(
+                    inst.shape_variant, &inst, p);
                 std::printf("{\"slot\":\"%s\",\"kind\":%d,"
                             "\"value\":%lld,\"flags\":%u}",
                             role.slot, static_cast<int>(role.kind),
-                            static_cast<long long>(ops
-                                ? semu::shape::operand_value_as_i64(ops[p]) : 0),
-                            ops ? static_cast<unsigned>(ops[p].flags) : 0u);
+                            static_cast<long long>(op
+                                ? semu::shape::operand_value_as_i64(*op) : 0),
+                            op ? static_cast<unsigned>(op->flags) : 0u);
             }
         }
         std::printf("],\"disasm\":\"%s\"}\n",

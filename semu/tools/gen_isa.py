@@ -1155,6 +1155,48 @@ def shape_type_name(key):
     return name
 
 
+# Kind-only operand families -> canonical FIELD name.  A position whose slot
+# names across variants span one family is a single operand role (register /
+# uniform / immediate); the field is named by that role (the kind lives in the
+# OperandValue).  Multi-name positions NOT in a family are semantic
+# polyvalence — those groups are split by their kind-collapsed signature, so
+# they never reach this naming pass (asserted below).
+FIELD_FAMILIES = [
+    (frozenset({"Rb", "Sb", "URb"}), "b"),
+    (frozenset({"Rc", "Sc", "URc"}), "c"),
+    (frozenset({"Ra", "URa"}), "a"),
+    (frozenset({"Ra_offset", "Sa_offset", "URa_offset"}), "off"),
+    (frozenset({"Rb2", "Sc2"}), "b2"),
+]
+
+
+def group_field_names(members):
+    """Per-position canonical field names of a decoded-struct group.
+    members = [(variant_idx, v, roles)...] (already split by shape signature,
+    so every position is either single-named or one kind-only family)."""
+    names_by_pos = {}
+    for _i, _v, roles in members:
+        for p, r in enumerate(roles):
+            names_by_pos.setdefault(p, set()).add(r["name"])
+    fields = []
+    for p in sorted(names_by_pos):
+        names = names_by_pos[p]
+        if len(names) == 1:
+            fields.append(next(iter(names)))
+            continue
+        fam = None
+        for fset, fname in FIELD_FAMILIES:
+            if names <= fset:
+                fam = fname
+                break
+        if fam is None:
+            raise AssertionError(
+                f"unexpected multi-name operand position {sorted(names)} "
+                "(group was not split or family map missing)")
+        fields.append(fam)
+    return fields
+
+
 def build_shape_groups(variants):
     """Group variants into decoded-struct groups.  Keys are (mnemonic,
     operand-count) normally, or (mnemonic, operand-count, split-k) for the
@@ -1297,18 +1339,24 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     L.append("// polyvalent groups declared in shapes_poly_config.py emit one")
     L.append("// Decoded<Mnemonic><N>_<k> per kind-collapsed role signature, so")
     L.append("// every struct's ops[] positions are unambiguous.  Operands are")
-    L.append("// positional in the mnemonic's canonical role order; modifiers")
-    L.append("// are typed enum members specific to each instruction.")
+    L.append("// positional role order; modifiers are typed enum members.")
+    L.append("// Every operand is ONE NAMED OperandValue FIELD (no ops[] array):")
+    L.append("// each position has a stable field name across the group's")
+    L.append("// variants (kind-only families {Rb,Sb,URb} etc. collapse to a")
+    L.append("// single field; the OperandValue kind carries register / uniform")
+    L.append("// / immediate at runtime).")
     for key in order:
         members = groups[key]
         type_name = shape_type_name(key)
-        operand_count = key[1]
+        fields = group_field_names(members)
         L.append(f"struct {type_name} : DecodedInstruction {{")
         L.append("    std::unique_ptr<DecodedInstruction> clone() const override {")
         L.append(f"        return std::make_unique<{type_name}>(*this);")
         L.append("    }")
-        if operand_count:
-            L.append(f"    OperandValue ops[{operand_count}];")
+        if fields:
+            L.append("    // Named operand fields (one per role position).")
+            for f in fields:
+                L.append(f"    OperandValue {f};")
         modseen = shape_members(members, enum_types)
         for mname, (tyid, _src) in modseen.items():
             L.append(f"    {tyid} {mname};")
@@ -1455,12 +1503,13 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
         if order[g][0] == "BAR":
             L.append(f"        out.barname = static_cast<std::uint8_t>("
                      f"in.value(\"barname\"));")
+        fields = group_field_names(groups[order[g]])
         for p, r in enumerate(roles):
             kind = OPERAND_KIND.get(r["type"], "kSpecial")
-            L.append(f"        out.ops[{p}].kind = static_cast<std::uint8_t>("
+            L.append(f"        out.{fields[p]}.kind = static_cast<std::uint8_t>("
                      f"OperandKind::{kind});")
-            L.append(f"        out.ops[{p}].flags = in.flags({cq(r['name'])});")
-            L.append(f"        operand_set_value(out.ops[{p}], "
+            L.append(f"        out.{fields[p]}.flags = in.flags({cq(r['name'])});")
+            L.append(f"        operand_set_value(out.{fields[p]}, "
                      f"OperandKind::{kind}, in.value({cq(r['name'])}));")
         L.append("        break;")
         L.append("    }")
@@ -1483,9 +1532,10 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
         L.append(f"    case {vi}: {{")
         if roles or actual_mods:
             L.append(f"        const auto& out = *static_cast<const {type_name}*>(inst);")
+        fields = group_field_names(groups[order[g]])
         for p, r in enumerate(roles):
             L.append(f"        if (std::strcmp(name, {cq(r['name'])}) == 0)")
-            L.append(f"            return static_cast<std::uint64_t>(operand_value_as_i64(out.ops[{p}]));")
+            L.append(f"            return static_cast<std::uint64_t>(operand_value_as_i64(out.{fields[p]}));")
         for s in actual_mods:
             mname = member_by_src.get(s["name"])
             if mname is None:
@@ -1509,15 +1559,29 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
     L.append("    }")
     L.append("}")
     L.append("")
-    L.append("// Return the positional operand array of a typed decoded shape.")
-    L.append("inline const OperandValue* operand_values_by_variant(")
-    L.append("    std::uint32_t vi, const DecodedInstruction* inst) {")
+    L.append("// Pointer to one named operand FIELD of a typed decoded shape (the")
+    L.append("// ops[] array was eliminated; operands are named members).  `p` is")
+    L.append("// the role position (ShapeManifest order).  Returns nullptr when p")
+    L.append("// >= n_ops or the variant has no operands.  This is the")
+    L.append("// decode/CLI/test bridge — the interpreter reads fields by name")
+    L.append("// through the concrete types.")
+    L.append("inline const OperandValue* operand_field(std::uint32_t vi,")
+    L.append("                                         const DecodedInstruction* inst,")
+    L.append("                                         std::uint16_t p) {")
     L.append("    switch (vi) {")
     for vi, _v in enumerate(variants):
         g = vid2gid[vi]
         type_name = shape_type_name(order[g])
-        if order[g][1]:
-            L.append(f"    case {vi}: return static_cast<const {type_name}*>(inst)->ops;")
+        fields = group_field_names(groups[order[g]])
+        if fields:
+            L.append(f"    case {vi}: {{")
+            L.append(f"        const auto& out = *static_cast<const {type_name}*>(inst);")
+            L.append("        switch (p) {")
+            for fp, f in enumerate(fields):
+                L.append(f"            case {fp}: return &out.{f};")
+            L.append("            default: return nullptr;")
+            L.append("        }")
+            L.append("    }")
         else:
             L.append(f"    case {vi}: return nullptr;")
     L.append("    default: return nullptr;")
