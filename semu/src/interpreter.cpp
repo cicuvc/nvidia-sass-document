@@ -5619,10 +5619,11 @@ Status Interpreter::do_omma(WarpState& w, std::uint32_t mask,
 // ===========================================================================
 
 Status Interpreter::fp32_arith_core(WarpState& w, std::uint32_t mask,
-                                    const DecodedInstruction& inst,
                                     std::uint64_t rd_rv, int op, Rnd rnd,
-                                    bool flush, bool sat, int fmz_val) {
-    const OperandFields ops(inst);
+                                    bool flush, bool sat, int fmz_val,
+                                    const shape::OperandValue& opa,
+                                    const shape::OperandValue& opb,
+                                    const shape::OperandValue* opc) {
     // Phase 5.5: resolve the leaf policy once per instruction (M5).
     const Fp32Plan plan = plan_fp32(op, static_cast<int>(rnd), flush);
     // Source value: register / uniform register / UImm/SImm immediate.
@@ -5645,9 +5646,9 @@ Status Interpreter::fp32_arith_core(WarpState& w, std::uint32_t mask,
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = src_val(t, ops[1]);
-        std::uint32_t b = src_val(t, ops[2]);
-        std::uint32_t c = (op == 2) ? src_val(t, ops[3]) : 0;
+        std::uint32_t a = src_val(t, opa);
+        std::uint32_t b = src_val(t, opb);
+        std::uint32_t c = (op == 2) ? src_val(t, *opc) : 0;
         bool use_fast = plan.use_fast;
         if (plan.need_exceptional &&
             (exceptional_f32(a) || exceptional_f32(b) ||
@@ -5693,55 +5694,54 @@ Status Interpreter::fp32_arith_core(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_fadd(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     const auto& d = *static_cast<const shape::DecodedFADD3*>(&inst);
-    const OperandFields ops(inst);
     const Rnd rnd = static_cast<Rnd>(d.rnd);
     const bool flush = static_cast<int>(d.ftz) != 0;
     const bool sat = static_cast<int>(d.sat) != 0;
-    const std::uint64_t rd_rv = static_cast<std::uint64_t>(
-        shape::operand_value_as_i64(ops[0]));
-    return fp32_arith_core(w, mask, inst, rd_rv, 0, rnd, flush, sat, 0);
+    return fp32_arith_core(w, mask,
+                           static_cast<std::uint64_t>(
+                               shape::operand_value_as_i64(d.Rd)),
+                           0, rnd, flush, sat, 0, d.Ra, d.c, nullptr);
 }
 
 Status Interpreter::do_fmul(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     const auto& d = *static_cast<const shape::DecodedFMUL3*>(&inst);
-    const OperandFields ops(inst);
     const Rnd rnd = static_cast<Rnd>(d.rnd);
     const bool flush = static_cast<int>(d.fmz) != 0;
     const bool sat = static_cast<int>(d.sat) != 0;
-    const std::uint64_t rd_rv = static_cast<std::uint64_t>(
-        shape::operand_value_as_i64(ops[0]));
-    return fp32_arith_core(w, mask, inst, rd_rv, 1, rnd, flush, sat, 0);
+    return fp32_arith_core(w, mask,
+                           static_cast<std::uint64_t>(
+                               shape::operand_value_as_i64(d.Rd)),
+                           1, rnd, flush, sat, 0, d.Ra, d.b, nullptr);
 }
 
 Status Interpreter::do_ffma(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     const auto& d = *static_cast<const shape::DecodedFFMA4*>(&inst);
-    const OperandFields ops(inst);
     const Rnd rnd = static_cast<Rnd>(d.rnd);
     // FFMA needs the raw fmz value (FMZ and FTZ differ on sm120).
     const int fmz_val = static_cast<int>(d.fmz);
     const bool flush = fmz_val != 0;
     const bool sat = static_cast<int>(d.sat) != 0;
-    const std::uint64_t rd_rv = static_cast<std::uint64_t>(
-        shape::operand_value_as_i64(ops[0]));
-    return fp32_arith_core(w, mask, inst, rd_rv, 2, rnd, flush, sat, fmz_val);
+    return fp32_arith_core(w, mask,
+                           static_cast<std::uint64_t>(
+                               shape::operand_value_as_i64(d.Rd)),
+                           2, rnd, flush, sat, fmz_val, d.Ra, d.b, &d.c);
 }
 
 Status Interpreter::fp64_arith_core(WarpState& w, std::uint32_t mask,
-                                    const DecodedInstruction& inst, int op,
-                                    Rnd rnd) {
-    const OperandFields ops(inst);
+                                    std::uint64_t rd_rv, int op, Rnd rnd,
+                                    const shape::OperandValue& opa,
+                                    const shape::OperandValue& opb,
+                                    const shape::OperandValue* opc) {
     // Phase 5.5: resolve the leaf policy once per instruction (M5).
     const Fp64Plan plan = plan_fp64(op, static_cast<int>(rnd));
     const bool sat = false;
-    // M5 pre-binding: pair base indices resolved once (2nd source = pos2;
-    // DADD has no Rb, its 2nd source is Rc — same position).
-    const int ra_r = bind_idx_ov(ops[1]);
-    const int sb_r = bind_idx_ov(ops[2]);
-    const int rc_r = (op == 2) ? bind_idx_ov(ops[3]) : -1;
-    const std::uint64_t rd_rv =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+    // M5 pre-binding: 64-bit pair base indices (DADD's 2nd source is the
+    // named c field; DFMA adds the third source).
+    const int ra_r = bind_idx_ov(opa);
+    const int sb_r = bind_idx_ov(opb);
+    const int rc_r = (op == 2) ? bind_idx_ov(*opc) : -1;
     auto read_pair_at = [](const ThreadState& t, int idx) -> std::uint64_t {
         if (idx < 0 || idx >= kNumGprs - 1) return 0;
         std::uint64_t lo = t.gpr[idx];
@@ -5801,34 +5801,44 @@ Status Interpreter::fp64_arith_core(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_dadd(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     const auto& d = *static_cast<const shape::DecodedDADD3*>(&inst);
-    return fp64_arith_core(w, mask, inst, 0, static_cast<Rnd>(d.rnd));
+    return fp64_arith_core(
+        w, mask,
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(d.Rd)), 0,
+        static_cast<Rnd>(d.rnd), d.Ra, d.c, nullptr);
 }
 
 Status Interpreter::do_dmul(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     const auto& d = *static_cast<const shape::DecodedDMUL3*>(&inst);
-    return fp64_arith_core(w, mask, inst, 1, static_cast<Rnd>(d.rnd));
+    return fp64_arith_core(
+        w, mask,
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(d.Rd)), 1,
+        static_cast<Rnd>(d.rnd), d.Ra, d.b, nullptr);
 }
 
 Status Interpreter::do_dfma(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     const auto& d = *static_cast<const shape::DecodedDFMA4*>(&inst);
-    return fp64_arith_core(w, mask, inst, 2, static_cast<Rnd>(d.rnd));
+    return fp64_arith_core(
+        w, mask,
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(d.Rd)), 2,
+        static_cast<Rnd>(d.rnd), d.Ra, d.b, &d.c);
 }
 
 Status Interpreter::fset_core(WarpState& w, std::uint32_t mask,
-                              const DecodedInstruction& inst,
                               std::uint64_t fcomp, std::uint64_t bop,
-                              bool ftz, int ra_pos, int pp_pos,
-                              bool dest_is_pred, bool has_pv) {
-    const OperandFields ops(inst);
-    const int second_pos = ra_pos + 1;
+                              bool ftz, const shape::OperandValue& ra,
+                              const shape::OperandValue& second,
+                              const shape::OperandValue* pp,
+                              const shape::OperandValue& rd,
+                              const shape::OperandValue* pv,
+                              bool dest_is_pred) {
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_ov(t, ops[ra_pos]);
-        std::uint32_t b = src_value(w, t, ops[second_pos]);
+        std::uint32_t a = read_reg_ov(t, ra);
+        std::uint32_t b = src_value(w, t, second);
         if (ftz) {
             if (fast_mode()) {
                 // Phase 5.5: kNone skips the subnormal flush and counts
@@ -5875,7 +5885,7 @@ Status Interpreter::fset_core(WarpState& w, std::uint32_t mask,
         // Bop combines (r) with Pp: AND/OR/XOR.  Pu = (r) BOP Pp;
         // Pv = (!r) BOP Pp (verified: FSETP Pv is NOT !Pu for OR).
         bool ppv = true;
-        if (pp_pos >= 0) read_pred_ov(t, ops[pp_pos], &ppv);
+        if (pp) read_pred_ov(t, *pp, &ppv);
         bool out = false;
         switch (bop) {
             case 0: out = r && ppv; break;  // AND
@@ -5892,10 +5902,10 @@ Status Interpreter::fset_core(WarpState& w, std::uint32_t mask,
         }
         if (fast_mode()) note_fast_leaf(false);
         if (dest_is_pred) {
-            write_pred_ov(t, ops[0], out);
-            if (has_pv) write_pred_ov(t, ops[1], outv);
+            write_pred_ov(t, rd, out);
+            if (pv) write_pred_ov(t, *pv, outv);
         } else {  // FSET: Rd = 1.0f or 0.0f (FSET.Rd holds result).
-            write_rd_ov(w, t, ops[0], out ? 0x3f800000u : 0u, 0);
+            write_rd_ov(w, t, rd, out ? 0x3f800000u : 0u, 0);
         }
     }
     return Status::success();
@@ -5908,8 +5918,6 @@ Status Interpreter::do_fsetp(WarpState& w, std::uint32_t mask,
     // 5-op (kfsetp__*) carries Pv/Pp; 3-op (kfsetp_simple__*) does not.
     std::uint64_t fcomp = 0, bop = 0;
     bool ftz = false;
-    int ra_pos = 1;
-    int pp_pos = -1;
     if (inst.variant_class == isa::VariantClass::kfsetp__RIR_RIR ||
         inst.variant_class == isa::VariantClass::kfsetp__RRR_RRR ||
         inst.variant_class == isa::VariantClass::kfsetp__RUR_RUR) {
@@ -5917,16 +5925,14 @@ Status Interpreter::do_fsetp(WarpState& w, std::uint32_t mask,
         fcomp = static_cast<std::uint64_t>(d.fcomp);
         bop = static_cast<std::uint64_t>(d.bop);
         ftz = static_cast<int>(d.ftz) != 0;
-        ra_pos = 2;
-        pp_pos = 4;
-        return fset_core(w, mask, inst, fcomp, bop, ftz, ra_pos, pp_pos,
-                         true, true);
+        return fset_core(w, mask, fcomp, bop, ftz, d.Ra, d.b, &d.Pp, d.Pu,
+                         &d.Pv, true);
     }
     const auto& d = *static_cast<const shape::DecodedFSETP3*>(&inst);
     fcomp = static_cast<std::uint64_t>(d.fcomp);
     ftz = static_cast<int>(d.ftz) != 0;
-    return fset_core(w, mask, inst, fcomp, bop, ftz, ra_pos, pp_pos, true,
-                     false);
+    return fset_core(w, mask, fcomp, bop, ftz, d.Ra, d.b, nullptr, d.Pu,
+                     nullptr, true);
 }
 
 Status Interpreter::do_fset(WarpState& w, std::uint32_t mask,
@@ -5937,15 +5943,16 @@ Status Interpreter::do_fset(WarpState& w, std::uint32_t mask,
         inst.variant_class == isa::VariantClass::kfset__RRR_RRR ||
         inst.variant_class == isa::VariantClass::kfset__RUR_RUR) {
         const auto& d = *static_cast<const shape::DecodedFSET4*>(&inst);
-        return fset_core(w, mask, inst,
+        return fset_core(w, mask,
                          static_cast<std::uint64_t>(d.fcomp),
                          static_cast<std::uint64_t>(d.bop),
-                         static_cast<int>(d.ftz) != 0, 1, 3, false, false);
+                         static_cast<int>(d.ftz) != 0, d.Ra, d.b, &d.Pp,
+                         d.Rd, nullptr, false);
     }
     const auto& d = *static_cast<const shape::DecodedFSET3*>(&inst);
-    return fset_core(w, mask, inst,
-                     static_cast<std::uint64_t>(d.fcomp), 0,
-                     static_cast<int>(d.ftz) != 0, 1, -1, false, false);
+    return fset_core(w, mask, static_cast<std::uint64_t>(d.fcomp), 0,
+                     static_cast<int>(d.ftz) != 0, d.Ra, d.b, nullptr, d.Rd,
+                     nullptr, false);
 }
 
 Status Interpreter::do_fmnmx(WarpState& w, std::uint32_t mask,

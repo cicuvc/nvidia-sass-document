@@ -773,16 +773,24 @@ private:
     // operands/modifiers) so the per-instruction function is just the
     // concrete-shape cast + forward.
     Status fp32_arith_core(WarpState& w, std::uint32_t mask,
-                           const DecodedInstruction& inst,
                            std::uint64_t rd_rv, int op, semu::fp::Rnd rnd,
-                           bool flush, bool sat, int fmz_val);
+                           bool flush, bool sat, int fmz_val,
+                           const shape::OperandValue& opa,
+                           const shape::OperandValue& opb,
+                           const shape::OperandValue* opc);
     Status fp64_arith_core(WarpState& w, std::uint32_t mask,
-                           const DecodedInstruction& inst, int op,
-                           semu::fp::Rnd rnd);
+                           std::uint64_t rd_rv, int op, semu::fp::Rnd rnd,
+                           const shape::OperandValue& opa,
+                           const shape::OperandValue& opb,
+                           const shape::OperandValue* opc);
     Status fset_core(WarpState& w, std::uint32_t mask,
-                     const DecodedInstruction& inst,
                      std::uint64_t fcomp, std::uint64_t bop, bool ftz,
-                     int ra_pos, int pp_pos, bool dest_is_pred, bool has_pv);
+                     const shape::OperandValue& ra,
+                     const shape::OperandValue& second,
+                     const shape::OperandValue* pp,
+                     const shape::OperandValue& rd,
+                     const shape::OperandValue* pv,
+                     bool dest_is_pred);
     Status cvtx_core(WarpState& w, std::uint32_t mask,
                      const DecodedInstruction& inst,
                      semu::fp::Rnd rnd, bool ftz,
