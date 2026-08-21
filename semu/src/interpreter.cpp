@@ -3892,65 +3892,82 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
     // already returned for exec_mask == 0.
     (void)mask;
 
-    // Operand layouts (positional, ShapeManifest role order):
-    //   ARRIVE   0x19a7/5op [Rd,Ra,Ra_URc,Ra_offset,Rb]
-    //   TCNT     0x19a7/4op [Ra,Ra_URc,Ra_offset,Rb]
-    //   PHASECHK 0x15a7/5op [Pu,Ra,Ra_URc,Ra_offset,Rb]
-    //   LD       0x15b1/4op [Rd,Ra,Ra_URc,Ra_offset]
-    //   CCTL     0x19b1/3op [Ra,Ra_URc,Ra_offset]
-    //   EXCH     0x15b2/5op [UPg,URd,URa,URa_offset,URb]
-    //   CAS      0x13b2/6op [UPg,URd,URa,URa_offset,URb,URc]
-    //   LD.64    0x19b2/4op [UPg,URd,URa,URa_offset]
-    const std::uint16_t nops = inst.n_ops;
+    // Operand layouts are FIXED per opcode — every SYNCS opcode has one
+    // deterministic role order (ARRIVE and TCNT share 0x19a7 and are told
+    // apart by variant class; they differ only in the [Ra,..] anchor + Rb
+    // position):
+    //   ARRIVE    0x19a7 arr [Rd,Ra,Ra_URc,Ra_offset,Rb]  trio 1,2,3 Rb@4
+    //   TCNT      0x19a7 tcnt[Ra,Ra_URc,Ra_offset,Rb]      trio 0,1,2 Rb@3
+    //   PHASECHK  0x15a7     [Pu,Ra,Ra_URc,Ra_offset,Rb]   trio 1,2,3 Rb@4
+    //   LD        0x15b1     [Rd,Ra,Ra_URc,Ra_offset]      trio 1,2,3
+    //   CCTL      0x19b1     [Ra,Ra_URc,Ra_offset]         trio 0,1,2
+    //   CCTL.ALL  0x9b1 / FLUSH 0x3a7                      (no address)
+    //   EXCH      0x15b2     [UPg,URd,URa,URa_offset,URb]  URa@2 off@3
+    //   CAS       0x13b2     [UPg,URd,URa,URa_offset,URb,URc]
+    //   LD.64     0x19b2     [UPg,URd,URa,URa_offset]
     const OperandFields ops(inst);
     // Shared target = [Ra + URc + Ra_offset] (Ra is RZ for mbarrier ops);
-    // the uniform forms use [URa + URa_offset].  The offset trio sits at the
-    // tail except on the Rb-carrying forms (one slot before it).
-    const bool uniform = (op == 0x15b2 || op == 0x13b2 || op == 0x19b2);
-    const bool has_rb = (op == 0x19a7 || op == 0x15a7);
-    const int ra_pos = uniform ? 2 : nops - (has_rb ? 4 : 3);
-    const int ra_urc_pos = ra_pos + 1;  // non-uniform: Ra_URc
-    const int ra_off_pos = uniform ? ra_pos + 1 : ra_pos + 2;
+    // the uniform forms use [URa + URa_offset].
     std::uint32_t addr = 0;
-    if (uniform || nops >= 3) {
-        if (uniform) {
-            const std::uint64_t base =
-                read_ur_ov(w, ops[ra_pos]);  // URa
-            const std::int64_t off =
-                shape::operand_value_as_i64(ops[ra_off_pos]);  // URa_offset
-            addr = static_cast<std::uint32_t>(
-                base + static_cast<std::uint64_t>(off));
-        } else {
-            const std::uint64_t base =
-                read_ur_ov(w, ops[ra_urc_pos]);  // Ra_URc
-            const std::uint64_t rbase =
-                read_reg_ov(w.threads[0], ops[ra_pos]);  // Ra
-            const std::int64_t off =
-                shape::operand_value_as_i64(ops[ra_off_pos]);  // Ra_offset
-            addr = static_cast<std::uint32_t>(
-                rbase + base + static_cast<std::uint64_t>(off));
-        }
+    int ra_pos = 0, ra_urc_pos = 1, ra_off_pos = 2;  // non-uniform trio anchor
+    bool uniform = false;
+    switch (op) {
+        case 0x19a7:  // ARRIVE vs TCNT (variant-class discriminated)
+            ra_pos = (inst.variant_class == isa::VariantClass::ksyncs_arrive_)
+                         ? 1 : 0;
+            ra_urc_pos = ra_pos + 1;
+            ra_off_pos = ra_pos + 2;
+            break;
+        case 0x15a7:  // PHASECHK
+        case 0x15b1:  // LD
+            ra_pos = 1; ra_urc_pos = 2; ra_off_pos = 3;
+            break;
+        case 0x19b1:  // CCTL
+            ra_pos = 0; ra_urc_pos = 1; ra_off_pos = 2;
+            break;
+        case 0x15b2:  // EXCH
+        case 0x13b2:  // CAS
+        case 0x19b2:  // LD.64
+            uniform = true;
+            ra_pos = 2; ra_urc_pos = 3; ra_off_pos = 3;  // URa / URa_offset
+            break;
+        default:  // CCTL.ALL / FLUSH: no shared target
+            break;
+    }
+    if (uniform) {
+        addr = static_cast<std::uint32_t>(
+            read_ur_ov(w, ops[ra_pos]) +
+            static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(ops[ra_off_pos])));
+    } else if (op != 0x9b1 && op != 0x3a7) {
+        addr = static_cast<std::uint32_t>(
+            read_reg_ov(w.threads[0], ops[ra_pos]) +
+            read_ur_ov(w, ops[ra_urc_pos]) +
+            static_cast<std::uint64_t>(
+                shape::operand_value_as_i64(ops[ra_off_pos])));
     }
 
     CtaState* cta = &ctas_[static_cast<std::size_t>(w.local_cta_id)];
     // Uniform atomics operate on the CURRENT CTA's shared window (no DSMEM
     // translation needed — EXCH/CAS/LD are local shared memory ops).
     switch (op) {
-        case 0x19a7: {  // ARRIVE (5-op) / TCNT (4-op: expect_tx/complete_tx)
+        case 0x19a7: {  // ARRIVE / TCNT (expect_tx/complete_tx; same opcode)
             std::uint64_t paramtype = 0, retval = 0;
             const shape::OperandValue* rd_op = nullptr;
-            if (nops == 5) {
-                // SYNCS5 split: 1 = ARRIVE (paramtype/retval members).
+            int rb_pos = 4;  // ARRIVE: [Rd,Ra,Ra_URc,Ra_offset,Rb]
+            if (inst.variant_class == isa::VariantClass::ksyncs_arrive_) {
+                // SYNCS5 split 1 = ARRIVE (paramtype/retval members).
                 const auto& d =
                     *static_cast<const shape::DecodedSYNCS5_1*>(&inst);
                 paramtype = static_cast<std::uint64_t>(d.paramtype);
                 retval = static_cast<std::uint64_t>(d.retval);
                 rd_op = &ops[0];  // Rd
             } else {
-                // SYNCS4 split: 2 = TCNT (retval member).
+                // SYNCS4 split 2 = TCNT (retval member; Rb@3).
                 const auto& d =
                     *static_cast<const shape::DecodedSYNCS4_2*>(&inst);
                 retval = static_cast<std::uint64_t>(d.retval);
+                rb_pos = 3;
             }
             auto* st = mbarrier_at(*cta, addr, /*create_if_missing=*/true);
             if (!st) {
@@ -3964,7 +3981,7 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                 return Status::failure(Error::internal("memory fault"));
             }
             const std::uint64_t rv =
-                read_reg_ov(w.threads[0], ops[nops - 1]);  // Rb
+                read_reg_ov(w.threads[0], ops[rb_pos]);  // Rb
             std::uint32_t inc = 0;
             std::uint64_t tx = 0;
             bool tx_is_complete = false;
