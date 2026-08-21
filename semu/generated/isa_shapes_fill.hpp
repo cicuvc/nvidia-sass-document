@@ -58041,14003 +58041,11244 @@ inline std::unique_ptr<DecodedInstruction> make_by_variant(std::uint32_t vi) {
     }
 }
 
-// Pointer to one named operand FIELD of a typed decoded shape (the
-// ops[] array was eliminated; operands are named members).  `p` is
-// the role position (ShapeManifest order).  Returns nullptr when p
-// >= n_ops or the variant has no operands.  This is the
-// decode/CLI/test bridge — the interpreter reads fields by name
-// through the concrete types.
+// Resolve every named operand field of a variant at ONCE with a
+// SINGLE vi switch (no per-position dispatch, no loop).  `out`
+// receives the field pointers in role order; sized for the
+// maximum operand count (9).  Used by the interpreter's
+// OperandFields view and by operand_field below.
+inline void fill_operand_fields(std::uint32_t vi,
+                                 const DecodedInstruction* inst,
+                                 const OperandValue* out[16]) {
+    switch (vi) {
+    case 0: {
+        const auto& o = *static_cast<const DecodedMOV2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1: {
+        const auto& o = *static_cast<const DecodedMOV3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.PixMaskU04;
+        break;
+    }
+    case 2: {
+        const auto& o = *static_cast<const DecodedP2R4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pr;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 3: {
+        const auto& o = *static_cast<const DecodedR2P3*>(inst);
+        out[0] = &o.PR;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 4: {
+        const auto& o = *static_cast<const DecodedSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 5: {
+        const auto& o = *static_cast<const DecodedFSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 6: {
+        const auto& o = *static_cast<const DecodedFMNMX4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 7: {
+        const auto& o = *static_cast<const DecodedFMNMX5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 8: {
+        const auto& o = *static_cast<const DecodedFSET4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 9: {
+        const auto& o = *static_cast<const DecodedFSET3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 10: {
+        const auto& o = *static_cast<const DecodedFSETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 11: {
+        const auto& o = *static_cast<const DecodedFSETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 12: {
+        const auto& o = *static_cast<const DecodedISETP6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        out[5] = &o.Pr;
+        break;
+    }
+    case 13: {
+        const auto& o = *static_cast<const DecodedISETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 14: {
+        const auto& o = *static_cast<const DecodedISETP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pr;
+        break;
+    }
+    case 15: {
+        const auto& o = *static_cast<const DecodedISETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 16: {
+        const auto& o = *static_cast<const DecodedISETP6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        out[5] = &o.Pr;
+        break;
+    }
+    case 17: {
+        const auto& o = *static_cast<const DecodedISETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 18: {
+        const auto& o = *static_cast<const DecodedISETP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pr;
+        break;
+    }
+    case 19: {
+        const auto& o = *static_cast<const DecodedISETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 20: {
+        const auto& o = *static_cast<const DecodedIADD36*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Rc;
+        break;
+    }
+    case 21: {
+        const auto& o = *static_cast<const DecodedIADD38*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Rc;
+        out[6] = &o.Pp;
+        out[7] = &o.Pq;
+        break;
+    }
+    case 22: {
+        const auto& o = *static_cast<const DecodedISCADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 23: {
+        const auto& o = *static_cast<const DecodedLEA6_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.scaleU5;
+        break;
+    }
+    case 24: {
+        const auto& o = *static_cast<const DecodedLEA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 25: {
+        const auto& o = *static_cast<const DecodedLEA6_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 26: {
+        const auto& o = *static_cast<const DecodedLEA7*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.scaleU5;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 27: {
+        const auto& o = *static_cast<const DecodedLEA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 28: {
+        const auto& o = *static_cast<const DecodedLEA6_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 29: {
+        const auto& o = *static_cast<const DecodedLOP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 30: {
+        const auto& o = *static_cast<const DecodedLOP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 31: {
+        const auto& o = *static_cast<const DecodedLOP37*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.imm8;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 32: {
+        const auto& o = *static_cast<const DecodedLOP36_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.imm8;
+        break;
+    }
+    case 33: {
+        const auto& o = *static_cast<const DecodedLOP36_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 34: {
+        const auto& o = *static_cast<const DecodedLOP35*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 35: {
+        const auto& o = *static_cast<const DecodedIABS2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 36: {
+        const auto& o = *static_cast<const DecodedPRMT4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 37: {
+        const auto& o = *static_cast<const DecodedIMNMX7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        out[6] = &o.Pq;
+        break;
+    }
+    case 38: {
+        const auto& o = *static_cast<const DecodedIMNMX6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 39: {
+        const auto& o = *static_cast<const DecodedIMNMX7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        out[6] = &o.Pq;
+        break;
+    }
+    case 40: {
+        const auto& o = *static_cast<const DecodedIMNMX6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 41: {
+        const auto& o = *static_cast<const DecodedSHF4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 42: {
+        const auto& o = *static_cast<const DecodedSHL3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 43: {
+        const auto& o = *static_cast<const DecodedSHR3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 44: {
+        const auto& o = *static_cast<const DecodedSGXT3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 45: {
+        const auto& o = *static_cast<const DecodedBMSK3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 46: {
+        const auto& o = *static_cast<const DecodedPLOP35_2*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.b;
+        out[3] = &o.Pr;
+        out[4] = &o.uimm8;
+        break;
+    }
+    case 47: {
+        const auto& o = *static_cast<const DecodedPLOP37_2*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Pp;
+        out[3] = &o.b;
+        out[4] = &o.Pr;
+        out[5] = &o.uimm8;
+        out[6] = &o.vimm8;
+        break;
+    }
+    case 48: {
+        const auto& o = *static_cast<const DecodedPLOP35_3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        out[4] = &o.uimm8;
+        break;
+    }
+    case 49: {
+        const auto& o = *static_cast<const DecodedPLOP37_3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Pp;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.uimm8;
+        out[6] = &o.vimm8;
+        break;
+    }
+    case 50: {
+        const auto& o = *static_cast<const DecodedPLOP35_4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        out[4] = &o.uimm8;
+        break;
+    }
+    case 51: {
+        const auto& o = *static_cast<const DecodedPLOP37_4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.uimm8;
+        out[6] = &o.vimm8;
+        break;
+    }
+    case 52: {
+        const auto& o = *static_cast<const DecodedFMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 53: {
+        const auto& o = *static_cast<const DecodedFADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 54: {
+        const auto& o = *static_cast<const DecodedFHADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 55: {
+        const auto& o = *static_cast<const DecodedFFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 56: {
+        const auto& o = *static_cast<const DecodedFHFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 57: {
+        const auto& o = *static_cast<const DecodedIMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 58: {
+        const auto& o = *static_cast<const DecodedIMAD5_3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.GetPseudoOpRRR;
+        break;
+    }
+    case 59: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 60: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 61: {
+        const auto& o = *static_cast<const DecodedIMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 62: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 63: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 64: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 65: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 66: {
+        const auto& o = *static_cast<const DecodedIMUL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 67: {
+        const auto& o = *static_cast<const DecodedIDP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 68: {
+        const auto& o = *static_cast<const DecodedIDP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 69: {
+        const auto& o = *static_cast<const DecodedIDP4A4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 70: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 71: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 72: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 73: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 74: {
+        const auto& o = *static_cast<const DecodedDMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 75: {
+        const auto& o = *static_cast<const DecodedDADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 76: {
+        const auto& o = *static_cast<const DecodedDSETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 77: {
+        const auto& o = *static_cast<const DecodedDSETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 78: {
+        const auto& o = *static_cast<const DecodedDFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 79: {
+        const auto& o = *static_cast<const DecodedCLMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 80: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 81: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 82: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 83: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 84: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 85: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 86: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 87: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 88: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 89: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 90: {
+        const auto& o = *static_cast<const DecodedHMUL23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 91: {
+        const auto& o = *static_cast<const DecodedHMUL23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 92: {
+        const auto& o = *static_cast<const DecodedHSET24_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 93: {
+        const auto& o = *static_cast<const DecodedHSET24_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 94: {
+        const auto& o = *static_cast<const DecodedHSET23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 95: {
+        const auto& o = *static_cast<const DecodedHSET23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 96: {
+        const auto& o = *static_cast<const DecodedHSETP25_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 97: {
+        const auto& o = *static_cast<const DecodedHSETP25_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 98: {
+        const auto& o = *static_cast<const DecodedHSETP24*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        break;
+    }
+    case 99: {
+        const auto& o = *static_cast<const DecodedHSETP24*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        break;
+    }
+    case 100: {
+        const auto& o = *static_cast<const DecodedIADD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 101: {
+        const auto& o = *static_cast<const DecodedIADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 102: {
+        const auto& o = *static_cast<const DecodedIADD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 103: {
+        const auto& o = *static_cast<const DecodedIADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 104: {
+        const auto& o = *static_cast<const DecodedVIADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 105: {
+        const auto& o = *static_cast<const DecodedIMMA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 106: {
+        const auto& o = *static_cast<const DecodedIMMA7*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.id;
+        break;
+    }
+    case 107: {
+        const auto& o = *static_cast<const DecodedI2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 108: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 109: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 110: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 111: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 112: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 113: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 114: {
+        const auto& o = *static_cast<const DecodedMOVM2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        break;
+    }
+    case 115: {
+        const auto& o = *static_cast<const DecodedHMMA7_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.id;
+        break;
+    }
+    case 116: {
+        const auto& o = *static_cast<const DecodedHMMA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 117: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 118: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 119: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 120: {
+        const auto& o = *static_cast<const DecodedF2FP3_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 121: {
+        const auto& o = *static_cast<const DecodedF2FP3_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 122: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 123: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 124: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 125: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 126: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 127: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 128: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 129: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 130: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 131: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 132: {
+        const auto& o = *static_cast<const DecodedDMMA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 133: {
+        const auto& o = *static_cast<const DecodedHMNMX24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 134: {
+        const auto& o = *static_cast<const DecodedHMNMX24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 135: {
+        const auto& o = *static_cast<const DecodedHMNMX26*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 136: {
+        const auto& o = *static_cast<const DecodedHMNMX26*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 137: {
+        const auto& o = *static_cast<const DecodedF2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 138: {
+        const auto& o = *static_cast<const DecodedI2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 139: {
+        const auto& o = *static_cast<const DecodedVIMNMX4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 140: {
+        const auto& o = *static_cast<const DecodedQMMA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 141: {
+        const auto& o = *static_cast<const DecodedQMMA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 142: {
+        const auto& o = *static_cast<const DecodedQMMA7*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.sparseId;
+        break;
+    }
+    case 143: {
+        const auto& o = *static_cast<const DecodedQMMA7*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.sparseId;
+        break;
+    }
+    case 144: {
+        const auto& o = *static_cast<const DecodedR2UR3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.URd;
+        out[2] = &o.Ra;
+        break;
+    }
+    case 145: {
+        const auto& o = *static_cast<const DecodedR2UR3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.URd;
+        out[2] = &o.Ra;
+        break;
+    }
+    case 146: {
+        const auto& o = *static_cast<const DecodedR2UR3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.URd;
+        out[2] = &o.Ra;
+        break;
+    }
+    case 147: {
+        const auto& o = *static_cast<const DecodedR2UR3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.URd;
+        out[2] = &o.Ra;
+        break;
+    }
+    case 148: {
+        const auto& o = *static_cast<const DecodedFLO3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.b;
+        break;
+    }
+    case 149: {
+        const auto& o = *static_cast<const DecodedBREV2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 150: {
+        const auto& o = *static_cast<const DecodedFCHK3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 151: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 152: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 153: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 154: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 155: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 156: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 157: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 158: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 159: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 160: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 161: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 162: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 163: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 164: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 165: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 166: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 167: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 168: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 169: {
+        const auto& o = *static_cast<const DecodedMUFU2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 170: {
+        const auto& o = *static_cast<const DecodedMUFU2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 171: {
+        const auto& o = *static_cast<const DecodedMUFU2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 172: {
+        const auto& o = *static_cast<const DecodedPOPC2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 173: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 174: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 175: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 176: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 177: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 178: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 179: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 180: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 181: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 182: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 183: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 184: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 185: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 186: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 187: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 188: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 189: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 190: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 191: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 192: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 193: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 194: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 195: {
+        const auto& o = *static_cast<const DecodedB2R2_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.barname;
+        break;
+    }
+    case 196: {
+        const auto& o = *static_cast<const DecodedB2R2_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        break;
+    }
+    case 197: {
+        const auto& o = *static_cast<const DecodedB2R1*>(inst);
+        out[0] = &o.Rd;
+        break;
+    }
+    case 198: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 199: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 200: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 201: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 202: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 203: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 204: {
+        const auto& o = *static_cast<const DecodedR2B2*>(inst);
+        out[0] = &o.barname;
+        out[1] = &o.Rb;
+        break;
+    }
+    case 205: {
+        const auto& o = *static_cast<const DecodedSETCTAID1*>(inst);
+        out[0] = &o.Ra;
+        break;
+    }
+    case 206: {
+        const auto& o = *static_cast<const DecodedALD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.srcAttr;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 207: {
+        const auto& o = *static_cast<const DecodedALD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.srcAttr;
+        out[2] = &o.a;
+        out[3] = &o.off;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 208: {
+        const auto& o = *static_cast<const DecodedALD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.srcAttr;
+        out[2] = &o.a;
+        out[3] = &o.off;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 209: {
+        const auto& o = *static_cast<const DecodedALD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.srcAttr;
+        out[2] = &o.a;
+        out[3] = &o.off;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 210: {
+        const auto& o = *static_cast<const DecodedAST4*>(inst);
+        out[0] = &o.srcAttr;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 211: {
+        const auto& o = *static_cast<const DecodedAST5*>(inst);
+        out[0] = &o.srcAttr;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 212: {
+        const auto& o = *static_cast<const DecodedAST5*>(inst);
+        out[0] = &o.srcAttr;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 213: {
+        const auto& o = *static_cast<const DecodedAST5*>(inst);
+        out[0] = &o.srcAttr;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 214: {
+        const auto& o = *static_cast<const DecodedOUT3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 215: {
+        const auto& o = *static_cast<const DecodedOUT3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 216: {
+        const auto& o = *static_cast<const DecodedOUT3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 217: {
+        const auto& o = *static_cast<const DecodedOUT1*>(inst);
+        out[0] = &o.Ra;
+        break;
+    }
+    case 218: {
+        const auto& o = *static_cast<const DecodedIPA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.srcAttr;
+        out[3] = &o.attr;
+        break;
+    }
+    case 219: {
+        const auto& o = *static_cast<const DecodedIPA5_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.srcAttr;
+        out[3] = &o.attr;
+        out[4] = &o.b;
+        break;
+    }
+    case 220: break;  // no operands
+    case 221: break;  // no operands
+    case 222: {
+        const auto& o = *static_cast<const DecodedCALL3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 223: {
+        const auto& o = *static_cast<const DecodedCALL3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 224: {
+        const auto& o = *static_cast<const DecodedCALL3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 225: {
+        const auto& o = *static_cast<const DecodedCALL2_1*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        break;
+    }
+    case 226: {
+        const auto& o = *static_cast<const DecodedWARPSYNC2_0*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Ra;
+        break;
+    }
+    case 227: {
+        const auto& o = *static_cast<const DecodedWARPSYNC3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Ra;
+        out[2] = &o.sImm;
+        break;
+    }
+    case 228: {
+        const auto& o = *static_cast<const DecodedWARPSYNC3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Ra;
+        out[2] = &o.sImm;
+        break;
+    }
+    case 229: {
+        const auto& o = *static_cast<const DecodedLEPC1*>(inst);
+        out[0] = &o.Rd;
+        break;
+    }
+    case 230: {
+        const auto& o = *static_cast<const DecodedRPCMOV2_2*>(inst);
+        out[0] = &o.RpcN;
+        out[1] = &o.b;
+        break;
+    }
+    case 231: {
+        const auto& o = *static_cast<const DecodedRPCMOV2_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.RpcN;
+        break;
+    }
+    case 232: {
+        const auto& o = *static_cast<const DecodedBMOV2_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.cbu_state;
+        break;
+    }
+    case 233: {
+        const auto& o = *static_cast<const DecodedBMOV2_4*>(inst);
+        out[0] = &o.cbu_state;
+        out[1] = &o.b;
+        break;
+    }
+    case 234: {
+        const auto& o = *static_cast<const DecodedBMOV2_1*>(inst);
+        out[0] = &o.atexit_pc;
+        out[1] = &o.b;
+        break;
+    }
+    case 235: {
+        const auto& o = *static_cast<const DecodedNANOTRAP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.b;
+        break;
+    }
+    case 236: {
+        const auto& o = *static_cast<const DecodedNANOSLEEP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.b;
+        break;
+    }
+    case 237: {
+        const auto& o = *static_cast<const DecodedTEX9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 238: {
+        const auto& o = *static_cast<const DecodedTEX9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 239: {
+        const auto& o = *static_cast<const DecodedTMML6*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.paramA;
+        out[5] = &o.wmsk;
+        break;
+    }
+    case 240: {
+        const auto& o = *static_cast<const DecodedTXQ5*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.query;
+        out[4] = &o.wmsk;
+        break;
+    }
+    case 241: {
+        const auto& o = *static_cast<const DecodedLDG5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Pnz;
+        break;
+    }
+    case 242: {
+        const auto& o = *static_cast<const DecodedLDG5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Pnz;
+        break;
+    }
+    case 243: {
+        const auto& o = *static_cast<const DecodedST3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 244: {
+        const auto& o = *static_cast<const DecodedST3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 245: {
+        const auto& o = *static_cast<const DecodedSTG3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 246: {
+        const auto& o = *static_cast<const DecodedSTG3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 247: {
+        const auto& o = *static_cast<const DecodedSTL3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 248: {
+        const auto& o = *static_cast<const DecodedSTL3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 249: {
+        const auto& o = *static_cast<const DecodedSTS3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 250: {
+        const auto& o = *static_cast<const DecodedSTS3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 251: {
+        const auto& o = *static_cast<const DecodedSHFL5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 252: {
+        const auto& o = *static_cast<const DecodedATOM6_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 253: {
+        const auto& o = *static_cast<const DecodedATOM6_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 254: {
+        const auto& o = *static_cast<const DecodedATOM7_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.Rc;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 255: {
+        const auto& o = *static_cast<const DecodedATOM7_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.Rc;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 256: {
+        const auto& o = *static_cast<const DecodedATOM7_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.Rc;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 257: {
+        const auto& o = *static_cast<const DecodedATOM7_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.Rc;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 258: {
+        const auto& o = *static_cast<const DecodedATOMS4_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 259: {
+        const auto& o = *static_cast<const DecodedATOMS4_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 260: {
+        const auto& o = *static_cast<const DecodedREDS3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 261: {
+        const auto& o = *static_cast<const DecodedREDS3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 262: {
+        const auto& o = *static_cast<const DecodedATOMS5_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 263: {
+        const auto& o = *static_cast<const DecodedATOMS5_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 264: {
+        const auto& o = *static_cast<const DecodedATOMS5_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 265: {
+        const auto& o = *static_cast<const DecodedATOMS5_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 266: break;  // no operands
+    case 267: {
+        const auto& o = *static_cast<const DecodedCCTLT1*>(inst);
+        out[0] = &o.b;
+        break;
+    }
+    case 268: {
+        const auto& o = *static_cast<const DecodedSUATOM6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.c;
+        out[5] = &o.URe;
+        break;
+    }
+    case 269: {
+        const auto& o = *static_cast<const DecodedSUATOM6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.c;
+        out[5] = &o.URe;
+        break;
+    }
+    case 270: {
+        const auto& o = *static_cast<const DecodedSURED4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.c;
+        out[3] = &o.URe;
+        break;
+    }
+    case 271: {
+        const auto& o = *static_cast<const DecodedMATCH3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        break;
+    }
+    case 272: {
+        const auto& o = *static_cast<const DecodedMATCH2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        break;
+    }
+    case 273: {
+        const auto& o = *static_cast<const DecodedATOM6_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 274: {
+        const auto& o = *static_cast<const DecodedATOM6_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 275: {
+        const auto& o = *static_cast<const DecodedATOMG5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 276: {
+        const auto& o = *static_cast<const DecodedATOMG5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 277: break;  // no operands
+    case 278: {
+        const auto& o = *static_cast<const DecodedATOMG5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 279: {
+        const auto& o = *static_cast<const DecodedATOMG5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 280: {
+        const auto& o = *static_cast<const DecodedATOMG6_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.Rc;
+        break;
+    }
+    case 281: {
+        const auto& o = *static_cast<const DecodedATOMG6_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.Rc;
+        break;
+    }
+    case 282: {
+        const auto& o = *static_cast<const DecodedQSPC3_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 283: {
+        const auto& o = *static_cast<const DecodedQSPC3_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 284: {
+        const auto& o = *static_cast<const DecodedQSPC3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 285: {
+        const auto& o = *static_cast<const DecodedQSPC3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 286: {
+        const auto& o = *static_cast<const DecodedQSPC4_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 287: {
+        const auto& o = *static_cast<const DecodedQSPC4_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 288: {
+        const auto& o = *static_cast<const DecodedGETLMEMBASE1*>(inst);
+        out[0] = &o.Rd;
+        break;
+    }
+    case 289: {
+        const auto& o = *static_cast<const DecodedSETLMEMBASE1*>(inst);
+        out[0] = &o.Ra;
+        break;
+    }
+    case 290: {
+        const auto& o = *static_cast<const DecodedREDUX2*>(inst);
+        out[0] = &o.URd;
+        out[1] = &o.Ra;
+        break;
+    }
+    case 291: break;  // no operands
+    case 292: break;  // no operands
+    case 293: break;  // no operands
+    case 294: {
+        const auto& o = *static_cast<const DecodedTTUST4*>(inst);
+        out[0] = &o.ttuAddr;
+        out[1] = &o.ImmU16;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 295: {
+        const auto& o = *static_cast<const DecodedTTUCLOSE1*>(inst);
+        out[0] = &o.Pu;
+        break;
+    }
+    case 296: {
+        const auto& o = *static_cast<const DecodedTTULD5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.ttuAddr;
+        out[4] = &o.ImmU16;
+        break;
+    }
+    case 297: {
+        const auto& o = *static_cast<const DecodedTTULD5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.ttuAddr;
+        out[4] = &o.ImmU16;
+        break;
+    }
+    case 298: break;  // no operands
+    case 299: break;  // no operands
+    case 300: {
+        const auto& o = *static_cast<const DecodedMOV2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 301: {
+        const auto& o = *static_cast<const DecodedSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 302: {
+        const auto& o = *static_cast<const DecodedLEA6_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.scaleU5;
+        break;
+    }
+    case 303: {
+        const auto& o = *static_cast<const DecodedLEA7*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.scaleU5;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 304: {
+        const auto& o = *static_cast<const DecodedPRMT4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 305: {
+        const auto& o = *static_cast<const DecodedSHF4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 306: {
+        const auto& o = *static_cast<const DecodedSHL3_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Sa;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 307: {
+        const auto& o = *static_cast<const DecodedFADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 308: {
+        const auto& o = *static_cast<const DecodedFADD32I3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        break;
+    }
+    case 309: {
+        const auto& o = *static_cast<const DecodedFFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 310: {
+        const auto& o = *static_cast<const DecodedIMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 311: {
+        const auto& o = *static_cast<const DecodedIMAD5_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Sc;
+        out[4] = &o.GetPseudoOpRRI;
+        break;
+    }
+    case 312: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 313: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 314: {
+        const auto& o = *static_cast<const DecodedDADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 315: {
+        const auto& o = *static_cast<const DecodedDSETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 316: {
+        const auto& o = *static_cast<const DecodedDSETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 317: {
+        const auto& o = *static_cast<const DecodedDFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 318: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 319: {
+        const auto& o = *static_cast<const DecodedHADD24_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sc;
+        break;
+    }
+    case 320: {
+        const auto& o = *static_cast<const DecodedHADD24_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        out[3] = &o.Sc1;
+        break;
+    }
+    case 321: {
+        const auto& o = *static_cast<const DecodedHADD24_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        out[3] = &o.Sc1;
+        break;
+    }
+    case 322: {
+        const auto& o = *static_cast<const DecodedHADD2_32I4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        out[3] = &o.Sc1;
+        break;
+    }
+    case 323: {
+        const auto& o = *static_cast<const DecodedHADD2_32I4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        out[3] = &o.Sc1;
+        break;
+    }
+    case 324: {
+        const auto& o = *static_cast<const DecodedHFMA25_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        break;
+    }
+    case 325: {
+        const auto& o = *static_cast<const DecodedHFMA25_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        break;
+    }
+    case 326: {
+        const auto& o = *static_cast<const DecodedHFMA25_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        break;
+    }
+    case 327: {
+        const auto& o = *static_cast<const DecodedHFMA26_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 328: {
+        const auto& o = *static_cast<const DecodedHFMA26_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 329: {
+        const auto& o = *static_cast<const DecodedHFMA26_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 330: {
+        const auto& o = *static_cast<const DecodedHSET25*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        out[3] = &o.Sc1;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 331: {
+        const auto& o = *static_cast<const DecodedHSET25*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        out[3] = &o.Sc1;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 332: {
+        const auto& o = *static_cast<const DecodedHSET24_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        out[3] = &o.Sc1;
+        break;
+    }
+    case 333: {
+        const auto& o = *static_cast<const DecodedHSET24_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sc;
+        out[3] = &o.Sc1;
+        break;
+    }
+    case 334: {
+        const auto& o = *static_cast<const DecodedHSETP26*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 335: {
+        const auto& o = *static_cast<const DecodedHSETP26*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 336: {
+        const auto& o = *static_cast<const DecodedHSETP25_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        break;
+    }
+    case 337: {
+        const auto& o = *static_cast<const DecodedHSETP25_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.Sc;
+        out[4] = &o.Sc1;
+        break;
+    }
+    case 338: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 339: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 340: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 341: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 342: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 343: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 344: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 345: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 346: {
+        const auto& o = *static_cast<const DecodedF2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 347: {
+        const auto& o = *static_cast<const DecodedQMMA8*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.Rh;
+        out[7] = &o.URi;
+        break;
+    }
+    case 348: {
+        const auto& o = *static_cast<const DecodedQMMA9*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.Rh;
+        out[7] = &o.URi;
+        out[8] = &o.sparseId;
+        break;
+    }
+    case 349: {
+        const auto& o = *static_cast<const DecodedMXQMMA8*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.Rh;
+        out[7] = &o.URi;
+        break;
+    }
+    case 350: {
+        const auto& o = *static_cast<const DecodedOMMA8*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.Rh;
+        out[7] = &o.URi;
+        break;
+    }
+    case 351: {
+        const auto& o = *static_cast<const DecodedOMMA9*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rb;
+        out[3] = &o.Rc;
+        out[4] = &o.UPp;
+        out[5] = &o.Re;
+        out[6] = &o.Rh;
+        out[7] = &o.URi;
+        out[8] = &o.sparseId;
+        break;
+    }
+    case 352: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 353: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 354: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 355: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 356: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 357: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 358: {
+        const auto& o = *static_cast<const DecodedMOV64IUR2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 359: {
+        const auto& o = *static_cast<const DecodedSHFL5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 360: {
+        const auto& o = *static_cast<const DecodedATOMS5_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 361: {
+        const auto& o = *static_cast<const DecodedATOMS5_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 362: break;  // no operands
+    case 363: {
+        const auto& o = *static_cast<const DecodedSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 364: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 365: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 366: {
+        const auto& o = *static_cast<const DecodedPMTRIG2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.imm;
+        break;
+    }
+    case 367: {
+        const auto& o = *static_cast<const DecodedMOV3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.PixMaskU04;
+        break;
+    }
+    case 368: {
+        const auto& o = *static_cast<const DecodedMOV32I3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Sb;
+        out[2] = &o.PixMaskU04;
+        break;
+    }
+    case 369: {
+        const auto& o = *static_cast<const DecodedP2R4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pr;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 370: {
+        const auto& o = *static_cast<const DecodedP2R2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pr;
+        break;
+    }
+    case 371: {
+        const auto& o = *static_cast<const DecodedR2P3*>(inst);
+        out[0] = &o.PR;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 372: {
+        const auto& o = *static_cast<const DecodedCS2R2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.SRa;
+        break;
+    }
+    case 373: {
+        const auto& o = *static_cast<const DecodedVOTE3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 374: {
+        const auto& o = *static_cast<const DecodedSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 375: {
+        const auto& o = *static_cast<const DecodedFSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 376: {
+        const auto& o = *static_cast<const DecodedFMNMX4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 377: {
+        const auto& o = *static_cast<const DecodedFMNMX5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 378: {
+        const auto& o = *static_cast<const DecodedFSET4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 379: {
+        const auto& o = *static_cast<const DecodedFSET3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 380: {
+        const auto& o = *static_cast<const DecodedFSETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 381: {
+        const auto& o = *static_cast<const DecodedFSETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 382: {
+        const auto& o = *static_cast<const DecodedISETP6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        out[5] = &o.Pr;
+        break;
+    }
+    case 383: {
+        const auto& o = *static_cast<const DecodedISETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 384: {
+        const auto& o = *static_cast<const DecodedISETP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pr;
+        break;
+    }
+    case 385: {
+        const auto& o = *static_cast<const DecodedISETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 386: {
+        const auto& o = *static_cast<const DecodedISETP6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        out[5] = &o.Pr;
+        break;
+    }
+    case 387: {
+        const auto& o = *static_cast<const DecodedISETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 388: {
+        const auto& o = *static_cast<const DecodedISETP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pr;
+        break;
+    }
+    case 389: {
+        const auto& o = *static_cast<const DecodedISETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 390: {
+        const auto& o = *static_cast<const DecodedCSMTEST1*>(inst);
+        out[0] = &o.Sa;
+        break;
+    }
+    case 391: {
+        const auto& o = *static_cast<const DecodedCSMTEST4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Sa;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 392: {
+        const auto& o = *static_cast<const DecodedCSMTEST2*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 393: {
+        const auto& o = *static_cast<const DecodedVOTE_VTG1*>(inst);
+        out[0] = &o.Sa;
+        break;
+    }
+    case 394: {
+        const auto& o = *static_cast<const DecodedVOTE_VTG4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Sa;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 395: {
+        const auto& o = *static_cast<const DecodedVOTE_VTG2*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 396: {
+        const auto& o = *static_cast<const DecodedIADD36*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Rc;
+        break;
+    }
+    case 397: {
+        const auto& o = *static_cast<const DecodedIADD38*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Rc;
+        out[6] = &o.Pp;
+        out[7] = &o.Pq;
+        break;
+    }
+    case 398: {
+        const auto& o = *static_cast<const DecodedISCADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 399: {
+        const auto& o = *static_cast<const DecodedISCADD32I5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.Sb;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 400: {
+        const auto& o = *static_cast<const DecodedLEA6_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.scaleU5;
+        break;
+    }
+    case 401: {
+        const auto& o = *static_cast<const DecodedLEA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 402: {
+        const auto& o = *static_cast<const DecodedLEA6_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 403: {
+        const auto& o = *static_cast<const DecodedLEA7*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.scaleU5;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 404: {
+        const auto& o = *static_cast<const DecodedLEA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 405: {
+        const auto& o = *static_cast<const DecodedLEA6_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 406: {
+        const auto& o = *static_cast<const DecodedLOP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 407: {
+        const auto& o = *static_cast<const DecodedLOP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 408: {
+        const auto& o = *static_cast<const DecodedLOP36_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 409: {
+        const auto& o = *static_cast<const DecodedLOP35*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 410: {
+        const auto& o = *static_cast<const DecodedLOP37*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.imm8;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 411: {
+        const auto& o = *static_cast<const DecodedLOP36_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.imm8;
+        break;
+    }
+    case 412: {
+        const auto& o = *static_cast<const DecodedLOP32I5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Sb;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 413: {
+        const auto& o = *static_cast<const DecodedLOP32I4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Sb;
+        break;
+    }
+    case 414: {
+        const auto& o = *static_cast<const DecodedIABS2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 415: {
+        const auto& o = *static_cast<const DecodedPRMT4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 416: {
+        const auto& o = *static_cast<const DecodedIMNMX7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        out[6] = &o.Pq;
+        break;
+    }
+    case 417: {
+        const auto& o = *static_cast<const DecodedIMNMX6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 418: {
+        const auto& o = *static_cast<const DecodedIMNMX7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        out[6] = &o.Pq;
+        break;
+    }
+    case 419: {
+        const auto& o = *static_cast<const DecodedIMNMX6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 420: {
+        const auto& o = *static_cast<const DecodedSHF4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 421: {
+        const auto& o = *static_cast<const DecodedSHL3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 422: {
+        const auto& o = *static_cast<const DecodedSHR3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 423: {
+        const auto& o = *static_cast<const DecodedSGXT3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 424: {
+        const auto& o = *static_cast<const DecodedBMSK3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 425: {
+        const auto& o = *static_cast<const DecodedPLOP34_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.Pq;
+        out[3] = &o.Pr;
+        break;
+    }
+    case 426: {
+        const auto& o = *static_cast<const DecodedPLOP34_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.Pq;
+        out[3] = &o.UPr;
+        break;
+    }
+    case 427: {
+        const auto& o = *static_cast<const DecodedPLOP35_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.Pq;
+        out[3] = &o.Pr;
+        out[4] = &o.uimm8;
+        break;
+    }
+    case 428: {
+        const auto& o = *static_cast<const DecodedPLOP35_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.Pq;
+        out[3] = &o.UPr;
+        out[4] = &o.uimm8;
+        break;
+    }
+    case 429: {
+        const auto& o = *static_cast<const DecodedPLOP37_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Pp;
+        out[3] = &o.Pq;
+        out[4] = &o.Pr;
+        out[5] = &o.uimm8;
+        out[6] = &o.vimm8;
+        break;
+    }
+    case 430: {
+        const auto& o = *static_cast<const DecodedPLOP37_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Pp;
+        out[3] = &o.Pq;
+        out[4] = &o.UPr;
+        out[5] = &o.uimm8;
+        out[6] = &o.vimm8;
+        break;
+    }
+    case 431: {
+        const auto& o = *static_cast<const DecodedPSETP5_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Pp;
+        out[3] = &o.Pq;
+        out[4] = &o.Pr;
+        break;
+    }
+    case 432: {
+        const auto& o = *static_cast<const DecodedPSETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.Pq;
+        break;
+    }
+    case 433: {
+        const auto& o = *static_cast<const DecodedPSETP5_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Pp;
+        out[3] = &o.Pq;
+        out[4] = &o.UPr;
+        break;
+    }
+    case 434: {
+        const auto& o = *static_cast<const DecodedFMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 435: {
+        const auto& o = *static_cast<const DecodedFMUL32I3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        break;
+    }
+    case 436: {
+        const auto& o = *static_cast<const DecodedFSWZADD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Rc;
+        out[3] = &o.npCtrl;
+        break;
+    }
+    case 437: {
+        const auto& o = *static_cast<const DecodedFFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 438: {
+        const auto& o = *static_cast<const DecodedFFMA32I4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 439: {
+        const auto& o = *static_cast<const DecodedIMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 440: {
+        const auto& o = *static_cast<const DecodedIMAD5_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Rc;
+        out[4] = &o.GetPseudoOpRIR;
+        break;
+    }
+    case 441: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 442: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 443: {
+        const auto& o = *static_cast<const DecodedIMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 444: {
+        const auto& o = *static_cast<const DecodedIMUL32I3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        break;
+    }
+    case 445: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 446: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 447: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 448: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 449: {
+        const auto& o = *static_cast<const DecodedIMUL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 450: {
+        const auto& o = *static_cast<const DecodedIMUL32I4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.Sb;
+        break;
+    }
+    case 451: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 452: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 453: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 454: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 455: {
+        const auto& o = *static_cast<const DecodedDMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 456: {
+        const auto& o = *static_cast<const DecodedDFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 457: break;  // no operands
+    case 458: break;  // no operands
+    case 459: {
+        const auto& o = *static_cast<const DecodedELECT3_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.URd;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 460: {
+        const auto& o = *static_cast<const DecodedHFMA25_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 461: {
+        const auto& o = *static_cast<const DecodedHFMA25_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 462: {
+        const auto& o = *static_cast<const DecodedHFMA25_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 463: {
+        const auto& o = *static_cast<const DecodedHFMA26_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Rc;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 464: {
+        const auto& o = *static_cast<const DecodedHFMA26_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Rc;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 465: {
+        const auto& o = *static_cast<const DecodedHFMA26_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Rc;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 466: {
+        const auto& o = *static_cast<const DecodedHFMA2_32I5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 467: {
+        const auto& o = *static_cast<const DecodedHFMA2_32I5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 468: {
+        const auto& o = *static_cast<const DecodedHMUL24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        break;
+    }
+    case 469: {
+        const auto& o = *static_cast<const DecodedHMUL24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        break;
+    }
+    case 470: {
+        const auto& o = *static_cast<const DecodedHMUL2_32I4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        break;
+    }
+    case 471: {
+        const auto& o = *static_cast<const DecodedHMUL2_32I4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        break;
+    }
+    case 472: {
+        const auto& o = *static_cast<const DecodedIADD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 473: {
+        const auto& o = *static_cast<const DecodedIADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 474: {
+        const auto& o = *static_cast<const DecodedIADD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 475: {
+        const auto& o = *static_cast<const DecodedIADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 476: {
+        const auto& o = *static_cast<const DecodedIADD32I4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.Sb;
+        break;
+    }
+    case 477: {
+        const auto& o = *static_cast<const DecodedIADD32I5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.Sb;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 478: {
+        const auto& o = *static_cast<const DecodedVIADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 479: {
+        const auto& o = *static_cast<const DecodedI2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 480: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 481: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 482: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 483: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 484: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 485: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 486: {
+        const auto& o = *static_cast<const DecodedLDSM3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 487: {
+        const auto& o = *static_cast<const DecodedLDSM3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 488: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 489: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 490: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 491: {
+        const auto& o = *static_cast<const DecodedF2FP3_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 492: {
+        const auto& o = *static_cast<const DecodedF2FP3_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 493: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 494: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 495: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 496: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 497: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 498: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 499: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 500: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 501: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 502: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 503: {
+        const auto& o = *static_cast<const DecodedHMNMX25*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 504: {
+        const auto& o = *static_cast<const DecodedHMNMX25*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Sb;
+        out[3] = &o.Sb1;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 505: {
+        const auto& o = *static_cast<const DecodedHMNMX27*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.Sb;
+        out[5] = &o.Sb1;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 506: {
+        const auto& o = *static_cast<const DecodedHMNMX27*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.Sb;
+        out[5] = &o.Sb1;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 507: {
+        const auto& o = *static_cast<const DecodedF2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 508: {
+        const auto& o = *static_cast<const DecodedSTSM3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 509: {
+        const auto& o = *static_cast<const DecodedI2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 510: {
+        const auto& o = *static_cast<const DecodedI2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 511: {
+        const auto& o = *static_cast<const DecodedVIMNMX4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 512: {
+        const auto& o = *static_cast<const DecodedUVIRTCOUNT2_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 513: {
+        const auto& o = *static_cast<const DecodedUVIRTCOUNT2_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 514: break;  // no operands
+    case 515: {
+        const auto& o = *static_cast<const DecodedUMOV3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 516: {
+        const auto& o = *static_cast<const DecodedVOTEU3*>(inst);
+        out[0] = &o.URd;
+        out[1] = &o.UPu;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 517: {
+        const auto& o = *static_cast<const DecodedUPLOP35*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPp;
+        out[3] = &o.UPq;
+        out[4] = &o.UPr;
+        break;
+    }
+    case 518: {
+        const auto& o = *static_cast<const DecodedUPLOP36_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPp;
+        out[3] = &o.UPq;
+        out[4] = &o.UPr;
+        out[5] = &o.uimm8;
+        break;
+    }
+    case 519: {
+        const auto& o = *static_cast<const DecodedUPLOP38_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.UPp;
+        out[4] = &o.UPq;
+        out[5] = &o.UPr;
+        out[6] = &o.uimm8;
+        out[7] = &o.vimm8;
+        break;
+    }
+    case 520: {
+        const auto& o = *static_cast<const DecodedUPSETP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.UPp;
+        out[4] = &o.UPq;
+        out[5] = &o.UPr;
+        break;
+    }
+    case 521: {
+        const auto& o = *static_cast<const DecodedUPSETP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPp;
+        out[3] = &o.UPq;
+        break;
+    }
+    case 522: {
+        const auto& o = *static_cast<const DecodedCS2UR3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.SRa;
+        break;
+    }
+    case 523: {
+        const auto& o = *static_cast<const DecodedFLO3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.b;
+        break;
+    }
+    case 524: {
+        const auto& o = *static_cast<const DecodedBREV2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 525: {
+        const auto& o = *static_cast<const DecodedFCHK3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 526: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 527: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 528: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 529: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 530: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 531: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 532: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 533: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 534: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 535: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 536: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 537: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 538: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 539: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 540: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 541: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 542: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 543: {
+        const auto& o = *static_cast<const DecodedMUFU2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 544: {
+        const auto& o = *static_cast<const DecodedMUFU2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 545: {
+        const auto& o = *static_cast<const DecodedPOPC2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 546: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 547: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 548: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 549: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 550: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 551: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 552: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 553: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 554: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 555: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 556: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 557: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 558: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 559: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 560: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 561: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 562: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 563: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 564: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 565: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 566: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 567: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 568: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 569: break;  // no operands
+    case 570: {
+        const auto& o = *static_cast<const DecodedS2R2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.SRa;
+        break;
+    }
+    case 571: {
+        const auto& o = *static_cast<const DecodedDEPBAR3_1*>(inst);
+        out[0] = &o.sbidx;
+        out[1] = &o.cnt;
+        out[2] = &o.scoreboard_list;
+        break;
+    }
+    case 572: {
+        const auto& o = *static_cast<const DecodedDEPBAR1*>(inst);
+        out[0] = &o.scoreboard_list;
+        break;
+    }
+    case 573: break;  // no operands
+    case 574: {
+        const auto& o = *static_cast<const DecodedENDCOLLECTIVE1*>(inst);
+        out[0] = &o.Pp;
+        break;
+    }
+    case 575: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 576: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 577: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 578: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 579: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 580: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 581: {
+        const auto& o = *static_cast<const DecodedAL2P3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 582: {
+        const auto& o = *static_cast<const DecodedAL2P3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 583: {
+        const auto& o = *static_cast<const DecodedISBERD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 584: {
+        const auto& o = *static_cast<const DecodedOUT3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 585: {
+        const auto& o = *static_cast<const DecodedPIXLD2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        break;
+    }
+    case 586: {
+        const auto& o = *static_cast<const DecodedIPA5_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.srcAttr;
+        out[3] = &o.attr;
+        out[4] = &o.b;
+        break;
+    }
+    case 587: {
+        const auto& o = *static_cast<const DecodedISBEWR3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 588: {
+        const auto& o = *static_cast<const DecodedBSYNC2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.barReg;
+        break;
+    }
+    case 589: {
+        const auto& o = *static_cast<const DecodedBSYNC2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.barReg;
+        break;
+    }
+    case 590: {
+        const auto& o = *static_cast<const DecodedBREAK2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.barReg;
+        break;
+    }
+    case 591: {
+        const auto& o = *static_cast<const DecodedBREAK2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.barReg;
+        break;
+    }
+    case 592: {
+        const auto& o = *static_cast<const DecodedCALL2_0*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 593: {
+        const auto& o = *static_cast<const DecodedCALL2_0*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 594: {
+        const auto& o = *static_cast<const DecodedCALL2_0*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 595: {
+        const auto& o = *static_cast<const DecodedBSSY3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.barReg;
+        out[2] = &o.Sa;
+        break;
+    }
+    case 596: {
+        const auto& o = *static_cast<const DecodedBSSY3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.barReg;
+        out[2] = &o.Sa;
+        break;
+    }
+    case 597: {
+        const auto& o = *static_cast<const DecodedBSSY3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.barReg;
+        out[2] = &o.Sa;
+        break;
+    }
+    case 598: {
+        const auto& o = *static_cast<const DecodedBSSY3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.barReg;
+        out[2] = &o.Sa;
+        break;
+    }
+    case 599: {
+        const auto& o = *static_cast<const DecodedYIELD1*>(inst);
+        out[0] = &o.Pp;
+        break;
+    }
+    case 600: {
+        const auto& o = *static_cast<const DecodedBRA2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.sImm;
+        break;
+    }
+    case 601: {
+        const auto& o = *static_cast<const DecodedBRA2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.sImm;
+        break;
+    }
+    case 602: {
+        const auto& o = *static_cast<const DecodedBRA2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.sImm;
+        break;
+    }
+    case 603: {
+        const auto& o = *static_cast<const DecodedBRA2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.sImm;
+        break;
+    }
+    case 604: {
+        const auto& o = *static_cast<const DecodedWARPSYNC1*>(inst);
+        out[0] = &o.Pp;
+        break;
+    }
+    case 605: {
+        const auto& o = *static_cast<const DecodedWARPSYNC2_1*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.sImm;
+        break;
+    }
+    case 606: {
+        const auto& o = *static_cast<const DecodedWARPSYNC2_1*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.sImm;
+        break;
+    }
+    case 607: {
+        const auto& o = *static_cast<const DecodedBRX3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 608: {
+        const auto& o = *static_cast<const DecodedBRX3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 609: {
+        const auto& o = *static_cast<const DecodedJMP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 610: {
+        const auto& o = *static_cast<const DecodedJMP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 611: {
+        const auto& o = *static_cast<const DecodedJMP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 612: {
+        const auto& o = *static_cast<const DecodedJMP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Sa;
+        break;
+    }
+    case 613: {
+        const auto& o = *static_cast<const DecodedJMX3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 614: {
+        const auto& o = *static_cast<const DecodedJMX3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 615: {
+        const auto& o = *static_cast<const DecodedEXIT1*>(inst);
+        out[0] = &o.Pp;
+        break;
+    }
+    case 616: {
+        const auto& o = *static_cast<const DecodedLEPC2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.sImm58;
+        break;
+    }
+    case 617: {
+        const auto& o = *static_cast<const DecodedLEPC2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.sImm58;
+        break;
+    }
+    case 618: break;  // no operands
+    case 619: {
+        const auto& o = *static_cast<const DecodedRET3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 620: {
+        const auto& o = *static_cast<const DecodedRET3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 621: {
+        const auto& o = *static_cast<const DecodedRET3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 622: {
+        const auto& o = *static_cast<const DecodedRET2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        break;
+    }
+    case 623: {
+        const auto& o = *static_cast<const DecodedIDE1*>(inst);
+        out[0] = &o.Sb;
+        break;
+    }
+    case 624: {
+        const auto& o = *static_cast<const DecodedRPCMOV2_2*>(inst);
+        out[0] = &o.RpcN;
+        out[1] = &o.b;
+        break;
+    }
+    case 625: {
+        const auto& o = *static_cast<const DecodedRPCMOV2_1*>(inst);
+        out[0] = &o.Rpc;
+        out[1] = &o.b;
+        break;
+    }
+    case 626: {
+        const auto& o = *static_cast<const DecodedBMOV2_4*>(inst);
+        out[0] = &o.cbu_state;
+        out[1] = &o.b;
+        break;
+    }
+    case 627: {
+        const auto& o = *static_cast<const DecodedBMOV2_1*>(inst);
+        out[0] = &o.atexit_pc;
+        out[1] = &o.b;
+        break;
+    }
+    case 628: {
+        const auto& o = *static_cast<const DecodedNANOTRAP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.b;
+        break;
+    }
+    case 629: {
+        const auto& o = *static_cast<const DecodedKILL1*>(inst);
+        out[0] = &o.Pp;
+        break;
+    }
+    case 630: {
+        const auto& o = *static_cast<const DecodedBPT1*>(inst);
+        out[0] = &o.Sb;
+        break;
+    }
+    case 631: {
+        const auto& o = *static_cast<const DecodedBPT1*>(inst);
+        out[0] = &o.Sb;
+        break;
+    }
+    case 632: {
+        const auto& o = *static_cast<const DecodedNANOSLEEP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.b;
+        break;
+    }
+    case 633: {
+        const auto& o = *static_cast<const DecodedNANOSLEEP1*>(inst);
+        out[0] = &o.Pp;
+        break;
+    }
+    case 634: {
+        const auto& o = *static_cast<const DecodedLD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Pnz;
+        break;
+    }
+    case 635: {
+        const auto& o = *static_cast<const DecodedLD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Pnz;
+        break;
+    }
+    case 636: {
+        const auto& o = *static_cast<const DecodedLDL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 637: {
+        const auto& o = *static_cast<const DecodedLDL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 638: {
+        const auto& o = *static_cast<const DecodedLDS3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 639: {
+        const auto& o = *static_cast<const DecodedLDS3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 640: {
+        const auto& o = *static_cast<const DecodedSHFL5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 641: {
+        const auto& o = *static_cast<const DecodedREDG3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 642: {
+        const auto& o = *static_cast<const DecodedREDG3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 643: break;  // no operands
+    case 644: {
+        const auto& o = *static_cast<const DecodedCCTL2_1*>(inst);
+        out[0] = &o.a;
+        out[1] = &o.off;
+        break;
+    }
+    case 645: {
+        const auto& o = *static_cast<const DecodedCCTL2_1*>(inst);
+        out[0] = &o.a;
+        out[1] = &o.off;
+        break;
+    }
+    case 646: {
+        const auto& o = *static_cast<const DecodedCCTL3_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 647: {
+        const auto& o = *static_cast<const DecodedCCTL3_3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.sector_count;
+        break;
+    }
+    case 648: {
+        const auto& o = *static_cast<const DecodedCCTL2_1*>(inst);
+        out[0] = &o.a;
+        out[1] = &o.off;
+        break;
+    }
+    case 649: {
+        const auto& o = *static_cast<const DecodedCCTL2_1*>(inst);
+        out[0] = &o.a;
+        out[1] = &o.off;
+        break;
+    }
+    case 650: {
+        const auto& o = *static_cast<const DecodedCCTL3_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 651: {
+        const auto& o = *static_cast<const DecodedCCTL3_3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.sector_count;
+        break;
+    }
+    case 652: break;  // no operands
+    case 653: break;  // no operands
+    case 654: break;  // no operands
+    case 655: {
+        const auto& o = *static_cast<const DecodedCCTLL2_1*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        break;
+    }
+    case 656: {
+        const auto& o = *static_cast<const DecodedCCTLL2_1*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        break;
+    }
+    case 657: break;  // no operands
+    case 658: break;  // no operands
+    case 659: break;  // no operands
+    case 660: {
+        const auto& o = *static_cast<const DecodedSULD5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.URe;
+        break;
+    }
+    case 661: {
+        const auto& o = *static_cast<const DecodedSULD5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.URe;
+        break;
+    }
+    case 662: {
+        const auto& o = *static_cast<const DecodedSUST4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.c;
+        out[3] = &o.URe;
+        break;
+    }
+    case 663: {
+        const auto& o = *static_cast<const DecodedSUST4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.c;
+        out[3] = &o.URe;
+        break;
+    }
+    case 664: {
+        const auto& o = *static_cast<const DecodedREDG3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 665: {
+        const auto& o = *static_cast<const DecodedREDG3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_offset;
+        out[2] = &o.Rb;
+        break;
+    }
+    case 666: break;  // no operands
+    case 667: break;  // no operands
+    case 668: break;  // no operands
+    case 669: {
+        const auto& o = *static_cast<const DecodedSUQUERY6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.queryType;
+        out[4] = &o.c;
+        out[5] = &o.URe;
+        break;
+    }
+    case 670: {
+        const auto& o = *static_cast<const DecodedUTMACMDFLUSH1*>(inst);
+        out[0] = &o.UPg;
+        break;
+    }
+    case 671: {
+        const auto& o = *static_cast<const DecodedUTMACCTL1*>(inst);
+        out[0] = &o.UPg;
+        break;
+    }
+    case 672: {
+        const auto& o = *static_cast<const DecodedUTMACCTL1*>(inst);
+        out[0] = &o.UPg;
+        break;
+    }
+    case 673: {
+        const auto& o = *static_cast<const DecodedS2UR3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.SRa;
+        break;
+    }
+    case 674: {
+        const auto& o = *static_cast<const DecodedTTUMACROFUSE1*>(inst);
+        out[0] = &o.Sb;
+        break;
+    }
+    case 675: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 676: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 677: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 678: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 679: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 680: {
+        const auto& o = *static_cast<const DecodedBAR3*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        out[2] = &o.Pp;
+        break;
+    }
+    case 681: break;  // no operands
+    case 682: break;  // no operands
+    case 683: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 684: {
+        const auto& o = *static_cast<const DecodedBAR2*>(inst);
+        out[0] = &o.b;
+        out[1] = &o.c;
+        break;
+    }
+    case 685: {
+        const auto& o = *static_cast<const DecodedCCTL4_0*>(inst);
+        out[0] = &o.Sa;
+        out[1] = &o.Sa_bank;
+        out[2] = &o.a;
+        out[3] = &o.off;
+        break;
+    }
+    case 686: {
+        const auto& o = *static_cast<const DecodedLDC5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Sa;
+        out[2] = &o.Sa_bank;
+        out[3] = &o.Ra;
+        out[4] = &o.Ra_offset;
+        break;
+    }
+    case 687: {
+        const auto& o = *static_cast<const DecodedLDC5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Sa;
+        out[2] = &o.Sa_bank;
+        out[3] = &o.Ra;
+        out[4] = &o.Ra_offset;
+        break;
+    }
+    case 688: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 689: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 690: {
+        const auto& o = *static_cast<const DecodedBMOV2_2*>(inst);
+        out[0] = &o.barReg;
+        out[1] = &o.Ba;
+        break;
+    }
+    case 691: {
+        const auto& o = *static_cast<const DecodedBMOV2_3*>(inst);
+        out[0] = &o.barReg;
+        out[1] = &o.cbu_state;
+        break;
+    }
+    case 692: {
+        const auto& o = *static_cast<const DecodedBMOV2_5*>(inst);
+        out[0] = &o.cbu_state;
+        out[1] = &o.barReg;
+        break;
+    }
+    case 693: {
+        const auto& o = *static_cast<const DecodedSHFL5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 694: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 695: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 696: {
+        const auto& o = *static_cast<const DecodedUVIADD4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 697: {
+        const auto& o = *static_cast<const DecodedUVIMNMX5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 698: {
+        const auto& o = *static_cast<const DecodedUIABS3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 699: {
+        const auto& o = *static_cast<const DecodedUI2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 700: {
+        const auto& o = *static_cast<const DecodedUI2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.URc;
+        break;
+    }
+    case 701: {
+        const auto& o = *static_cast<const DecodedUI2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.URc;
+        break;
+    }
+    case 702: {
+        const auto& o = *static_cast<const DecodedUI2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.URc;
+        break;
+    }
+    case 703: {
+        const auto& o = *static_cast<const DecodedUFMNMX5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 704: {
+        const auto& o = *static_cast<const DecodedUFMNMX6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 705: {
+        const auto& o = *static_cast<const DecodedUFSEL5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 706: {
+        const auto& o = *static_cast<const DecodedUFSET5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 707: {
+        const auto& o = *static_cast<const DecodedUFSET4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 708: {
+        const auto& o = *static_cast<const DecodedUFSETP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 709: {
+        const auto& o = *static_cast<const DecodedUFSETP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 710: {
+        const auto& o = *static_cast<const DecodedUFADD4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.c;
+        break;
+    }
+    case 711: {
+        const auto& o = *static_cast<const DecodedUFHADD4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 712: {
+        const auto& o = *static_cast<const DecodedUFFMA5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 713: {
+        const auto& o = *static_cast<const DecodedUFHFMA5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.URb;
+        out[4] = &o.URc;
+        break;
+    }
+    case 714: {
+        const auto& o = *static_cast<const DecodedUFMUL4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 715: {
+        const auto& o = *static_cast<const DecodedUF2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 716: {
+        const auto& o = *static_cast<const DecodedUI2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 717: {
+        const auto& o = *static_cast<const DecodedUI2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 718: {
+        const auto& o = *static_cast<const DecodedUI2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 719: {
+        const auto& o = *static_cast<const DecodedUF2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 720: {
+        const auto& o = *static_cast<const DecodedUF2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 721: {
+        const auto& o = *static_cast<const DecodedUF2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 722: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 723: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 724: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 725: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 726: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 727: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 728: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 729: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 730: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 731: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 732: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 733: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 734: {
+        const auto& o = *static_cast<const DecodedUI2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 735: {
+        const auto& o = *static_cast<const DecodedUIMNMX8*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URd;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.UPp;
+        out[7] = &o.UPq;
+        break;
+    }
+    case 736: {
+        const auto& o = *static_cast<const DecodedUIMNMX7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URd;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 737: {
+        const auto& o = *static_cast<const DecodedUIMNMX8*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URd;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.UPp;
+        out[7] = &o.UPq;
+        break;
+    }
+    case 738: {
+        const auto& o = *static_cast<const DecodedUIMNMX7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URd;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 739: {
+        const auto& o = *static_cast<const DecodedUSEL5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 740: {
+        const auto& o = *static_cast<const DecodedUISETP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 741: {
+        const auto& o = *static_cast<const DecodedUISETP7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        out[6] = &o.UPr;
+        break;
+    }
+    case 742: {
+        const auto& o = *static_cast<const DecodedUISETP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 743: {
+        const auto& o = *static_cast<const DecodedUISETP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPr;
+        break;
+    }
+    case 744: {
+        const auto& o = *static_cast<const DecodedUISETP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 745: {
+        const auto& o = *static_cast<const DecodedUISETP7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        out[6] = &o.UPr;
+        break;
+    }
+    case 746: {
+        const auto& o = *static_cast<const DecodedUISETP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 747: {
+        const auto& o = *static_cast<const DecodedUISETP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPr;
+        break;
+    }
+    case 748: {
+        const auto& o = *static_cast<const DecodedUIADD37*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.UPv;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.URc;
+        break;
+    }
+    case 749: {
+        const auto& o = *static_cast<const DecodedUIADD39*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.UPv;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.URc;
+        out[7] = &o.UPp;
+        out[8] = &o.UPq;
+        break;
+    }
+    case 750: {
+        const auto& o = *static_cast<const DecodedULEA7_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.c;
+        out[6] = &o.scaleU5;
+        break;
+    }
+    case 751: {
+        const auto& o = *static_cast<const DecodedULEA6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.scaleU5;
+        break;
+    }
+    case 752: {
+        const auto& o = *static_cast<const DecodedULEA7_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.scaleU5;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 753: {
+        const auto& o = *static_cast<const DecodedULEA8*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.c;
+        out[6] = &o.scaleU5;
+        out[7] = &o.UPp;
+        break;
+    }
+    case 754: {
+        const auto& o = *static_cast<const DecodedULEA6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.scaleU5;
+        break;
+    }
+    case 755: {
+        const auto& o = *static_cast<const DecodedULEA7_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.scaleU5;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 756: {
+        const auto& o = *static_cast<const DecodedULOP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 757: {
+        const auto& o = *static_cast<const DecodedULOP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        break;
+    }
+    case 758: {
+        const auto& o = *static_cast<const DecodedULOP38*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.imm8;
+        out[7] = &o.UPp;
+        break;
+    }
+    case 759: {
+        const auto& o = *static_cast<const DecodedULOP37_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.imm8;
+        break;
+    }
+    case 760: {
+        const auto& o = *static_cast<const DecodedULOP37_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 761: {
+        const auto& o = *static_cast<const DecodedULOP36*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        break;
+    }
+    case 762: {
+        const auto& o = *static_cast<const DecodedUPRMT5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.URc;
+        break;
+    }
+    case 763: {
+        const auto& o = *static_cast<const DecodedUIADD3_647*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.UPv;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.URc;
+        break;
+    }
+    case 764: {
+        const auto& o = *static_cast<const DecodedUIADD3_649*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.UPv;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.URc;
+        out[7] = &o.UPp;
+        out[8] = &o.UPq;
+        break;
+    }
+    case 765: {
+        const auto& o = *static_cast<const DecodedUSHF5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 766: {
+        const auto& o = *static_cast<const DecodedUSHL4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 767: {
+        const auto& o = *static_cast<const DecodedUSHR4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 768: {
+        const auto& o = *static_cast<const DecodedUSGXT4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 769: {
+        const auto& o = *static_cast<const DecodedUBMSK4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 770: {
+        const auto& o = *static_cast<const DecodedUPLOP36_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPp;
+        out[3] = &o.URb;
+        out[4] = &o.UPr;
+        out[5] = &o.uimm8;
+        break;
+    }
+    case 771: {
+        const auto& o = *static_cast<const DecodedUPLOP38_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.UPp;
+        out[4] = &o.URb;
+        out[5] = &o.UPr;
+        out[6] = &o.uimm8;
+        out[7] = &o.vimm8;
+        break;
+    }
+    case 772: {
+        const auto& o = *static_cast<const DecodedUPLOP36_2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPp;
+        out[3] = &o.URb;
+        out[4] = &o.URc;
+        out[5] = &o.uimm8;
+        break;
+    }
+    case 773: {
+        const auto& o = *static_cast<const DecodedUPLOP38_2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.UPp;
+        out[4] = &o.URb;
+        out[5] = &o.URc;
+        out[6] = &o.uimm8;
+        out[7] = &o.vimm8;
+        break;
+    }
+    case 774: {
+        const auto& o = *static_cast<const DecodedUPLOP36_3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.URb;
+        out[4] = &o.URc;
+        out[5] = &o.uimm8;
+        break;
+    }
+    case 775: {
+        const auto& o = *static_cast<const DecodedUPLOP38_3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.URb;
+        out[5] = &o.URc;
+        out[6] = &o.uimm8;
+        out[7] = &o.vimm8;
+        break;
+    }
+    case 776: {
+        const auto& o = *static_cast<const DecodedUIMAD5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 777: {
+        const auto& o = *static_cast<const DecodedUIMAD6_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 778: {
+        const auto& o = *static_cast<const DecodedUIMAD6_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        break;
+    }
+    case 779: {
+        const auto& o = *static_cast<const DecodedUIMAD7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 780: {
+        const auto& o = *static_cast<const DecodedUIMAD6_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        break;
+    }
+    case 781: {
+        const auto& o = *static_cast<const DecodedUIMAD7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 782: {
+        const auto& o = *static_cast<const DecodedUF2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 783: {
+        const auto& o = *static_cast<const DecodedUF2FP4_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 784: {
+        const auto& o = *static_cast<const DecodedUF2FP4_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 785: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 786: {
+        const auto& o = *static_cast<const DecodedUF2FP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 787: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 788: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 789: {
+        const auto& o = *static_cast<const DecodedUF2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 790: {
+        const auto& o = *static_cast<const DecodedUF2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 791: {
+        const auto& o = *static_cast<const DecodedUFLO4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.b;
+        break;
+    }
+    case 792: {
+        const auto& o = *static_cast<const DecodedUBREV3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 793: {
+        const auto& o = *static_cast<const DecodedUPOPC3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 794: {
+        const auto& o = *static_cast<const DecodedLDCU7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd2;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.Sa_offset;
+        out[5] = &o.word_mask;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 795: {
+        const auto& o = *static_cast<const DecodedLDCU6_2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd2;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.Sa_offset;
+        out[5] = &o.word_mask;
+        break;
+    }
+    case 796: {
+        const auto& o = *static_cast<const DecodedLDTRAM4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.srcAttr;
+        out[2] = &o.URa;
+        out[3] = &o.URa_offset;
+        break;
+    }
+    case 797: {
+        const auto& o = *static_cast<const DecodedSYNCS6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.URa_offset;
+        out[4] = &o.URb;
+        out[5] = &o.URc;
+        break;
+    }
+    case 798: {
+        const auto& o = *static_cast<const DecodedUTMALDG4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 799: {
+        const auto& o = *static_cast<const DecodedUTMALDG6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        out[4] = &o.desc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 800: {
+        const auto& o = *static_cast<const DecodedUTMALDG4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 801: {
+        const auto& o = *static_cast<const DecodedUTMALDG6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        out[4] = &o.desc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 802: {
+        const auto& o = *static_cast<const DecodedUTMASTG3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        break;
+    }
+    case 803: {
+        const auto& o = *static_cast<const DecodedUTMASTG5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 804: {
+        const auto& o = *static_cast<const DecodedUTMASTG3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        break;
+    }
+    case 805: {
+        const auto& o = *static_cast<const DecodedUTMASTG5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 806: {
+        const auto& o = *static_cast<const DecodedUTMAREDG3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        break;
+    }
+    case 807: {
+        const auto& o = *static_cast<const DecodedUTMAREDG5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 808: {
+        const auto& o = *static_cast<const DecodedUTMAREDG3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        break;
+    }
+    case 809: {
+        const auto& o = *static_cast<const DecodedUTMAREDG5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 810: {
+        const auto& o = *static_cast<const DecodedUTMAPF4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 811: {
+        const auto& o = *static_cast<const DecodedUTMAPF6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        out[4] = &o.desc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 812: {
+        const auto& o = *static_cast<const DecodedUTMAPF4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 813: {
+        const auto& o = *static_cast<const DecodedUTMAPF6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        out[4] = &o.desc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 814: {
+        const auto& o = *static_cast<const DecodedUBLKCP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 815: {
+        const auto& o = *static_cast<const DecodedUBLKCP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        out[4] = &o.desc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 816: {
+        const auto& o = *static_cast<const DecodedUBLKCP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        out[4] = &o.desc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 817: {
+        const auto& o = *static_cast<const DecodedUBLKCP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 818: {
+        const auto& o = *static_cast<const DecodedUBLKRED4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 819: {
+        const auto& o = *static_cast<const DecodedUBLKRED6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        out[4] = &o.desc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 820: {
+        const auto& o = *static_cast<const DecodedUBLKRED6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        out[4] = &o.desc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 821: {
+        const auto& o = *static_cast<const DecodedUBLKRED4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.URc;
+        break;
+    }
+    case 822: {
+        const auto& o = *static_cast<const DecodedUBLKPF3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        out[2] = &o.URc;
+        break;
+    }
+    case 823: {
+        const auto& o = *static_cast<const DecodedUBLKPF5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        out[2] = &o.URc;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 824: {
+        const auto& o = *static_cast<const DecodedUBLKPF3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        out[2] = &o.URc;
+        break;
+    }
+    case 825: {
+        const auto& o = *static_cast<const DecodedUBLKPF5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        out[2] = &o.URc;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 826: {
+        const auto& o = *static_cast<const DecodedUCGABARSET2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        break;
+    }
+    case 827: {
+        const auto& o = *static_cast<const DecodedUCGABAR_SET2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        break;
+    }
+    case 828: {
+        const auto& o = *static_cast<const DecodedUSETMAXREG3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.b;
+        break;
+    }
+    case 829: {
+        const auto& o = *static_cast<const DecodedUSETMAXREG2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.b;
+        break;
+    }
+    case 830: {
+        const auto& o = *static_cast<const DecodedUSETSHMSZ2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.b;
+        break;
+    }
+    case 831: {
+        const auto& o = *static_cast<const DecodedUGETNEXTWORKID3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        out[2] = &o.URb;
+        break;
+    }
+    case 832: {
+        const auto& o = *static_cast<const DecodedUGETNEXTWORKID3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        out[2] = &o.URb;
+        break;
+    }
+    case 833: {
+        const auto& o = *static_cast<const DecodedUMEMSETS5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        out[2] = &o.URa_offset;
+        out[3] = &o.URb;
+        out[4] = &o.URc;
+        break;
+    }
+    case 834: {
+        const auto& o = *static_cast<const DecodedULEPC2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        break;
+    }
+    case 835: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 836: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 837: {
+        const auto& o = *static_cast<const DecodedUVIRTCOUNT2_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        break;
+    }
+    case 838: {
+        const auto& o = *static_cast<const DecodedUVIRTCOUNT2_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        break;
+    }
+    case 839: {
+        const auto& o = *static_cast<const DecodedUFADD4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.c;
+        break;
+    }
+    case 840: {
+        const auto& o = *static_cast<const DecodedUFFMA5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 841: {
+        const auto& o = *static_cast<const DecodedUF2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 842: {
+        const auto& o = *static_cast<const DecodedMOV4_1*>(inst);
+        out[0] = &o.indexURd;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.PixMaskU04;
+        break;
+    }
+    case 843: {
+        const auto& o = *static_cast<const DecodedUMOV3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 844: {
+        const auto& o = *static_cast<const DecodedUSEL5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 845: {
+        const auto& o = *static_cast<const DecodedULEA7_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.c;
+        out[6] = &o.scaleU5;
+        break;
+    }
+    case 846: {
+        const auto& o = *static_cast<const DecodedULEA8*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.c;
+        out[6] = &o.scaleU5;
+        out[7] = &o.UPp;
+        break;
+    }
+    case 847: {
+        const auto& o = *static_cast<const DecodedUSHF5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 848: {
+        const auto& o = *static_cast<const DecodedUSHL4_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.Sa;
+        out[3] = &o.URb;
+        break;
+    }
+    case 849: {
+        const auto& o = *static_cast<const DecodedUIMAD5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 850: {
+        const auto& o = *static_cast<const DecodedUIMAD6_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 851: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 852: {
+        const auto& o = *static_cast<const DecodedUF2FP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 853: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 854: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 855: {
+        const auto& o = *static_cast<const DecodedALD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.srcAttr;
+        out[2] = &o.a;
+        out[3] = &o.off;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 856: {
+        const auto& o = *static_cast<const DecodedALD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.srcAttr;
+        out[2] = &o.a;
+        out[3] = &o.off;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 857: {
+        const auto& o = *static_cast<const DecodedAST5*>(inst);
+        out[0] = &o.srcAttr;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 858: {
+        const auto& o = *static_cast<const DecodedAST5*>(inst);
+        out[0] = &o.srcAttr;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 859: {
+        const auto& o = *static_cast<const DecodedIPA5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.srcAttr;
+        out[3] = &o.URa;
+        out[4] = &o.URa_offset;
+        break;
+    }
+    case 860: {
+        const auto& o = *static_cast<const DecodedIPA6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.srcAttr;
+        out[3] = &o.URa;
+        out[4] = &o.URa_offset;
+        out[5] = &o.b;
+        break;
+    }
+    case 861: {
+        const auto& o = *static_cast<const DecodedCCTL2_1*>(inst);
+        out[0] = &o.a;
+        out[1] = &o.off;
+        break;
+    }
+    case 862: {
+        const auto& o = *static_cast<const DecodedCCTL2_1*>(inst);
+        out[0] = &o.a;
+        out[1] = &o.off;
+        break;
+    }
+    case 863: {
+        const auto& o = *static_cast<const DecodedBRA3_0*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.UPq;
+        out[2] = &o.sImm;
+        break;
+    }
+    case 864: {
+        const auto& o = *static_cast<const DecodedBRA3_0*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.UPq;
+        out[2] = &o.sImm;
+        break;
+    }
+    case 865: {
+        const auto& o = *static_cast<const DecodedJMP3_0*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.UPq;
+        out[2] = &o.Sa;
+        break;
+    }
+    case 866: {
+        const auto& o = *static_cast<const DecodedJMP3_0*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.UPq;
+        out[2] = &o.Sa;
+        break;
+    }
+    case 867: {
+        const auto& o = *static_cast<const DecodedLDC5_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Sa;
+        out[2] = &o.URa;
+        out[3] = &o.Rb;
+        out[4] = &o.Sa_offset;
+        break;
+    }
+    case 868: {
+        const auto& o = *static_cast<const DecodedLDC5_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Sa;
+        out[2] = &o.URa;
+        out[3] = &o.Rb;
+        out[4] = &o.Sa_offset;
+        break;
+    }
+    case 869: {
+        const auto& o = *static_cast<const DecodedSYNCS5_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 870: {
+        const auto& o = *static_cast<const DecodedLDCU8_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd2;
+        out[2] = &o.URd;
+        out[3] = &o.Sa;
+        out[4] = &o.URa;
+        out[5] = &o.URb;
+        out[6] = &o.Sa_offset;
+        out[7] = &o.word_mask;
+        break;
+    }
+    case 871: {
+        const auto& o = *static_cast<const DecodedSYNCS4_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 872: {
+        const auto& o = *static_cast<const DecodedSYNCS5_2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.URa_offset;
+        out[4] = &o.URb;
+        break;
+    }
+    case 873: {
+        const auto& o = *static_cast<const DecodedUTMALDG3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        break;
+    }
+    case 874: {
+        const auto& o = *static_cast<const DecodedUTMALDG5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 875: {
+        const auto& o = *static_cast<const DecodedUTMALDG3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        break;
+    }
+    case 876: {
+        const auto& o = *static_cast<const DecodedUTMALDG5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 877: {
+        const auto& o = *static_cast<const DecodedUTMAPF3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        break;
+    }
+    case 878: {
+        const auto& o = *static_cast<const DecodedUTMAPF5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 879: {
+        const auto& o = *static_cast<const DecodedUTMAPF3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        break;
+    }
+    case 880: {
+        const auto& o = *static_cast<const DecodedUTMAPF5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URb;
+        out[2] = &o.URa;
+        out[3] = &o.desc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 881: {
+        const auto& o = *static_cast<const DecodedUCGABARGET2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        break;
+    }
+    case 882: {
+        const auto& o = *static_cast<const DecodedUCGABAR_GET2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        break;
+    }
+    case 883: {
+        const auto& o = *static_cast<const DecodedCCTL4_1*>(inst);
+        out[0] = &o.Sa;
+        out[1] = &o.URa;
+        out[2] = &o.b;
+        out[3] = &o.Sa_offset;
+        break;
+    }
+    case 884: {
+        const auto& o = *static_cast<const DecodedCCTL4_1*>(inst);
+        out[0] = &o.Sa;
+        out[1] = &o.URa;
+        out[2] = &o.b;
+        out[3] = &o.Sa_offset;
+        break;
+    }
+    case 885: {
+        const auto& o = *static_cast<const DecodedLDCU6_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.Sa;
+        out[3] = &o.Sa_bank;
+        out[4] = &o.URa;
+        out[5] = &o.Sa_offset;
+        break;
+    }
+    case 886: {
+        const auto& o = *static_cast<const DecodedELECT3_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        break;
+    }
+    case 887: {
+        const auto& o = *static_cast<const DecodedELECT2*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.URd;
+        break;
+    }
+    case 888: {
+        const auto& o = *static_cast<const DecodedLDSM4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 889: {
+        const auto& o = *static_cast<const DecodedLDSM4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 890: {
+        const auto& o = *static_cast<const DecodedSTSM4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 891: {
+        const auto& o = *static_cast<const DecodedUVIADD4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 892: {
+        const auto& o = *static_cast<const DecodedUVIMNMX5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 893: {
+        const auto& o = *static_cast<const DecodedUIABS3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 894: {
+        const auto& o = *static_cast<const DecodedUI2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 895: {
+        const auto& o = *static_cast<const DecodedUI2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.URc;
+        break;
+    }
+    case 896: {
+        const auto& o = *static_cast<const DecodedUI2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.URc;
+        break;
+    }
+    case 897: {
+        const auto& o = *static_cast<const DecodedUI2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.URc;
+        break;
+    }
+    case 898: {
+        const auto& o = *static_cast<const DecodedUFMNMX5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 899: {
+        const auto& o = *static_cast<const DecodedUFMNMX6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 900: {
+        const auto& o = *static_cast<const DecodedUFSEL5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 901: {
+        const auto& o = *static_cast<const DecodedUFSET5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 902: {
+        const auto& o = *static_cast<const DecodedUFSET4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 903: {
+        const auto& o = *static_cast<const DecodedUFSETP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 904: {
+        const auto& o = *static_cast<const DecodedUFSETP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 905: {
+        const auto& o = *static_cast<const DecodedUFFMA5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 906: {
+        const auto& o = *static_cast<const DecodedUFMUL4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 907: {
+        const auto& o = *static_cast<const DecodedUF2IP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 908: {
+        const auto& o = *static_cast<const DecodedUI2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 909: {
+        const auto& o = *static_cast<const DecodedUI2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 910: {
+        const auto& o = *static_cast<const DecodedUF2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 911: {
+        const auto& o = *static_cast<const DecodedUF2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 912: {
+        const auto& o = *static_cast<const DecodedUF2F3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 913: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 914: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 915: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 916: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 917: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 918: {
+        const auto& o = *static_cast<const DecodedUF2I3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 919: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 920: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 921: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 922: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 923: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 924: {
+        const auto& o = *static_cast<const DecodedUFRND3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 925: {
+        const auto& o = *static_cast<const DecodedUI2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 926: {
+        const auto& o = *static_cast<const DecodedUI2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 927: {
+        const auto& o = *static_cast<const DecodedMOV4_1*>(inst);
+        out[0] = &o.indexURd;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.PixMaskU04;
+        break;
+    }
+    case 928: {
+        const auto& o = *static_cast<const DecodedUP2UR5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPR;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        break;
+    }
+    case 929: {
+        const auto& o = *static_cast<const DecodedUP2UR3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPR;
+        break;
+    }
+    case 930: {
+        const auto& o = *static_cast<const DecodedUR2UP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPR;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 931: {
+        const auto& o = *static_cast<const DecodedUIMNMX8*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URd;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.UPp;
+        out[7] = &o.UPq;
+        break;
+    }
+    case 932: {
+        const auto& o = *static_cast<const DecodedUIMNMX7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URd;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 933: {
+        const auto& o = *static_cast<const DecodedUIMNMX8*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URd;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.UPp;
+        out[7] = &o.UPq;
+        break;
+    }
+    case 934: {
+        const auto& o = *static_cast<const DecodedUIMNMX7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URd;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 935: {
+        const auto& o = *static_cast<const DecodedUSEL5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 936: {
+        const auto& o = *static_cast<const DecodedUISETP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 937: {
+        const auto& o = *static_cast<const DecodedUISETP7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        out[6] = &o.UPr;
+        break;
+    }
+    case 938: {
+        const auto& o = *static_cast<const DecodedUISETP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 939: {
+        const auto& o = *static_cast<const DecodedUISETP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPr;
+        break;
+    }
+    case 940: {
+        const auto& o = *static_cast<const DecodedUISETP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 941: {
+        const auto& o = *static_cast<const DecodedUISETP7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.UPv;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        out[6] = &o.UPr;
+        break;
+    }
+    case 942: {
+        const auto& o = *static_cast<const DecodedUISETP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 943: {
+        const auto& o = *static_cast<const DecodedUISETP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPr;
+        break;
+    }
+    case 944: {
+        const auto& o = *static_cast<const DecodedUIADD37*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.UPv;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.URc;
+        break;
+    }
+    case 945: {
+        const auto& o = *static_cast<const DecodedUIADD39*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.UPv;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.URc;
+        out[7] = &o.UPp;
+        out[8] = &o.UPq;
+        break;
+    }
+    case 946: {
+        const auto& o = *static_cast<const DecodedULEA7_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.c;
+        out[6] = &o.scaleU5;
+        break;
+    }
+    case 947: {
+        const auto& o = *static_cast<const DecodedULEA6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.scaleU5;
+        break;
+    }
+    case 948: {
+        const auto& o = *static_cast<const DecodedULEA7_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.scaleU5;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 949: {
+        const auto& o = *static_cast<const DecodedULEA8*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.c;
+        out[6] = &o.scaleU5;
+        out[7] = &o.UPp;
+        break;
+    }
+    case 950: {
+        const auto& o = *static_cast<const DecodedULEA6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.scaleU5;
+        break;
+    }
+    case 951: {
+        const auto& o = *static_cast<const DecodedULEA7_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.scaleU5;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 952: {
+        const auto& o = *static_cast<const DecodedULOP6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 953: {
+        const auto& o = *static_cast<const DecodedULOP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        break;
+    }
+    case 954: {
+        const auto& o = *static_cast<const DecodedULOP37_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 955: {
+        const auto& o = *static_cast<const DecodedULOP36*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        break;
+    }
+    case 956: {
+        const auto& o = *static_cast<const DecodedULOP38*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.imm8;
+        out[7] = &o.UPp;
+        break;
+    }
+    case 957: {
+        const auto& o = *static_cast<const DecodedULOP37_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.imm8;
+        break;
+    }
+    case 958: {
+        const auto& o = *static_cast<const DecodedULOP32I6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.Sb;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 959: {
+        const auto& o = *static_cast<const DecodedULOP32I5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.URd;
+        out[3] = &o.URa;
+        out[4] = &o.Sb;
+        break;
+    }
+    case 960: {
+        const auto& o = *static_cast<const DecodedUPRMT5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.URc;
+        break;
+    }
+    case 961: {
+        const auto& o = *static_cast<const DecodedUIADD3_647*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.UPv;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.URc;
+        break;
+    }
+    case 962: {
+        const auto& o = *static_cast<const DecodedUIADD3_649*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.UPv;
+        out[4] = &o.URa;
+        out[5] = &o.b;
+        out[6] = &o.URc;
+        out[7] = &o.UPp;
+        out[8] = &o.UPq;
+        break;
+    }
+    case 963: {
+        const auto& o = *static_cast<const DecodedUSHF5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 964: {
+        const auto& o = *static_cast<const DecodedUSHL4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 965: {
+        const auto& o = *static_cast<const DecodedUSHR4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 966: {
+        const auto& o = *static_cast<const DecodedUSGXT4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 967: {
+        const auto& o = *static_cast<const DecodedUBMSK4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 968: {
+        const auto& o = *static_cast<const DecodedUIMAD5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 969: {
+        const auto& o = *static_cast<const DecodedUIMAD6_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.UPp;
+        break;
+    }
+    case 970: {
+        const auto& o = *static_cast<const DecodedUIMAD6_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        break;
+    }
+    case 971: {
+        const auto& o = *static_cast<const DecodedUIMAD7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 972: {
+        const auto& o = *static_cast<const DecodedUIMAD6_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        break;
+    }
+    case 973: {
+        const auto& o = *static_cast<const DecodedUIMAD7*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.URc;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 974: {
+        const auto& o = *static_cast<const DecodedUF2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 975: {
+        const auto& o = *static_cast<const DecodedUF2FP4_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 976: {
+        const auto& o = *static_cast<const DecodedUF2FP4_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 977: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 978: {
+        const auto& o = *static_cast<const DecodedUF2FP5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 979: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 980: {
+        const auto& o = *static_cast<const DecodedUF2FP4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 981: {
+        const auto& o = *static_cast<const DecodedUF2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 982: {
+        const auto& o = *static_cast<const DecodedUF2FP3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 983: {
+        const auto& o = *static_cast<const DecodedUCLEA6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.constSizeU05;
+        break;
+    }
+    case 984: {
+        const auto& o = *static_cast<const DecodedUFLO4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.b;
+        break;
+    }
+    case 985: {
+        const auto& o = *static_cast<const DecodedUBREV3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 986: {
+        const auto& o = *static_cast<const DecodedUPOPC3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 987: {
+        const auto& o = *static_cast<const DecodedIPA6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.srcAttr;
+        out[3] = &o.URa;
+        out[4] = &o.URa_offset;
+        out[5] = &o.b;
+        break;
+    }
+    case 988: {
+        const auto& o = *static_cast<const DecodedCALL3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 989: {
+        const auto& o = *static_cast<const DecodedCALL3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 990: {
+        const auto& o = *static_cast<const DecodedCALL3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 991: {
+        const auto& o = *static_cast<const DecodedCALL2_1*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        break;
+    }
+    case 992: {
+        const auto& o = *static_cast<const DecodedBRA3_1*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.URb;
+        out[2] = &o.sImm;
+        break;
+    }
+    case 993: {
+        const auto& o = *static_cast<const DecodedBRA3_1*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.URb;
+        out[2] = &o.sImm;
+        break;
+    }
+    case 994: {
+        const auto& o = *static_cast<const DecodedJMP3_1*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.URb;
+        out[2] = &o.Sa;
+        break;
+    }
+    case 995: {
+        const auto& o = *static_cast<const DecodedJMP3_1*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.URb;
+        out[2] = &o.Sa;
+        break;
+    }
+    case 996: {
+        const auto& o = *static_cast<const DecodedRET3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 997: {
+        const auto& o = *static_cast<const DecodedRET3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 998: {
+        const auto& o = *static_cast<const DecodedRET3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        out[2] = &o.off;
+        break;
+    }
+    case 999: {
+        const auto& o = *static_cast<const DecodedRET2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.a;
+        break;
+    }
+    case 1000: {
+        const auto& o = *static_cast<const DecodedBRXU3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.URa;
+        out[2] = &o.UR_offset;
+        break;
+    }
+    case 1001: {
+        const auto& o = *static_cast<const DecodedBRXU3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.URa;
+        out[2] = &o.UR_offset;
+        break;
+    }
+    case 1002: {
+        const auto& o = *static_cast<const DecodedJMXU3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.URa;
+        out[2] = &o.UR_offset;
+        break;
+    }
+    case 1003: {
+        const auto& o = *static_cast<const DecodedJMXU3*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.URa;
+        out[2] = &o.UR_offset;
+        break;
+    }
+    case 1004: {
+        const auto& o = *static_cast<const DecodedLDG8*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.memoryDescriptor;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra;
+        out[5] = &o.Ra_offset;
+        out[6] = &o.word_mask;
+        out[7] = &o.Pnz;
+        break;
+    }
+    case 1005: {
+        const auto& o = *static_cast<const DecodedLDG8*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.memoryDescriptor;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra;
+        out[5] = &o.Ra_offset;
+        out[6] = &o.word_mask;
+        out[7] = &o.Pnz;
+        break;
+    }
+    case 1006: {
+        const auto& o = *static_cast<const DecodedLDG7_1*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.word_mask;
+        out[6] = &o.Pnz;
+        break;
+    }
+    case 1007: {
+        const auto& o = *static_cast<const DecodedLDG7_1*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.word_mask;
+        out[6] = &o.Pnz;
+        break;
+    }
+    case 1008: {
+        const auto& o = *static_cast<const DecodedLDG7_1*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.word_mask;
+        out[6] = &o.Pnz;
+        break;
+    }
+    case 1009: {
+        const auto& o = *static_cast<const DecodedLDG7_1*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.word_mask;
+        out[6] = &o.Pnz;
+        break;
+    }
+    case 1010: {
+        const auto& o = *static_cast<const DecodedLDG7_1*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.word_mask;
+        out[6] = &o.Pnz;
+        break;
+    }
+    case 1011: {
+        const auto& o = *static_cast<const DecodedLDG7_1*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.word_mask;
+        out[6] = &o.Pnz;
+        break;
+    }
+    case 1012: {
+        const auto& o = *static_cast<const DecodedSTG7*>(inst);
+        out[0] = &o.memoryDescriptor;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        out[5] = &o.Rb2;
+        out[6] = &o.word_mask;
+        break;
+    }
+    case 1013: {
+        const auto& o = *static_cast<const DecodedSTG6*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rb2;
+        out[5] = &o.word_mask;
+        break;
+    }
+    case 1014: {
+        const auto& o = *static_cast<const DecodedSTG6*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rb2;
+        out[5] = &o.word_mask;
+        break;
+    }
+    case 1015: {
+        const auto& o = *static_cast<const DecodedSTG6*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        out[4] = &o.Rb2;
+        out[5] = &o.word_mask;
+        break;
+    }
+    case 1016: {
+        const auto& o = *static_cast<const DecodedLD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.memoryDescriptor;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1017: {
+        const auto& o = *static_cast<const DecodedLD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Pnz;
+        break;
+    }
+    case 1018: {
+        const auto& o = *static_cast<const DecodedLD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Pnz;
+        break;
+    }
+    case 1019: {
+        const auto& o = *static_cast<const DecodedLD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Pnz;
+        break;
+    }
+    case 1020: {
+        const auto& o = *static_cast<const DecodedLDG7_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.memoryDescriptor;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra;
+        out[5] = &o.Ra_offset;
+        out[6] = &o.Pnz;
+        break;
+    }
+    case 1021: {
+        const auto& o = *static_cast<const DecodedLDG6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1022: {
+        const auto& o = *static_cast<const DecodedLDG6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1023: {
+        const auto& o = *static_cast<const DecodedLDG6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1024: {
+        const auto& o = *static_cast<const DecodedLDL5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.memoryDescriptor;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra;
+        out[4] = &o.Ra_offset;
+        break;
+    }
+    case 1025: {
+        const auto& o = *static_cast<const DecodedLDL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1026: {
+        const auto& o = *static_cast<const DecodedLDS4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1027: {
+        const auto& o = *static_cast<const DecodedST5*>(inst);
+        out[0] = &o.memoryDescriptor;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 1028: {
+        const auto& o = *static_cast<const DecodedST4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1029: {
+        const auto& o = *static_cast<const DecodedST4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1030: {
+        const auto& o = *static_cast<const DecodedST4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1031: {
+        const auto& o = *static_cast<const DecodedSTG5*>(inst);
+        out[0] = &o.memoryDescriptor;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 1032: {
+        const auto& o = *static_cast<const DecodedSTG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1033: {
+        const auto& o = *static_cast<const DecodedSTG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1034: {
+        const auto& o = *static_cast<const DecodedSTG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1035: {
+        const auto& o = *static_cast<const DecodedSTL5*>(inst);
+        out[0] = &o.memoryDescriptor;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 1036: {
+        const auto& o = *static_cast<const DecodedSTL4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1037: {
+        const auto& o = *static_cast<const DecodedSTS4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1038: {
+        const auto& o = *static_cast<const DecodedATOM7_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 1039: {
+        const auto& o = *static_cast<const DecodedATOM7_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 1040: {
+        const auto& o = *static_cast<const DecodedATOM7_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 1041: {
+        const auto& o = *static_cast<const DecodedATOM8*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.memoryDescriptor;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra;
+        out[5] = &o.Ra_offset;
+        out[6] = &o.Rb;
+        out[7] = &o.wr_early;
+        break;
+    }
+    case 1042: {
+        const auto& o = *static_cast<const DecodedATOMS5_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 1043: {
+        const auto& o = *static_cast<const DecodedREDS4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1044: {
+        const auto& o = *static_cast<const DecodedREDG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1045: {
+        const auto& o = *static_cast<const DecodedREDG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1046: {
+        const auto& o = *static_cast<const DecodedREDG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1047: {
+        const auto& o = *static_cast<const DecodedREDG5*>(inst);
+        out[0] = &o.memoryDescriptor;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 1048: {
+        const auto& o = *static_cast<const DecodedATOM7_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 1049: {
+        const auto& o = *static_cast<const DecodedATOM7_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 1050: {
+        const auto& o = *static_cast<const DecodedATOM7_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        out[6] = &o.wr_early;
+        break;
+    }
+    case 1051: {
+        const auto& o = *static_cast<const DecodedATOM8*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.memoryDescriptor;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra;
+        out[5] = &o.Ra_offset;
+        out[6] = &o.Rb;
+        out[7] = &o.wr_early;
+        break;
+    }
+    case 1052: {
+        const auto& o = *static_cast<const DecodedATOMG6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        break;
+    }
+    case 1053: {
+        const auto& o = *static_cast<const DecodedATOMG6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        break;
+    }
+    case 1054: {
+        const auto& o = *static_cast<const DecodedATOMG6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        break;
+    }
+    case 1055: {
+        const auto& o = *static_cast<const DecodedATOMG7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.memoryDescriptor;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra;
+        out[5] = &o.Ra_offset;
+        out[6] = &o.Rb;
+        break;
+    }
+    case 1056: {
+        const auto& o = *static_cast<const DecodedLDGMC4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1057: {
+        const auto& o = *static_cast<const DecodedLDGMC4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1058: {
+        const auto& o = *static_cast<const DecodedLDGMC4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1059: {
+        const auto& o = *static_cast<const DecodedLDGMC5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.memoryDescriptor;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra;
+        out[4] = &o.Ra_offset;
+        break;
+    }
+    case 1060: {
+        const auto& o = *static_cast<const DecodedLDGMC4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1061: {
+        const auto& o = *static_cast<const DecodedLDGMC4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1062: {
+        const auto& o = *static_cast<const DecodedLDGMC4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1063: {
+        const auto& o = *static_cast<const DecodedLDGMC5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.memoryDescriptor;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra;
+        out[4] = &o.Ra_offset;
+        break;
+    }
+    case 1064: {
+        const auto& o = *static_cast<const DecodedREDG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1065: {
+        const auto& o = *static_cast<const DecodedREDG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1066: {
+        const auto& o = *static_cast<const DecodedREDG4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1067: {
+        const auto& o = *static_cast<const DecodedREDG5*>(inst);
+        out[0] = &o.memoryDescriptor;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 1068: {
+        const auto& o = *static_cast<const DecodedSYNCS5_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        out[4] = &o.Rb;
+        break;
+    }
+    case 1069: {
+        const auto& o = *static_cast<const DecodedSYNCS4_2*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1070: {
+        const auto& o = *static_cast<const DecodedATOMG6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        break;
+    }
+    case 1071: {
+        const auto& o = *static_cast<const DecodedATOMG6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        break;
+    }
+    case 1072: {
+        const auto& o = *static_cast<const DecodedATOMG6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Rb;
+        break;
+    }
+    case 1073: {
+        const auto& o = *static_cast<const DecodedATOMG7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.memoryDescriptor;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra;
+        out[5] = &o.Ra_offset;
+        out[6] = &o.Rb;
+        break;
+    }
+    case 1074: {
+        const auto& o = *static_cast<const DecodedQSPC4_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1075: {
+        const auto& o = *static_cast<const DecodedQSPC4_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1076: {
+        const auto& o = *static_cast<const DecodedQSPC4_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1077: {
+        const auto& o = *static_cast<const DecodedQSPC4_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1078: {
+        const auto& o = *static_cast<const DecodedQSPC4_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1079: {
+        const auto& o = *static_cast<const DecodedQSPC4_2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1080: {
+        const auto& o = *static_cast<const DecodedQSPC5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        break;
+    }
+    case 1081: {
+        const auto& o = *static_cast<const DecodedQSPC5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        break;
+    }
+    case 1082: {
+        const auto& o = *static_cast<const DecodedQSPC5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URb;
+        out[4] = &o.Ra_offset;
+        break;
+    }
+    case 1083: {
+        const auto& o = *static_cast<const DecodedLDCU5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.Sa_offset;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 1084: {
+        const auto& o = *static_cast<const DecodedLDCU4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.Sa_offset;
+        break;
+    }
+    case 1085: {
+        const auto& o = *static_cast<const DecodedARRIVES3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 1086: {
+        const auto& o = *static_cast<const DecodedSYNCS3*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        break;
+    }
+    case 1087: {
+        const auto& o = *static_cast<const DecodedSYNCS4_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.URa_offset;
+        break;
+    }
+    case 1088: {
+        const auto& o = *static_cast<const DecodedUTMACCTL2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        break;
+    }
+    case 1089: {
+        const auto& o = *static_cast<const DecodedUTMACCTL2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URa;
+        break;
+    }
+    case 1090: {
+        const auto& o = *static_cast<const DecodedUCGABARARV1*>(inst);
+        out[0] = &o.UPg;
+        break;
+    }
+    case 1091: {
+        const auto& o = *static_cast<const DecodedUCGABAR_ARV1*>(inst);
+        out[0] = &o.UPg;
+        break;
+    }
+    case 1092: {
+        const auto& o = *static_cast<const DecodedUSETMAXREG3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPu;
+        out[2] = &o.b;
+        break;
+    }
+    case 1093: {
+        const auto& o = *static_cast<const DecodedUSETMAXREG2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.b;
+        break;
+    }
+    case 1094: {
+        const auto& o = *static_cast<const DecodedUSETSHMSZ1*>(inst);
+        out[0] = &o.UPg;
+        break;
+    }
+    case 1095: {
+        const auto& o = *static_cast<const DecodedUSETSHMSZ2*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.b;
+        break;
+    }
+    case 1096: {
+        const auto& o = *static_cast<const DecodedULEPC3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.sImm58;
+        break;
+    }
+    case 1097: {
+        const auto& o = *static_cast<const DecodedULEPC3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.sImm58;
+        break;
+    }
+    case 1098: {
+        const auto& o = *static_cast<const DecodedCCTL4_0*>(inst);
+        out[0] = &o.Sa;
+        out[1] = &o.Sa_bank;
+        out[2] = &o.a;
+        out[3] = &o.off;
+        break;
+    }
+    case 1099: {
+        const auto& o = *static_cast<const DecodedLDCU6_1*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.Sa;
+        out[3] = &o.URa;
+        out[4] = &o.URb;
+        out[5] = &o.Sa_offset;
+        break;
+    }
+    case 1100: {
+        const auto& o = *static_cast<const DecodedMOV2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1101: {
+        const auto& o = *static_cast<const DecodedMOV3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.PixMaskU04;
+        break;
+    }
+    case 1102: {
+        const auto& o = *static_cast<const DecodedMOV2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1103: {
+        const auto& o = *static_cast<const DecodedP2R4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pr;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 1104: {
+        const auto& o = *static_cast<const DecodedR2P3*>(inst);
+        out[0] = &o.PR;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1105: {
+        const auto& o = *static_cast<const DecodedSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1106: {
+        const auto& o = *static_cast<const DecodedFSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1107: {
+        const auto& o = *static_cast<const DecodedFMNMX4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1108: {
+        const auto& o = *static_cast<const DecodedFMNMX5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1109: {
+        const auto& o = *static_cast<const DecodedFSET4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1110: {
+        const auto& o = *static_cast<const DecodedFSET3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1111: {
+        const auto& o = *static_cast<const DecodedFSETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1112: {
+        const auto& o = *static_cast<const DecodedFSETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1113: {
+        const auto& o = *static_cast<const DecodedISETP6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        out[5] = &o.Pr;
+        break;
+    }
+    case 1114: {
+        const auto& o = *static_cast<const DecodedISETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1115: {
+        const auto& o = *static_cast<const DecodedISETP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pr;
+        break;
+    }
+    case 1116: {
+        const auto& o = *static_cast<const DecodedISETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1117: {
+        const auto& o = *static_cast<const DecodedISETP6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        out[5] = &o.Pr;
+        break;
+    }
+    case 1118: {
+        const auto& o = *static_cast<const DecodedISETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1119: {
+        const auto& o = *static_cast<const DecodedISETP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pr;
+        break;
+    }
+    case 1120: {
+        const auto& o = *static_cast<const DecodedISETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1121: {
+        const auto& o = *static_cast<const DecodedIADD36*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Rc;
+        break;
+    }
+    case 1122: {
+        const auto& o = *static_cast<const DecodedIADD38*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Rc;
+        out[6] = &o.Pp;
+        out[7] = &o.Pq;
+        break;
+    }
+    case 1123: {
+        const auto& o = *static_cast<const DecodedISCADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 1124: {
+        const auto& o = *static_cast<const DecodedLEA6_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.scaleU5;
+        break;
+    }
+    case 1125: {
+        const auto& o = *static_cast<const DecodedLEA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 1126: {
+        const auto& o = *static_cast<const DecodedLEA6_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1127: {
+        const auto& o = *static_cast<const DecodedLEA7*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.scaleU5;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 1128: {
+        const auto& o = *static_cast<const DecodedLEA5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        break;
+    }
+    case 1129: {
+        const auto& o = *static_cast<const DecodedLEA6_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.scaleU5;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1130: {
+        const auto& o = *static_cast<const DecodedLOP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1131: {
+        const auto& o = *static_cast<const DecodedLOP4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 1132: {
+        const auto& o = *static_cast<const DecodedLOP37*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.imm8;
+        out[6] = &o.Pp;
+        break;
+    }
+    case 1133: {
+        const auto& o = *static_cast<const DecodedLOP36_1*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.imm8;
+        break;
+    }
+    case 1134: {
+        const auto& o = *static_cast<const DecodedLOP36_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1135: {
+        const auto& o = *static_cast<const DecodedLOP35*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        break;
+    }
+    case 1136: {
+        const auto& o = *static_cast<const DecodedIABS2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1137: {
+        const auto& o = *static_cast<const DecodedPRMT4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1138: {
+        const auto& o = *static_cast<const DecodedIMNMX7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        out[6] = &o.Pq;
+        break;
+    }
+    case 1139: {
+        const auto& o = *static_cast<const DecodedIMNMX6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1140: {
+        const auto& o = *static_cast<const DecodedIMNMX7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        out[6] = &o.Pq;
+        break;
+    }
+    case 1141: {
+        const auto& o = *static_cast<const DecodedIMNMX6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1142: {
+        const auto& o = *static_cast<const DecodedSHF4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1143: {
+        const auto& o = *static_cast<const DecodedSHL3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1144: {
+        const auto& o = *static_cast<const DecodedSHR3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1145: {
+        const auto& o = *static_cast<const DecodedSGXT3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1146: {
+        const auto& o = *static_cast<const DecodedBMSK3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1147: {
+        const auto& o = *static_cast<const DecodedPLOP35_2*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.b;
+        out[3] = &o.Pr;
+        out[4] = &o.uimm8;
+        break;
+    }
+    case 1148: {
+        const auto& o = *static_cast<const DecodedPLOP37_2*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Pp;
+        out[3] = &o.b;
+        out[4] = &o.Pr;
+        out[5] = &o.uimm8;
+        out[6] = &o.vimm8;
+        break;
+    }
+    case 1149: {
+        const auto& o = *static_cast<const DecodedPLOP35_3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pp;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        out[4] = &o.uimm8;
+        break;
+    }
+    case 1150: {
+        const auto& o = *static_cast<const DecodedPLOP37_3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Pp;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.uimm8;
+        out[6] = &o.vimm8;
+        break;
+    }
+    case 1151: {
+        const auto& o = *static_cast<const DecodedPLOP35_4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        out[4] = &o.uimm8;
+        break;
+    }
+    case 1152: {
+        const auto& o = *static_cast<const DecodedPLOP37_4*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Rc;
+        out[5] = &o.uimm8;
+        out[6] = &o.vimm8;
+        break;
+    }
+    case 1153: {
+        const auto& o = *static_cast<const DecodedFMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1154: {
+        const auto& o = *static_cast<const DecodedFFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1155: {
+        const auto& o = *static_cast<const DecodedFHFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1156: {
+        const auto& o = *static_cast<const DecodedIMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1157: {
+        const auto& o = *static_cast<const DecodedIMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1158: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1159: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1160: {
+        const auto& o = *static_cast<const DecodedIMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1161: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 1162: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 1163: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1164: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1165: {
+        const auto& o = *static_cast<const DecodedIMUL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 1166: {
+        const auto& o = *static_cast<const DecodedIDP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1167: {
+        const auto& o = *static_cast<const DecodedIDP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1168: {
+        const auto& o = *static_cast<const DecodedIDP4A4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1169: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 1170: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 1171: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1172: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1173: {
+        const auto& o = *static_cast<const DecodedDMUL3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1174: {
+        const auto& o = *static_cast<const DecodedDFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1175: {
+        const auto& o = *static_cast<const DecodedCLMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1176: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1177: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1178: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1179: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1180: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1181: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1182: {
+        const auto& o = *static_cast<const DecodedHMUL23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1183: {
+        const auto& o = *static_cast<const DecodedHMUL23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1184: {
+        const auto& o = *static_cast<const DecodedIADD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 1185: {
+        const auto& o = *static_cast<const DecodedIADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1186: {
+        const auto& o = *static_cast<const DecodedIADD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        break;
+    }
+    case 1187: {
+        const auto& o = *static_cast<const DecodedIADD5*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1188: {
+        const auto& o = *static_cast<const DecodedVIADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1189: {
+        const auto& o = *static_cast<const DecodedI2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1190: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1191: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1192: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1193: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1194: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1195: {
+        const auto& o = *static_cast<const DecodedI2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Rc;
+        break;
+    }
+    case 1196: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1197: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1198: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1199: {
+        const auto& o = *static_cast<const DecodedF2FP3_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1200: {
+        const auto& o = *static_cast<const DecodedF2FP3_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1201: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1202: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1203: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1204: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1205: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1206: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1207: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1208: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1209: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1210: {
+        const auto& o = *static_cast<const DecodedF2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1211: {
+        const auto& o = *static_cast<const DecodedHMNMX24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1212: {
+        const auto& o = *static_cast<const DecodedHMNMX24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1213: {
+        const auto& o = *static_cast<const DecodedHMNMX26*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1214: {
+        const auto& o = *static_cast<const DecodedHMNMX26*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Pv;
+        out[3] = &o.Ra;
+        out[4] = &o.b;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1215: {
+        const auto& o = *static_cast<const DecodedF2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1216: {
+        const auto& o = *static_cast<const DecodedI2FP2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1217: {
+        const auto& o = *static_cast<const DecodedVIMNMX4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1218: {
+        const auto& o = *static_cast<const DecodedMOV4_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.indexURb;
+        out[2] = &o.URb;
+        out[3] = &o.PixMaskU04;
+        break;
+    }
+    case 1219: {
+        const auto& o = *static_cast<const DecodedUMOV3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 1220: {
+        const auto& o = *static_cast<const DecodedUMOV3*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.b;
+        break;
+    }
+    case 1221: {
+        const auto& o = *static_cast<const DecodedUP2UR5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPR;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        break;
+    }
+    case 1222: {
+        const auto& o = *static_cast<const DecodedUR2UP4*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.UPR;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        break;
+    }
+    case 1223: {
+        const auto& o = *static_cast<const DecodedUSEL5*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.URa;
+        out[3] = &o.b;
+        out[4] = &o.UPp;
+        break;
+    }
+    case 1224: {
+        const auto& o = *static_cast<const DecodedUCLEA6*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd;
+        out[2] = &o.UPu;
+        out[3] = &o.URa;
+        out[4] = &o.b;
+        out[5] = &o.constSizeU05;
+        break;
+    }
+    case 1225: {
+        const auto& o = *static_cast<const DecodedFLO3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.b;
+        break;
+    }
+    case 1226: {
+        const auto& o = *static_cast<const DecodedBREV2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1227: {
+        const auto& o = *static_cast<const DecodedFCHK3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1228: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1229: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1230: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1231: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1232: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1233: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1234: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1235: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1236: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1237: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1238: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1239: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1240: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1241: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1242: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1243: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1244: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1245: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1246: {
+        const auto& o = *static_cast<const DecodedMUFU2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1247: {
+        const auto& o = *static_cast<const DecodedMUFU2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1248: {
+        const auto& o = *static_cast<const DecodedMUFU2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1249: {
+        const auto& o = *static_cast<const DecodedPOPC2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1250: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1251: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1252: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1253: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1254: {
+        const auto& o = *static_cast<const DecodedF2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1255: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1256: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1257: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1258: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1259: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1260: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1261: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1262: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1263: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1264: {
+        const auto& o = *static_cast<const DecodedF2I2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1265: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1266: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1267: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1268: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1269: {
+        const auto& o = *static_cast<const DecodedI2F2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1270: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1271: {
+        const auto& o = *static_cast<const DecodedFRND2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1272: {
+        const auto& o = *static_cast<const DecodedDEPBAR3_0*>(inst);
+        out[0] = &o.sbidx;
+        out[1] = &o.URb;
+        out[2] = &o.scoreboard_list;
+        break;
+    }
+    case 1273: {
+        const auto& o = *static_cast<const DecodedOUT3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        break;
+    }
+    case 1274: {
+        const auto& o = *static_cast<const DecodedRPCMOV2_2*>(inst);
+        out[0] = &o.RpcN;
+        out[1] = &o.b;
+        break;
+    }
+    case 1275: {
+        const auto& o = *static_cast<const DecodedRPCMOV2_1*>(inst);
+        out[0] = &o.Rpc;
+        out[1] = &o.b;
+        break;
+    }
+    case 1276: {
+        const auto& o = *static_cast<const DecodedBMOV2_4*>(inst);
+        out[0] = &o.cbu_state;
+        out[1] = &o.b;
+        break;
+    }
+    case 1277: {
+        const auto& o = *static_cast<const DecodedBMOV2_1*>(inst);
+        out[0] = &o.atexit_pc;
+        out[1] = &o.b;
+        break;
+    }
+    case 1278: {
+        const auto& o = *static_cast<const DecodedNANOTRAP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.b;
+        break;
+    }
+    case 1279: {
+        const auto& o = *static_cast<const DecodedNANOSLEEP2*>(inst);
+        out[0] = &o.Pp;
+        out[1] = &o.b;
+        break;
+    }
+    case 1280: {
+        const auto& o = *static_cast<const DecodedTEX8*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URe;
+        out[6] = &o.paramA;
+        out[7] = &o.wmsk;
+        break;
+    }
+    case 1281: {
+        const auto& o = *static_cast<const DecodedTEX8*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URe;
+        out[6] = &o.paramA;
+        out[7] = &o.wmsk;
+        break;
+    }
+    case 1282: {
+        const auto& o = *static_cast<const DecodedTLD48*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URe;
+        out[6] = &o.paramA;
+        out[7] = &o.wmsk;
+        break;
+    }
+    case 1283: {
+        const auto& o = *static_cast<const DecodedTLD48*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URe;
+        out[6] = &o.paramA;
+        out[7] = &o.wmsk;
+        break;
+    }
+    case 1284: {
+        const auto& o = *static_cast<const DecodedTLD8*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URe;
+        out[6] = &o.paramA;
+        out[7] = &o.wmsk;
+        break;
+    }
+    case 1285: {
+        const auto& o = *static_cast<const DecodedTLD8*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URe;
+        out[6] = &o.paramA;
+        out[7] = &o.wmsk;
+        break;
+    }
+    case 1286: {
+        const auto& o = *static_cast<const DecodedTXD8*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URe;
+        out[6] = &o.paramA;
+        out[7] = &o.wmsk;
+        break;
+    }
+    case 1287: {
+        const auto& o = *static_cast<const DecodedFOOTPRINT6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.paramA;
+        break;
+    }
+    case 1288: {
+        const auto& o = *static_cast<const DecodedFOOTPRINT6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.paramA;
+        break;
+    }
+    case 1289: {
+        const auto& o = *static_cast<const DecodedCCTL2_0*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URb;
+        break;
+    }
+    case 1290: {
+        const auto& o = *static_cast<const DecodedCCTL2_0*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URb;
+        break;
+    }
+    case 1291: {
+        const auto& o = *static_cast<const DecodedCCTL3_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        break;
+    }
+    case 1292: {
+        const auto& o = *static_cast<const DecodedCCTL3_2*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URb;
+        out[2] = &o.sector_count;
+        break;
+    }
+    case 1293: {
+        const auto& o = *static_cast<const DecodedCCTL2_0*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URb;
+        break;
+    }
+    case 1294: {
+        const auto& o = *static_cast<const DecodedCCTL2_0*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URb;
+        break;
+    }
+    case 1295: {
+        const auto& o = *static_cast<const DecodedCCTL3_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URb;
+        break;
+    }
+    case 1296: {
+        const auto& o = *static_cast<const DecodedCCTL3_2*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URb;
+        out[2] = &o.sector_count;
+        break;
+    }
+    case 1297: {
+        const auto& o = *static_cast<const DecodedCCTLL2_0*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URb;
+        break;
+    }
+    case 1298: {
+        const auto& o = *static_cast<const DecodedCCTLL2_0*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URb;
+        break;
+    }
+    case 1299: {
+        const auto& o = *static_cast<const DecodedCCTLT1*>(inst);
+        out[0] = &o.b;
+        break;
+    }
+    case 1300: {
+        const auto& o = *static_cast<const DecodedLDCU8_0*>(inst);
+        out[0] = &o.UPg;
+        out[1] = &o.URd2;
+        out[2] = &o.URd;
+        out[3] = &o.Sa;
+        out[4] = &o.Sa_bank;
+        out[5] = &o.URa;
+        out[6] = &o.Sa_offset;
+        out[7] = &o.word_mask;
+        break;
+    }
+    case 1301: {
+        const auto& o = *static_cast<const DecodedLDGSTS6_0*>(inst);
+        out[0] = &o.Rb;
+        out[1] = &o.Rb_URc;
+        out[2] = &o.Rb_offset;
+        out[3] = &o.Ra;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1302: {
+        const auto& o = *static_cast<const DecodedLDGSTS8*>(inst);
+        out[0] = &o.Rb;
+        out[1] = &o.Rb_URc;
+        out[2] = &o.Rb_offset;
+        out[3] = &o.memoryDescriptor;
+        out[4] = &o.Ra_URd;
+        out[5] = &o.Ra;
+        out[6] = &o.Ra_offset;
+        out[7] = &o.Pnz;
+        break;
+    }
+    case 1303: {
+        const auto& o = *static_cast<const DecodedLDGSTS6_0*>(inst);
+        out[0] = &o.Rb;
+        out[1] = &o.Rb_URc;
+        out[2] = &o.Rb_offset;
+        out[3] = &o.Ra;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1304: {
+        const auto& o = *static_cast<const DecodedSUQUERY7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.queryType;
+        out[4] = &o.Rc;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        break;
+    }
+    case 1305: {
+        const auto& o = *static_cast<const DecodedSTAS4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1306: {
+        const auto& o = *static_cast<const DecodedSTAS4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1307: {
+        const auto& o = *static_cast<const DecodedSTAS4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1308: {
+        const auto& o = *static_cast<const DecodedREDAS4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1309: {
+        const auto& o = *static_cast<const DecodedREDAS4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1310: {
+        const auto& o = *static_cast<const DecodedREDAS4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Ra_URc;
+        out[2] = &o.Ra_offset;
+        out[3] = &o.Rb;
+        break;
+    }
+    case 1311: {
+        const auto& o = *static_cast<const DecodedUCGABARWAIT1*>(inst);
+        out[0] = &o.UPg;
+        break;
+    }
+    case 1312: {
+        const auto& o = *static_cast<const DecodedUCGABAR_WAIT1*>(inst);
+        out[0] = &o.UPg;
+        break;
+    }
+    case 1313: {
+        const auto& o = *static_cast<const DecodedSEL4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1314: {
+        const auto& o = *static_cast<const DecodedPRMT4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1315: {
+        const auto& o = *static_cast<const DecodedSHF4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1316: {
+        const auto& o = *static_cast<const DecodedFADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1317: {
+        const auto& o = *static_cast<const DecodedFHADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1318: {
+        const auto& o = *static_cast<const DecodedFFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1319: {
+        const auto& o = *static_cast<const DecodedFHFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1320: {
+        const auto& o = *static_cast<const DecodedIMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1321: {
+        const auto& o = *static_cast<const DecodedIMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1322: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1323: {
+        const auto& o = *static_cast<const DecodedIMAD5_4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1324: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 1325: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 1326: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1327: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1328: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 1329: {
+        const auto& o = *static_cast<const DecodedIMAD5_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        break;
+    }
+    case 1330: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1331: {
+        const auto& o = *static_cast<const DecodedIMAD6*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Pu;
+        out[2] = &o.Ra;
+        out[3] = &o.b;
+        out[4] = &o.c;
+        out[5] = &o.Pp;
+        break;
+    }
+    case 1332: {
+        const auto& o = *static_cast<const DecodedDADD3*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1333: {
+        const auto& o = *static_cast<const DecodedDSETP5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1334: {
+        const auto& o = *static_cast<const DecodedDSETP3*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1335: {
+        const auto& o = *static_cast<const DecodedDFMA4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1336: {
+        const auto& o = *static_cast<const DecodedCLMAD4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1337: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1338: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1339: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1340: {
+        const auto& o = *static_cast<const DecodedHADD23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1341: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1342: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1343: {
+        const auto& o = *static_cast<const DecodedHFMA24*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1344: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1345: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1346: {
+        const auto& o = *static_cast<const DecodedHFMA25_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1347: {
+        const auto& o = *static_cast<const DecodedHSET24_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1348: {
+        const auto& o = *static_cast<const DecodedHSET24_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        out[3] = &o.Pp;
+        break;
+    }
+    case 1349: {
+        const auto& o = *static_cast<const DecodedHSET23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1350: {
+        const auto& o = *static_cast<const DecodedHSET23*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.c;
+        break;
+    }
+    case 1351: {
+        const auto& o = *static_cast<const DecodedHSETP25_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1352: {
+        const auto& o = *static_cast<const DecodedHSETP25_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.Pp;
+        break;
+    }
+    case 1353: {
+        const auto& o = *static_cast<const DecodedHSETP24*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        break;
+    }
+    case 1354: {
+        const auto& o = *static_cast<const DecodedHSETP24*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Pv;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        break;
+    }
+    case 1355: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1356: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1357: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1358: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1359: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1360: {
+        const auto& o = *static_cast<const DecodedF2FP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1361: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1362: {
+        const auto& o = *static_cast<const DecodedF2FP3_1*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        out[2] = &o.c;
+        break;
+    }
+    case 1363: {
+        const auto& o = *static_cast<const DecodedF2IP4*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.b;
+        out[3] = &o.c;
+        break;
+    }
+    case 1364: {
+        const auto& o = *static_cast<const DecodedHMMA9*>(inst);
+        out[0] = &o.indexURd;
+        out[1] = &o.URd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.indexURc;
+        out[5] = &o.URc;
+        out[6] = &o.UPp;
+        out[7] = &o.Re;
+        out[8] = &o.id;
+        break;
+    }
+    case 1365: {
+        const auto& o = *static_cast<const DecodedHMMA7_1*>(inst);
+        out[0] = &o.indexURd;
+        out[1] = &o.URd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.indexURc;
+        out[5] = &o.URc;
+        out[6] = &o.UPp;
+        break;
+    }
+    case 1366: {
+        const auto& o = *static_cast<const DecodedMOV64IUR2*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.b;
+        break;
+    }
+    case 1367: {
+        const auto& o = *static_cast<const DecodedTEX9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1368: {
+        const auto& o = *static_cast<const DecodedTEX9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1369: {
+        const auto& o = *static_cast<const DecodedTLD49*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1370: {
+        const auto& o = *static_cast<const DecodedTLD49*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1371: {
+        const auto& o = *static_cast<const DecodedTLD49*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1372: {
+        const auto& o = *static_cast<const DecodedTLD49*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1373: {
+        const auto& o = *static_cast<const DecodedTLD9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1374: {
+        const auto& o = *static_cast<const DecodedTLD9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1375: {
+        const auto& o = *static_cast<const DecodedTLD9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1376: {
+        const auto& o = *static_cast<const DecodedTLD9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1377: {
+        const auto& o = *static_cast<const DecodedTMML7*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.URc;
+        out[5] = &o.paramA;
+        out[6] = &o.wmsk;
+        break;
+    }
+    case 1378: {
+        const auto& o = *static_cast<const DecodedTMML7*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.URc;
+        out[5] = &o.paramA;
+        out[6] = &o.wmsk;
+        break;
+    }
+    case 1379: {
+        const auto& o = *static_cast<const DecodedTXD9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1380: {
+        const auto& o = *static_cast<const DecodedTXD9*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        out[7] = &o.paramA;
+        out[8] = &o.wmsk;
+        break;
+    }
+    case 1381: {
+        const auto& o = *static_cast<const DecodedTXQ6*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.query;
+        out[4] = &o.URc;
+        out[5] = &o.wmsk;
+        break;
+    }
+    case 1382: {
+        const auto& o = *static_cast<const DecodedTXQ6*>(inst);
+        out[0] = &o.Rd2;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.query;
+        out[4] = &o.URc;
+        out[5] = &o.wmsk;
+        break;
+    }
+    case 1383: {
+        const auto& o = *static_cast<const DecodedFOOTPRINT7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.paramA;
+        break;
+    }
+    case 1384: {
+        const auto& o = *static_cast<const DecodedFOOTPRINT7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.paramA;
+        break;
+    }
+    case 1385: {
+        const auto& o = *static_cast<const DecodedFOOTPRINT7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.paramA;
+        break;
+    }
+    case 1386: {
+        const auto& o = *static_cast<const DecodedFOOTPRINT7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd2;
+        out[2] = &o.Rd;
+        out[3] = &o.Ra;
+        out[4] = &o.Rb;
+        out[5] = &o.URc;
+        out[6] = &o.paramA;
+        break;
+    }
+    case 1387: {
+        const auto& o = *static_cast<const DecodedATOM6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 1388: {
+        const auto& o = *static_cast<const DecodedATOM6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 1389: {
+        const auto& o = *static_cast<const DecodedATOM6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 1390: {
+        const auto& o = *static_cast<const DecodedATOM6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 1391: {
+        const auto& o = *static_cast<const DecodedATOM6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 1392: {
+        const auto& o = *static_cast<const DecodedATOM6_0*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.wr_early;
+        break;
+    }
+    case 1393: {
+        const auto& o = *static_cast<const DecodedATOMS4_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1394: {
+        const auto& o = *static_cast<const DecodedATOMS4_0*>(inst);
+        out[0] = &o.Rd;
+        out[1] = &o.Ra;
+        out[2] = &o.Ra_URc;
+        out[3] = &o.Ra_offset;
+        break;
+    }
+    case 1395: {
+        const auto& o = *static_cast<const DecodedSUATOM6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.c;
+        out[5] = &o.URe;
+        break;
+    }
+    case 1396: {
+        const auto& o = *static_cast<const DecodedSUATOM7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        break;
+    }
+    case 1397: {
+        const auto& o = *static_cast<const DecodedSUATOM6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.c;
+        out[5] = &o.URe;
+        break;
+    }
+    case 1398: {
+        const auto& o = *static_cast<const DecodedSUATOM7*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rb;
+        out[4] = &o.Rc;
+        out[5] = &o.URc;
+        out[6] = &o.URe;
+        break;
+    }
+    case 1399: {
+        const auto& o = *static_cast<const DecodedSULD5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.URe;
+        break;
+    }
+    case 1400: {
+        const auto& o = *static_cast<const DecodedSULD6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rc;
+        out[4] = &o.URc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 1401: {
+        const auto& o = *static_cast<const DecodedSULD5*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.c;
+        out[4] = &o.URe;
+        break;
+    }
+    case 1402: {
+        const auto& o = *static_cast<const DecodedSULD6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.Rc;
+        out[4] = &o.URc;
+        out[5] = &o.URe;
+        break;
+    }
+    case 1403: {
+        const auto& o = *static_cast<const DecodedSUST4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.c;
+        out[3] = &o.URe;
+        break;
+    }
+    case 1404: {
+        const auto& o = *static_cast<const DecodedSUST5*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.Rc;
+        out[3] = &o.URc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 1405: {
+        const auto& o = *static_cast<const DecodedSUST4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.c;
+        out[3] = &o.URe;
+        break;
+    }
+    case 1406: {
+        const auto& o = *static_cast<const DecodedSUST5*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.Rc;
+        out[3] = &o.URc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 1407: {
+        const auto& o = *static_cast<const DecodedSURED4*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.c;
+        out[3] = &o.URe;
+        break;
+    }
+    case 1408: {
+        const auto& o = *static_cast<const DecodedSURED5*>(inst);
+        out[0] = &o.Ra;
+        out[1] = &o.Rb;
+        out[2] = &o.Rc;
+        out[3] = &o.URc;
+        out[4] = &o.URe;
+        break;
+    }
+    case 1409: {
+        const auto& o = *static_cast<const DecodedLDGSTS6_1*>(inst);
+        out[0] = &o.Rb;
+        out[1] = &o.Rb_offset;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1410: {
+        const auto& o = *static_cast<const DecodedLDGSTS6_1*>(inst);
+        out[0] = &o.Rb;
+        out[1] = &o.Rb_offset;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1411: {
+        const auto& o = *static_cast<const DecodedLDGSTS7*>(inst);
+        out[0] = &o.Rb;
+        out[1] = &o.Rb_offset;
+        out[2] = &o.memoryDescriptor;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra;
+        out[5] = &o.Ra_offset;
+        out[6] = &o.Pnz;
+        break;
+    }
+    case 1412: {
+        const auto& o = *static_cast<const DecodedLDGSTS6_1*>(inst);
+        out[0] = &o.Rb;
+        out[1] = &o.Rb_offset;
+        out[2] = &o.Ra;
+        out[3] = &o.Ra_URc;
+        out[4] = &o.Ra_offset;
+        out[5] = &o.Pnz;
+        break;
+    }
+    case 1413: {
+        const auto& o = *static_cast<const DecodedSUQUERY6*>(inst);
+        out[0] = &o.Pu;
+        out[1] = &o.Rd;
+        out[2] = &o.Ra;
+        out[3] = &o.queryType;
+        out[4] = &o.c;
+        out[5] = &o.URe;
+        break;
+    }
+    default: break;
+    }
+}
+
+// Pointer to one named operand FIELD of a typed decoded shape.
+// Thunks through fill_operand_fields: single vi dispatch, no
+// per-position switch.  Returns nullptr when p >= n_ops.  This is
+// the decode/CLI/test bridge; the interpreter reads fields via the
+// OperandFields view (single fill call).
 inline const OperandValue* operand_field(std::uint32_t vi,
                                          const DecodedInstruction* inst,
                                          std::uint16_t p) {
-    switch (vi) {
-    case 0: {
-        const auto& out = *static_cast<const DecodedMOV2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1: {
-        const auto& out = *static_cast<const DecodedMOV3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.PixMaskU04;
-            default: return nullptr;
-        }
-    }
-    case 2: {
-        const auto& out = *static_cast<const DecodedP2R4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pr;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 3: {
-        const auto& out = *static_cast<const DecodedR2P3*>(inst);
-        switch (p) {
-            case 0: return &out.PR;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 4: {
-        const auto& out = *static_cast<const DecodedSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 5: {
-        const auto& out = *static_cast<const DecodedFSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 6: {
-        const auto& out = *static_cast<const DecodedFMNMX4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 7: {
-        const auto& out = *static_cast<const DecodedFMNMX5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 8: {
-        const auto& out = *static_cast<const DecodedFSET4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 9: {
-        const auto& out = *static_cast<const DecodedFSET3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 10: {
-        const auto& out = *static_cast<const DecodedFSETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 11: {
-        const auto& out = *static_cast<const DecodedFSETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 12: {
-        const auto& out = *static_cast<const DecodedISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            case 5: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 13: {
-        const auto& out = *static_cast<const DecodedISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 14: {
-        const auto& out = *static_cast<const DecodedISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 15: {
-        const auto& out = *static_cast<const DecodedISETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 16: {
-        const auto& out = *static_cast<const DecodedISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            case 5: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 17: {
-        const auto& out = *static_cast<const DecodedISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 18: {
-        const auto& out = *static_cast<const DecodedISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 19: {
-        const auto& out = *static_cast<const DecodedISETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 20: {
-        const auto& out = *static_cast<const DecodedIADD36*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 21: {
-        const auto& out = *static_cast<const DecodedIADD38*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Rc;
-            case 6: return &out.Pp;
-            case 7: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 22: {
-        const auto& out = *static_cast<const DecodedISCADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 23: {
-        const auto& out = *static_cast<const DecodedLEA6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 24: {
-        const auto& out = *static_cast<const DecodedLEA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 25: {
-        const auto& out = *static_cast<const DecodedLEA6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 26: {
-        const auto& out = *static_cast<const DecodedLEA7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.scaleU5;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 27: {
-        const auto& out = *static_cast<const DecodedLEA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 28: {
-        const auto& out = *static_cast<const DecodedLEA6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 29: {
-        const auto& out = *static_cast<const DecodedLOP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 30: {
-        const auto& out = *static_cast<const DecodedLOP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 31: {
-        const auto& out = *static_cast<const DecodedLOP37*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.imm8;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 32: {
-        const auto& out = *static_cast<const DecodedLOP36_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.imm8;
-            default: return nullptr;
-        }
-    }
-    case 33: {
-        const auto& out = *static_cast<const DecodedLOP36_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 34: {
-        const auto& out = *static_cast<const DecodedLOP35*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 35: {
-        const auto& out = *static_cast<const DecodedIABS2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 36: {
-        const auto& out = *static_cast<const DecodedPRMT4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 37: {
-        const auto& out = *static_cast<const DecodedIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            case 6: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 38: {
-        const auto& out = *static_cast<const DecodedIMNMX6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 39: {
-        const auto& out = *static_cast<const DecodedIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            case 6: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 40: {
-        const auto& out = *static_cast<const DecodedIMNMX6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 41: {
-        const auto& out = *static_cast<const DecodedSHF4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 42: {
-        const auto& out = *static_cast<const DecodedSHL3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 43: {
-        const auto& out = *static_cast<const DecodedSHR3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 44: {
-        const auto& out = *static_cast<const DecodedSGXT3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 45: {
-        const auto& out = *static_cast<const DecodedBMSK3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 46: {
-        const auto& out = *static_cast<const DecodedPLOP35_2*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.b;
-            case 3: return &out.Pr;
-            case 4: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 47: {
-        const auto& out = *static_cast<const DecodedPLOP37_2*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Pp;
-            case 3: return &out.b;
-            case 4: return &out.Pr;
-            case 5: return &out.uimm8;
-            case 6: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 48: {
-        const auto& out = *static_cast<const DecodedPLOP35_3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            case 4: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 49: {
-        const auto& out = *static_cast<const DecodedPLOP37_3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Pp;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.uimm8;
-            case 6: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 50: {
-        const auto& out = *static_cast<const DecodedPLOP35_4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            case 4: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 51: {
-        const auto& out = *static_cast<const DecodedPLOP37_4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.uimm8;
-            case 6: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 52: {
-        const auto& out = *static_cast<const DecodedFMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 53: {
-        const auto& out = *static_cast<const DecodedFADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 54: {
-        const auto& out = *static_cast<const DecodedFHADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 55: {
-        const auto& out = *static_cast<const DecodedFFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 56: {
-        const auto& out = *static_cast<const DecodedFHFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 57: {
-        const auto& out = *static_cast<const DecodedIMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 58: {
-        const auto& out = *static_cast<const DecodedIMAD5_3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.GetPseudoOpRRR;
-            default: return nullptr;
-        }
-    }
-    case 59: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 60: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 61: {
-        const auto& out = *static_cast<const DecodedIMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 62: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 63: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 64: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 65: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 66: {
-        const auto& out = *static_cast<const DecodedIMUL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 67: {
-        const auto& out = *static_cast<const DecodedIDP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 68: {
-        const auto& out = *static_cast<const DecodedIDP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 69: {
-        const auto& out = *static_cast<const DecodedIDP4A4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 70: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 71: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 72: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 73: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 74: {
-        const auto& out = *static_cast<const DecodedDMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 75: {
-        const auto& out = *static_cast<const DecodedDADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 76: {
-        const auto& out = *static_cast<const DecodedDSETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 77: {
-        const auto& out = *static_cast<const DecodedDSETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 78: {
-        const auto& out = *static_cast<const DecodedDFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 79: {
-        const auto& out = *static_cast<const DecodedCLMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 80: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 81: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 82: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 83: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 84: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 85: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 86: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 87: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 88: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 89: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 90: {
-        const auto& out = *static_cast<const DecodedHMUL23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 91: {
-        const auto& out = *static_cast<const DecodedHMUL23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 92: {
-        const auto& out = *static_cast<const DecodedHSET24_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 93: {
-        const auto& out = *static_cast<const DecodedHSET24_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 94: {
-        const auto& out = *static_cast<const DecodedHSET23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 95: {
-        const auto& out = *static_cast<const DecodedHSET23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 96: {
-        const auto& out = *static_cast<const DecodedHSETP25_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 97: {
-        const auto& out = *static_cast<const DecodedHSETP25_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 98: {
-        const auto& out = *static_cast<const DecodedHSETP24*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 99: {
-        const auto& out = *static_cast<const DecodedHSETP24*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 100: {
-        const auto& out = *static_cast<const DecodedIADD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 101: {
-        const auto& out = *static_cast<const DecodedIADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 102: {
-        const auto& out = *static_cast<const DecodedIADD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 103: {
-        const auto& out = *static_cast<const DecodedIADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 104: {
-        const auto& out = *static_cast<const DecodedVIADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 105: {
-        const auto& out = *static_cast<const DecodedIMMA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 106: {
-        const auto& out = *static_cast<const DecodedIMMA7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.id;
-            default: return nullptr;
-        }
-    }
-    case 107: {
-        const auto& out = *static_cast<const DecodedI2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 108: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 109: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 110: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 111: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 112: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 113: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 114: {
-        const auto& out = *static_cast<const DecodedMOVM2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 115: {
-        const auto& out = *static_cast<const DecodedHMMA7_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.id;
-            default: return nullptr;
-        }
-    }
-    case 116: {
-        const auto& out = *static_cast<const DecodedHMMA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 117: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 118: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 119: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 120: {
-        const auto& out = *static_cast<const DecodedF2FP3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 121: {
-        const auto& out = *static_cast<const DecodedF2FP3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 122: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 123: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 124: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 125: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 126: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 127: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 128: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 129: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 130: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 131: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 132: {
-        const auto& out = *static_cast<const DecodedDMMA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 133: {
-        const auto& out = *static_cast<const DecodedHMNMX24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 134: {
-        const auto& out = *static_cast<const DecodedHMNMX24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 135: {
-        const auto& out = *static_cast<const DecodedHMNMX26*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 136: {
-        const auto& out = *static_cast<const DecodedHMNMX26*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 137: {
-        const auto& out = *static_cast<const DecodedF2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 138: {
-        const auto& out = *static_cast<const DecodedI2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 139: {
-        const auto& out = *static_cast<const DecodedVIMNMX4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 140: {
-        const auto& out = *static_cast<const DecodedQMMA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 141: {
-        const auto& out = *static_cast<const DecodedQMMA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 142: {
-        const auto& out = *static_cast<const DecodedQMMA7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.sparseId;
-            default: return nullptr;
-        }
-    }
-    case 143: {
-        const auto& out = *static_cast<const DecodedQMMA7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.sparseId;
-            default: return nullptr;
-        }
-    }
-    case 144: {
-        const auto& out = *static_cast<const DecodedR2UR3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.URd;
-            case 2: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 145: {
-        const auto& out = *static_cast<const DecodedR2UR3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.URd;
-            case 2: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 146: {
-        const auto& out = *static_cast<const DecodedR2UR3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.URd;
-            case 2: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 147: {
-        const auto& out = *static_cast<const DecodedR2UR3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.URd;
-            case 2: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 148: {
-        const auto& out = *static_cast<const DecodedFLO3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 149: {
-        const auto& out = *static_cast<const DecodedBREV2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 150: {
-        const auto& out = *static_cast<const DecodedFCHK3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 151: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 152: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 153: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 154: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 155: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 156: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 157: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 158: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 159: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 160: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 161: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 162: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 163: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 164: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 165: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 166: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 167: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 168: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 169: {
-        const auto& out = *static_cast<const DecodedMUFU2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 170: {
-        const auto& out = *static_cast<const DecodedMUFU2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 171: {
-        const auto& out = *static_cast<const DecodedMUFU2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 172: {
-        const auto& out = *static_cast<const DecodedPOPC2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 173: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 174: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 175: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 176: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 177: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 178: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 179: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 180: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 181: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 182: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 183: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 184: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 185: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 186: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 187: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 188: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 189: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 190: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 191: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 192: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 193: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 194: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 195: {
-        const auto& out = *static_cast<const DecodedB2R2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.barname;
-            default: return nullptr;
-        }
-    }
-    case 196: {
-        const auto& out = *static_cast<const DecodedB2R2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            default: return nullptr;
-        }
-    }
-    case 197: {
-        const auto& out = *static_cast<const DecodedB2R1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            default: return nullptr;
-        }
-    }
-    case 198: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 199: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 200: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 201: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 202: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 203: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 204: {
-        const auto& out = *static_cast<const DecodedR2B2*>(inst);
-        switch (p) {
-            case 0: return &out.barname;
-            case 1: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 205: {
-        const auto& out = *static_cast<const DecodedSETCTAID1*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 206: {
-        const auto& out = *static_cast<const DecodedALD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.srcAttr;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 207: {
-        const auto& out = *static_cast<const DecodedALD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.srcAttr;
-            case 2: return &out.a;
-            case 3: return &out.off;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 208: {
-        const auto& out = *static_cast<const DecodedALD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.srcAttr;
-            case 2: return &out.a;
-            case 3: return &out.off;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 209: {
-        const auto& out = *static_cast<const DecodedALD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.srcAttr;
-            case 2: return &out.a;
-            case 3: return &out.off;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 210: {
-        const auto& out = *static_cast<const DecodedAST4*>(inst);
-        switch (p) {
-            case 0: return &out.srcAttr;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 211: {
-        const auto& out = *static_cast<const DecodedAST5*>(inst);
-        switch (p) {
-            case 0: return &out.srcAttr;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 212: {
-        const auto& out = *static_cast<const DecodedAST5*>(inst);
-        switch (p) {
-            case 0: return &out.srcAttr;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 213: {
-        const auto& out = *static_cast<const DecodedAST5*>(inst);
-        switch (p) {
-            case 0: return &out.srcAttr;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 214: {
-        const auto& out = *static_cast<const DecodedOUT3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 215: {
-        const auto& out = *static_cast<const DecodedOUT3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 216: {
-        const auto& out = *static_cast<const DecodedOUT3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 217: {
-        const auto& out = *static_cast<const DecodedOUT1*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 218: {
-        const auto& out = *static_cast<const DecodedIPA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.srcAttr;
-            case 3: return &out.attr;
-            default: return nullptr;
-        }
-    }
-    case 219: {
-        const auto& out = *static_cast<const DecodedIPA5_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.srcAttr;
-            case 3: return &out.attr;
-            case 4: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 220: return nullptr;
-    case 221: return nullptr;
-    case 222: {
-        const auto& out = *static_cast<const DecodedCALL3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 223: {
-        const auto& out = *static_cast<const DecodedCALL3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 224: {
-        const auto& out = *static_cast<const DecodedCALL3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 225: {
-        const auto& out = *static_cast<const DecodedCALL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            default: return nullptr;
-        }
-    }
-    case 226: {
-        const auto& out = *static_cast<const DecodedWARPSYNC2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 227: {
-        const auto& out = *static_cast<const DecodedWARPSYNC3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Ra;
-            case 2: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 228: {
-        const auto& out = *static_cast<const DecodedWARPSYNC3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Ra;
-            case 2: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 229: {
-        const auto& out = *static_cast<const DecodedLEPC1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            default: return nullptr;
-        }
-    }
-    case 230: {
-        const auto& out = *static_cast<const DecodedRPCMOV2_2*>(inst);
-        switch (p) {
-            case 0: return &out.RpcN;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 231: {
-        const auto& out = *static_cast<const DecodedRPCMOV2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.RpcN;
-            default: return nullptr;
-        }
-    }
-    case 232: {
-        const auto& out = *static_cast<const DecodedBMOV2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.cbu_state;
-            default: return nullptr;
-        }
-    }
-    case 233: {
-        const auto& out = *static_cast<const DecodedBMOV2_4*>(inst);
-        switch (p) {
-            case 0: return &out.cbu_state;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 234: {
-        const auto& out = *static_cast<const DecodedBMOV2_1*>(inst);
-        switch (p) {
-            case 0: return &out.atexit_pc;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 235: {
-        const auto& out = *static_cast<const DecodedNANOTRAP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 236: {
-        const auto& out = *static_cast<const DecodedNANOSLEEP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 237: {
-        const auto& out = *static_cast<const DecodedTEX9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 238: {
-        const auto& out = *static_cast<const DecodedTEX9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 239: {
-        const auto& out = *static_cast<const DecodedTMML6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.paramA;
-            case 5: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 240: {
-        const auto& out = *static_cast<const DecodedTXQ5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.query;
-            case 4: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 241: {
-        const auto& out = *static_cast<const DecodedLDG5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 242: {
-        const auto& out = *static_cast<const DecodedLDG5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 243: {
-        const auto& out = *static_cast<const DecodedST3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 244: {
-        const auto& out = *static_cast<const DecodedST3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 245: {
-        const auto& out = *static_cast<const DecodedSTG3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 246: {
-        const auto& out = *static_cast<const DecodedSTG3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 247: {
-        const auto& out = *static_cast<const DecodedSTL3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 248: {
-        const auto& out = *static_cast<const DecodedSTL3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 249: {
-        const auto& out = *static_cast<const DecodedSTS3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 250: {
-        const auto& out = *static_cast<const DecodedSTS3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 251: {
-        const auto& out = *static_cast<const DecodedSHFL5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 252: {
-        const auto& out = *static_cast<const DecodedATOM6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 253: {
-        const auto& out = *static_cast<const DecodedATOM6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 254: {
-        const auto& out = *static_cast<const DecodedATOM7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.Rc;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 255: {
-        const auto& out = *static_cast<const DecodedATOM7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.Rc;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 256: {
-        const auto& out = *static_cast<const DecodedATOM7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.Rc;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 257: {
-        const auto& out = *static_cast<const DecodedATOM7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.Rc;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 258: {
-        const auto& out = *static_cast<const DecodedATOMS4_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 259: {
-        const auto& out = *static_cast<const DecodedATOMS4_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 260: {
-        const auto& out = *static_cast<const DecodedREDS3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 261: {
-        const auto& out = *static_cast<const DecodedREDS3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 262: {
-        const auto& out = *static_cast<const DecodedATOMS5_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 263: {
-        const auto& out = *static_cast<const DecodedATOMS5_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 264: {
-        const auto& out = *static_cast<const DecodedATOMS5_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 265: {
-        const auto& out = *static_cast<const DecodedATOMS5_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 266: return nullptr;
-    case 267: {
-        const auto& out = *static_cast<const DecodedCCTLT1*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 268: {
-        const auto& out = *static_cast<const DecodedSUATOM6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.c;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 269: {
-        const auto& out = *static_cast<const DecodedSUATOM6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.c;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 270: {
-        const auto& out = *static_cast<const DecodedSURED4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.c;
-            case 3: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 271: {
-        const auto& out = *static_cast<const DecodedMATCH3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 272: {
-        const auto& out = *static_cast<const DecodedMATCH2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 273: {
-        const auto& out = *static_cast<const DecodedATOM6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 274: {
-        const auto& out = *static_cast<const DecodedATOM6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 275: {
-        const auto& out = *static_cast<const DecodedATOMG5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 276: {
-        const auto& out = *static_cast<const DecodedATOMG5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 277: return nullptr;
-    case 278: {
-        const auto& out = *static_cast<const DecodedATOMG5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 279: {
-        const auto& out = *static_cast<const DecodedATOMG5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 280: {
-        const auto& out = *static_cast<const DecodedATOMG6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 281: {
-        const auto& out = *static_cast<const DecodedATOMG6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 282: {
-        const auto& out = *static_cast<const DecodedQSPC3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 283: {
-        const auto& out = *static_cast<const DecodedQSPC3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 284: {
-        const auto& out = *static_cast<const DecodedQSPC3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 285: {
-        const auto& out = *static_cast<const DecodedQSPC3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 286: {
-        const auto& out = *static_cast<const DecodedQSPC4_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 287: {
-        const auto& out = *static_cast<const DecodedQSPC4_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 288: {
-        const auto& out = *static_cast<const DecodedGETLMEMBASE1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            default: return nullptr;
-        }
-    }
-    case 289: {
-        const auto& out = *static_cast<const DecodedSETLMEMBASE1*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 290: {
-        const auto& out = *static_cast<const DecodedREDUX2*>(inst);
-        switch (p) {
-            case 0: return &out.URd;
-            case 1: return &out.Ra;
-            default: return nullptr;
-        }
-    }
-    case 291: return nullptr;
-    case 292: return nullptr;
-    case 293: return nullptr;
-    case 294: {
-        const auto& out = *static_cast<const DecodedTTUST4*>(inst);
-        switch (p) {
-            case 0: return &out.ttuAddr;
-            case 1: return &out.ImmU16;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 295: {
-        const auto& out = *static_cast<const DecodedTTUCLOSE1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            default: return nullptr;
-        }
-    }
-    case 296: {
-        const auto& out = *static_cast<const DecodedTTULD5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.ttuAddr;
-            case 4: return &out.ImmU16;
-            default: return nullptr;
-        }
-    }
-    case 297: {
-        const auto& out = *static_cast<const DecodedTTULD5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.ttuAddr;
-            case 4: return &out.ImmU16;
-            default: return nullptr;
-        }
-    }
-    case 298: return nullptr;
-    case 299: return nullptr;
-    case 300: {
-        const auto& out = *static_cast<const DecodedMOV2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 301: {
-        const auto& out = *static_cast<const DecodedSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 302: {
-        const auto& out = *static_cast<const DecodedLEA6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 303: {
-        const auto& out = *static_cast<const DecodedLEA7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.scaleU5;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 304: {
-        const auto& out = *static_cast<const DecodedPRMT4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 305: {
-        const auto& out = *static_cast<const DecodedSHF4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 306: {
-        const auto& out = *static_cast<const DecodedSHL3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Sa;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 307: {
-        const auto& out = *static_cast<const DecodedFADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 308: {
-        const auto& out = *static_cast<const DecodedFADD32I3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            default: return nullptr;
-        }
-    }
-    case 309: {
-        const auto& out = *static_cast<const DecodedFFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 310: {
-        const auto& out = *static_cast<const DecodedIMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 311: {
-        const auto& out = *static_cast<const DecodedIMAD5_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Sc;
-            case 4: return &out.GetPseudoOpRRI;
-            default: return nullptr;
-        }
-    }
-    case 312: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 313: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 314: {
-        const auto& out = *static_cast<const DecodedDADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 315: {
-        const auto& out = *static_cast<const DecodedDSETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 316: {
-        const auto& out = *static_cast<const DecodedDSETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 317: {
-        const auto& out = *static_cast<const DecodedDFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 318: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 319: {
-        const auto& out = *static_cast<const DecodedHADD24_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sc;
-            default: return nullptr;
-        }
-    }
-    case 320: {
-        const auto& out = *static_cast<const DecodedHADD24_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            case 3: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 321: {
-        const auto& out = *static_cast<const DecodedHADD24_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            case 3: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 322: {
-        const auto& out = *static_cast<const DecodedHADD2_32I4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            case 3: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 323: {
-        const auto& out = *static_cast<const DecodedHADD2_32I4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            case 3: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 324: {
-        const auto& out = *static_cast<const DecodedHFMA25_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 325: {
-        const auto& out = *static_cast<const DecodedHFMA25_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 326: {
-        const auto& out = *static_cast<const DecodedHFMA25_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 327: {
-        const auto& out = *static_cast<const DecodedHFMA26_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 328: {
-        const auto& out = *static_cast<const DecodedHFMA26_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 329: {
-        const auto& out = *static_cast<const DecodedHFMA26_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 330: {
-        const auto& out = *static_cast<const DecodedHSET25*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            case 3: return &out.Sc1;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 331: {
-        const auto& out = *static_cast<const DecodedHSET25*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            case 3: return &out.Sc1;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 332: {
-        const auto& out = *static_cast<const DecodedHSET24_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            case 3: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 333: {
-        const auto& out = *static_cast<const DecodedHSET24_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sc;
-            case 3: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 334: {
-        const auto& out = *static_cast<const DecodedHSETP26*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 335: {
-        const auto& out = *static_cast<const DecodedHSETP26*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 336: {
-        const auto& out = *static_cast<const DecodedHSETP25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 337: {
-        const auto& out = *static_cast<const DecodedHSETP25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.Sc;
-            case 4: return &out.Sc1;
-            default: return nullptr;
-        }
-    }
-    case 338: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 339: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 340: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 341: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 342: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 343: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 344: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 345: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 346: {
-        const auto& out = *static_cast<const DecodedF2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 347: {
-        const auto& out = *static_cast<const DecodedQMMA8*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.Rh;
-            case 7: return &out.URi;
-            default: return nullptr;
-        }
-    }
-    case 348: {
-        const auto& out = *static_cast<const DecodedQMMA9*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.Rh;
-            case 7: return &out.URi;
-            case 8: return &out.sparseId;
-            default: return nullptr;
-        }
-    }
-    case 349: {
-        const auto& out = *static_cast<const DecodedMXQMMA8*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.Rh;
-            case 7: return &out.URi;
-            default: return nullptr;
-        }
-    }
-    case 350: {
-        const auto& out = *static_cast<const DecodedOMMA8*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.Rh;
-            case 7: return &out.URi;
-            default: return nullptr;
-        }
-    }
-    case 351: {
-        const auto& out = *static_cast<const DecodedOMMA9*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rb;
-            case 3: return &out.Rc;
-            case 4: return &out.UPp;
-            case 5: return &out.Re;
-            case 6: return &out.Rh;
-            case 7: return &out.URi;
-            case 8: return &out.sparseId;
-            default: return nullptr;
-        }
-    }
-    case 352: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 353: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 354: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 355: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 356: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 357: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 358: {
-        const auto& out = *static_cast<const DecodedMOV64IUR2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 359: {
-        const auto& out = *static_cast<const DecodedSHFL5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 360: {
-        const auto& out = *static_cast<const DecodedATOMS5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 361: {
-        const auto& out = *static_cast<const DecodedATOMS5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 362: return nullptr;
-    case 363: {
-        const auto& out = *static_cast<const DecodedSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 364: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 365: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 366: {
-        const auto& out = *static_cast<const DecodedPMTRIG2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.imm;
-            default: return nullptr;
-        }
-    }
-    case 367: {
-        const auto& out = *static_cast<const DecodedMOV3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.PixMaskU04;
-            default: return nullptr;
-        }
-    }
-    case 368: {
-        const auto& out = *static_cast<const DecodedMOV32I3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Sb;
-            case 2: return &out.PixMaskU04;
-            default: return nullptr;
-        }
-    }
-    case 369: {
-        const auto& out = *static_cast<const DecodedP2R4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pr;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 370: {
-        const auto& out = *static_cast<const DecodedP2R2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 371: {
-        const auto& out = *static_cast<const DecodedR2P3*>(inst);
-        switch (p) {
-            case 0: return &out.PR;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 372: {
-        const auto& out = *static_cast<const DecodedCS2R2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.SRa;
-            default: return nullptr;
-        }
-    }
-    case 373: {
-        const auto& out = *static_cast<const DecodedVOTE3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 374: {
-        const auto& out = *static_cast<const DecodedSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 375: {
-        const auto& out = *static_cast<const DecodedFSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 376: {
-        const auto& out = *static_cast<const DecodedFMNMX4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 377: {
-        const auto& out = *static_cast<const DecodedFMNMX5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 378: {
-        const auto& out = *static_cast<const DecodedFSET4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 379: {
-        const auto& out = *static_cast<const DecodedFSET3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 380: {
-        const auto& out = *static_cast<const DecodedFSETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 381: {
-        const auto& out = *static_cast<const DecodedFSETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 382: {
-        const auto& out = *static_cast<const DecodedISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            case 5: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 383: {
-        const auto& out = *static_cast<const DecodedISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 384: {
-        const auto& out = *static_cast<const DecodedISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 385: {
-        const auto& out = *static_cast<const DecodedISETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 386: {
-        const auto& out = *static_cast<const DecodedISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            case 5: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 387: {
-        const auto& out = *static_cast<const DecodedISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 388: {
-        const auto& out = *static_cast<const DecodedISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 389: {
-        const auto& out = *static_cast<const DecodedISETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 390: {
-        const auto& out = *static_cast<const DecodedCSMTEST1*>(inst);
-        switch (p) {
-            case 0: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 391: {
-        const auto& out = *static_cast<const DecodedCSMTEST4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Sa;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 392: {
-        const auto& out = *static_cast<const DecodedCSMTEST2*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 393: {
-        const auto& out = *static_cast<const DecodedVOTE_VTG1*>(inst);
-        switch (p) {
-            case 0: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 394: {
-        const auto& out = *static_cast<const DecodedVOTE_VTG4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Sa;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 395: {
-        const auto& out = *static_cast<const DecodedVOTE_VTG2*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 396: {
-        const auto& out = *static_cast<const DecodedIADD36*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 397: {
-        const auto& out = *static_cast<const DecodedIADD38*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Rc;
-            case 6: return &out.Pp;
-            case 7: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 398: {
-        const auto& out = *static_cast<const DecodedISCADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 399: {
-        const auto& out = *static_cast<const DecodedISCADD32I5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.Sb;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 400: {
-        const auto& out = *static_cast<const DecodedLEA6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 401: {
-        const auto& out = *static_cast<const DecodedLEA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 402: {
-        const auto& out = *static_cast<const DecodedLEA6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 403: {
-        const auto& out = *static_cast<const DecodedLEA7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.scaleU5;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 404: {
-        const auto& out = *static_cast<const DecodedLEA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 405: {
-        const auto& out = *static_cast<const DecodedLEA6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 406: {
-        const auto& out = *static_cast<const DecodedLOP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 407: {
-        const auto& out = *static_cast<const DecodedLOP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 408: {
-        const auto& out = *static_cast<const DecodedLOP36_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 409: {
-        const auto& out = *static_cast<const DecodedLOP35*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 410: {
-        const auto& out = *static_cast<const DecodedLOP37*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.imm8;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 411: {
-        const auto& out = *static_cast<const DecodedLOP36_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.imm8;
-            default: return nullptr;
-        }
-    }
-    case 412: {
-        const auto& out = *static_cast<const DecodedLOP32I5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Sb;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 413: {
-        const auto& out = *static_cast<const DecodedLOP32I4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 414: {
-        const auto& out = *static_cast<const DecodedIABS2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 415: {
-        const auto& out = *static_cast<const DecodedPRMT4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 416: {
-        const auto& out = *static_cast<const DecodedIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            case 6: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 417: {
-        const auto& out = *static_cast<const DecodedIMNMX6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 418: {
-        const auto& out = *static_cast<const DecodedIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            case 6: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 419: {
-        const auto& out = *static_cast<const DecodedIMNMX6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 420: {
-        const auto& out = *static_cast<const DecodedSHF4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 421: {
-        const auto& out = *static_cast<const DecodedSHL3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 422: {
-        const auto& out = *static_cast<const DecodedSHR3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 423: {
-        const auto& out = *static_cast<const DecodedSGXT3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 424: {
-        const auto& out = *static_cast<const DecodedBMSK3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 425: {
-        const auto& out = *static_cast<const DecodedPLOP34_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.Pq;
-            case 3: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 426: {
-        const auto& out = *static_cast<const DecodedPLOP34_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.Pq;
-            case 3: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 427: {
-        const auto& out = *static_cast<const DecodedPLOP35_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.Pq;
-            case 3: return &out.Pr;
-            case 4: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 428: {
-        const auto& out = *static_cast<const DecodedPLOP35_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.Pq;
-            case 3: return &out.UPr;
-            case 4: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 429: {
-        const auto& out = *static_cast<const DecodedPLOP37_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Pp;
-            case 3: return &out.Pq;
-            case 4: return &out.Pr;
-            case 5: return &out.uimm8;
-            case 6: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 430: {
-        const auto& out = *static_cast<const DecodedPLOP37_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Pp;
-            case 3: return &out.Pq;
-            case 4: return &out.UPr;
-            case 5: return &out.uimm8;
-            case 6: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 431: {
-        const auto& out = *static_cast<const DecodedPSETP5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Pp;
-            case 3: return &out.Pq;
-            case 4: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 432: {
-        const auto& out = *static_cast<const DecodedPSETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 433: {
-        const auto& out = *static_cast<const DecodedPSETP5_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Pp;
-            case 3: return &out.Pq;
-            case 4: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 434: {
-        const auto& out = *static_cast<const DecodedFMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 435: {
-        const auto& out = *static_cast<const DecodedFMUL32I3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 436: {
-        const auto& out = *static_cast<const DecodedFSWZADD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Rc;
-            case 3: return &out.npCtrl;
-            default: return nullptr;
-        }
-    }
-    case 437: {
-        const auto& out = *static_cast<const DecodedFFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 438: {
-        const auto& out = *static_cast<const DecodedFFMA32I4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 439: {
-        const auto& out = *static_cast<const DecodedIMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 440: {
-        const auto& out = *static_cast<const DecodedIMAD5_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Rc;
-            case 4: return &out.GetPseudoOpRIR;
-            default: return nullptr;
-        }
-    }
-    case 441: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 442: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 443: {
-        const auto& out = *static_cast<const DecodedIMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 444: {
-        const auto& out = *static_cast<const DecodedIMUL32I3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 445: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 446: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 447: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 448: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 449: {
-        const auto& out = *static_cast<const DecodedIMUL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 450: {
-        const auto& out = *static_cast<const DecodedIMUL32I4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 451: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 452: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 453: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 454: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 455: {
-        const auto& out = *static_cast<const DecodedDMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 456: {
-        const auto& out = *static_cast<const DecodedDFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 457: return nullptr;
-    case 458: return nullptr;
-    case 459: {
-        const auto& out = *static_cast<const DecodedELECT3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.URd;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 460: {
-        const auto& out = *static_cast<const DecodedHFMA25_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 461: {
-        const auto& out = *static_cast<const DecodedHFMA25_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 462: {
-        const auto& out = *static_cast<const DecodedHFMA25_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 463: {
-        const auto& out = *static_cast<const DecodedHFMA26_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Rc;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 464: {
-        const auto& out = *static_cast<const DecodedHFMA26_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Rc;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 465: {
-        const auto& out = *static_cast<const DecodedHFMA26_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Rc;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 466: {
-        const auto& out = *static_cast<const DecodedHFMA2_32I5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 467: {
-        const auto& out = *static_cast<const DecodedHFMA2_32I5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 468: {
-        const auto& out = *static_cast<const DecodedHMUL24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            default: return nullptr;
-        }
-    }
-    case 469: {
-        const auto& out = *static_cast<const DecodedHMUL24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            default: return nullptr;
-        }
-    }
-    case 470: {
-        const auto& out = *static_cast<const DecodedHMUL2_32I4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            default: return nullptr;
-        }
-    }
-    case 471: {
-        const auto& out = *static_cast<const DecodedHMUL2_32I4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            default: return nullptr;
-        }
-    }
-    case 472: {
-        const auto& out = *static_cast<const DecodedIADD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 473: {
-        const auto& out = *static_cast<const DecodedIADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 474: {
-        const auto& out = *static_cast<const DecodedIADD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 475: {
-        const auto& out = *static_cast<const DecodedIADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 476: {
-        const auto& out = *static_cast<const DecodedIADD32I4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 477: {
-        const auto& out = *static_cast<const DecodedIADD32I5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.Sb;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 478: {
-        const auto& out = *static_cast<const DecodedVIADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 479: {
-        const auto& out = *static_cast<const DecodedI2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 480: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 481: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 482: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 483: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 484: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 485: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 486: {
-        const auto& out = *static_cast<const DecodedLDSM3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 487: {
-        const auto& out = *static_cast<const DecodedLDSM3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 488: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 489: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 490: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 491: {
-        const auto& out = *static_cast<const DecodedF2FP3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 492: {
-        const auto& out = *static_cast<const DecodedF2FP3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 493: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 494: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 495: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 496: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 497: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 498: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 499: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 500: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 501: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 502: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 503: {
-        const auto& out = *static_cast<const DecodedHMNMX25*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 504: {
-        const auto& out = *static_cast<const DecodedHMNMX25*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Sb;
-            case 3: return &out.Sb1;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 505: {
-        const auto& out = *static_cast<const DecodedHMNMX27*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.Sb;
-            case 5: return &out.Sb1;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 506: {
-        const auto& out = *static_cast<const DecodedHMNMX27*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.Sb;
-            case 5: return &out.Sb1;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 507: {
-        const auto& out = *static_cast<const DecodedF2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 508: {
-        const auto& out = *static_cast<const DecodedSTSM3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 509: {
-        const auto& out = *static_cast<const DecodedI2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 510: {
-        const auto& out = *static_cast<const DecodedI2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 511: {
-        const auto& out = *static_cast<const DecodedVIMNMX4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 512: {
-        const auto& out = *static_cast<const DecodedUVIRTCOUNT2_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 513: {
-        const auto& out = *static_cast<const DecodedUVIRTCOUNT2_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 514: return nullptr;
-    case 515: {
-        const auto& out = *static_cast<const DecodedUMOV3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 516: {
-        const auto& out = *static_cast<const DecodedVOTEU3*>(inst);
-        switch (p) {
-            case 0: return &out.URd;
-            case 1: return &out.UPu;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 517: {
-        const auto& out = *static_cast<const DecodedUPLOP35*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPp;
-            case 3: return &out.UPq;
-            case 4: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 518: {
-        const auto& out = *static_cast<const DecodedUPLOP36_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPp;
-            case 3: return &out.UPq;
-            case 4: return &out.UPr;
-            case 5: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 519: {
-        const auto& out = *static_cast<const DecodedUPLOP38_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.UPp;
-            case 4: return &out.UPq;
-            case 5: return &out.UPr;
-            case 6: return &out.uimm8;
-            case 7: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 520: {
-        const auto& out = *static_cast<const DecodedUPSETP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.UPp;
-            case 4: return &out.UPq;
-            case 5: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 521: {
-        const auto& out = *static_cast<const DecodedUPSETP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPp;
-            case 3: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 522: {
-        const auto& out = *static_cast<const DecodedCS2UR3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.SRa;
-            default: return nullptr;
-        }
-    }
-    case 523: {
-        const auto& out = *static_cast<const DecodedFLO3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 524: {
-        const auto& out = *static_cast<const DecodedBREV2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 525: {
-        const auto& out = *static_cast<const DecodedFCHK3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 526: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 527: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 528: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 529: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 530: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 531: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 532: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 533: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 534: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 535: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 536: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 537: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 538: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 539: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 540: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 541: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 542: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 543: {
-        const auto& out = *static_cast<const DecodedMUFU2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 544: {
-        const auto& out = *static_cast<const DecodedMUFU2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 545: {
-        const auto& out = *static_cast<const DecodedPOPC2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 546: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 547: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 548: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 549: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 550: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 551: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 552: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 553: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 554: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 555: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 556: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 557: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 558: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 559: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 560: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 561: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 562: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 563: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 564: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 565: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 566: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 567: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 568: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 569: return nullptr;
-    case 570: {
-        const auto& out = *static_cast<const DecodedS2R2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.SRa;
-            default: return nullptr;
-        }
-    }
-    case 571: {
-        const auto& out = *static_cast<const DecodedDEPBAR3_1*>(inst);
-        switch (p) {
-            case 0: return &out.sbidx;
-            case 1: return &out.cnt;
-            case 2: return &out.scoreboard_list;
-            default: return nullptr;
-        }
-    }
-    case 572: {
-        const auto& out = *static_cast<const DecodedDEPBAR1*>(inst);
-        switch (p) {
-            case 0: return &out.scoreboard_list;
-            default: return nullptr;
-        }
-    }
-    case 573: return nullptr;
-    case 574: {
-        const auto& out = *static_cast<const DecodedENDCOLLECTIVE1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 575: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 576: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 577: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 578: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 579: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 580: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 581: {
-        const auto& out = *static_cast<const DecodedAL2P3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 582: {
-        const auto& out = *static_cast<const DecodedAL2P3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 583: {
-        const auto& out = *static_cast<const DecodedISBERD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 584: {
-        const auto& out = *static_cast<const DecodedOUT3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 585: {
-        const auto& out = *static_cast<const DecodedPIXLD2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            default: return nullptr;
-        }
-    }
-    case 586: {
-        const auto& out = *static_cast<const DecodedIPA5_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.srcAttr;
-            case 3: return &out.attr;
-            case 4: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 587: {
-        const auto& out = *static_cast<const DecodedISBEWR3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 588: {
-        const auto& out = *static_cast<const DecodedBSYNC2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.barReg;
-            default: return nullptr;
-        }
-    }
-    case 589: {
-        const auto& out = *static_cast<const DecodedBSYNC2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.barReg;
-            default: return nullptr;
-        }
-    }
-    case 590: {
-        const auto& out = *static_cast<const DecodedBREAK2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.barReg;
-            default: return nullptr;
-        }
-    }
-    case 591: {
-        const auto& out = *static_cast<const DecodedBREAK2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.barReg;
-            default: return nullptr;
-        }
-    }
-    case 592: {
-        const auto& out = *static_cast<const DecodedCALL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 593: {
-        const auto& out = *static_cast<const DecodedCALL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 594: {
-        const auto& out = *static_cast<const DecodedCALL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 595: {
-        const auto& out = *static_cast<const DecodedBSSY3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.barReg;
-            case 2: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 596: {
-        const auto& out = *static_cast<const DecodedBSSY3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.barReg;
-            case 2: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 597: {
-        const auto& out = *static_cast<const DecodedBSSY3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.barReg;
-            case 2: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 598: {
-        const auto& out = *static_cast<const DecodedBSSY3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.barReg;
-            case 2: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 599: {
-        const auto& out = *static_cast<const DecodedYIELD1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 600: {
-        const auto& out = *static_cast<const DecodedBRA2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 601: {
-        const auto& out = *static_cast<const DecodedBRA2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 602: {
-        const auto& out = *static_cast<const DecodedBRA2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 603: {
-        const auto& out = *static_cast<const DecodedBRA2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 604: {
-        const auto& out = *static_cast<const DecodedWARPSYNC1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 605: {
-        const auto& out = *static_cast<const DecodedWARPSYNC2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 606: {
-        const auto& out = *static_cast<const DecodedWARPSYNC2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 607: {
-        const auto& out = *static_cast<const DecodedBRX3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 608: {
-        const auto& out = *static_cast<const DecodedBRX3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 609: {
-        const auto& out = *static_cast<const DecodedJMP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 610: {
-        const auto& out = *static_cast<const DecodedJMP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 611: {
-        const auto& out = *static_cast<const DecodedJMP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 612: {
-        const auto& out = *static_cast<const DecodedJMP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 613: {
-        const auto& out = *static_cast<const DecodedJMX3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 614: {
-        const auto& out = *static_cast<const DecodedJMX3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 615: {
-        const auto& out = *static_cast<const DecodedEXIT1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 616: {
-        const auto& out = *static_cast<const DecodedLEPC2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.sImm58;
-            default: return nullptr;
-        }
-    }
-    case 617: {
-        const auto& out = *static_cast<const DecodedLEPC2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.sImm58;
-            default: return nullptr;
-        }
-    }
-    case 618: return nullptr;
-    case 619: {
-        const auto& out = *static_cast<const DecodedRET3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 620: {
-        const auto& out = *static_cast<const DecodedRET3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 621: {
-        const auto& out = *static_cast<const DecodedRET3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 622: {
-        const auto& out = *static_cast<const DecodedRET2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            default: return nullptr;
-        }
-    }
-    case 623: {
-        const auto& out = *static_cast<const DecodedIDE1*>(inst);
-        switch (p) {
-            case 0: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 624: {
-        const auto& out = *static_cast<const DecodedRPCMOV2_2*>(inst);
-        switch (p) {
-            case 0: return &out.RpcN;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 625: {
-        const auto& out = *static_cast<const DecodedRPCMOV2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rpc;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 626: {
-        const auto& out = *static_cast<const DecodedBMOV2_4*>(inst);
-        switch (p) {
-            case 0: return &out.cbu_state;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 627: {
-        const auto& out = *static_cast<const DecodedBMOV2_1*>(inst);
-        switch (p) {
-            case 0: return &out.atexit_pc;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 628: {
-        const auto& out = *static_cast<const DecodedNANOTRAP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 629: {
-        const auto& out = *static_cast<const DecodedKILL1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 630: {
-        const auto& out = *static_cast<const DecodedBPT1*>(inst);
-        switch (p) {
-            case 0: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 631: {
-        const auto& out = *static_cast<const DecodedBPT1*>(inst);
-        switch (p) {
-            case 0: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 632: {
-        const auto& out = *static_cast<const DecodedNANOSLEEP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 633: {
-        const auto& out = *static_cast<const DecodedNANOSLEEP1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 634: {
-        const auto& out = *static_cast<const DecodedLD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 635: {
-        const auto& out = *static_cast<const DecodedLD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 636: {
-        const auto& out = *static_cast<const DecodedLDL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 637: {
-        const auto& out = *static_cast<const DecodedLDL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 638: {
-        const auto& out = *static_cast<const DecodedLDS3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 639: {
-        const auto& out = *static_cast<const DecodedLDS3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 640: {
-        const auto& out = *static_cast<const DecodedSHFL5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 641: {
-        const auto& out = *static_cast<const DecodedREDG3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 642: {
-        const auto& out = *static_cast<const DecodedREDG3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 643: return nullptr;
-    case 644: {
-        const auto& out = *static_cast<const DecodedCCTL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.a;
-            case 1: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 645: {
-        const auto& out = *static_cast<const DecodedCCTL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.a;
-            case 1: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 646: {
-        const auto& out = *static_cast<const DecodedCCTL3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 647: {
-        const auto& out = *static_cast<const DecodedCCTL3_3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.sector_count;
-            default: return nullptr;
-        }
-    }
-    case 648: {
-        const auto& out = *static_cast<const DecodedCCTL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.a;
-            case 1: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 649: {
-        const auto& out = *static_cast<const DecodedCCTL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.a;
-            case 1: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 650: {
-        const auto& out = *static_cast<const DecodedCCTL3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 651: {
-        const auto& out = *static_cast<const DecodedCCTL3_3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.sector_count;
-            default: return nullptr;
-        }
-    }
-    case 652: return nullptr;
-    case 653: return nullptr;
-    case 654: return nullptr;
-    case 655: {
-        const auto& out = *static_cast<const DecodedCCTLL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 656: {
-        const auto& out = *static_cast<const DecodedCCTLL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 657: return nullptr;
-    case 658: return nullptr;
-    case 659: return nullptr;
-    case 660: {
-        const auto& out = *static_cast<const DecodedSULD5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 661: {
-        const auto& out = *static_cast<const DecodedSULD5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 662: {
-        const auto& out = *static_cast<const DecodedSUST4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.c;
-            case 3: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 663: {
-        const auto& out = *static_cast<const DecodedSUST4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.c;
-            case 3: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 664: {
-        const auto& out = *static_cast<const DecodedREDG3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 665: {
-        const auto& out = *static_cast<const DecodedREDG3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_offset;
-            case 2: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 666: return nullptr;
-    case 667: return nullptr;
-    case 668: return nullptr;
-    case 669: {
-        const auto& out = *static_cast<const DecodedSUQUERY6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.queryType;
-            case 4: return &out.c;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 670: {
-        const auto& out = *static_cast<const DecodedUTMACMDFLUSH1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            default: return nullptr;
-        }
-    }
-    case 671: {
-        const auto& out = *static_cast<const DecodedUTMACCTL1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            default: return nullptr;
-        }
-    }
-    case 672: {
-        const auto& out = *static_cast<const DecodedUTMACCTL1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            default: return nullptr;
-        }
-    }
-    case 673: {
-        const auto& out = *static_cast<const DecodedS2UR3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.SRa;
-            default: return nullptr;
-        }
-    }
-    case 674: {
-        const auto& out = *static_cast<const DecodedTTUMACROFUSE1*>(inst);
-        switch (p) {
-            case 0: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 675: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 676: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 677: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 678: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 679: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 680: {
-        const auto& out = *static_cast<const DecodedBAR3*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            case 2: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 681: return nullptr;
-    case 682: return nullptr;
-    case 683: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 684: {
-        const auto& out = *static_cast<const DecodedBAR2*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            case 1: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 685: {
-        const auto& out = *static_cast<const DecodedCCTL4_0*>(inst);
-        switch (p) {
-            case 0: return &out.Sa;
-            case 1: return &out.Sa_bank;
-            case 2: return &out.a;
-            case 3: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 686: {
-        const auto& out = *static_cast<const DecodedLDC5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Sa;
-            case 2: return &out.Sa_bank;
-            case 3: return &out.Ra;
-            case 4: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 687: {
-        const auto& out = *static_cast<const DecodedLDC5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Sa;
-            case 2: return &out.Sa_bank;
-            case 3: return &out.Ra;
-            case 4: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 688: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 689: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 690: {
-        const auto& out = *static_cast<const DecodedBMOV2_2*>(inst);
-        switch (p) {
-            case 0: return &out.barReg;
-            case 1: return &out.Ba;
-            default: return nullptr;
-        }
-    }
-    case 691: {
-        const auto& out = *static_cast<const DecodedBMOV2_3*>(inst);
-        switch (p) {
-            case 0: return &out.barReg;
-            case 1: return &out.cbu_state;
-            default: return nullptr;
-        }
-    }
-    case 692: {
-        const auto& out = *static_cast<const DecodedBMOV2_5*>(inst);
-        switch (p) {
-            case 0: return &out.cbu_state;
-            case 1: return &out.barReg;
-            default: return nullptr;
-        }
-    }
-    case 693: {
-        const auto& out = *static_cast<const DecodedSHFL5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 694: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 695: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 696: {
-        const auto& out = *static_cast<const DecodedUVIADD4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 697: {
-        const auto& out = *static_cast<const DecodedUVIMNMX5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 698: {
-        const auto& out = *static_cast<const DecodedUIABS3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 699: {
-        const auto& out = *static_cast<const DecodedUI2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 700: {
-        const auto& out = *static_cast<const DecodedUI2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 701: {
-        const auto& out = *static_cast<const DecodedUI2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 702: {
-        const auto& out = *static_cast<const DecodedUI2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 703: {
-        const auto& out = *static_cast<const DecodedUFMNMX5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 704: {
-        const auto& out = *static_cast<const DecodedUFMNMX6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 705: {
-        const auto& out = *static_cast<const DecodedUFSEL5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 706: {
-        const auto& out = *static_cast<const DecodedUFSET5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 707: {
-        const auto& out = *static_cast<const DecodedUFSET4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 708: {
-        const auto& out = *static_cast<const DecodedUFSETP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 709: {
-        const auto& out = *static_cast<const DecodedUFSETP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 710: {
-        const auto& out = *static_cast<const DecodedUFADD4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 711: {
-        const auto& out = *static_cast<const DecodedUFHADD4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 712: {
-        const auto& out = *static_cast<const DecodedUFFMA5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 713: {
-        const auto& out = *static_cast<const DecodedUFHFMA5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.URb;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 714: {
-        const auto& out = *static_cast<const DecodedUFMUL4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 715: {
-        const auto& out = *static_cast<const DecodedUF2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 716: {
-        const auto& out = *static_cast<const DecodedUI2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 717: {
-        const auto& out = *static_cast<const DecodedUI2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 718: {
-        const auto& out = *static_cast<const DecodedUI2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 719: {
-        const auto& out = *static_cast<const DecodedUF2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 720: {
-        const auto& out = *static_cast<const DecodedUF2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 721: {
-        const auto& out = *static_cast<const DecodedUF2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 722: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 723: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 724: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 725: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 726: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 727: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 728: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 729: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 730: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 731: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 732: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 733: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 734: {
-        const auto& out = *static_cast<const DecodedUI2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 735: {
-        const auto& out = *static_cast<const DecodedUIMNMX8*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URd;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.UPp;
-            case 7: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 736: {
-        const auto& out = *static_cast<const DecodedUIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URd;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 737: {
-        const auto& out = *static_cast<const DecodedUIMNMX8*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URd;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.UPp;
-            case 7: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 738: {
-        const auto& out = *static_cast<const DecodedUIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URd;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 739: {
-        const auto& out = *static_cast<const DecodedUSEL5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 740: {
-        const auto& out = *static_cast<const DecodedUISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 741: {
-        const auto& out = *static_cast<const DecodedUISETP7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            case 6: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 742: {
-        const auto& out = *static_cast<const DecodedUISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 743: {
-        const auto& out = *static_cast<const DecodedUISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 744: {
-        const auto& out = *static_cast<const DecodedUISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 745: {
-        const auto& out = *static_cast<const DecodedUISETP7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            case 6: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 746: {
-        const auto& out = *static_cast<const DecodedUISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 747: {
-        const auto& out = *static_cast<const DecodedUISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 748: {
-        const auto& out = *static_cast<const DecodedUIADD37*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.UPv;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 749: {
-        const auto& out = *static_cast<const DecodedUIADD39*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.UPv;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.URc;
-            case 7: return &out.UPp;
-            case 8: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 750: {
-        const auto& out = *static_cast<const DecodedULEA7_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.c;
-            case 6: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 751: {
-        const auto& out = *static_cast<const DecodedULEA6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 752: {
-        const auto& out = *static_cast<const DecodedULEA7_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.scaleU5;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 753: {
-        const auto& out = *static_cast<const DecodedULEA8*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.c;
-            case 6: return &out.scaleU5;
-            case 7: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 754: {
-        const auto& out = *static_cast<const DecodedULEA6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 755: {
-        const auto& out = *static_cast<const DecodedULEA7_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.scaleU5;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 756: {
-        const auto& out = *static_cast<const DecodedULOP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 757: {
-        const auto& out = *static_cast<const DecodedULOP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 758: {
-        const auto& out = *static_cast<const DecodedULOP38*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.imm8;
-            case 7: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 759: {
-        const auto& out = *static_cast<const DecodedULOP37_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.imm8;
-            default: return nullptr;
-        }
-    }
-    case 760: {
-        const auto& out = *static_cast<const DecodedULOP37_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 761: {
-        const auto& out = *static_cast<const DecodedULOP36*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 762: {
-        const auto& out = *static_cast<const DecodedUPRMT5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 763: {
-        const auto& out = *static_cast<const DecodedUIADD3_647*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.UPv;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 764: {
-        const auto& out = *static_cast<const DecodedUIADD3_649*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.UPv;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.URc;
-            case 7: return &out.UPp;
-            case 8: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 765: {
-        const auto& out = *static_cast<const DecodedUSHF5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 766: {
-        const auto& out = *static_cast<const DecodedUSHL4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 767: {
-        const auto& out = *static_cast<const DecodedUSHR4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 768: {
-        const auto& out = *static_cast<const DecodedUSGXT4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 769: {
-        const auto& out = *static_cast<const DecodedUBMSK4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 770: {
-        const auto& out = *static_cast<const DecodedUPLOP36_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPp;
-            case 3: return &out.URb;
-            case 4: return &out.UPr;
-            case 5: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 771: {
-        const auto& out = *static_cast<const DecodedUPLOP38_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.UPp;
-            case 4: return &out.URb;
-            case 5: return &out.UPr;
-            case 6: return &out.uimm8;
-            case 7: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 772: {
-        const auto& out = *static_cast<const DecodedUPLOP36_2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPp;
-            case 3: return &out.URb;
-            case 4: return &out.URc;
-            case 5: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 773: {
-        const auto& out = *static_cast<const DecodedUPLOP38_2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.UPp;
-            case 4: return &out.URb;
-            case 5: return &out.URc;
-            case 6: return &out.uimm8;
-            case 7: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 774: {
-        const auto& out = *static_cast<const DecodedUPLOP36_3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.URb;
-            case 4: return &out.URc;
-            case 5: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 775: {
-        const auto& out = *static_cast<const DecodedUPLOP38_3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.URb;
-            case 5: return &out.URc;
-            case 6: return &out.uimm8;
-            case 7: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 776: {
-        const auto& out = *static_cast<const DecodedUIMAD5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 777: {
-        const auto& out = *static_cast<const DecodedUIMAD6_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 778: {
-        const auto& out = *static_cast<const DecodedUIMAD6_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 779: {
-        const auto& out = *static_cast<const DecodedUIMAD7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 780: {
-        const auto& out = *static_cast<const DecodedUIMAD6_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 781: {
-        const auto& out = *static_cast<const DecodedUIMAD7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 782: {
-        const auto& out = *static_cast<const DecodedUF2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 783: {
-        const auto& out = *static_cast<const DecodedUF2FP4_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 784: {
-        const auto& out = *static_cast<const DecodedUF2FP4_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 785: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 786: {
-        const auto& out = *static_cast<const DecodedUF2FP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 787: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 788: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 789: {
-        const auto& out = *static_cast<const DecodedUF2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 790: {
-        const auto& out = *static_cast<const DecodedUF2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 791: {
-        const auto& out = *static_cast<const DecodedUFLO4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 792: {
-        const auto& out = *static_cast<const DecodedUBREV3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 793: {
-        const auto& out = *static_cast<const DecodedUPOPC3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 794: {
-        const auto& out = *static_cast<const DecodedLDCU7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd2;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.Sa_offset;
-            case 5: return &out.word_mask;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 795: {
-        const auto& out = *static_cast<const DecodedLDCU6_2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd2;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.Sa_offset;
-            case 5: return &out.word_mask;
-            default: return nullptr;
-        }
-    }
-    case 796: {
-        const auto& out = *static_cast<const DecodedLDTRAM4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.srcAttr;
-            case 2: return &out.URa;
-            case 3: return &out.URa_offset;
-            default: return nullptr;
-        }
-    }
-    case 797: {
-        const auto& out = *static_cast<const DecodedSYNCS6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.URa_offset;
-            case 4: return &out.URb;
-            case 5: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 798: {
-        const auto& out = *static_cast<const DecodedUTMALDG4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 799: {
-        const auto& out = *static_cast<const DecodedUTMALDG6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            case 4: return &out.desc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 800: {
-        const auto& out = *static_cast<const DecodedUTMALDG4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 801: {
-        const auto& out = *static_cast<const DecodedUTMALDG6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            case 4: return &out.desc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 802: {
-        const auto& out = *static_cast<const DecodedUTMASTG3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 803: {
-        const auto& out = *static_cast<const DecodedUTMASTG5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 804: {
-        const auto& out = *static_cast<const DecodedUTMASTG3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 805: {
-        const auto& out = *static_cast<const DecodedUTMASTG5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 806: {
-        const auto& out = *static_cast<const DecodedUTMAREDG3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 807: {
-        const auto& out = *static_cast<const DecodedUTMAREDG5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 808: {
-        const auto& out = *static_cast<const DecodedUTMAREDG3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 809: {
-        const auto& out = *static_cast<const DecodedUTMAREDG5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 810: {
-        const auto& out = *static_cast<const DecodedUTMAPF4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 811: {
-        const auto& out = *static_cast<const DecodedUTMAPF6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            case 4: return &out.desc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 812: {
-        const auto& out = *static_cast<const DecodedUTMAPF4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 813: {
-        const auto& out = *static_cast<const DecodedUTMAPF6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            case 4: return &out.desc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 814: {
-        const auto& out = *static_cast<const DecodedUBLKCP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 815: {
-        const auto& out = *static_cast<const DecodedUBLKCP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            case 4: return &out.desc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 816: {
-        const auto& out = *static_cast<const DecodedUBLKCP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            case 4: return &out.desc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 817: {
-        const auto& out = *static_cast<const DecodedUBLKCP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 818: {
-        const auto& out = *static_cast<const DecodedUBLKRED4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 819: {
-        const auto& out = *static_cast<const DecodedUBLKRED6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            case 4: return &out.desc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 820: {
-        const auto& out = *static_cast<const DecodedUBLKRED6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            case 4: return &out.desc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 821: {
-        const auto& out = *static_cast<const DecodedUBLKRED4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 822: {
-        const auto& out = *static_cast<const DecodedUBLKPF3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            case 2: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 823: {
-        const auto& out = *static_cast<const DecodedUBLKPF5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            case 2: return &out.URc;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 824: {
-        const auto& out = *static_cast<const DecodedUBLKPF3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            case 2: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 825: {
-        const auto& out = *static_cast<const DecodedUBLKPF5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            case 2: return &out.URc;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 826: {
-        const auto& out = *static_cast<const DecodedUCGABARSET2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            default: return nullptr;
-        }
-    }
-    case 827: {
-        const auto& out = *static_cast<const DecodedUCGABAR_SET2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            default: return nullptr;
-        }
-    }
-    case 828: {
-        const auto& out = *static_cast<const DecodedUSETMAXREG3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 829: {
-        const auto& out = *static_cast<const DecodedUSETMAXREG2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 830: {
-        const auto& out = *static_cast<const DecodedUSETSHMSZ2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 831: {
-        const auto& out = *static_cast<const DecodedUGETNEXTWORKID3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            case 2: return &out.URb;
-            default: return nullptr;
-        }
-    }
-    case 832: {
-        const auto& out = *static_cast<const DecodedUGETNEXTWORKID3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            case 2: return &out.URb;
-            default: return nullptr;
-        }
-    }
-    case 833: {
-        const auto& out = *static_cast<const DecodedUMEMSETS5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            case 2: return &out.URa_offset;
-            case 3: return &out.URb;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 834: {
-        const auto& out = *static_cast<const DecodedULEPC2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            default: return nullptr;
-        }
-    }
-    case 835: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 836: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 837: {
-        const auto& out = *static_cast<const DecodedUVIRTCOUNT2_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 838: {
-        const auto& out = *static_cast<const DecodedUVIRTCOUNT2_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 839: {
-        const auto& out = *static_cast<const DecodedUFADD4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 840: {
-        const auto& out = *static_cast<const DecodedUFFMA5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 841: {
-        const auto& out = *static_cast<const DecodedUF2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 842: {
-        const auto& out = *static_cast<const DecodedMOV4_1*>(inst);
-        switch (p) {
-            case 0: return &out.indexURd;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.PixMaskU04;
-            default: return nullptr;
-        }
-    }
-    case 843: {
-        const auto& out = *static_cast<const DecodedUMOV3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 844: {
-        const auto& out = *static_cast<const DecodedUSEL5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 845: {
-        const auto& out = *static_cast<const DecodedULEA7_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.c;
-            case 6: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 846: {
-        const auto& out = *static_cast<const DecodedULEA8*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.c;
-            case 6: return &out.scaleU5;
-            case 7: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 847: {
-        const auto& out = *static_cast<const DecodedUSHF5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 848: {
-        const auto& out = *static_cast<const DecodedUSHL4_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.Sa;
-            case 3: return &out.URb;
-            default: return nullptr;
-        }
-    }
-    case 849: {
-        const auto& out = *static_cast<const DecodedUIMAD5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 850: {
-        const auto& out = *static_cast<const DecodedUIMAD6_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 851: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 852: {
-        const auto& out = *static_cast<const DecodedUF2FP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 853: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 854: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 855: {
-        const auto& out = *static_cast<const DecodedALD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.srcAttr;
-            case 2: return &out.a;
-            case 3: return &out.off;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 856: {
-        const auto& out = *static_cast<const DecodedALD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.srcAttr;
-            case 2: return &out.a;
-            case 3: return &out.off;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 857: {
-        const auto& out = *static_cast<const DecodedAST5*>(inst);
-        switch (p) {
-            case 0: return &out.srcAttr;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 858: {
-        const auto& out = *static_cast<const DecodedAST5*>(inst);
-        switch (p) {
-            case 0: return &out.srcAttr;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 859: {
-        const auto& out = *static_cast<const DecodedIPA5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.srcAttr;
-            case 3: return &out.URa;
-            case 4: return &out.URa_offset;
-            default: return nullptr;
-        }
-    }
-    case 860: {
-        const auto& out = *static_cast<const DecodedIPA6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.srcAttr;
-            case 3: return &out.URa;
-            case 4: return &out.URa_offset;
-            case 5: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 861: {
-        const auto& out = *static_cast<const DecodedCCTL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.a;
-            case 1: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 862: {
-        const auto& out = *static_cast<const DecodedCCTL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.a;
-            case 1: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 863: {
-        const auto& out = *static_cast<const DecodedBRA3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.UPq;
-            case 2: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 864: {
-        const auto& out = *static_cast<const DecodedBRA3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.UPq;
-            case 2: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 865: {
-        const auto& out = *static_cast<const DecodedJMP3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.UPq;
-            case 2: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 866: {
-        const auto& out = *static_cast<const DecodedJMP3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.UPq;
-            case 2: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 867: {
-        const auto& out = *static_cast<const DecodedLDC5_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Sa;
-            case 2: return &out.URa;
-            case 3: return &out.Rb;
-            case 4: return &out.Sa_offset;
-            default: return nullptr;
-        }
-    }
-    case 868: {
-        const auto& out = *static_cast<const DecodedLDC5_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Sa;
-            case 2: return &out.URa;
-            case 3: return &out.Rb;
-            case 4: return &out.Sa_offset;
-            default: return nullptr;
-        }
-    }
-    case 869: {
-        const auto& out = *static_cast<const DecodedSYNCS5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 870: {
-        const auto& out = *static_cast<const DecodedLDCU8_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd2;
-            case 2: return &out.URd;
-            case 3: return &out.Sa;
-            case 4: return &out.URa;
-            case 5: return &out.URb;
-            case 6: return &out.Sa_offset;
-            case 7: return &out.word_mask;
-            default: return nullptr;
-        }
-    }
-    case 871: {
-        const auto& out = *static_cast<const DecodedSYNCS4_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 872: {
-        const auto& out = *static_cast<const DecodedSYNCS5_2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.URa_offset;
-            case 4: return &out.URb;
-            default: return nullptr;
-        }
-    }
-    case 873: {
-        const auto& out = *static_cast<const DecodedUTMALDG3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 874: {
-        const auto& out = *static_cast<const DecodedUTMALDG5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 875: {
-        const auto& out = *static_cast<const DecodedUTMALDG3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 876: {
-        const auto& out = *static_cast<const DecodedUTMALDG5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 877: {
-        const auto& out = *static_cast<const DecodedUTMAPF3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 878: {
-        const auto& out = *static_cast<const DecodedUTMAPF5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 879: {
-        const auto& out = *static_cast<const DecodedUTMAPF3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 880: {
-        const auto& out = *static_cast<const DecodedUTMAPF5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URb;
-            case 2: return &out.URa;
-            case 3: return &out.desc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 881: {
-        const auto& out = *static_cast<const DecodedUCGABARGET2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            default: return nullptr;
-        }
-    }
-    case 882: {
-        const auto& out = *static_cast<const DecodedUCGABAR_GET2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            default: return nullptr;
-        }
-    }
-    case 883: {
-        const auto& out = *static_cast<const DecodedCCTL4_1*>(inst);
-        switch (p) {
-            case 0: return &out.Sa;
-            case 1: return &out.URa;
-            case 2: return &out.b;
-            case 3: return &out.Sa_offset;
-            default: return nullptr;
-        }
-    }
-    case 884: {
-        const auto& out = *static_cast<const DecodedCCTL4_1*>(inst);
-        switch (p) {
-            case 0: return &out.Sa;
-            case 1: return &out.URa;
-            case 2: return &out.b;
-            case 3: return &out.Sa_offset;
-            default: return nullptr;
-        }
-    }
-    case 885: {
-        const auto& out = *static_cast<const DecodedLDCU6_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.Sa;
-            case 3: return &out.Sa_bank;
-            case 4: return &out.URa;
-            case 5: return &out.Sa_offset;
-            default: return nullptr;
-        }
-    }
-    case 886: {
-        const auto& out = *static_cast<const DecodedELECT3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 887: {
-        const auto& out = *static_cast<const DecodedELECT2*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.URd;
-            default: return nullptr;
-        }
-    }
-    case 888: {
-        const auto& out = *static_cast<const DecodedLDSM4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 889: {
-        const auto& out = *static_cast<const DecodedLDSM4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 890: {
-        const auto& out = *static_cast<const DecodedSTSM4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 891: {
-        const auto& out = *static_cast<const DecodedUVIADD4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 892: {
-        const auto& out = *static_cast<const DecodedUVIMNMX5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 893: {
-        const auto& out = *static_cast<const DecodedUIABS3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 894: {
-        const auto& out = *static_cast<const DecodedUI2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 895: {
-        const auto& out = *static_cast<const DecodedUI2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 896: {
-        const auto& out = *static_cast<const DecodedUI2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 897: {
-        const auto& out = *static_cast<const DecodedUI2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 898: {
-        const auto& out = *static_cast<const DecodedUFMNMX5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 899: {
-        const auto& out = *static_cast<const DecodedUFMNMX6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 900: {
-        const auto& out = *static_cast<const DecodedUFSEL5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 901: {
-        const auto& out = *static_cast<const DecodedUFSET5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 902: {
-        const auto& out = *static_cast<const DecodedUFSET4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 903: {
-        const auto& out = *static_cast<const DecodedUFSETP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 904: {
-        const auto& out = *static_cast<const DecodedUFSETP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 905: {
-        const auto& out = *static_cast<const DecodedUFFMA5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 906: {
-        const auto& out = *static_cast<const DecodedUFMUL4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 907: {
-        const auto& out = *static_cast<const DecodedUF2IP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 908: {
-        const auto& out = *static_cast<const DecodedUI2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 909: {
-        const auto& out = *static_cast<const DecodedUI2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 910: {
-        const auto& out = *static_cast<const DecodedUF2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 911: {
-        const auto& out = *static_cast<const DecodedUF2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 912: {
-        const auto& out = *static_cast<const DecodedUF2F3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 913: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 914: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 915: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 916: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 917: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 918: {
-        const auto& out = *static_cast<const DecodedUF2I3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 919: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 920: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 921: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 922: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 923: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 924: {
-        const auto& out = *static_cast<const DecodedUFRND3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 925: {
-        const auto& out = *static_cast<const DecodedUI2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 926: {
-        const auto& out = *static_cast<const DecodedUI2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 927: {
-        const auto& out = *static_cast<const DecodedMOV4_1*>(inst);
-        switch (p) {
-            case 0: return &out.indexURd;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.PixMaskU04;
-            default: return nullptr;
-        }
-    }
-    case 928: {
-        const auto& out = *static_cast<const DecodedUP2UR5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPR;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 929: {
-        const auto& out = *static_cast<const DecodedUP2UR3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPR;
-            default: return nullptr;
-        }
-    }
-    case 930: {
-        const auto& out = *static_cast<const DecodedUR2UP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPR;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 931: {
-        const auto& out = *static_cast<const DecodedUIMNMX8*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URd;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.UPp;
-            case 7: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 932: {
-        const auto& out = *static_cast<const DecodedUIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URd;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 933: {
-        const auto& out = *static_cast<const DecodedUIMNMX8*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URd;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.UPp;
-            case 7: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 934: {
-        const auto& out = *static_cast<const DecodedUIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URd;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 935: {
-        const auto& out = *static_cast<const DecodedUSEL5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 936: {
-        const auto& out = *static_cast<const DecodedUISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 937: {
-        const auto& out = *static_cast<const DecodedUISETP7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            case 6: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 938: {
-        const auto& out = *static_cast<const DecodedUISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 939: {
-        const auto& out = *static_cast<const DecodedUISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 940: {
-        const auto& out = *static_cast<const DecodedUISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 941: {
-        const auto& out = *static_cast<const DecodedUISETP7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.UPv;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            case 6: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 942: {
-        const auto& out = *static_cast<const DecodedUISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 943: {
-        const auto& out = *static_cast<const DecodedUISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPr;
-            default: return nullptr;
-        }
-    }
-    case 944: {
-        const auto& out = *static_cast<const DecodedUIADD37*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.UPv;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 945: {
-        const auto& out = *static_cast<const DecodedUIADD39*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.UPv;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.URc;
-            case 7: return &out.UPp;
-            case 8: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 946: {
-        const auto& out = *static_cast<const DecodedULEA7_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.c;
-            case 6: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 947: {
-        const auto& out = *static_cast<const DecodedULEA6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 948: {
-        const auto& out = *static_cast<const DecodedULEA7_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.scaleU5;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 949: {
-        const auto& out = *static_cast<const DecodedULEA8*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.c;
-            case 6: return &out.scaleU5;
-            case 7: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 950: {
-        const auto& out = *static_cast<const DecodedULEA6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 951: {
-        const auto& out = *static_cast<const DecodedULEA7_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.scaleU5;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 952: {
-        const auto& out = *static_cast<const DecodedULOP6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 953: {
-        const auto& out = *static_cast<const DecodedULOP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 954: {
-        const auto& out = *static_cast<const DecodedULOP37_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 955: {
-        const auto& out = *static_cast<const DecodedULOP36*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 956: {
-        const auto& out = *static_cast<const DecodedULOP38*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.imm8;
-            case 7: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 957: {
-        const auto& out = *static_cast<const DecodedULOP37_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.imm8;
-            default: return nullptr;
-        }
-    }
-    case 958: {
-        const auto& out = *static_cast<const DecodedULOP32I6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.Sb;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 959: {
-        const auto& out = *static_cast<const DecodedULOP32I5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.URd;
-            case 3: return &out.URa;
-            case 4: return &out.Sb;
-            default: return nullptr;
-        }
-    }
-    case 960: {
-        const auto& out = *static_cast<const DecodedUPRMT5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 961: {
-        const auto& out = *static_cast<const DecodedUIADD3_647*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.UPv;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 962: {
-        const auto& out = *static_cast<const DecodedUIADD3_649*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.UPv;
-            case 4: return &out.URa;
-            case 5: return &out.b;
-            case 6: return &out.URc;
-            case 7: return &out.UPp;
-            case 8: return &out.UPq;
-            default: return nullptr;
-        }
-    }
-    case 963: {
-        const auto& out = *static_cast<const DecodedUSHF5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 964: {
-        const auto& out = *static_cast<const DecodedUSHL4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 965: {
-        const auto& out = *static_cast<const DecodedUSHR4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 966: {
-        const auto& out = *static_cast<const DecodedUSGXT4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 967: {
-        const auto& out = *static_cast<const DecodedUBMSK4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 968: {
-        const auto& out = *static_cast<const DecodedUIMAD5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 969: {
-        const auto& out = *static_cast<const DecodedUIMAD6_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 970: {
-        const auto& out = *static_cast<const DecodedUIMAD6_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 971: {
-        const auto& out = *static_cast<const DecodedUIMAD7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 972: {
-        const auto& out = *static_cast<const DecodedUIMAD6_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            default: return nullptr;
-        }
-    }
-    case 973: {
-        const auto& out = *static_cast<const DecodedUIMAD7*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.URc;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 974: {
-        const auto& out = *static_cast<const DecodedUF2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 975: {
-        const auto& out = *static_cast<const DecodedUF2FP4_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 976: {
-        const auto& out = *static_cast<const DecodedUF2FP4_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 977: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 978: {
-        const auto& out = *static_cast<const DecodedUF2FP5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 979: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 980: {
-        const auto& out = *static_cast<const DecodedUF2FP4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 981: {
-        const auto& out = *static_cast<const DecodedUF2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 982: {
-        const auto& out = *static_cast<const DecodedUF2FP3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 983: {
-        const auto& out = *static_cast<const DecodedUCLEA6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.constSizeU05;
-            default: return nullptr;
-        }
-    }
-    case 984: {
-        const auto& out = *static_cast<const DecodedUFLO4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 985: {
-        const auto& out = *static_cast<const DecodedUBREV3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 986: {
-        const auto& out = *static_cast<const DecodedUPOPC3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 987: {
-        const auto& out = *static_cast<const DecodedIPA6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.srcAttr;
-            case 3: return &out.URa;
-            case 4: return &out.URa_offset;
-            case 5: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 988: {
-        const auto& out = *static_cast<const DecodedCALL3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 989: {
-        const auto& out = *static_cast<const DecodedCALL3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 990: {
-        const auto& out = *static_cast<const DecodedCALL3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 991: {
-        const auto& out = *static_cast<const DecodedCALL2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            default: return nullptr;
-        }
-    }
-    case 992: {
-        const auto& out = *static_cast<const DecodedBRA3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.URb;
-            case 2: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 993: {
-        const auto& out = *static_cast<const DecodedBRA3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.URb;
-            case 2: return &out.sImm;
-            default: return nullptr;
-        }
-    }
-    case 994: {
-        const auto& out = *static_cast<const DecodedJMP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.URb;
-            case 2: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 995: {
-        const auto& out = *static_cast<const DecodedJMP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.URb;
-            case 2: return &out.Sa;
-            default: return nullptr;
-        }
-    }
-    case 996: {
-        const auto& out = *static_cast<const DecodedRET3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 997: {
-        const auto& out = *static_cast<const DecodedRET3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 998: {
-        const auto& out = *static_cast<const DecodedRET3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            case 2: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 999: {
-        const auto& out = *static_cast<const DecodedRET2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.a;
-            default: return nullptr;
-        }
-    }
-    case 1000: {
-        const auto& out = *static_cast<const DecodedBRXU3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.URa;
-            case 2: return &out.UR_offset;
-            default: return nullptr;
-        }
-    }
-    case 1001: {
-        const auto& out = *static_cast<const DecodedBRXU3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.URa;
-            case 2: return &out.UR_offset;
-            default: return nullptr;
-        }
-    }
-    case 1002: {
-        const auto& out = *static_cast<const DecodedJMXU3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.URa;
-            case 2: return &out.UR_offset;
-            default: return nullptr;
-        }
-    }
-    case 1003: {
-        const auto& out = *static_cast<const DecodedJMXU3*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.URa;
-            case 2: return &out.UR_offset;
-            default: return nullptr;
-        }
-    }
-    case 1004: {
-        const auto& out = *static_cast<const DecodedLDG8*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.memoryDescriptor;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra;
-            case 5: return &out.Ra_offset;
-            case 6: return &out.word_mask;
-            case 7: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1005: {
-        const auto& out = *static_cast<const DecodedLDG8*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.memoryDescriptor;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra;
-            case 5: return &out.Ra_offset;
-            case 6: return &out.word_mask;
-            case 7: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1006: {
-        const auto& out = *static_cast<const DecodedLDG7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.word_mask;
-            case 6: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1007: {
-        const auto& out = *static_cast<const DecodedLDG7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.word_mask;
-            case 6: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1008: {
-        const auto& out = *static_cast<const DecodedLDG7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.word_mask;
-            case 6: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1009: {
-        const auto& out = *static_cast<const DecodedLDG7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.word_mask;
-            case 6: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1010: {
-        const auto& out = *static_cast<const DecodedLDG7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.word_mask;
-            case 6: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1011: {
-        const auto& out = *static_cast<const DecodedLDG7_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.word_mask;
-            case 6: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1012: {
-        const auto& out = *static_cast<const DecodedSTG7*>(inst);
-        switch (p) {
-            case 0: return &out.memoryDescriptor;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            case 5: return &out.Rb2;
-            case 6: return &out.word_mask;
-            default: return nullptr;
-        }
-    }
-    case 1013: {
-        const auto& out = *static_cast<const DecodedSTG6*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rb2;
-            case 5: return &out.word_mask;
-            default: return nullptr;
-        }
-    }
-    case 1014: {
-        const auto& out = *static_cast<const DecodedSTG6*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rb2;
-            case 5: return &out.word_mask;
-            default: return nullptr;
-        }
-    }
-    case 1015: {
-        const auto& out = *static_cast<const DecodedSTG6*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            case 4: return &out.Rb2;
-            case 5: return &out.word_mask;
-            default: return nullptr;
-        }
-    }
-    case 1016: {
-        const auto& out = *static_cast<const DecodedLD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.memoryDescriptor;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1017: {
-        const auto& out = *static_cast<const DecodedLD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1018: {
-        const auto& out = *static_cast<const DecodedLD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1019: {
-        const auto& out = *static_cast<const DecodedLD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1020: {
-        const auto& out = *static_cast<const DecodedLDG7_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.memoryDescriptor;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra;
-            case 5: return &out.Ra_offset;
-            case 6: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1021: {
-        const auto& out = *static_cast<const DecodedLDG6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1022: {
-        const auto& out = *static_cast<const DecodedLDG6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1023: {
-        const auto& out = *static_cast<const DecodedLDG6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1024: {
-        const auto& out = *static_cast<const DecodedLDL5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.memoryDescriptor;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra;
-            case 4: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1025: {
-        const auto& out = *static_cast<const DecodedLDL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1026: {
-        const auto& out = *static_cast<const DecodedLDS4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1027: {
-        const auto& out = *static_cast<const DecodedST5*>(inst);
-        switch (p) {
-            case 0: return &out.memoryDescriptor;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1028: {
-        const auto& out = *static_cast<const DecodedST4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1029: {
-        const auto& out = *static_cast<const DecodedST4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1030: {
-        const auto& out = *static_cast<const DecodedST4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1031: {
-        const auto& out = *static_cast<const DecodedSTG5*>(inst);
-        switch (p) {
-            case 0: return &out.memoryDescriptor;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1032: {
-        const auto& out = *static_cast<const DecodedSTG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1033: {
-        const auto& out = *static_cast<const DecodedSTG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1034: {
-        const auto& out = *static_cast<const DecodedSTG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1035: {
-        const auto& out = *static_cast<const DecodedSTL5*>(inst);
-        switch (p) {
-            case 0: return &out.memoryDescriptor;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1036: {
-        const auto& out = *static_cast<const DecodedSTL4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1037: {
-        const auto& out = *static_cast<const DecodedSTS4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1038: {
-        const auto& out = *static_cast<const DecodedATOM7_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1039: {
-        const auto& out = *static_cast<const DecodedATOM7_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1040: {
-        const auto& out = *static_cast<const DecodedATOM7_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1041: {
-        const auto& out = *static_cast<const DecodedATOM8*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.memoryDescriptor;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra;
-            case 5: return &out.Ra_offset;
-            case 6: return &out.Rb;
-            case 7: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1042: {
-        const auto& out = *static_cast<const DecodedATOMS5_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1043: {
-        const auto& out = *static_cast<const DecodedREDS4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1044: {
-        const auto& out = *static_cast<const DecodedREDG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1045: {
-        const auto& out = *static_cast<const DecodedREDG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1046: {
-        const auto& out = *static_cast<const DecodedREDG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1047: {
-        const auto& out = *static_cast<const DecodedREDG5*>(inst);
-        switch (p) {
-            case 0: return &out.memoryDescriptor;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1048: {
-        const auto& out = *static_cast<const DecodedATOM7_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1049: {
-        const auto& out = *static_cast<const DecodedATOM7_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1050: {
-        const auto& out = *static_cast<const DecodedATOM7_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            case 6: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1051: {
-        const auto& out = *static_cast<const DecodedATOM8*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.memoryDescriptor;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra;
-            case 5: return &out.Ra_offset;
-            case 6: return &out.Rb;
-            case 7: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1052: {
-        const auto& out = *static_cast<const DecodedATOMG6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1053: {
-        const auto& out = *static_cast<const DecodedATOMG6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1054: {
-        const auto& out = *static_cast<const DecodedATOMG6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1055: {
-        const auto& out = *static_cast<const DecodedATOMG7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.memoryDescriptor;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra;
-            case 5: return &out.Ra_offset;
-            case 6: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1056: {
-        const auto& out = *static_cast<const DecodedLDGMC4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1057: {
-        const auto& out = *static_cast<const DecodedLDGMC4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1058: {
-        const auto& out = *static_cast<const DecodedLDGMC4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1059: {
-        const auto& out = *static_cast<const DecodedLDGMC5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.memoryDescriptor;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra;
-            case 4: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1060: {
-        const auto& out = *static_cast<const DecodedLDGMC4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1061: {
-        const auto& out = *static_cast<const DecodedLDGMC4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1062: {
-        const auto& out = *static_cast<const DecodedLDGMC4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1063: {
-        const auto& out = *static_cast<const DecodedLDGMC5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.memoryDescriptor;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra;
-            case 4: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1064: {
-        const auto& out = *static_cast<const DecodedREDG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1065: {
-        const auto& out = *static_cast<const DecodedREDG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1066: {
-        const auto& out = *static_cast<const DecodedREDG4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1067: {
-        const auto& out = *static_cast<const DecodedREDG5*>(inst);
-        switch (p) {
-            case 0: return &out.memoryDescriptor;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1068: {
-        const auto& out = *static_cast<const DecodedSYNCS5_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            case 4: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1069: {
-        const auto& out = *static_cast<const DecodedSYNCS4_2*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1070: {
-        const auto& out = *static_cast<const DecodedATOMG6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1071: {
-        const auto& out = *static_cast<const DecodedATOMG6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1072: {
-        const auto& out = *static_cast<const DecodedATOMG6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1073: {
-        const auto& out = *static_cast<const DecodedATOMG7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.memoryDescriptor;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra;
-            case 5: return &out.Ra_offset;
-            case 6: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1074: {
-        const auto& out = *static_cast<const DecodedQSPC4_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1075: {
-        const auto& out = *static_cast<const DecodedQSPC4_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1076: {
-        const auto& out = *static_cast<const DecodedQSPC4_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1077: {
-        const auto& out = *static_cast<const DecodedQSPC4_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1078: {
-        const auto& out = *static_cast<const DecodedQSPC4_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1079: {
-        const auto& out = *static_cast<const DecodedQSPC4_2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1080: {
-        const auto& out = *static_cast<const DecodedQSPC5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1081: {
-        const auto& out = *static_cast<const DecodedQSPC5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1082: {
-        const auto& out = *static_cast<const DecodedQSPC5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URb;
-            case 4: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1083: {
-        const auto& out = *static_cast<const DecodedLDCU5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.Sa_offset;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 1084: {
-        const auto& out = *static_cast<const DecodedLDCU4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.Sa_offset;
-            default: return nullptr;
-        }
-    }
-    case 1085: {
-        const auto& out = *static_cast<const DecodedARRIVES3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1086: {
-        const auto& out = *static_cast<const DecodedSYNCS3*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1087: {
-        const auto& out = *static_cast<const DecodedSYNCS4_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.URa_offset;
-            default: return nullptr;
-        }
-    }
-    case 1088: {
-        const auto& out = *static_cast<const DecodedUTMACCTL2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 1089: {
-        const auto& out = *static_cast<const DecodedUTMACCTL2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URa;
-            default: return nullptr;
-        }
-    }
-    case 1090: {
-        const auto& out = *static_cast<const DecodedUCGABARARV1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            default: return nullptr;
-        }
-    }
-    case 1091: {
-        const auto& out = *static_cast<const DecodedUCGABAR_ARV1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            default: return nullptr;
-        }
-    }
-    case 1092: {
-        const auto& out = *static_cast<const DecodedUSETMAXREG3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPu;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1093: {
-        const auto& out = *static_cast<const DecodedUSETMAXREG2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1094: {
-        const auto& out = *static_cast<const DecodedUSETSHMSZ1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            default: return nullptr;
-        }
-    }
-    case 1095: {
-        const auto& out = *static_cast<const DecodedUSETSHMSZ2*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1096: {
-        const auto& out = *static_cast<const DecodedULEPC3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.sImm58;
-            default: return nullptr;
-        }
-    }
-    case 1097: {
-        const auto& out = *static_cast<const DecodedULEPC3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.sImm58;
-            default: return nullptr;
-        }
-    }
-    case 1098: {
-        const auto& out = *static_cast<const DecodedCCTL4_0*>(inst);
-        switch (p) {
-            case 0: return &out.Sa;
-            case 1: return &out.Sa_bank;
-            case 2: return &out.a;
-            case 3: return &out.off;
-            default: return nullptr;
-        }
-    }
-    case 1099: {
-        const auto& out = *static_cast<const DecodedLDCU6_1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.Sa;
-            case 3: return &out.URa;
-            case 4: return &out.URb;
-            case 5: return &out.Sa_offset;
-            default: return nullptr;
-        }
-    }
-    case 1100: {
-        const auto& out = *static_cast<const DecodedMOV2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1101: {
-        const auto& out = *static_cast<const DecodedMOV3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.PixMaskU04;
-            default: return nullptr;
-        }
-    }
-    case 1102: {
-        const auto& out = *static_cast<const DecodedMOV2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1103: {
-        const auto& out = *static_cast<const DecodedP2R4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pr;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1104: {
-        const auto& out = *static_cast<const DecodedR2P3*>(inst);
-        switch (p) {
-            case 0: return &out.PR;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1105: {
-        const auto& out = *static_cast<const DecodedSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1106: {
-        const auto& out = *static_cast<const DecodedFSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1107: {
-        const auto& out = *static_cast<const DecodedFMNMX4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1108: {
-        const auto& out = *static_cast<const DecodedFMNMX5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1109: {
-        const auto& out = *static_cast<const DecodedFSET4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1110: {
-        const auto& out = *static_cast<const DecodedFSET3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1111: {
-        const auto& out = *static_cast<const DecodedFSETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1112: {
-        const auto& out = *static_cast<const DecodedFSETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1113: {
-        const auto& out = *static_cast<const DecodedISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            case 5: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 1114: {
-        const auto& out = *static_cast<const DecodedISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1115: {
-        const auto& out = *static_cast<const DecodedISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 1116: {
-        const auto& out = *static_cast<const DecodedISETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1117: {
-        const auto& out = *static_cast<const DecodedISETP6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            case 5: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 1118: {
-        const auto& out = *static_cast<const DecodedISETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1119: {
-        const auto& out = *static_cast<const DecodedISETP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pr;
-            default: return nullptr;
-        }
-    }
-    case 1120: {
-        const auto& out = *static_cast<const DecodedISETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1121: {
-        const auto& out = *static_cast<const DecodedIADD36*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1122: {
-        const auto& out = *static_cast<const DecodedIADD38*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Rc;
-            case 6: return &out.Pp;
-            case 7: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 1123: {
-        const auto& out = *static_cast<const DecodedISCADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 1124: {
-        const auto& out = *static_cast<const DecodedLEA6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 1125: {
-        const auto& out = *static_cast<const DecodedLEA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 1126: {
-        const auto& out = *static_cast<const DecodedLEA6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1127: {
-        const auto& out = *static_cast<const DecodedLEA7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.scaleU5;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1128: {
-        const auto& out = *static_cast<const DecodedLEA5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            default: return nullptr;
-        }
-    }
-    case 1129: {
-        const auto& out = *static_cast<const DecodedLEA6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.scaleU5;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1130: {
-        const auto& out = *static_cast<const DecodedLOP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1131: {
-        const auto& out = *static_cast<const DecodedLOP4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1132: {
-        const auto& out = *static_cast<const DecodedLOP37*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.imm8;
-            case 6: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1133: {
-        const auto& out = *static_cast<const DecodedLOP36_1*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.imm8;
-            default: return nullptr;
-        }
-    }
-    case 1134: {
-        const auto& out = *static_cast<const DecodedLOP36_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1135: {
-        const auto& out = *static_cast<const DecodedLOP35*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1136: {
-        const auto& out = *static_cast<const DecodedIABS2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1137: {
-        const auto& out = *static_cast<const DecodedPRMT4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1138: {
-        const auto& out = *static_cast<const DecodedIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            case 6: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 1139: {
-        const auto& out = *static_cast<const DecodedIMNMX6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1140: {
-        const auto& out = *static_cast<const DecodedIMNMX7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            case 6: return &out.Pq;
-            default: return nullptr;
-        }
-    }
-    case 1141: {
-        const auto& out = *static_cast<const DecodedIMNMX6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1142: {
-        const auto& out = *static_cast<const DecodedSHF4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1143: {
-        const auto& out = *static_cast<const DecodedSHL3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1144: {
-        const auto& out = *static_cast<const DecodedSHR3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1145: {
-        const auto& out = *static_cast<const DecodedSGXT3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1146: {
-        const auto& out = *static_cast<const DecodedBMSK3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1147: {
-        const auto& out = *static_cast<const DecodedPLOP35_2*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.b;
-            case 3: return &out.Pr;
-            case 4: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 1148: {
-        const auto& out = *static_cast<const DecodedPLOP37_2*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Pp;
-            case 3: return &out.b;
-            case 4: return &out.Pr;
-            case 5: return &out.uimm8;
-            case 6: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 1149: {
-        const auto& out = *static_cast<const DecodedPLOP35_3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pp;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            case 4: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 1150: {
-        const auto& out = *static_cast<const DecodedPLOP37_3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Pp;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.uimm8;
-            case 6: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 1151: {
-        const auto& out = *static_cast<const DecodedPLOP35_4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            case 4: return &out.uimm8;
-            default: return nullptr;
-        }
-    }
-    case 1152: {
-        const auto& out = *static_cast<const DecodedPLOP37_4*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Rc;
-            case 5: return &out.uimm8;
-            case 6: return &out.vimm8;
-            default: return nullptr;
-        }
-    }
-    case 1153: {
-        const auto& out = *static_cast<const DecodedFMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1154: {
-        const auto& out = *static_cast<const DecodedFFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1155: {
-        const auto& out = *static_cast<const DecodedFHFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1156: {
-        const auto& out = *static_cast<const DecodedIMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1157: {
-        const auto& out = *static_cast<const DecodedIMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1158: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1159: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1160: {
-        const auto& out = *static_cast<const DecodedIMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1161: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1162: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1163: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1164: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1165: {
-        const auto& out = *static_cast<const DecodedIMUL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1166: {
-        const auto& out = *static_cast<const DecodedIDP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1167: {
-        const auto& out = *static_cast<const DecodedIDP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1168: {
-        const auto& out = *static_cast<const DecodedIDP4A4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1169: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1170: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1171: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1172: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1173: {
-        const auto& out = *static_cast<const DecodedDMUL3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1174: {
-        const auto& out = *static_cast<const DecodedDFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1175: {
-        const auto& out = *static_cast<const DecodedCLMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1176: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1177: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1178: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1179: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1180: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1181: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1182: {
-        const auto& out = *static_cast<const DecodedHMUL23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1183: {
-        const auto& out = *static_cast<const DecodedHMUL23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1184: {
-        const auto& out = *static_cast<const DecodedIADD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1185: {
-        const auto& out = *static_cast<const DecodedIADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1186: {
-        const auto& out = *static_cast<const DecodedIADD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1187: {
-        const auto& out = *static_cast<const DecodedIADD5*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1188: {
-        const auto& out = *static_cast<const DecodedVIADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1189: {
-        const auto& out = *static_cast<const DecodedI2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1190: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1191: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1192: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1193: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1194: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1195: {
-        const auto& out = *static_cast<const DecodedI2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Rc;
-            default: return nullptr;
-        }
-    }
-    case 1196: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1197: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1198: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1199: {
-        const auto& out = *static_cast<const DecodedF2FP3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1200: {
-        const auto& out = *static_cast<const DecodedF2FP3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1201: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1202: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1203: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1204: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1205: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1206: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1207: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1208: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1209: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1210: {
-        const auto& out = *static_cast<const DecodedF2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1211: {
-        const auto& out = *static_cast<const DecodedHMNMX24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1212: {
-        const auto& out = *static_cast<const DecodedHMNMX24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1213: {
-        const auto& out = *static_cast<const DecodedHMNMX26*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1214: {
-        const auto& out = *static_cast<const DecodedHMNMX26*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Pv;
-            case 3: return &out.Ra;
-            case 4: return &out.b;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1215: {
-        const auto& out = *static_cast<const DecodedF2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1216: {
-        const auto& out = *static_cast<const DecodedI2FP2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1217: {
-        const auto& out = *static_cast<const DecodedVIMNMX4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1218: {
-        const auto& out = *static_cast<const DecodedMOV4_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.indexURb;
-            case 2: return &out.URb;
-            case 3: return &out.PixMaskU04;
-            default: return nullptr;
-        }
-    }
-    case 1219: {
-        const auto& out = *static_cast<const DecodedUMOV3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1220: {
-        const auto& out = *static_cast<const DecodedUMOV3*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1221: {
-        const auto& out = *static_cast<const DecodedUP2UR5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPR;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1222: {
-        const auto& out = *static_cast<const DecodedUR2UP4*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.UPR;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1223: {
-        const auto& out = *static_cast<const DecodedUSEL5*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.URa;
-            case 3: return &out.b;
-            case 4: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 1224: {
-        const auto& out = *static_cast<const DecodedUCLEA6*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd;
-            case 2: return &out.UPu;
-            case 3: return &out.URa;
-            case 4: return &out.b;
-            case 5: return &out.constSizeU05;
-            default: return nullptr;
-        }
-    }
-    case 1225: {
-        const auto& out = *static_cast<const DecodedFLO3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1226: {
-        const auto& out = *static_cast<const DecodedBREV2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1227: {
-        const auto& out = *static_cast<const DecodedFCHK3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1228: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1229: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1230: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1231: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1232: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1233: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1234: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1235: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1236: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1237: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1238: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1239: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1240: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1241: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1242: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1243: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1244: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1245: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1246: {
-        const auto& out = *static_cast<const DecodedMUFU2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1247: {
-        const auto& out = *static_cast<const DecodedMUFU2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1248: {
-        const auto& out = *static_cast<const DecodedMUFU2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1249: {
-        const auto& out = *static_cast<const DecodedPOPC2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1250: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1251: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1252: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1253: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1254: {
-        const auto& out = *static_cast<const DecodedF2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1255: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1256: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1257: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1258: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1259: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1260: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1261: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1262: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1263: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1264: {
-        const auto& out = *static_cast<const DecodedF2I2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1265: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1266: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1267: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1268: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1269: {
-        const auto& out = *static_cast<const DecodedI2F2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1270: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1271: {
-        const auto& out = *static_cast<const DecodedFRND2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1272: {
-        const auto& out = *static_cast<const DecodedDEPBAR3_0*>(inst);
-        switch (p) {
-            case 0: return &out.sbidx;
-            case 1: return &out.URb;
-            case 2: return &out.scoreboard_list;
-            default: return nullptr;
-        }
-    }
-    case 1273: {
-        const auto& out = *static_cast<const DecodedOUT3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1274: {
-        const auto& out = *static_cast<const DecodedRPCMOV2_2*>(inst);
-        switch (p) {
-            case 0: return &out.RpcN;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1275: {
-        const auto& out = *static_cast<const DecodedRPCMOV2_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rpc;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1276: {
-        const auto& out = *static_cast<const DecodedBMOV2_4*>(inst);
-        switch (p) {
-            case 0: return &out.cbu_state;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1277: {
-        const auto& out = *static_cast<const DecodedBMOV2_1*>(inst);
-        switch (p) {
-            case 0: return &out.atexit_pc;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1278: {
-        const auto& out = *static_cast<const DecodedNANOTRAP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1279: {
-        const auto& out = *static_cast<const DecodedNANOSLEEP2*>(inst);
-        switch (p) {
-            case 0: return &out.Pp;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1280: {
-        const auto& out = *static_cast<const DecodedTEX8*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URe;
-            case 6: return &out.paramA;
-            case 7: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1281: {
-        const auto& out = *static_cast<const DecodedTEX8*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URe;
-            case 6: return &out.paramA;
-            case 7: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1282: {
-        const auto& out = *static_cast<const DecodedTLD48*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URe;
-            case 6: return &out.paramA;
-            case 7: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1283: {
-        const auto& out = *static_cast<const DecodedTLD48*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URe;
-            case 6: return &out.paramA;
-            case 7: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1284: {
-        const auto& out = *static_cast<const DecodedTLD8*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URe;
-            case 6: return &out.paramA;
-            case 7: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1285: {
-        const auto& out = *static_cast<const DecodedTLD8*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URe;
-            case 6: return &out.paramA;
-            case 7: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1286: {
-        const auto& out = *static_cast<const DecodedTXD8*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URe;
-            case 6: return &out.paramA;
-            case 7: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1287: {
-        const auto& out = *static_cast<const DecodedFOOTPRINT6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.paramA;
-            default: return nullptr;
-        }
-    }
-    case 1288: {
-        const auto& out = *static_cast<const DecodedFOOTPRINT6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.paramA;
-            default: return nullptr;
-        }
-    }
-    case 1289: {
-        const auto& out = *static_cast<const DecodedCCTL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URb;
-            default: return nullptr;
-        }
-    }
-    case 1290: {
-        const auto& out = *static_cast<const DecodedCCTL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URb;
-            default: return nullptr;
-        }
-    }
-    case 1291: {
-        const auto& out = *static_cast<const DecodedCCTL3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            default: return nullptr;
-        }
-    }
-    case 1292: {
-        const auto& out = *static_cast<const DecodedCCTL3_2*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URb;
-            case 2: return &out.sector_count;
-            default: return nullptr;
-        }
-    }
-    case 1293: {
-        const auto& out = *static_cast<const DecodedCCTL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URb;
-            default: return nullptr;
-        }
-    }
-    case 1294: {
-        const auto& out = *static_cast<const DecodedCCTL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URb;
-            default: return nullptr;
-        }
-    }
-    case 1295: {
-        const auto& out = *static_cast<const DecodedCCTL3_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URb;
-            default: return nullptr;
-        }
-    }
-    case 1296: {
-        const auto& out = *static_cast<const DecodedCCTL3_2*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URb;
-            case 2: return &out.sector_count;
-            default: return nullptr;
-        }
-    }
-    case 1297: {
-        const auto& out = *static_cast<const DecodedCCTLL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URb;
-            default: return nullptr;
-        }
-    }
-    case 1298: {
-        const auto& out = *static_cast<const DecodedCCTLL2_0*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URb;
-            default: return nullptr;
-        }
-    }
-    case 1299: {
-        const auto& out = *static_cast<const DecodedCCTLT1*>(inst);
-        switch (p) {
-            case 0: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1300: {
-        const auto& out = *static_cast<const DecodedLDCU8_0*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            case 1: return &out.URd2;
-            case 2: return &out.URd;
-            case 3: return &out.Sa;
-            case 4: return &out.Sa_bank;
-            case 5: return &out.URa;
-            case 6: return &out.Sa_offset;
-            case 7: return &out.word_mask;
-            default: return nullptr;
-        }
-    }
-    case 1301: {
-        const auto& out = *static_cast<const DecodedLDGSTS6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rb;
-            case 1: return &out.Rb_URc;
-            case 2: return &out.Rb_offset;
-            case 3: return &out.Ra;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1302: {
-        const auto& out = *static_cast<const DecodedLDGSTS8*>(inst);
-        switch (p) {
-            case 0: return &out.Rb;
-            case 1: return &out.Rb_URc;
-            case 2: return &out.Rb_offset;
-            case 3: return &out.memoryDescriptor;
-            case 4: return &out.Ra_URd;
-            case 5: return &out.Ra;
-            case 6: return &out.Ra_offset;
-            case 7: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1303: {
-        const auto& out = *static_cast<const DecodedLDGSTS6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rb;
-            case 1: return &out.Rb_URc;
-            case 2: return &out.Rb_offset;
-            case 3: return &out.Ra;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1304: {
-        const auto& out = *static_cast<const DecodedSUQUERY7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.queryType;
-            case 4: return &out.Rc;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1305: {
-        const auto& out = *static_cast<const DecodedSTAS4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1306: {
-        const auto& out = *static_cast<const DecodedSTAS4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1307: {
-        const auto& out = *static_cast<const DecodedSTAS4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1308: {
-        const auto& out = *static_cast<const DecodedREDAS4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1309: {
-        const auto& out = *static_cast<const DecodedREDAS4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1310: {
-        const auto& out = *static_cast<const DecodedREDAS4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Ra_URc;
-            case 2: return &out.Ra_offset;
-            case 3: return &out.Rb;
-            default: return nullptr;
-        }
-    }
-    case 1311: {
-        const auto& out = *static_cast<const DecodedUCGABARWAIT1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            default: return nullptr;
-        }
-    }
-    case 1312: {
-        const auto& out = *static_cast<const DecodedUCGABAR_WAIT1*>(inst);
-        switch (p) {
-            case 0: return &out.UPg;
-            default: return nullptr;
-        }
-    }
-    case 1313: {
-        const auto& out = *static_cast<const DecodedSEL4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1314: {
-        const auto& out = *static_cast<const DecodedPRMT4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1315: {
-        const auto& out = *static_cast<const DecodedSHF4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1316: {
-        const auto& out = *static_cast<const DecodedFADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1317: {
-        const auto& out = *static_cast<const DecodedFHADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1318: {
-        const auto& out = *static_cast<const DecodedFFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1319: {
-        const auto& out = *static_cast<const DecodedFHFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1320: {
-        const auto& out = *static_cast<const DecodedIMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1321: {
-        const auto& out = *static_cast<const DecodedIMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1322: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1323: {
-        const auto& out = *static_cast<const DecodedIMAD5_4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1324: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1325: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1326: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1327: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1328: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1329: {
-        const auto& out = *static_cast<const DecodedIMAD5_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1330: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1331: {
-        const auto& out = *static_cast<const DecodedIMAD6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Pu;
-            case 2: return &out.Ra;
-            case 3: return &out.b;
-            case 4: return &out.c;
-            case 5: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1332: {
-        const auto& out = *static_cast<const DecodedDADD3*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1333: {
-        const auto& out = *static_cast<const DecodedDSETP5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1334: {
-        const auto& out = *static_cast<const DecodedDSETP3*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1335: {
-        const auto& out = *static_cast<const DecodedDFMA4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1336: {
-        const auto& out = *static_cast<const DecodedCLMAD4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1337: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1338: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1339: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1340: {
-        const auto& out = *static_cast<const DecodedHADD23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1341: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1342: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1343: {
-        const auto& out = *static_cast<const DecodedHFMA24*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1344: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1345: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1346: {
-        const auto& out = *static_cast<const DecodedHFMA25_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1347: {
-        const auto& out = *static_cast<const DecodedHSET24_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1348: {
-        const auto& out = *static_cast<const DecodedHSET24_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            case 3: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1349: {
-        const auto& out = *static_cast<const DecodedHSET23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1350: {
-        const auto& out = *static_cast<const DecodedHSET23*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1351: {
-        const auto& out = *static_cast<const DecodedHSETP25_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1352: {
-        const auto& out = *static_cast<const DecodedHSETP25_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.Pp;
-            default: return nullptr;
-        }
-    }
-    case 1353: {
-        const auto& out = *static_cast<const DecodedHSETP24*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1354: {
-        const auto& out = *static_cast<const DecodedHSETP24*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Pv;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1355: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1356: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1357: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1358: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1359: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1360: {
-        const auto& out = *static_cast<const DecodedF2FP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1361: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1362: {
-        const auto& out = *static_cast<const DecodedF2FP3_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            case 2: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1363: {
-        const auto& out = *static_cast<const DecodedF2IP4*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.b;
-            case 3: return &out.c;
-            default: return nullptr;
-        }
-    }
-    case 1364: {
-        const auto& out = *static_cast<const DecodedHMMA9*>(inst);
-        switch (p) {
-            case 0: return &out.indexURd;
-            case 1: return &out.URd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.indexURc;
-            case 5: return &out.URc;
-            case 6: return &out.UPp;
-            case 7: return &out.Re;
-            case 8: return &out.id;
-            default: return nullptr;
-        }
-    }
-    case 1365: {
-        const auto& out = *static_cast<const DecodedHMMA7_1*>(inst);
-        switch (p) {
-            case 0: return &out.indexURd;
-            case 1: return &out.URd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.indexURc;
-            case 5: return &out.URc;
-            case 6: return &out.UPp;
-            default: return nullptr;
-        }
-    }
-    case 1366: {
-        const auto& out = *static_cast<const DecodedMOV64IUR2*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.b;
-            default: return nullptr;
-        }
-    }
-    case 1367: {
-        const auto& out = *static_cast<const DecodedTEX9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1368: {
-        const auto& out = *static_cast<const DecodedTEX9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1369: {
-        const auto& out = *static_cast<const DecodedTLD49*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1370: {
-        const auto& out = *static_cast<const DecodedTLD49*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1371: {
-        const auto& out = *static_cast<const DecodedTLD49*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1372: {
-        const auto& out = *static_cast<const DecodedTLD49*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1373: {
-        const auto& out = *static_cast<const DecodedTLD9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1374: {
-        const auto& out = *static_cast<const DecodedTLD9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1375: {
-        const auto& out = *static_cast<const DecodedTLD9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1376: {
-        const auto& out = *static_cast<const DecodedTLD9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1377: {
-        const auto& out = *static_cast<const DecodedTMML7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.URc;
-            case 5: return &out.paramA;
-            case 6: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1378: {
-        const auto& out = *static_cast<const DecodedTMML7*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.URc;
-            case 5: return &out.paramA;
-            case 6: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1379: {
-        const auto& out = *static_cast<const DecodedTXD9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1380: {
-        const auto& out = *static_cast<const DecodedTXD9*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            case 7: return &out.paramA;
-            case 8: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1381: {
-        const auto& out = *static_cast<const DecodedTXQ6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.query;
-            case 4: return &out.URc;
-            case 5: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1382: {
-        const auto& out = *static_cast<const DecodedTXQ6*>(inst);
-        switch (p) {
-            case 0: return &out.Rd2;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.query;
-            case 4: return &out.URc;
-            case 5: return &out.wmsk;
-            default: return nullptr;
-        }
-    }
-    case 1383: {
-        const auto& out = *static_cast<const DecodedFOOTPRINT7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.paramA;
-            default: return nullptr;
-        }
-    }
-    case 1384: {
-        const auto& out = *static_cast<const DecodedFOOTPRINT7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.paramA;
-            default: return nullptr;
-        }
-    }
-    case 1385: {
-        const auto& out = *static_cast<const DecodedFOOTPRINT7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.paramA;
-            default: return nullptr;
-        }
-    }
-    case 1386: {
-        const auto& out = *static_cast<const DecodedFOOTPRINT7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd2;
-            case 2: return &out.Rd;
-            case 3: return &out.Ra;
-            case 4: return &out.Rb;
-            case 5: return &out.URc;
-            case 6: return &out.paramA;
-            default: return nullptr;
-        }
-    }
-    case 1387: {
-        const auto& out = *static_cast<const DecodedATOM6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1388: {
-        const auto& out = *static_cast<const DecodedATOM6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1389: {
-        const auto& out = *static_cast<const DecodedATOM6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1390: {
-        const auto& out = *static_cast<const DecodedATOM6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1391: {
-        const auto& out = *static_cast<const DecodedATOM6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1392: {
-        const auto& out = *static_cast<const DecodedATOM6_0*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.wr_early;
-            default: return nullptr;
-        }
-    }
-    case 1393: {
-        const auto& out = *static_cast<const DecodedATOMS4_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1394: {
-        const auto& out = *static_cast<const DecodedATOMS4_0*>(inst);
-        switch (p) {
-            case 0: return &out.Rd;
-            case 1: return &out.Ra;
-            case 2: return &out.Ra_URc;
-            case 3: return &out.Ra_offset;
-            default: return nullptr;
-        }
-    }
-    case 1395: {
-        const auto& out = *static_cast<const DecodedSUATOM6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.c;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1396: {
-        const auto& out = *static_cast<const DecodedSUATOM7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1397: {
-        const auto& out = *static_cast<const DecodedSUATOM6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.c;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1398: {
-        const auto& out = *static_cast<const DecodedSUATOM7*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rb;
-            case 4: return &out.Rc;
-            case 5: return &out.URc;
-            case 6: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1399: {
-        const auto& out = *static_cast<const DecodedSULD5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1400: {
-        const auto& out = *static_cast<const DecodedSULD6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rc;
-            case 4: return &out.URc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1401: {
-        const auto& out = *static_cast<const DecodedSULD5*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.c;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1402: {
-        const auto& out = *static_cast<const DecodedSULD6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.Rc;
-            case 4: return &out.URc;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1403: {
-        const auto& out = *static_cast<const DecodedSUST4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.c;
-            case 3: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1404: {
-        const auto& out = *static_cast<const DecodedSUST5*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.Rc;
-            case 3: return &out.URc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1405: {
-        const auto& out = *static_cast<const DecodedSUST4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.c;
-            case 3: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1406: {
-        const auto& out = *static_cast<const DecodedSUST5*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.Rc;
-            case 3: return &out.URc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1407: {
-        const auto& out = *static_cast<const DecodedSURED4*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.c;
-            case 3: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1408: {
-        const auto& out = *static_cast<const DecodedSURED5*>(inst);
-        switch (p) {
-            case 0: return &out.Ra;
-            case 1: return &out.Rb;
-            case 2: return &out.Rc;
-            case 3: return &out.URc;
-            case 4: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    case 1409: {
-        const auto& out = *static_cast<const DecodedLDGSTS6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rb;
-            case 1: return &out.Rb_offset;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1410: {
-        const auto& out = *static_cast<const DecodedLDGSTS6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rb;
-            case 1: return &out.Rb_offset;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1411: {
-        const auto& out = *static_cast<const DecodedLDGSTS7*>(inst);
-        switch (p) {
-            case 0: return &out.Rb;
-            case 1: return &out.Rb_offset;
-            case 2: return &out.memoryDescriptor;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra;
-            case 5: return &out.Ra_offset;
-            case 6: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1412: {
-        const auto& out = *static_cast<const DecodedLDGSTS6_1*>(inst);
-        switch (p) {
-            case 0: return &out.Rb;
-            case 1: return &out.Rb_offset;
-            case 2: return &out.Ra;
-            case 3: return &out.Ra_URc;
-            case 4: return &out.Ra_offset;
-            case 5: return &out.Pnz;
-            default: return nullptr;
-        }
-    }
-    case 1413: {
-        const auto& out = *static_cast<const DecodedSUQUERY6*>(inst);
-        switch (p) {
-            case 0: return &out.Pu;
-            case 1: return &out.Rd;
-            case 2: return &out.Ra;
-            case 3: return &out.queryType;
-            case 4: return &out.c;
-            case 5: return &out.URe;
-            default: return nullptr;
-        }
-    }
-    default: return nullptr;
-    }
+    if (!inst || p >= inst->n_ops) return nullptr;
+    const OperandValue* f[16];
+    fill_operand_fields(vi, inst, f);
+    return f[p];
 }
 
 }  // namespace semu::shape

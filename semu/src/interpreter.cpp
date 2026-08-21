@@ -29,23 +29,22 @@ using semu::fp::Rnd;
 
 // Per-instruction operand-field view: the derived Decoded types store
 // operands as NAMED OperandValue fields (the ops[] array was eliminated).
-// This wraps the generated operand_field bridge so read sites keep `ops[p]`
-// syntax; the fields are resolved ONCE per instruction, then per-lane loops
-// read the local pointer array (no per-lane lookup).
+// The view resolves ALL fields with ONE generated fill_operand_fields call
+// (single vi switch — no per-position dispatch); per-lane loops then read
+// the local pointer array (no per-lane lookup).
 class OperandFields {
 public:
     explicit OperandFields(const DecodedInstruction& inst) {
         const std::uint32_t vi = inst.shape_variant;
         if (vi >= isa::kNumVariants) return;
         n_ = inst.n_ops;
-        for (std::uint16_t p = 0; p < n_; ++p)
-            f_[p] = shape::operand_field(vi, &inst, p);
+        shape::fill_operand_fields(vi, &inst, f_);
     }
     std::uint16_t n() const { return n_; }
     const shape::OperandValue& operator[](int p) const { return *f_[p]; }
     const shape::OperandValue* ptr(int p) const { return f_[p]; }
 private:
-    std::array<const shape::OperandValue*, 16> f_{};
+    const shape::OperandValue* f_[16] = {};
     std::uint16_t n_ = 0;
 };
 
