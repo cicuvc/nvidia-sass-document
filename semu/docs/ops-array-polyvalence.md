@@ -20,15 +20,17 @@ each group, each position's slot-name set across variants was compared.
 | total `Decoded<Mnemonic><N>` types | 425 | |
 | single-variant or fully position-stable | 221 | every position already has ONE name across all variants → ops[] can be renamed mechanically to fields |
 | kind-only polyvalence | 161 | the position always means the SAME semantic role; only the OperandKind varies (`{Rb,Sb,URb}`, `{Rc,Sc,URc}`, `{Ra,URa}`, `{URb,Sb}`, `{Sc,Sc1}` …) → ONE field, kind stays dynamic |
-| **semantic polyvalence** | **43** | the same position carries different operand *meanings* across variants → needs per-variant resolution (see below) |
+| **semantic polyvalence** | **50** | the same position carries different operand *meanings* across variants → needs per-variant resolution (see below) |
 
-Note: the 161 "kind-only" set includes the compiler's slot-name *naming
+Note: the "kind-only" set includes the compiler's slot-name *naming
 artifacts* — e.g. HFMA2's second source is `Sb` in the F32i form and `Sc`
 in the fixed forms, HSET2's third source is `Rc`/`Sc`/`URc`, WARPSYNC's
 mask is `Ra`/`sImm`.  All are the same operand role; the name difference
-comes from the spec's per-form slot naming.
+comes from the spec's per-form slot naming.  (The strict classification
+above keeps `Sb1`/`Sc1`/`sImm`/`Sa` as DISTINCT keys, which is why the
+semantic count is 50, not the looser 43.)
 
-## The 43 semantic-polyvalence groups
+## The 50 semantic-polyvalence groups
 
 Full per-variant role lists are below; this is the same position being
 *reused for different operands*:
@@ -104,7 +106,16 @@ UPLOP3   8    p3:{UPp,URa} p4:{UPq,URb} p5:{UPr,URc}
 
 ## Design implications (next refactor)
 
-- **221 stable + 161 kind-only groups (90%)**: `ops[i]` → a named field is
+IMPLEMENTED (2026-08): the 50 groups are declared in
+`semu/tools/shapes_poly_config.py` (arch-specific injection at gen_isa
+time); `gen_isa.py --shapes` splits each into one
+`Decoded<Mnemonic><N>_<k>` per kind-collapsed role signature and emits
+`kShapeSplitByVariant[vi]` so every split struct's ops[] positions are
+unambiguous (verified: 0 unstable positions across the 126 split structs).
+The interpreter's handlers dispatch on the split ordinal only where typed
+members are read; ops arrays go through `operand_values_by_variant`.
+
+- **Stable + kind-only groups**: `ops[i]` → a named field is
   mechanical.  Name = the single role name (stable) or the semantic role
   for kind-only positions (`src2`/`src3`/`base`/`off` — or keep the
   register name and let the kind live in the field, exactly like

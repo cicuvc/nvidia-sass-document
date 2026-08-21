@@ -1106,25 +1106,98 @@ def shape_modifier_slots(v):
     return [s for s in v["slots"] if s["modifier"] and s["name"] not in SCHED]
 
 
+# ---------------------------------------------------------------------------
+# Polyvalent-group splitting (arch-specific injection).
+#
+# The (mnemonic, nops) groups listed in shapes_poly_config.py reuse one
+# ops[] position for operands of different meaning across their variants
+# (see docs/ops-array-polyvalence.md).  For those groups the generator emits
+# one `Decoded<Mnemonic><Nops>_<k>` struct PER KIND-COLLAPSED ROLE
+# SIGNATURE: the variant role order with kind-only slots collapsed
+# ({Rb,Sb,URb} etc. share one key), so every split struct is
+# position-unambiguous.  Automatic detection is deliberately NOT used -- the
+# list is curated per arch and injected at generation time.
+# ---------------------------------------------------------------------------
+
+# Kind-collapse: FORMAT slot names that are the SAME operand role differing
+# only in kind (register / uniform register / immediate).  Two slots in one
+# collapse family are never semantically distinct; slots NOT listed keep
+# their own key and therefore force a split.
+KIND_COLLAPSE = {
+    "Rb": "b", "Sb": "b", "URb": "b",
+    "Rc": "c", "Sc": "c", "URc": "c",
+    "Ra": "a", "URa": "a",
+    "Ra_offset": "off", "Sa_offset": "off", "URa_offset": "off",
+    "Rb2": "b2", "Sc2": "c2",
+}
+
+
+def load_poly_groups():
+    """Arch-specific polyvalent (mnemonic, nops) group set.  Missing config
+    or import failure degrades to an empty set (no splits)."""
+    try:
+        from shapes_poly_config import POLY_GROUPS
+        return set(POLY_GROUPS)
+    except Exception:
+        return set()
+
+
+def split_signature(roles):
+    """Kind-collapsed role signature of a variant (tuple of canonical keys)."""
+    return tuple(KIND_COLLAPSE.get(r["name"], r["name"]) for r in roles)
+
+
+def shape_type_name(key):
+    """Decoded<Mnemonic><Nops>[_k] for a (mn, nops[, split]) group key."""
+    name = f"Decoded{cident(key[0])}{key[1]}"
+    if len(key) > 2:
+        name += f"_{key[2]}"
+    return name
+
+
 def build_shape_groups(variants):
-    """Group variants by (mnemonic, operand-count).  Returns
-    (groups, order, vid2gid) where groups[key]=[(variant_idx, v, roles)...],
-    order = list of keys sorted by first appearance (deterministic), and
-    vid2gid[variant_idx] = group id."""
+    """Group variants into decoded-struct groups.  Keys are (mnemonic,
+    operand-count) normally, or (mnemonic, operand-count, split-k) for the
+    polyvalent groups declared in shapes_poly_config.py (split by
+    kind-collapsed role signature, k = sorted-signature index).  Returns
+    (groups, order, vid2gid, variant_split) where groups[key] =
+    [(variant_idx, v, roles)...], order = keys in first-appearance order,
+    vid2gid[variant_idx] = group index, variant_split[variant_idx] = split
+    ordinal or -1 (no split)."""
     from collections import OrderedDict
-    groups = OrderedDict()
-    order = []
+    poly = load_poly_groups()
+    raw = OrderedDict()
     for i, v in enumerate(variants):
         roles = shape_operand_roles(v)
         key = (v["mnemonic"], len(roles))
-        if key not in groups:
-            groups[key] = []
+        raw.setdefault(key, []).append((i, v, roles))
+    groups = OrderedDict()
+    order = []
+    vi_key = {}  # variant idx -> group key
+    for key, members in raw.items():
+        if key in poly:
+            # split by kind-collapsed signature; k = sorted-signature index
+            # (deterministic across regenerations).
+            subs = OrderedDict()
+            for m in members:
+                sg = split_signature(m[2])
+                subs.setdefault(sg, []).append(m)
+            for k, (_sg, sub) in enumerate(sorted(subs.items())):
+                gkey = (key[0], key[1], k)
+                groups[gkey] = sub
+                order.append(gkey)
+                for m in sub:
+                    vi_key[m[0]] = gkey
+        else:
+            groups[key] = members
             order.append(key)
-        groups[key].append((i, v, roles))
+            for m in members:
+                vi_key[m[0]] = key
     gid = {k: n for n, k in enumerate(order)}
-    vid2gid = [gid[(v["mnemonic"], len(shape_operand_roles(v)))]
-               for v in variants]
-    return groups, order, vid2gid
+    vid2gid = [gid[vi_key[i]] for i in range(len(variants))]
+    variant_split = [k[2] if len(k) > 2 else -1 for k in
+                     (vi_key[i] for i in range(len(variants)))]
+    return groups, order, vid2gid, variant_split
 
 
 def shape_members(group_members, enum_types):
@@ -1217,21 +1290,25 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
         L.append("};")
 
     # ---- group variants by (mnemonic, operand-count) ----
-    groups, order, vid2gid = build_shape_groups(variants)
+    groups, order, vid2gid, variant_split = build_shape_groups(variants)
 
     L.append("")
-    L.append("// Derived decoded types: one per (mnemonic, operand-count).")
-    L.append("// Operands are positional in the mnemonic's canonical role order;")
-    L.append("// modifiers are typed enum members specific to each instruction.")
-    for (mn, nops) in order:
-        members = groups[(mn, nops)]
-        type_name = f"Decoded{cident(mn)}{nops}"
+    L.append("// Derived decoded types: one per (mnemonic, operand-count); the")
+    L.append("// polyvalent groups declared in shapes_poly_config.py emit one")
+    L.append("// Decoded<Mnemonic><N>_<k> per kind-collapsed role signature, so")
+    L.append("// every struct's ops[] positions are unambiguous.  Operands are")
+    L.append("// positional in the mnemonic's canonical role order; modifiers")
+    L.append("// are typed enum members specific to each instruction.")
+    for key in order:
+        members = groups[key]
+        type_name = shape_type_name(key)
+        operand_count = key[1]
         L.append(f"struct {type_name} : DecodedInstruction {{")
         L.append("    std::unique_ptr<DecodedInstruction> clone() const override {")
         L.append(f"        return std::make_unique<{type_name}>(*this);")
         L.append("    }")
-        if nops:
-            L.append(f"    OperandValue ops[{nops}];")
+        if operand_count:
+            L.append(f"    OperandValue ops[{operand_count}];")
         modseen = shape_members(members, enum_types)
         for mname, (tyid, _src) in modseen.items():
             L.append(f"    {tyid} {mname};")
@@ -1239,11 +1316,20 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
         # name (X/wide/hi/imm64/fp traits), so the interpreter can dispatch
         # without string or slot-id lookups.
         L.append("    std::uint8_t subclass;  // generated semantic flags")
-        if mn == "BAR":
+        if key[0] == "BAR":
             # The barrier-id encoding (barname field) is not a FORMAT slot;
             # expose it as a typed member for do_bar.
             L.append("    std::uint8_t barname;  // unsurfaced barrier-id field")
         L.append("};")
+
+    # Per-variant split ordinal (-1 = single struct).  The interpreter uses
+    # this to pick the concrete split type of a decoded instruction.
+    L.append("")
+    L.append("// kShapeSplitByVariant[vi]: split ordinal of the variant's decoded")
+    L.append("// struct within its (mnemonic, nops) group; -1 = no split.")
+    L.append("inline constexpr std::int8_t kShapeSplitByVariant[] = {")
+    L.append("    " + ", ".join(str(s) for s in variant_split))
+    L.append("};")
 
     # ---- per-variant operand-role manifest (aligned to kVariants index) ----
     # Each operand slot of a variant -> (position in ops[], OperandKind).  This
@@ -1319,7 +1405,7 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
                   (s["type"] for v in variants for s in shape_modifier_slots(v))
                   if any(val is not None for val in
                          db["enums"].get(t, {}).values())}
-    groups, order, vid2gid = build_shape_groups(variants)
+    groups, order, vid2gid, _split = build_shape_groups(variants)
 
     L = []
     L.append("// Generated file -- do not edit.  Regenerate with:")
@@ -1337,13 +1423,13 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
     L.append("")
     L.append("// Per-group modifier filler (cast void_out to Decoded<Mnemonic><N>).")
     grp_has_mods = {}
-    for g, (mn, nops) in enumerate(order):
-        members = groups[(mn, nops)]
+    for g, key in enumerate(order):
+        members = groups[key]
         modseen = shape_members(members, enum_types)
         grp_has_mods[g] = bool(modseen)
         if not modseen:
             continue
-        type_name = f"Decoded{cident(mn)}{nops}"
+        type_name = shape_type_name(key)
         L.append(f"inline void shape_fill_mods_grp{g}("
                  f"const FillIn& in, void* void_out) {{")
         L.append(f"    auto& out = *static_cast<{type_name}*>(void_out);")
@@ -1359,15 +1445,14 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
     L.append("    switch (vi) {")
     for vi, v in enumerate(variants):
         g = vid2gid[vi]
-        mn, nops = order[g]
-        type_name = f"Decoded{cident(mn)}{nops}"
+        type_name = shape_type_name(order[g])
         roles = shape_operand_roles(v)
         L.append(f"    case {vi}: {{")
         L.append(f"        auto& out = *static_cast<{type_name}*>(void_out);")
         if grp_has_mods[g]:
             L.append(f"        shape_fill_mods_grp{g}(in, void_out);")
         L.append(f"        out.subclass = {variant_subclass(v['class'])};")
-        if mn == "BAR":
+        if order[g][0] == "BAR":
             L.append(f"        out.barname = static_cast<std::uint8_t>("
                      f"in.value(\"barname\"));")
         for p, r in enumerate(roles):
@@ -1390,11 +1475,10 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
     L.append("    switch (vi) {")
     for vi, v in enumerate(variants):
         g = vid2gid[vi]
-        mn, nops = order[g]
-        type_name = f"Decoded{cident(mn)}{nops}"
+        type_name = shape_type_name(order[g])
         roles = shape_operand_roles(v)
         actual_mods = shape_modifier_slots(v)
-        modseen = shape_members(groups[(mn, nops)], enum_types)
+        modseen = shape_members(groups[order[g]], enum_types)
         member_by_src = {src: mname for mname, (_ty, src) in modseen.items()}
         L.append(f"    case {vi}: {{")
         if roles or actual_mods:
@@ -1419,8 +1503,7 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
     L.append("    switch (vi) {")
     for vi, _v in enumerate(variants):
         g = vid2gid[vi]
-        mn, nops = order[g]
-        type_name = f"Decoded{cident(mn)}{nops}"
+        type_name = shape_type_name(order[g])
         L.append(f"    case {vi}: return std::make_unique<{type_name}>();")
     L.append("    default: return nullptr;")
     L.append("    }")
@@ -1432,9 +1515,8 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
     L.append("    switch (vi) {")
     for vi, _v in enumerate(variants):
         g = vid2gid[vi]
-        mn, nops = order[g]
-        type_name = f"Decoded{cident(mn)}{nops}"
-        if nops:
+        type_name = shape_type_name(order[g])
+        if order[g][1]:
             L.append(f"    case {vi}: return static_cast<const {type_name}*>(inst)->ops;")
         else:
             L.append(f"    case {vi}: return nullptr;")

@@ -1444,6 +1444,11 @@ std::optional<std::uint64_t> Interpreter::branch_target(
     ThreadState& t) const {
     const isa::Mnemonic m = inst.mnemonic;
     const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    // Ops access is the per-variant generic array (BRA3/JMP3 split into
+    // uniform-pred vs uniform-target structs by shapes_poly_config.py; the
+    // target/displacement role stays at the same position in both).
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
     std::int64_t target_s = 0;
     if (m == isa::Mnemonic::kBRA || m == isa::Mnemonic::kJMP) {
         // The displacement/target operand is the LAST role (sImm for BRA, Sa
@@ -1452,19 +1457,9 @@ std::optional<std::uint64_t> Interpreter::branch_target(
         // two's-complement sImm reads as e.g. -12 directly.
         std::int64_t imm = 0;
         if (mf.n_ops == 3) {
-            if (m == isa::Mnemonic::kBRA)
-                imm = shape::operand_value_as_i64(
-                    static_cast<const shape::DecodedBRA3*>(&inst)->ops[2]);
-            else
-                imm = shape::operand_value_as_i64(
-                    static_cast<const shape::DecodedJMP3*>(&inst)->ops[2]);
+            imm = shape::operand_value_as_i64(ops[2]);
         } else {
-            if (m == isa::Mnemonic::kBRA)
-                imm = shape::operand_value_as_i64(
-                    static_cast<const shape::DecodedBRA2*>(&inst)->ops[1]);
-            else
-                imm = shape::operand_value_as_i64(
-                    static_cast<const shape::DecodedJMP2*>(&inst)->ops[1]);
+            imm = shape::operand_value_as_i64(ops[1]);
         }
         if (m == isa::Mnemonic::kBRA) {
             const std::int64_t disp = imm;
@@ -1487,11 +1482,7 @@ std::optional<std::uint64_t> Interpreter::branch_target(
         // BRX/JMX use a 64-bit register pair Ra:R(a+1) (verified:
         // test_brx target = next_pc + sign-extended(Ra:R(a+1)) + off*4).
         const std::uint64_t rv =
-            (m == isa::Mnemonic::kBRX)
-                ? shape::operand_value_as_i64(
-                      static_cast<const shape::DecodedBRX3*>(&inst)->ops[1])
-                : shape::operand_value_as_i64(
-                      static_cast<const shape::DecodedJMX3*>(&inst)->ops[1]);
+            shape::operand_value_as_i64(ops[1]);
         const int rlo = static_cast<int>(rv);
         const std::uint64_t low = (rlo == kRegRz) ? 0 : read_reg(t, rlo);
         const std::uint64_t high =
@@ -1501,11 +1492,7 @@ std::optional<std::uint64_t> Interpreter::branch_target(
         // pair is the raw 64-bit displacement (two's complement).
         const std::int64_t disp = static_cast<std::int64_t>(pair);
         const std::int64_t off_v =
-            (m == isa::Mnemonic::kBRX)
-                ? shape::operand_value_as_i64(
-                      static_cast<const shape::DecodedBRX3*>(&inst)->ops[2])
-                : shape::operand_value_as_i64(
-                      static_cast<const shape::DecodedJMX3*>(&inst)->ops[2]);
+            shape::operand_value_as_i64(ops[2]);
         std::int64_t scaled;
         if (!checked_mul4(off_v, &scaled)) return std::nullopt;
         std::int64_t base = (m == isa::Mnemonic::kBRX)
@@ -2343,10 +2330,36 @@ Status Interpreter::do_imad(WarpState& w, std::uint32_t mask,
         fmt = static_cast<std::uint64_t>(d.fmt);
         subclass = d.subclass;
     } else if (nops == 5) {
-        const auto& d = *static_cast<const shape::DecodedIMAD5*>(&inst);
-        ops = d.ops;
-        fmt = static_cast<std::uint64_t>(d.fmt);
-        subclass = d.subclass;
+        // IMAD5 is split into 5 structs (x/wide/hi/pseudo layouts); every
+        // split carries the same `fmt`/`subclass` members.
+        ops = shape::operand_values_by_variant(inst.shape_variant, &inst);
+        switch (shape::kShapeSplitByVariant[inst.shape_variant]) {
+            case 0:
+                fmt = static_cast<std::uint64_t>(
+                    static_cast<const shape::DecodedIMAD5_0*>(&inst)->fmt);
+                subclass = static_cast<const shape::DecodedIMAD5_0*>(&inst)->subclass;
+                break;
+            case 1:
+                fmt = static_cast<std::uint64_t>(
+                    static_cast<const shape::DecodedIMAD5_1*>(&inst)->fmt);
+                subclass = static_cast<const shape::DecodedIMAD5_1*>(&inst)->subclass;
+                break;
+            case 2:
+                fmt = static_cast<std::uint64_t>(
+                    static_cast<const shape::DecodedIMAD5_2*>(&inst)->fmt);
+                subclass = static_cast<const shape::DecodedIMAD5_2*>(&inst)->subclass;
+                break;
+            case 3:
+                fmt = static_cast<std::uint64_t>(
+                    static_cast<const shape::DecodedIMAD5_3*>(&inst)->fmt);
+                subclass = static_cast<const shape::DecodedIMAD5_3*>(&inst)->subclass;
+                break;
+            default:
+                fmt = static_cast<std::uint64_t>(
+                    static_cast<const shape::DecodedIMAD5_4*>(&inst)->fmt);
+                subclass = static_cast<const shape::DecodedIMAD5_4*>(&inst)->subclass;
+                break;
+        }
     } else {
         const auto& d = *static_cast<const shape::DecodedIMAD6*>(&inst);
         ops = d.ops;
@@ -2460,8 +2473,12 @@ MemWidthInfo mem_sz(const DecodedInstruction& inst) {
     switch (inst.mnemonic) {
         case isa::Mnemonic::kLDG:
             if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG5*>(&inst)->sz);
-            else if (nops == 7) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG7*>(&inst)->sz);
-            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG8*>(&inst)->sz);
+            else if (nops == 7) {
+                // LDG7 split: 0 = memdesc, 1 = 256-bit uniform.
+                sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                         ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG7_0*>(&inst)->sz)
+                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG7_1*>(&inst)->sz);
+            } else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDG8*>(&inst)->sz);
             break;
         case isa::Mnemonic::kSTG:
             if (nops == 3) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTG3*>(&inst)->sz);
@@ -2484,26 +2501,62 @@ MemWidthInfo mem_sz(const DecodedInstruction& inst) {
             else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDL5*>(&inst)->sz);
             break;
         case isa::Mnemonic::kSTL: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedSTL3*>(&inst)->sz); break;
-        case isa::Mnemonic::kLDC: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDC5*>(&inst)->sz); break;
+        case isa::Mnemonic::kLDC:
+            // LDC5 split: 0 = LDC [Sa_bank,Ra,..], 1 = LDC.UR [URa,Rb,..].
+            sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                     ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDC5_0*>(&inst)->sz)
+                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDC5_1*>(&inst)->sz);
+            break;
         case isa::Mnemonic::kLDCU:
             if (nops == 4) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU4*>(&inst)->sz);
             else if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU5*>(&inst)->sz);
-            else if (nops == 6) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6*>(&inst)->sz);
-            else if (nops == 7) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU7*>(&inst)->sz);
-            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU8*>(&inst)->sz);
+            else if (nops == 6) {
+                // LDCU6 split: 0/1 = const RCR/RCxR, 2 = 256-ur-offset.
+                switch (shape::kShapeSplitByVariant[inst.shape_variant]) {
+                    case 0: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_0*>(&inst)->sz); break;
+                    case 1: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_1*>(&inst)->sz); break;
+                    default: sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU6_2*>(&inst)->sz); break;
+                }
+            } else if (nops == 7) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU7*>(&inst)->sz);
+            else {
+                // LDCU8 split: 0 = 256-const-RCR, 1 = 256-const-RCxR.
+                sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                         ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU8_0*>(&inst)->sz)
+                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDCU8_1*>(&inst)->sz);
+            }
             break;
         case isa::Mnemonic::kATOM:
-            sz = (nops == 7) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7*>(&inst)->sz)
-                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6*>(&inst)->sz);
+            // ATOM6 split: 0 = .ARRIVE, 1 = int/fp.  ATOM7 split: 0 =
+            // int/fp-uniform, 1 = CAS.
+            sz = (nops == 7)
+                     ? ((shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                            ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sz)
+                            : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sz))
+                     : ((shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                            ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sz)
+                            : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sz));
             break;
         case isa::Mnemonic::kATOMS:
-            sz = (nops == 5) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5*>(&inst)->sz)
-                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4*>(&inst)->sz);
+            // ATOMS4 split: 0 = .ARRIVE, 1 = plain.  ATOMS5 split: 0 =
+            // cast-destPu, 1 = uniform, 2 = CAS/cast-destRd.
+            sz = (nops == 5)
+                     ? ((shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                            ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_0*>(&inst)->sz)
+                            : (shape::kShapeSplitByVariant[inst.shape_variant] == 1)
+                                  ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_1*>(&inst)->sz)
+                                  : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_2*>(&inst)->sz))
+                     : ((shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                            ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_0*>(&inst)->sz)
+                            : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_1*>(&inst)->sz));
             break;
         case isa::Mnemonic::kATOMG:
             if (nops == 5) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG5*>(&inst)->sz);
-            else if (nops == 6) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6*>(&inst)->sz);
-            else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG7*>(&inst)->sz);
+            else if (nops == 6) {
+                // ATOMG6 split: 0 = uniform base, 1 = CAS.
+                sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                         ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sz)
+                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sz);
+            } else sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG7*>(&inst)->sz);
             break;
         case isa::Mnemonic::kREDG:
             if (nops == 3) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedREDG3*>(&inst)->sz);
@@ -2515,8 +2568,13 @@ MemWidthInfo mem_sz(const DecodedInstruction& inst) {
                              : static_cast<std::uint64_t>(static_cast<const shape::DecodedREDS3*>(&inst)->sz);
             break;
         case isa::Mnemonic::kLDGSTS:
-            sz = (nops == 7) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS7*>(&inst)->sz)
-                             : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS6*>(&inst)->sz);
+            if (nops == 7) sz = static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS7*>(&inst)->sz);
+            else {
+                // LDGSTS6 split: 0 = RUR, 1 = RR32U/RR64U.
+                sz = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                         ? static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS6_0*>(&inst)->sz)
+                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedLDGSTS6_1*>(&inst)->sz);
+            }
             break;
         default:
             // sz not present on this family; keep the default 32-bit width.
@@ -2541,43 +2599,94 @@ std::optional<AtomicOp> decode_atomic_op(const DecodedInstruction& inst) {
     std::uint64_t opv = 0, szv = 0;
     std::uint8_t subclass = 0;
     switch (inst.mnemonic) {
-        case isa::Mnemonic::kATOM:
+        case isa::Mnemonic::kATOM: {
+            // ATOM6 split: 0 = .ARRIVE, 1 = int/fp.  ATOM7 split: 0 =
+            // int/fp-uniform, 1 = CAS.  All carry op/sz/subclass.
+            const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
             if (nops == 7) {
-                const auto& d = *static_cast<const shape::DecodedATOM7*>(&inst);
-                opv = static_cast<std::uint64_t>(d.op);
-                szv = static_cast<std::uint64_t>(d.sz);
-                subclass = d.subclass;
+                if (split == 0) {
+                    const auto& d = *static_cast<const shape::DecodedATOM7_0*>(&inst);
+                    opv = static_cast<std::uint64_t>(d.op);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                } else {
+                    // ATOM7 CAS split has no `op` member (opv stays 0; the
+                    // caller overrides with kCas when a comparand exists).
+                    const auto& d = *static_cast<const shape::DecodedATOM7_1*>(&inst);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                }
             } else {
-                const auto& d = *static_cast<const shape::DecodedATOM6*>(&inst);
-                opv = static_cast<std::uint64_t>(d.op);
-                szv = static_cast<std::uint64_t>(d.sz);
-                subclass = d.subclass;
+                if (split == 0) {
+                    const auto& d = *static_cast<const shape::DecodedATOM6_0*>(&inst);
+                    opv = static_cast<std::uint64_t>(d.op);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                } else {
+                    const auto& d = *static_cast<const shape::DecodedATOM6_1*>(&inst);
+                    opv = static_cast<std::uint64_t>(d.op);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                }
             }
             break;
-        case isa::Mnemonic::kATOMS:
+        }
+        case isa::Mnemonic::kATOMS: {
+            // ATOMS4 split: 0 = .ARRIVE, 1 = plain (op member present).
+            // ATOMS5 split: 1 = uniform has `op`; 0 (cast-destPu) and 2
+            // (CAS) carry `cas` instead (opv stays 0 — the caller overrides
+            // with kCas when a CAS comparand is present, as before).
+            const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
             if (nops == 5) {
-                const auto& d = *static_cast<const shape::DecodedATOMS5*>(&inst);
-                opv = static_cast<std::uint64_t>(d.op);
-                szv = static_cast<std::uint64_t>(d.sz);
-                subclass = d.subclass;
+                if (split == 0) {
+                    const auto& d = *static_cast<const shape::DecodedATOMS5_0*>(&inst);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                } else if (split == 1) {
+                    const auto& d = *static_cast<const shape::DecodedATOMS5_1*>(&inst);
+                    opv = static_cast<std::uint64_t>(d.op);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                } else {
+                    const auto& d = *static_cast<const shape::DecodedATOMS5_2*>(&inst);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                }
             } else {
-                const auto& d = *static_cast<const shape::DecodedATOMS4*>(&inst);
-                opv = static_cast<std::uint64_t>(d.op);
-                szv = static_cast<std::uint64_t>(d.sz);
-                subclass = d.subclass;
+                if (split == 0) {
+                    const auto& d = *static_cast<const shape::DecodedATOMS4_0*>(&inst);
+                    opv = static_cast<std::uint64_t>(d.op);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                } else {
+                    const auto& d = *static_cast<const shape::DecodedATOMS4_1*>(&inst);
+                    opv = static_cast<std::uint64_t>(d.op);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                }
             }
             break;
-        case isa::Mnemonic::kATOMG:
+        }
+        case isa::Mnemonic::kATOMG: {
+            // ATOMG6 split: 0 = uniform base (op member), 1 = CAS (no op —
+            // opv stays 0, overridden by kCas in the caller).
+            const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
             if (nops == 5) {
                 const auto& d = *static_cast<const shape::DecodedATOMG5*>(&inst);
                 opv = static_cast<std::uint64_t>(d.op);
                 szv = static_cast<std::uint64_t>(d.sz);
                 subclass = d.subclass;
             } else if (nops == 6) {
-                const auto& d = *static_cast<const shape::DecodedATOMG6*>(&inst);
-                opv = static_cast<std::uint64_t>(d.op);
-                szv = static_cast<std::uint64_t>(d.sz);
-                subclass = d.subclass;
+                if (split == 0) {
+                    const auto& d = *static_cast<const shape::DecodedATOMG6_0*>(&inst);
+                    opv = static_cast<std::uint64_t>(d.op);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                } else {
+                    const auto& d = *static_cast<const shape::DecodedATOMG6_1*>(&inst);
+                    szv = static_cast<std::uint64_t>(d.sz);
+                    subclass = d.subclass;
+                }
             } else {
                 const auto& d = *static_cast<const shape::DecodedATOMG7*>(&inst);
                 opv = static_cast<std::uint64_t>(d.op);
@@ -2585,6 +2694,7 @@ std::optional<AtomicOp> decode_atomic_op(const DecodedInstruction& inst) {
                 subclass = d.subclass;
             }
             break;
+        }
         case isa::Mnemonic::kREDG:
             if (nops == 3) {
                 const auto& d = *static_cast<const shape::DecodedREDG3*>(&inst);
@@ -2665,7 +2775,8 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
             ops = static_cast<const shape::DecodedLDG5*>(&inst)->ops;
             ra = 2; off = 3;
         } else if (static_cast<shape::OperandKind>(
-                       (ops = static_cast<const shape::DecodedLDG7*>(&inst)->ops)[                                                                                   2].kind) ==
+                       (ops = shape::operand_values_by_variant(
+                            inst.shape_variant, &inst))[2].kind) ==
                    shape::OperandKind::kRegister) {
             ra = 2; off = 4;  // uniform 7-op
         } else {
@@ -2742,9 +2853,7 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
                       : static_cast<const shape::DecodedSTS3*>(&inst)->ops;
             ra = 0; off = (nops == 4) ? 2 : 1;
         } else if (m == isa::Mnemonic::kATOMS) {
-            ops = (nops == 5)
-                      ? static_cast<const shape::DecodedATOMS5*>(&inst)->ops
-                      : static_cast<const shape::DecodedATOMS4*>(&inst)->ops;
+            ops = shape::operand_values_by_variant(inst.shape_variant, &inst);
             ra = 1; off = 2;
         } else {  // REDS
             ops = (nops == 4)
@@ -2826,7 +2935,8 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
             if (m == isa::Mnemonic::kATOMG) {
                 ops = (nops == 5)
                           ? static_cast<const shape::DecodedATOMG5*>(&inst)->ops
-                          : static_cast<const shape::DecodedATOMG6*>(&inst)->ops;
+                          : shape::operand_values_by_variant(
+                                inst.shape_variant, &inst);
             } else {
                 ops = (nops == 3)
                           ? static_cast<const shape::DecodedREDG3*>(&inst)->ops
@@ -2847,11 +2957,10 @@ Status Interpreter::resolve_mem_addr(const DecodedInstruction& inst,
         return Status::success();
     }
     if (m == isa::Mnemonic::kATOM) {
-        // 6 [Pu,Rd,Ra,off,Rb,wr]; 7 cas +Rc.
+        // 6 [Pu,Rd,Ra,off,Rb,wr]; 7 cas +Rc.  (ATOM6/7 split; ops via the
+        // per-variant generic array.)
         const shape::OperandValue* ops =
-            (nops == 7)
-                ? static_cast<const shape::DecodedATOM7*>(&inst)->ops
-                : static_cast<const shape::DecodedATOM6*>(&inst)->ops;
+            shape::operand_values_by_variant(inst.shape_variant, &inst);
         *addr_out = read_reg_ov(t, ops[2]);
         *off_out = shape::operand_value_as_i64(ops[3]);
         *space_out = AddressSpace::kGlobal;
@@ -3215,10 +3324,12 @@ Status Interpreter::mem_ldst_atom_core(
 Status Interpreter::do_ldg(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    // 5/7/8-op: Rd is ops[1] in every layout.
-    const auto& o = *static_cast<const shape::DecodedLDG7*>(&inst);
+    // 5/7/8-op: Rd is ops[1] in every layout (the LDG7 split keeps Rd@1 in
+    // both the 256-uniform and the memdesc struct).
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
-                              mem_ov_idx(o.ops, 1), 255, 255, 0, 0, 0);
+                              mem_ov_idx(ops, 1), 255, 255, 0, 0, 0);
 }
 
 Status Interpreter::do_stg(WarpState& w, std::uint32_t mask,
@@ -3276,9 +3387,10 @@ Status Interpreter::do_stl(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_ldc(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst, std::uint64_t pc,
                            std::optional<Fault>* fault) {
-    const auto& o = *static_cast<const shape::DecodedLDC5*>(&inst);
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
     return mem_ldst_atom_core(w, mask, inst, pc, fault, true, false,
-                              mem_ov_idx(o.ops, 0), 255, 255, 0, 0, 0);
+                              mem_ov_idx(ops, 0), 255, 255, 0, 0, 0);
 }
 
 Status Interpreter::do_ldcu(WarpState& w, std::uint32_t mask,
@@ -3293,39 +3405,64 @@ Status Interpreter::do_ldcu(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_atom(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
-    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
     if (nops == 7) {
-        const auto& o = *static_cast<const shape::DecodedATOM7*>(&inst);
-        return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 1),
-            mem_ov_idx(o.ops, 4), mem_ov_idx(o.ops, 5),
-            static_cast<std::uint64_t>(o.sz),
-            static_cast<std::uint64_t>(o.sem),
-            static_cast<std::uint64_t>(o.sco));
+        // ATOM7 split: 0 = int/fp-uniform [Pu,Rd,Ra,Ra_URc,Ra_offset,Rb,wr],
+        // 1 = CAS [Pu,Rd,Ra,Ra_offset,Rb,Rc,wr].  The positional rd/rb/cas
+        // reads are preserved (uniform-form rb/cas are the old positional
+        // values); sz/sem/sco come from the split struct.
+        const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sz)
+                                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sz);
+        const auto sem = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sem)
+                                      : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sem);
+        const auto sco = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_0*>(&inst)->sco)
+                                      : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM7_1*>(&inst)->sco);
+        const shape::OperandValue* ops =
+            shape::operand_values_by_variant(inst.shape_variant, &inst);
+        return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                                  mem_ov_idx(ops, 1), mem_ov_idx(ops, 4),
+                                  mem_ov_idx(ops, 5), sz, sem, sco);
     }
-    const auto& o = *static_cast<const shape::DecodedATOM6*>(&inst);
-    return mem_ldst_atom_core(
-        w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 1),
-        mem_ov_idx(o.ops, 4), 255, static_cast<std::uint64_t>(o.sz),
-        static_cast<std::uint64_t>(o.sem),
-        static_cast<std::uint64_t>(o.sco));
+    // ATOM6 split: 0 = .ARRIVE [Pu,Rd,Ra,Ra_URc,Ra_offset,wr], 1 = int/fp
+    // [Pu,Rd,Ra,Ra_offset,Rb,wr].  Positional reads preserved.
+    const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sz)
+                                 : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sz);
+    const auto sem = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sem)
+                                  : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sem);
+    const auto sco = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_0*>(&inst)->sco)
+                                  : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOM6_1*>(&inst)->sco);
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                              mem_ov_idx(ops, 1), mem_ov_idx(ops, 4), 255,
+                              sz, sem, sco);
 }
 
 Status Interpreter::do_atoms(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst, std::uint64_t pc,
                              std::optional<Fault>* fault) {
-    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
+    const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
     if (nops == 5) {
-        const auto& o = *static_cast<const shape::DecodedATOMS5*>(&inst);
-        return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 0),
-            mem_ov_idx(o.ops, 3), mem_ov_idx(o.ops, 4),
-            static_cast<std::uint64_t>(o.sz), 1, 0);
+        // ATOMS5 split: 0 = cast-destPu, 1 = uniform, 2 = CAS/cast-destRd.
+        const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_0*>(&inst)->sz)
+                         : (split == 1) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_1*>(&inst)->sz)
+                         : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS5_2*>(&inst)->sz);
+        return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                                  mem_ov_idx(ops, 0), mem_ov_idx(ops, 3),
+                                  mem_ov_idx(ops, 4), sz, 1, 0);
     }
-    const auto& o = *static_cast<const shape::DecodedATOMS4*>(&inst);
-    return mem_ldst_atom_core(
-        w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 0),
-        mem_ov_idx(o.ops, 3), 255, static_cast<std::uint64_t>(o.sz), 1, 0);
+    // ATOMS4 split: 0 = .ARRIVE, 1 = plain (positional reads preserved).
+    const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_0*>(&inst)->sz)
+                                 : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMS4_1*>(&inst)->sz);
+    return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                              mem_ov_idx(ops, 0), mem_ov_idx(ops, 3), 255,
+                              sz, 1, 0);
 }
 
 Status Interpreter::do_reds(WarpState& w, std::uint32_t mask,
@@ -3347,7 +3484,8 @@ Status Interpreter::do_reds(WarpState& w, std::uint32_t mask,
 Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst, std::uint64_t pc,
                              std::optional<Fault>* fault) {
-    const std::uint16_t nops = shape::kShapeManifests[inst.shape_variant].n_ops;
+    const auto& mf = shape::kShapeManifests[inst.shape_variant];
+    const std::uint16_t nops = mf.n_ops;
     if (nops == 5) {
         const auto& o = *static_cast<const shape::DecodedATOMG5*>(&inst);
         return mem_ldst_atom_core(
@@ -3357,13 +3495,20 @@ Status Interpreter::do_atomg(WarpState& w, std::uint32_t mask,
             static_cast<std::uint64_t>(o.sco));
     }
     if (nops == 6) {
-        const auto& o = *static_cast<const shape::DecodedATOMG6*>(&inst);
-        return mem_ldst_atom_core(
-            w, mask, inst, pc, fault, false, true, mem_ov_idx(o.ops, 1),
-            mem_ov_idx(o.ops, 5), mem_ov_idx(o.ops, 5),
-            static_cast<std::uint64_t>(o.sz),
-            static_cast<std::uint64_t>(o.sem),
-            static_cast<std::uint64_t>(o.sco));
+        // ATOMG6 split: 0 = uniform base, 1 = CAS.  Positional reads
+        // preserved (CAS-form rb/cas at ops[5]).
+        const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
+        const auto sz = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sz)
+                                     : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sz);
+        const auto sem = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sem)
+                                      : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sem);
+        const auto sco = (split == 0) ? static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_0*>(&inst)->sco)
+                                      : static_cast<std::uint64_t>(static_cast<const shape::DecodedATOMG6_1*>(&inst)->sco);
+        const shape::OperandValue* ops =
+            shape::operand_values_by_variant(inst.shape_variant, &inst);
+        return mem_ldst_atom_core(w, mask, inst, pc, fault, false, true,
+                                  mem_ov_idx(ops, 1), mem_ov_idx(ops, 5),
+                                  mem_ov_idx(ops, 5), sz, sem, sco);
     }
     const auto& o = *static_cast<const shape::DecodedATOMG7*>(&inst);
     return mem_ldst_atom_core(
@@ -3601,12 +3746,23 @@ Status Interpreter::do_ldgsts(WarpState& w, std::uint32_t mask,
     int ra, rao, rbo;
     std::uint64_t wide = 0, szv = 0;
     if (nops == 6) {
-        const auto& d = *static_cast<const shape::DecodedLDGSTS6*>(&inst);
-        ra = has_urc ? 3 : 2;
-        rao = 4;
-        rbo = has_urc ? 2 : 1;
-        wide = static_cast<std::uint64_t>(d.input_reg_sz_64_dist);
-        szv = static_cast<std::uint64_t>(d.sz);
+        // LDGSTS6 split: 0 = RUR, 1 = RR32U/RR64U (same members).
+        const auto split = shape::kShapeSplitByVariant[inst.shape_variant];
+        if (split == 0) {
+            const auto& d = *static_cast<const shape::DecodedLDGSTS6_0*>(&inst);
+            ra = has_urc ? 3 : 2;
+            rao = 4;
+            rbo = has_urc ? 2 : 1;
+            wide = static_cast<std::uint64_t>(d.input_reg_sz_64_dist);
+            szv = static_cast<std::uint64_t>(d.sz);
+        } else {
+            const auto& d = *static_cast<const shape::DecodedLDGSTS6_1*>(&inst);
+            ra = has_urc ? 3 : 2;
+            rao = 4;
+            rbo = has_urc ? 2 : 1;
+            wide = static_cast<std::uint64_t>(d.input_reg_sz_64_dist);
+            szv = static_cast<std::uint64_t>(d.sz);
+        }
     } else {
         const auto& d = *static_cast<const shape::DecodedLDGSTS7*>(&inst);
         ra = has_urc ? 5 : 4;
@@ -3739,10 +3895,18 @@ void Interpreter::do_depbar(WarpState& w, const DecodedInstruction& inst,
     const auto& mf = shape::kShapeManifests[inst.shape_variant];
     std::uint64_t le = 0, sbidx = 0, cnt = 0;
     if (mf.n_ops == 3) {
-        const auto& d = *static_cast<const shape::DecodedDEPBAR3*>(&inst);
-        le = static_cast<std::uint64_t>(d.le);
-        sbidx = static_cast<std::uint64_t>(shape::operand_value_as_i64(d.ops[0]));
-        cnt = static_cast<std::uint64_t>(shape::operand_value_as_i64(d.ops[1]));
+        // DEPBAR3 splits into depbar_ur_ (_0: [sbidx,URb,..]) and depbar__LE
+        // (_1: [sbidx,cnt,..]); both carry the `le` member and the count role
+        // at ops[1].
+        const shape::OperandValue* ops =
+            shape::operand_values_by_variant(inst.shape_variant, &inst);
+        le = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                 ? static_cast<std::uint64_t>(
+                       static_cast<const shape::DecodedDEPBAR3_0*>(&inst)->le)
+                 : static_cast<std::uint64_t>(
+                       static_cast<const shape::DecodedDEPBAR3_1*>(&inst)->le);
+        sbidx = static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+        cnt = static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
     } else if (mf.n_ops == 1) {
         const auto& d = *static_cast<const shape::DecodedDEPBAR1*>(&inst);
         (void)d;
@@ -3849,14 +4013,16 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             std::uint64_t paramtype = 0, retval = 0;
             const shape::OperandValue* rd_op = nullptr;
             if (nops == 5) {
+                // SYNCS5 split: 1 = ARRIVE (paramtype/retval members).
                 const auto& d =
-                    *static_cast<const shape::DecodedSYNCS5*>(&inst);
+                    *static_cast<const shape::DecodedSYNCS5_1*>(&inst);
                 paramtype = static_cast<std::uint64_t>(d.paramtype);
                 retval = static_cast<std::uint64_t>(d.retval);
-                rd_op = &d.ops[0];  // Rd
+                rd_op = &ops[0];  // Rd
             } else {
+                // SYNCS4 split: 2 = TCNT (retval member).
                 const auto& d =
-                    *static_cast<const shape::DecodedSYNCS4*>(&inst);
+                    *static_cast<const shape::DecodedSYNCS4_2*>(&inst);
                 retval = static_cast<std::uint64_t>(d.retval);
             }
             auto* st = mbarrier_at(*cta, addr, /*create_if_missing=*/true);
@@ -3923,13 +4089,11 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             }
             return Status::success();
         }
-        case 0x15a7: {  // PHASECHK / try_wait.parity
-            const auto& d =
-                *static_cast<const shape::DecodedSYNCS5*>(&inst);
+        case 0x15a7: {  // PHASECHK / try_wait.parity (SYNCS5 split 0)
             const std::uint64_t pnum = static_cast<std::uint64_t>(
-                shape::operand_value_as_i64(d.ops[0]));  // Pu
+                shape::operand_value_as_i64(ops[0]));  // Pu
             const std::uint64_t parity =
-                (read_reg_ov(w.threads[0], d.ops[4]) >> 31) & 1;  // Rb
+                (read_reg_ov(w.threads[0], ops[4]) >> 31) & 1;  // Rb
             auto* st = mbarrier_at(*cta, addr, /*create_if_missing=*/true);
             if (!st) {
                 if (fault) {
@@ -3991,8 +4155,6 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             return Status::success();
         }
         case 0x15b1: {  // LD: load barrier state (64-bit) into GPR Rd
-            const auto& d =
-                *static_cast<const shape::DecodedSYNCS4*>(&inst);
             auto* st = mbarrier_at(*cta, addr, /*create_if_missing=*/true);
             if (!st) {
                 if (fault) {
@@ -4004,7 +4166,7 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                 return Status::failure(Error::internal("memory fault"));
             }
             const std::uint64_t reg = static_cast<std::uint64_t>(
-                shape::operand_value_as_i64(d.ops[0]));  // Rd
+                shape::operand_value_as_i64(ops[0]));  // Rd
             const std::uint64_t nw = st->encode();
             if (reg != 255 && reg + 1 < kNumGprs) {
                 w.threads[0].gpr[reg] =
@@ -4024,12 +4186,10 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             return Status::failure(Error::internal("memory fault"));
         }
         case 0x15b2: {  // EXCH.64: uniform shared atomic exchange (mbarrier.init)
-            const auto& d =
-                *static_cast<const shape::DecodedSYNCS5*>(&inst);
             const std::uint64_t urd = static_cast<std::uint64_t>(
-                shape::operand_value_as_i64(d.ops[1]));  // URd
+                shape::operand_value_as_i64(ops[1]));  // URd
             const std::uint64_t new_val =
-                read_ur_pair_ov(w, d.ops[4]);  // URb
+                read_ur_pair_ov(w, ops[4]);  // URb
             if (addr > cta->shared.size() || addr + 8 > cta->shared.size()) {
                 if (fault) {
                     *fault = Fault(FaultKind::kIllegalMemoryAccess,
@@ -4060,10 +4220,8 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             return Status::success();
         }
         case 0x13b2: {  // CAS.64: uniform shared atomic compare-and-swap
-            const auto& d =
-                *static_cast<const shape::DecodedSYNCS6*>(&inst);
             const std::uint64_t urd = static_cast<std::uint64_t>(
-                shape::operand_value_as_i64(d.ops[1]));  // URd
+                shape::operand_value_as_i64(ops[1]));  // URd
             if (addr > cta->shared.size() || addr + 8 > cta->shared.size()) {
                 if (fault) {
                     *fault = Fault(FaultKind::kIllegalMemoryAccess,
@@ -4078,10 +4236,10 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
                 old_val |= static_cast<std::uint64_t>(cta->shared[addr + i])
                            << (8 * i);
             const std::uint64_t cmp =
-                read_ur_pair_ov(w, d.ops[5]);  // URc
+                read_ur_pair_ov(w, ops[5]);  // URc
             if (old_val == cmp) {
                 const std::uint64_t new_val =
-                    read_ur_pair_ov(w, d.ops[4]);  // URb
+                    read_ur_pair_ov(w, ops[4]);  // URb
                 for (int i = 0; i < 8; ++i)
                     cta->shared[addr + i] =
                         static_cast<std::uint8_t>((new_val >> (8 * i)) & 0xff);
@@ -4098,10 +4256,8 @@ Status Interpreter::do_syncs(WarpState& w, std::uint32_t mask,
             return Status::success();
         }
         case 0x19b2: {  // LD.64: uniform shared load
-            const auto& d =
-                *static_cast<const shape::DecodedSYNCS4*>(&inst);
             const std::uint64_t urd = static_cast<std::uint64_t>(
-                shape::operand_value_as_i64(d.ops[1]));  // URd
+                shape::operand_value_as_i64(ops[1]));  // URd
             if (addr > cta->shared.size() || addr + 8 > cta->shared.size()) {
                 if (fault) {
                     *fault = Fault(FaultKind::kIllegalMemoryAccess,
@@ -4743,8 +4899,12 @@ void Interpreter::record_coupled_l1_to_shared(const WarpState& w,
     const auto& mf = shape::kShapeManifests[inst.shape_variant];
     std::uint64_t loc = 1;
     if (mf.n_ops == 6) {
-        loc = static_cast<std::uint64_t>(
-            static_cast<const shape::DecodedLDGSTS6*>(&inst)->loc);
+        // LDGSTS6 split: 0 = RUR, 1 = RR32U/RR64U (same `loc` member).
+        loc = (shape::kShapeSplitByVariant[inst.shape_variant] == 0)
+                  ? static_cast<std::uint64_t>(
+                        static_cast<const shape::DecodedLDGSTS6_0*>(&inst)->loc)
+                  : static_cast<std::uint64_t>(
+                        static_cast<const shape::DecodedLDGSTS6_1*>(&inst)->loc);
     } else if (mf.n_ops == 7) {
         loc = static_cast<std::uint64_t>(
             static_cast<const shape::DecodedLDGSTS7*>(&inst)->loc);
@@ -5146,7 +5306,9 @@ Status Interpreter::do_hmma(WarpState& w, std::uint32_t mask,
         srcfmt = static_cast<std::uint64_t>(d.srcfmt);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
     } else {
-        const auto& d = *static_cast<const shape::DecodedHMMA7*>(&inst);
+        // HMMA7 split: sparse (_0) / indexedRF (_1); BOTH are rejected by the
+        // dense-shape gate below, so the member values never matter.
+        const auto& d = *static_cast<const shape::DecodedHMMA7_0*>(&inst);
         ops = d.ops;
         size = static_cast<std::uint64_t>(d.size);
         srcfmt = static_cast<std::uint64_t>(d.srcfmt);
@@ -6070,8 +6232,11 @@ Status Interpreter::do_elect(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst) {
     // ELECT Pu, URd, Pp: leader election — lowest active lane with Pp.
     // Roles: [Pu, URd, <Pp|URa>] (the third role is Pp when present).
-    const auto& d = *static_cast<const shape::DecodedELECT3*>(&inst);
-    const shape::OperandValue* ops = d.ops;
+    // ELECT3 split: 0 = [Pu,URd,Pp], 1 = [Pu,URd,URa]; the third role's
+    // kind decides which semantics apply, so a plain per-variant ops array
+    // works for both.
+    const shape::OperandValue* ops =
+        shape::operand_values_by_variant(inst.shape_variant, &inst);
     const bool has_pp =
         static_cast<shape::OperandKind>(ops[2].kind) ==
         shape::OperandKind::kPredicate;
@@ -6232,7 +6397,9 @@ Status Interpreter::do_lop3(WarpState& w, std::uint32_t mask,
     if (nops == 7) {
         ops = static_cast<const shape::DecodedLOP37*>(&inst)->ops;
     } else if (nops == 6) {
-        ops = static_cast<const shape::DecodedLOP36*>(&inst)->ops;
+        // LOP36 split: 0 = no-LUT [..,Rc,Pp], 1 = LUT [..,Rc,imm8] (ops[5]
+        // differs); ops via the per-variant generic array.
+        ops = shape::operand_values_by_variant(inst.shape_variant, &inst);
     } else {
         ops = static_cast<const shape::DecodedLOP35*>(&inst)->ops;
     }
@@ -6377,23 +6544,36 @@ Status Interpreter::do_lea(WarpState& w, std::uint32_t mask,
     const std::uint16_t nops = mf.n_ops;
     const shape::OperandValue* ops = nullptr;
     std::uint64_t hilo = 0;
+    int scale_pos = 4;      // scaleU5 position for the (n, 5)/7-op layouts
+    bool has_rc = nops >= 6;
     if (nops == 5) {
         const auto& d = *static_cast<const shape::DecodedLEA5*>(&inst);
         ops = d.ops;
         hilo = static_cast<std::uint64_t>(d.hilo);
     } else if (nops == 6) {
-        const auto& d = *static_cast<const shape::DecodedLEA6*>(&inst);
-        ops = d.ops;
-        hilo = static_cast<std::uint64_t>(d.hilo);
+        // LEA6 split: 0 = non-x [..,Rc,scaleU5], 1 = x-form [..,scaleU5,Pp]
+        // (no Rc).
+        const std::int8_t split = shape::kShapeSplitByVariant[inst.shape_variant];
+        if (split == 0) {
+            const auto& d = *static_cast<const shape::DecodedLEA6_0*>(&inst);
+            ops = d.ops;
+            hilo = static_cast<std::uint64_t>(d.hilo);
+            scale_pos = 5;
+        } else {
+            const auto& d = *static_cast<const shape::DecodedLEA6_1*>(&inst);
+            ops = d.ops;
+            hilo = static_cast<std::uint64_t>(d.hilo);
+            has_rc = false;
+            scale_pos = 4;
+        }
     } else {
         const auto& d = *static_cast<const shape::DecodedLEA7*>(&inst);
         ops = d.ops;
         hilo = static_cast<std::uint64_t>(d.hilo);
+        scale_pos = 5;
     }
-    const bool has_rc = nops >= 6;
     const std::uint64_t scale_v =
-        static_cast<std::uint64_t>(shape::operand_value_as_i64(
-            ops[(nops == 5) ? 4 : 5]));
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[scale_pos]));
     const unsigned sh = static_cast<unsigned>(scale_v & 0x1f);
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
