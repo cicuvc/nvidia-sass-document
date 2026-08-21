@@ -6369,13 +6369,12 @@ Status Interpreter::do_frnd(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     // FRND Rd, Rb/Sb/URb — round to integral.  Roles: [Rd, source].
     const auto& d = *static_cast<const shape::DecodedFRND2*>(&inst);
-    const OperandFields ops(inst);
     const Rnd rnd = static_cast<Rnd>(d.rnd);
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_ov(t, ops[1]);
+        std::uint32_t a = read_reg_ov(t, d.b);
         const float f = std::bit_cast<float>(a);
         float r;
         switch (rnd) {
@@ -6385,24 +6384,24 @@ Status Interpreter::do_frnd(WarpState& w, std::uint32_t mask,
             default: r = std::nearbyint(f); break;
         }
         if (fast_mode()) note_fast_leaf(false);
-        write_rd_ov(w, t, ops[0], std::bit_cast<std::uint32_t>(r), 0);
+        write_rd_ov(w, t, d.Rd, std::bit_cast<std::uint32_t>(r), 0);
     }
     return Status::success();
 }
 
+
 Status Interpreter::do_p2r(WarpState& w, std::uint32_t mask,
-                           const DecodedInstruction& inst) {
+                            const DecodedInstruction& inst) {
     // P2R[.B0/.B1/.B2/.B3] Rd, PR, Ra, Sb — pack predicates into Rd.
     // Roles: [Rd, Pr, Ra, 2nd].
     const auto& d = *static_cast<const shape::DecodedP2R4*>(&inst);
-    const OperandFields ops(inst);
     const std::uint64_t insert = static_cast<std::uint64_t>(d.insert);
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t base = read_reg_ov(t, ops[2]);
-        std::uint32_t sel = src_value(w, t, ops[3]);
+        std::uint32_t base = read_reg_ov(t, d.Ra);
+        std::uint32_t sel = src_value(w, t, d.b);
         std::uint32_t out = base;
         const unsigned shift = static_cast<unsigned>(8 * (insert & 3));
         for (int i = 0; i < 8; ++i) {
@@ -6412,25 +6411,25 @@ Status Interpreter::do_p2r(WarpState& w, std::uint32_t mask,
             if (pv) out |= bit;
             else out &= ~bit;
         }
-        write_rd_ov(w, t, ops[0], out, 0);
+        write_rd_ov(w, t, d.Rd, out, 0);
     }
     return Status::success();
 }
 
+
 Status Interpreter::do_vote(WarpState& w, std::uint32_t mask,
-                            const DecodedInstruction& inst) {
+                             const DecodedInstruction& inst) {
     // VOTE.op Rd, Pu, Pp — warp-wide reduction of Pp into Rd (bitmask),
     // Pu = result predicate (per-lane).  Roles: [Rd, Pu, Pp].
     const auto& d = *static_cast<const shape::DecodedVOTE3*>(&inst);
-    const OperandFields ops(inst);
     const std::uint64_t op = static_cast<std::uint64_t>(d.voteop);
-    // Build the warp mask of Pp over all ACTIVE lanes (those at this PC).
+    // Build the warp mask of Pp over all ACTIVE lanes.
     std::uint32_t all = 0;
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         const ThreadState& t = w.threads[lane];
         bool p = false;
-        read_pred_ov(t, ops[2], &p);
+        read_pred_ov(t, d.Pp, &p);
         if (p) all |= (1u << lane);
     }
     const int pop = __builtin_popcount(all);
@@ -6441,29 +6440,39 @@ Status Interpreter::do_vote(WarpState& w, std::uint32_t mask,
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        write_pred_ov(t, ops[1], result);
-        write_rd_ov(w, t, ops[0], all, 0);
+        write_pred_ov(t, d.Pu, result);
+        write_rd_ov(w, t, d.Rd, all, 0);
     }
     return Status::success();
 }
 
+
 Status Interpreter::do_elect(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst) {
     // ELECT Pu, URd, Pp: leader election — lowest active lane with Pp.
-    // Roles: [Pu, URd, <Pp|URa>] (the third role is Pp when present).
-    // ELECT3 split: 0 = [Pu,URd,Pp], 1 = [Pu,URd,URa]; the third role's
-    // kind decides which semantics apply, so a plain per-variant ops array
-    // works for both.
-    const OperandFields ops(inst);
+    // Roles: [Pu, URd, <Pp|URa>] (the third role is Pp on the Pp form,
+    // URa on the source form).
+    const shape::OperandValue* pu = nullptr;
+    const shape::OperandValue* urd = nullptr;
+    const shape::OperandValue* src = nullptr;
+    if (inst.variant_class == isa::VariantClass::kelect_Pp_) {
+        const auto& d = *static_cast<const shape::DecodedELECT3_0*>(&inst);
+        pu = &d.Pu; urd = &d.URd; src = &d.Pp;
+    } else {
+        const auto& d = *static_cast<const shape::DecodedELECT3_1*>(&inst);
+        pu = &d.Pu; urd = &d.URd; src = &d.URa;
+    }
     const bool has_pp =
-        static_cast<shape::OperandKind>(ops[2].kind) ==
+        static_cast<shape::OperandKind>(src->kind) ==
         shape::OperandKind::kPredicate;
+    const std::uint64_t r =
+        static_cast<std::uint64_t>(shape::operand_value_as_i64(*urd));
     int leader = -1;
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         const ThreadState& t = w.threads[lane];
         bool p = false;
-        if (has_pp) read_pred_ov(t, ops[2], &p);
+        if (has_pp) read_pred_ov(t, *src, &p);
         if (p) { leader = lane; break; }
     }
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
@@ -6471,29 +6480,26 @@ Status Interpreter::do_elect(WarpState& w, std::uint32_t mask,
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
         const bool is_leader = (lane == leader);
-        write_pred_ov(t, ops[0], is_leader);
+        write_pred_ov(t, *pu, is_leader);
         // URd = leader lane id for all lanes.
-        const std::uint64_t r =
-            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[1]));
         if (r < kNumUrs)
             w.ur[r] = static_cast<std::uint32_t>(leader);
     }
     return Status::success();
 }
 
+
 Status Interpreter::do_redux(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst) {
     // REDUX.op.sz URd, Ra — reduce active-lane Ra values into URd.
-    // Roles: [URd, Ra].
     const auto& d = *static_cast<const shape::DecodedREDUX2*>(&inst);
-    const OperandFields ops(inst);
     const std::uint64_t op = static_cast<std::uint64_t>(d.op);
     bool first = true;
     std::uint32_t acc = 0;
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         const ThreadState& t = w.threads[lane];
-        const std::uint32_t v = read_reg_ov(t, ops[1]);
+        const std::uint32_t v = read_reg_ov(t, d.Ra);
         if (first) { acc = v; first = false; }
         else {
             switch (op) {
@@ -6508,42 +6514,42 @@ Status Interpreter::do_redux(WarpState& w, std::uint32_t mask,
     }
     if (!first) {
         const std::uint64_t r =
-            static_cast<std::uint64_t>(shape::operand_value_as_i64(ops[0]));
+            static_cast<std::uint64_t>(shape::operand_value_as_i64(d.URd));
         if (r < kNumUrs) w.ur[r] = acc;
     }
     return Status::success();
 }
+
 
 Status Interpreter::do_shfl(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
     // SHFL.idx/mode Pu, Rd, Ra, Sb/Rb, Rc/Sc — warp shuffle.
     // Roles: [Pu, Rd, Ra, 2nd (idx), 3rd (segment base)].
     const auto& d = *static_cast<const shape::DecodedSHFL5*>(&inst);
-    const OperandFields ops(inst);
     const std::uint64_t mode = static_cast<std::uint64_t>(d.shflmd);
     // Gather all active-lane Ra values (per-lane).
     std::array<std::uint32_t, kLanesPerWarp> vals{};
     for (int lane = 0; lane < kLanesPerWarp; ++lane)
-        vals[lane] = read_reg_ov(w.threads[lane], ops[2]);
-    const auto seg_kind = static_cast<shape::OperandKind>(ops[4].kind);
-    const std::int64_t seg_v = shape::operand_value_as_i64(ops[4]);
-    const auto idx_kind = static_cast<shape::OperandKind>(ops[3].kind);
+        vals[lane] = read_reg_ov(w.threads[lane], d.Ra);
+    const auto seg_kind = static_cast<shape::OperandKind>(d.c.kind);
+    const std::int64_t seg_v = shape::operand_value_as_i64(d.c);
+    const auto idx_kind = static_cast<shape::OperandKind>(d.b.kind);
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
         const std::uint32_t seg =
             (seg_kind == shape::OperandKind::kRegister && seg_v != 255)
-            ? read_reg_ov(t, ops[4]) & 0x1f
+            ? read_reg_ov(t, d.c) & 0x1f
             : 0;
         std::uint32_t idx = 0;
         if (idx_kind == shape::OperandKind::kUImm ||
             idx_kind == shape::OperandKind::kSImm) {
             idx = static_cast<std::uint32_t>(
-                      shape::operand_value_as_i64(ops[3])) &
+                      shape::operand_value_as_i64(d.b)) &
                   0x1f;
         } else if (idx_kind == shape::OperandKind::kRegister) {
-            idx = read_reg_ov(t, ops[3]) & 0x1f;
+            idx = read_reg_ov(t, d.b) & 0x1f;
         }
         int srclane = -1;
         const int laneid = lane;
@@ -6562,22 +6568,18 @@ Status Interpreter::do_shfl(WarpState& w, std::uint32_t mask,
                 break;
             default: break;
         }
-        // Range check: UP keeps only lane-idx >= 0; DOWN keeps only
-        // lane+idx < 32; IDX keeps the source < 32 (segment bounds the
-        // source to [seg*0, seg*0+31] — a full warp when seg=0).
         const bool valid = (srclane >= 0 && srclane < kLanesPerWarp);
         if (valid && (mask & (1u << srclane))) {
-            write_rd_ov(w, t, ops[1], vals[srclane], 0);
-            write_pred_ov(t, ops[0], true);
+            write_rd_ov(w, t, d.Rd, vals[srclane], 0);
+            write_pred_ov(t, d.Pu, true);
         } else {
-            // Out of range: Rd = the lane's own Ra value (verified in
-            // test_shfl: UP t<delta keeps t; DOWN t+delta>=32 keeps t).
-            write_rd_ov(w, t, ops[1], vals[lane], 0);
-            write_pred_ov(t, ops[0], false);
+            write_rd_ov(w, t, d.Rd, vals[lane], 0);
+            write_pred_ov(t, d.Pu, false);
         }
     }
     return Status::success();
 }
+
 
 Status Interpreter::lut_core(WarpState& w, std::uint32_t mask,
                              std::uint32_t lut,
@@ -6675,16 +6677,15 @@ Status Interpreter::do_shf(WarpState& w, std::uint32_t mask,
     // SHF.L/.R Rd, Ra, 2nd, 3rd (shift count = 2nd & 0x1f).  hilo selects
     // which register holds the value being shifted; dir the direction.
     const auto& d = *static_cast<const shape::DecodedSHF4*>(&inst);
-    const OperandFields ops(inst);
     const std::uint64_t dir = static_cast<std::uint64_t>(d.dir);
     const std::uint64_t hilo = static_cast<std::uint64_t>(d.hilo);
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_ov(t, ops[1]);
-        std::uint32_t b = src_value(w, t, ops[2]);
-        std::uint32_t c = read_reg_ov(t, ops[3]);
+        std::uint32_t a = read_reg_ov(t, d.Ra);
+        std::uint32_t b = src_value(w, t, d.b);
+        std::uint32_t c = read_reg_ov(t, d.c);
         const unsigned sh = b & 0x1f;
         std::uint32_t out;
         if (dir == 0) {  // L
@@ -6700,62 +6701,84 @@ Status Interpreter::do_shf(WarpState& w, std::uint32_t mask,
                 out = (sh == 0) ? c : (c >> sh);
             }
         }
-        write_rd_ov(w, t, ops[0], out, 0);
+        write_rd_ov(w, t, d.Rd, out, 0);
     }
     return Status::success();
 }
 
+
 Status Interpreter::do_iabs(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst) {
-    const OperandFields ops(inst);
+    const auto& d = *static_cast<const shape::DecodedIABS2*>(&inst);
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t b = src_value(w, t, ops[1]);
+        std::uint32_t b = src_value(w, t, d.b);
         const std::uint32_t out = (b & 0x80000000u)
             ? ((b == 0x80000000u) ? b : (~b + 1)) : b;
-        write_rd_ov(w, t, ops[0], out, 0);
+        write_rd_ov(w, t, d.Rd, out, 0);
     }
     return Status::success();
 }
+
 
 Status Interpreter::do_imnmx(WarpState& w, std::uint32_t mask,
                              const DecodedInstruction& inst) {
     // IMNMX Rd, Ra, 2nd, Pp — signed min/max (Pp: PT=min, !PT=max).
     // Roles: [Pu, Pv, Rd, Ra, 2nd, Pp(, Pq)].
-    OperandFields ops(inst);
+    // 7-op (with Pq) = the non-"nopred" IMNMX classes.
+    const bool has_pq =
+        inst.variant_class == isa::VariantClass::kimnmx_64__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::kimnmx__RRR_RRR ||
+        inst.variant_class == isa::VariantClass::kimnmx_64__RIR_RsIR ||
+        inst.variant_class == isa::VariantClass::kimnmx__RIR_RsIR ||
+        inst.variant_class == isa::VariantClass::kimnmx_64__RUR_RUR ||
+        inst.variant_class == isa::VariantClass::kimnmx__RUR_RUR;
+    const shape::OperandValue* rd = nullptr;
+    const shape::OperandValue* ra = nullptr;
+    const shape::OperandValue* b = nullptr;
+    const shape::OperandValue* pp = nullptr;
+    if (has_pq) {
+        const auto& d = *static_cast<const shape::DecodedIMNMX7*>(&inst);
+        rd = &d.Rd; ra = &d.Ra; b = &d.b; pp = &d.Pp;
+    } else {
+        const auto& d = *static_cast<const shape::DecodedIMNMX6*>(&inst);
+        rd = &d.Rd; ra = &d.Ra; b = &d.b; pp = &d.Pp;
+    }
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::int32_t a = static_cast<std::int32_t>(read_reg_ov(t, ops[3]));
-        std::int32_t b = static_cast<std::int32_t>(src_value(w, t, ops[4]));
+        std::int32_t a = static_cast<std::int32_t>(read_reg_ov(t, *ra));
+        std::int32_t bv = static_cast<std::int32_t>(src_value(w, t, *b));
         bool do_min = true;
-        read_pred_ov(t, ops[5], &do_min);
-        std::int32_t out = do_min ? (a < b ? a : b) : (a > b ? a : b);
-        write_rd_ov(w, t, ops[2], static_cast<std::uint32_t>(out), 0);
+        read_pred_ov(t, *pp, &do_min);
+        std::int32_t out = do_min ? (a < bv ? a : bv) : (a > bv ? a : bv);
+        write_rd_ov(w, t, *rd, static_cast<std::uint32_t>(out), 0);
     }
     return Status::success();
 }
+
 
 Status Interpreter::do_iscadd(WarpState& w, std::uint32_t mask,
                               const DecodedInstruction& inst) {
     // ISCADD Rd, Pu, Ra, 2nd, scaleU5 — (Ra + (2nd << scaleU5)).
     // Roles: [Rd, Pu, Ra, 2nd, scaleU5].
-    const OperandFields ops(inst);
+    const auto& d = *static_cast<const shape::DecodedISCADD5*>(&inst);
     for (int lane = 0; lane < kLanesPerWarp; ++lane) {
         if (!(mask & (1u << lane))) continue;
         ThreadState& t = w.threads[lane];
         if (!t.active || t.exited) continue;
-        std::uint32_t a = read_reg_ov(t, ops[2]);
-        std::uint32_t b = src_value(w, t, ops[3]);
+        std::uint32_t a = read_reg_ov(t, d.Ra);
+        std::uint32_t b = src_value(w, t, d.b);
         const unsigned sh = static_cast<unsigned>(
-            shape::operand_value_as_i64(ops[4]) & 0x1f);
-        write_rd_ov(w, t, ops[0], a + (b << sh), 0);
+            shape::operand_value_as_i64(d.scaleU5) & 0x1f);
+        write_rd_ov(w, t, d.Rd, a + (b << sh), 0);
     }
     return Status::success();
 }
+
 
 Status Interpreter::do_lea(WarpState& w, std::uint32_t mask,
                            const DecodedInstruction& inst) {
