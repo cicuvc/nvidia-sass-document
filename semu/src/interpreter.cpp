@@ -5372,17 +5372,22 @@ Status Interpreter::tensor_lane_core(WarpState& w, std::uint32_t mask,
                                      std::optional<Fault>* fault,
                                      const tensor::Shape& shape,
                                      tensor::Format fmt, bool need_uri,
-                                     bool has_re, bool has_rh, int mode) {
-    const OperandFields ops(inst);
-    const std::int64_t rd_v = shape::operand_value_as_i64(ops[0]);
-    const std::int64_t ra_v = shape::operand_value_as_i64(ops[1]);
-    const std::int64_t rb_v = shape::operand_value_as_i64(ops[2]);
-    const std::int64_t rc_v = shape::operand_value_as_i64(ops[3]);
+                                     bool has_re, bool has_rh, int mode,
+                                     const shape::OperandValue& rd,
+                                     const shape::OperandValue& ra,
+                                     const shape::OperandValue& rb,
+                                     const shape::OperandValue& rc,
+                                     const shape::OperandValue* re,
+                                     const shape::OperandValue* rh,
+                                     const shape::OperandValue* uri) {
+    const std::int64_t rd_v = shape::operand_value_as_i64(rd);
+    const std::int64_t ra_v = shape::operand_value_as_i64(ra);
+    const std::int64_t rb_v = shape::operand_value_as_i64(rb);
+    const std::int64_t rc_v = shape::operand_value_as_i64(rc);
 
     // OMMA selection register: only sel=0 is verified legal on SM120.
     if (need_uri) {
-        const std::uint32_t sel =
-            read_ur_ov(w, ops[7]);  // URZ (255) reads as 0
+        const std::uint32_t sel = read_ur_ov(w, *uri);  // URZ (255) reads 0
         if (sel != 0) {
             Fault f(FaultKind::kUnsupportedInstruction,
                     "OMMA.SF selector URi != 0 is decode-only (only sel=0 is "
@@ -5438,10 +5443,10 @@ Status Interpreter::tensor_lane_core(WarpState& w, std::uint32_t mask,
             if (!has_re || !has_rh)
                 return tensor_unsupported(w, inst, pc, mask, fault,
                                           "(missing Re/Rh)");
-            std::uint32_t re = read_reg_ov(t, ops[5]);
-            std::uint32_t rh = read_reg_ov(t, ops[6]);
+            const std::uint32_t re_v = read_reg_ov(t, *re);
+            const std::uint32_t rh_v = read_reg_ov(t, *rh);
             const std::uint32_t sel = 0;  // validated above
-            tensor::omma_k64(a, b, c, re, rh, sel, out);
+            tensor::omma_k64(a, b, c, re_v, rh_v, sel, out);
         }
 
         for (int i = 0; i < 4; ++i) {
@@ -5458,11 +5463,15 @@ Status Interpreter::do_hmma(WarpState& w, std::uint32_t mask,
                             std::optional<Fault>* fault) {
     // Dense HMMA (hmma_x8_): size 0=k8 / 1=k16 / 2=k4(TF32), srcfmt
     // 0=F16 1=BF16 2=TF32 3=E6M9, dstfmt 0=F16 1=F32 accumulator.
-    OperandFields ops(inst);
     std::uint64_t size = 0, srcfmt = 0, dstfmt = 0;
     bool has_re = false;
+    const shape::OperandValue* opd = nullptr;
+    const shape::OperandValue* opa = nullptr;
+    const shape::OperandValue* opb = nullptr;
+    const shape::OperandValue* opc = nullptr;
     if (inst.variant_class == isa::VariantClass::khmma_x8_) {
         const auto& d = *static_cast<const shape::DecodedHMMA5*>(&inst);
+        opd = &d.Rd; opa = &d.Ra; opb = &d.Rb; opc = &d.Rc;
         size = static_cast<std::uint64_t>(d.size);
         srcfmt = static_cast<std::uint64_t>(d.srcfmt);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
@@ -5470,6 +5479,7 @@ Status Interpreter::do_hmma(WarpState& w, std::uint32_t mask,
         // HMMA7 split: sparse (_0) / indexedRF (_1); BOTH are rejected by the
         // dense-shape gate below, so the member values never matter.
         const auto& d = *static_cast<const shape::DecodedHMMA7_0*>(&inst);
+        opd = &d.Rd; opa = &d.Ra; opb = &d.Rb; opc = &d.Rc;
         size = static_cast<std::uint64_t>(d.size);
         srcfmt = static_cast<std::uint64_t>(d.srcfmt);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
@@ -5491,24 +5501,30 @@ Status Interpreter::do_hmma(WarpState& w, std::uint32_t mask,
     }
     const tensor::Format fmt =
         (srcfmt == 1) ? tensor::Format::kBf16 : tensor::Format::kF16;
-    return tensor_lane_core(w, mask, inst, pc, fault, shape, fmt, false,
-                            has_re, false, 0);
+    return tensor_lane_core(w, mask, inst, pc, fault, shape, fmt, false, has_re,
+                            false, 0, *opd, *opa, *opb, *opc, nullptr,
+                            nullptr, nullptr);
 }
 
 Status Interpreter::do_qmma(WarpState& w, std::uint32_t mask,
                             const DecodedInstruction& inst, std::uint64_t pc,
                             std::optional<Fault>* fault) {
     // Dense QMMA (qmma_): size 0=k16 / 1=k32, dstfmt(ntz) 0=F16 1=F32.
-    OperandFields ops(inst);
     std::uint64_t size = 0, dstfmt = 0;
     std::uint64_t sfa = 0, sfb = 0, sf = 0, ssz = 1;
     bool need_uri = false;
     bool has_re = false, has_rh = false;
+    const shape::OperandValue* opd = nullptr;
+    const shape::OperandValue* opa = nullptr;
+    const shape::OperandValue* opb = nullptr;
+    const shape::OperandValue* opc = nullptr;
+    const shape::OperandValue* uri = nullptr;
     // QMMA forms: kqmma_ / kqmma_rowcol_ (5-op), kqmma_sp_/_sp_rowcol_
     // (7-op), kqmma_scale_ (8-op), kqmma_sp_scale_ (9-op).
     if (inst.variant_class == isa::VariantClass::kqmma_ ||
         inst.variant_class == isa::VariantClass::kqmma_rowcol_) {
         const auto& d = *static_cast<const shape::DecodedQMMA5*>(&inst);
+        opd = &d.Rd; opa = &d.Ra; opb = &d.Rb; opc = &d.Rc;
         size = static_cast<std::uint64_t>(d.size);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
         sfa = static_cast<std::uint64_t>(d.srcFmtA);
@@ -5516,6 +5532,7 @@ Status Interpreter::do_qmma(WarpState& w, std::uint32_t mask,
     } else if (inst.variant_class == isa::VariantClass::kqmma_sp_ ||
                inst.variant_class == isa::VariantClass::kqmma_sp_rowcol_) {
         const auto& d = *static_cast<const shape::DecodedQMMA7*>(&inst);
+        opd = &d.Rd; opa = &d.Ra; opb = &d.Rb; opc = &d.Rc;
         size = static_cast<std::uint64_t>(d.size);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
         sfa = static_cast<std::uint64_t>(d.srcFmtA);
@@ -5523,6 +5540,8 @@ Status Interpreter::do_qmma(WarpState& w, std::uint32_t mask,
         has_re = true;
     } else if (inst.variant_class == isa::VariantClass::kqmma_scale_) {
         const auto& d = *static_cast<const shape::DecodedQMMA8*>(&inst);
+        opd = &d.Rd; opa = &d.Ra; opb = &d.Rb; opc = &d.Rc;
+        uri = &d.URi;
         size = static_cast<std::uint64_t>(d.size);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
         sfa = static_cast<std::uint64_t>(d.srcFmtA);
@@ -5533,6 +5552,8 @@ Status Interpreter::do_qmma(WarpState& w, std::uint32_t mask,
         has_re = has_rh = true;
     } else {
         const auto& d = *static_cast<const shape::DecodedQMMA9*>(&inst);
+        opd = &d.Rd; opa = &d.Ra; opb = &d.Rb; opc = &d.Rc;
+        uri = &d.URi;
         size = static_cast<std::uint64_t>(d.size);
         dstfmt = static_cast<std::uint64_t>(d.dstfmt);
         sfa = static_cast<std::uint64_t>(d.srcFmtA);
@@ -5569,8 +5590,9 @@ Status Interpreter::do_qmma(WarpState& w, std::uint32_t mask,
                                            "(srcFmtA)");
     }
     (void)sf; (void)ssz; (void)sfb;  // scale-vector fields: decode-gated above
-    return tensor_lane_core(w, mask, inst, pc, fault, shape, fmt,
-                            need_uri, has_re, has_rh, 1);
+    return tensor_lane_core(w, mask, inst, pc, fault, shape, fmt, need_uri, has_re,
+                            has_rh, 1, *opd, *opa, *opb, *opc, nullptr, nullptr,
+                            uri);
 }
 
 Status Interpreter::do_omma(WarpState& w, std::uint32_t mask,
@@ -5578,16 +5600,26 @@ Status Interpreter::do_omma(WarpState& w, std::uint32_t mask,
                             std::optional<Fault>* fault) {
     // OMMA.SF (mxfp4 block-scaled): only the verified 2X-scale E8 e2m1
     // configuration is implemented (gpu_waiver — see capability manifest).
-    OperandFields ops(inst);
     std::uint64_t sf = 0, ssz = 1, sfa = 0, sfb = 0;
+    const shape::OperandValue* opd = nullptr;
+    const shape::OperandValue* opa = nullptr;
+    const shape::OperandValue* opb = nullptr;
+    const shape::OperandValue* opc = nullptr;
+    const shape::OperandValue* re = nullptr;
+    const shape::OperandValue* rh = nullptr;
+    const shape::OperandValue* uri = nullptr;
     if (inst.variant_class == isa::VariantClass::komma_scale_) {
         const auto& d = *static_cast<const shape::DecodedOMMA8*>(&inst);
+        opd = &d.Rd; opa = &d.Ra; opb = &d.Rb; opc = &d.Rc;
+        re = &d.Re; rh = &d.Rh; uri = &d.URi;
         sf = static_cast<std::uint64_t>(d.sf);
         ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
         sfa = static_cast<std::uint64_t>(d.srcFmtA);
         sfb = static_cast<std::uint64_t>(d.srcFmtB);
     } else {
         const auto& d = *static_cast<const shape::DecodedOMMA9*>(&inst);
+        opd = &d.Rd; opa = &d.Ra; opb = &d.Rb; opc = &d.Rc;
+        re = &d.Re; rh = &d.Rh; uri = &d.URi;
         sf = static_cast<std::uint64_t>(d.sf);
         ssz = static_cast<std::uint64_t>(d.scaleVectorSz);
         sfa = static_cast<std::uint64_t>(d.srcFmtA);
@@ -5608,8 +5640,8 @@ Status Interpreter::do_omma(WarpState& w, std::uint32_t mask,
         return tensor_unsupported(w, inst, pc, mask, fault, "(shape)");
     }
     const tensor::Format fmt = tensor::Format::kFp8E4M3;  // unused for gdfs
-    return tensor_lane_core(w, mask, inst, pc, fault, shape, fmt, true,
-                            true, true, 2);
+    return tensor_lane_core(w, mask, inst, pc, fault, shape, fmt, true, true, true,
+                            2, *opd, *opa, *opb, *opc, re, rh, uri);
 }
 
 // Phase 5 compute — one function per instruction (2b-3 plan-b + refactor).

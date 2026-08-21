@@ -881,11 +881,17 @@ private:
                               std::optional<Fault>* fault,
                               const std::string& why);
     Status tensor_lane_core(WarpState& w, std::uint32_t mask,
-                            const DecodedInstruction& inst, std::uint64_t pc,
-                            std::optional<Fault>* fault,
+                            const DecodedInstruction& inst,
+                            std::uint64_t pc, std::optional<Fault>* fault,
                             const tensor::Shape& shape, tensor::Format fmt,
                             bool need_uri, bool has_re, bool has_rh,
-                            int mode);
+                            int mode, const shape::OperandValue& rd,
+                            const shape::OperandValue& ra,
+                            const shape::OperandValue& rb,
+                            const shape::OperandValue& rc,
+                            const shape::OperandValue* re,
+                            const shape::OperandValue* rh,
+                            const shape::OperandValue* uri);
     Status do_hmma(WarpState& w, std::uint32_t mask,
                    const DecodedInstruction& inst, std::uint64_t pc,
                    std::optional<Fault>* fault);
