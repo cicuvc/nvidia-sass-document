@@ -5,7 +5,7 @@
 // interpreter and the Python differential harness use the same code, so these
 // vectors pin the engine to the model bit-for-bit.
 
-#include <semu/tensor.hpp>
+#include <semu/tensor/tensor.hpp>
 
 #include <cstdint>
 #include <cstdio>

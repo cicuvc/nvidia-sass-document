@@ -1,6 +1,6 @@
 // Generated file -- do not edit.  Regenerate with:
 //   python3 semu/tools/gen_capability.py
-#include <semu/capability.hpp>
+#include <semu/core/capability.hpp>
 #include "capability_data.hpp"
 
 namespace semu::generated {

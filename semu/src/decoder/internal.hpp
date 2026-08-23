@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include <semu/decoder.hpp>
-#include <semu/word.hpp>
+#include <semu/decoder/decoder.hpp>
+#include <semu/core/word.hpp>
 
 #include "expr.hpp"
 

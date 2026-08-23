@@ -1,5 +1,5 @@
 // L0 unit tests: tensor-map descriptor parsing + tile expansion (Phase 9).
-#include <semu/tensor_map.hpp>
+#include <semu/tensor/tensor_map.hpp>
 
 #include <cstdint>
 #include <vector>

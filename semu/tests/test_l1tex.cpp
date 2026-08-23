@@ -11,7 +11,7 @@
 // Phase 8 extensions verify the LDGSTS profiler counters (TWf/Sectors/
 // TagConf/TSetAcc/SharedConf/GlobalConf) and their confidence labels.
 
-#include <semu/l1tex_model.hpp>
+#include <semu/memory/l1tex_model.hpp>
 
 #include <cstdio>
 #include <cstring>

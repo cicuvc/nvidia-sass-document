@@ -14,7 +14,7 @@
 // The service constant bank feeds the fallback interpreter (params land at
 // c[0x0][0x380] on both sides), proving the whole chain end-to-end.
 
-#include <semu/mock_backend.hpp>
+#include <semu/context/mock_backend.hpp>
 
 #include <cstdint>
 #include <cstring>
@@ -22,10 +22,10 @@
 #include <utility>
 #include <vector>
 
-#include <semu/capability.hpp>
-#include <semu/context.hpp>
-#include <semu/cubin.hpp>
-#include <semu/status.hpp>
+#include <semu/core/capability.hpp>
+#include <semu/context/context.hpp>
+#include <semu/cubin/cubin.hpp>
+#include <semu/core/status.hpp>
 #include "test_framework.hpp"
 
 namespace {

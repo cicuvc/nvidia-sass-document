@@ -1,5 +1,5 @@
 // L0 unit tests: mbarrier logical model (Phase 9).
-#include <semu/mbarrier.hpp>
+#include <semu/tensor/mbarrier.hpp>
 
 #include <cstdio>
 

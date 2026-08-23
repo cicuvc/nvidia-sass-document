@@ -5,10 +5,10 @@
 // guard predicates, EXIT, BSSY/BSYNC, partial-EXIT divergence, instruction
 // limit, and decode-only fault locality.
 
-#include <semu/context.hpp>
-#include <semu/interpreter.hpp>
-#include <semu/l1tex_model.hpp>
-#include <semu/race_detector.hpp>
+#include <semu/context/context.hpp>
+#include <semu/interpreter/interpreter.hpp>
+#include <semu/memory/l1tex_model.hpp>
+#include <semu/memory/race_detector.hpp>
 
 #include <cfenv>
 #include <cstdio>

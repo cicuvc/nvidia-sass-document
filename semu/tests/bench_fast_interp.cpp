@@ -13,8 +13,8 @@
 // Output: a JSON object on stdout.  Performance is only meaningful on a
 // Release build; debug/sanitizer runs are reported but not gated.
 
-#include <semu/context.hpp>
-#include <semu/interpreter.hpp>
+#include <semu/context/context.hpp>
+#include <semu/interpreter/interpreter.hpp>
 
 #include <algorithm>
 #include <cfenv>

@@ -7,7 +7,7 @@
 //   - prediction perturbation (estimator returns 1 / real / +N) must not
 //     change functional results — the estimator is trace-only.
 
-#include <semu/subcore_scheduler.hpp>
+#include <semu/exec/subcore_scheduler.hpp>
 
 #include <cstdio>
 #include <string>

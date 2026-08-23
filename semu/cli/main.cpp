@@ -1,14 +1,14 @@
-#include <semu/api.hpp>
-#include <semu/capability.hpp>
-#include <semu/cubin.hpp>
-#include <semu/debugger.hpp>
-#include <semu/decoder.hpp>
-#include <semu/decoded_access.hpp>
+#include <semu/core/api.hpp>
+#include <semu/core/capability.hpp>
+#include <semu/cubin/cubin.hpp>
+#include <semu/exec/debugger.hpp>
+#include <semu/decoder/decoder.hpp>
+#include <semu/decoder/decoded_access.hpp>
 #include <isa_manifest.hpp>    // ShapeManifest/kShapeManifests (decode bridge)
-#include <semu/interpreter.hpp>
-#include <semu/profiler.hpp>
-#include <semu/status.hpp>
-#include <semu/version.hpp>
+#include <semu/interpreter/interpreter.hpp>
+#include <semu/profiler/profiler.hpp>
+#include <semu/core/status.hpp>
+#include <semu/core/version.hpp>
 
 #include <cstdio>
 #include <cstring>

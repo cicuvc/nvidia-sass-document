@@ -6,7 +6,7 @@
 //     byte-for-byte identical event stream
 //   - the engine is trace-only: issuing events never returns a value change
 
-#include <semu/l2_events.hpp>
+#include <semu/memory/l2_events.hpp>
 
 #include <cstdio>
 #include <string>

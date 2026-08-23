@@ -1,11 +1,11 @@
 // L0 unit tests: error model, fault reporting, capability manifest, word/bit
 // helpers, version/build info.  No CUDA, no GPU.
 
-#include <semu/capability.hpp>
-#include <semu/fault.hpp>
-#include <semu/status.hpp>
-#include <semu/version.hpp>
-#include <semu/word.hpp>
+#include <semu/core/capability.hpp>
+#include <semu/core/fault.hpp>
+#include <semu/core/status.hpp>
+#include <semu/core/version.hpp>
+#include <semu/core/word.hpp>
 
 #include <cstdio>
 #include <string>

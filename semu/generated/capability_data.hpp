@@ -1,7 +1,7 @@
 // Generated file -- do not edit.  Regenerate with:
 //   python3 semu/tools/gen_capability.py
 #pragma once
-#include <semu/capability.hpp>
+#include <semu/core/capability.hpp>
 
 namespace semu::generated {
 struct CapabilityRow {

@@ -7,7 +7,7 @@
 #undef NAN
 #endif
 #include "isa_shapes.hpp"
-#include <semu/shape_in.hpp>
+#include <semu/decoder/shape_in.hpp>
 
 namespace semu::shape {
 

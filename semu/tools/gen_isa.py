@@ -982,7 +982,7 @@ def emit_cpp(out: Path, db: dict, variants: list,
         "// Generated file -- do not edit.  Regenerate with:",
         "//   python3 semu/tools/gen_isa.py",
         "#include \"isa_data.hpp\"",
-        "#include <semu/word.hpp>",
+        "#include <semu/core/word.hpp>",
         "",
         "#include <cstring>",
         "",
@@ -1502,7 +1502,7 @@ def emit_shapes_hpp(out: Path, db: dict, variants: list) -> None:
     L.append("#include <cstring>")
     L.append("#include <optional>")
     L.append("#include <memory>")
-    L.append("#include <semu/decoded_base.hpp>")
+    L.append("#include <semu/decoder/decoded_base.hpp>")
     L.append("#ifdef NAN")
     L.append("#undef NAN")
     L.append("#endif")
@@ -1647,7 +1647,7 @@ def emit_manifest_hpp(out: Path, db: dict, variants: list) -> None:
     L.append("")
     L.append("#include <cstdint>")
     L.append("#include <cstring>")
-    L.append("#include <semu/decoded_base.hpp>")
+    L.append("#include <semu/decoder/decoded_base.hpp>")
     L.append("#include <isa_shapes.hpp>")
     L.append("")
     L.append("namespace semu::shape {")
@@ -1710,7 +1710,7 @@ def emit_shapes_fill(out: Path, db: dict, variants: list) -> None:
     L.append("#undef NAN")
     L.append("#endif")
     L.append("#include \"isa_shapes.hpp\"")
-    L.append("#include <semu/shape_in.hpp>")
+    L.append("#include <semu/decoder/shape_in.hpp>")
     L.append("")
     L.append("namespace semu::shape {")
     L.append("")

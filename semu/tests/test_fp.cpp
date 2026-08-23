@@ -5,8 +5,8 @@
 // flush rules, NaN canonicalization, and the fenv restore contract (the
 // RoundingGuard leaves the host rounding mode unchanged after the call).
 
-#include <semu/fp.hpp>
-#include <semu/fast_fp.hpp>
+#include <semu/fp/fp.hpp>
+#include <semu/fp/fast_fp.hpp>
 
 #include <cfenv>
 #include <cstdio>

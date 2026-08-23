@@ -5,7 +5,7 @@
 // lanes conflict iff they hit the same bank with DIFFERENT words; identical
 // (bank, word) is a broadcast/coalesce, never a conflict.
 
-#include <semu/shared_bank.hpp>
+#include <semu/memory/shared_bank.hpp>
 
 #include <cstdio>
 #include <vector>

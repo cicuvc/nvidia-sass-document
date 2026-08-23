@@ -1,8 +1,8 @@
 // Interpreter abstraction tests: IInterpreter surface + InterpreterRegistry
 // (default availability, name lookup, registration/replacement).
 
-#include <semu/decoder.hpp>
-#include <semu/interpreter.hpp>
+#include <semu/decoder/decoder.hpp>
+#include <semu/interpreter/interpreter.hpp>
 
 #include <cstdio>
 #include <string>

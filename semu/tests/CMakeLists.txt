@@ -276,13 +276,21 @@ function(semu_header_object_check _name _header)
 endfunction()
 
 set(SEMU_PUBLIC_HEADERS
-  api.hpp capability.hpp cluster.hpp context.hpp cubin.hpp debugger.hpp
-  decoded_access.hpp decoder.hpp execution.hpp fast_fp.hpp fault.hpp fp.hpp
-  global_model.hpp
-  hb_clock.hpp interpreter.hpp l1tex_model.hpp l2_events.hpp mbarrier.hpp
-  memory.hpp memory_events.hpp memory_service.hpp mock_backend.hpp
-  profiler.hpp race_detector.hpp shared_bank.hpp status.hpp
-  subcore_scheduler.hpp tensor.hpp tensor_map.hpp version.hpp word.hpp)
+  core/api.hpp core/capability.hpp core/fault.hpp core/hb_clock.hpp
+  core/status.hpp core/version.hpp core/word.hpp
+  context/context.hpp context/mock_backend.hpp
+  exec/cluster.hpp exec/debugger.hpp exec/execution.hpp
+  exec/subcore_scheduler.hpp
+  memory/global_model.hpp memory/l1tex_model.hpp memory/l2_events.hpp
+  memory/memory.hpp memory/memory_events.hpp memory/memory_service.hpp
+  memory/race_detector.hpp memory/shared_bank.hpp
+  tensor/mbarrier.hpp tensor/tensor.hpp tensor/tensor_map.hpp
+  fp/fast_fp.hpp fp/fp.hpp
+  profiler/profiler.hpp
+  decoder/decoder.hpp decoder/decoded_access.hpp decoder/decoded_base.hpp
+  decoder/shape_in.hpp
+  cubin/cubin.hpp
+  interpreter/interpreter.hpp)
 foreach(_h IN LISTS SEMU_PUBLIC_HEADERS)
   string(REPLACE ".hpp" "" _base "${_h}")
   string(REPLACE "/" "_" _base "${_base}")

@@ -24,14 +24,14 @@
 //     symtab, applied by relocation width with an explicit allowlist on
 //     executable/data targets; unknown execution-affecting types fail.
 
-#include <semu/cubin.hpp>
+#include <semu/cubin/cubin.hpp>
 
 #include <algorithm>
 #include <cstring>
 #include <limits>
 #include <span>
 
-#include <semu/decoder.hpp>
+#include <semu/decoder/decoder.hpp>
 
 namespace semu {
 namespace {

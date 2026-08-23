@@ -6,9 +6,9 @@
 // cluster / OOB / local-vs-DSMEM distinction), and the identity fields of
 // the translation.
 
-#include <semu/cluster.hpp>
-#include <semu/context.hpp>
-#include <semu/memory.hpp>
+#include <semu/exec/cluster.hpp>
+#include <semu/context/context.hpp>
+#include <semu/memory/memory.hpp>
 
 #include <cstdio>
 #include <cstring>

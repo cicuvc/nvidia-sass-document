@@ -3,7 +3,7 @@
 // every error path (bad magic, truncation, wrong arch, broken tables,
 // relocation failure, malformed EIATTR) is deterministically reachable.
 
-#include <semu/cubin.hpp>
+#include <semu/cubin/cubin.hpp>
 
 #include <cstdio>
 #include <cstring>

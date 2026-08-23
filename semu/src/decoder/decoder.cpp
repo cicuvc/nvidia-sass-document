@@ -1,4 +1,4 @@
-#include <semu/decoder.hpp>
+#include <semu/decoder/decoder.hpp>
 
 #include <cinttypes>
 #include <cstdio>

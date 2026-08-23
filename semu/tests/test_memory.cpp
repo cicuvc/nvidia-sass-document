@@ -5,9 +5,9 @@
 // module/function lookup, per-item KernelArg and packed-buffer launches
 // producing byte-identical constant0 contents, error paths.
 
-#include <semu/context.hpp>
-#include <semu/memory.hpp>
-#include <semu/memory_service.hpp>
+#include <semu/context/context.hpp>
+#include <semu/memory/memory.hpp>
+#include <semu/memory/memory_service.hpp>
 
 #include <cstdio>
 #include <cstring>

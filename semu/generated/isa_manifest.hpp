@@ -9,7 +9,7 @@
 
 #include <cstdint>
 #include <cstring>
-#include <semu/decoded_base.hpp>
+#include <semu/decoder/decoded_base.hpp>
 #include <isa_shapes.hpp>
 
 namespace semu::shape {

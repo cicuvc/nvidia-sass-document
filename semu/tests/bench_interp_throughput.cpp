@@ -25,9 +25,9 @@
 // Output: JSON object on stdout; when --record is given the object is appended
 // to an array stored in that file.
 
-#include <semu/cubin.hpp>
-#include <semu/interpreter.hpp>
-#include <semu/version.hpp>
+#include <semu/cubin/cubin.hpp>
+#include <semu/interpreter/interpreter.hpp>
+#include <semu/core/version.hpp>
 
 #include <algorithm>
 #include <chrono>

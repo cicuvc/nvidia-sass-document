@@ -13,7 +13,7 @@
 //   {"SharedWf":..., ..., "TWf":I,"TagConf":I,"TSetAcc":I,"Sectors":I,
 //    "SharedConf":I,"GlobalConf":I,"SharedWfConfidence":"...",...}
 
-#include <semu/l1tex_model.hpp>
+#include <semu/memory/l1tex_model.hpp>
 
 #include <cstdio>
 #include <cstdlib>

@@ -12,7 +12,7 @@
 //
 // Plus: byte-for-byte deterministic JSON for the same execution.
 
-#include <semu/race_detector.hpp>
+#include <semu/memory/race_detector.hpp>
 
 #include <cstdio>
 #include <string>

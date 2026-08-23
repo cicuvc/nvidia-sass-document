@@ -9,8 +9,8 @@
 //   instruction stops BEFORE execution; instruction limit; warp step focus;
 //   step-N-then-continue == direct-continue; fully reproducible traces.
 
-#include <semu/debugger.hpp>
-#include <semu/interpreter.hpp>
+#include <semu/exec/debugger.hpp>
+#include <semu/interpreter/interpreter.hpp>
 
 #include <cstdio>
 #include <cstring>

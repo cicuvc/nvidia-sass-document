@@ -8,7 +8,7 @@
 #include <cstring>
 #include <optional>
 #include <memory>
-#include <semu/decoded_base.hpp>
+#include <semu/decoder/decoded_base.hpp>
 #ifdef NAN
 #undef NAN
 #endif

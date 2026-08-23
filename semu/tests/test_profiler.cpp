@@ -5,10 +5,10 @@
 // (kept separate from L1/shared counters) and profiler on/off functional
 // identity.
 
-#include <semu/context.hpp>
-#include <semu/interpreter.hpp>
-#include <semu/l2_events.hpp>
-#include <semu/profiler.hpp>
+#include <semu/context/context.hpp>
+#include <semu/interpreter/interpreter.hpp>
+#include <semu/memory/l2_events.hpp>
+#include <semu/profiler/profiler.hpp>
 
 #include <algorithm>
 #include <cstdio>

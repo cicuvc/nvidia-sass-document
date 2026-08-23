@@ -3,8 +3,8 @@
 // known sm120 words -- a cross-check independent of the Python-driven
 // corpus round-trip / ambiguity gates.
 
-#include <semu/decoder.hpp>
-#include <semu/decoded_access.hpp>
+#include <semu/decoder/decoder.hpp>
+#include <semu/decoder/decoded_access.hpp>
 #include <isa_shapes.hpp>       // typed-IR schema (regenerate with --shapes)
 #include <isa_manifest.hpp>    // ShapeManifest/kShapeManifests (decode bridge)
 #include <isa_shapes_fill.hpp>  // 2a: per-variant typed fill (equivalence path)

@@ -1,7 +1,7 @@
 // Generated file -- do not edit.  Regenerate with:
 //   python3 semu/tools/gen_isa.py
 #include "isa_data.hpp"
-#include <semu/word.hpp>
+#include <semu/core/word.hpp>
 
 #include <cstring>
 

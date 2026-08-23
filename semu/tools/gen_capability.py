@@ -119,7 +119,7 @@ def emit_hpp(out: Path, rows: list) -> None:
         "// Generated file -- do not edit.  Regenerate with:",
         "//   python3 semu/tools/gen_capability.py",
         "#pragma once",
-        "#include <semu/capability.hpp>",
+        "#include <semu/core/capability.hpp>",
         "",
         "namespace semu::generated {",
         "struct CapabilityRow {",
@@ -162,7 +162,7 @@ def emit_cpp(out: Path, header: dict, rows: list, generated_from: str) -> None:
     L = [
         "// Generated file -- do not edit.  Regenerate with:",
         "//   python3 semu/tools/gen_capability.py",
-        "#include <semu/capability.hpp>",
+        "#include <semu/core/capability.hpp>",
         "#include \"capability_data.hpp\"",
         "",
         "namespace semu::generated {",

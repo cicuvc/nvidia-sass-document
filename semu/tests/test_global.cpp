@@ -4,7 +4,7 @@
 // sector / 128-B line crossings.  L1 data-bank and tag-bank are reported as
 // SEPARATE counters.
 
-#include <semu/global_model.hpp>
+#include <semu/memory/global_model.hpp>
 
 #include <cstdio>
 #include <vector>
