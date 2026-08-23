@@ -29,15 +29,8 @@ int print_usage(FILE* out) {
                  "  --version            print version and build info\n"
                  "  capability [--full]  print the sm120 capability manifest\n"
                  "  disasm <lo> <hi>     decode a 128-bit instruction word\n"
-                 "  scan-conds           scan all legality conditions for\n"
-                 "                       parser gaps (GAP-04 gate)\n"
-                 "  cond-eval <cls> <lo> <hi>\n"
-                 "                       per-condition verdicts for a variant\n"
-                 "                       class against a word (GAP-09)\n"
                  "  decode-json <lo> <hi>  structured decode (GAP-10)\n"
-                  "  eval-cond             stdin predicate+slot map ->\n"
-                  "                       1|0|2 tri-state (GAP-09)\n"
-                  "  load <cubin>         load a cubin module (Phase 2)\n"
+                 "  load <cubin>         load a cubin module (Phase 2)\n"
                   "  inspect <cubin>      dump ELF sections/symbols/kernels\n"
                   "  list-kernels <cubin> one line per kernel (machine-\n"
                   "                       readable)\n"
@@ -217,73 +210,6 @@ int run_decode_json(int argc, char** argv) {
         } else {
             std::printf("{}\n");
         }
-    }
-    return 0;
-}
-
-int run_scan_conds() {
-    std::size_t total = 0, resolved = 0;
-    const std::size_t gaps =
-        semu::scan_condition_parse_gaps(true, &total, &resolved);
-    std::printf("# conditions: %zu total, %zu resolvable, %zu parser gaps\n",
-                total, resolved, gaps);
-    return gaps == 0 ? 0 : 1;
-}
-
-// GAP-09: per-condition verdict for a variant against a word's decoded slot
-// map: `semu cond-eval <variant_class> <lo> <hi>` prints one line per
-// condition: "<error>\t<1|0|2>\t<predicate>" (1 true, 0 false, 2 unresolved).
-int run_cond_eval(int argc, char** argv) {
-    if (argc < 5) {
-        std::fputs("semu: 'cond-eval' requires <variant_class> <lo> <hi>\n",
-                   stderr);
-        return 2;
-    }
-    const std::string cls = argv[2];
-    const std::uint64_t lo = std::strtoull(argv[3], nullptr, 0);
-    const std::uint64_t hi = std::strtoull(argv[4], nullptr, 0);
-    auto verdicts = semu::condition_verdicts(
-        cls, semu::Word128{lo, hi});
-    if (verdicts.empty()) {
-        std::fprintf(stderr, "semu: no variant class '%s'\n", cls.c_str());
-        return 1;
-    }
-    for (const auto& cv : verdicts) {
-        std::printf("%s\t%d\t%s\n", cv.error.c_str(), cv.verdict,
-                    cv.predicate.c_str());
-    }
-    return 0;
-}
-
-// GAP-09: direct three-state evaluation of a predicate against an explicit
-// slot map: `semu eval-cond` reads lines "<predicate>\t<slot=value,...>" from
-// stdin and prints "1|0|2" per line (1 true, 0 false, 2 unresolved).  This is
-// the counterpart of Python's ConditionEvaluator.evaluate_tristate used by
-// cond_differential_test to verify unknown-token samples on the C++ side too.
-int run_eval_cond() {
-    char line[4096];
-    while (std::fgets(line, sizeof(line), stdin)) {
-        char* tab = std::strchr(line, '\t');
-        if (!tab) {
-            std::printf("2\n");
-            continue;
-        }
-        *tab = '\0';
-        std::string pred(line);
-        std::vector<std::pair<std::string, std::int64_t>> slots;
-        char* sp = tab + 1;
-        while (sp && *sp) {
-            char* comma = std::strchr(sp, ',');
-            if (comma) *comma = '\0';
-            char* eq = std::strchr(sp, '=');
-            if (eq) {
-                *eq = '\0';
-                slots.emplace_back(std::string(sp),
-                                   std::strtoll(eq + 1, nullptr, 0));
-            }
-            sp = comma ? comma + 1 : nullptr;
-        }
-        std::printf("%d\n", semu::eval_predicate(pred, slots));
     }
     return 0;
 }
@@ -763,7 +689,7 @@ int run_interp(int argc, char** argv) {
         env.block[(idx - (o.pos + 2)) / 2 + 1] = b;
         idx += 2;
     }
-    auto r = semu::Interpreter::run_result(*k, env, opts);
+    auto r = semu::InterpreterRegistry::default_impl()->run_result(*k, env, opts);
     if (r.fault) {
         std::printf("{\"execution_mode\":\"%s\",\"approximate\":%s,"
                     "\"fast_stats\":{\"fast_fp_ops\":%llu,"
@@ -1804,17 +1730,8 @@ int main(int argc, char** argv) {
         }
         return run_disasm_module(argc, argv);
     }
-    if (cmd == "scan-conds") {
-        return run_scan_conds();
-    }
-    if (cmd == "cond-eval") {
-        return run_cond_eval(argc, argv);
-    }
     if (cmd == "decode-json") {
         return run_decode_json(argc, argv);
-    }
-    if (cmd == "eval-cond") {
-        return run_eval_cond();
     }
     if (cmd == "load") {
         return run_load(argc, argv);

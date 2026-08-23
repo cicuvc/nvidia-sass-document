@@ -45,6 +45,13 @@ inline constexpr int kBackendApiVersion = 1;
 // through polymorphic cloning.
 inline constexpr int kDecodedIrVersion = 4;
 
+// IInterpreter + InterpreterRegistry (interpreter.hpp): the abstract
+// execution interface plus the pluggable implementation registry.  The
+// reference backend is the always-available default; alternative engines
+// (JIT, other-arch interpreters) register via
+// InterpreterRegistry::register_impl without recompiling the simulator.
+inline constexpr int kInterpreterApiVersion = 1;
+
 // IRuntimeServices (memory / constant bank / event channel / cluster DSMEM).
 // Async/TMA semantics are NOT frozen; their future completion/commit callbacks
 // and mbarrier state queries are reserved as a versioned EXTENSION set (see

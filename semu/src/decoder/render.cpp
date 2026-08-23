@@ -25,7 +25,6 @@ static bool styp(const char* t, const char* want) {
 namespace semu {
 
 using decoder::IsaData;
-using decoder::ExprEvaluator;
 
 namespace {
 
@@ -233,19 +232,27 @@ std::optional<std::int64_t> do_slot_value(const DecodeCtx& ctx,
 }
 
 // operand size in bits for a register slot (default 32 / 64 for address regs).
+// Widths come from the generated per-variant metadata (isa_data: `*_SIZE`
+// predicates compiled to bit-slice extraction functions) -- no string eval.
+namespace {
+bool width_from_key(const isa::Variant* v, const char* key, const DecodeCtx& ctx,
+                    int* out) {
+    const std::uint32_t vi = static_cast<std::uint32_t>(v - isa::kVariants);
+    const int ki = isa::metadata::size_key_index(key);
+    if (ki < 0) return false;
+    const isa::metadata::SizeFn fn = isa::metadata::kSizeFns[vi][ki];
+    if (!fn) return false;
+    *out = static_cast<int>(fn(ctx.word));
+    return true;
+}
+}  // namespace
+
 int size_of(const isa::Variant* v, const DecodeCtx& ctx,
             const std::string& name, int dflt = 32) {
     const char* key = size_key_for(name);
     if (key) {
-        for (std::uint16_t i = 0; i < v->npreds; ++i) {
-            if (std::strcmp(v->preds[i].key, key) == 0) {
-                ExprEvaluator ev(isa_data());
-                ev.set_slots(ctx.sm);
-                auto w = ev.eval_int(v->preds[i].value);
-                if (w) return static_cast<int>(*w);
-                return dflt;
-            }
-        }
+        int w = 0;
+        if (width_from_key(v, key, ctx, &w)) return w;
         // size_key_for's key is absent (e.g. URd without ILABEL_URd_SIZE):
         // fall back to the destination/source size predicates like the
         // reference disassembler.
@@ -265,14 +272,8 @@ int size_of(const isa::Variant* v, const DecodeCtx& ctx,
         }
     }
     if (key) {
-        for (std::uint16_t i = 0; i < v->npreds; ++i) {
-            if (std::strcmp(v->preds[i].key, key) != 0) continue;
-            ExprEvaluator ev(isa_data());
-            ev.set_slots(ctx.sm);
-            auto w = ev.eval_int(v->preds[i].value);
-            if (w) return static_cast<int>(*w);
-            break;
-        }
+        int w = 0;
+        if (width_from_key(v, key, ctx, &w)) return w;
     }
     return dflt;
 }

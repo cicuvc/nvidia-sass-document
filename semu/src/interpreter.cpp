@@ -25,7 +25,6 @@ namespace semu {
 namespace {
 
 using semu::fp::Rnd;
-using semu::fp::Rnd;
 
 // The migration-scaffold OperandFields ops[] view was ELIMINATED: the
 // interpreter reads operand values solely through the NAMED fields of the
@@ -591,7 +590,7 @@ bool Interpreter::step_consistent(const Kernel& kernel, const LaunchEnv& env,
     return true;
 }
 
-Interpreter::Result Interpreter::run_result(const Kernel& kernel,
+InterpreterResult Interpreter::run_result(const Kernel& kernel,
                                             const LaunchEnv& env,
                                             std::uint64_t limit,
                                             bool report_trace) {
@@ -601,7 +600,7 @@ Interpreter::Result Interpreter::run_result(const Kernel& kernel,
     return run_result(kernel, env, opts);
 }
 
-Interpreter::Result Interpreter::run_result(const Kernel& kernel,
+InterpreterResult Interpreter::run_result(const Kernel& kernel,
                                             const LaunchEnv& env,
                                             const RunOptions& options) {
     // Run-scope fenv guard: the fast path relies on host round-to-nearest
@@ -653,7 +652,7 @@ Interpreter::Result Interpreter::run_result(const Kernel& kernel,
 // Race-free workloads must produce byte-identical results for any worker
 // count.  Fault selection is deterministic: the worker with the smallest
 // (cta_id, dynamic-instruction) fault wins.
-Interpreter::Result Interpreter::run_result_parallel(
+InterpreterResult Interpreter::run_result_parallel(
     const Kernel& kernel, const LaunchEnv& env, const RunOptions& options) {
     const int nworkers = options.worker_count;
     // Shared MemoryService: params + global backing set up once.
@@ -685,7 +684,7 @@ Interpreter::Result Interpreter::run_result_parallel(
         options.model.deterministic_seed);
 
     struct WorkerResult {
-        Interpreter::Result r;
+        InterpreterResult r;
         int worker_id = 0;
     };
     std::vector<WorkerResult> results(nworkers);
@@ -851,7 +850,7 @@ Interpreter::Result Interpreter::run_result_parallel(
 // Run the CTAs owned by this interpreter instance (either the full grid for a
 // single worker, or a worker's subset in parallel mode).  Returns the result
 // with this instance's CTAs; parallel mode merges per-worker results.
-Interpreter::Result Interpreter::run_owned() {
+InterpreterResult Interpreter::run_owned() {
     int cta = 0;
     int warp = 0;
     std::uint64_t pc = 0;
@@ -7026,6 +7025,81 @@ Status Interpreter::detect_deadlock(CtaState& cta, const WarpState& w,
     // barriers, next_group returns false and the runner would exit cleanly —
     // Phase 4 marks this via a distinct check in the runner loop).
     return Status::success();
+}
+
+namespace {
+
+// The reference-backend adapter: forwards the abstract IInterpreter surface
+// to the concrete Interpreter statics.  Nothing else in the simulator needs
+// to name Interpreter directly once it goes through the registry.
+class DefaultInterpreter final : public IInterpreter {
+public:
+    const char* name() const override { return "reference-sm120"; }
+    bool handles(const DecodedInstruction& inst) const override {
+        return interpreter_handles(inst);
+    }
+    InterpreterResult run_result(const Kernel& kernel, const LaunchEnv& env,
+                                 std::uint64_t limit, bool report_trace) const override {
+        return Interpreter::run_result(kernel, env, limit, report_trace);
+    }
+    InterpreterResult run_result(const Kernel& kernel, const LaunchEnv& env,
+                                 const RunOptions& options) const override {
+        return Interpreter::run_result(kernel, env, options);
+    }
+    std::optional<Fault> run(const Kernel& kernel, const LaunchEnv& env,
+                             std::uint64_t limit, bool report_trace) const override {
+        return Interpreter::run(kernel, env, limit, report_trace);
+    }
+    std::optional<Fault> run(const Kernel& kernel, const LaunchEnv& env,
+                             const RunOptions& options) const override {
+        return Interpreter::run(kernel, env, options);
+    }
+    std::optional<Fault> run_shared(const Kernel& kernel, const LaunchEnv& env,
+                                    std::vector<std::uint8_t>* shared_out,
+                                    std::uint64_t limit) const override {
+        return Interpreter::run_shared(kernel, env, shared_out, limit);
+    }
+};
+
+std::vector<std::pair<std::string, InterpreterRegistry::Factory>>&
+interpreter_registry_table() {
+    static std::vector<std::pair<std::string, InterpreterRegistry::Factory>> t;
+    return t;
+}
+
+}  // namespace
+
+const IInterpreter* InterpreterRegistry::default_impl() {
+    static const DefaultInterpreter d;
+    return &d;
+}
+
+void InterpreterRegistry::register_impl(const char* name,
+                                        InterpreterRegistry::Factory factory) {
+    auto& t = interpreter_registry_table();
+    for (auto& [n, f] : t) {
+        if (n == name) {
+            f = factory;
+            return;
+        }
+    }
+    t.emplace_back(name, factory);
+}
+
+const IInterpreter* InterpreterRegistry::find(const char* name) {
+    for (auto& [n, f] : interpreter_registry_table()) {
+        if (n == name) return f();
+    }
+    return nullptr;
+}
+
+std::vector<std::string> InterpreterRegistry::names() {
+    std::vector<std::string> out;
+    for (auto& [n, f] : interpreter_registry_table()) {
+        out.push_back(n);
+    }
+    std::sort(out.begin(), out.end());
+    return out;
 }
 
 }  // namespace semu

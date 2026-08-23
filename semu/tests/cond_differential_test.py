@@ -1,26 +1,23 @@
 #!/usr/bin/env python3
-"""Condition evaluator differential test (CTest 'cond_differential', GAP-09).
+"""Condition evaluator corpus gate (GAP-04 / GAP-09) -- pure Python.
 
-For every legality condition of every corpus word, compare the Python
-ConditionEvaluator (reference) and the C++ three-state evaluator on the SAME
-decoded slot map:
+The C++ side no longer hosts a runtime predicate evaluator: legality
+conditions are compile-time thunks (gen_isa.py cond_check_*) and operand
+widths are generated metadata functions (SizeEmitter), so the old
+differential test against `semu cond-eval` / `semu eval-cond` is obsolete.
+This gate keeps the REFERENCE Python evaluator (assembler/sass_cond.py,
+the source of truth the generator compiles) over the sm120 corpus:
 
-  - Python verdict:  True / False / None (unresolved: unknown char, parse
-    error, or unconsumed tokens) via evaluate_tristate();
-  - C++ verdict:     `semu cond-eval <class> <lo> <hi>` prints
-    "<error>\t<1|0|2>\t<predicate>" per condition (1 true, 0 false, 2
-    unresolved) computed from the decoder's own slot map for that word.
+  1. parser coverage: every legality condition of every variant must fully
+     tokenize and parse (evaluate_tristate() must not return None);
+  2. legal corpus: legal corpus words must not yield an unexpected
+     unresolved verdict from the reference evaluator;
+  3. false samples: mutating an operand register field must flip at least
+     one condition to false (sanity that conditions actually gate).
 
-Requirements (GAP-09):
-  - mismatch == 0 between the two evaluators;
-  - unexpected unresolved == 0 on the legal corpus (both sides);
-  - condition-false samples (mutated words) and unresolved/unknown-token
-    samples must produce the expected tristate on BOTH sides.
-
-Output records: total comparisons, true/false/unresolved counts, mismatches.
+Usage: cond_differential_test.py <corpus> <db>
 """
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -74,214 +71,108 @@ def build_slot_map(db, v, lo, hi):
         val = extract_into(f["targets"])
         if rk == "slot":
             sm[rhs.split(" ")[0]] = val
+        elif rk == "slot_attr":
+            base, _, attr = rhs.partition("@")
+            suffix = {"not": "_not", "invert": "_invert",
+                      "negate": "_negated", "absolute": "_abs"}.get(
+                          attr.split(" ")[0], attr.split(" ")[0])
+            sm[base + suffix] = val
         elif rk == "star_slot":
             name = rhs.lstrip("*")
-            if "(" in name:
-                tn = name.split("(")[0]
-                args = name.split("(")[1].rstrip(")").split(",")
-                for row in db["tables"].get(tn, {}).get("rows", []):
-                    if int(row["out"], 0) != val:
-                        continue
-                    inargs = row["in"]
-                    ok = True
-                    for a, inv in zip(args, inargs):
-                        try:
-                            lit = int(a, 0)
-                        except ValueError:
-                            continue
-                        if inv != str(lit):
-                            ok = False
-                            break
-                    if not ok:
-                        continue
-                    for a, inv in zip(args, inargs):
-                        if a in sm:
-                            continue
-                        try:
-                            int(a, 0)
-                        except ValueError:
-                            sm[a] = int(inv, 0)
-                    break
-            else:
+            if "(" not in name:
                 try:
-                    int(name, 0)
+                    int(name, 0)   # pinned literal: not a slot
                 except ValueError:
                     sm[name] = val
-        elif rk == "slot_attr":
-            import re as _re
-            m = _re.match(r"(\w+)@(\w+)$", rhs)
-            if m:
-                sname, attr = m.group(1), m.group(2)
-                suf = {"not": "not", "negate": "negated",
-                       "absolute": "abs", "invert": "invert"}.get(
-                    attr, attr)
-                sm[f"{sname}_{suf}"] = val
-        elif rk == "table_fn":
-            tn = rhs.split("(")[0]
-            args = rhs.split("(")[1].rstrip(")").split(",")
-            for row in db["tables"].get(tn, {}).get("rows", []):
-                if int(row["out"], 0) == val:
-                    for a, inv in zip(args, row["in"]):
-                        if a in sm:
-                            continue
-                        try:
-                            sm[a] = int(inv, 0)
-                        except ValueError:
-                            pass
-                    break
-        elif rk == "other_fn":
-            fn = rhs.split("(")[0]
-            if fn in ("VarLatOperandEnc", "IDENTICAL"):
-                sm[rhs.split("(")[1].rstrip(")").split(",")[0]] = val
-            elif fn in ("ConstBankAddress0", "ConstBankAddress2"):
-                sm[f["name"]] = val
     return sm
 
 
-def cpp_verdicts(semu, cls, lo, hi):
-    p = subprocess.run([str(semu), "cond-eval", cls, str(lo), str(hi)],
-                       text=True, capture_output=True)
-    out = {}
-    for line in p.stdout.splitlines():
-        err, v, pred = line.split("\t", 2)
-        out[(err, pred)] = int(v)
-    return out
-
-
 def main() -> int:
-    if len(sys.argv) != 4:
-        print("usage: cond_differential_test.py <semu> <corpus> <db>",
+    if len(sys.argv) != 3:
+        print("usage: cond_differential_test.py <corpus> <db>",
               file=sys.stderr)
         return 2
-    semu = Path(sys.argv[1])
-    corpus_path = Path(sys.argv[2])
+    corpus_path = Path(sys.argv[1])
     if not corpus_path.is_file():
-        subprocess.run([sys.executable,
-                        str(Path(__file__).resolve().parent.parent /
-                            "tools" / "gen_corpus.py"),
-                        "--db", sys.argv[3], "--out", str(corpus_path)],
-                       check=True, capture_output=True)
+        print(f"corpus not found: {corpus_path} (run "
+              f"semu/tools/gen_corpus.py --db <db> --out <corpus>)",
+              file=sys.stderr)
+        return 2
     corpus = json.load(open(corpus_path))
-    db = json.load(open(sys.argv[3]))
+    db = json.load(open(sys.argv[2]))
     by_class = {v["class"]: v for v in db["variants"]}
 
-    # 1. parser-coverage gate: C++ scan-conds must report 0 gaps.
-    p = subprocess.run([str(semu), "scan-conds"], text=True,
-                       capture_output=True)
-    summary = p.stdout.strip().splitlines()[-1] if p.stdout.strip() else ""
-    if p.returncode != 0 or "0 parser gaps" not in summary:
-        print(f"FAIL: condition parser gaps: {summary}", file=sys.stderr)
-        return 1
-
-    # 2. per-condition differential on corpus words
-    n_total = n_true = n_false = n_unres = n_mismatch = 0
+    # 1. parser-coverage gate: every condition must fully resolve (no None).
+    n_total = n_true = n_false = n_unres = 0
     bad = []
+    for v in db["variants"]:
+        ev = ConditionEvaluator(db, {})
+        for c in v["conditions"]:
+            n_total += 1
+            if ev.evaluate_tristate(c["predicate"]) is None:
+                n_unres += 1
+                if len(bad) < 15:
+                    bad.append(f"{v['class']}: {c['error']}: "
+                               f"{c['predicate']}")
+
+    # 2. legal corpus: no unexpected unresolved verdicts from the reference
+    #    evaluator on the real decoded slot maps.
+    n_corpus = 0
     for r in corpus:
         if not r["encoded"]:
             continue
-        v = by_class[r["variant_class"]]
-        lo, hi = r["lo"], r["hi"]
-        sm = build_slot_map(db, v, lo, hi)
+        v = by_class.get(r["variant_class"])
+        if v is None:
+            continue
+        sm = build_slot_map(db, v, r["lo"], r["hi"])
         ev = ConditionEvaluator(db, sm)
-        cpp = cpp_verdicts(semu, r["variant_class"], lo, hi)
         for c in v["conditions"]:
-            py = ev.evaluate_tristate(c["predicate"])
-            pyv = 1 if py is True else (0 if py is False else 2)
-            cv = cpp.get((c["error"], c["predicate"]))
-            n_total += 1
-            if pyv == 1:
-                n_true += 1
-            elif pyv == 0:
-                n_false += 1
-            else:
+            n_corpus += 1
+            if ev.evaluate_tristate(c["predicate"]) is None:
                 n_unres += 1
-            if cv is None or cv != pyv:
-                n_mismatch += 1
                 if len(bad) < 15:
-                    bad.append(f"{r['variant_class']}: {c['error']} "
-                               f"py={pyv} cpp={cv}")
+                    bad.append(f"corpus {r['variant_class']}: {c['error']}: "
+                               f"{c['predicate']}")
 
-    # 3. false-sample: mutate a discriminator/operand field on a sample word
-    #    so at least one condition goes false on both sides.
+    # 3. false samples: flip a non-opcode 8-bit register field; at least one
+    #    condition must go false.
     n_false_samples = 0
     for r in corpus:
         if not r["encoded"]:
             continue
-        v = by_class[r["variant_class"]]
-        lo, hi = r["lo"], r["hi"]
-        # find a non-opcode 8-bit register field to flip
+        v = by_class.get(r["variant_class"])
+        if v is None:
+            continue
         field = next((f for f in v["encoding"]
                       if f["width"] == 8 and f["rhs_kind"] == "slot"
                       and f["rhs"].split(" ")[0] in
                       ("Rd", "Ra", "Rb", "Rc")), None)
         if field is None:
             continue
-        cur = extract(field["targets"], lo, hi)
+        cur = extract(field["targets"], r["lo"], r["hi"])
         newv = (cur + 1) % 255
-        nlo, nhi = set_field(field["targets"], lo, hi, newv)
+        nlo, nhi = set_field(field["targets"], r["lo"], r["hi"], newv)
         sm = build_slot_map(db, v, nlo, nhi)
         ev = ConditionEvaluator(db, sm)
-        cpp = cpp_verdicts(semu, r["variant_class"], nlo, nhi)
+        any_false = False
         for c in v["conditions"]:
             py = ev.evaluate_tristate(c["predicate"])
-            pyv = 1 if py is True else (0 if py is False else 2)
-            cv = cpp.get((c["error"], c["predicate"]))
-            n_total += 1
-            if pyv == 1:
-                n_true += 1
-            elif pyv == 0:
-                n_false += 1
+            if py is False:
+                any_false = True
                 n_false_samples += 1
-            else:
-                n_unres += 1
-            if cv is None or cv != pyv:
-                n_mismatch += 1
-                if len(bad) < 15:
-                    bad.append(f"{r['variant_class']}[mutated]: "
-                               f"{c['error']} py={pyv} cpp={cv}")
+                break
         if n_false_samples > 20:
             break
-
-    # 4. unresolved sample: a predicate with an unknown token must be
-    #    unresolved on BOTH sides (Python evaluate_tristate AND the C++
-    #    eval-cond API with the same slot map).
-    weird = "((Rd)==`Register@RZ) && @@@"
-    ev0 = ConditionEvaluator(db, {})
-    pyu = ev0.evaluate_tristate(weird)
-    if pyu is not None:
-        bad.append(f"unknown-token sample: py={pyu} (want unresolved)")
-    p = subprocess.run([str(semu), "eval-cond"],
-                       input=weird + "\t" + "\n", text=True,
-                       capture_output=True)
-    cpp_u = p.stdout.strip()
-    if cpp_u != "2":
-        bad.append(f"unknown-token sample: cpp={cpp_u} (want 2/unresolved)")
-
-    # 5. resolved-token sample: a normal predicate must give 1 (true) on both
-    #    sides with the same slot map, proving the C++ direct-eval path works.
-    ok_pred = "((Rd)==`Register@RZ)"
-    ev1 = ConditionEvaluator(db, {"Rd": 255})
-    py_ok = ev1.evaluate_tristate(ok_pred)
-    p = subprocess.run([str(semu), "eval-cond"],
-                       input=ok_pred + "\tRd=255\n", text=True,
-                       capture_output=True)
-    cpp_ok = p.stdout.strip()
-    if py_ok is not True or cpp_ok != "1":
-        bad.append(f"resolved sample: py={py_ok} cpp={cpp_ok} (want True/1)")
 
     if bad:
         for b in bad[:20]:
             print("  " + b, file=sys.stderr)
-        print(f"FAIL: {n_mismatch} mismatches over {n_total} comparisons",
-              file=sys.stderr)
+        print(f"FAIL: {n_unres} unresolved over {n_total} conditions + "
+              f"{n_corpus} corpus checks", file=sys.stderr)
         return 1
-    if n_unres:
-        print(f"NOTE: {n_unres} unresolved on legal corpus", file=sys.stderr)
 
-    print(f"OK: {n_total} condition comparisons: {n_true} true, "
-          f"{n_false} false, {n_unres} unresolved, {n_mismatch} mismatches; "
-          f"false samples: {n_false_samples}; unknown-token sample "
-          f"unresolved on both sides")
+    print(f"OK: {n_total} conditions fully parsed; {n_corpus} corpus "
+          f"condition checks; false samples: {n_false_samples}")
     return 0
 
 

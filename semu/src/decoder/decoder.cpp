@@ -15,7 +15,6 @@
 namespace semu {
 
 using decoder::IsaData;
-using decoder::ExprEvaluator;
 
 // ---------------------------------------------------------------------------
 // Compiled-in ISA lookup tables (built once from the generated data).
@@ -28,12 +27,6 @@ const IsaData& isa_data() {
         }
         for (std::uint32_t i = 0; i < isa::kNumTables; ++i) {
             d.tables[isa::kTables[i].name] = &isa::kTables[i];
-        }
-        for (std::uint32_t i = 0; i < isa::kNumParameters; ++i) {
-            d.parameters[isa::kParameters[i]] = isa::kParameterVals[i];
-        }
-        for (std::uint32_t i = 0; i < isa::kNumConstants; ++i) {
-            d.constants[isa::kConstants[i]] = isa::kConstantVals[i];
         }
         return d;
     }();
@@ -197,101 +190,6 @@ bool reverse_star_table_fn(DecodeCtx& ctx, const std::string& rhs,
 }
 
 namespace {
-
-// ---------------------------------------------------------------------------
-// build_slot_map: extract every encoding field of a variant into the slot
-// map (ctx.sm) exactly as the decoder does, WITHOUT the fixed-bit / reserved /
-// discriminator rejection gates.  Returns false (with `reject` reason) only
-// on structural failures (malformed table fn / no table row) where the slot
-// map cannot be built at all.  Used both by try_decode_variant and by the
-// per-condition verdict API (GAP-09).
-// ---------------------------------------------------------------------------
-bool build_slot_map(const isa::Variant* v, Word128 word, DecodeCtx* ctx,
-                    std::string* reject) {
-    for (std::uint16_t fi = 0; fi < v->nfields; ++fi) {
-        const isa::Field& f = v->fields[fi];
-        const std::uint64_t val = extract_field(f, word);
-        ctx->fields.emplace_back(&f, val);
-        std::string rhs(f.rhs);
-        char buf[160];
-        switch (f.rhs_kind) {
-            case 3:  // num: fixed literal (checked by the caller's gate)
-            case 4:  // star_num: reserved literal (checked by caller)
-            case 2:  // opcode
-            default:
-                break;
-            case 5: {  // star_slot
-                std::string slot_name = rhs.size() > 1 ? rhs.substr(1) : rhs;
-                if (!slot_name.empty() && slot_name[0] == '*') {
-                    slot_name = slot_name.substr(1);
-                }
-                if (!slot_name.empty() &&
-                    slot_name.find('(') != std::string::npos) {
-                    if (!reverse_star_table_fn(*ctx, rhs, val, reject)) {
-                        return false;
-                    }
-                    break;
-                }
-                std::int64_t lit;
-                if (parse_int_full(slot_name, &lit)) {
-                    break;  // pinned literal
-                }
-                ctx->sm[slot_name] = static_cast<std::int64_t>(val);
-                break;
-            }
-            case 0: {  // slot: value (scaled up on decode)
-                const std::int64_t scale = f.scale ? f.scale : 1;
-                ctx->sm[rhs] = static_cast<std::int64_t>(val) * scale;
-                break;
-            }
-            case 1: {  // slot_attr: X@attr
-                std::size_t at = rhs.find('@');
-                if (at != std::string::npos) {
-                    const char* suffix =
-                        attr_suffix(rhs.substr(at + 1));
-                    ctx->sm[rhs.substr(0, at) + suffix] =
-                        static_cast<std::int64_t>(val);
-                }
-                break;
-            }
-            case 6: {  // table_fn: reverse lookup
-                if (!reverse_table_fn(*ctx, f, val)) {
-                    std::string tname = rhs.substr(0, rhs.find('('));
-                    std::snprintf(buf, sizeof(buf),
-                                  "no %s row for value 0x%" PRIx64,
-                                  tname.c_str(), val);
-                    *reject = buf;
-                    return false;
-                }
-                break;
-            }
-            case 7: {  // other_fn
-                std::size_t open = rhs.find('(');
-                if (open != std::string::npos) {
-                    std::string fn = rhs.substr(0, open);
-                    std::string args = rhs.substr(open + 1);
-                    if (!args.empty() && args.back() == ')') args.pop_back();
-                    auto argnames = decoder::split_row_args(args);
-                    if (fn == "VarLatOperandEnc") {
-                        if (!argnames.empty()) {
-                            ctx->sm[argnames[0]] =
-                                static_cast<std::int64_t>(val);
-                        }
-                    } else if (fn == "IDENTICAL") {
-                        for (const auto& a : argnames) {
-                            ctx->sm[a] = static_cast<std::int64_t>(val);
-                        }
-                    } else if (fn == "ConstBankAddress0" ||
-                               fn == "ConstBankAddress2") {
-                        ctx->sm[f.name] = static_cast<std::int64_t>(val);
-                    }
-                }
-                break;
-            }
-        }
-    }
-    return true;
-}
 
 // ---------------------------------------------------------------------------
 // build_decode_ctx: fixed-bit checks + slot map + legality conditions for a
@@ -592,96 +490,6 @@ Decoder::Decoder() {}
 const Decoder& Decoder::instance() {
     static const Decoder dec;
     return dec;
-}
-
-std::size_t scan_condition_parse_gaps(bool report,
-                                      std::size_t* total_conds,
-                                      std::size_t* resolved_conds) {
-    std::size_t total = 0;
-    std::size_t resolved = 0;
-    std::size_t gaps = 0;
-    for (std::uint32_t i = 0; i < isa::kNumVariants; ++i) {
-        const isa::Variant* v = &isa::kVariants[i];
-        ExprEvaluator ev(isa_data());
-        // empty slot map: all slots evaluate to 0, which is sufficient to
-        // detect tokenizer/grammar gaps (they return nullopt regardless of
-        // slot values).
-        static const std::unordered_map<std::string, std::int64_t> kEmpty;
-        ev.set_slots(kEmpty);
-        for (std::uint16_t ci = 0; ci < v->nconds; ++ci) {
-            ++total;
-            if (ev.eval_bool_tristate(v->conds[ci].predicate).has_value()) {
-                ++resolved;
-            } else {
-                ++gaps;
-                if (report) {
-                    std::printf("%s\t%s\t%s\n",
-                                isa::variant_class_name(v->variant_class),
-                                v->conds[ci].error, v->conds[ci].predicate);
-                }
-            }
-        }
-    }
-    if (total_conds) *total_conds = total;
-    if (resolved_conds) *resolved_conds = resolved;
-    return gaps;
-}
-
-std::vector<ConditionVerdict> condition_verdicts(
-    const std::string& variant_class, Word128 word) {
-    std::vector<ConditionVerdict> out;
-    const isa::Variant* variant = nullptr;
-    for (std::uint32_t i = 0; i < isa::kNumVariants; ++i) {
-        if (variant_class ==
-            isa::variant_class_name(isa::kVariants[i].variant_class)) {
-            variant = &isa::kVariants[i];
-            break;
-        }
-    }
-    if (!variant) {
-        return out;
-    }
-    DecodeCtx ctx;
-    ctx.variant = variant;
-    ctx.word = word;
-    std::string reject;
-    if (!build_slot_map(variant, word, &ctx, &reject)) {
-        // structural failure: every condition is unresolved
-        for (std::uint16_t ci = 0; ci < variant->nconds; ++ci) {
-            out.push_back({variant->conds[ci].error,
-                           variant->conds[ci].predicate, 2});
-        }
-        return out;
-    }
-    ExprEvaluator ev(isa_data());
-    ev.set_slots(ctx.sm);
-    for (std::uint16_t ci = 0; ci < variant->nconds; ++ci) {
-        const isa::Cond& c = variant->conds[ci];
-        auto r = ev.eval_bool_tristate(c.predicate);
-        int verdict = 2;  // unresolved
-        if (r.has_value()) {
-            verdict = *r ? 1 : 0;
-        }
-        out.push_back({c.error, c.predicate, verdict});
-    }
-    return out;
-}
-
-
-int eval_predicate(const std::string& predicate,
-                   const std::vector<std::pair<std::string, std::int64_t>>&
-                       slots) {
-    ExprEvaluator ev(isa_data());
-    std::unordered_map<std::string, std::int64_t> sm;
-    for (const auto& [k, v] : slots) {
-        sm[k] = v;
-    }
-    ev.set_slots(sm);
-    auto r = ev.eval_bool_tristate(predicate);
-    if (!r.has_value()) {
-        return 2;  // unresolved
-    }
-    return *r ? 1 : 0;
 }
 
 }  // namespace semu

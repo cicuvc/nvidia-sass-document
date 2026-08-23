@@ -142,7 +142,7 @@ Status MockBackend::launch(const BackendLaunchRequest& request) {
         // Runtime authority: the reference interpreter must be able to execute
         // the instruction family; otherwise it cannot be lowered anywhere and
         // the decode-only fault fires.
-        if (!interpreter_handles(*w.inst)) {
+        if (!InterpreterRegistry::default_impl()->handles(*w.inst)) {
             const Fault f = report_decode_only(w);
             return Status::failure(f);
         }
@@ -223,8 +223,8 @@ Status MockBackend::launch(const BackendLaunchRequest& request) {
         opts.worker_count = policy_.worker_count;
         opts.memory.params = &params_slice_;
         opts.memory.global = policy_.global_buffer;
-        Interpreter::Result r =
-            Interpreter::run_result(*request.kernel, env, opts);
+        const IInterpreter* interp = InterpreterRegistry::default_impl();
+        InterpreterResult r = interp->run_result(*request.kernel, env, opts);
         stats_.interpreter_ran = true;
         stats_.interpreter_dynamic_instructions = r.dynamic_instructions;
         stats_.interpreter_fault = r.fault;

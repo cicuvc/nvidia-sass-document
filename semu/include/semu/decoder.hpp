@@ -97,36 +97,4 @@ private:
     Decoder();
 };
 
-// Condition-parser coverage scan (GAP-04 gate): evaluate every legality
-// condition of every variant with the built-in default slot values using the
-// three-state evaluator.  Returns the number of conditions the parser could
-// not fully consume/resolve (0 = full coverage).  `report` receives one line
-// per unresolved condition when non-null.
-std::size_t scan_condition_parse_gaps(
-    bool report, std::size_t* total_conds = nullptr,
-    std::size_t* resolved_conds = nullptr);
-
-// Per-condition verdict for a variant against a *specific* word's decoded
-// slot map (GAP-09): verdict 1 = true, 0 = false, 2 = unresolved (parser gap
-// or unresolvable reference).  Unlike scan_condition_parse_gaps this uses the
-// real decoded slot values, so the Python reference evaluator can be compared
-// condition-by-condition on identical inputs.
-struct ConditionVerdict {
-    std::string error;
-    std::string predicate;
-    int verdict;  // 1 true, 0 false, 2 unresolved
-};
-// Evaluate every legality condition of the given variant class against the
-// word's decoded slot map.  Returns empty when the class is unknown.
-std::vector<ConditionVerdict> condition_verdicts(
-    const std::string& variant_class, Word128 word);
-
-// Direct three-state evaluation of an arbitrary predicate against an explicit
-// slot map (GAP-09): 1 = true, 0 = false, 2 = unresolved (unknown char, parse
-// gap, or unconsumed tokens).  This lets tests feed the SAME expression and
-// slot values to both the C++ evaluator and the Python reference evaluator.
-int eval_predicate(const std::string& predicate,
-                   const std::vector<std::pair<std::string, std::int64_t>>&
-                       slots);
-
 }  // namespace semu

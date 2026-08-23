@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string_view>
 
 namespace semu { struct Word128; }  // forward decl (word.hpp)
 
@@ -1832,3 +1833,2132 @@ extern const char* const kConstants[]; extern const std::int64_t kConstantVals[]
 extern const std::uint32_t kNumConstants;
 
 }  // namespace semu::isa
+
+// ---------------------------------------------------------------------------
+// Generated operand-width metadata (per-variant, from `*_SIZE` predicates).
+// Each variant's widths are static member functions that extract the width
+// directly from the 128-bit word (no slot map / string eval at runtime).
+// kSizeFns[vi][key] is the dispatch table; a nullptr entry means the variant
+// has no such predicate (the renderer falls back to its default width).
+namespace semu::isa::metadata {
+enum SizeKey : int {
+    kDest2Size = 0,   // IDEST2_SIZE
+    kDestIndexRfSize = 1,   // IDEST_INDEX_RF_SIZE
+    kDestSize = 2,   // IDEST_SIZE
+    kLabelRaSize = 3,   // ILABEL_Ra_SIZE
+    kLabelRaUrbSize = 4,   // ILABEL_Ra_URb_SIZE
+    kLabelRaUrcSize = 5,   // ILABEL_Ra_URc_SIZE
+    kLabelRaUrdSize = 6,   // ILABEL_Ra_URd_SIZE
+    kLabelRb2Size = 7,   // ILABEL_Rb2_SIZE
+    kLabelRbSize = 8,   // ILABEL_Rb_SIZE
+    kLabelRbUrcSize = 9,   // ILABEL_Rb_URc_SIZE
+    kLabelRcSize = 10,   // ILABEL_Rc_SIZE
+    kLabelReSize = 11,   // ILABEL_Re_SIZE
+    kLabelRhSize = 12,   // ILABEL_Rh_SIZE
+    kLabelUraSize = 13,   // ILABEL_URa_SIZE
+    kLabelUrbSize = 14,   // ILABEL_URb_SIZE
+    kLabelUrcSize = 15,   // ILABEL_URc_SIZE
+    kLabelUreSize = 16,   // ILABEL_URe_SIZE
+    kLabelUriSize = 17,   // ILABEL_URi_SIZE
+    kSourceASize = 18,   // ISRC_A_SIZE
+    kSourceB2Size = 19,   // ISRC_B2_SIZE
+    kSourceBIndexRfSize = 20,   // ISRC_B_INDEX_RF_SIZE
+    kSourceBSize = 21,   // ISRC_B_SIZE
+    kSourceCIndexRfSize = 22,   // ISRC_C_INDEX_RF_SIZE
+    kSourceCSize = 23,   // ISRC_C_SIZE
+    kSourceESize = 24,   // ISRC_E_SIZE
+    kSourceHSize = 25,   // ISRC_H_SIZE
+    kSourceISize = 26,   // ISRC_I_SIZE
+    kNumSizeKeys,
+};
+
+inline constexpr const char* const kSizeKeyNames[kNumSizeKeys] = {
+    "IDEST2_SIZE",
+    "IDEST_INDEX_RF_SIZE",
+    "IDEST_SIZE",
+    "ILABEL_Ra_SIZE",
+    "ILABEL_Ra_URb_SIZE",
+    "ILABEL_Ra_URc_SIZE",
+    "ILABEL_Ra_URd_SIZE",
+    "ILABEL_Rb2_SIZE",
+    "ILABEL_Rb_SIZE",
+    "ILABEL_Rb_URc_SIZE",
+    "ILABEL_Rc_SIZE",
+    "ILABEL_Re_SIZE",
+    "ILABEL_Rh_SIZE",
+    "ILABEL_URa_SIZE",
+    "ILABEL_URb_SIZE",
+    "ILABEL_URc_SIZE",
+    "ILABEL_URe_SIZE",
+    "ILABEL_URi_SIZE",
+    "ISRC_A_SIZE",
+    "ISRC_B2_SIZE",
+    "ISRC_B_INDEX_RF_SIZE",
+    "ISRC_B_SIZE",
+    "ISRC_C_INDEX_RF_SIZE",
+    "ISRC_C_SIZE",
+    "ISRC_E_SIZE",
+    "ISRC_H_SIZE",
+    "ISRC_I_SIZE",
+};
+
+// Key name -> column index (std::string_view include in the header).
+inline int size_key_index(std::string_view name) {
+    for (int i = 0; i < kNumSizeKeys; ++i)
+        if (name == kSizeKeyNames[i]) return i;
+    return -1;
+}
+
+using SizeFn = std::int64_t (*)(const semu::Word128&);
+extern const SizeFn kSizeFns[][kNumSizeKeys];
+
+// One nested namespace per mnemonic; one struct per variant class (slug).
+namespace MOV {
+    // one struct per variant (slug = variant class)
+    struct mov_64__RR;
+    struct mov__RR;
+    struct mov_imm64_;
+    struct mov__RI;
+    struct mov_indexedRF_IRFd__Rb;
+    struct mov_indexedRF_IRFd__Ib;
+    struct mov_64__RU;
+    struct mov__RU;
+    struct mov_nonconformity__RU;
+    struct mov_indexedRF_Rd_;
+}  // namespace MOV
+namespace P2R {
+    // one struct per variant (slug = variant class)
+    struct p2r__RRR_RRR;
+    struct p2r__RuIR_RIR;
+    struct p2r_simple_;
+    struct p2r__RUR_RUR;
+}  // namespace P2R
+namespace R2P {
+    // one struct per variant (slug = variant class)
+    struct r2p__RRR;
+    struct r2p__RIR;
+    struct r2p__RUR;
+}  // namespace R2P
+namespace SEL {
+    // one struct per variant (slug = variant class)
+    struct sel__RRR_RRR;
+    struct sel_64__RIR;
+    struct sel_64__RRR;
+    struct sel__RuIR_RIR;
+    struct sel__RUR_RUR;
+    struct sel_64__RUR;
+}  // namespace SEL
+namespace FSEL {
+    // one struct per variant (slug = variant class)
+    struct fsel__RRR_RRR;
+    struct fsel__RIR_RIR;
+    struct fsel__RUR_RUR;
+}  // namespace FSEL
+namespace FMNMX {
+    // one struct per variant (slug = variant class)
+    struct fmnmx__RRR_RRR;
+    struct fmnmx_pred__RRR_RRR;
+    struct fmnmx__RIR_RIR;
+    struct fmnmx_pred__RIR_RIR;
+    struct fmnmx__RUR_RUR;
+    struct fmnmx_pred__RUR_RUR;
+}  // namespace FMNMX
+namespace FSET {
+    // one struct per variant (slug = variant class)
+    struct fset__RRR_RRR;
+    struct fset_simple__RRR_RRR;
+    struct fset__RIR_RIR;
+    struct fset_simple__RIR_RIR;
+    struct fset__RUR_RUR;
+    struct fset_simple__RUR_RUR;
+}  // namespace FSET
+namespace FSETP {
+    // one struct per variant (slug = variant class)
+    struct fsetp__RRR_RRR;
+    struct fsetp_simple__RRR_RRR;
+    struct fsetp__RIR_RIR;
+    struct fsetp_simple__RIR_RIR;
+    struct fsetp__RUR_RUR;
+    struct fsetp_simple__RUR_RUR;
+}  // namespace FSETP
+namespace ISETP {
+    // one struct per variant (slug = variant class)
+    struct isetp_64__RRR_RRR_EX;
+    struct isetp_64__RRR_RRR_noEX;
+    struct isetp_64_simple__RRR_RRR_EX;
+    struct isetp_64_simple__RRR_RRR_noEX;
+    struct isetp__RRR_RRR_EX;
+    struct isetp__RRR_RRR_noEX;
+    struct isetp_simple__RRR_RRR_EX;
+    struct isetp_simple__RRR_RRR_noEX;
+    struct isetp_64__RsIR_RIR_EX;
+    struct isetp_64__RsIR_RIR_noEX;
+    struct isetp_64_simple__RsIR_RIR_EX;
+    struct isetp_64_simple__RsIR_RIR_noEX;
+    struct isetp__RsIR_RIR_EX;
+    struct isetp__RsIR_RIR_noEX;
+    struct isetp_simple__RsIR_RIR_EX;
+    struct isetp_simple__RsIR_RIR_noEX;
+    struct isetp_64__RUR_RUR_EX;
+    struct isetp_64__RUR_RUR_noEX;
+    struct isetp_64_simple__RUR_RUR_EX;
+    struct isetp_64_simple__RUR_RUR_noEX;
+    struct isetp__RUR_RUR_EX;
+    struct isetp__RUR_RUR_noEX;
+    struct isetp_simple__RUR_RUR_EX;
+    struct isetp_simple__RUR_RUR_noEX;
+}  // namespace ISETP
+namespace IADD3 {
+    // one struct per variant (slug = variant class)
+    struct iadd3_noimm__RRR_RRR;
+    struct iadd3_x_noimm__RRR_RRR;
+    struct iadd3_imm__RsIR_RIR;
+    struct iadd3_x_imm__RIR_RIR;
+    struct iadd3_noimm__RUR_RUR;
+    struct iadd3_x_noimm__RUR_RUR;
+}  // namespace IADD3
+namespace ISCADD {
+    // one struct per variant (slug = variant class)
+    struct iscadd_noimm__RRR_RRR;
+    struct iscadd_imm__RIR_RIR;
+    struct iscadd_noimm__RUR_RUR;
+}  // namespace ISCADD
+namespace LEA {
+    // one struct per variant (slug = variant class)
+    struct lea_hi_noimm__RRR_RRR;
+    struct lea_hi_noimm_sx32__RRR_RRR;
+    struct lea_hi_noimm_sx32_x__RRR_RRR;
+    struct lea_hi_noimm_x__RRR_RRR;
+    struct lea_lo_noimm__RRR_RRR;
+    struct lea_lo_noimm_x__RRR_RRR;
+    struct lea_hi_imm__RRuI_RRI;
+    struct lea_hi_imm_x__RRuI_RRI;
+    struct lea_hi_imm__RuIR_RIR;
+    struct lea_hi_imm_sx32__RuIR_RIR;
+    struct lea_hi_imm_sx32_x__RuIR_RIR;
+    struct lea_hi_imm_x__RuIR_RIR;
+    struct lea_lo_imm__RuIR_RIR;
+    struct lea_lo_imm_x__RuIR_RIR;
+    struct lea_hi_noimm__RUR_RUR;
+    struct lea_hi_noimm_sx32__RUR_RUR;
+    struct lea_hi_noimm_sx32_x__RUR_RUR;
+    struct lea_hi_noimm_x__RUR_RUR;
+    struct lea_lo_noimm__RUR_RUR;
+    struct lea_lo_noimm_x__RUR_RUR;
+}  // namespace LEA
+namespace LOP {
+    // one struct per variant (slug = variant class)
+    struct lop_noimm__RRR_RRR;
+    struct lop_noimm_optionalPp__RRR_RRR;
+    struct lop_imm_;
+    struct lop_imm_optionalPp_;
+    struct lop_noimm__RUR_RUR;
+    struct lop_noimm_optionalPp__RUR_RUR;
+}  // namespace LOP
+namespace LOP3 {
+    // one struct per variant (slug = variant class)
+    struct lop3_lut__RRR_RRR;
+    struct lop3_lut_optionalPp__RRR_RRR;
+    struct lop3_noimm__RRR_RRR;
+    struct lop3_noimm_optionalPp__RRR_RRR;
+    struct lop3_imm__RIR_RIR;
+    struct lop3_imm_optionalPp__RIR_RIR;
+    struct lop3_lut__RuIR_RIR;
+    struct lop3_lut_optionalPp__RuIR_RIR;
+    struct lop3_lut__RUR_RUR;
+    struct lop3_lut_optionalPp__RUR_RUR;
+    struct lop3_noimm__RUR_RUR;
+    struct lop3_noimm_optionalPp__RUR_RUR;
+}  // namespace LOP3
+namespace IABS {
+    // one struct per variant (slug = variant class)
+    struct iabs__RRR_R;
+    struct iabs__RsIR_I;
+    struct iabs__RUR_UR;
+}  // namespace IABS
+namespace PRMT {
+    // one struct per variant (slug = variant class)
+    struct prmt__RRR_RRR;
+    struct prmt__RRuI_RRI;
+    struct prmt__RuIR_RIR;
+    struct prmt__RUR_RUR;
+    struct prmt__RRU_RRU;
+}  // namespace PRMT
+namespace IMNMX {
+    // one struct per variant (slug = variant class)
+    struct imnmx_64__RRR_RRR;
+    struct imnmx_64_nopred__RRR_RRR;
+    struct imnmx__RRR_RRR;
+    struct imnmx_nopred__RRR_RRR;
+    struct imnmx_64__RIR_RsIR;
+    struct imnmx_64_nopred__RIR_RsIR;
+    struct imnmx__RIR_RsIR;
+    struct imnmx_nopred__RIR_RsIR;
+    struct imnmx_64__RUR_RUR;
+    struct imnmx_64_nopred__RUR_RUR;
+    struct imnmx__RUR_RUR;
+    struct imnmx_nopred__RUR_RUR;
+}  // namespace IMNMX
+namespace SHF {
+    // one struct per variant (slug = variant class)
+    struct shf__RRR_RRR;
+    struct shf__RRuI_RRI;
+    struct shf__RuIR_RIR;
+    struct shf__RUR_RUR;
+    struct shf__RRU_RRU;
+}  // namespace SHF
+namespace SHL {
+    // one struct per variant (slug = variant class)
+    struct shl__RRR_RRR;
+    struct shl_imm_;
+    struct shl__RuIR_RIR;
+    struct shl__RUR_RUR;
+}  // namespace SHL
+namespace SHR {
+    // one struct per variant (slug = variant class)
+    struct shr__RRR_RRR;
+    struct shr__RIR_RIR;
+    struct shr__RUR_RUR;
+}  // namespace SHR
+namespace SGXT {
+    // one struct per variant (slug = variant class)
+    struct sgxt__RRR_RRR;
+    struct sgxt__RuIR_RIR;
+    struct sgxt__RUR_RUR;
+}  // namespace SGXT
+namespace BMSK {
+    // one struct per variant (slug = variant class)
+    struct bmsk__RRR_RRR;
+    struct bmsk__RuIR_RIR;
+    struct bmsk__RUR_RUR;
+}  // namespace BMSK
+namespace PLOP3 {
+    // one struct per variant (slug = variant class)
+    struct plop3_lut_1out_1reg__RRR;
+    struct plop3_lut_2out_1reg__RRR;
+    struct plop3_lut_1out_2reg__RRR;
+    struct plop3_lut_2out_2reg__RRR;
+    struct plop3_lut_1out_3reg__RRR;
+    struct plop3_lut_2out_3reg__RRR;
+    struct plop3_lut_1out_1reg__RUR;
+    struct plop3_lut_2out_1reg__RUR;
+    struct plop3_lut_1out_2reg__RUR;
+    struct plop3_lut_2out_2reg__RUR;
+    struct plop3_lut_1out_3reg__RUR;
+    struct plop3_lut_2out_3reg__RUR;
+}  // namespace PLOP3
+namespace FMUL {
+    // one struct per variant (slug = variant class)
+    struct fmul__RRR_RR;
+    struct fmul__RIR_RI;
+    struct fmul__RUR_RU;
+}  // namespace FMUL
+namespace FADD {
+    // one struct per variant (slug = variant class)
+    struct fadd__RRR_RR;
+    struct fadd__RRI_RI;
+    struct fadd__RRU_RU;
+}  // namespace FADD
+namespace FHADD {
+    // one struct per variant (slug = variant class)
+    struct fhadd__RR;
+    struct fhadd__RU;
+}  // namespace FHADD
+namespace FFMA {
+    // one struct per variant (slug = variant class)
+    struct ffma__RRR_RRR;
+    struct ffma__RRI_RRI;
+    struct ffma__RIR_RIR;
+    struct ffma__RUR_RUR;
+    struct ffma__RRU_RRU;
+}  // namespace FFMA
+namespace FHFMA {
+    // one struct per variant (slug = variant class)
+    struct fhfma__RRR;
+    struct fhfma__RUR;
+    struct fhfma__RRU;
+}  // namespace FHFMA
+namespace IMAD {
+    // one struct per variant (slug = variant class)
+    struct imad__RRR_RRR;
+    struct imad_pseudo__RRR_RRR;
+    struct imad_x__RRR_RRR;
+    struct imad_x_pseudo__RRR_RRR;
+    struct imad_wide__RRR_RRR;
+    struct imad_wide_pseudo__RRR_RRR;
+    struct imad_wide_x__RRR_RRR;
+    struct imad_wide_x_pseudo__RRR_RRR;
+    struct imad_hi__RRR_RRR;
+    struct imad_hi_pseudo__RRR_RRR;
+    struct imad_hi_x__RRR_RRR;
+    struct imad_hi_x_pseudo__RRR_RRR;
+    struct imad__RRsI_RRI;
+    struct imad_pseudo__RRsI_RRI;
+    struct imad_x__RRsI_RRI;
+    struct imad_x_pseudo__RRsI_RRI;
+    struct imad__RsIR_RIR;
+    struct imad_pseudo__RsIR_RIR;
+    struct imad_x__RsIR_RIR;
+    struct imad_x_pseudo__RsIR_RIR;
+    struct imad_wide__RsIR_RIR;
+    struct imad_wide_pseudo__RsIR_RIR;
+    struct imad_wide_x__RsIR_RIR;
+    struct imad_wide_x_pseudo__RsIR_RIR;
+    struct imad_hi__RsIR_RIR;
+    struct imad_hi_pseudo__RsIR_RIR;
+    struct imad_hi_x__RsIR_RIR;
+    struct imad_hi_x_pseudo__RsIR_RIR;
+    struct imad__RUR_RUR;
+    struct imad_pseudo__RUR_RUR;
+    struct imad_x__RUR_RUR;
+    struct imad_x_pseudo__RUR_RUR;
+    struct imad_wide__RUR_RUR;
+    struct imad_wide_pseudo__RUR_RUR;
+    struct imad_wide_x__RUR_RUR;
+    struct imad_wide_x_pseudo__RUR_RUR;
+    struct imad_hi__RUR_RUR;
+    struct imad_hi_pseudo__RUR_RUR;
+    struct imad_hi_x__RUR_RUR;
+    struct imad_hi_x_pseudo__RUR_RUR;
+    struct imad__RRU_RRU;
+    struct imad_pseudo__RRU_RRU;
+    struct imad_x__RRU_RRU;
+    struct imad_x_pseudo__RRU_RRU;
+    struct imad_wide__RRU_RRU;
+    struct imad_wide_pseudo__RRU_RRU;
+    struct imad_wide_x__RRU_RRU;
+    struct imad_wide_x_pseudo__RRU_RRU;
+    struct imad_hi__RRU_RRU;
+    struct imad_hi_pseudo__RRU_RRU;
+    struct imad_hi_x__RRU_RRU;
+    struct imad_hi_x_pseudo__RRU_RRU;
+}  // namespace IMAD
+namespace IMUL {
+    // one struct per variant (slug = variant class)
+    struct imul__RRR_RRR;
+    struct imul_wide__RRR_RRR;
+    struct imul__RsIR_RIR;
+    struct imul_wide__RsIR_RIR;
+    struct imul__RUR_RUR;
+    struct imul_wide__RUR_RUR;
+}  // namespace IMUL
+namespace IDP {
+    // one struct per variant (slug = variant class)
+    struct idp_2a__R;
+    struct idp_4a__R;
+    struct idp_2a__URb;
+    struct idp_4a__URb;
+}  // namespace IDP
+namespace IDP4A {
+    // one struct per variant (slug = variant class)
+    struct idp4a__R;
+    struct idp4a__URb;
+}  // namespace IDP4A
+namespace DMUL {
+    // one struct per variant (slug = variant class)
+    struct dmul__RRR_RR;
+    struct dmul__RsIR_RI;
+    struct dmul__RUR_RU;
+}  // namespace DMUL
+namespace DADD {
+    // one struct per variant (slug = variant class)
+    struct dadd__RRR_RR;
+    struct dadd__RRsI_RI;
+    struct dadd__RRU_RU;
+}  // namespace DADD
+namespace DSETP {
+    // one struct per variant (slug = variant class)
+    struct dsetp__RRR_RR;
+    struct dsetp_simple__RRR_RR;
+    struct dsetp__RRsI_RI;
+    struct dsetp_simple__RRsI_RI;
+    struct dsetp__RRU_RU;
+    struct dsetp_simple__RRU_RU;
+}  // namespace DSETP
+namespace DFMA {
+    // one struct per variant (slug = variant class)
+    struct dfma__RRR_RRR;
+    struct dfma__RRsI_RRI;
+    struct dfma__RsIR_RIR;
+    struct dfma__RUR_RUR;
+    struct dfma__RRU_RRU;
+}  // namespace DFMA
+namespace CLMAD {
+    // one struct per variant (slug = variant class)
+    struct clmad__RRR_RRR;
+    struct clmad__RUR_RUR;
+    struct clmad__RRU_RRU;
+}  // namespace CLMAD
+namespace HADD2 {
+    // one struct per variant (slug = variant class)
+    struct hadd2_F32__RR;
+    struct hadd2_F32_fixed__RR;
+    struct hadd2__RR;
+    struct hadd2_fixed__RR;
+    struct hadd2_F32__RI;
+    struct hadd2_F32i_;
+    struct hadd2__RI;
+    struct hadd2_fixed__RI;
+    struct hadd2_F32__RU;
+    struct hadd2_F32_fixed__RU;
+    struct hadd2__RU;
+    struct hadd2_fixed__RU;
+}  // namespace HADD2
+namespace HFMA2 {
+    // one struct per variant (slug = variant class)
+    struct hfma2__RRR;
+    struct hfma2_fixed__RRR;
+    struct hfma2_mma__RRR;
+    struct hfma2_mma_relu__RRR;
+    struct hfma2_relu__RRR;
+    struct hfma2_relu_fixed__RRR;
+    struct hfma2__RRI;
+    struct hfma2_fixed__RRI;
+    struct hfma2_mma__RRI;
+    struct hfma2_mma_relu__RRI;
+    struct hfma2_relu__RRI;
+    struct hfma2_relu_fixed__RRI;
+    struct hfma2__RIR;
+    struct hfma2_fixed__RIR;
+    struct hfma2_mma__RIR;
+    struct hfma2_mma_relu__RIR;
+    struct hfma2_relu__RIR;
+    struct hfma2_relu_fixed__RIR;
+    struct hfma2__RUR;
+    struct hfma2_fixed__RUR;
+    struct hfma2_mma__RUR;
+    struct hfma2_mma_relu__RUR;
+    struct hfma2_relu__RUR;
+    struct hfma2_relu_fixed__RUR;
+    struct hfma2__RRU;
+    struct hfma2_fixed__RRU;
+    struct hfma2_mma__RRU;
+    struct hfma2_mma_relu__RRU;
+    struct hfma2_relu__RRU;
+    struct hfma2_relu_fixed__RRU;
+}  // namespace HFMA2
+namespace HMUL2 {
+    // one struct per variant (slug = variant class)
+    struct hmul2__RR;
+    struct hmul2_fixed__RR;
+    struct hmul2__RI;
+    struct hmul2_fixed__RI;
+    struct hmul2__RU;
+    struct hmul2_fixed__RU;
+}  // namespace HMUL2
+namespace HSET2 {
+    // one struct per variant (slug = variant class)
+    struct hset2__RR;
+    struct hset2_fixed__RR;
+    struct hset2_noBop__RR;
+    struct hset2_noBop_fixed__RR;
+    struct hset2__RI;
+    struct hset2_fixed__RI;
+    struct hset2_noBop__RI;
+    struct hset2_noBop_fixed__RI;
+    struct hset2__RU;
+    struct hset2_fixed__RU;
+    struct hset2_noBop__RU;
+    struct hset2_noBop_fixed__RU;
+}  // namespace HSET2
+namespace HSETP2 {
+    // one struct per variant (slug = variant class)
+    struct hsetp2__RR;
+    struct hsetp2_fixed__RR;
+    struct hsetp2_noBop__RR;
+    struct hsetp2_noBop_fixed__RR;
+    struct hsetp2__RI;
+    struct hsetp2_fixed__RI;
+    struct hsetp2_noBop__RI;
+    struct hsetp2_noBop_fixed__RI;
+    struct hsetp2__RU;
+    struct hsetp2_fixed__RU;
+    struct hsetp2_noBop__RU;
+    struct hsetp2_noBop_fixed__RU;
+}  // namespace HSETP2
+namespace IADD {
+    // one struct per variant (slug = variant class)
+    struct iadd_64_noimm__RRR_RRR;
+    struct iadd_64_x_noimm__RRR_RRR;
+    struct iadd_noimm__RRR_RRR;
+    struct iadd_x_noimm__RRR_RRR;
+    struct iadd_64_imm__RsIR_RIR;
+    struct iadd_64_x_imm__RIR_RIR;
+    struct iadd_imm__RsIR_RIR;
+    struct iadd_x_imm__RIR_RIR;
+    struct iadd_64_noimm__RUR_RUR;
+    struct iadd_64_x_noimm__RUR_RUR;
+    struct iadd_noimm__RUR_RUR;
+    struct iadd_x_noimm__RUR_RUR;
+}  // namespace IADD
+namespace VIADD {
+    // one struct per variant (slug = variant class)
+    struct viadd__RRR_RRR;
+    struct viadd__RuIR_RIR;
+    struct viadd__RUR_RUR;
+}  // namespace VIADD
+namespace IMMA {
+    // one struct per variant (slug = variant class)
+    struct imma_;
+    struct imma_sp_;
+}  // namespace IMMA
+namespace I2I {
+    // one struct per variant (slug = variant class)
+    struct i2i__RRR_RRR;
+    struct i2i__RsIR_RIR;
+    struct i2i__RUR_RUR;
+}  // namespace I2I
+namespace I2IP {
+    // one struct per variant (slug = variant class)
+    struct i2ip_24__RRR_RRR;
+    struct i2ip_24_relu__RRR_RRR;
+    struct i2ip_28__RRR_RRR;
+    struct i2ip_28_relu__RRR_RRR;
+    struct i2ip__RRR_RRR;
+    struct i2ip_relu__RRR_RRR;
+    struct i2ip_24__RsIR_RIR;
+    struct i2ip_24_relu__RsIR_RIR;
+    struct i2ip_28__RsIR_RIR;
+    struct i2ip_28_relu__RsIR_RIR;
+    struct i2ip__RsIR_RIR;
+    struct i2ip_relu__RsIR_RIR;
+    struct i2ip_24__RUR_RUR;
+    struct i2ip_24_relu__RUR_RUR;
+    struct i2ip_28__RUR_RUR;
+    struct i2ip_28_relu__RUR_RUR;
+    struct i2ip__RUR_RUR;
+    struct i2ip_relu__RUR_RUR;
+}  // namespace I2IP
+namespace MOVM {
+    // one struct per variant (slug = variant class)
+    struct movm_;
+}  // namespace MOVM
+namespace HMMA {
+    // one struct per variant (slug = variant class)
+    struct hmma_sparse_;
+    struct hmma_x8_;
+    struct hmma_sparse_indexedRF_;
+    struct hmma_x8_indexedRF_;
+}  // namespace HMMA
+namespace F2FP {
+    // one struct per variant (slug = variant class)
+    struct f2fp_4b_upconvert__RRR;
+    struct f2fp_8b_upconvert__RRR;
+    struct f2fp_E8_upconvert__RRR;
+    struct f2fp__RRR;
+    struct f2fp_default_dst_src__RRR;
+    struct f2fp_f16_to_4b_downconvert__RRR;
+    struct f2fp_f16_to_8b_downconvert__RRR;
+    struct f2fp_f16_to_mx8_downconvert_scale__RRR;
+    struct f2fp_f32_to_4b_downconvert__RRR;
+    struct f2fp_f32_to_8b_downconvert__RRR;
+    struct f2fp_f32_to_mx8_downconvert_scale__RRR;
+    struct f2fp_merge_c__RRR;
+    struct f2fp_merge_c_default_dst_src__RRR;
+    struct f2fp_tf32__RRR;
+    struct f2fp_tf32_default_src__RRR;
+    struct f2fp_f16_to_4b_downconvert__RRI;
+    struct f2fp_f16_to_8b_downconvert__RRI;
+    struct f2fp_f16_to_mx8_downconvert_scale__RRI;
+    struct f2fp_f32_to_4b_downconvert__RRI;
+    struct f2fp_f32_to_8b_downconvert__RRI;
+    struct f2fp_f32_to_mx8_downconvert_scale__RRI;
+    struct f2fp_merge_c__RRI;
+    struct f2fp_merge_c_default_dst_src__RRI;
+    struct f2fp_4b_upconvert_scale__RRR;
+    struct f2fp_8b_upconvert_scale__RRR;
+    struct f2fp_4b_upconvert__RIR;
+    struct f2fp_8b_upconvert__RIR;
+    struct f2fp_E8_upconvert__RIR;
+    struct f2fp__RIR;
+    struct f2fp_default_dst_src__RIR;
+    struct f2fp_f16_to_4b_downconvert__RIR;
+    struct f2fp_f16_to_8b_downconvert__RIR;
+    struct f2fp_f16_to_mx8_downconvert_scale__RIR;
+    struct f2fp_f32_to_4b_downconvert__RIR;
+    struct f2fp_f32_to_8b_downconvert__RIR;
+    struct f2fp_f32_to_mx8_downconvert_scale__RIR;
+    struct f2fp_merge_c__RIR;
+    struct f2fp_merge_c_default_dst_src__RIR;
+    struct f2fp_tf32__RIR;
+    struct f2fp_tf32_default_src__RIR;
+    struct f2fp_4b_upconvert_scale__RIR;
+    struct f2fp_8b_upconvert_scale__RIR;
+    struct f2fp_4b_upconvert_scale__RRI;
+    struct f2fp_8b_upconvert_scale__RRI;
+    struct f2fp_4b_upconvert_scale__RUR;
+    struct f2fp_8b_upconvert_scale__RUR;
+    struct f2fp_4b_upconvert_scale__RRU;
+    struct f2fp_8b_upconvert_scale__RRU;
+    struct f2fp_4b_upconvert__RUR;
+    struct f2fp_8b_upconvert__RUR;
+    struct f2fp_E8_upconvert__RUR;
+    struct f2fp__RUR;
+    struct f2fp_default_dst_src__RUR;
+    struct f2fp_f16_to_4b_downconvert__RUR;
+    struct f2fp_f16_to_8b_downconvert__RUR;
+    struct f2fp_f16_to_mx8_downconvert_scale__RUR;
+    struct f2fp_f32_to_4b_downconvert__RUR;
+    struct f2fp_f32_to_8b_downconvert__RUR;
+    struct f2fp_f32_to_mx8_downconvert_scale__RUR;
+    struct f2fp_merge_c__RUR;
+    struct f2fp_merge_c_default_dst_src__RUR;
+    struct f2fp_tf32__RUR;
+    struct f2fp_tf32_default_src__RUR;
+    struct f2fp_f16_to_4b_downconvert__RRU;
+    struct f2fp_f16_to_8b_downconvert__RRU;
+    struct f2fp_f16_to_mx8_downconvert_scale__RRU;
+    struct f2fp_f32_to_4b_downconvert__RRU;
+    struct f2fp_f32_to_8b_downconvert__RRU;
+    struct f2fp_f32_to_mx8_downconvert_scale__RRU;
+    struct f2fp_merge_c__RRU;
+    struct f2fp_merge_c_default_dst_src__RRU;
+}  // namespace F2FP
+namespace DMMA {
+    // one struct per variant (slug = variant class)
+    struct dmma_;
+}  // namespace DMMA
+namespace HMNMX2 {
+    // one struct per variant (slug = variant class)
+    struct hmnmx2__RRR;
+    struct hmnmx2_fixed__RRR;
+    struct hmnmx2_pred__RRR;
+    struct hmnmx2_pred_fixed__RRR;
+    struct hmnmx2__RIR;
+    struct hmnmx2_fixed__RIR;
+    struct hmnmx2_pred__RIR;
+    struct hmnmx2_pred_fixed__RIR;
+    struct hmnmx2__RUR;
+    struct hmnmx2_fixed__RUR;
+    struct hmnmx2_pred__RUR;
+    struct hmnmx2_pred_fixed__RUR;
+}  // namespace HMNMX2
+namespace F2IP {
+    // one struct per variant (slug = variant class)
+    struct f2ip__RRR;
+    struct f2ip__RRI;
+    struct f2ip__RIR;
+    struct f2ip__RUR;
+    struct f2ip__RRU;
+}  // namespace F2IP
+namespace I2FP {
+    // one struct per variant (slug = variant class)
+    struct i2fp__RRR;
+    struct i2fp__RsIR;
+    struct i2fp__RuIR;
+    struct i2fp__RUR;
+}  // namespace I2FP
+namespace VIMNMX {
+    // one struct per variant (slug = variant class)
+    struct vimnmx__RRR_RRR;
+    struct vimnmx__RIR_RsIR;
+    struct vimnmx__RUR_RUR;
+}  // namespace VIMNMX
+namespace QMMA {
+    // one struct per variant (slug = variant class)
+    struct qmma_;
+    struct qmma_rowcol_;
+    struct qmma_sp_;
+    struct qmma_sp_rowcol_;
+    struct qmma_scale_;
+    struct qmma_sp_scale_;
+}  // namespace QMMA
+namespace R2UR {
+    // one struct per variant (slug = variant class)
+    struct r2ur__OR;
+    struct r2ur__noOR;
+    struct r2ur_nonconformity__OR;
+    struct r2ur_nonconformity__noOR;
+}  // namespace R2UR
+namespace FLO {
+    // one struct per variant (slug = variant class)
+    struct flo__RRR_RRR;
+    struct flo__RuIR_RIR;
+    struct flo__RUR_RUR;
+}  // namespace FLO
+namespace BREV {
+    // one struct per variant (slug = variant class)
+    struct brev__RRR_RRR;
+    struct brev__RuIR_RIR;
+    struct brev__RUR_RUR;
+}  // namespace BREV
+namespace FCHK {
+    // one struct per variant (slug = variant class)
+    struct fchk__RRR_RR;
+    struct fchk__RIR_RI;
+    struct fchk__RUR_RU;
+}  // namespace FCHK
+namespace F2F {
+    // one struct per variant (slug = variant class)
+    struct f2f_f32_downconvert__RRR_RRR;
+    struct f2f_f32_upconvert__RRR_RRR;
+    struct f2f_f32_upconvert_swap__RRR_RRR;
+    struct f2f_f64_downconvert__RRR_RRR;
+    struct f2f_f64_upconvert__R_R16_R_RRR;
+    struct f2f_f64_upconvert__R_R32_R_RRR;
+    struct f2f_f64_upconvert_swap__R_R16_R_RRR;
+    struct f2f_f64_upconvert_swap__R_R32_R_RRR;
+    struct f2f_f32_downconvert__RIR_RIR;
+    struct f2f_f32_upconvert__RIR_RIR;
+    struct f2f_f32_upconvert_swap__RIR_RIR;
+    struct f2f_f64_downconvert__RIR_RIR;
+    struct f2f_f64_upconvert__R_32I_R_RIR;
+    struct f2f_f64_upconvert__R_I16_R_RIR;
+    struct f2f_f64_upconvert_swap__R_32I_R_RIR;
+    struct f2f_f64_upconvert_swap__R_I16_R_RIR;
+    struct f2f_f32_downconvert__RUR_RUR;
+    struct f2f_f32_upconvert__RUR_RUR;
+    struct f2f_f32_upconvert_swap__RUR_RUR;
+    struct f2f_f64_downconvert__RUR_RUR;
+    struct f2f_f64_upconvert__R_UR16_R_RUR;
+    struct f2f_f64_upconvert__R_UR32_R_RUR;
+    struct f2f_f64_upconvert_swap__R_UR16_R_RUR;
+    struct f2f_f64_upconvert_swap__R_UR32_R_RUR;
+}  // namespace F2F
+namespace F2I {
+    // one struct per variant (slug = variant class)
+    struct f2i__Rb_16b;
+    struct f2i__Rb_32b;
+    struct f2i__Rb_bf16;
+    struct f2i_swap__Rb_16b;
+    struct f2i_swap__Rb_32b;
+    struct f2i_swap__Rb_bf16;
+    struct f2i_Rd64__Rb_16b;
+    struct f2i_Rd64__Rb_32b;
+    struct f2i_Rd64__Rb_64b;
+    struct f2i_Rd64__Rb_bf16;
+    struct f2i_Rd64_swap__Rb_16b;
+    struct f2i_Rd64_swap__Rb_32b;
+    struct f2i_Rd64_swap__Rb_64b;
+    struct f2i_Rd64_swap__Rb_bf16;
+    struct f2i__Rb_64b;
+    struct f2i_swap__Rb_64b;
+    struct f2i__IU_32b;
+    struct f2i__Ib_16b;
+    struct f2i__Ib_bf16;
+    struct f2i_swap__IU_32b;
+    struct f2i_swap__Ib_16b;
+    struct f2i_swap__Ib_bf16;
+    struct f2i_Rd64__IU_32b;
+    struct f2i_Rd64__Ib_16b;
+    struct f2i_Rd64__Ib_64b;
+    struct f2i_Rd64__Ib_bf16;
+    struct f2i_Rd64_swap__IU_32b;
+    struct f2i_Rd64_swap__Ib_16b;
+    struct f2i_Rd64_swap__Ib_64b;
+    struct f2i_Rd64_swap__Ib_bf16;
+    struct f2i__Ib_64b;
+    struct f2i_swap__Ib_64b;
+    struct f2i__URb_16b;
+    struct f2i__URb_32b;
+    struct f2i__URb_bf16;
+    struct f2i_swap__URb_16b;
+    struct f2i_swap__URb_32b;
+    struct f2i_swap__URb_bf16;
+    struct f2i_Rd64__URb_16b;
+    struct f2i_Rd64__URb_32b;
+    struct f2i_Rd64__URb_64b;
+    struct f2i_Rd64__URb_bf16;
+    struct f2i_Rd64_swap__URb_16b;
+    struct f2i_Rd64_swap__URb_32b;
+    struct f2i_Rd64_swap__URb_64b;
+    struct f2i_Rd64_swap__URb_bf16;
+    struct f2i__URb_64b;
+    struct f2i_swap__URb_64b;
+}  // namespace F2I
+namespace I2F {
+    // one struct per variant (slug = variant class)
+    struct i2f__Rb_16b;
+    struct i2f__Rb_32b;
+    struct i2f__Rb_8b;
+    struct i2f_Rd64__Rb_16b;
+    struct i2f_Rd64__Rb_32b;
+    struct i2f_Rd64__Rb_64b;
+    struct i2f_Rd64__Rb_8b;
+    struct i2f__Rb_64b;
+    struct i2f__IS_32b;
+    struct i2f__IU_32b;
+    struct i2f_Rd64__IS_32b;
+    struct i2f_Rd64__IS_64b;
+    struct i2f_Rd64__IU_32b;
+    struct i2f_Rd64__IU_64b;
+    struct i2f__IS_64b;
+    struct i2f__IU_64b;
+    struct i2f__UR_16b;
+    struct i2f__UR_32b;
+    struct i2f__UR_8b;
+    struct i2f_Rd64__UR_16b;
+    struct i2f_Rd64__UR_32b;
+    struct i2f_Rd64__UR_64b;
+    struct i2f_Rd64__UR_8b;
+    struct i2f__UR_64b;
+}  // namespace I2F
+namespace FRND {
+    // one struct per variant (slug = variant class)
+    struct frnd__bf16_R;
+    struct frnd__f16_R;
+    struct frnd__f32_R;
+    struct frnd_swap__bf16_R;
+    struct frnd_swap__f16_R;
+    struct frnd_swap__f32_R;
+    struct frnd__f64_R;
+    struct frnd_swap__f64_R;
+    struct frnd__bf16_I;
+    struct frnd__f16_I;
+    struct frnd__f32_I;
+    struct frnd_swap__bf16_I;
+    struct frnd_swap__f16_I;
+    struct frnd_swap__f32_I;
+    struct frnd__f64_I;
+    struct frnd_swap__f64_I;
+    struct frnd__bf16_URb;
+    struct frnd__f16_URb;
+    struct frnd__f32_URb;
+    struct frnd_swap__bf16_URb;
+    struct frnd_swap__f16_URb;
+    struct frnd_swap__f32_URb;
+    struct frnd__f64_URb;
+    struct frnd_swap__f64_URb;
+}  // namespace FRND
+namespace MUFU {
+    // one struct per variant (slug = variant class)
+    struct mufu__RRR_RR;
+    struct mufu_fp16__RR;
+    struct mufu_fp16_swap__RR;
+    struct mufu__RIR_RI;
+    struct mufu_fp16__RI;
+    struct mufu__RUR_RU;
+    struct mufu_fp16__RU;
+    struct mufu_fp16_swap__RU;
+}  // namespace MUFU
+namespace POPC {
+    // one struct per variant (slug = variant class)
+    struct popc__RRR_RRR;
+    struct popc__RuIR_RIR;
+    struct popc__RUR_RUR;
+}  // namespace POPC
+namespace B2R {
+    // one struct per variant (slug = variant class)
+    struct b2r__BAR;
+    struct b2r__RESULT;
+    struct b2r__WARP;
+}  // namespace B2R
+namespace BAR {
+    // one struct per variant (slug = variant class)
+    struct bar__ARV_RR_RR;
+    struct bar__RED_RR_RR;
+    struct bar__RED_dfrBlk_RR_RR;
+    struct bar__SCAN_RR_RR;
+    struct bar__SYNC_RR_RR;
+    struct bar__SYNC_dfrBlk_RR_RR;
+    struct bar__ARV_RI_RI;
+    struct bar__RED_RI_optionalCount_RI;
+    struct bar__RED_dfrBlk_RI_optionalCount_RI;
+    struct bar__SCAN_RI_RI;
+    struct bar__SYNC_RI_optionalCount_RI;
+    struct bar__SYNC_dfrBlk_RI_optionalCount_RI;
+    struct bar__ARV_IR_IR;
+    struct bar__RED_IR_optionalCount_IR;
+    struct bar__RED_dfrBlk_IR_optionalCount_IR;
+    struct bar__SCAN_IR_IR;
+    struct bar__SYNC_IR_optionalCount_IR;
+    struct bar__SYNC_dfrBlk_IR_optionalCount_IR;
+    struct bar__ARV_II_II;
+    struct bar__RED_II_optionalCount_II;
+    struct bar__RED_dfrBlk_II_optionalCount_II;
+    struct bar__SCAN_II_II;
+    struct bar__SYNCALL_dfrBlk_noSrc_II;
+    struct bar__SYNCALL_noSrc_II;
+    struct bar__SYNC_II_optionalCount_II;
+    struct bar__SYNC_dfrBlk_II_optionalCount_II;
+}  // namespace BAR
+namespace R2B {
+    // one struct per variant (slug = variant class)
+    struct r2b_;
+}  // namespace R2B
+namespace SETCTAID {
+    // one struct per variant (slug = variant class)
+    struct setctaid_;
+}  // namespace SETCTAID
+namespace ALD {
+    // one struct per variant (slug = variant class)
+    struct ald_PHYS_;
+    struct ald__LOGICAL_RaRZ_default;
+    struct ald__PATCH_RaNonRZOffset_P_RbRZ;
+    struct ald__PATCH_RaRZ_P_RbRZ;
+    struct ald_UR__LOGICAL_URa_default;
+    struct ald_UR__PATCH_URa_P_RbRZ;
+}  // namespace ALD
+namespace AST {
+    // one struct per variant (slug = variant class)
+    struct ast_PHYS_;
+    struct ast__LOGICAL_RaRZ;
+    struct ast__PATCH_RaNonRZOffset;
+    struct ast__PATCH_RaRZ;
+    struct ast_UR__LOGICAL_URa;
+    struct ast_UR__PATCH_RaRZ_URa;
+}  // namespace AST
+namespace OUT {
+    // one struct per variant (slug = variant class)
+    struct out__CUT;
+    struct out__EMIT_Rb;
+    struct out__FINAL;
+    struct out_final_rz_;
+    struct out__EMIT_Imm;
+    struct out__EMIT_URb;
+}  // namespace OUT
+namespace IPA {
+    // one struct per variant (slug = variant class)
+    struct ipa_;
+    struct ipa_offset__IPA_Rb;
+    struct ipa_offset__IPA_Ib;
+    struct ipa_ur_;
+    struct ipa_ur_offset__IPA_URa_Rb;
+    struct ipa_ur_offset__IPA_URa_Ib;
+}  // namespace IPA
+namespace CALL {
+    // one struct per variant (slug = variant class)
+    struct call_abs__RRR;
+    struct call_rel__RRR;
+    struct call_rel_imm__RRR;
+    struct call_rel_reg__RRR;
+    struct call_abs__RIR;
+    struct call_rel__RIR;
+    struct call_rel_imm__RIR;
+    struct call_abs__URIR;
+    struct call_rel__URIR;
+    struct call_rel_imm__URIR;
+    struct call_rel_reg__URIR;
+}  // namespace CALL
+namespace WARPSYNC {
+    // one struct per variant (slug = variant class)
+    struct warpsync__RRR;
+    struct warpsync_collective__RRR;
+    struct warpsync_rel__RRR;
+    struct warpsync_collective__RIR;
+    struct warpsync_rel__RIR;
+}  // namespace WARPSYNC
+namespace LEPC {
+    // one struct per variant (slug = variant class)
+    struct lepc__RRR;
+    struct lepc__R_I_R;
+    struct lepc_rel_;
+}  // namespace LEPC
+namespace RPCMOV {
+    // one struct per variant (slug = variant class)
+    struct rpcmov_dstPc_;
+    struct rpcmov_srcPc_;
+    struct rpcmov_dstPc_imm_;
+    struct rpcmov_dstPc64__Imm;
+    struct rpcmov_dstPc_URb_;
+    struct rpcmov_dstPc64__URb;
+}  // namespace RPCMOV
+namespace BMOV {
+    // one struct per variant (slug = variant class)
+    struct bmov_clear__Rd;
+    struct bmov_pquad__RRR;
+    struct bmov_dst64__R;
+    struct bmov_pquad__RIR;
+    struct bmov_dst64__I;
+    struct bmov_pquad__RUR;
+    struct bmov_dst64__UR;
+}  // namespace BMOV
+namespace NANOTRAP {
+    // one struct per variant (slug = variant class)
+    struct nanotrap__R;
+    struct nanotrap__I;
+    struct nanotrap__U;
+}  // namespace NANOTRAP
+namespace NANOSLEEP {
+    // one struct per variant (slug = variant class)
+    struct nanosleep__R;
+    struct nanosleep__I;
+    struct nanosleep__U;
+}  // namespace NANOSLEEP
+namespace TEX {
+    // one struct per variant (slug = variant class)
+    struct tex_b_urc_;
+    struct tex_scr_b_urc_;
+    struct tex_b_noConst_;
+    struct tex_scr_b_noConst_;
+    struct tex_scr_urc_;
+    struct tex_urc_;
+}  // namespace TEX
+namespace TMML {
+    // one struct per variant (slug = variant class)
+    struct tmml_b_noConst_;
+    struct tmml_urc_;
+    struct tmml_b_urc_;
+}  // namespace TMML
+namespace TXQ {
+    // one struct per variant (slug = variant class)
+    struct txq_b_noConst_;
+    struct txq_urc_;
+    struct txq_b_urc_;
+}  // namespace TXQ
+namespace LDG {
+    // one struct per variant (slug = variant class)
+    struct ldg__sImmOffset;
+    struct ldg__uImmOffset;
+    struct ldg_256_memdesc__Ra64;
+    struct ldg_256_rml2_memdesc__Ra64;
+    struct ldg_256_rml2_uniform__Ra32;
+    struct ldg_256_rml2_uniform__Ra64;
+    struct ldg_256_rml2_uniform__RaRZ;
+    struct ldg_256_uniform__Ra32;
+    struct ldg_256_uniform__Ra64;
+    struct ldg_256_uniform__RaRZ;
+    struct ldg_memdesc__Ra64;
+    struct ldg_uniform__Ra32;
+    struct ldg_uniform__Ra64;
+    struct ldg_uniform__RaRZ;
+}  // namespace LDG
+namespace ST {
+    // one struct per variant (slug = variant class)
+    struct st__sImmOffset;
+    struct st__uImmOffset;
+    struct st_memdesc__Ra64;
+    struct st_uniform__Ra32;
+    struct st_uniform__Ra64;
+    struct st_uniform__RaRZ;
+}  // namespace ST
+namespace STG {
+    // one struct per variant (slug = variant class)
+    struct stg__sImmOffset;
+    struct stg__uImmOffset;
+    struct stg_256_memdesc__Ra64;
+    struct stg_256_uniform__Ra32;
+    struct stg_256_uniform__Ra64;
+    struct stg_256_uniform__RaRZ;
+    struct stg_memdesc__Ra64;
+    struct stg_uniform__Ra32;
+    struct stg_uniform__Ra64;
+    struct stg_uniform__RaRZ;
+}  // namespace STG
+namespace STL {
+    // one struct per variant (slug = variant class)
+    struct stl__sImmOffset;
+    struct stl__uImmOffset;
+    struct stl_memdesc_;
+    struct stl_uniform_;
+}  // namespace STL
+namespace STS {
+    // one struct per variant (slug = variant class)
+    struct sts__sImmOffset;
+    struct sts__uImmOffset;
+    struct sts_uniform_;
+}  // namespace STS
+namespace SHFL {
+    // one struct per variant (slug = variant class)
+    struct shfl__RRR;
+    struct shfl__RRI;
+    struct shfl__RIR;
+    struct shfl__RII;
+}  // namespace SHFL
+namespace ATOM {
+    // one struct per variant (slug = variant class)
+    struct atom_int__RaNonRZ;
+    struct atom_int__RaRZ;
+    struct atom_cas__RaNonRZ_CAS;
+    struct atom_cas__RaNonRZ_CAST;
+    struct atom_cas__RaRZ_CAS;
+    struct atom_cas__RaRZ_CAST;
+    struct atom_fp__RaNonRZ;
+    struct atom_fp__RaRZ;
+    struct atom_int_uniform__Ra32;
+    struct atom_int_uniform__Ra64;
+    struct atom_int_uniform__RaRZ;
+    struct atom_int_uniform__memdesc;
+    struct atom_fp_uniform__Ra32;
+    struct atom_fp_uniform__Ra64;
+    struct atom_fp_uniform__RaRZ;
+    struct atom_fp_uniform__memdesc;
+    struct atom_arrive__Ra32_arrive;
+    struct atom_arrive__Ra32_popcinc;
+    struct atom_arrive__Ra64_arrive;
+    struct atom_arrive__Ra64_popcinc;
+    struct atom_arrive__RaRZ_arrive;
+    struct atom_arrive__RaRZ_popcinc;
+}  // namespace ATOM
+namespace ATOMS {
+    // one struct per variant (slug = variant class)
+    struct atoms__RaNonRZ;
+    struct atoms__RaRZ;
+    struct atoms_cas__RaNonRZ;
+    struct atoms_cas__RaRZ;
+    struct atoms_cast_destRd__RaNonRZ;
+    struct atoms_cast_destRd__RaRZ;
+    struct atoms_cast_destPu__RaNonRZ;
+    struct atoms_cast_destPu__RaRZ;
+    struct atoms_uniform_;
+    struct atoms_arrive__arrive;
+    struct atoms_arrive__popcinc;
+}  // namespace ATOMS
+namespace REDS {
+    // one struct per variant (slug = variant class)
+    struct atoms_reds__RaNonRZ;
+    struct atoms_reds__RaRZ;
+    struct atoms_reds_uniform_;
+}  // namespace REDS
+namespace CCTLT {
+    // one struct per variant (slug = variant class)
+    struct cctlt__Rb;
+    struct cctlt__URb;
+}  // namespace CCTLT
+namespace SUATOM {
+    // one struct per variant (slug = variant class)
+    struct suatom_reg_;
+    struct suatom_cas_reg_;
+    struct suatom_urc_;
+    struct suatom_r_urc_;
+    struct suatom_cas_urc_;
+    struct suatom_cas_r_urc_;
+}  // namespace SUATOM
+namespace SURED {
+    // one struct per variant (slug = variant class)
+    struct sured_reg_;
+    struct sured_urc_;
+    struct sured_r_urc_;
+}  // namespace SURED
+namespace MATCH {
+    // one struct per variant (slug = variant class)
+    struct match__ALL;
+    struct match__ANY;
+}  // namespace MATCH
+namespace ATOMG {
+    // one struct per variant (slug = variant class)
+    struct atomg_fp__RaNonRZ;
+    struct atomg_fp__RaRZ;
+    struct atomg_int__RaNonRZ;
+    struct atomg_int__RaRZ;
+    struct atomg_cas__RaNonRZ;
+    struct atomg_cas__RaRZ;
+    struct atomg_fp_uniform__Ra32;
+    struct atomg_fp_uniform__Ra64;
+    struct atomg_fp_uniform__RaRZ;
+    struct atomg_fp_uniform__memdesc;
+    struct atomg_int_uniform__Ra32;
+    struct atomg_int_uniform__Ra64;
+    struct atomg_int_uniform__RaRZ;
+    struct atomg_int_uniform__memdesc;
+}  // namespace ATOMG
+namespace QSPC {
+    // one struct per variant (slug = variant class)
+    struct qspc_PuOnly__RaNonRZ;
+    struct qspc_PuOnly__RaRZ;
+    struct qspc_RdOnly__RaNonRZ;
+    struct qspc_RdOnly__RaRZ;
+    struct qspc__RaNonRZ;
+    struct qspc__RaRZ;
+    struct qspc_urb_PuOnly__Ra32;
+    struct qspc_urb_PuOnly__Ra64;
+    struct qspc_urb_PuOnly__RaRZ;
+    struct qspc_urb_RdOnly__Ra32;
+    struct qspc_urb_RdOnly__Ra64;
+    struct qspc_urb_RdOnly__RaRZ;
+    struct qspc_urb__Ra32;
+    struct qspc_urb__Ra64;
+    struct qspc_urb__RaRZ;
+}  // namespace QSPC
+namespace GETLMEMBASE {
+    // one struct per variant (slug = variant class)
+    struct getlmembase_;
+}  // namespace GETLMEMBASE
+namespace SETLMEMBASE {
+    // one struct per variant (slug = variant class)
+    struct setlmembase_;
+}  // namespace SETLMEMBASE
+namespace REDUX {
+    // one struct per variant (slug = variant class)
+    struct redux_;
+}  // namespace REDUX
+namespace TTUST {
+    // one struct per variant (slug = variant class)
+    struct ttust_;
+}  // namespace TTUST
+namespace TTULD {
+    // one struct per variant (slug = variant class)
+    struct ttuld__close;
+    struct ttuld__no_close;
+}  // namespace TTULD
+namespace FADD32I {
+    // one struct per variant (slug = variant class)
+    struct fadd32i_;
+}  // namespace FADD32I
+namespace HADD2_32I {
+    // one struct per variant (slug = variant class)
+    struct hadd2_32i_;
+    struct hadd2_32i_fixed_;
+}  // namespace HADD2_32I
+namespace MXQMMA {
+    // one struct per variant (slug = variant class)
+    struct mxqmma_scale_;
+}  // namespace MXQMMA
+namespace OMMA {
+    // one struct per variant (slug = variant class)
+    struct omma_scale_;
+    struct omma_sp_scale_;
+}  // namespace OMMA
+namespace MOV64IUR {
+    // one struct per variant (slug = variant class)
+    struct mov64iur_imm_;
+    struct mov64iur_ur_;
+}  // namespace MOV64IUR
+namespace PMTRIG {
+    // one struct per variant (slug = variant class)
+    struct pmtrig_;
+}  // namespace PMTRIG
+namespace MOV32I {
+    // one struct per variant (slug = variant class)
+    struct mov32i_;
+}  // namespace MOV32I
+namespace CS2R {
+    // one struct per variant (slug = variant class)
+    struct cs2r_;
+}  // namespace CS2R
+namespace VOTE {
+    // one struct per variant (slug = variant class)
+    struct vote_;
+}  // namespace VOTE
+namespace CSMTEST {
+    // one struct per variant (slug = variant class)
+    struct csmtest_;
+    struct csmtest_bop_;
+    struct csmtest_cmp_;
+}  // namespace CSMTEST
+namespace VOTE_VTG {
+    // one struct per variant (slug = variant class)
+    struct vote_vtg_;
+    struct vote_vtg_bop_;
+    struct vote_vtg_cmp_;
+}  // namespace VOTE_VTG
+namespace ISCADD32I {
+    // one struct per variant (slug = variant class)
+    struct iscadd32i__RIR_RIR;
+}  // namespace ISCADD32I
+namespace LOP32I {
+    // one struct per variant (slug = variant class)
+    struct lop32i_;
+    struct lop32i_optionalPp_;
+}  // namespace LOP32I
+namespace FMUL32I {
+    // one struct per variant (slug = variant class)
+    struct fmul32i_;
+}  // namespace FMUL32I
+namespace FSWZADD {
+    // one struct per variant (slug = variant class)
+    struct fswzadd_;
+}  // namespace FSWZADD
+namespace FFMA32I {
+    // one struct per variant (slug = variant class)
+    struct ffma32i_;
+}  // namespace FFMA32I
+namespace IMUL32I {
+    // one struct per variant (slug = variant class)
+    struct imul32i_lo__RsIR_RIR;
+    struct imul32i_wide__RsIR_RIR;
+}  // namespace IMUL32I
+namespace ELECT {
+    // one struct per variant (slug = variant class)
+    struct elect_Pp_;
+    struct elect_;
+    struct elect_noURa_;
+}  // namespace ELECT
+namespace HFMA2_32I {
+    // one struct per variant (slug = variant class)
+    struct hfma2_32i_;
+    struct hfma2_32i_fixed_;
+}  // namespace HFMA2_32I
+namespace HMUL2_32I {
+    // one struct per variant (slug = variant class)
+    struct hmul2_32i_;
+    struct hmul2_32i_fixed_;
+}  // namespace HMUL2_32I
+namespace IADD32I {
+    // one struct per variant (slug = variant class)
+    struct iadd32i_imm__RsIR_RIR;
+    struct iadd32i_x_imm__RIR_RIR;
+}  // namespace IADD32I
+namespace LDSM {
+    // one struct per variant (slug = variant class)
+    struct ldsm__sImmOffset;
+    struct ldsm_pseudo_ops__sImmOffset;
+    struct ldsm__UR_sI_R;
+    struct ldsm_pseudo_ops__UR_sI_R;
+}  // namespace LDSM
+namespace STSM {
+    // one struct per variant (slug = variant class)
+    struct stsm__sImmOffset;
+    struct stsm__UR_sI_R;
+}  // namespace STSM
+namespace UVIRTCOUNT {
+    // one struct per variant (slug = variant class)
+    struct uvirtcount__imm;
+    struct uvirtcount_one__imm;
+    struct uvirtcount__UR;
+    struct uvirtcount_one__UR;
+}  // namespace UVIRTCOUNT
+namespace UMOV {
+    // one struct per variant (slug = variant class)
+    struct umov__UI;
+    struct umov_imm64_;
+    struct umov_64__UR;
+    struct umov__UR;
+}  // namespace UMOV
+namespace VOTEU {
+    // one struct per variant (slug = variant class)
+    struct voteu_;
+}  // namespace VOTEU
+namespace CS2UR {
+    // one struct per variant (slug = variant class)
+    struct cs2ur_;
+}  // namespace CS2UR
+namespace S2R {
+    // one struct per variant (slug = variant class)
+    struct s2r_;
+}  // namespace S2R
+namespace AL2P {
+    // one struct per variant (slug = variant class)
+    struct al2p__RaNonRZ;
+    struct al2p__RaRZ;
+}  // namespace AL2P
+namespace ISBERD {
+    // one struct per variant (slug = variant class)
+    struct isberd_;
+}  // namespace ISBERD
+namespace PIXLD {
+    // one struct per variant (slug = variant class)
+    struct pixld_;
+}  // namespace PIXLD
+namespace ISBEWR {
+    // one struct per variant (slug = variant class)
+    struct isbewr_;
+}  // namespace ISBEWR
+namespace BSSY {
+    // one struct per variant (slug = variant class)
+    struct bssy_;
+    struct bssy_rel_;
+    struct bssy_reliability_;
+    struct bssy_reliability_rel_;
+}  // namespace BSSY
+namespace BRA {
+    // one struct per variant (slug = variant class)
+    struct bra__CONV_DIV;
+    struct bra__U;
+    struct bra_rel__CONV_DIV;
+    struct bra_rel__U;
+    struct bra_uniform_pred_;
+    struct bra_uniform_pred_rel_;
+    struct bra_uniform_;
+    struct bra_uniform_rel_;
+}  // namespace BRA
+namespace BRX {
+    // one struct per variant (slug = variant class)
+    struct brx_;
+    struct brx_rel_;
+}  // namespace BRX
+namespace JMP {
+    // one struct per variant (slug = variant class)
+    struct jmp_imm__CONV_DIV;
+    struct jmp_imm__U;
+    struct jmp_imm_rel__CONV_DIV;
+    struct jmp_imm_rel__U;
+    struct jmp_imm_uniform_pred_;
+    struct jmp_imm_uniform_pred_rel_;
+    struct jmp_imm_uniform_;
+    struct jmp_imm_uniform_rel_;
+}  // namespace JMP
+namespace JMX {
+    // one struct per variant (slug = variant class)
+    struct jmx_;
+    struct jmx_rel_;
+}  // namespace JMX
+namespace RET {
+    // one struct per variant (slug = variant class)
+    struct ret__ABS;
+    struct ret__REL;
+    struct ret_rel__RIR;
+    struct ret_rel_reg__RIR;
+    struct ret__ABS_UR;
+    struct ret__REL_UR;
+    struct ret_rel__URIR;
+    struct ret_rel_reg__URIR;
+}  // namespace RET
+namespace IDE {
+    // one struct per variant (slug = variant class)
+    struct ide_;
+}  // namespace IDE
+namespace BPT {
+    // one struct per variant (slug = variant class)
+    struct bpt__noDRAIN;
+    struct bpt__onlyDRAIN;
+}  // namespace BPT
+namespace LD {
+    // one struct per variant (slug = variant class)
+    struct ld__sImmOffset;
+    struct ld__uImmOffset;
+    struct ld_memdesc__Ra64;
+    struct ld_uniform__Ra32;
+    struct ld_uniform__Ra64;
+    struct ld_uniform__RaRZ;
+}  // namespace LD
+namespace LDL {
+    // one struct per variant (slug = variant class)
+    struct ldl__sImmOffset;
+    struct ldl__uImmOffset;
+    struct ldl_memdesc_;
+    struct ldl_uniform_;
+}  // namespace LDL
+namespace LDS {
+    // one struct per variant (slug = variant class)
+    struct lds__sImmOffset;
+    struct lds__uImmOffset;
+    struct lds_uniform_;
+}  // namespace LDS
+namespace REDG {
+    // one struct per variant (slug = variant class)
+    struct redg_int__RaNonRZ;
+    struct redg_int__RaRZ;
+    struct redg_fp__RaNonRZ;
+    struct redg_fp__RaRZ;
+    struct redg_int_uniform__Ra32;
+    struct redg_int_uniform__Ra64;
+    struct redg_int_uniform__RaRZ;
+    struct redg_int_uniform__memdesc;
+    struct redg_fp_uniform__Ra32;
+    struct redg_fp_uniform__Ra64;
+    struct redg_fp_uniform__RaRZ;
+    struct redg_fp_uniform__memdesc;
+}  // namespace REDG
+namespace CCTL {
+    // one struct per variant (slug = variant class)
+    struct cctl__IVALL_WBALL_D_U_noSrc;
+    struct cctl__sImmOffset;
+    struct cctl__sImmOffset_pf2;
+    struct cctl__sImmOffset_pf2_q;
+    struct cctl__sImmOffset_rml2;
+    struct cctl__uImmOffset;
+    struct cctl__uImmOffset_pf2;
+    struct cctl__uImmOffset_pf2_q;
+    struct cctl__uImmOffset_rml2;
+    struct cctl_c_ldc_const_bound_;
+    struct cctl_c_ldc_va_;
+    struct cctl_c_ldcu_va_;
+    struct cctl_c_ldc_const_bindless_;
+    struct cctl_c_ldcu_const_bindless_;
+    struct cctl_c_ldcu_const_bound_;
+    struct cctl__sUROffset;
+    struct cctl__sUROffset_pf2;
+    struct cctl__sUROffset_pf2_q;
+    struct cctl__sUROffset_rml2;
+    struct cctl__uUROffset;
+    struct cctl__uUROffset_pf2;
+    struct cctl__uUROffset_pf2_q;
+    struct cctl__uUROffset_rml2;
+}  // namespace CCTL
+namespace CCTLL {
+    // one struct per variant (slug = variant class)
+    struct cctll__sImmOffset;
+    struct cctll__uImmOffset;
+    struct cctll__Ra_RZ_UR;
+    struct cctll__Ra_nonRz_UR;
+}  // namespace CCTLL
+namespace SULD {
+    // one struct per variant (slug = variant class)
+    struct suld_p_reg_;
+    struct suld_d_reg_;
+    struct suld_p_urc_;
+    struct suld_p_r_urc_;
+    struct suld_d_urc_;
+    struct suld_d_r_urc_;
+}  // namespace SULD
+namespace SUST {
+    // one struct per variant (slug = variant class)
+    struct sust_p_reg_;
+    struct sust_d_reg_;
+    struct sust_p_urc_;
+    struct sust_p_r_urc_;
+    struct sust_d_urc_;
+    struct sust_d_r_urc_;
+}  // namespace SUST
+namespace SUQUERY {
+    // one struct per variant (slug = variant class)
+    struct suquery_reg_;
+    struct suquery_r_urc_;
+    struct suquery_urc_;
+}  // namespace SUQUERY
+namespace S2UR {
+    // one struct per variant (slug = variant class)
+    struct s2ur_;
+}  // namespace S2UR
+namespace TTUMACROFUSE {
+    // one struct per variant (slug = variant class)
+    struct ttumacrofuse_;
+}  // namespace TTUMACROFUSE
+namespace LDC {
+    // one struct per variant (slug = variant class)
+    struct ldc__RaNonRZ;
+    struct ldc__RaRZ;
+    struct ldc_ur__URRzI;
+    struct ldc_ur__URnonRzI;
+}  // namespace LDC
+namespace UVIADD {
+    // one struct per variant (slug = variant class)
+    struct uviadd__URURUR_UUU;
+    struct uviadd__URuIUR_URIR;
+}  // namespace UVIADD
+namespace UVIMNMX {
+    // one struct per variant (slug = variant class)
+    struct uvimnmx__UUU_URURUR;
+    struct uvimnmx__URIR_URsIUR;
+}  // namespace UVIMNMX
+namespace UIABS {
+    // one struct per variant (slug = variant class)
+    struct uiabs__URURUR_UR;
+    struct uiabs__URsIUR_I;
+}  // namespace UIABS
+namespace UI2I {
+    // one struct per variant (slug = variant class)
+    struct ui2i__URURUR_UUU;
+    struct ui2i__URsIUR_URIR;
+}  // namespace UI2I
+namespace UI2IP {
+    // one struct per variant (slug = variant class)
+    struct ui2ip_24__URURUR_UUU;
+    struct ui2ip_28__URURUR_UUU;
+    struct ui2ip__URURUR_UUU;
+    struct ui2ip_24__URsIUR_URRI;
+    struct ui2ip_28__URsIUR_URRI;
+    struct ui2ip__URsIUR_URRI;
+}  // namespace UI2IP
+namespace UFMNMX {
+    // one struct per variant (slug = variant class)
+    struct ufmnmx__URURUR_UUU;
+    struct ufmnmx_pred__URURUR_UUU;
+    struct ufmnmx__URsIUR_URIR;
+    struct ufmnmx_pred__URsIUR_URIR;
+}  // namespace UFMNMX
+namespace UFSEL {
+    // one struct per variant (slug = variant class)
+    struct ufsel__URURUR_UUU;
+    struct ufsel__URsIUR_URIR;
+}  // namespace UFSEL
+namespace UFSET {
+    // one struct per variant (slug = variant class)
+    struct ufset__URURUR_UUU;
+    struct ufset_simple__URURUR_UUU;
+    struct ufset__URsIUR_URIR;
+    struct ufset_simple__URsIUR_URIR;
+}  // namespace UFSET
+namespace UFSETP {
+    // one struct per variant (slug = variant class)
+    struct ufsetp__URURUR_UUU;
+    struct ufsetp_simple__URURUR_UUU;
+    struct ufsetp__URsIUR_URIR;
+    struct ufsetp_simple__URsIUR_URIR;
+}  // namespace UFSETP
+namespace UFADD {
+    // one struct per variant (slug = variant class)
+    struct ufadd__URURUR_UUU;
+    struct ufadd__URURsI_URURI;
+}  // namespace UFADD
+namespace UFHADD {
+    // one struct per variant (slug = variant class)
+    struct ufhadd__UUU;
+}  // namespace UFHADD
+namespace UFFMA {
+    // one struct per variant (slug = variant class)
+    struct uffma__UUU_UUU;
+    struct uffma__URURI_URURI;
+    struct uffma__URIUR_URIUR;
+}  // namespace UFFMA
+namespace UFHFMA {
+    // one struct per variant (slug = variant class)
+    struct ufhfma__UUU;
+}  // namespace UFHFMA
+namespace UFMUL {
+    // one struct per variant (slug = variant class)
+    struct ufmul__UUU;
+    struct ufmul__URIR;
+}  // namespace UFMUL
+namespace UF2IP {
+    // one struct per variant (slug = variant class)
+    struct uf2ip__UUU;
+    struct uf2ip__RRI;
+    struct uf2ip__URIUR;
+}  // namespace UF2IP
+namespace UI2F {
+    // one struct per variant (slug = variant class)
+    struct ui2f__UR_16b;
+    struct ui2f__UR_32b;
+    struct ui2f__UR_8b;
+    struct ui2f__IS_32b;
+    struct ui2f__IU_32b;
+}  // namespace UI2F
+namespace UF2F {
+    // one struct per variant (slug = variant class)
+    struct uf2f_f32_downconvert__UUU_UUU;
+    struct uf2f_f32_upconvert__UUU_UUU;
+    struct uf2f_f32_upconvert_swap__UUU_UUU;
+    struct uf2f_f32_downconvert__URIR_URIR;
+    struct uf2f_f32_upconvert__URIR_URIR;
+    struct uf2f_f32_upconvert_swap__URIR_URIR;
+}  // namespace UF2F
+namespace UF2I {
+    // one struct per variant (slug = variant class)
+    struct uf2i__URb_16b;
+    struct uf2i__URb_32b;
+    struct uf2i__URb_bf16;
+    struct uf2i_swap__URb_16b;
+    struct uf2i_swap__URb_32b;
+    struct uf2i_swap__URb_bf16;
+    struct uf2i__IU_32b;
+    struct uf2i__Ib_16b;
+    struct uf2i__Ib_bf16;
+    struct uf2i_swap__IU_32b;
+    struct uf2i_swap__Ib_16b;
+    struct uf2i_swap__Ib_bf16;
+}  // namespace UF2I
+namespace UFRND {
+    // one struct per variant (slug = variant class)
+    struct ufrnd__bf16_URb;
+    struct ufrnd__f16_URb;
+    struct ufrnd__f32_URb;
+    struct ufrnd_swap__bf16_URb;
+    struct ufrnd_swap__f16_URb;
+    struct ufrnd_swap__f32_URb;
+    struct ufrnd__bf16_I;
+    struct ufrnd__f16_I;
+    struct ufrnd__f32_I;
+    struct ufrnd_swap__bf16_I;
+    struct ufrnd_swap__f16_I;
+    struct ufrnd_swap__f32_I;
+}  // namespace UFRND
+namespace UI2FP {
+    // one struct per variant (slug = variant class)
+    struct ui2fp__UUU;
+    struct ui2fp__URsIR;
+    struct ui2fp__URuIR;
+}  // namespace UI2FP
+namespace UIMNMX {
+    // one struct per variant (slug = variant class)
+    struct uimnmx_64__UUU_URURUR;
+    struct uimnmx_64_nopred__UUU_URURUR;
+    struct uimnmx__UUU_URURUR;
+    struct uimnmx_nopred__UUU_URURUR;
+    struct uimnmx_64__URIR_URsIUR;
+    struct uimnmx_64_nopred__URIR_URsIUR;
+    struct uimnmx__URIR_URsIUR;
+    struct uimnmx_nopred__URIR_URsIUR;
+}  // namespace UIMNMX
+namespace USEL {
+    // one struct per variant (slug = variant class)
+    struct usel__URURUR_UUU;
+    struct usel_64__URIR;
+    struct usel__URuIUR_URIR;
+    struct usel_64__UUU;
+}  // namespace USEL
+namespace UISETP {
+    // one struct per variant (slug = variant class)
+    struct uisetp_64__URURUR_URURUR;
+    struct uisetp_64_optional_upr__URURUR_URURUR;
+    struct uisetp_64_simple__URURUR_URURUR;
+    struct uisetp_64_simple_optional_upr__URURUR_URURUR;
+    struct uisetp__URURUR_URURUR;
+    struct uisetp_optional_upr__URURUR_URURUR;
+    struct uisetp_simple__URURUR_URURUR;
+    struct uisetp_simple_optional_upr__URURUR_URURUR;
+    struct uisetp_64__URsIUR_URIR;
+    struct uisetp_64_optional_upr__URsIUR_URIR;
+    struct uisetp_64_simple__URsIUR_URIR;
+    struct uisetp_64_simple_optional_upr__URsIUR_URIR;
+    struct uisetp__URsIUR_URIR;
+    struct uisetp_optional_upr__URsIUR_URIR;
+    struct uisetp_simple__URsIUR_URIR;
+    struct uisetp_simple_optional_upr__URsIUR_URIR;
+}  // namespace UISETP
+namespace UIADD3 {
+    // one struct per variant (slug = variant class)
+    struct uiadd3__URURUR_URURUR;
+    struct uiadd3_x__URURUR_URURUR;
+    struct uiadd3__URsIUR_RIR;
+    struct uiadd3_x__URsIUR_RIR;
+}  // namespace UIADD3
+namespace ULEA {
+    // one struct per variant (slug = variant class)
+    struct ulea_hi_noimm__URURUR_URURUR;
+    struct ulea_hi_noimm_sx32__URURUR_URURUR;
+    struct ulea_hi_noimm_sx32_x__URURUR_URURUR;
+    struct ulea_hi_noimm_x__URURUR_URURUR;
+    struct ulea_lo_noimm__URURUR_URURUR;
+    struct ulea_lo_noimm_x__URURUR_URURUR;
+    struct ulea_hi_imm__RRuI_RRI;
+    struct ulea_hi_imm_x__RRuI_RRI;
+    struct ulea_hi_imm__RuIR_URIR;
+    struct ulea_hi_imm_sx32__RuIR_URIUR;
+    struct ulea_hi_imm_sx32_x__RuIR_URIUR;
+    struct ulea_hi_imm_x__RuIR_URIR;
+    struct ulea_lo_imm__URuIUR_URIUR;
+    struct ulea_lo_imm_x__URuIUR_URIUR;
+}  // namespace ULEA
+namespace ULOP {
+    // one struct per variant (slug = variant class)
+    struct ulop_noimm__URURUR;
+    struct ulop_noimm_optionalUPp__URURUR;
+    struct ulop_imm_;
+    struct ulop_imm_optionalUPp_;
+}  // namespace ULOP
+namespace ULOP3 {
+    // one struct per variant (slug = variant class)
+    struct ulop3_lut__URURUR_URURUR;
+    struct ulop3_lut_optionalUPp__URURUR_URURUR;
+    struct ulop3_noimm__URURUR_URURUR;
+    struct ulop3_noimm_optionalUPp__URURUR_URURUR;
+    struct ulop3_imm__URIR_URIR;
+    struct ulop3_imm_optionalUPp__URIR_URIR;
+    struct ulop3_lut__URuIUR_URIR;
+    struct ulop3_lut_optionalUPp__URuIUR_URIR;
+}  // namespace ULOP3
+namespace UPRMT {
+    // one struct per variant (slug = variant class)
+    struct uprmt__URURUR;
+    struct uprmt__URIUR;
+}  // namespace UPRMT
+namespace UIADD3_64 {
+    // one struct per variant (slug = variant class)
+    struct uiadd3_64__URURUR_URURUR;
+    struct uiadd3_64_x__URURUR_URURUR;
+    struct uiadd3_64__URsIUR_RIR;
+    struct uiadd3_64_x__URsIUR_RIR;
+}  // namespace UIADD3_64
+namespace USHF {
+    // one struct per variant (slug = variant class)
+    struct ushf__URURUR_URURUR;
+    struct ushf__URURuI_URRI;
+    struct ushf__URuIUR_URIR;
+}  // namespace USHF
+namespace USHL {
+    // one struct per variant (slug = variant class)
+    struct ushl__URURUR_URURUR;
+    struct ushl_imm_;
+    struct ushl__URuIUR_URIR;
+}  // namespace USHL
+namespace USHR {
+    // one struct per variant (slug = variant class)
+    struct ushr__URURUR_URURUR;
+    struct ushr__URIR_URIR;
+}  // namespace USHR
+namespace USGXT {
+    // one struct per variant (slug = variant class)
+    struct usgxt__URURUR_UUU;
+    struct usgxt__URuIUR_URIR;
+}  // namespace USGXT
+namespace UBMSK {
+    // one struct per variant (slug = variant class)
+    struct ubmsk__URURUR_URUR;
+    struct ubmsk__URuIUR_URI;
+}  // namespace UBMSK
+namespace UPLOP3 {
+    // one struct per variant (slug = variant class)
+    struct uplop3_lut_1out_1reg__URURUR;
+    struct uplop3_lut_2out_1reg__URURUR;
+    struct uplop3_lut_1out_2reg__URURUR;
+    struct uplop3_lut_2out_2reg__URURUR;
+    struct uplop3_lut_1out_3reg__URURUR;
+    struct uplop3_lut_2out_3reg__URURUR;
+}  // namespace UPLOP3
+namespace UIMAD {
+    // one struct per variant (slug = variant class)
+    struct uimad__URURUR_URURUR;
+    struct uimad_x__URURUR_URURUR;
+    struct uimad_wide__URURUR_URURUR;
+    struct uimad_wide_x__URURUR_URURUR;
+    struct uimad_hi__URURUR_URURUR;
+    struct uimad_hi_x__URURUR_URURUR;
+    struct uimad__URURsI_URURI;
+    struct uimad_x__URURsI_URURI;
+    struct uimad__URsIUR_URIUR;
+    struct uimad_x__URsIUR_URIUR;
+    struct uimad_wide__URsIUR_URIUR;
+    struct uimad_wide_x__URsIUR_URIUR;
+    struct uimad_hi__URsIUR_URIUR;
+    struct uimad_hi_x__URsIUR_URIUR;
+}  // namespace UIMAD
+namespace UF2FP {
+    // one struct per variant (slug = variant class)
+    struct uf2fp_8b_upconvert__URURUR;
+    struct uf2fp__URURUR;
+    struct uf2fp_default_dst_src__URURUR;
+    struct uf2fp_f16_to_8b_downconvert__URURUR;
+    struct uf2fp_f32_to_8b_downconvert__URURUR;
+    struct uf2fp_merge_c__URURUR;
+    struct uf2fp_merge_c_default_dst_src__URURUR;
+    struct uf2fp_tf32__URURUR;
+    struct uf2fp_tf32_default_src__URURUR;
+    struct uf2fp_f16_to_8b_downconvert__URURI;
+    struct uf2fp_f32_to_8b_downconvert__URURI;
+    struct uf2fp_merge_c__URURI;
+    struct uf2fp_merge_c_default_dst_src__URURI;
+    struct uf2fp_8b_upconvert__URIUR;
+    struct uf2fp__URIUR;
+    struct uf2fp_default_dst_src__URIUR;
+    struct uf2fp_f16_to_8b_downconvert__URIUR;
+    struct uf2fp_f32_to_8b_downconvert__URIUR;
+    struct uf2fp_merge_c__URIUR;
+    struct uf2fp_merge_c_default_dst_src__URIUR;
+    struct uf2fp_tf32__URIUR;
+    struct uf2fp_tf32_default_src__URIUR;
+}  // namespace UF2FP
+namespace UFLO {
+    // one struct per variant (slug = variant class)
+    struct uflo__URURUR_URURUR;
+    struct uflo__URuIUR_URuIR;
+}  // namespace UFLO
+namespace UBREV {
+    // one struct per variant (slug = variant class)
+    struct ubrev__URURUR_URUR;
+    struct ubrev__URuIUR_URI;
+}  // namespace UBREV
+namespace UPOPC {
+    // one struct per variant (slug = variant class)
+    struct upopc__URURUR_URUUR;
+    struct upopc__URuIUR_URIR;
+}  // namespace UPOPC
+namespace LDCU {
+    // one struct per variant (slug = variant class)
+    struct ldcu_256_ur_offs_;
+    struct ldcu_256_ur_offs_optional_upx_;
+    struct ldcu_256_const_RCxR_;
+    struct ldcu_const_RCR_;
+    struct ldcu_ur_offs_;
+    struct ldcu_ur_offs_optional_upx_;
+    struct ldcu_const_RCxR_;
+    struct ldcu_256_const_RCR_;
+}  // namespace LDCU
+namespace LDTRAM {
+    // one struct per variant (slug = variant class)
+    struct ldtram_;
+}  // namespace LDTRAM
+namespace SYNCS {
+    // one struct per variant (slug = variant class)
+    struct syncs_uniform_cas_;
+    struct syncs_phasechk_;
+    struct syncs_ld_;
+    struct syncs_uniform_exch_;
+    struct syncs_arrive_;
+    struct syncs_tcnt_;
+    struct syncs_cctl_;
+    struct syncs_uniform_ld_;
+}  // namespace SYNCS
+namespace UTMALDG {
+    // one struct per variant (slug = variant class)
+    struct utmaldg_URc__UUU;
+    struct utmaldg_URc__UUU_desc;
+    struct utmaldg_URc_one__UUU;
+    struct utmaldg_URc_one__UUU_desc;
+    struct utmaldg__UUU;
+    struct utmaldg__UUU_desc;
+    struct utmaldg_one__UUU;
+    struct utmaldg_one__UUU_desc;
+}  // namespace UTMALDG
+namespace UTMASTG {
+    // one struct per variant (slug = variant class)
+    struct utmastg__UUU;
+    struct utmastg__UUU_desc;
+    struct utmastg_one__UUU;
+    struct utmastg_one__UUU_desc;
+}  // namespace UTMASTG
+namespace UTMAREDG {
+    // one struct per variant (slug = variant class)
+    struct utmaredg__UUU;
+    struct utmaredg__UUU_desc;
+    struct utmaredg_one__UUU;
+    struct utmaredg_one__UUU_desc;
+}  // namespace UTMAREDG
+namespace UTMAPF {
+    // one struct per variant (slug = variant class)
+    struct utmapf_URc__UUU;
+    struct utmapf_URc__UUU_desc;
+    struct utmapf_URc_one__UUU;
+    struct utmapf_URc_one__UUU_desc;
+    struct utmapf__UUU;
+    struct utmapf__UUU_desc;
+    struct utmapf_one__UUU;
+    struct utmapf_one__UUU_desc;
+}  // namespace UTMAPF
+namespace UBLKCP {
+    // one struct per variant (slug = variant class)
+    struct ublkcp_;
+    struct ublkcp_desc_;
+    struct ublkcp_desc_one_;
+    struct ublkcp_one_;
+}  // namespace UBLKCP
+namespace UBLKRED {
+    // one struct per variant (slug = variant class)
+    struct ublkred_;
+    struct ublkred_desc_;
+    struct ublkred_desc_one_;
+    struct ublkred_one_;
+}  // namespace UBLKRED
+namespace UBLKPF {
+    // one struct per variant (slug = variant class)
+    struct ublkpf__UUU;
+    struct ublkpf__UUU_desc;
+    struct ublkpf_one__UUU;
+    struct ublkpf_one__UUU_desc;
+}  // namespace UBLKPF
+namespace UCGABARSET {
+    // one struct per variant (slug = variant class)
+    struct ucgabarset_;
+}  // namespace UCGABARSET
+namespace UCGABAR_SET {
+    // one struct per variant (slug = variant class)
+    struct ucgabar_set_;
+}  // namespace UCGABAR_SET
+namespace USETMAXREG {
+    // one struct per variant (slug = variant class)
+    struct usetmaxreg__URb_alloc;
+    struct usetmaxreg__URb_dealloc;
+    struct usetmaxreg__Ib_alloc;
+    struct usetmaxreg__Ib_dealloc;
+}  // namespace USETMAXREG
+namespace USETSHMSZ {
+    // one struct per variant (slug = variant class)
+    struct usetshmsz__URb;
+    struct usetshmsz__Ib;
+}  // namespace USETSHMSZ
+namespace UGETNEXTWORKID {
+    // one struct per variant (slug = variant class)
+    struct ugetnextworkid_;
+    struct ugetnextworkid_one_;
+}  // namespace UGETNEXTWORKID
+namespace UMEMSETS {
+    // one struct per variant (slug = variant class)
+    struct umemsets_;
+}  // namespace UMEMSETS
+namespace ULEPC {
+    // one struct per variant (slug = variant class)
+    struct ulepc__URURUR;
+    struct ulepc__UR_I_R;
+    struct ulepc_rel_;
+}  // namespace ULEPC
+namespace UCGABARGET {
+    // one struct per variant (slug = variant class)
+    struct ucgabarget_;
+}  // namespace UCGABARGET
+namespace UCGABAR_GET {
+    // one struct per variant (slug = variant class)
+    struct ucgabar_get_;
+}  // namespace UCGABAR_GET
+namespace UP2UR {
+    // one struct per variant (slug = variant class)
+    struct up2ur__Imm;
+    struct up2ur_simple_;
+    struct up2ur__URb;
+}  // namespace UP2UR
+namespace UR2UP {
+    // one struct per variant (slug = variant class)
+    struct ur2up__Imm;
+    struct ur2up__URb;
+}  // namespace UR2UP
+namespace ULOP32I {
+    // one struct per variant (slug = variant class)
+    struct ulop32i_;
+    struct ulop32i_optionalUPp_;
+}  // namespace ULOP32I
+namespace UCLEA {
+    // one struct per variant (slug = variant class)
+    struct uclea__Imm;
+    struct uclea__URb;
+}  // namespace UCLEA
+namespace BRXU {
+    // one struct per variant (slug = variant class)
+    struct brxu_;
+    struct brxu_rel_;
+}  // namespace BRXU
+namespace JMXU {
+    // one struct per variant (slug = variant class)
+    struct jmxu_;
+    struct jmxu_rel_;
+}  // namespace JMXU
+namespace LDGMC {
+    // one struct per variant (slug = variant class)
+    struct ldgmc_int__Ra32;
+    struct ldgmc_int__Ra64;
+    struct ldgmc_int__RaRZ;
+    struct ldgmc_int__memdesc;
+    struct ldgmc_fp__Ra32;
+    struct ldgmc_fp__Ra64;
+    struct ldgmc_fp__RaRZ;
+    struct ldgmc_fp__memdesc;
+}  // namespace LDGMC
+namespace ARRIVES {
+    // one struct per variant (slug = variant class)
+    struct arrives_;
+}  // namespace ARRIVES
+namespace UTMACCTL {
+    // one struct per variant (slug = variant class)
+    struct utmacctl_URa_;
+    struct utmacctl_URa_one_;
+}  // namespace UTMACCTL
+namespace DEPBAR {
+    // one struct per variant (slug = variant class)
+    struct depbar_ur_;
+}  // namespace DEPBAR
+namespace TLD4 {
+    // one struct per variant (slug = variant class)
+    struct tld4_b_noConst_;
+    struct tld4_scr_b_noConst_;
+    struct tld4_scr_urc_;
+    struct tld4_urc_;
+    struct tld4_b_urc_;
+    struct tld4_scr_b_urc_;
+}  // namespace TLD4
+namespace TLD {
+    // one struct per variant (slug = variant class)
+    struct tld_b_noConst_;
+    struct tld_scr_b_noConst_;
+    struct tld_scr_urc_;
+    struct tld_urc_;
+    struct tld_b_urc_;
+    struct tld_scr_b_urc_;
+}  // namespace TLD
+namespace TXD {
+    // one struct per variant (slug = variant class)
+    struct txd_b_noConst_;
+    struct txd_urc_;
+    struct txd_b_urc_;
+}  // namespace TXD
+namespace FOOTPRINT {
+    // one struct per variant (slug = variant class)
+    struct footprint_b_noConst_;
+    struct footprint_scr_b_noConst_;
+    struct footprint_b_urc_;
+    struct footprint_scr_b_urc_;
+    struct footprint_scr_uniform_;
+    struct footprint_uniform_;
+}  // namespace FOOTPRINT
+namespace LDGSTS {
+    // one struct per variant (slug = variant class)
+    struct ldgsts__RUR;
+    struct ldgsts_memdesc_;
+    struct ldgsts_no_ra__RUR;
+    struct ldgsts__RR32U;
+    struct ldgsts__RR64U;
+    struct ldgsts__desc_RRU;
+    struct ldgsts_no_ra__RRU;
+}  // namespace LDGSTS
+namespace STAS {
+    // one struct per variant (slug = variant class)
+    struct stas_64__Ra64;
+    struct stas_64__RaRZ;
+    struct stas__Ra32;
+}  // namespace STAS
+namespace REDAS {
+    // one struct per variant (slug = variant class)
+    struct redas_64__Ra64;
+    struct redas_64__RaRZ;
+    struct redas__Ra32;
+}  // namespace REDAS
+
+}  // namespace semu::isa::metadata

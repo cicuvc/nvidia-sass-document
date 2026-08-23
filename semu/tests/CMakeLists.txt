@@ -22,6 +22,10 @@ add_executable(semu_test_interp test_interp.cpp)
 target_link_libraries(semu_test_interp PRIVATE semu_core)
 target_compile_options(semu_test_interp PRIVATE ${SEMU_WARN_FLAGS})
 
+add_executable(semu_test_interpreter_registry test_interpreter_registry.cpp)
+target_link_libraries(semu_test_interpreter_registry PRIVATE semu_core)
+target_compile_options(semu_test_interpreter_registry PRIVATE ${SEMU_WARN_FLAGS})
+
 add_executable(semu_test_fp test_fp.cpp)
 target_link_libraries(semu_test_fp PRIVATE semu_core)
 target_compile_options(semu_test_fp PRIVATE ${SEMU_WARN_FLAGS})
@@ -79,6 +83,7 @@ add_test(NAME cubin_loader COMMAND semu_test_cubin)
 add_test(NAME memory COMMAND semu_test_memory)
 add_test(NAME cluster COMMAND semu_test_cluster)
 add_test(NAME interp COMMAND semu_test_interp)
+add_test(NAME interpreter_registry COMMAND semu_test_interpreter_registry)
 add_test(NAME fp COMMAND semu_test_fp)
 add_test(NAME l1tex COMMAND semu_test_l1tex)
 add_test(NAME shared_bank COMMAND semu_test_shared_bank)
@@ -156,12 +161,10 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../sm120.json)
             ${CMAKE_SOURCE_DIR}/../sm120.json)
 
   # Condition evaluator coverage (GAP-04): every legality condition must be
-  # fully parseable by the C++ three-state evaluator, and the Python
-  # reference evaluator must agree on the corpus words.
+  # fully parseable by the (Python reference) evaluator over the corpus.
   add_test(NAME cond_differential
     COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/cond_differential_test.py
-            $<TARGET_FILE:semu>
             ${SEMU_CORPUS}
             ${CMAKE_SOURCE_DIR}/../sm120.json)
 
@@ -171,6 +174,13 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../sm120.json)
   add_test(NAME cond_compile_equiv
     COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/cond_compile_equiv_test.py
+            ${CMAKE_SOURCE_DIR}/../sm120.json)
+
+  # Generated operand-width metadata equivalence (gen_isa.SizeEmitter ->
+  # per-variant width methods) vs the reference evaluator on random words.
+  add_test(NAME size_compile_equiv
+    COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/size_compile_equiv_test.py
             ${CMAKE_SOURCE_DIR}/../sm120.json)
 
   # Real cuobjdump vector differential (GAP-05): words extracted from sm120

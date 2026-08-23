@@ -286,16 +286,28 @@ def cond_tokenize(predicate: str):
 
 def cpp_enum_value(db, literal: str) -> int:
     """Resolve `Type@Value or Type@\"Value\" to its integer (matching the
-    reference evaluator's _enum, including AInteger-style `_64` aliasing)."""
+    reference evaluator's _enum, including AInteger-style `_64` aliasing).
+    Names whose spec value is undefined (null in sm120.json, e.g.
+    SQInteger@F64.RN which only appears inside ATOM-arrive size predicates
+    that legality conditions forbid) map to -1: they must never compare equal
+    to any legal slot value, so the surrounding OR terms stay false."""
     etype, _, value = literal.partition("@")
     value = value.strip('"')
     ev = db["enums"].get(etype, {})
-    if value in ev:
-        return int(ev[value])
-    if value.startswith("_") and value[1:] in ev:
-        return int(ev[value[1:]])
-    if not value.startswith("_") and "_" + value in ev:
-        return int(ev["_" + value])
+
+    def lookup(name):
+        if name in ev:
+            v = ev[name]
+            return -1 if v is None else int(v)
+        return None
+
+    v = lookup(value)
+    if v is not None:
+        return v
+    if value.startswith("_") and lookup(value[1:]) is not None:
+        return lookup(value[1:])
+    if not value.startswith("_") and lookup("_" + value) is not None:
+        return lookup("_" + value)
     try:
         return int(value, 0)
     except ValueError:
@@ -620,8 +632,144 @@ def compile_variant_conds(db, variants):
     return var_meta, emit_table_helpers(db, em.table_helpers), max_cond_slots
 
 
+# ---------------------------------------------------------------------------
+# Operand-width (size predicate) -> per-variant C++ metadata.
+#
+# Each variant's `*_SIZE` predicates (IDEST_SIZE / ISRC_A_SIZE / ...) are
+# compiled to static member functions that extract the width straight from
+# the 128-bit word -- no slot map, no string eval at runtime.  The dispatch
+# table kSizeFns[vi][key] is what render.cpp consults (see SizeEmitter).
+# ---------------------------------------------------------------------------
+
+SIZE_HEAD = {"IDEST": "Dest", "IDEST2": "Dest2", "ISRC": "Source",
+             "ILABEL": "Label"}
+
+
+def collect_size_keys(variants):
+    """Sorted list of every `*_SIZE` predicate key used by any variant."""
+    seen = set()
+    for v in variants:
+        for k, _ in v["preds"]:
+            if k.endswith("_SIZE"):
+                seen.add(k)
+    return sorted(seen)
+
+
+def size_method_name(key):
+    """Key -> C++ member name: ISRC_B_SIZE -> getSourceBSize."""
+    base = key[: -len("_SIZE")]
+    parts = base.split("_")
+    head = SIZE_HEAD.get(parts[0], parts[0])
+    rest = "".join(p.capitalize() for p in parts[1:])
+    return f"get{head}{rest}Size"
+
+
+def field_slot_key(f):
+    """Slot key a field encodes; None when the field is not a bare slot read
+    (opcode / fixed literals / table fn / other fn)."""
+    rk = f["rhs_kind"]
+    rhs = f["rhs"]
+    if rk == 0:                     # slot
+        return rhs
+    if rk == 1:                     # slot@attr
+        base, _, attr = rhs.partition("@")
+        return base + COND_ATTR_SUFFIX.get(attr, attr)
+    if rk == 5 and rhs.startswith("*") and "(" not in rhs:  # *slot
+        return rhs[1:]
+    return None
+
+
+def bit_expr(ranges, scale):
+    """C++ expression extracting the field's slices from `const semu::Word128& w`
+    (hi-first, same order as decoder extract_field; scale folded in)."""
+    parts = []
+    widths = []
+    for hi, lo in ranges:
+        w = hi - lo + 1
+        widths.append(w)
+        if lo >= 64:
+            sh = lo - 64
+            part = (f"(w.hi >> {sh})" if w == 64 else
+                    f"((w.hi >> {sh}) & {((1 << w) - 1)})")
+        elif hi < 64:
+            part = ("w.lo" if w == 64 else
+                    f"((w.lo >> {lo}) & {((1 << w) - 1)})")
+        else:
+            lo_w = 64 - lo
+            hi_w = w - lo_w
+            part = (f"((((w.lo >> {lo}) & {((1 << lo_w) - 1)}) | "
+                    f"(((w.hi) & {((1 << hi_w) - 1)}) << {lo_w}))")
+        parts.append(part)
+    expr = parts[0]
+    for p, wn in zip(parts[1:], widths[1:]):
+        expr = f"((({expr}) << {wn}) | ({p}))"
+    if scale and scale != 1:
+        expr = f"(({expr}) * {scale})"
+    return expr
+
+
+class SizeEmitter(CondEmitter):
+    """Same grammar as CondEmitter, but slot keys resolve to direct Word128
+    bit-slice extraction expressions (no packed slot array)."""
+
+    def __init__(self, db, variant):
+        super().__init__(db, {})
+        self.variant = variant
+        self.field_by_key = {}
+        for f in variant["fields"]:
+            key = field_slot_key(f)
+            if key is not None:
+                self.field_by_key.setdefault(key, f)
+
+    def slot_ref(self, key):
+        f = self.field_by_key.get(key)
+        if f is None:
+            raise ValueError(
+                f"{self.variant['class']}: size predicate references slot "
+                f"{key!r} which is not a bare-slot bit field")
+        return bit_expr(f["ranges"], f.get("scale"))
+
+
+def compile_variant_sizes(db, variants, size_keys):
+    """Compile each variant's `*_SIZE` predicates into metadata.  Returns one
+    entry per variant: None (no size predicates) or
+        {mnemonic, class_slug, methods: [(key_idx, key, name, expr), ...]}.
+    Fails loudly when any predicate cannot be emitted (generation gate)."""
+    key_index = {k: i for i, k in enumerate(size_keys)}
+    out = []
+    for v in variants:
+        size_preds = [(k, val) for k, val in v["preds"] if k.endswith("_SIZE")]
+        if not size_preds:
+            out.append(None)
+            continue
+        em = SizeEmitter(db, v)
+        methods = []
+        for k, val in size_preds:
+            methods.append((key_index[k], k, size_method_name(k), em.emit(val)))
+        out.append({
+            "mnemonic": v["mnemonic"],
+            "class_slug": cident(v["class"]),
+            "methods": methods,
+        })
+    for mnem, group in _group_by_mnemonic(out).items():
+        slugs = [m["class_slug"] for m in group]
+        if len(slugs) != len(set(slugs)):
+            raise ValueError(f"size metadata slug collision in {mnem}")
+    return out
+
+
+def _group_by_mnemonic(size_meta):
+    groups = {}
+    for m in size_meta:
+        if m is None:
+            continue
+        groups.setdefault(m["mnemonic"], []).append(m)
+    return groups
+
+
 def emit_hpp(out: Path, mnemonics, classes, pipes,
-              mnemonic_id, class_id, pipe_id, max_cond_slots) -> None:
+              mnemonic_id, class_id, pipe_id, max_cond_slots,
+              size_keys, size_meta) -> None:
     L = [
         "// Generated file -- do not edit.  Regenerate with:",
         "//   python3 semu/tools/gen_isa.py",
@@ -629,6 +777,7 @@ def emit_hpp(out: Path, mnemonics, classes, pipes,
         "",
         "#include <cstdint>",
         "#include <optional>",
+        "#include <string_view>",
         "",
         "namespace semu { struct Word128; }  // forward decl (word.hpp)",
         "",
@@ -776,17 +925,64 @@ def emit_hpp(out: Path, mnemonics, classes, pipes,
         "",
         "}  // namespace semu::isa",
         "",
+        "// ---------------------------------------------------------------------------",
+        "// Generated operand-width metadata (per-variant, from `*_SIZE` predicates).",
+        "// Each variant's widths are static member functions that extract the width",
+        "// directly from the 128-bit word (no slot map / string eval at runtime).",
+        "// kSizeFns[vi][key] is the dispatch table; a nullptr entry means the variant",
+        "// has no such predicate (the renderer falls back to its default width).",
+        "namespace semu::isa::metadata {",
+    ]
+    L.append(f"enum SizeKey : int {{")
+    for i, k in enumerate(size_keys):
+        L.append(f"    k{size_method_name(k)[3:]} = {i},   // {k}")
+    L.append("    kNumSizeKeys,")
+    L.append("};")
+    L += [
+        "",
+        f"inline constexpr const char* const kSizeKeyNames[kNumSizeKeys] = {{",
+    ]
+    for k in size_keys:
+        L.append(f"    {cq(k)},")
+    L += [
+        "};",
+        "",
+        "// Key name -> column index (std::string_view include in the header).",
+        "inline int size_key_index(std::string_view name) {",
+        "    for (int i = 0; i < kNumSizeKeys; ++i)",
+        "        if (name == kSizeKeyNames[i]) return i;",
+        "    return -1;",
+        "}",
+        "",
+        "using SizeFn = std::int64_t (*)(const semu::Word128&);",
+        "extern const SizeFn kSizeFns[][kNumSizeKeys];",
+        "",
+        "// One nested namespace per mnemonic; one struct per variant class (slug).",
+    ]
+    for mnem, group in _group_by_mnemonic(size_meta).items():
+        ns = cident(mnem)
+        L.append(f"namespace {ns} {{")
+        L.append("    // one struct per variant (slug = variant class)")
+        for m in group:
+            L.append(f"    struct {m['class_slug']};")
+        L.append(f"}}  // namespace {ns}")
+    L += [
+        "",
+        "}  // namespace semu::isa::metadata",
+        "",
     ]
     out.write_text("\n".join(L), encoding="utf-8")
 
 
 def emit_cpp(out: Path, db: dict, variants: list,
              mnemonics, classes, pipes, mnemonic_id, class_id, pipe_id,
-             var_cond_meta, cond_table_helpers) -> None:
+             var_cond_meta, cond_table_helpers,
+             size_keys, size_meta) -> None:
     lines = [
         "// Generated file -- do not edit.  Regenerate with:",
         "//   python3 semu/tools/gen_isa.py",
         "#include \"isa_data.hpp\"",
+        "#include <semu/word.hpp>",
         "",
         "#include <cstring>",
         "",
@@ -1056,6 +1252,35 @@ def emit_cpp(out: Path, db: dict, variants: list,
     lines.append("")
     lines.append("}  // namespace semu::isa")
     lines.append("")
+
+    # ---- generated operand-width metadata (per-variant `*_SIZE` predicates) ----
+    lines.append("namespace semu::isa::metadata {")
+    for mnem, group in _group_by_mnemonic(size_meta).items():
+        ns = cident(mnem)
+        lines.append(f"namespace {ns} {{")
+        for m in group:
+            lines.append(f"struct {m['class_slug']} {{")
+            for _, _, name, expr in m["methods"]:
+                lines.append(f"    static std::int64_t {name}(const semu::Word128& w) "
+                             f"{{ (void)w; return {expr}; }}")
+            lines.append("};")
+        lines.append(f"}}  // namespace {ns}")
+    lines.append("")
+    nk = len(size_keys)
+    lines.append(f"const SizeFn kSizeFns[{len(variants)}][kNumSizeKeys] = {{")
+    for m in size_meta:
+        if m is None:
+            lines.append("    {},")
+            continue
+        ns = cident(m["mnemonic"])
+        by_key = {mm[0]: mm[2] for mm in m["methods"]}
+        cells = [f"&{ns}::{m['class_slug']}::{by_key[ki]}" if ki in by_key
+                 else "nullptr" for ki in range(nk)]
+        lines.append("    {" + ", ".join(cells) + "},")
+    lines.append("};")
+    lines.append("")
+    lines.append("}  // namespace semu::isa::metadata")
+
     out.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -1644,11 +1869,15 @@ def main() -> int:
     pipes, pipe_id = category_ids(v["pipe"] for v in variants)
     var_cond_meta, cond_table_helpers, max_cond_slots = \
         compile_variant_conds(db, variants)
+    size_keys = collect_size_keys(variants)
+    size_meta = compile_variant_sizes(db, variants, size_keys)
     emit_hpp(out_dir / "isa_data.hpp", mnemonics, classes, pipes,
-             mnemonic_id, class_id, pipe_id, max_cond_slots)
+             mnemonic_id, class_id, pipe_id, max_cond_slots,
+             size_keys, size_meta)
     emit_cpp(out_dir / "isa_data.cpp", db, variants,
              mnemonics, classes, pipes, mnemonic_id, class_id, pipe_id,
-             var_cond_meta, cond_table_helpers)
+             var_cond_meta, cond_table_helpers,
+             size_keys, size_meta)
     if args.shapes:
         emit_shapes_hpp(out_dir / "isa_shapes.hpp", db, variants)
         emit_shapes_fill(out_dir / "isa_shapes_fill.hpp", db, variants)

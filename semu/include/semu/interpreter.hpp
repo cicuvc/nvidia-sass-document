@@ -300,6 +300,95 @@ struct L2RequestDescriptor {
 // capability manifest (the mock backend does exactly that).
 bool interpreter_handles(const DecodedInstruction& inst);
 
+// ---------------------------------------------------------------------------
+// Interpreter abstraction.
+//
+// The reference backend is accessed through the IInterpreter interface plus
+// the InterpreterRegistry so the rest of the simulator depends on the
+// interface, not on the concrete Interpreter class.  Alternative execution
+// engines (JIT, other-arch interpreters) register through
+// InterpreterRegistry::register_impl and are picked by name, with the
+// reference interpreter kept as the always-available default.
+// ---------------------------------------------------------------------------
+
+// Result of one kernel execution (kept out of the Interpreter class so the
+// interface can return it by value).
+struct InterpreterResult {
+    std::optional<Fault> fault;
+    std::vector<CtaState> ctas;
+    std::vector<std::string> trace;  // when report_trace
+    std::uint64_t dynamic_instructions = 0;
+    bool limit_reached = false;
+    // Phase 5.5: which mode ran and fast-path accounting.
+    ExecutionMode execution_mode = ExecutionMode::kPrecise;
+    FastExecutionStats fast_stats;
+    bool approximate = false;  // true once a fast FP leaf executed
+    // Phase 6 Step 2B: trace-only memory events (empty unless model.l1tex
+    // != kOff).  Never affects functional results.
+    std::vector<MemoryEvent> memory_events;
+    // Phase 6 Step 2D: data-race reports (empty unless model.race ==
+    // kReport).  Trace-only; never affects functional results.
+    std::vector<RaceReport> race_reports;
+    // Phase 10 hotspot profile (empty unless options.collect_hotspots):
+    // kernel-relative PC -> dynamic issue count for every static word that
+    // executed.  Sorted ascending by PC.  The benchmark derives top-N
+    // mnemonics from this map against the kernel's predecoded text.
+    std::map<std::uint64_t, std::uint64_t> pc_hotspots;
+};
+
+// Abstract execution interface over the pre-decoded IR.  Lifetime: owned by
+// the registry; callers hold non-owning references.
+class IInterpreter {
+public:
+    virtual ~IInterpreter() = default;
+
+    // Stable implementation identifier (e.g. "reference-sm120").
+    virtual const char* name() const = 0;
+
+    // Whether this implementation FUNCTIONALLY executes the instruction's
+    // mnemonic family (see interpreter_handles).  Capability-manifest
+    // boundary checking is the caller's responsibility.
+    virtual bool handles(const DecodedInstruction& inst) const = 0;
+
+    virtual InterpreterResult run_result(
+        const Kernel& kernel, const LaunchEnv& env,
+        std::uint64_t instruction_limit = 1000000,
+        bool report_trace = false) const = 0;
+    virtual InterpreterResult run_result(
+        const Kernel& kernel, const LaunchEnv& env,
+        const RunOptions& options) const = 0;
+    virtual std::optional<Fault> run(
+        const Kernel& kernel, const LaunchEnv& env,
+        std::uint64_t instruction_limit = 1000000,
+        bool report_trace = false) const = 0;
+    virtual std::optional<Fault> run(
+        const Kernel& kernel, const LaunchEnv& env,
+        const RunOptions& options) const = 0;
+    virtual std::optional<Fault> run_shared(
+        const Kernel& kernel, const LaunchEnv& env,
+        std::vector<std::uint8_t>* shared_out,
+        std::uint64_t instruction_limit = 1000000) const = 0;
+};
+
+// Pluggable interpreter registry.  Registration happens at init time
+// (single-threaded); find() returns nullptr for unknown names.
+class InterpreterRegistry {
+public:
+    using Factory = const IInterpreter* (*)();
+
+    // The reference backend (always available, no registration required).
+    static const IInterpreter* default_impl();
+
+    // Register (or replace) an interpreter under a stable name.
+    static void register_impl(const char* name, Factory factory);
+
+    // Exact name lookup; nullptr when not registered.
+    static const IInterpreter* find(const char* name);
+
+    // Registered names (sorted), for diagnostics / CLI selection.
+    static std::vector<std::string> names();
+};
+
 class Interpreter {
 public:
     // Run a kernel's pre-decoded IR from pc=0 with the given environment.
@@ -314,28 +403,7 @@ public:
         std::uint64_t instruction_limit = 1000000);
 
     // Expose the CTA state after run() for tests (via a result struct).
-    struct Result {
-        std::optional<Fault> fault;
-        std::vector<CtaState> ctas;
-        std::vector<std::string> trace;  // when report_trace
-        std::uint64_t dynamic_instructions = 0;
-        bool limit_reached = false;
-        // Phase 5.5: which mode ran and fast-path accounting.
-        ExecutionMode execution_mode = ExecutionMode::kPrecise;
-        FastExecutionStats fast_stats;
-        bool approximate = false;  // true once a fast FP leaf executed
-        // Phase 6 Step 2B: trace-only memory events (empty unless model.l1tex
-        // != kOff).  Never affects functional results.
-        std::vector<MemoryEvent> memory_events;
-        // Phase 6 Step 2D: data-race reports (empty unless model.race ==
-        // kReport).  Trace-only; never affects functional results.
-        std::vector<RaceReport> race_reports;
-        // Phase 10 hotspot profile (empty unless options.collect_hotspots):
-        // kernel-relative PC -> dynamic issue count for every static word that
-        // executed.  Sorted ascending by PC.  The benchmark derives top-N
-        // mnemonics from this map against the kernel's predecoded text.
-        std::map<std::uint64_t, std::uint64_t> pc_hotspots;
-    };
+    using Result = InterpreterResult;
     static Result run_result(const Kernel& kernel, const LaunchEnv& env,
                              std::uint64_t instruction_limit = 1000000,
                              bool report_trace = false);
