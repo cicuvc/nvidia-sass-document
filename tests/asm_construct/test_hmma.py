@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, CudaModule, assemble_flat
+from archutil import adapt_source  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # HMMA.16816.F32.BF16 — tensor-core matrix multiply (bf16 x bf16 -> f32),
@@ -54,7 +55,7 @@ KERNEL = """#fn k(out<8>) {
 
 def run_hmma(srcfmt, frag16):
     """frag16: 16 words at out[0..15]; D written to out+0x40. Returns 4 floats."""
-    mod = CudaModule(assemble(KERNEL.replace("{SRCFMT}", srcfmt)))
+    mod = CudaModule(assemble(adapt_source(KERNEL.replace("{SRCFMT}", srcfmt))))
     d = mod.devmem_alloc(2048 * 4)
     buf = [0] * 2048
     buf[:16] = frag16

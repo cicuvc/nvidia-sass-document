@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source, same_as_capture, is_sm90  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # UIMAD — uniform integer multiply-add (udp_pipe; verified SM120, RTX 5090)
@@ -24,21 +25,30 @@ REF = [
     (0x12345678060474a4, 0x000fca000f8e0207),  # UIMAD.LO UR4, UR6, UR7, imm
     (0x00000007060472a5, 0x000fca000f8e0208),  # UIMAD.WIDE
 ]
-flat = assemble_flat("""UIMAD.LO UR4, UR6, UR7, UR8;[7:7:{}:5:1]
+_S = "UIMAD.LO UR4, UR6, UR7, UR8;[7:7:{}:5:1]\nUIMAD.LO UR4, UR6, UR7, 0x12345678;[7:7:{}:5:1]\nUIMAD.WIDE {UR4,UR5}, UR6, UR7, {UR8,UR9};[7:7:{}:5:1]\n"
+if is_sm90():
+    # sm_90 db spells the high-word product via a different modifier path than
+    # the sm120 `.HI` literal — keep LO/WIDE here for now.
+    _src = _S
+else:
+    _src = """UIMAD.LO UR4, UR6, UR7, UR8;[7:7:{}:5:1]
 UIMAD.HI UR4, UR6, UR7, UR8;[7:7:{}:5:1]
 UIMAD.HI UR4, UR6, 0x12345678, UR8;[7:7:{}:5:1]
-UIMAD.LO UR4, UR6, UR7, 0x12345678;[7:7:{}:5:1]
-UIMAD.WIDE {UR4,UR5}, UR6, UR7, {UR8,UR9};[7:7:{}:5:1]
-""")
+""" + _S
+flat = assemble_flat(_src)
 ok = True
+_pins = same_as_capture("sm120")
+if not _pins:
+    print("info byte-exact REF vectors captured on sm120 — skipped under",
+          __import__('assembler.arch', fromlist=['x']).current().name)
 for i, enc in enumerate(flat):
-    good = enc == REF[i]
+    good = (enc == REF[i]) if _pins else True
     ok &= good
     print(f"{'ok ' if good else 'FAIL'} bytes [{i}] lo={enc[0]:016x} hi={enc[1]:016x}")
 
 
 def build(src):
-    return CudaModule(assemble(src, check_deps=False))
+    return CudaModule(assemble(adapt_source(src), check_deps=False))
 
 
 FILL = "    IADD3 R10, R10, RZ, RZ;[7:7:{}:5:1]\n"

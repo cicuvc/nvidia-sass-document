@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # UBLKCP — non-tensor cp.async.bulk (uniform datapath bulk copy).
@@ -89,7 +90,7 @@ body = (
     "    DEPBAR.LE SB0, 0x0;[7:7:{1}:5:1]\n"
     "    EXIT;[7:7:{}:5:0]\n")
 src = "#fn k(out<8>) {\n    #pragma SHARED(0x4000)\n" + body + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(64)
 mod.device_write(d, bytes(64))
 mod.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
@@ -102,7 +103,7 @@ check("UBLKCP.G.S 32B store (URc=2)", list(v), exp)
 # --- 2. store size in 16-byte units: URc=1 -> 16 bytes --------------------
 body2 = body.replace("    UMOV UR11, 0x2;[1:7:{}:1:0]", "    UMOV UR11, 0x1;[1:7:{}:1:0]")
 src = "#fn k(out<8>) {\n    #pragma SHARED(0x4000)\n" + body2 + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(64)
 mod.device_write(d, bytes(64))
 mod.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
@@ -153,7 +154,7 @@ body3 = (
     "    STG.E desc[{UR4,UR5}][{R6,R7}+0xc], R13;[0:1:{1}:1:0]\n"
     "    EXIT;[7:7:{}:5:0]\n")
 src = "#fn k(out<8>, gsrc<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body3 + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(64)
 g = mod.devmem_alloc(0x200)
 pat = struct.pack("<16I", *range(1, 17))
@@ -217,7 +218,7 @@ body4 = (
     "    STG.E desc[{UR4,UR5}][{R6,R7}+0x14], R13;[0:1:{1}:1:0]\n"
     "    EXIT;[7:7:{}:5:0]\n")
 src = "#fn k(out<8>, gsrc<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body4 + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(64)
 g = mod.devmem_alloc(0x200)
 pat = struct.pack("<16I", *range(1, 17))

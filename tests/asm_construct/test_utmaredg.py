@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source  # noqa: E402
 from assembler.runner import _cuda, _check
 
 # ---------------------------------------------------------------------------
@@ -104,12 +105,12 @@ def utmaredg_kernel(op, src_vals, dst_init):
         "    EXIT;[7:7:{}:5:0]\n")
     return "#fn k(tmap_ptr<8>, out<8>) {\n    #pragma SHARED(0x4000)\n" + body + "}\n"
 
-mod = CudaModule(assemble(utmaredg_kernel("ADD", [1, 2, 3, 4], [0] * 4)))
+mod = CudaModule(assemble(adapt_source(utmaredg_kernel("ADD", [1, 2, 3, 4], [0] * 4))))
 
 
 def run_red(op, src_vals, dst_init):
     src = utmaredg_kernel(op, src_vals, dst_init)
-    m = CudaModule(assemble(src))
+    m = CudaModule(assemble(adapt_source(src)))
     dd = m.devmem_alloc(8 * 8 * 4)
     m.device_write(dd, struct.pack("<64I", *(dst_init * 16)))
     dt = make_tmap(dd)

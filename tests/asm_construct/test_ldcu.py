@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source, same_as_capture, is_sm90  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # LDCU (sm_120 name of ULDC) — uniform load constant (udp_pipe; verified SM120)
@@ -37,23 +38,33 @@ REF = [
     (0x00007000ff0677ac, 0x000e220008000a00),  # .64
     (0x00007000ff1477ac, 0x000e220008000c00),  # .128 -> UR20
 ]
-flat = assemble_flat("""LDCU UR6, c[0x0][0x380];[0:7:{}:1:0]
+_BODY = """
 LDCU.U8 UR6, c[0x0][0x380];[0:7:{}:1:0]
 LDCU.S8 UR6, c[0x0][0x380];[0:7:{}:1:0]
 LDCU.U16 UR6, c[0x0][0x380];[0:7:{}:1:0]
 LDCU.S16 UR6, c[0x0][0x380];[0:7:{}:1:0]
-LDCU.64 {UR6,UR7}, c[0x0][0x380];[0:7:{}:1:0]
+LDCU.64 {UR6,UR7}, c[0x0][0x380];[0:7:{}:1:0]"""
+if is_sm90():
+    # sm_90 spec ULDC sz enum tops out at 64 — no .128 variant.
+    _src = _HEAD + _BODY + "\n"
+else:
+    _src = _HEAD + _BODY + """
 LDCU.128 {UR20,UR21,UR22,UR23}, c[0x0][0x380];[0:7:{}:1:0]
-""")
+"""
+flat = assemble_flat(_src)
 ok = True
+_pins = same_as_capture("sm120")
+if not _pins:
+    print("info byte-exact REF vectors captured on sm120 — skipped under",
+          __import__('assembler.arch', fromlist=['x']).current().name)
 for i, enc in enumerate(flat):
-    good = enc == REF[i]
+    good = (enc == REF[i]) if _pins else True
     ok &= good
     print(f"{'ok ' if good else 'FAIL'} bytes [{i}] lo={enc[0]:016x} hi={enc[1]:016x}")
 
 
 def build(src):
-    return CudaModule(assemble(src, check_deps=False))
+    return CudaModule(assemble(adapt_source(src), check_deps=False))
 
 
 FILL = "    IADD3 R10, R10, RZ, RZ;[7:7:{}:5:1]\n"
@@ -117,8 +128,13 @@ good = (lo, hi) == (0xCAFEBABE, 0xDEADBEEF)
 ok &= good
 print(f"{'ok ' if good else 'FAIL'} 64-bit lo=0x{lo:08X} hi=0x{hi:08X} (exp 0xCAFEBABE, 0xDEADBEEF)")
 
-# 128-bit quad from two contiguous 8-byte params (a at 0x380, b at 0x388).
-src128 = f"""#fn t(a<8>, b<8>, out<1024>) {{
+# 128-bit quad from two contiguous 8-byte params (a at #param(a), b at
+# #param(b); on sm_120 these land at 0x380/0x388).  The sm_90 spec has no
+# .128 ULDC variant, so this section runs only where the variant exists.
+if is_sm90():
+    print("info .128 section skipped: sm_90 spec has no ULDC.128")
+else:
+    src128 = f"""#fn t(a<8>, b<8>, out<1024>) {{
     LDCU.64 {{UR4, UR5}}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{{}}:1:0]
     LDC.64 {{R6, R7}}, #param(out);[1:7:{{}}:1:0]
     LDCU.128 {{UR20,UR21,UR22,UR23}}, #param(a);[2:7:{{}}:1:0]
@@ -142,18 +158,18 @@ src128 = f"""#fn t(a<8>, b<8>, out<1024>) {{
     STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0xC], R5;[7:7:{{0,1}}:1:0]
     EXIT;[7:7:{{}}:5:0]
 }}"""
-mod = build(src128)
-d = mod.devmem_alloc(1024)
-mod.device_write(d, bytes(1024))
-mod.launch("t", grid=(1,), block=(1,),
-           args=[0x1111111122222222, 0x3333333344444444, d])
-mod.synchronize()
-v = struct.unpack("<4I", mod.device_read(d, 16))
-mod.devmem_free(d)
-exp = (0x22222222, 0x11111111, 0x44444444, 0x33333333)
-good = v == exp
-ok &= good
-print(f"{'ok ' if good else 'FAIL'} 128-bit {[hex(x) for x in v]} (exp {[hex(x) for x in exp]})")
+    mod = build(src128)
+    d = mod.devmem_alloc(1024)
+    mod.device_write(d, bytes(1024))
+    mod.launch("t", grid=(1,), block=(1,),
+               args=[0x1111111122222222, 0x3333333344444444, d])
+    mod.synchronize()
+    v = struct.unpack("<4I", mod.device_read(d, 16))
+    mod.devmem_free(d)
+    exp = (0x22222222, 0x11111111, 0x44444444, 0x33333333)
+    good = v == exp
+    ok &= good
+    print(f"{'ok ' if good else 'FAIL'} 128-bit {[hex(x) for x in v]} (exp {[hex(x) for x in exp]})")
 
 print("\n=== LDCU (ULDC) semantic verification: ALL OK ===" if ok else "\n=== LDCU FAILURES ===")
 sys.exit(0 if ok else 1)

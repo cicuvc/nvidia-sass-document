@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, CudaModule
+from archutil import adapt_source  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Bit-level precision of the tensor-core HMMA, verified against the FDA model
@@ -70,7 +71,7 @@ def fi(v):
 
 
 def run(srcfmt, frag16):
-    mod = CudaModule(assemble(KERNEL.replace("{SRCFMT}", srcfmt)))
+    mod = CudaModule(assemble(adapt_source(KERNEL.replace("{SRCFMT}", srcfmt))))
     d = mod.devmem_alloc(2048 * 4)
     buf = [0] * 2048
     buf[:16] = frag16

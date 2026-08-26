@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, CudaModule, assemble_flat
+from archutil import adapt_source  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # LDG / STG full-option coverage (SM120).
@@ -48,7 +49,7 @@ def run_rt(ldg_mod, ldg_sz, dest, src_off, dst_off, block=1):
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     src = "\n".join(lines)
-    mod = CudaModule(assemble(src))
+    mod = CudaModule(assemble(adapt_source(src)))
     d = mod.devmem_alloc(1024)
     mod.device_write(d, bytes([i & 0xFF for i in range(1024)]))
     mod.launch("k", grid=(1,), block=(block,), args=[d])
@@ -79,7 +80,7 @@ def ext_case(ldg_sz, want):
              f"    STG.E{'.64' if ldg_sz == '64' else '.128' if ldg_sz == '128' else ''} desc[{{UR4,UR5}}][{{R6,R7}}+0x{dst_off:X}], {dest};[0:1:{{0,1}}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
-    mod = CudaModule(assemble("\n".join(lines)))
+    mod = CudaModule(assemble(adapt_source("\n".join(lines))))
     d = mod.devmem_alloc(1024)
     # byte pattern: byte0=0x80, byte1=0x81, byte2=0x82, byte3=0x83 ...
     pat = b"".join(bytes([(0x80 + i) & 0xFF]) for i in range(64))
@@ -147,7 +148,7 @@ def stg_write(sz, mods="E", value=0x88776655):
              f"    STG.{mods}{s2} desc[{{UR4,UR5}}][{{R6,R7}}+0x40], {dreg};[0:1:{{0}}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
-    mod = CudaModule(assemble("\n".join(lines)))
+    mod = CudaModule(assemble(adapt_source("\n".join(lines))))
     d = mod.devmem_alloc(1024)
     mod.device_write(d, b"\x00" * 1024)
     mod.launch("k", grid=(1,), block=(1,), args=[d])

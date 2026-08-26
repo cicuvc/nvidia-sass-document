@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_kernel, CudaModule
+from archutil import adapt_source  # noqa: E402
 from assembler.runner import _cuda, _check
 
 # ---------------------------------------------------------------------------
@@ -174,7 +175,7 @@ B_row = [((b << 16) | a) for a, b in
 
 def run_variant(tag, ctl):
     mod.device_write(d_tmap, bytes(tmap.raw))   # reset descriptor -> src A
-    m = CudaModule(assemble(kernel(ctl)))
+    m = CudaModule(assemble(adapt_source(kernel(ctl))))
     d = m.devmem_alloc(64)
     m.device_write(d, bytes(64))
     m.launch("k", grid=(1,), block=(32,), args=[d_tmap, dB, d],

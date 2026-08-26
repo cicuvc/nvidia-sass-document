@@ -64,10 +64,16 @@ IADD3 R1, R0, R0, RZ;[7:7:{0}:5:1]
 }"""), [])
 
 # --- 2. LDG descriptor not waited ------------------------------------------
+# Arch-conditional: on sm120 LDCU is DECOUPLED_WR_SCBD (its wr SB backs the
+# desc operands, so the un-waited LDG is a dependency violation); on sm90 ULDC
+# is COUPLED_MATH with dst_wr_sb=*7 — no descriptor edge exists to violate.
+import archutil
+_sm90 = archutil.is_sm90()
+_EXP_DESC_REQ = [] if _sm90 else ["missing_req"]
 check("LDG w/o desc req", codes("""#fn k(out<8>) {
 LDCU.64 {UR4,UR5}, #param(out);[1:7:{}:2:0]
 LDG.E R8, desc[{UR4,UR5}][{R0,R1}+0x0];[0:7:{}:8:1]
-}"""), ["missing_req"])
+}"""), _EXP_DESC_REQ)
 check("LDG with desc req", codes("""#fn k(out<8>) {
 LDCU.64 {UR4,UR5}, #param(out);[1:7:{}:2:0]
 LDG.E R8, desc[{UR4,UR5}][{R0,R1}+0x0];[0:7:{1}:8:1]
@@ -111,12 +117,13 @@ IADD3 R2, R8, RZ, RZ;[7:7:{}:5:1]
 }"""), [])
 
 # --- 7. DEPBAR.LE with uniform threshold: no crash, no coverage ------------
+# Same arch-conditional LDG-desc edge as case 2 above.
 check("DEPBAR.LE UR threshold", codes("""#fn k(out<8>) {
 LDCU.64 {UR4,UR5}, #param(out);[1:7:{}:2:0]
 LDG.E R8, desc[{UR4,UR5}][{R0,R1}+0x0];[0:7:{1}:8:1]
 DEPBAR.LE SB0, UR3;[7:7:{1}:5:1]
 IADD3 R2, R8, RZ, RZ;[7:7:{}:5:1]
-}"""), ["missing_req"])
+}"""), _EXP_DESC_REQ)
 
 # --- 8. control flow: predicated BRA, taken path missing req ---------------
 check("BRA taken path w/o req", codes("""#fn k(out<8>) {

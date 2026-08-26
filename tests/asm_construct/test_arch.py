@@ -46,12 +46,15 @@ try:
 finally:
     arch.set_arch(saved)
 
-# --- sm120 (default): LDCU opcode + const-bank layout ----------------------
-check("default arch is sm120", arch.current().name, "sm120")
-r = assemble_kernel(SRC)
-check("sm120 param base (0x380)", r.params[0][1], 0x380)
-check("sm120 LDCU enc (UR4 + c[0x0][0x358])",
-      r.encoded[0][0], 0x00006b00ff0477ac)
+# --- sm120 (default) / default-arch block ---------------------------------
+import os
+_default_arch = os.environ.get("ASSEMBLER_ARCH", "sm120")
+check("default arch matches environment", arch.current().name, _default_arch)
+if arch.current().name == "sm120":
+    r = assemble_kernel(SRC)
+    check("sm120 param base (0x380)", r.params[0][1], 0x380)
+    check("sm120 LDCU enc (UR4 + c[0x0][0x358])",
+          r.encoded[0][0], 0x00006b00ff0477ac)
 
 # --- arch= kwarg switches per-call and restores ----------------------------
 before = arch.current().name

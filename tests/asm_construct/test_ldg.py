@@ -3,6 +3,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, CudaModule
+from archutil import adapt_source  # noqa: E402
+from archutil import adapt_source  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # LDG global load — hand-built ELF (scoreboard-corrected).
@@ -33,7 +35,7 @@ def build():
              "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R22;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
-    return assemble("\n".join(lines))
+    return assemble(adapt_source("\n".join(lines)))
 
 
 print("=== hand-built ELF LDG, scoreboard-corrected ===")

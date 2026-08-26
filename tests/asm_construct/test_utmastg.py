@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source  # noqa: E402
 from assembler.runner import _cuda, _check
 
 # ---------------------------------------------------------------------------
@@ -108,7 +109,7 @@ def utmastg_kernel(c0, c1):
         "    EXIT;[7:7:{}:5:0]\n")
     return "#fn k(tmap_ptr<8>, out<8>) {\n    #pragma SHARED(0x4000)\n" + body + "}\n"
 
-mod = CudaModule(assemble(utmastg_kernel(0, 0)))
+mod = CudaModule(assemble(adapt_source(utmastg_kernel(0, 0))))
 d_dst = mod.devmem_alloc(16 * 16 * 2)
 mod.device_write(d_dst, bytes(16 * 16 * 2))
 d_tmap = make_tmap(d_dst)
@@ -116,7 +117,7 @@ d_tmap = make_tmap(d_dst)
 
 def run_store(c0, c1):
     src = utmastg_kernel(c0, c1)
-    m = CudaModule(assemble(src))
+    m = CudaModule(assemble(adapt_source(src)))
     dd = m.devmem_alloc(16 * 16 * 2)
     m.device_write(dd, bytes(16 * 16 * 2))
     dt = make_tmap(dd)

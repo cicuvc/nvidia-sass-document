@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, CudaModule, assemble_flat
+from archutil import adapt_source  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # LDGSTS (cp.async) — asynchronous global→shared copy (mio_pipe, VQ_AGU).
@@ -55,7 +56,7 @@ def run_ldgsts(block=1):
     STG.E.128 desc[{UR4,UR5}][{R6,R7}+0x200], {R8,R9,R10,R11};[0:1:{0,1}:1:0]
     EXIT;[7:7:{}:5:0]
 }"""
-    mod = CudaModule(assemble(src))
+    mod = CudaModule(assemble(adapt_source(src)))
     d = mod.devmem_alloc(1024)
     mod.device_write(d, struct.pack("<256I", *list(range(256))))
     mod.launch("k", grid=(1,), block=(block,), args=[d])
@@ -102,7 +103,7 @@ def run_sz(sz, nwords):
 {stores}
     EXIT;[7:7:{{}}:5:0]
 }}"""
-    mod = CudaModule(assemble(src))
+    mod = CudaModule(assemble(adapt_source(src)))
     d = mod.devmem_alloc(1024)
     pat = list(range(256))
     mod.device_write(d, struct.pack("<256I", *pat))

@@ -4,6 +4,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 
 from assembler import assemble, CudaModule
+from archutil import adapt_source  # noqa: E402
 import hmma_model as M
 
 # ---------------------------------------------------------------------------
@@ -47,7 +48,7 @@ KERNEL = """#fn k(out<8>) {
 
 
 def run_hw(srcfmt, frag16):
-    mod = CudaModule(assemble(KERNEL.replace("{SRCFMT}", srcfmt)))
+    mod = CudaModule(assemble(adapt_source(KERNEL.replace("{SRCFMT}", srcfmt))))
     d = mod.devmem_alloc(2048 * 4)
     buf = [0] * 2048
     buf[:16] = frag16

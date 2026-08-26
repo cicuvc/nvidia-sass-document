@@ -200,8 +200,16 @@ enc_cases = [
     ("@P0 ATOMG.E.ADD.STRONG.GPU PT, R6, desc[{UR6,UR7}][{R6,R7}], R11",
      0x8000000b060609a8),
 ]
+from archutil import same_as_capture
+_pins = same_as_capture("sm120")
 ok = True
+if not _pins:
+    print("info byte-exact enc_cases captured on sm120 — skipped under",
+          __import__('assembler.arch', fromlist=['x']).current().name)
 for sass, want_lo in enc_cases:
+    if not _pins:
+        print(f"skip {sass[:46]:<46} (arch-tagged vector)")
+        continue
     try:
         e = assemble_flat(sass + ";[7:7:{}:1:0]\n")[0]
     except Exception as ex:

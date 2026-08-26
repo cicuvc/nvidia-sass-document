@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source  # noqa: E402
 from assembler.runner import _cuda, _check
 
 # ---------------------------------------------------------------------------
@@ -145,7 +146,7 @@ def utmaldg_kernel(c0, c1):
 
 
 def run_tma(c0, c1):
-    mod = CudaModule(assemble(utmaldg_kernel(c0, c1)))
+    mod = CudaModule(assemble(adapt_source(utmaldg_kernel(c0, c1))))
     d = mod.devmem_alloc(64)
     mod.device_write(d, bytes(64))
     mod.launch("k", grid=(1,), block=(32,), args=[d_tmap, d],

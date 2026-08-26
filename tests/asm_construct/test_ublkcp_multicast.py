@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_kernel, CudaModule
+from archutil import adapt_source
 from assembler.runner import _cuda, _check
 
 # ---------------------------------------------------------------------------
@@ -38,7 +39,7 @@ def check(name, got, want):
     print(f"{'ok ' if good else 'FAIL'} {name:<52} {got} (exp {want})")
 
 try:
-    _ = CudaModule(assemble("#fn k() { EXIT;[7:7:{}:5:0] }"))
+    _ = CudaModule(assemble(adapt_source("#fn k() { EXIT;[7:7:{}:5:0] }")))
     HAVE_GPU = True
 except RuntimeError:
     HAVE_GPU = False
@@ -123,14 +124,14 @@ if not HAVE_GPU:
     sys.exit(0 if ok else 1)
 
 lib = _cuda()
-m0 = CudaModule(assemble("#fn k() { EXIT;[7:7:{}:5:0] }"))
+m0 = CudaModule(assemble(adapt_source("#fn k() { EXIT;[7:7:{}:5:0] }")))
 d_in = m0.devmem_alloc(512)
 m0.device_write(d_in, struct.pack("<128I", *range(0x1000, 0x1000 + 128)))
 d_out = m0.devmem_alloc(64)
 m0.device_write(d_out, bytes(64))
 
 def run(multicast: bool, cluster: bool):
-    _cubin = assemble(kernel(multicast, cluster))
+    _cubin = assemble(adapt_source(kernel(multicast, cluster)))
     if os.environ.get("DUMP_CUBIN"):
         open(f"/tmp/dump_{multicast}_{cluster}.cubin", "wb").write(_cubin)
     m = CudaModule(_cubin)
