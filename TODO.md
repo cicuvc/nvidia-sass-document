@@ -88,7 +88,7 @@ Format conversion on `int_pipe` (modern I2FP/F2IP/I2I) and `mio_pipe` (legacy I2
 - [x] **FRND_X** (idx 50) — Float round, extended  `-> FRND`
 - [x] **I2FP** (idx 197) — Integer to float (int_pipe modern replacement for I2F)
 - [x] **F2IP** (idx 195) — Float to integer, packed 8-bit output (int_pipe modern replacement for F2I)
-- [ ] **F2FP** (idx 158) — Float to float, packed conversion
+- [x] **F2FP** (idx 158) — Float to float, packed conversion (int_pipe; 61 variants / 9 families)
 - [x] **UF2FP** (idx 196) — Uniform float to float, packed conversion (on udp_pipe)
 
 ## Uniform

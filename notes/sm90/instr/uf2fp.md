@@ -60,7 +60,7 @@ Rounding mode: RN (round-to-nearest).
 
 | Property | F2F | F2FP | UF2FP |
 |----------|-----|------|-------|
-| Pipe | `mio_pipe` | `udp_pipe` | `udp_pipe` |
+| Pipe | `mio_pipe` | `int_pipe` | `udp_pipe` |
 | Registers | Regular | Regular | Uniform |
 | Packed | No | Yes | Yes (merge modes) |
 | pTxas emits? | No | Yes | Not observed |
