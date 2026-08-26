@@ -32,11 +32,16 @@ REF = [
     (0x00000123060478bc, 0x000fca00080e0a00),  # imm16 0x123
     (0x00000123060478bc, 0x000fca00080e2000),  # constSize=16
 ]
-flat = assemble_flat("""UCLEA {UR4,UR5}, UPT, {UR6,UR7}, UR8, 0x5;[7:7:{}:5:1]
+from archutil import adapt_source, same_as_capture, is_sm90  # noqa: E402
+
+_SRC = """UCLEA {UR4,UR5}, UPT, {UR6,UR7}, UR8, 0x5;[7:7:{}:5:1]
 UCLEA {UR4,UR5}, UP0, {UR6,UR7}, UR8, 0x5;[7:7:{}:5:1]
-UCLEA {UR4,UR5}, UPT, {UR6,UR7}, 0x123, 0x5;[7:7:{}:5:1]
-UCLEA {UR4,UR5}, UPT, {UR6,UR7}, 0x123, 16;[7:7:{}:5:1]
-""")
+UCLEA {UR4,UR5}, UPT, {UR6,UR7}, 0x123, 0x5;[7:7:{}:5:1]"""
+if not is_sm90():
+    # sm_90 spec condition: constSizeU04 cannot be greater than 8 — the
+    # scale=16 probe is a Blackwell-only legality case.
+    _SRC += "\nUCLEA {UR4,UR5}, UPT, {UR6,UR7}, 0x123, 16;[7:7:{}:5:1]"
+flat = assemble_flat(_SRC + "\n")
 ok = True
 for i, enc in enumerate(flat):
     good = enc == REF[i]

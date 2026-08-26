@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, CudaModule
+from archutil import adapt_source  # noqa: E402
 from assembler.runner import reset_context
 
 # ---------------------------------------------------------------------------
@@ -79,13 +80,13 @@ def build_udpmio(stalls):
 def run(kind, stalls):
     reset_context()
     if kind == "udpudp":
-        cubin = assemble(build_udpudp(stalls), check_deps=False)
+        cubin = assemble(adapt_source(build_udpudp(stalls)), check_deps=False)
         mod = CudaModule(cubin)
         d = mod.devmem_alloc(1024)
         mod.device_write(d, bytes(1024))
         mod.launch("fwd", grid=(1,), block=(1,), args=[d, POISON_I])
     else:
-        cubin = assemble(build_udpmio(stalls), check_deps=False)
+        cubin = assemble(adapt_source(build_udpmio(stalls)), check_deps=False)
         mod = CudaModule(cubin)
         d = mod.devmem_alloc(1024)
         mod.device_write(d, bytes(1024))

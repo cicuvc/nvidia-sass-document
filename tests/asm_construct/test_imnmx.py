@@ -6,6 +6,43 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from assembler import assemble, CudaModule, assemble_flat
 import struct
 
+# ---------------------------------------------------------------------------
+# Arch scope: the predicate-result matrix below (Pd/Pv forms) is the sm_120
+# extension; the sm_90 spec IMNMX is plain `IMNMX[U32|S32] Rd,Ra,Rb,[!]Pp`
+# (S32/U32 only, no 64-bit).  On sm90 we verify that reduced surface here and
+# skip the extended matrix.
+if __name__ == "__main__":
+    try:
+        from archutil import same_as_capture, adapt_source, is_sm90  # noqa: E402
+    except ImportError:
+        same_as_capture = None
+    if same_as_capture is not None and not same_as_capture("sm120"):
+        ok = True
+        _src = """#fn imnmx_test(out<8>) {
+    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
+    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]
+    MOV32I R0, 0xFFFFFFF9;[7:7:{}:5:1]      // -7 signed / 0xFFFFFFF9 unsigned
+    MOV32I R1, 0x00000009;[7:7:{}:5:1]      // +9
+    IMNMX.S32 R2, R0, R1, PT;[0:1:{0}:3:1]   // min  -> -7 (0xFFFFFFF9)
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R2;[0:1:{0}:3:1]
+    IMNMX.U32 R3, R0, R1, PT;[0:1:{0}:3:1]   // minu -> +9
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R3;[0:1:{0}:3:1]
+    EXIT;[7:7:{}:5:0]
+}"""
+        cubin = assemble(adapt_source(_src))
+        mod = CudaModule(cubin)
+        d = mod.devmem_alloc(16)
+        mod.device_write(d, b"\x00" * 16)
+        mod.launch("imnmx_test", grid=(1,), block=(1,), args=[d])
+        mod.synchronize()
+        v = struct.unpack("<2I", mod.device_read(d, 8))
+        exp = (0xFFFFFFF9, 9)
+        good = v == exp
+        ok &= good
+        print(f"{'ok ' if good else 'FAIL'} sm90 plain-form min/max: {[hex(x) for x in v]} (exp {[hex(x) for x in exp]})")
+        print(f"\n=== IMNMX sm90 reduced surface: {'ALL OK' if ok else 'FAILED'} ===")
+        sys.exit(0 if ok else 1)
+
 # IMNMX — Integer Min/Max (int_pipe). Verified on SM120 (RTX 5090).
 #
 # SM120 syntax (full form, richer than the sm90/sm75 4-operand form):

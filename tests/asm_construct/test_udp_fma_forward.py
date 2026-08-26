@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, CudaModule
+from archutil import adapt_source  # noqa: E402
 from assembler.runner import reset_context
 
 # ---------------------------------------------------------------------------
@@ -55,7 +56,7 @@ def build_kernel(stalls):
 
 def run(stalls):
     reset_context()
-    cubin = assemble(build_kernel(stalls), check_deps=False)
+    cubin = assemble(adapt_source(build_kernel(stalls)), check_deps=False)
     mod = CudaModule(cubin)
     d = mod.devmem_alloc(1024)
     mod.device_write(d, bytes(1024))

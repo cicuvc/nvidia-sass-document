@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # VIADD — Vector Integer Add on the fmalighter (FP) pipe (verified SM120, RTX 5090)
@@ -140,7 +141,7 @@ src = """#fn k(out<8>) {
 }"""
 
 try:
-    mod = CudaModule(assemble(src))
+    mod = CudaModule(assemble(adapt_source(src)))
 except RuntimeError as e:
     print(f"skip GPU checks (no CUDA driver/GPU): {e}")
     sys.exit(0 if ok else 1)

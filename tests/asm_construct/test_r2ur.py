@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source, same_as_capture  # noqa: E402
 from assembler.runner import reset_context
 
 # ---------------------------------------------------------------------------
@@ -41,22 +42,27 @@ REF = [
     (0x00000000021072ca, 0x000fca00004e0000, "R2UR.FILL UR16, R2 (Pu=PT default)"),
     (0x00000000021072ca, 0x000fca00008e0000, "R2UR.BROADCAST UR16, R2 (Pu=PT default)"),
 ]
-flat = assemble_flat("""R2UR UR16, R2;[2:7:{}:5:1]
+_SRC_ALL = """R2UR UR16, R2;[2:7:{}:5:1]
 R2UR.OR P0, UR16, R2;[2:7:{}:5:1]
 R2UR.FILL P0, UR16, R2;[2:7:{}:5:1]
 R2UR.BROADCAST P0, UR16, R2;[2:7:{}:5:1]
 R2UR.FILL UR16, R2;[2:7:{}:5:1]
 R2UR.BROADCAST UR16, R2;[2:7:{}:5:1]
-""")
+"""
+_SRC_SM90 = "R2UR UR16, R2;[2:7:{}:5:1]\nR2UR.OR P0, UR16, R2;[2:7:{}:5:1]\n"
+flat = assemble_flat(_SRC_ALL if same_as_capture("sm120") else _SRC_SM90)
 ok = True
-for i, (lo, hi, name) in enumerate(REF):
+if not _pins:
+    print("info .FILL/.BROADCAST forms absent from the sm_90 spec — running base/OR cases only")
+for i, (lo, hi, name) in enumerate(REF if _pins else REF[:2]):
     good = flat[i] == (lo, hi)
+    if i >= len(flat): break
     ok &= good
     print(f"{'ok ' if good else 'FAIL'} bytes {name:24s} lo={flat[i][0]:016x} hi={flat[i][1]:016x}")
 
 
 def build(src):
-    return CudaModule(assemble(src, check_deps=False))
+    return CudaModule(assemble(adapt_source(src), check_deps=False))
 
 
 FILL = "    IADD3 R10, R10, RZ, RZ;[7:7:{}:5:1]\n"

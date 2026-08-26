@@ -54,6 +54,28 @@ def same_as_capture(capture: str = "sm120") -> bool:
     return current().name == capture
 
 
+_MOV64_RE = re.compile(
+    r"^(?P<lead>[ \t]*)(?:MOV|UMOV)\.64[ \t]*(?P<dst>\{[^}]+\})[ \t]*,[ \t]*(?P<src>.+?)(?P<br>;\[[^]]*\])[ \t]*$")
+
+def _split_mov64(m):
+    """sm_90 spec has no MOV.64: split pair-move into two scalar MOVs."""
+    lead, dst, src, br = m.group("lead"), m.group("dst"), m.group("src"), m.group("br")
+    lo_reg, hi_reg = [x.strip() for x in dst.strip("{}").split(",")]
+    src = src.strip()
+    if src.startswith("{"):
+        s_lo, s_hi = [x.strip() for x in src.strip("{}").split(",")]
+        l1 = f"{lead}MOV {lo_reg}, {s_lo}{br}"
+        l2 = f"{lead}MOV {hi_reg}, {s_hi}{br}"
+    else:
+        imm = int(src, 16) if src.lower().startswith("0x") else int(src)
+        l1 = f"{lead}MOV {lo_reg}, 0x{imm & 0xFFFFFFFF:X}{br}"
+        l2 = f"{lead}MOV {hi_reg}, 0x{(imm >> 32) & 0xFFFFFFFF:X}{br}"
+    return l1 + "\n" + l2
+
+
+_VIADD_U32_RE = re.compile(r"(\bVIADD(?:X|XU)?)\.U32\b")
+
+
 _ELECT_RE = re.compile(r"\bELECT\s+(P\d+)\s*,\s*(UR\w+)\s*,\s*PT\b")
 
 
@@ -95,6 +117,15 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
     out_lines = []
     for line in lines_in:
         head, sep, bracket = line.partition(";")
+        if is_sm90():
+            new, nsub = _VIADD_U32_RE.subn(r"\1.32", head)
+            if nsub:
+                line = new + sep + bracket
+                head, sep, bracket = line.partition(";")
+            mmov = _MOV64_RE.match(line)
+            if mmov:
+                out_lines.extend(_split_mov64(mmov).split("\n"))
+                continue
         if sep and "ELECT" in head:
             # sm120 dialect prints `ELECT Pd, URa, PT`; sm90 slots are
             # `ELECT Pu, URd, [~]URa` — a literal PT cannot fill URa.
