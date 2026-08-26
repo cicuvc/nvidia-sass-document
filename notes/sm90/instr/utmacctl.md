@@ -2,6 +2,15 @@
 
 **Opcode mnemonics:** `UTMACCTL` = `0b1100110111001` = **0x19b9** (`_URa_`: `.IV`/`.PF` + operand) / `0b100110111001` = **0x9b9** (`_`: `.IVALL`, no operand) | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` (URa form) / `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` (IVALL form) | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
+> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 UTMACCTL manages the coherence of **tensor-map descriptors** in the TMA
 descriptor cache. A `CUtensorMap` may be mutated in global memory (via

@@ -2,6 +2,15 @@
 
 **Opcode mnemonic:** UP2UR  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). Its byte-exact encoding vectors were captured from sm_120 assembly;
+> the GPU-semantics halves of those cases passed on H20 (real sm_90).
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 
 Copies the hardware uniform predicate register (`UPR`) into a uniform register (`URd`), optionally combined with a source register and an immediate/register offset.

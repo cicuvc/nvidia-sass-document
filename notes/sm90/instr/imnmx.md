@@ -10,6 +10,15 @@ Both share the same pipe and operand structure.
 
 ---
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
+> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 
 `Rd = MIN(MAX)(Ra, Rb)` — two-operand integer min/max on 32-bit values,

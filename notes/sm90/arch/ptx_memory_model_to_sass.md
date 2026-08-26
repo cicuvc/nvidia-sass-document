@@ -181,7 +181,7 @@ single-serialisation-per-address is what makes atomicity free.
 ## 11. Crossbar + L2 model — where reordering comes from (corrected)
 Topology: SMs ↔ crossbar ↔ L2 (1–2 monolithic OoO atomic/ordering backends on
 recent archs: 1 on RTX 5090, 2 on H100; verified via aggregate-atomic-ceiling,
-`l2_slice_probe.md`). Data-bandwidth path is wide (many banks ⇒ TB/s); the
+`notes/sm120/l2_slice_probe.md`). Data-bandwidth path is wide (many banks ⇒ TB/s); the
 atomic/ordering commit path is narrow (~1–2 backends ⇒ ~90 Matom/s @ ~27-cyc
 aggregate issue period).
 
@@ -200,7 +200,7 @@ aggregate issue period).
   locations is well-behaved even across different addresses.
 
 This corrects the earlier "independent slices → independent xbar paths → rich
-cross-location reordering" speculation (§4, §9 in `l2_slice_probe.md`):
+cross-location reordering" speculation (§4, §9 in `notes/sm120/l2_slice_probe.md`):
 reordering is not *lots* of slices driving independence; it is an **OoO-backend
 behaviour** where the one backend speculates addresses apart, retires in program
 order, and resolves conflicts by rollback. Still permits the ISA-level reordering

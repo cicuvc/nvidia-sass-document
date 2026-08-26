@@ -20,6 +20,15 @@ source predicate `Pp`, but the results land in **uniform** storage: the ballot m
 register `URd` and the vote boolean in a uniform predicate `UPu`. Emitted when the ballot/vote
 result is warp-uniform and consumed by the uniform datapath — e.g. `__activemask()`.
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). Its byte-exact encoding vectors were captured from sm_120 assembly;
+> the GPU-semantics halves of those cases passed on H20 (real sm_90).
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 Reduces `Pp` across active lanes per `voteop`, identical modes to `VOTE`:
 | `voteop`[73:72] | SASS | reduction of `UPu` |

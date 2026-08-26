@@ -4,7 +4,7 @@ Consolidated picture of the SM-internal memory path: what is **established**
 (directly measured, reproducible), what is **inferred** (model fits, mechanism
 unproven), and what is **open**. Sources: `lsu_mio_structure.md` (MIO/arbiter,
 scoreboards), `memory_order_cta.md` (single-arbiter coherence), `scoreboards.md`,
-`control_codes.md`, `async_proxy.md` (two data movers), `sm120_findings.md`
+`control_codes.md`, `async_proxy.md` (two data movers), `notes/sm120/encoding-addressing.md`
 (encoding substrate), `shared_bank_conflicts.md` (LDGSTS/L1TEX model — the
 primary source for §2–§4 below).
 Tests: `tests/bankconf/*`, `arch/l1tex/*` (probe + regress + datasets),
@@ -29,7 +29,7 @@ Tests: `tests/bankconf/*`, `arch/l1tex/*` (probe + regress + datasets),
     memory latency).
 - sm_120 shares the exact encoding substrate with sm_90/sm_100 and the memory
   model is unchanged since Turing → the microarchitecture is largely inherited
-  (`sm120_findings.md`).
+  (`notes/sm120/encoding-addressing.md`).
 
 ## 2. L1TEX tag stage (LDGSTS) — ESTABLISHED
 

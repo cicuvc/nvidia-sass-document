@@ -9,6 +9,14 @@ There are **two distinct 64-bit formats**, distinguished by bit 4 of the UR5 hig
 `createpolicy`-generated descriptors set `[28]` (0x10 in the priority byte), driver
 access-property descriptors keep it clear.
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). The probing test itself is timing/state-sensitive and flaky on both GPUs.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Format 1 — `createpolicy` (UR4 = 0)
 
 PTX `createpolicy.{fractional|range}.L2::<prio>[.L2::<sec>].b64` lowers to a uniform

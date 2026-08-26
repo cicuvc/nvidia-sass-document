@@ -8,6 +8,17 @@ hand-assembled HMMA harness.
 (random-fragment vs hardware), `tests/asm_construct/test_hmma_precision.py`
 (targeted bit-level probes).
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
+> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
+> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
+> stall/NOP pattern before results count as sm_90-verified.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Algorithm (FDA, after MMA-Sim arXiv:2511.10909)
 
 Hopper HMMA (fp16/bf16, F32 accum) follows the **Fused-Dot-Add (FDA)** model:

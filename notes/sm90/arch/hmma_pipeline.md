@@ -6,6 +6,17 @@ and how does it relate to the `sm_90_latencies.txt` model?
 (`mma.sync.aligned.m16n8k16.f16…` → `HMMA.16816.F16`), sm_90a.
 Companion of `usched_latency.md`.
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
+> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
+> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
+> stall/NOP pattern before results count as sm_90-verified.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Spec position
 - Pipe: `HMMA ∈ fp16_pipe` (and the singleton set `HMMA_OP`). Issue occupancy
   `HMMA_OP : FMALITE_Occupancy [2]`.

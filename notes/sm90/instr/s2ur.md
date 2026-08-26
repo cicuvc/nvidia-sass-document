@@ -4,6 +4,11 @@
 
 Copy a hardware **special register** `SRa` into a uniform register `URd`. The uniform-datapath sibling of `S2R`, chosen when the SR value is warp-uniform (e.g. `blockIdx`, `SR_CgaCtaId`) and consumed on the uniform datapath.
 
+<!-- arch-scope-banner -->
+> **Arch scope:** SR_CTAID.X *last-writer-wins* numbers below come from RTX 5090 (sm_120). On real
+> Hopper (H20) the grid=3 case reads 1 vs the recorded 2 — silicon or launch-order
+> difference pending a dedicated probe. See `notes/sm120/silver-status.md`.
+
 ## Semantics
 `URd` (32-bit) = value of special register `SRa` (`SRa`[79:72], 8-bit index). Decoupled (`VQ_SR2UR`=29) — consumers wait via the write scoreboard. `SRa` 84/85 (`SR_ESR_PC`/`_HI`) are trap-mode only.
 

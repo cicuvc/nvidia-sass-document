@@ -2,6 +2,15 @@
 
 **Opcode mnemonic:** `UBLKCP` = `0b1001110111010` = **0x13ba** | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
+> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 UBLKCP is the **non-tensor** bulk-copy engine op — the SASS lowering of PTX
 `cp.async.bulk` (contiguous byte copy), as opposed to `UTMALDG`/`UTMASTG` which

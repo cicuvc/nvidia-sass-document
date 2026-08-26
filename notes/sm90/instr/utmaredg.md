@@ -4,6 +4,15 @@
 
 > TODO: idx 244 was listed as **`UTMREDG`** (ref_memo abbreviation) `-> UTMAREDG`.
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
+> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 UTMAREDG is the SASS lowering of PTX **`cp.reduce.async.bulk.tensor…`** — a TMA
 tensor store (shared::cta → global) that **atomically reduces** the tile into the

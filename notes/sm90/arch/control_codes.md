@@ -359,7 +359,7 @@ cache:
 
 A GPU-clock (CS2R SR_CLOCKLO) measurement was attempted but a second CS2R
 after a reuse FFMA faults `ILLEGAL_INSTRUCTION` in hand-built ELFs (same
-flakiness class as sm120_findings.md §10), so the boundary is pinned by the
+flakiness class as notes/sm120/encoding-addressing.md §10), so the boundary is pinned by the
 stall-controlled issue-gap model (`pos2 = s1`) instead — which is itself a
 cycle-accurate measurement.
 

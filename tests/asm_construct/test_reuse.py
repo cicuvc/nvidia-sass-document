@@ -29,7 +29,7 @@ from assembler import assemble, CudaModule
 # Registers R14-R16 were once thought reserved (ILLEGAL_INSTRUCTION); that
 # was an EIATTR_REGCOUNT undercount — the GPU reserves the top 2 registers of
 # each 8-register window. Fixed in sass_elf._compute_regcount; R17 is used
-# here out of habit. See notes/sm90/arch/sm120_findings.md section 10.
+# here out of habit. See notes/sm120/encoding-addressing.md section 10.
 # ---------------------------------------------------------------------------
 
 INIT = [

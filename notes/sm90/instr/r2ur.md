@@ -6,6 +6,15 @@ Moves a per-lane general register `Ra` into a **uniform** register `URd` — the
 per-thread datapath to the uniform datapath. Unlike the fast decoupled uniform ops, R2UR is
 **coupled** and slow (needs the warp to coordinate to produce a single uniform value).
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
+> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 - **`R2UR URd, Ra`** (noOR) — `URd = Ra` of the **first active lane** (lowest active laneid
   under the guard predicate). Verified on sm_120 silicon (RTX 5090):

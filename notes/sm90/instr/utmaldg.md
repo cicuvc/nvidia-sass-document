@@ -2,6 +2,15 @@
 
 **Opcode mnemonics:** `UTMALDG` = `0b1010110110100` = **0x15b4** (plain `.tile`, no `URc`) / `0b1001110110100` = **0x13b4** (with `URc`: im2col and/or multicast) | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
+> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 UTMALDG is the SASS lowering of PTX **`cp.async.bulk.tensor…`** in the *load*
 direction (global → shared::cluster). One elected thread on the uniform datapath

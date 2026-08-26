@@ -8,6 +8,15 @@ lever behind Volta+ Independent Thread Scheduling's **forward-progress** behavio
 into spin/poll loops so a waiting warp deprioritizes itself and lets the warp/group holding
 the awaited resource make progress.
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
+> (sm_120). Hopper silicon (H20) showed a deviation from the recorded sm_120 result.
+> Treat the numbers below as Blackwell-specific until probed on sm_90.
+
+> Status and follow-up tracking: `notes/sm120/silver-status.md`,
+> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
+> `notes/sm120/`.
+
 ## Semantics
 `@Pg YIELD [Pp]` requests the scheduler to yield the current warp's turn (favor another
 ready warp / PC-group on the next cycle) for the lanes where `Pg` holds. It performs no

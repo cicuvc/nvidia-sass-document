@@ -75,7 +75,9 @@ put the ULDC immediately before the consumer, or give the LDG extra stall.
   order), matching cuobjdump — not the sm120 `desc[...], Rd` dialect.
 
 ## Test-suite status on H20 (ASSEMBLER_ARCH=sm90)
-101 tests: **61 pass / 40 fail**.  Failure buckets:
+*(superseded by `sm90_resilver_audit.md`: full suite later reached **123 tests,
+83 pass / 40 fail** on H20, with per-bucket analysis and follow-up actions there.)*
+First snapshot: 101 tests: **61 pass / 40 fail**.  Failure buckets:
 - **sm120-only instructions** (expected): QMMA/OMMA (sm90 uses QGMMA),
   tensor-map helpers, etc. — need arch-specific sources or isolation.
 - **ULDC-synchronous pattern** (see above): tests that `LDCU` the cdesc then

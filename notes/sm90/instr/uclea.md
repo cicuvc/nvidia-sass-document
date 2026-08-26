@@ -2,6 +2,12 @@
 
 **Opcode mnemonic:** UCLEA  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
+<!-- arch-scope-banner -->
+> **Arch scope:** the em-window rules were measured on RTX 5090 (sm_120); the sm_90 spec
+> additionally rejects immediates >8 (#constSizeU04), so several sm_120 probes cannot
+> assemble under ASSEMBLER_ARCH=sm90 until sources are split per arch. See
+> `notes/sm120/silver-status.md`.
+
 ## Semantics
 
 **Silicon-verified on SM120 (`tests/asm_construct/test_uclea.py`, RTX 5090) —

@@ -31,7 +31,7 @@ homed to its slice and slow for the other half. This matches the external claim
 (“H800 = 2 slices, half the SMs direct-connected to each, NUMA-like”).
 
 Contrast with **RTX 5090 (sm_120)**: aggregate global-atomic ceiling ≈ 90 Matom/s
-(`l2_slice_probe.md`) is consistent with a **single** L2 atomic/commit backend (1
+(`notes/sm120/l2_slice_probe.md`) is consistent with a **single** L2 atomic/commit backend (1
 slice) — no L2 NUMA split expected there. So slice count is arch/SKU-specific:
 5090 = 1, H800 = 2.
 
