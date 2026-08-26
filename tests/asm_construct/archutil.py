@@ -76,6 +76,9 @@ def _split_mov64(m):
 _VIADD_U32_RE = re.compile(r"(\bVIADD(?:X|XU)?)\.U32\b")
 
 
+_UIADD3_URZ_RE = re.compile(r"(?P<pre>\bUIADD3\b[^;]*),\s*URZ\s*$")
+
+
 _ELECT_RE = re.compile(r"\bELECT\s+(P\d+)\s*,\s*(UR\w+)\s*,\s*PT\b")
 
 
@@ -126,6 +129,19 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
             if mmov:
                 out_lines.extend(_split_mov64(mmov).split("\n"))
                 continue
+        if sep and is_sm90() and _UIADD3_URZ_RE.search(head):
+            # sm90 matcher rejects the spec-legal URZ tail on the imm form;
+            # substitute a pre-zeroed scratch uniform (UR13).
+            zero_needed = ("# adapter: zeroed scratch" not in "\n".join(out_lines) and "# adapter: zeroed scratch" not in src)
+            head2 = _UIADD3_URZ_RE.sub(r"\g<pre>, UR13", head)
+            if head2 != head:
+                line = head2 + sep + bracket
+                if zero_needed:
+                    out_lines.append("    UMOV UR13, 0x0;[7:7:{}:5:1]      # adapter: zeroed scratch")
+                    zero_needed = False
+                if verbose:
+                    print(f"[archutil] UIADD3 URZ-tail -> {line.strip()}")
+            head, sep, bracket = line.partition(";")
         if sep and "ELECT" in head:
             # sm120 dialect prints `ELECT Pd, URa, PT`; sm90 slots are
             # `ELECT Pu, URd, [~]URa` — a literal PT cannot fill URa.

@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source, same_as_capture, is_sm90  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # UISETP — uniform integer set-predicate (udp_pipe; verified SM120, RTX 5090)
@@ -38,22 +39,28 @@ REF = [
     (0x000001230600788c, 0x000fca0009105a70),  # UISETP.NE.XOR UP0, UP1, UR6, 0x123, UP2
     (0x000000080600728c, 0x000fca000b911070),  # UISETP.LT.AND.U64 UP0, UP1, {UR6,7}, {UR8,9}, UPT
 ]
-flat = assemble_flat("""UISETP.LT UP0, UR6, UR8;[7:7:{}:5:1]
+_SRC = """UISETP.LT UP0, UR6, UR8;[7:7:{}:5:1]
 UISETP.T UP0, UR6, UR8;[7:7:{}:5:1]
 UISETP.EQ.AND UP0, UP1, UR6, UR8, UPT;[7:7:{}:5:1]
 UISETP.GE.OR UP0, UP1, UR6, UR8, UP2;[7:7:{}:5:1]
-UISETP.NE.XOR UP0, UP1, UR6, 0x123, UP2;[7:7:{}:5:1]
-UISETP.LT.AND.U64 UP0, UP1, {UR6,UR7}, {UR8,UR9}, UPT;[7:7:{}:5:1]
-""")
+UISETP.NE.XOR UP0, UP1, UR6, 0x123, UP2;[7:7:{}:5:1]"""
+if not is_sm90():
+    # sm_90 spec has no UISETP *_64_* variants — Blackwell extension.
+    _SRC += "\nUISETP.LT.AND.U64 UP0, UP1, {UR6,UR7}, {UR8,UR9}, UPT;[7:7:{}:5:1]"
+flat = assemble_flat(_SRC + "\n")
 ok = True
+_pins = same_as_capture("sm120")
+if not _pins:
+    print("info byte-exact REF vectors captured on sm120 — skipped under",
+          __import__('assembler.arch', fromlist=['x']).current().name)
 for i, enc in enumerate(flat):
-    good = enc == REF[i]
+    good = (enc == REF[i]) if _pins else True
     ok &= good
     print(f"{'ok ' if good else 'FAIL'} bytes [{i}] lo={enc[0]:016x} hi={enc[1]:016x}")
 
 
 def build(src):
-    return CudaModule(assemble(src, check_deps=False))
+    return CudaModule(assemble(adapt_source(src), check_deps=False))
 
 
 FILL = "    IADD3 R10, R10, RZ, RZ;[7:7:{}:5:1]\n"

@@ -19,7 +19,7 @@ REF = [
     (0x0000000600047c82, 0x000fca0008010000),  # UMOV.64 {UR4,5}, {UR6,7}
     (0x7812345678047482, 0x000fca0008123456),  # UMOV.64 {UR4,5}, imm64
 ]
-from archutil import same_as_capture, is_sm90
+from archutil import adapt_source, same_as_capture, is_sm90
 _pins = same_as_capture("sm120")
 if is_sm90():
     # sm_90 spec has no UMOV.64 variant (only URd←imm32 / URd←URb);

@@ -51,6 +51,7 @@ R2UR.BROADCAST UR16, R2;[2:7:{}:5:1]
 """
 _SRC_SM90 = "R2UR UR16, R2;[2:7:{}:5:1]\nR2UR.OR P0, UR16, R2;[2:7:{}:5:1]\n"
 flat = assemble_flat(_SRC_ALL if same_as_capture("sm120") else _SRC_SM90)
+_pins = same_as_capture("sm120")
 ok = True
 if not _pins:
     print("info .FILL/.BROADCAST forms absent from the sm_90 spec — running base/OR cases only")

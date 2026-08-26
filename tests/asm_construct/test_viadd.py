@@ -34,7 +34,7 @@ REF = {
     "RIR":        (0x1234567800027836, 0x000fca0000000000),  # R2=R0+0x12345678
 }
 
-flat = assemble_flat("""VIADD.U32 R2, R0, R1;[7:7:{}:5:1]
+flat = assemble_flat(adapt_source("""VIADD.U32 R2, R0, R1;[7:7:{}:5:1]
 VIADD.U32 R2, R0, -R1;[7:7:{}:5:1]
 VIADD.U32 R2, -R0, R1;[7:7:{}:5:1]
 VIADD.S32.ISAT R2, R0, R1;[7:7:{}:5:1]
@@ -42,7 +42,7 @@ VIADD.U16x2 R2, R0, R1;[7:7:{}:5:1]
 VIADD.S16x2 R2, R0, R1;[7:7:{}:5:1]
 VIADD.U8x4 R2, R0, R1;[7:7:{}:5:1]
 VIADD.U32 R2, R0, 0x12345678;[7:7:{}:5:1]
-""")
+"""))
 ok = True
 for name, enc in zip(REF, flat):
     good = enc == REF[name]

@@ -46,11 +46,22 @@ LDCU.S16 UR6, c[0x0][0x380];[0:7:{}:1:0]
 LDCU.64 {UR6,UR7}, c[0x0][0x380];[0:7:{}:1:0]"""
 if is_sm90():
     # sm_90 spec ULDC sz enum tops out at 64 — no .128 variant.
-    _src = _HEAD + _BODY + "\n"
+    _src = _VEC_FIRST = ('flat', )  # placeholder-free rebuild below
+
+_plain32_src = "LDCU UR6, c[0x0][0x380];[0:7:{}:1:0]"
+_BODY = """
+LDCU.U8 UR6, c[0x0][0x380];[0:7:{}:1:0]
+LDCU.S8 UR6, c[0x0][0x380];[0:7:{}:1:0]
+LDCU.U16 UR6, c[0x0][0x380];[0:7:{}:1:0]
+LDCU.S16 UR6, c[0x0][0x380];[0:7:{}:1:0]
+LDCU.64 {UR6,UR7}, c[0x0][0x380];[0:7:{}:1:0]"""
+if is_sm90():
+    # sm_90 spec ULDC sz enum tops out at 64 — no .128 variant.
+    _src = _plain32_src + "\n" + _BODY.strip("\n") + "\n"
 else:
-    _src = _HEAD + _BODY + """
-LDCU.128 {UR20,UR21,UR22,UR23}, c[0x0][0x380];[0:7:{}:1:0]
-"""
+    _src = (_plain32_src + "\n" + _BODY.strip("\n") +
+            "\nLDCU.128 {UR20,UR21,UR22,UR23}, c[0x0][0x380];[0:7:{}:1:0]\n")
+
 flat = assemble_flat(_src)
 ok = True
 _pins = same_as_capture("sm120")

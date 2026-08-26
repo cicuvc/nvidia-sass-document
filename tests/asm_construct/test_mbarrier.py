@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # mbarrier (shared-memory barrier) semantic verification — hand-written SASS.
@@ -40,7 +41,7 @@ def check(name, got, want):
     print(f"{'ok ' if good else 'FAIL'} {name:<46} {got} (exp {want})")
 
 try:
-    _ = CudaModule(assemble("#fn k() { EXIT;[7:7:{}:5:0] }"))
+    _ = CudaModule(assemble(adapt_source("#fn k() { EXIT;[7:7:{}:5:0] }")))
     HAVE_GPU = True
 except RuntimeError:
     HAVE_GPU = False
@@ -88,7 +89,7 @@ body += arrive() + arrive() + phasechk(1) + store(0xc)
 body += phasechk(0) + store(0x10)
 body += "    EXIT;[7:7:{}:5:0]\n"
 src = "#fn k(out<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(64)
 mod.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
 mod.synchronize()
@@ -104,7 +105,7 @@ body = HEAD + init(1) + phasechk(0, trywait=False) + store(0x0)
 body += arrive() + phasechk(0, trywait=False) + store(0x4)
 body += "    EXIT;[7:7:{}:5:0]\n"
 src = "#fn k(out<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(32)
 mod.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
 mod.synchronize()
@@ -122,7 +123,7 @@ body += "    SYNCS.ARRIVE.TRANS64.RED.A0TX {RZ,RZ}, [RZ+UR6], R2;[1:7:{2}:5:1]\n
 body += phasechk(0) + store(0x4)
 body += "    EXIT;[7:7:{}:5:0]\n"
 src = "#fn k(out<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(32)
 mod.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
 mod.synchronize()
@@ -143,7 +144,7 @@ body += "    SYNCS.ARRIVE.TRANS64.RED.A0TX {RZ,RZ}, [RZ+UR6], R2;[1:7:{2}:5:1]\n
 body += phasechk(0) + store(0x4)
 body += "    EXIT;[7:7:{}:5:0]\n"
 src = "#fn k(out<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(32)
 mod.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
 mod.synchronize()
@@ -158,7 +159,7 @@ body += "    NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]\n"
 body += phasechk(0) + store(0x0)
 body += "    EXIT;[7:7:{}:5:0]\n"
 src = "#fn k(out<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(32)
 mod.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
 mod.synchronize()
@@ -169,7 +170,7 @@ check("inval: phase no longer completes", v, 0)
 body = HEAD + init(0) + phasechk(0) + store(0x0)
 body += "    EXIT;[7:7:{}:5:0]\n"
 src = "#fn k(out<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body + "}\n"
-mod = CudaModule(assemble(src))
+mod = CudaModule(assemble(adapt_source(src)))
 d = mod.devmem_alloc(32)
 mod.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
 mod.synchronize()
@@ -182,7 +183,7 @@ def expect_launch_fault(name, body):
     global ok
     src = "#fn k(out<8>) {\n    #pragma NUM_MBARRIERS(1)\n    #pragma SHARED(0x4000)\n" + body + "}\n"
     try:
-        m = CudaModule(assemble(src))
+        m = CudaModule(assemble(adapt_source(src)))
         d = m.devmem_alloc(32)
         m.launch("k", grid=(1,), block=(1,), args=[d], shared_mem=0x4000)
         m.synchronize()

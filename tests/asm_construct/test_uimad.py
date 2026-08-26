@@ -128,24 +128,31 @@ for a, b, c, exp in lo_cases:
     print(f"{'ok ' if good else 'FAIL'} LO {hex(a)}*{hex(b)}+{hex(c)} = 0x{lo:08X} (exp 0x{exp:08X})")
 
 # HI: high32(signed product) + URc (addend to the high word).
+# Arch scope: the .HI spelling and plain-UIMAD==HI default are sm_120 only;
+# the sm_90 spec provides LO/WIDE/X families, so HI semantics are skipped
+# there until a Hopper-equivalent high-word form is identified.
 hi_cases = [
     (0x10000, 0x10000, 5, 6),
     (0xFFFFFFFF, 0xFFFFFFFF, 0, 0),
     (0xFFFFFFFF, 2, 0, 0xFFFFFFFF),
     (5, 10, 100, 100),
 ]
-for a, b, c, exp in hi_cases:
-    lo, _ = run("UIMAD.HI UR17, UR6, UR7, UR8;", a, b, c)
-    exp2 = ((s32(a) * s32(b)) >> 32) + c
-    good = lo == (exp2 & 0xFFFFFFFF)
-    ok &= good
-    print(f"{'ok ' if good else 'FAIL'} HI {hex(a)}*{hex(b)}+{hex(c)} = 0x{lo:08X} (exp 0x{exp2 & 0xFFFFFFFF:08X})")
+if not is_sm90():
+    for a, b, c, exp in hi_cases:
+        lo, _ = run("UIMAD.HI UR17, UR6, UR7, UR8;", a, b, c)
+        exp2 = ((s32(a) * s32(b)) >> 32) + c
+        good = lo == (exp2 & 0xFFFFFFFF)
+        ok &= good
+        print(f"{'ok ' if good else 'FAIL'} HI {hex(a)}*{hex(b)}+{hex(c)} = 0x{lo:08X} (exp 0x{exp2 & 0xFFFFFFFF:08X})")
+else:
+    print("info HI forms skipped: no UIMAD .HI variant in the sm_90 spec")
 
-# Plain UIMAD == HI (sm_120 default).
-lo, _ = run("UIMAD UR17, UR6, UR7, UR8;", 0x10000, 0x10000, 5)
-good = lo == 6
-ok &= good
-print(f"{'ok ' if good else 'FAIL'} plain UIMAD == HI: 0x{lo:08X} (exp 0x6)")
+# Plain UIMAD == HI (sm_120 default). Skipped on sm90 for the same reason.
+if not is_sm90():
+    lo, _ = run("UIMAD UR17, UR6, UR7, UR8;", 0x10000, 0x10000, 5)
+    good = lo == 6
+    ok &= good
+    print(f"{'ok ' if good else 'FAIL'} plain UIMAD == HI: 0x{lo:08X} (exp 0x6)")
 
 # WIDE: signed 64-bit product.
 wide_cases = [

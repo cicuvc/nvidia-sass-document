@@ -23,10 +23,10 @@ if __name__ == "__main__":
     LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]
     MOV32I R0, 0xFFFFFFF9;[7:7:{}:5:1]      // -7 signed / 0xFFFFFFF9 unsigned
     MOV32I R1, 0x00000009;[7:7:{}:5:1]      // +9
-    IMNMX.S32 R2, R0, R1, PT;[0:1:{0}:3:1]   // min  -> -7 (0xFFFFFFF9)
-    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R2;[0:1:{0}:3:1]
-    IMNMX.U32 R3, R0, R1, PT;[0:1:{0}:3:1]   // minu -> +9
-    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R3;[0:1:{0}:3:1]
+    IMNMX.S32 R2, R0, R1, PT;[1:7:{}:3:1]    // min  -> -7 (0xFFFFFFF9); wr=SB1
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R2;[0:1:{0,1}:3:1]
+    IMNMX.U32 R3, R0, R1, PT;[2:7:{}:3:1]    // minu -> +9; wr=SB2
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x4], R3;[0:1:{0,2}:3:1]
     EXIT;[7:7:{}:5:0]
 }"""
         cubin = assemble(adapt_source(_src))
