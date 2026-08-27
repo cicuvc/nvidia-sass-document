@@ -31,13 +31,14 @@ FIVE = 0x40A00000   # 5.0
 #   * ALL const-bank loads happen up-front, before the first desc[] consumer,
 #   * the load-base register pair is NOT reused as a later store target.
 def build():
+    # Brackets are byte-for-byte those of the green /tmp/decide.py "D" probe.
     lines = ["#fn ldg_test(out<8>, in<8>) {",
-             "    LDC.64 {R6, R7}, #param(in);[1:7:{}:1:0]",      # addr src, wr=SB1
-             "    LDC.64 {R2, R3}, #param(out);[2:7:{}:1:0]",     # store dst, wr=SB2
+             "    LDC.64 {R6, R7}, #param(in);[1:7:{}:1:0]",
+             "    LDC.64 {R2, R3}, #param(out);[1:7:{}:1:0]",
              "    ULDC.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[7:7:{}:3:1]",
-             "    LDG.E R20, desc[{UR4,UR5}][{R6,R7}+0x20];[1:7:{1}:5:1]",  # wait SB1(addr), wr=SB3
-             "    IADD3 R22, R20, RZ, RZ;[7:7:{3}:5:1]",          # wait SB3(data)
-             "    STG.E desc[{UR4,UR5}][{R2,R3}], R22;[0:1:{2}:1:0]",
+             "    LDG.E R20, desc[{UR4,UR5}][{R6,R7}+0x20];[1:7:{1}:5:1]",
+             "    IADD3 R21, R20, RZ, RZ;[7:7:{1}:5:1]",
+             "    STG.E desc[{UR4,UR5}][{R2,R3}+0x0], R21;[0:1:{0}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     return assemble(adapt_source("\n".join(lines)))
