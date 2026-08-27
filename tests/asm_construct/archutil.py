@@ -58,29 +58,26 @@ _MOV64_RE = re.compile(
     r"^(?P<lead>[ \t]*)(?:MOV|UMOV)\.64[ \t]*(?P<dst>\{[^}]+\})[ \t]*,[ \t]*(?P<src>.+?)(?P<br>;\[[^]]*\])[ \t]*$")
 
 def _split_mov64(m):
-    """sm_90 spec has no MOV.64: split pair-move into two scalar MOVs."""
+    """sm_90 spec has no *.64 pair-move: split into scalar moves."""
     lead, dst, src, br = m.group("lead"), m.group("dst"), m.group("src"), m.group("br")
     lo_reg, hi_reg = [x.strip() for x in dst.strip("{}").split(",")]
+    uni = lo_reg.upper().startswith("U")
+    mnem = "UMOV" if uni else "MOV"
     src = src.strip()
     if src.startswith("{"):
         s_lo, s_hi = [x.strip() for x in src.strip("{}").split(",")]
-        l1 = f"{lead}MOV {lo_reg}, {s_lo}{br}"
-        l2 = f"{lead}MOV {hi_reg}, {s_hi}{br}"
+        l1 = f"{lead}{mnem} {lo_reg}, {s_lo}{br}"
+        l2 = f"{lead}{mnem} {hi_reg}, {s_hi}{br}"
     else:
         imm = int(src, 16) if src.lower().startswith("0x") else int(src)
-        l1 = f"{lead}MOV {lo_reg}, 0x{imm & 0xFFFFFFFF:X}{br}"
-        l2 = f"{lead}MOV {hi_reg}, 0x{(imm >> 32) & 0xFFFFFFFF:X}{br}"
+        l1 = f"{lead}{mnem} {lo_reg}, 0x{imm & 0xFFFFFFFF:X}{br}"
+        l2 = f"{lead}{mnem} {hi_reg}, 0x{(imm >> 32) & 0xFFFFFFFF:X}{br}"
     return l1 + "\n" + l2
 
 
 _VIADD_U32_RE = re.compile(r"(\bVIADD(?:X|XU)?)\.U32\b")
-
-
-# sm90 matcher rejects spec-legal URZ tails on the udp imm/shift forms;
-# swap in a pre-zeroed scratch uniform. Covers UIADD3 imm, USHF fills etc.
 _UI_URZ_ANCHOR = re.compile(r"^\s*(?:@\S+\s+)?(?:UIADD3|USHF|UIMAD|UISHL|UISETP)\b")
 _UI_URZ_TOKEN = re.compile(r"\bURZ\b")
-
 
 _ELECT_RE = re.compile(r"\bELECT\s+(P\d+)\s*,\s*(UR\w+)\s*,\s*PT\b")
 
@@ -140,6 +137,15 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
                 head = new
                 line = head + sep + bracket
 
+            # --- UI-family URZ tails -> pre-zeroed scratch ------------------
+            if _UI_URZ_ANCHOR.search(head) and _UI_URZ_TOKEN.search(head):
+                if not dropped_scratch_done:
+                    out_lines.append("    UMOV UR13, 0x0;[7:7:{}:5:1]      # adapter: zeroed scratch")
+                    dropped_scratch_done = True
+                new = _UI_URZ_TOKEN.sub("UR13", head)
+                line = new + sep + bracket
+                head, _, bracket = line.partition(";")
+
             # --- ELECT slot order ------------------------------------------
             if "ELECT" in head:
                 new = _ELECT_RE.sub(r"ELECT \1, \2, URZ", head)
@@ -160,7 +166,7 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
                 sz = m.group("sz") or "64"
                 regs, dst = m.group("regs"), m.group("src")
                 mm = _BRACKET_RE.match(m.group("bracket"))
-                st = max(int(mm.group("stall")) if mm else 1, 1)
+                st = max(int(mm.group("stall")) if mm else 1, 2)
                 yl = max(int(mm.group("yield")) if mm else 0, 1)
                 br2 = f"[7:7:{{}}:{st}:{yl}]"
                 if verbose:

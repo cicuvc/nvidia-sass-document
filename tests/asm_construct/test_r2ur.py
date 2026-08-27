@@ -3,7 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
-from archutil import adapt_source, same_as_capture  # noqa: E402
+from archutil import adapt_source, same_as_capture, is_sm90  # noqa: E402
 from assembler.runner import reset_context
 
 # ---------------------------------------------------------------------------

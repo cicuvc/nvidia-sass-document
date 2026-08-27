@@ -104,6 +104,10 @@ ok &= good
 print(f"{'ok ' if good else 'FAIL'} UMOV imm: 0x{lo:08X} (exp 0xCAFEBABE)")
 
 # 64-bit register pair move.
+if is_sm90():
+    print("info UMOV.64 pair/imm64 runs skipped: absent from the sm_90 spec")
+    print(f"\n=== UMOV semantic verification: {'ALL OK' if ok else 'FAILED'} ===")
+    sys.exit(0 if ok else 1)
 lo, hi = run("UMOV.64 {UR16,UR17}, {UR6,UR7};", 0xAAAAAAAA11111111)
 good = (lo, hi) == (0x11111111, 0xAAAAAAAA)
 ok &= good

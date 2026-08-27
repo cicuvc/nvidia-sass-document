@@ -155,7 +155,12 @@ for pp in (0, 1):
     print(f"{'ok ' if good else 'FAIL'} USEL imm UPp={pp} -> 0x{v:08X} (exp 0x{exp:08X})")
 
 # 64-bit register form: true path correct, false path duplicates URb (quirk).
+# (sm_90 spec has no USEL.64 — Blackwell-only; skip this section on sm90.)
 A64, B64 = 0xAAAAAAAA_11111111, 0xCCCCCCCC_33333333
+if is_sm90():
+    print("info USEL.64 sections skipped: absent from the sm_90 spec")
+    print("\n=== USEL semantic verification: ALL OK ===" if ok else "\n=== USEL FAILURES ===")
+    sys.exit(0 if ok else 1)
 lo, hi = run64("USEL.64 {UR16,UR17}, {UR6,UR7}, {UR8,UR9}, UP0;", 1, A64, B64)
 good = (lo, hi) == (0x11111111, 0xAAAAAAAA)
 ok &= good
