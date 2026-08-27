@@ -65,7 +65,20 @@ Suite-runs with `ASSEMBLER_ARCH=sm90`, tools/run_tests.py:
 | b3 | 93 / 30 | imnmx reduced surface, uimad/uiclea(u) gates land |
 | b4 | 93 / 30 | archutil v3: ULDC-doctrine REMOVED — see port-note |
 | b5 | 95 / 28 | test_ldg green via canonical template |
-| **b6** | **98 / 25** | UI-URZ & MOV→UMOV rules restored; umov/usel/udp_int green |
+| b6 | 98 / 25 | UI-URZ & MOV→UMOV rules restored; umov/usel/udp_int green |
+| b7 | 99 / 24 | **UniformRegister.URZ encoded as 63 (enum truth)**; ELECT lo-parity with ptxas |
+| b8 | 101 / 22 | wide-slot exemption for URZ; r2ur/viadd gates finish |
+| b9 | 102 / 21 | LDCU rewrite restricted to genuine .64 lines (ldcu green) |
+| — | hang | ublkcp/utmaldg deadlocked H20 → bare-URZ spelling adopted, family blacklisted under sm90 (`HANG_SUSPECT_sm90.txt`) |
+| **b11** | **103 / 117** (88%) | first clean full pass; test_mbarrier now GREEN (SYNCS choreography works) |
+
+### Root cause that unblocked the largest chunk
+`assembler/operand.py` encoded `URZ == 255` (GPR convention) while the ISA enum
+says `UniformRegister.URZ == 63`. Every CLASS condition of the form
+`(URx == \`UniformRegister@URZ)` therefore evaluated false, rejecting a whole
+family of legal placeholders. After the fix our `ELECT P1, URZ, PT` lo64 is
+bit-identical to what nvcc emits on sm_90a. No generated bits changed for real
+registers — only condition evaluation, asm printing and depcheck sentinels.
 
 ### Key resolved findings
 * S2UR SR_CTAID.X "1 vs 2" was a **race artifact** of intra-process context
@@ -83,3 +96,14 @@ Suite-runs with `ASSEMBLER_ARCH=sm90`, tools/run_tests.py:
   ublkcp/utma respins). Tooling bug, next-session target.
 * bigparam >8-byte param zero-read on H20 (ABI probe pending).
 * yield forward-progress boundaries per-SKU note row.
+
+### Fresh finds from the last pass (open)
+* **VIADD negate-A positional delta**: under sm90 the `.32` form encoding
+  `VIADD R2, -R0, R1` does not set the hi64 bit72 that sm120 uses for
+  negate-a — captured in `test_viadd` byte check ("U32-Ra"). Next step:
+  nvcc-reference bit hunt with `-arch=sm_90a` and a PTX snippet forcing the
+  negate through arithmetic instead of modifier.
+* TMA/UBLKCP hand-built kernels deadlock on H20 even after assembling —
+  blacklist stays until FENCE/arrive-expect_tx ordering is reconciled with
+  nvcc-generated reference (target: dump ptxas SASS for
+  cp.async.bulk.tensor + mbarrier completion chain).
