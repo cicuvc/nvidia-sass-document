@@ -58,9 +58,12 @@ VIADD.U32 R2, R0, 0x12345678;[7:7:{}:5:1]
     _names = list(REF)
 flat = assemble_flat(adapt_source(_src))
 ok = True
-_expect = list(REF.items()) if not is_sm90() else [
-    (k, REF[k]) for k in list(REF)[:len(flat)]
-]
+if not is_sm90():
+    _expect = list(REF.items())
+else:
+    # source order above: plain, negate-b, negate-a, .16x2, RIR
+    _names_sm90 = ["U32", "U32-Rb", "U32-Ra", "U16x2", "RIR"]
+    _expect = [(k, REF[k]) for k in _names_sm90]
 for (name,(elo,ehi)), enc in zip(_expect, flat):
     good = enc == (elo, ehi)
     ok &= good
