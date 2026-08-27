@@ -32,19 +32,20 @@ def check(name, got, want):
     print(f"{'ok ' if good else 'FAIL'} {name:<44} {got}")
 
 
-KERNEL = """#fn k(out<8>) {
-    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
-    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]
-    LDG.E.128 {R16,R17,R18,R19}, desc[{UR4,UR5}][{R6,R7}+0x0];[5:7:{0,1}:8:1]
-    LDG.E.64 {R20,R21}, desc[{UR4,UR5}][{R6,R7}+0x10];[5:7:{0,1}:8:1]
-    LDG.E.128 {R24,R25,R26,R27}, desc[{UR4,UR5}][{R6,R7}+0x20];[5:7:{0,1}:8:1]
+KERNEL = """#fn k(out<8>, gsrc<8>) {
+    ULDC.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[7:7:{}:2:0]
+    LDC.64 {R6,R7}, #param(gsrc);[1:7:{}:1:0]
+    LDC.64 {R2,R3}, #param(out);[2:7:{}:1:0]
+    LDG.E.128 {R16,R17,R18,R19}, desc[{UR4,UR5}][{R6,R7}+0x0];[5:7:{1}:8:1]
+    LDG.E.64 {R20,R21}, desc[{UR4,UR5}][{R6,R7}+0x10];[5:7:{1}:8:1]
+    LDG.E.128 {R24,R25,R26,R27}, desc[{UR4,UR5}][{R6,R7}+0x20];[5:7:{1}:8:1]
     NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]
     NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]
     HMMA.16816.F32.{SRCFMT} {R28,R29,R30,R31}, {R16,R17,R18,R19}, {R20,R21}, {R24,R25,R26,R27};[7:7:{5}:1:0]
     NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]
     NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]  NOP;[7:7:{}:5:1]
-    IADD3 R8, R6, 0x40, RZ;[7:7:{1}:5:1]
-    IADD3 R9, R7, RZ, RZ;[7:7:{1}:5:1]
+    IADD3 R8, R2, 0x40, RZ;[7:7:{1}:5:1]
+    IADD3 R9, R3, RZ, RZ;[7:7:{1}:5:1]
     STG.E desc[{UR4,UR5}][{R8,R9}+0x0], R28;[0:1:{0,1}:1:0]
     STG.E desc[{UR4,UR5}][{R8,R9}+0x4], R29;[0:1:{0,1}:1:0]
     STG.E desc[{UR4,UR5}][{R8,R9}+0x8], R30;[0:1:{0,1}:1:0]
@@ -60,7 +61,7 @@ def run_hmma(srcfmt, frag16):
     buf = [0] * 2048
     buf[:16] = frag16
     mod.device_write(d, struct.pack("<%dI" % 2048, *buf))
-    mod.launch("k", grid=(1,), block=(32,), args=[d])
+    mod.launch("k", grid=(1,), block=(32,), args=[d, d])
     mod.synchronize()
     vals = struct.unpack("<4f", mod.device_read(d + 0x40, 16))
     try:

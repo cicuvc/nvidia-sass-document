@@ -41,18 +41,19 @@ def run_rt(ldg_mod, ldg_sz, dest, src_off, dst_off, block=1):
     """
     width = {"U8": 1, "S8": 1, "U16": 2, "S16": 2, "": 4, "32": 4, "64": 8,
              "128": 16}[ldg_sz]
-    lines = ["#fn k(out<8>) {",
+    lines = ["#fn k(out<8>, srcalias<8>) {",
              "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
-             "    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]",
-             f"    LDG.{ldg_mod}{'.' + ldg_sz if ldg_sz else ''} {dest}, desc[{{UR4,UR5}}][{{R6,R7}}+0x{src_off:X}];[1:7:{{0}}:5:1]",
-             f"    STG.E{'.64' if ldg_sz == '64' else '.128' if ldg_sz == '128' else ''} desc[{{UR4,UR5}}][{{R6,R7}}+0x{dst_off:X}], {dest};[0:1:{{0,1}}:1:0]",
+             "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]",
+             "    LDC.64 {R2,R3}, #param(srcalias);[1:7:{}:1:0]",
+             f"    LDG.{ldg_mod}{'.' + ldg_sz if ldg_sz else ''} {dest}, desc[{{UR4,UR5}}][{{R6,R7}}+0x{src_off:X}];[1:7:{{1}}:5:1]",
+             f"    STG.E{'.64' if ldg_sz == '64' else '.128' if ldg_sz == '128' else ''} desc[{{UR4,UR5}}][{{R2,R3}}+0x{dst_off:X}], {dest};[0:1:{{1}}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     src = "\n".join(lines)
     mod = CudaModule(assemble(adapt_source(src)))
     d = mod.devmem_alloc(1024)
     mod.device_write(d, bytes([i & 0xFF for i in range(1024)]))
-    mod.launch("k", grid=(1,), block=(block,), args=[d])
+    mod.launch("k", grid=(1,), block=(block,), args=[d, d])
     mod.synchronize()
     v = struct.unpack("<256I", mod.device_read(d, 1024))
     n = (width + 3) // 4
@@ -73,11 +74,12 @@ def ext_case(ldg_sz, want):
         dest = "{R8,R9,R10,R11}"
     else:
         dest = "R8"
-    lines = ["#fn k(out<8>) {",
+    lines = ["#fn k(out<8>, srcalias<8>) {",
              "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
-             "    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]",
-             f"    LDG.E{'.' + ldg_sz if ldg_sz else ''} {dest}, desc[{{UR4,UR5}}][{{R6,R7}}+0x{src_off:X}];[1:7:{{0}}:5:1]",
-             f"    STG.E{'.64' if ldg_sz == '64' else '.128' if ldg_sz == '128' else ''} desc[{{UR4,UR5}}][{{R6,R7}}+0x{dst_off:X}], {dest};[0:1:{{0,1}}:1:0]",
+             "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]",
+             "    LDC.64 {R2,R3}, #param(srcalias);[1:7:{}:1:0]",
+             f"    LDG.E{'.' + ldg_sz if ldg_sz else ''} {dest}, desc[{{UR4,UR5}}][{{R6,R7}}+0x{src_off:X}];[1:7:{{1}}:5:1]",
+             f"    STG.E{'.64' if ldg_sz == '64' else '.128' if ldg_sz == '128' else ''} desc[{{UR4,UR5}}][{{R2,R3}}+0x{dst_off:X}], {dest};[0:1:{{1}}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     mod = CudaModule(assemble(adapt_source("\n".join(lines))))
@@ -85,7 +87,7 @@ def ext_case(ldg_sz, want):
     # byte pattern: byte0=0x80, byte1=0x81, byte2=0x82, byte3=0x83 ...
     pat = b"".join(bytes([(0x80 + i) & 0xFF]) for i in range(64))
     mod.device_write(d, pat + b"\x00" * (1024 - len(pat)))
-    mod.launch("k", grid=(1,), block=(1,), args=[d])
+    mod.launch("k", grid=(1,), block=(1,), args=[d, d])
     mod.synchronize()
     v = struct.unpack("<256I", mod.device_read(d, 1024))
     n = {"U8": 1, "S8": 1, "U16": 1, "S16": 1, "": 1, "32": 1, "64": 2,
@@ -138,20 +140,21 @@ def stg_write(sz, mods="E", value=0x88776655):
     else:
         dreg = "R8"
     s2 = f"{'.' + sz if sz else ''}"
-    lines = ["#fn k(out<8>) {",
+    lines = ["#fn k(out<8>, srcalias<8>) {",
              "    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",
-             "    LDC.64 {R6,R7}, #param(out);[0:7:{}:1:0]",
+             "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]",
+             "    LDC.64 {R2,R3}, #param(srcalias);[1:7:{}:1:0]",
              "    MOV32I R8, 0x88776655;[7:7:{}:5:1]",
              "    MOV32I R9, 0x44332211;[7:7:{}:5:1]",
              "    MOV32I R10, 0x00112233;[7:7:{}:5:1]",
              "    MOV32I R11, 0x44556677;[7:7:{}:5:1]",
-             f"    STG.{mods}{s2} desc[{{UR4,UR5}}][{{R6,R7}}+0x40], {dreg};[0:1:{{0}}:1:0]",
+             f"    STG.{mods}{s2} desc[{{UR4,UR5}}][{{R6,R7}}+0x40], {dreg};[0:1:{{1}}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     mod = CudaModule(assemble(adapt_source("\n".join(lines))))
     d = mod.devmem_alloc(1024)
     mod.device_write(d, b"\x00" * 1024)
-    mod.launch("k", grid=(1,), block=(1,), args=[d])
+    mod.launch("k", grid=(1,), block=(1,), args=[d, d])
     mod.synchronize()
     v = struct.unpack("<256I", mod.device_read(d, 1024))
     try:
