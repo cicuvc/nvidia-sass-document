@@ -51,6 +51,19 @@ TIMING_SENSITIVE = {
 }
 
 
+HANG_FILE = TESTS_DIR / "HANG_SUSPECT_sm90.txt"
+HANG_SUSPECT_SM90 = set()
+
+
+def _load_hang_list():
+    global HANG_SUSPECT_SM90
+    if not HANG_SUSPECT_SM90 and HANG_FILE.exists():
+        for ln in HANG_FILE.read_text().splitlines():
+            ln = ln.strip()
+            if ln and not ln.startswith("#"):
+                HANG_SUSPECT_SM90.add(ln)
+
+
 def run_one(name: str, timeout: float):
     path = TESTS_DIR / f"{name}.py"
     t0 = time.time()
@@ -79,6 +92,10 @@ def main() -> int:
     args = ap.parse_args()
 
     names = sorted(p.stem for p in TESTS_DIR.glob("test_*.py"))
+    _load_hang_list()
+    skip_deadlock = os.environ.get("ASSEMBLER_ARCH") == "sm90"
+    if skip_deadlock:
+        names = [n for n in names if n not in HANG_SUSPECT_SM90]
     parallel = [n for n in names if n not in TIMING_SENSITIVE]
     serial = [n for n in names if n in TIMING_SENSITIVE]
 

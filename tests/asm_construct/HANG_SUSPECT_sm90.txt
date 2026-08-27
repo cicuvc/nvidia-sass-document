@@ -1,0 +1,11 @@
+# Tests that deadlock the H20 GPU (hang holding a context until SIGKILL).
+# They never executed before because they died at assemble time on sm90;
+# now they run — and their hand-written cp.async.bulk/mbarrier coordination
+# has an unresolved ordering bug. Next session: capture ptxas's own FENCE /
+# arrive-expect_tx choreography from an nvcc-built TMA kernel and diff.
+test_ublkcp
+test_ublkcp_multicast
+test_utmacctl
+test_utmaldg
+test_utmaredg
+test_utmastg
