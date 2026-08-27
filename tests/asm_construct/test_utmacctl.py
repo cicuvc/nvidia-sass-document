@@ -51,12 +51,26 @@ CCTL_S = "    CCTL.E.C.LDCU.IV.SHALLOW [UR16];[7:7:{0}:1:0]\n"
 IV     = "    UTMACCTL.IV [UR16];[7:3:{1}:5:1]\n"
 IVALL  = "    UTMACCTL.IVALL;[7:7:{3}:5:1]\n"
 
-CTL_NONE = ""
-CTL_FULL = MB + CCTL_D + IV
-CTL_PAIR_NOMBAR = CCTL_D + IV          # membars/DEPBAR not required
-CTL_CCTL = MB + CCTL_D
-CTL_IV   = MB + IV
-CTL_CCTL_IVALL = MB + CCTL_D + IVALL
+from archutil import is_sm90  # noqa: E402
+
+if is_sm90():
+    # Hopper has no CCTL.LDCU-invalidate suboperation: ptxas(sm_90a) lowers the
+    # tensormap.cp_fenceproxy/acquire fence chain to a single UTMACCTL.IV (see
+    # notes/sm120/silver-status.md "Blackwell-only").  Skip CCTL combos here.
+    print("info CCTL.E.C.LDCU.* variants skipped: Blackwell-only on this ISA")
+    CTL_NONE = ""
+    CTL_FULL = IV
+    CTL_PAIR_NOMBAR = IV
+    CTL_CCTL = ""
+    CTL_IV   = MB + IV
+    CTL_CCTL_IVALL = IVALL
+else:
+    CTL_NONE = ""
+    CTL_FULL = MB + CCTL_D + IV
+    CTL_PAIR_NOMBAR = CCTL_D + IV          # membars/DEPBAR not required
+    CTL_CCTL = MB + CCTL_D
+    CTL_IV   = MB + IV
+    CTL_CCTL_IVALL = MB + CCTL_D + IVALL
 
 def kernel(ctl):
     body = (
@@ -124,15 +138,17 @@ def kernel(ctl):
         "    #pragma NUM_MBARRIERS(2)\n" \
         "    #pragma SHARED(0x4000)\n" + body + "}\n"
 
-# offline: full variant must contain CCTL.E.C.LDCU.IV.DEEP (0x1540 -> lo 0x7540)
-# and UTMACCTL.IV (0x19b9); the no-ctl variant must contain neither.
+# offline: full variant must contain the expected control ops.
+# sm_120: CCTL.E.C.LDCU.IV.DEEP (opcode family 0x540/0x1540) + UTMACCTL.IV;
+# sm_90 : UTMACCTL.IV only.
 enc = assemble_kernel(kernel(CTL_FULL)).encoded
-cctls = [e for e in enc if (e[0] & 0xFFF) == 0x540 and ((e[0] >> 63) & 0xF) == 0]
 utmas = [e for e in enc
          if (e[0] & 0xFFF) == 0x9b9 and ((e[1] >> 27) & 1) == 1]
-check("offline: CCTL.E.C.LDCU.IV.DEEP present in full variant",
-      len(cctls), 1)
 check("offline: UTMACCTL.IV present in full variant", len(utmas), 1)
+if not is_sm90():
+    cctls = [e for e in enc if (e[0] & 0xFFF) == 0x540 and ((e[0] >> 63) & 0xF) == 0]
+    check("offline: CCTL.E.C.LDCU.IV.DEEP present in full variant",
+          len(cctls), 1)
 enc = assemble_kernel(kernel(CTL_NONE)).encoded
 cctls = [e for e in enc if (e[0] & 0xFFF) == 0x540]
 utmas = [e for e in enc

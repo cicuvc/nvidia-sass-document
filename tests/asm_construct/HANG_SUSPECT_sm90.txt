@@ -1,11 +1,5 @@
-# Tests that deadlock the H20 GPU (hang holding a context until SIGKILL).
-# They never executed before because they died at assemble time on sm90;
-# now they run — and their hand-written cp.async.bulk/mbarrier coordination
-# has an unresolved ordering bug. Next session: capture ptxas's own FENCE /
-# arrive-expect_tx choreography from an nvcc-built TMA kernel and diff.
-test_ublkcp
-test_ublkcp_multicast
-test_utmacctl
-test_utmaldg
-test_utmaredg
-test_utmastg
+# No current sm90-hang suspects.  History:
+#  - ublkcp/utma family deadlocks traced to two causes, both fixed:
+#      (1) ELECT membermask rewrite emptied the candidate mask (archutil rule)
+#      (2) CCTL.E.C.LDCU.* combos are Blackwell-only and must be branched
+#          out under ASSEMBLER_ARCH=sm90 (see test_utmacctl.py)
