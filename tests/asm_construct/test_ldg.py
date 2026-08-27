@@ -26,28 +26,40 @@ from archutil import adapt_source  # noqa: E402
 FIVE = 0x40A00000   # 5.0
 
 
+# Canonical template (empirically the only shape that is stable on H20):
+#   * every purpose gets its own pointer parameter (in != out),
+#   * ALL const-bank loads happen up-front, before the first desc[] consumer,
+#   * the load-base register pair is NOT reused as a later store target.
 def build():
-    lines = ["#fn ldg_test(out<8>) {",
-             "    LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]",   # desc policy, wr=SB0
-             "    LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]",
-             "    LDG.E R20, desc[{UR4,UR5}][{R6,R7}+0x20];[1:7:{0}:5:1]",  # wait SB0, wr=SB1
-             "    IADD3 R22, R20, RZ, RZ;[7:7:{1}:5:1]",       # first use waits SB1
-             "    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R22;[0:1:{0}:1:0]",
+    lines = ["#fn ldg_test(out<8>, in<8>) {",
+             "    LDC.64 {R6, R7}, #param(in);[1:7:{}:1:0]",      # addr src, wr=SB1
+             "    LDC.64 {R2, R3}, #param(out);[2:7:{}:1:0]",     # store dst, wr=SB2
+             "    ULDC.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[7:7:{}:3:1]",
+             "    LDG.E R20, desc[{UR4,UR5}][{R6,R7}+0x20];[1:7:{1}:5:1]",  # wait SB1(addr), wr=SB3
+             "    IADD3 R22, R20, RZ, RZ;[7:7:{3}:5:1]",          # wait SB3(data)
+             "    STG.E desc[{UR4,UR5}][{R2,R3}], R22;[0:1:{2}:1:0]",
              "    EXIT;[7:7:{}:5:0]",
              "}"]
     return assemble(adapt_source("\n".join(lines)))
 
 
-print("=== hand-built ELF LDG, scoreboard-corrected ===")
+print("=== hand-built ELF LDG, H20-canonical template ===")
 cubin = build()
 open("x.cubin", "wb").write(cubin)
 mod = CudaModule(cubin)
-d = mod.devmem_alloc(64)
-mod.device_write(d, struct.pack("<16I", *([0] * 8 + [FIVE] + [0] * 7)))  # out[8] = 5.0
-mod.launch("ldg_test", grid=(1,), block=(1,), args=[d])
+d_in = mod.devmem_alloc(64)
+d_out = mod.devmem_alloc(64)
+mod.device_write(d_in, struct.pack("<16I", *([0] * 8 + [FIVE] + [0] * 7)))   # in[8] = 5.0
+mod.device_write(d_out, b"\x00" * 64)
+mod.launch("ldg_test", grid=(1,), block=(1,), args=[d_out, d_in])
 mod.synchronize()
-v = struct.unpack("<I", mod.device_read(d, 4))[0]
-mod.devmem_free(d)
+v = struct.unpack("<I", mod.device_read(d_out, 4))[0]
+f = struct.unpack("<f", struct.pack("<I", v))[0]
+good = f == 5.0
+print(f"{'ok ' if good else 'FAIL'} loaded {f} (expect 5.0)")
+import sys as _s
+_s.exit(0 if good else 1)
+
 f = struct.unpack("<f", struct.pack("<I", v))[0]
 print(f"loaded {f} (expect 5.0)")
 assert f == 5.0, "LDG round-trip mismatch"
