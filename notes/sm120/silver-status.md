@@ -52,3 +52,34 @@ conversions, PRMT/SHF/SHFL/VOTE/ELECT/NANOTRAP, uniform ALU stack
 UBLKRED/UBMSK/UBREV, VIMNMX/IABS/IMAD(.X)/IADD3/QSPC/PDL/PMTRIG/
 CLMAD/IDP/SGXT/RTT/SETCTAID/S2R/BMOV/REUSE — plus everything previously marked
 "verified sm_90 + sm_120" (f2fp-hopper subset, hfma2 quirk, bpt/shf PTX mappings).
+
+## Resilver progress log (H20, remote Hopper)
+
+Suite-runs with `ASSEMBLER_ARCH=sm90`, tools/run_tests.py:
+
+| Date | Pass/Fail | Notes |
+|---|---|---|
+| run 1 | 83 / 40 | pre-fix baseline (SM120-only suite) |
+| b1 | 89 / 34 | arch/depcheck/up2ur/voteu/atom vectors; s2ur flake |
+| b2 | 89 / 34 | dialect gates start; wiring bugs introduced |
+| b3 | 93 / 30 | imnmx reduced surface, uimad/uiclea(u) gates land |
+| b4 | 93 / 30 | archutil v3: ULDC-doctrine REMOVED — see port-note |
+| b5 | 95 / 28 | test_ldg green via canonical template |
+| **b6** | **98 / 25** | UI-URZ & MOV→UMOV rules restored; umov/usel/udp_int green |
+
+### Key resolved findings
+* S2UR SR_CTAID.X "1 vs 2" was a **race artifact** of intra-process context
+  poisoning (see sticky-fault gotcha) — repeats flip between runs.
+* The ldg-family 700s were never cache-descriptor related: depcheck had
+  flagged missing address-producer req coverage; canonical template fixes them
+  (`ldg` done; `ldg_stg`, `ldgsts`, hmma trio still need the refactor).
+
+### Remaining open items
+* SYNCS.EXCH.64 sm_90 spelling rejected by matcher despite spec-shaped args
+  (`test_mbarrier`) — needs ptxas-reference diff on H20.
+* ELECT: conditions pass and direct SassEncoder encodes fine, but through
+  assemble_flat a nondeterministic `TypeError: 'tuple' object cannot be
+  interpreted as an integer` escapes without internal frames (blocks
+  ublkcp/utma respins). Tooling bug, next-session target.
+* bigparam >8-byte param zero-read on H20 (ABI probe pending).
+* yield forward-progress boundaries per-SKU note row.

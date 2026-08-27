@@ -53,22 +53,38 @@ hardcode touched or reviewed.
   the ULDC clears the fault.  Test sources that load the cdesc and consume
   it via `req` (the sm120 pattern) must switch to stall/NOP for sm90.
 
-### ULDC timing investigation (H20)
-Probed the minimal stall/yield that makes a following LDG see the descriptor:
-| ULDC bracket | result |
-|---|---|
-| yield=0, stall=0 | **ILLEGAL_ADDRESS** (desc not ready) |
-| yield=0, stall≥1 | pass |
-| yield=1, stall=0..7 | pass |
-| `[0:7:{}:7:1]` (nvcc's exact encoding) | pass, byte-identical to nvcc |
+### ULDC timing investigation (H20) — REVISED 2026-08-27
 
-So the synchronous ULDC needs either `yield=1` (lets the warp swap out while
-the uniform datapath writes UR4/UR5) or `stall≥1`.  `req` never helps because
-`dst_wr_sb=*7`.  A lone `yield=1` on the LDCU is NOT always sufficient in a
-longer kernel: if the LDG's `req` only waits the *address* scoreboard (LDC.64)
-and the ULDC sits earlier, the LDG can still issue before the desc lands —
-put the ULDC immediately before the consumer, or give the LDG extra stall.
-`sm120 LDCU` needs none of this (it is DECOUPLED and req-waits work).
+The original conclusion "ULDC needs special care on sm90" has been **superseded by
+on-target probes** (user-driven plus scripted bisection):
+
+1. **Poison test proves synchronous RAW.**  Preloading UR5=0xffffffff then omitting
+   ULDC makes the very next LDG fault IMA; inserting `ULDC.64 {UR4,UR5},
+   #spec_const(SLOT_DEFAULT_CDESC);[7:7:{}:1:1]` immediately before the LDG yields
+   correct data with **zero scoreboard involvement** — issue-order coherence
+   (stall≥1 or yield≥1) suffices.
+2. **No special sm90 descriptor choreography exists.**  Kernel text assembled with
+   the old sm120-style `LDCU + wr claim + consumer req` also runs green on H20
+   (test_s2r / test_atom / test_umov pass verbatim).  What actually broke the
+   ldg/ldg_stg/hmma-family tests was *missing req coverage of the param LDC's
+   write-scoreboard* (`depcheck` warned precisely: consumers must wait the SB of
+   the instruction that produced their R6/R7 addresses), NOT anything about cache
+   descriptors.
+3. **Canonical stable template** for any new hand-built kernel:
+   every purpose gets its own pointer parameter (in ≠ out), ALL const-bank loads
+   are hoisted before the first `desc[]` consumer, and the load-base register pair
+   is never reused as a later store target.  Byte-exact bracket literals from the
+   green probe are pinned in `tests/asm_construct/test_ldg.py::build()`.
+4. `LDC.64` empirically wants **stall ≥ 2** on H20 (probe hint).  In
+   `tests/asm_construct/archutil.py` the floor applies only to uniform loads whose
+   destination feeds a nearby `desc[]` consumer, so latency-calibration sweeps are
+   untouched.
+5. **Sticky-fault gotcha:** one illegal launch poisons the CUDA context —
+   subsequent cuCtxCreate/synchronize in the SAME process return 700 too.  Every
+   probe must run as a fresh process (this silently invalidated several early
+   sweep matrices).
+6. The historic `dst_wr_sb/opex` control-word diffs between our encodings and
+   ptxas's for LDG remain cosmetic (identical lo64; suite passes without them).
 - Verified on H20: kernel load+launch, param base 0x210, default cdesc
   c[0x0][0x208], LDG/STG, integer math, shared-memory roundtrip, ISETP+SEL
   predicate all pass.  sm90 LDG operand order is `Rd, desc[...]` (format

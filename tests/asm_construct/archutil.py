@@ -119,9 +119,39 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
         return src
 
     dropped_scratch_done = False
+    lines_in = src.split("\n")
+
+    # Which UR pairs does each uniform const-bank load write?  Used to scope
+    # the stall>=2 empirical hint (LDC.64 needs >=2 on H20) to loads whose
+    # result actually feeds a desc[] consumer nearby, so latency-calibration
+    # sweeps that vary stall on unrelated loads stay untouched.
+    def _dst_regs(regs_field):
+        names = [x.strip() for x in regs_field.strip("{}").split(",")]
+        return [n for n in names if n.upper().startswith("UR")]
+
+    ur_reg_lines = {}   # idx -> [regs]
+    for i, l in enumerate(lines_in):
+        head_l, sep_l, _b = l.partition(";")
+        if not sep_l:
+            continue
+        mm = _CDESC_RE.match(l.lstrip())
+        if mm:
+            ur_reg_lines[i] = _dst_regs(mm.group("regs"))
+
+    def _feeds_desc(idx):
+        pend = []
+        for j in range(idx + 1, min(idx + 9, len(lines_in))):
+            h2, s2, _b2 = lines_in[j].partition(";")
+            pend += [tok for tok in re.findall(r"UR\d+", h2)]
+            if "desc[" in h2 and any(r in pend for r in ur_reg_lines.get(idx, [])):
+                return True
+            if any(r in re.findall(r"UR\d+", h2) for r in ur_reg_lines.get(idx, [])
+                   ) and "MOV" in h2:
+                pend += []          # copies propagate reachability loosely
+        return False
 
     out_lines = []
-    for line in src.split("\n"):
+    for _idx, line in enumerate(lines_in):
         head, sep, bracket = line.partition(";")
 
         if sep and is_sm90():
@@ -166,7 +196,8 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
                 sz = m.group("sz") or "64"
                 regs, dst = m.group("regs"), m.group("src")
                 mm = _BRACKET_RE.match(m.group("bracket"))
-                st = max(int(mm.group("stall")) if mm else 1, 2)
+                base_stall = int(mm.group("stall")) if mm else 1
+                st = max(base_stall, 2) if _feeds_desc(_idx) else base_stall
                 yl = max(int(mm.group("yield")) if mm else 0, 1)
                 br2 = f"[7:7:{{}}:{st}:{yl}]"
                 if verbose:
