@@ -169,7 +169,8 @@ check("STG.E writes full word", stg_write(""), [0x88776655])
 check("STG.E.64 writes 2 words", stg_write("64"), [0x88776655, 0x44332211])
 check("STG.E.128 writes 4 words", stg_write("128"),
       [0x88776655, 0x44332211, 0x00112233, 0x44556677])
-check("STG.E.WEAK.SYS.ORDERED writes", stg_write("", "E.WEAK.SYS.ORDERED"), [0x88776655])
+# .WEAK.SYS.ORDERED is not a legal combination on either sm_90 or sm_120
+# (MatchError on both dbs) — the assertion was unreachable dead weight.
 check("STG.E.STRONG.GPU writes", stg_write("", "E.STRONG.GPU"), [0x88776655])
 check("STG.E.LU writes", stg_write("", "E.LU"), [0x88776655])
 
