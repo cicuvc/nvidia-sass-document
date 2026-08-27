@@ -214,20 +214,33 @@ def classify(name, v, want_phase2):
 v = run_variant("no-ctl", CTL_NONE)
 classify("no-ctl", v, "A")
 
-v = run_variant("full (CCTL+IV)", CTL_FULL)
-classify("full (CCTL+IV)", v, "B")
+if is_sm90():
+    # Hopper semantics (probed): UTMACCTL.IV alone invalidates the descriptor
+    # cache too — no preceding CCTL.LDCU needed.  The CCTL-only combinations
+    # do not exist on this ISA and were skipped by the matrix branching above.
+    v = run_variant("full (UTMACCTL.IV, Hopper form)", CTL_FULL)
+    classify("full (Hopper IV)", v, "B")
 
-v = run_variant("CCTL+IV (no membars)", CTL_PAIR_NOMBAR)
-classify("CCTL+IV (no membars)", v, "B")
+    v = run_variant("UTMACCTL.IV only", CTL_IV)
+    classify("UTMACCTL.IV only", v, "B")
 
-v = run_variant("CCTL only", CTL_CCTL)
-classify("CCTL only", v, "A")
+    v = run_variant("IVALL only", CTL_CCTL_IVALL)
+    classify("IVALL only", v, "A")     # bulk-invalidate does not refresh LDCU
+else:
+    v = run_variant("full (CCTL+IV)", CTL_FULL)
+    classify("full (CCTL+IV)", v, "B")
 
-v = run_variant("UTMACCTL.IV only", CTL_IV)
-classify("UTMACCTL.IV only", v, "A")
+    v = run_variant("CCTL+IV (no membars)", CTL_PAIR_NOMBAR)
+    classify("CCTL+IV (no membars)", v, "B")
 
-v = run_variant("CCTL+IVALL", CTL_CCTL_IVALL)
-classify("CCTL+IVALL", v, "B")
+    v = run_variant("CCTL only", CTL_CCTL)
+    classify("CCTL only", v, "A")
+
+    v = run_variant("UTMACCTL.IV only", CTL_IV)
+    classify("UTMACCTL.IV only", v, "A")
+
+    v = run_variant("CCTL+IVALL", CTL_CCTL_IVALL)
+    classify("CCTL+IVALL", v, "B")
 
 print(f"\n=== UTMACCTL: {'ALL PASS' if ok else 'FAILURES'} ===")
 sys.exit(0 if ok else 1)
