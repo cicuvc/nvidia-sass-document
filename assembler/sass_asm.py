@@ -26,8 +26,8 @@ def fmt_operand(op) -> str:
         return s
     if kind == OperandKind.UREG:
         if op.regs:
-            return "{" + ", ".join("URZ" if r == 255 else f"UR{r}" for r in op.regs) + "}"
-        s = f"UR{op.value}" if op.value != 255 else "URZ"
+            return "{" + ", ".join("URZ" if r in (63, 255) else f"UR{r}" for r in op.regs) + "}"
+        s = "URZ" if op.value in (63, 255) else f"UR{op.value}"
         return s
     if kind == OperandKind.PRED:
         return f"P{op.value}" if op.value != 7 else "PT"
@@ -48,7 +48,7 @@ def fmt_operand(op) -> str:
     if kind == OperandKind.MEM_DESC:
         if op.regs:
             return "desc[{" + ", ".join("URZ" if r == 255 else f"UR{r}" for r in op.regs) + "}]"
-        return f"desc[UR{op.value}]" if op.value != 255 else "desc[URZ]"
+        return "desc[URZ]" if op.value in (63, 255) else f"desc[UR{op.value}]"
     if kind == OperandKind.MEM_ADDR:
         off = f"+0x{op.offset:x}" if op.offset >= 0 else f"-0x{-op.offset:x}"
         if op.regs:

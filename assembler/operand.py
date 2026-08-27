@@ -88,7 +88,10 @@ class Operand:
 
     @staticmethod
     def ureg(name: str, width: int = 32) -> Operand:
-        v = 255 if name.upper() == "URZ" else int(name[2:])
+        # UniformRegister.URZ == 63 in the ISA enum (GPR RZ uses 255; the
+        # 6-bit field truncation previously masked this).  Matching the enum
+        # matters because CLASS conditions compare URd==URZ numerically.
+        v = 63 if name.upper() == "URZ" else int(name[2:])
         return Operand(OperandKind.UREG, v, width=width)
 
     @staticmethod

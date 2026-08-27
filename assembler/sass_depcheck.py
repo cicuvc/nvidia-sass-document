@@ -158,7 +158,7 @@ def _slot_regs(slot_name: str, slot_map: dict) -> Optional[int]:
     v = slot_map.get(slot_name)
     if v is None:
         return None
-    return v if v != 255 else None
+    return v if v not in (63, 255) else None   # URZ == 63 in the UR domain
 
 
 def _eval_size(db: dict, variant: dict, slot_map: dict, key: str) -> Optional[int]:
@@ -227,7 +227,7 @@ def extract_instr(inst, match, db: dict) -> InstrInfo:
         if st not in ("Register", "NonZeroRegister", "UniformRegister"):
             continue
         v = slot_map.get(nm)
-        if v is None or v == 255:
+        if v is None or v in (63, 255):
             continue
         base = _rk(UREG if st == "UniformRegister" else REG, v)
         key = _SRC_SIZE_KEY.get(nm)
