@@ -25,10 +25,14 @@ from assembler.runner import CudaModule, reset_context  # noqa: E402
 
 def make_kernel(nwords):
     """Echo nwords from a single big param (`p`) into out[]."""
+    # sm90 layout assumption under test: params are packed contiguously
+    # starting at PARAM_CBANK base (0x210): out<8> at 0x210, p at 0x218.
     lines = ["    ULDC.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[7:7:{}:2:0]",
              "    LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]"]
     for i in range(nwords):
-        lines.append(f"    LDC R8, #param(p)[{i * 4:X}];[1:7:{1}:3:0]")
+        off = 0x218 + i * 4
+        lines.append(f"    LDC R8, c[0x0][0x{off:X}];[1:7:{1}:3:0]")
+        lines.append(f"    // expect word {i + 1} from p[{i}]")
         lines.append(f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{i * 4:X}], "
                      f"R8;[0:1:{1}:1:0]")
     lines.append("    EXIT;[7:7:{}:5:0]")

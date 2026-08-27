@@ -111,7 +111,11 @@ def build_g2s_source(*, use_expect=True, phase_poll=False,
         "    UIADD3 UR12, UPT, UPT, -UR12, 0x100000, UR13;[7:7:{2}:5:1]",
         "    USHF.L.U32 UR13, UR12, 0xb, UR13;[7:7:{2}:5:1]",
         "    USHF.L.U32 UR12, UR12, 0x1, UR12;[7:7:{2}:5:1]",
-        "    SYNCS.EXCH.64 URZ, [UR6], UR12;[2:1:{2}:5:1]",
+        "    SYNCS.EXCH.64 URZ, [UR6], UR12;[2:1:{2}:5:1]\n"
+        "        // H20 rule (user finding): consumer blocks must not observe the\n"
+        "        // barrier before initialization; nvcc emits BAR.SYNC right after\n"
+        "        // the init to order every lane's subsequent ARRIVE/WAIT behind it.\n"
+        "    BAR.SYNC.DEFER_BLOCKING 0x0;[7:7:{2}:13:1]",
         "    MOV32I R0, %d;[7:7:{}:1:0]" % (units * 16),
         *(["    SYNCS.ARRIVE.TRANS64 {RZ,RZ}, [RZ+UR6], R0;[1:7:{2}:5:1]"
            ] if use_expect else []),
