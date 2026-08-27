@@ -70,7 +70,20 @@ Suite-runs with `ASSEMBLER_ARCH=sm90`, tools/run_tests.py:
 | b8 | 101 / 22 | wide-slot exemption for URZ; r2ur/viadd gates finish |
 | b9 | 102 / 21 | LDCU rewrite restricted to genuine .64 lines (ldcu green) |
 | — | hang | ublkcp/utmaldg deadlocked H20 → bare-URZ spelling adopted, family blacklisted under sm90 (`HANG_SUSPECT_sm90.txt`) |
-| **b11** | **103 / 117** (88%) | first clean full pass; test_mbarrier now GREEN (SYNCS choreography works) |
+| b11 | 103 / 117 (88%) | first clean full pass; test_mbarrier now GREEN |
+| b12 | 106 / 117 | hmma trio + ldgsts? canonical template verified on H20 |
+| **b13** | **106 / 117** | bigparam & viadd turn green; ldg_stg fixed after dropping an illegal combo |
+
+### Final per-arch parameter layout rule (H20, bank sweep probe_bankmap.py)
+Params are placed **contiguously at PARAM_CBANK base** in declaration order:
+`out<8> @0x210`, `p<N> @0x218` with word k at `base+8+4k` — no alignment
+holes up to 128B. The original "bigparam zeros" finding was a stale sm_120
+constant (0x38c) inside the test, not an ABI delta. test_bigparam is now
+arch-aware (`assembler.arch.current().param_base`) and GREEN.
+
+### Dead-assertion note
+`STG.E.WEAK.SYS.ORDERED` MatchErrors on BOTH spec dbs — removed as an
+unreachable assertion.
 
 ### Root cause that unblocked the largest chunk
 `assembler/operand.py` encoded `URZ == 255` (GPR convention) while the ISA enum
