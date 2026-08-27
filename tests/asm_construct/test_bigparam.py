@@ -27,14 +27,17 @@ def check(name, got, want):
     else:
         print(f"{'ok ' if good else 'FAIL'} {name:<40} {got:#x} (exp {want:#x})")
 
-# param layout: out<8> @ 0x380, big<128> @ 0x388.  Read big[4..7] (c[0x0][0x38c]).
+# param layout (per-arch): out<8> at PARAM_CBANK base, big<128> right after.
+import assembler.arch as _arch
+_pb = _arch.current().param_base
+_big_w4_off = _pb + 8 + 0x10          # skip the 8-byte out pointer
 KERNEL = """#fn k(out<8>, big<128>) {
-    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
+    ULDC.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[7:7:{}:2:0]
     LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]
-    LDC.32 R0, c[0x0][0x38c];[1:7:{}:1:0]
-    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R0;[0:1:{0,1}:1:0]
+    LDC.32 R0, c[0x0][%#x];[1:7:{}:1:0]
+    STG.E desc[{UR4,UR5}][{R6,R7}+0x0], R0;[0:1:{1}:1:0]
     EXIT;[7:7:{}:5:0]
-}"""
+}""" % (_big_w4_off,)
 
 mod = CudaModule(assemble(KERNEL))
 d = mod.devmem_alloc(16)
