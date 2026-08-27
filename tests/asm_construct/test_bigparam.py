@@ -30,7 +30,7 @@ def check(name, got, want):
 # param layout (per-arch): out<8> at PARAM_CBANK base, big<128> right after.
 import assembler.arch as _arch
 _pb = _arch.current().param_base
-_big_w4_off = _pb + 8 + 0x10          # skip the 8-byte out pointer
+_big_w4_off = _pb + 8 + 4    # big[4..7] is word 1         # skip the 8-byte out pointer
 KERNEL = """#fn k(out<8>, big<128>) {
     ULDC.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[7:7:{}:2:0]
     LDC.64 {R6,R7}, #param(out);[1:7:{}:1:0]
