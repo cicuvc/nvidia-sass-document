@@ -193,18 +193,18 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
                 and re.search(r"SLOT_DEFAULT_CDESC|#param\(|c\[", head):
             def _load(m):
                 lead = m.group("lead")
-                sz = m.group("sz") or "64"
+                sz = m.group("sz") or ""
                 regs, dst = m.group("regs"), m.group("src")
+                if sz not in ("64", "128"):
+                    # Plain/32-bit const loads pass through untouched —
+                    # forcing .64 on them corrupts subword-width probes.
+                    return m.group(0)
                 mm = _BRACKET_RE.match(m.group("bracket"))
                 base_stall = int(mm.group("stall")) if mm else 1
                 st = max(base_stall, 2) if _feeds_desc(_idx) else base_stall
                 yl = max(int(mm.group("yield")) if mm else 0, 1)
                 br2 = f"[7:7:{{}}:{st}:{yl}]"
-                if verbose:
-                    print(f"[archutil] {mnem_of(m.group('bracket'))}->ULDC (no wr) {br2}")
                 return f"{lead}ULDC.{sz} {regs}, {dst};{br2}"
-            def mnem_of(old_bracket):
-                return "LDCU"
             line = _CDESC_RE.sub(_load, line)
 
         out_lines.append(line)
