@@ -160,9 +160,16 @@ kind, s, d = run(False, True)
 check("plain UBLKCP.S.G cluster: mbar completes", s, 0)
 check("plain UBLKCP.S.G cluster: data = source[0]", d, 0x1000)
 
-# multicast: expected to fault CUDA_ERROR_ILLEGAL_INSTRUCTION (715) on sm_120
+# multicast: PTX docs say .multicast needs sm_90+; on H20 it EXECUTES
+# successfully (both CTAs receive data), while the sm_120 hand-encoded run
+# rejected with CUDA_ERROR_ILLEGAL_INSTRUCTION (715).
 kind, *rest = run(True, True)
-check("multicast: rejected on sm_120 (715)",
+if archutil.is_sm90():
+    check("multicast on sm_90: completes", kind, "ok")
+    check("multicast on sm_90: mbar state", rest[0], 0)
+    print("info data words:", [hex(x) for x in rest[1:]][:2])
+else:
+    check("multicast: rejected on sm_120 (715)",
       f"{kind}:{rest[0]}" if kind == "err" else "no-error",
       "err:715")
 
