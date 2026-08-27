@@ -80,7 +80,12 @@ def kernel(multicast: bool, cluster: bool):
     #def_label(c1)
 {cga_sync}
     UISETP.NE.AND UP0, UPT, UR8, 0x0, UPT;[7:7:{{1}}:1:0]
-    PLOP3.LUT P3, PT, PT, PT, UP0, 0x80, 0x0;[7:7:{{1}}:5:1]
+    # PLOP3(int/udp pred) -> @P3 BRA(cbu) is the slow-coarse predicate path:
+    # the stall MUST sit on the instruction that WRITES P3 (12-13 cycles),
+    # not on UISETP above (which only covers UP0 readiness).  Found on H20:
+    # stall=1 here left a live hazard — skip_issue mis-branched, multicaster
+    # never issued, and downstream mbarrier phases looked "stuck".
+    PLOP3.LUT P3, PT, PT, PT, UP0, 0x80, 0x0;[7:7:{{1}}:13:1]
     @P3 BRA #label(skip_issue);[7:7:{{}}:5:1]
     UBLKCP.S.G{mc} {{UR6,UR7}}, {{UR10,UR11}}, UR8;[7:1:{{3}}:1:0]
     #def_label(skip_issue)
