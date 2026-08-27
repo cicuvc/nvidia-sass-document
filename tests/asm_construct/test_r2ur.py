@@ -122,10 +122,14 @@ MASK = """    S2R R8, SR_LANEID;[0:7:{}:5:1]
 """
 
 # uniform source -> exact value through every encoding variant
-for label, inst in [("noOR", "R2UR UR16, R2"),
-                    ("OR", "R2UR.OR P0, UR16, R2"),
-                    ("FILL", "R2UR.FILL UR16, R2"),
-                    ("BROADCAST", "R2UR.BROADCAST UR16, R2")]:
+# (sm_90 spec lacks the .FILL/.BROADCAST spellings — Blackwell-only)
+_variants = [("noOR", "R2UR UR16, R2"), ("OR", "R2UR.OR P0, UR16, R2")]
+if not is_sm90():
+    _variants += [("FILL", "R2UR.FILL UR16, R2"),
+                  ("BROADCAST", "R2UR.BROADCAST UR16, R2")]
+else:
+    print("info .FILL/.BROADCAST GPU lanes skipped: absent from the sm_90 spec")
+for label, inst in _variants:
     v = run(UNI + f"    {inst};[2:7:{{}}:5:1]\n" + settle_store("UR16", "R20", 0x0))[0]
     good = v == 0x12345678
     ok &= good

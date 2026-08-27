@@ -34,7 +34,19 @@ REF = {
     "RIR":        (0x1234567800027836, 0x000fca0000000000),  # R2=R0+0x12345678
 }
 
-flat = assemble_flat(adapt_source("""VIADD.U32 R2, R0, R1;[7:7:{}:5:1]
+_VA = """VIADD.32 R2, R0, R1;[7:7:{}:5:1]
+VIADD.32 R2, R0, -R1;[7:7:{}:5:1]
+VIADD.32 R2, -R0, R1;[7:7:{}:5:1]"""
+if is_sm90():
+    # sm_90 spec FMT_viadd = {32, 16x2} only — no ISAT/u8x4, and the modifier
+    # token is '.32' rather than the sm120 '.U32'.
+    _src = _VA + """
+VIADD.16x2 R2, R0, R1;[7:7:{}:5:1]
+VIADD.32 R2, R0, 0x12345678;[7:7:{}:5:1]
+"""
+    _names = ["32+=", "32 +(-b)", "32 (-a)+", "16x2", "RIR"]
+else:
+    _src = """VIADD.U32 R2, R0, R1;[7:7:{}:5:1]
 VIADD.U32 R2, R0, -R1;[7:7:{}:5:1]
 VIADD.U32 R2, -R0, R1;[7:7:{}:5:1]
 VIADD.S32.ISAT R2, R0, R1;[7:7:{}:5:1]
@@ -42,9 +54,11 @@ VIADD.U16x2 R2, R0, R1;[7:7:{}:5:1]
 VIADD.S16x2 R2, R0, R1;[7:7:{}:5:1]
 VIADD.U8x4 R2, R0, R1;[7:7:{}:5:1]
 VIADD.U32 R2, R0, 0x12345678;[7:7:{}:5:1]
-"""))
+"""
+    _names = list(REF)
+flat = assemble_flat(adapt_source(_src))
 ok = True
-for name, enc in zip(REF, flat):
+for name, enc in zip(_names, flat):
     good = enc == REF[name]
     ok &= good
     print(f"{'ok ' if good else 'FAIL'} bytes {name:8s} lo={enc[0]:016x} hi={enc[1]:016x}")

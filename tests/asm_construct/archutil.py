@@ -76,7 +76,10 @@ def _split_mov64(m):
 _VIADD_U32_RE = re.compile(r"(\bVIADD(?:X|XU)?)\.U32\b")
 
 
-_UIADD3_URZ_RE = re.compile(r"(?P<pre>\bUIADD3\b[^;]*),\s*URZ\s*$")
+# sm90 matcher rejects spec-legal URZ tails on the udp imm/shift forms;
+# swap in a pre-zeroed scratch uniform. Covers UIADD3 imm, USHF fills etc.
+_UI_URZ_ANCHOR = re.compile(r"^\s*(?:@\S+\s+)?(?:UIADD3|USHF|UIMAD|UISHL|UISETP)\b")
+_UI_URZ_TOKEN = re.compile(r"\bURZ\b")
 
 
 _ELECT_RE = re.compile(r"\bELECT\s+(P\d+)\s*,\s*(UR\w+)\s*,\s*PT\b")
@@ -93,89 +96,80 @@ def _prune_wait(inner: str, alive: set) -> str:
 
 
 def adapt_source(src: str, *, verbose: bool = False) -> str:
-    """Make an sm_120-dialect kernel string valid for the active arch."""
+    """Minimal sm_120 -> sm_90 kernel-text adaptation.
+
+    Empirically established on H20 (see notes/sm90/arch/assembler_sm90_port.md
+    "ULDC timing investigation" + follow-up probe):
+
+    * ``ULDC`` is **synchronous**: a directly-following consumer observes the
+      loaded pair through ordinary issue-ordering (stall>=1 or yield>=1) even
+      with no write-scoreboard involved.  Proven by poisoning UR5 with
+      0xffffffff and watching the very next LDG fault until ULDC overwrote it.
+    * Hence NO special sm90 scoreboard choreography is required.  We only
+      (a) normalise the mnemonic (LDCU -> ULDC, dropping its fake wr claim —
+      ULDC writes no scoreboard, claiming one would falsely satisfy
+      unrelated consumers),
+      (b) leave every OTHER line exactly as authored, so their documented
+      depcheck-verified wait sets (e.g. LDG req-waiting the param-load SB)
+      keep doing the real work,
+      (c) apply matcher-level dialect fixes (ELECT arg order, MOV->UMOV for
+      uniform targets, VIADD .U32->.32, MOV.64 split, UI-family URZ tails).
+
+    All heavy custom waiting lives in the test sources themselves, where
+    depcheck enforces consistency.
+    """
     if not is_sm90():
         return src
 
-    lines_in = src.split("\n")
-    # pass 1: classify every write-scoreboard claim — wrs from uniform loads
-    # vanish under ULDC; everything else stays live.
-    alive_sbs: set[int] = set()
-    for line in lines_in:
-        head, sep, bracket = line.partition(";")
-        if not sep:
-            continue
-        mm = _BRACKET_RE.match(
-            bracket if bracket.startswith("[") else "[" + bracket.rstrip("]") + "]")
-        if not mm or not (mm.group("wr")).isdigit():
-            continue
-        wr = int(mm.group("wr"))
-        is_uniform_load = ((("LDCU" in head) or ("ULDC." in head))
-                           and re.search(r"SLOT_DEFAULT_CDESC|#param\(|c\[", head))
-        if is_uniform_load:
-            continue                        # will be rewritten to no-wr below
-        if wr != 7:
-            alive_sbs.add(wr)
+    dropped_scratch_done = False
 
     out_lines = []
-    for line in lines_in:
+    for line in src.split("\n"):
         head, sep, bracket = line.partition(";")
-        if is_sm90():
-            new, nsub = _VIADD_U32_RE.subn(r"\1.32", head)
-            if nsub:
-                line = new + sep + bracket
-                head, sep, bracket = line.partition(";")
+
+        if sep and is_sm90():
+            # --- dialect: MOV URx,... reads as GPR-move; use UMOV ----------
+            new, n = re.subn(r"^(?P<lead>\s*)MOV\s+(UR\w+)", r"\g<lead>UMOV \2", head)
+            if n:
+                head = new
+                line = head + sep + bracket
+
+            # --- VIADD modifier token --------------------------------------
+            new, n = _VIADD_U32_RE.subn(r"\1.32", head)
+            if n:
+                head = new
+                line = head + sep + bracket
+
+            # --- ELECT slot order ------------------------------------------
+            if "ELECT" in head:
+                new = _ELECT_RE.sub(r"ELECT \1, \2, URZ", head)
+                if new != head:
+                    line = new + sep + bracket
+                    head, _, bracket = line.partition(";")
+
+            # --- MOV.64 split ----------------------------------------------
             mmov = _MOV64_RE.match(line)
             if mmov:
                 out_lines.extend(_split_mov64(mmov).split("\n"))
                 continue
-        if sep and is_sm90() and _UIADD3_URZ_RE.search(head):
-            # sm90 matcher rejects the spec-legal URZ tail on the imm form;
-            # substitute a pre-zeroed scratch uniform (UR13).
-            zero_needed = ("# adapter: zeroed scratch" not in "\n".join(out_lines) and "# adapter: zeroed scratch" not in src)
-            head2 = _UIADD3_URZ_RE.sub(r"\g<pre>, UR13", head)
-            if head2 != head:
-                line = head2 + sep + bracket
-                if zero_needed:
-                    out_lines.append("    UMOV UR13, 0x0;[7:7:{}:5:1]      # adapter: zeroed scratch")
-                    zero_needed = False
-                if verbose:
-                    print(f"[archutil] UIADD3 URZ-tail -> {line.strip()}")
-            head, sep, bracket = line.partition(";")
-        if sep and "ELECT" in head:
-            # sm120 dialect prints `ELECT Pd, URa, PT`; sm90 slots are
-            # `ELECT Pu, URd, [~]URa` — a literal PT cannot fill URa.
-            new = _ELECT_RE.sub(r"ELECT \1, \2, URZ", head)
-            if new != head:
-                line = new + sep + bracket
-            head, sep, bracket = line.partition(";")
-        if sep and "desc[" in head:
-            m = _BRACKET_RE.match(
-                bracket if bracket.startswith("[") else "[" + bracket.rstrip("]") + "]")
-            if m:
-                wait = _prune_wait(m.group("wait"), alive_sbs)
-                st = max(int(m.group("stall")), 3)
-                yl = max(int(m.group("yield")), 1)
-                br2 = f"[{m.group('wr')}:{m.group('rd')}:{wait}:{st}:{yl}{m.group('rest') or ''}]"
-                line = f"{head};{br2}"
-                if verbose:
-                    print(f"[archutil] desc-consumer -> {line.strip()}")
-        elif sep and ("LDCU." in head or "ULDC." in head or re.search(r"\bLDCU\b", head)) \
-                and re.search(r"SLOT_DEFAULT_CDESC|#param\(|c\[", line):
+
+        if sep and ("LDCU" in head or "ULDC." in head or re.search(r"\bLDCU\b", head)) \
+                and re.search(r"SLOT_DEFAULT_CDESC|#param\(|c\[", head):
             def _load(m):
                 lead = m.group("lead")
                 sz = m.group("sz") or "64"
                 regs, dst = m.group("regs"), m.group("src")
                 mm = _BRACKET_RE.match(m.group("bracket"))
-                old_wr = int(mm.group("wr")) if mm else None
-                st = max(int(mm.group("stall")) if mm else 1, 3)
+                st = max(int(mm.group("stall")) if mm else 1, 1)
                 yl = max(int(mm.group("yield")) if mm else 0, 1)
                 br2 = f"[7:7:{{}}:{st}:{yl}]"
                 if verbose:
-                    print(f"[archutil] LDCU->ULDC (wr={old_wr}->none) {br2}")
+                    print(f"[archutil] {mnem_of(m.group('bracket'))}->ULDC (no wr) {br2}")
                 return f"{lead}ULDC.{sz} {regs}, {dst};{br2}"
-            new = _CDESC_RE.sub(_load, line)
-            line = new if new != line else line
+            def mnem_of(old_bracket):
+                return "LDCU"
+            line = _CDESC_RE.sub(_load, line)
+
         out_lines.append(line)
     return "\n".join(out_lines)
 

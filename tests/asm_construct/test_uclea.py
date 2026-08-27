@@ -107,8 +107,12 @@ cases = [
     (0x00000000, 0x0, 5, "zero"),
     (0x41, 0x0, 5, "0x41<<6"),
     (0x12345678, 0x123, 0, "K=0 same as K=5"),
-    (0x12345678, 0x123, 16, "K=16 same as K=5"),
 ]
+if not is_sm90():
+    # sm_90 spec caps constSizeU04 at 8 — scale 16 is Blackwell-only legality.
+    cases.append((0x12345678, 0x123, 16, "K=16 same as K=5"))
+else:
+    print("info K=16 case skipped: constSizeU04 > 8 is illegal on sm_90")
 for base, off, K, lab in cases:
     res = run_kernel(kernel(K=K), base, off)
     exp = ((base << 6) + off) & 0xFFFFFFFFFFFFFFFF

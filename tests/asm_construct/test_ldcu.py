@@ -38,16 +38,6 @@ REF = [
     (0x00007000ff0677ac, 0x000e220008000a00),  # .64
     (0x00007000ff1477ac, 0x000e220008000c00),  # .128 -> UR20
 ]
-_BODY = """
-LDCU.U8 UR6, c[0x0][0x380];[0:7:{}:1:0]
-LDCU.S8 UR6, c[0x0][0x380];[0:7:{}:1:0]
-LDCU.U16 UR6, c[0x0][0x380];[0:7:{}:1:0]
-LDCU.S16 UR6, c[0x0][0x380];[0:7:{}:1:0]
-LDCU.64 {UR6,UR7}, c[0x0][0x380];[0:7:{}:1:0]"""
-if is_sm90():
-    # sm_90 spec ULDC sz enum tops out at 64 — no .128 variant.
-    _src = _VEC_FIRST = ('flat', )  # placeholder-free rebuild below
-
 _plain32_src = "LDCU UR6, c[0x0][0x380];[0:7:{}:1:0]"
 _BODY = """
 LDCU.U8 UR6, c[0x0][0x380];[0:7:{}:1:0]

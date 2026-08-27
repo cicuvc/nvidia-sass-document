@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_flat, CudaModule
+from archutil import adapt_source, same_as_capture, is_sm90  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # USEL — uniform register conditional select (udp_pipe; verified SM120)

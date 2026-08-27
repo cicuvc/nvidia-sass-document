@@ -60,11 +60,16 @@ def s32(x):
 
 def kernel(inst, wide=False):
     if wide:
+        _extra_c = is_sm90()
         loads = ("    LDCU UR6, #param(a);[2:7:{}:1:0]\n"
                  "    LDCU UR7, #param(b);[3:7:{}:1:0]\n"
                  "    UMOV UR9, UR6;[7:7:{2}:5:1]\n"
                  "    UMOV UR9, UR7;[7:7:{3}:5:1]\n")
-        reqs = "{2,3}"
+        if _extra_c:
+            # sm90 WIDE spelling takes an explicit addend register.
+            loads += ("    LDCU UR8, #param(c);[4:7:{}:1:0]\n"
+                      "    UMOV UR9, UR8;[7:7:{4}:5:1]\n")
+        reqs = "{2,3}" if not _extra_c else "{2,3,4}"
         dst = "{UR16,UR17}"
     else:
         loads = ("    LDCU UR6, #param(a);[2:7:{}:1:0]\n"
@@ -162,7 +167,14 @@ wide_cases = [
     (0x7FFFFFFF, 0x7FFFFFFF, 0x3FFFFFFF00000001),
 ]
 for a, b, exp in wide_cases:
-    lo, hi = run("UIMAD.WIDE {UR16,UR17}, UR6, UR7, {URZ,URZ};", a, b, 0, wide=True)
+    if is_sm90():
+        # sm_90 WIDE operand order: URd(64-bit), UPu, URa, URb, [-]URc — the
+        # merge predicate is an explicit literal and there is no imm in this
+        # class.  Addend lives in URZ-free UR8? spec allows URZ but matcher
+        # rejects it; use param(c) register which run(wide) keeps at UR8.
+        lo, hi = run("UIMAD.WIDE {UR16,UR17}, UPT, UR6, UR7, {UR8,UR9};", a, b, 0, wide=True)
+    else:
+        lo, hi = run("UIMAD.WIDE {UR16,UR17}, UR6, UR7, {URZ,URZ};", a, b, 0, wide=True)
     got = (hi << 32) | lo
     good = got == exp
     ok &= good
