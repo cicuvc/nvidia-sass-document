@@ -70,6 +70,16 @@ cross-lane `R2UR`.
 | int → cbu (`ISETP`→`@P0 BRA`) | 13 | **7 fine / 12–13 coarse** | slow predicate |
 | fp16 → cbu (`HSETP2`→`@P0 BRA`) | 13 | **7 fine / 12 coarse** | slow predicate |
 | int → int (predicated `@P0 IADD3`) | 5 | not swept | (see open Q) |
+| PLOP3 → cbu (`PLOP3.LUT P3, PT,PT,PT, UP0, …` → `@P3 BRA`) | — | **13 (stall on the PLOP3 line itself)** | slow predicate |
+
+**Placement rule (H20 live finding, ublkcp_multicast):** the gap for a
+cbu-consuming predicate must be the *stall of the instruction that WRITES
+that predicate*.  A big stall on an upstream producer only covers ITS output;
+the consumer still hazards on the intermediate PLOP3 result.  Concretely:
+
+    UISETP.NE.AND UP0, UPT, UR8, 0x0, UPT;[…:1:0]      // covers UP0 only
+    PLOP3.LUT P3, …UP0…;[…:13:1]                       // <- where the 13 goes
+    @P3 BRA #label(skip_issue);[…]                     // clean at 13, hazardous at 5
 
 ## Forwarding taxonomy (6 classes)
 

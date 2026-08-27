@@ -93,7 +93,7 @@ Suite-runs with `ASSEMBLER_ARCH=sm90`, tools/run_tests.py:
 * On Hopper **`UTMACCTL.IV` alone refreshes the descriptor/LDCU cache**
   (isolation-matrix probe): unlike sm_120 where CCTL.DEEP must precede it.
   `UTMACCTL.IVALL` alone leaves stale entries.
-* Multicast rejection codes differ (sm_120:715 ILLEGAL_INSTRUCTION-encoding;
+* With the PLOP3→BRA stall fix, multicast issue is deterministic and DATA lands on both CTAs; only the hand-built mbarrier completion of the multicast form remains unresolved. Multicast rejection codes differ (sm_120:715 ILLEGAL_INSTRUCTION-encoding;
   sm_90 executes) — PTX docs put `.multicast` at sm_90+.
 * mbarrier choreography rule for hand-built kernels: init must be fenced from
   consumer observation (BAR.SYNC.DEFER_BLOCKING right after SYNCS.EXCH.64),
