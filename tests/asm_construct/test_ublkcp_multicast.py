@@ -3,7 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import assemble, assemble_kernel, CudaModule
-from archutil import adapt_source
+from archutil import adapt_source, is_sm90
 from assembler.runner import _cuda, _check
 
 # ---------------------------------------------------------------------------
@@ -164,7 +164,7 @@ check("plain UBLKCP.S.G cluster: data = source[0]", d, 0x1000)
 # successfully (both CTAs receive data), while the sm_120 hand-encoded run
 # rejected with CUDA_ERROR_ILLEGAL_INSTRUCTION (715).
 kind, *rest = run(True, True)
-if archutil.is_sm90():
+if is_sm90():
     check("multicast on sm_90: completes", kind, "ok")
     check("multicast on sm_90: mbar state", rest[0], 0)
     print("info data words:", [hex(x) for x in rest[1:]][:2])
