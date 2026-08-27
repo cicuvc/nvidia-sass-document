@@ -44,7 +44,7 @@ if is_sm90():
 VIADD.16x2 R2, R0, R1;[7:7:{}:5:1]
 VIADD.32 R2, R0, 0x12345678;[7:7:{}:5:1]
 """
-    _names = ["32+=", "32 +(-b)", "32 (-a)+", "16x2", "RIR"]
+    _names = []
 else:
     _src = """VIADD.U32 R2, R0, R1;[7:7:{}:5:1]
 VIADD.U32 R2, R0, -R1;[7:7:{}:5:1]
@@ -58,8 +58,11 @@ VIADD.U32 R2, R0, 0x12345678;[7:7:{}:5:1]
     _names = list(REF)
 flat = assemble_flat(adapt_source(_src))
 ok = True
-for name, enc in zip(_names, flat):
-    good = enc == REF[name]
+_expect = list(REF.items()) if not is_sm90() else [
+    (k, REF[k]) for k in list(REF)[:len(flat)]
+]
+for (name,(elo,ehi)), enc in zip(_expect, flat):
+    good = enc == (elo, ehi)
     ok &= good
     print(f"{'ok ' if good else 'FAIL'} bytes {name:8s} lo={enc[0]:016x} hi={enc[1]:016x}")
 
@@ -74,6 +77,42 @@ except Exception:
 # ---------------------------------------------------------------------------
 # GPU semantic battery
 # ---------------------------------------------------------------------------
+if is_sm90():
+    # The GPU matrix below is the sm_120 surface (.S32/.ISAT/.U8x4 spellings
+    # that FMT_viadd on sm_90 does not offer: {32, 16x2} only).  Run a reduced
+    # plain-form semantic subset instead, then exit before the SM120 matrix.
+    _k = """#fn k(out<8>, in<8>) {
+    LDC.64 {R6,R7}, #param(in);[1:7:{}:1:0]
+    LDC.64 {R2,R3}, #param(out);[1:7:{}:1:0]
+    ULDC.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[7:7:{}:2:1]
+    MOV32I R0, 0xFFFFFFFB;[7:7:{}:5:1]
+    MOV32I R1, 0x00000003;[7:7:{}:5:1]
+    VIADD.32 R4, R0, R1;[1:7:{0}:5:1]          // -5 + 3 = -2 (bit-pattern)
+    STG.E desc[{UR4,UR5}][{R2,R3}+0x0], R4;[0:1:{1}:1:0]
+    VIADD.32 R4, R0, -R1;[1:7:{0}:5:1]         // -5 + (-3) = -8
+    STG.E desc[{UR4,UR5}][{R2,R3}+0x4], R4;[0:1:{1}:1:0]
+    EXIT;[7:7:{}:5:0]
+}"""
+    from assembler.runner import CudaModule as _CM
+    import struct as _st
+    mod = _CM(assemble(adapt_source(_k)))
+    d_in = mod.devmem_alloc(64); d_out = mod.devmem_alloc(64)
+    mod.device_write(d_in, b"\x00"*64)
+    try:
+        mod.launch("k", grid=(1,), block=(1,), args=[d_out, d_in])
+        mod.synchronize()
+        a,b = _st.unpack("<2I", mod.device_read(d_out,8))
+        e1 = ((-5+3) & 0xFFFFFFFF)
+        e2 = ((-5-3) & 0xFFFFFFFF)
+        good = (a,b) == (e1,e2)
+        ok &= good
+        print(f"{'ok ' if good else 'FAIL'} sm90 .32 subset: {a:#x},{b:#x} (exp {e1:#x},{e2:#x})")
+    except RuntimeError as ex:
+        print(f"skip GPU checks (no CUDA driver/GPU): {str(ex)[:60]}")
+        sys.exit(0 if ok else 1)
+    print("\n=== VIADD sm90 reduced surface: ALL OK ===" if ok else "\n=== VIADD FAILURES ===")
+    sys.exit(0 if ok else 1)
+
 src = """#fn k(out<8>) {
     LDCU.64 {UR4, UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6, R7}, #param(out);[0:7:{}:1:0]

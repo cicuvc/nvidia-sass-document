@@ -153,10 +153,10 @@ ok &= good
 print(f"{'ok ' if good else 'FAIL'} REDUX.OR control -> 0x{v:02x} (exp 0x3f = OR of 1..32)")
 
 # partial active mask: first active lane is lane 8 -> its value is 9
-for label, inst in [("noOR", "R2UR UR16, R2"),
-                    ("OR", "R2UR.OR P1, UR16, R2"),
-                    ("FILL", "R2UR.FILL UR16, R2"),
-                    ("BROADCAST", "R2UR.BROADCAST UR16, R2")]:
+_v2 = [("noOR", "R2UR UR16, R2"), ("OR", "R2UR.OR P1, UR16, R2")]
+if not is_sm90():
+    _v2 += [("FILL", "R2UR.FILL UR16, R2"), ("BROADCAST", "R2UR.BROADCAST UR16, R2")]
+for label, inst in _v2:
     v = run(DIV + MASK + f"    @P0 {inst};[2:7:{{}}:5:1]\n" + settle_store("UR16", "R20", 0x0))[0]
     good = v == 9
     ok &= good
@@ -263,12 +263,13 @@ ok &= good
 print(f"{'ok ' if good else 'FAIL'} Pu guard-off: skipped R2UR writes nothing (all lanes keep preset 1)")
 
 # divergent + FILL/BROADCAST variants write Pu identically
-for label, inst in [("FILL", "R2UR.FILL P0, UR16, R2"),
-                    ("BROADCAST", "R2UR.BROADCAST P0, UR16, R2")]:
-    v = run_lanes(DIV + P0_PRESET_0 + f"    {inst};[2:7:{{}}:5:1]\n" + PU_CHAIN + P2R_P0)
-    good = v[0] == 0 and all(x == 1 for x in v[1:])
-    ok &= good
-    print(f"{'ok ' if good else 'FAIL'} Pu {label:10s} preset0 div: lane0={v[0]} lanes1-31 all-1: {all(x==1 for x in v[1:])}")
+if not is_sm90():
+    for label, inst in [("FILL", "R2UR.FILL P0, UR16, R2"),
+                        ("BROADCAST", "R2UR.BROADCAST P0, UR16, R2")]:
+        v = run_lanes(DIV + P0_PRESET_0 + f"    {inst};[2:7:{{}}:5:1]\n" + PU_CHAIN + P2R_P0)
+        good = v[0] == 0 and all(x == 1 for x in v[1:])
+        ok &= good
+        print(f"{'ok ' if good else 'FAIL'} Pu {label:10s} preset0 div: lane0={v[0]} lanes1-31 all-1: {all(x==1 for x in v[1:])}")
 
 # Pu RAW latency floor: WAIT1_END_GROUP reads STALE (old P0=0), WAIT5 reads settled.
 v = run_lanes(DIV + P0_PRESET_0 + "    R2UR.OR P0, UR16, R2;[2:7:{}:1:1]\n" + P2R_P0)

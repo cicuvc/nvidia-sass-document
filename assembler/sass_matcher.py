@@ -201,8 +201,10 @@ class SassMatcher:
                     return None
             elif want > 32:
                 # RZ as a wide operand means "none/empty" (e.g. HGMMA's
-                # second accumulator Rc=RZ encodes 0); allow it.
-                if int(op.value) == 255:
+                # second accumulator Rc=RZ encodes 0); allow it.  UR-domain
+                # Z is 63 (UniformRegister enum), also a legal placeholder.
+                if int(op.value) == 255 or (op.kind == OperandKind.UREG
+                                            and int(op.value) == 63):
                     continue
                 rv = int(op.value)
                 self._cond_errors.append(
