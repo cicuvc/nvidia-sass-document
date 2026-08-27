@@ -108,6 +108,11 @@ if(Python3_FOUND)
             ${CMAKE_CURRENT_SOURCE_DIR}/cli_smoke_test.py
             $<TARGET_FILE:semu>
             ${CMAKE_CURRENT_SOURCE_DIR}/data/empty_module.bin)
+  # probe binary smoke: structured decode must emit a mnemonic.
+  add_test(NAME probe_decode_json
+    COMMAND semu_probe decode-json 0x7918 0x000fc00000000000)
+  set_tests_properties(probe_decode_json
+    PROPERTIES PASS_REGULAR_EXPRESSION "\"mnemonic\"")
 else()
   add_test(NAME cli_version COMMAND semu --version)
   add_test(NAME cli_invalid_command COMMAND semu frobnicate)

@@ -265,7 +265,7 @@ def utmaldg_kernel(c0, c1):
         "    USHF.L.U32 UR12, UR12, 0x1, URZ;[7:7:{1}:5:1]\n"
         "    MOV32I R0, 256;[7:7:{}:5:1]\n"
         "    FENCE.VIEW.ASYNC.S;[1:7:{}:5:1]\n"
-        "    SYNCS.EXCH.64 {URZ,URZ}, [UR7], UR12;[3:1:{1}:5:1]\n"
+        "    SYNCS.EXCH.64 URZ, [UR7], UR12;[3:1:{1}:5:1]\n"
         "    MEMBAR.ALL.CTA;[7:7:{3}:5:1]\n"
         "    FENCE.VIEW.ASYNC.S;[2:7:{}:5:1]\n"
         "    UMOV UR8, 0x400;[1:7:{}:1:0]\n"

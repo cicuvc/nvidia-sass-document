@@ -127,7 +127,7 @@ body3 = (
     "    UIADD3 UR12, UPT, UPT, -UR12, 0x100000, URZ;[7:7:{1}:5:1]\n"
     "    USHF.L.U32 UR13, UR12, 0xb, URZ;[7:7:{1}:5:1]\n"
     "    USHF.L.U32 UR12, UR12, 0x1, URZ;[7:7:{1}:5:1]\n"
-    "    SYNCS.EXCH.64 {URZ,URZ}, [UR6], UR12;[2:1:{1}:5:1]\n"
+    "    SYNCS.EXCH.64 URZ, [UR6], UR12;[2:1:{1}:5:1]\n"
     "    MOV32I R0, 16;[7:7:{}:5:1]\n"
     "    SYNCS.ARRIVE.TRANS64 {RZ,RZ}, [RZ+UR6], R0;[1:7:{2}:5:1]\n"
     "    MOV32I R2, 0x1;[7:7:{}:5:1]\n"
@@ -195,7 +195,7 @@ body4 = (
     "    LDCU.64 {UR10,UR11}, #param(gsrc);[2:7:{1}:5:1]\n"
     "    MOV32I R0, 512;[7:7:{}:5:1]\n"           # expect_tx byte count
     "    FENCE.VIEW.ASYNC.S;[1:7:{}:5:1]\n"
-    "    SYNCS.EXCH.64 {URZ,URZ}, [UR7], UR12;[3:1:{1}:5:1]\n"
+    "    SYNCS.EXCH.64 URZ, [UR7], UR12;[3:1:{1}:5:1]\n"
     "    MEMBAR.ALL.CTA;[7:7:{3}:5:1]\n"
     "    FENCE.VIEW.ASYNC.S;[2:7:{}:5:1]\n"
     "    UMOV UR8, 0x20;[1:7:{}:1:0]\n"           # 512 bytes (16B units)

@@ -459,9 +459,8 @@ class Parser:
             elif uniform != is_uni:
                 raise SyntaxError(
                     "register group cannot mix R and UR registers")
-            if t.text.upper().endswith("RZ"):
-                # GPR Z encodes 255; uniform Z is 63 in its enum.
-                regs.append(255 if not is_uni else 63)
+            if t.text.upper() in ("RZ", "URZ"):
+                regs.append(255)
             else:
                 regs.append(int(t.text[2:] if is_uni else t.text[1:]))
             if not self.skip("COMMA"):
@@ -472,10 +471,9 @@ class Parser:
                 f"register group must list 2 (64-bit), 4 (128-bit), "
                 f"8 (256-bit) or 16/32/64/128 (wide MMA accumulator) "
                 f"registers, got {len(regs)}")
-        zsent = {255, 63} if uniform else {255}
-        all_rz = all(r in zsent for r in regs)
+        all_rz = all(r == 255 for r in regs)
         if not all_rz:
-            if any(r in zsent for r in regs):
+            if 255 in regs:
                 raise SyntaxError(
                     "register group cannot mix RZ with real registers")
             for a, b in zip(regs, regs[1:]):

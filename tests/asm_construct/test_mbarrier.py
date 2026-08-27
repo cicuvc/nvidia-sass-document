@@ -62,7 +62,7 @@ def init(count):
         "    UIADD3 UR8, UPT, UPT, -UR8, 0x100000, URZ;[7:7:{1}:5:1]\n"
         "    USHF.L.U32 UR9, UR8, 0xb, URZ;[7:7:{1}:5:1]\n"
         "    USHF.L.U32 UR8, UR8, 0x1, URZ;[7:7:{1}:5:1]\n"
-        "    SYNCS.EXCH.64 {URZ,URZ}, [UR6], UR8;[2:1:{1}:5:1]\n"
+        "    SYNCS.EXCH.64 URZ, [UR6], UR8;[2:1:{1}:5:1]\n"
     )
 
 def phasechk(parity, trywait=True, wr=1):
