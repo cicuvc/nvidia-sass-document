@@ -79,9 +79,6 @@ _VIADD_U32_RE = re.compile(r"(\bVIADD(?:X|XU)?)\.U32\b")
 _UI_URZ_ANCHOR = re.compile(r"^\s*(?:@\S+\s+)?(?:UIADD3|USHF|UIMAD|UISHL|UISETP)\b")
 _UI_URZ_TOKEN = re.compile(r"\bURZ\b")
 
-_ELECT_RE = re.compile(r"\bELECT\s+(P\d+)\s*,\s*(UR\w+)\s*,\s*PT\b")
-
-
 def _prune_wait(inner: str, alive: set) -> str:
     """Keep only wait ids whose producer scoreboard still exists on sm90."""
     body = inner.strip("{} ")
@@ -177,12 +174,6 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
                 head, _, bracket = line.partition(";")
 
             # --- ELECT slot order ------------------------------------------
-            if "ELECT" in head:
-                new = _ELECT_RE.sub(r"ELECT \1, \2, URZ", head)
-                if new != head:
-                    line = new + sep + bracket
-                    head, _, bracket = line.partition(";")
-
             # --- MOV.64 split ----------------------------------------------
             mmov = _MOV64_RE.match(line)
             if mmov:
