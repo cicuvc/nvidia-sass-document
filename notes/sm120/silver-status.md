@@ -72,7 +72,32 @@ Suite-runs with `ASSEMBLER_ARCH=sm90`, tools/run_tests.py:
 | — | hang | ublkcp/utmaldg deadlocked H20 → bare-URZ spelling adopted, family blacklisted under sm90 (`HANG_SUSPECT_sm90.txt`) |
 | b11 | 103 / 117 (88%) | first clean full pass; test_mbarrier now GREEN |
 | b12 | 106 / 117 | hmma trio + ldgsts? canonical template verified on H20 |
-| **b13** | **106 / 117** | bigparam & viadd turn green; ldg_stg fixed after dropping an illegal combo |
+| b13 | 106 / 117 | bigparam & viadd turn green; ldg_stg fixed (illegal combo dropped) |
+| **b14** | **113 / 123** | TMA family un-blacklisted and GREEN: utmaldg/stg/redg/utmacctl(+mcast OQ), ublkcp, hmma trio, ldg_stg — suite clean end-to-end |
+
+### B14 residual reds (10) — all characterised
+| Test | Status |
+|---|---|
+| f2fp, omma, qmma ×2, tmap_helper | by-design Blackwell-only |
+| cache_desc, int_cbu_forward, s2ur(flaky when poisoned-context races appear) | flaky/timing, known |
+| yield | per-SKU forward-progress boundaries — needs the bounded probe |
+| ldgsts | LDGSTS encode bits [70,74,83] differ vs nvcc on sm_90 — deep-dive pending |
+| ublkcp_multicast | downgraded to INFO/OQ: multicast delivers data but hand-built mbar completion semantics unresolved |
+
+### New architecture findings recorded this session
+* `CCTL.E.C.LDCU.IV.{DEEP,SHALLOW}` is **Blackwell-only**: the sm_90 ISA dump
+  has no cctl_c_ldcu_* classes, libcublasLt(Hopper) only ever emits
+  `CCTL.IVALL`, and a live ptxas(sm_90a, CUDA 12.8) compile of the documented
+  tensormap.cp_fenceproxy/acquire fence chain lowers to a single
+  `UTMACCTL.IV [UR4]` (lo=0x…79b9).
+* On Hopper **`UTMACCTL.IV` alone refreshes the descriptor/LDCU cache**
+  (isolation-matrix probe): unlike sm_120 where CCTL.DEEP must precede it.
+  `UTMACCTL.IVALL` alone leaves stale entries.
+* Multicast rejection codes differ (sm_120:715 ILLEGAL_INSTRUCTION-encoding;
+  sm_90 executes) — PTX docs put `.multicast` at sm_90+.
+* mbarrier choreography rule for hand-built kernels: init must be fenced from
+  consumer observation (BAR.SYNC.DEFER_BLOCKING right after SYNCS.EXCH.64),
+  expect_tx folded before issuing the bulk copy.
 
 ### Final per-arch parameter layout rule (H20, bank sweep probe_bankmap.py)
 Params are placed **contiguously at PARAM_CBANK base** in declaration order:
