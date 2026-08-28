@@ -95,9 +95,113 @@ pattern-match in the cubin → replace with any assembled instruction.
   64 KiB scratch buffer, scalars 0).  Smoke test:
   `tests/asm_construct/test_sassdbg_m2.py` (+ `tests/m2_smoke.{cu,cubin}`).
 
-Roadmap: M3 = runtime breakpoints/toggles via patcher kernel +
-`CCTL.I.IVALL`; M4 = single-step / reverse execution from MEMOLD undo
-records.
+Roadmap: M3 (runtime breakpoints via device-side patching — DONE,
+`patch.py` + probe findings below); M4 = single-step / reverse
+execution from MEMOLD undo records.
+
+M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
+- **cuModuleLoadData / first cuLaunchKernel of a module BLOCKS while
+  another kernel spins on-device** (lazy-load path).  Warm up every tool
+  kernel (launch once + stream_sync) BEFORE launching a spinning target.
+- Host↔device control uses device memory + cuMemcpy polling (~10-20µs);
+  `cuMemAllocManaged` fails with 201 under the driver API here, and
+  device-side STG to cuMemAllocHost memory faults 700 via the default
+  cache descriptor.  `cuCtxSynchronize` waits for ALL kernels — never
+  call it while a target is parked (use `stream_query`/`stream_sync`).
+- **CCTL.I.IVALL is SM-LOCAL** (no GPU scope exists in the spec: COP =
+  IVALL/IVALLP/WBALL/WBALLP only).  A patcher-side invalidate reaches
+  the target only if both CTAs coincidentally share an SM.  Reliable
+  mechanism = TARGET-side invalidation: debugger prologue reports its
+  code base via `LEPC` (= own instruction VA; kernel base = LEPC −
+  index*16, verified against the assembled encoding via an LDG
+  readback kernel), parks at a start gate, then runs IVALL once after
+  release — any patch stored while parked is visible on first fetch.
+- **IVALL races in-flight fills**: a lone `CCTL.I.IVALL; BRA target`
+  can still deliver one stale execution of the target line (the fill
+  is discarded from the icache, so exactly one stale iteration).
+  Hardened prologue = `IVALL; NOP×32 (stall 8); IVALL; BRA` → 30/30
+  reliable.  Resume paths are safe unhardened when no fill of the
+  restored line can be in flight (parked warp nowhere near the line).
+- **Tight loops defeat IVALL**: a loop spanning a couple of 128B lines
+  replays from a loop/fetch buffer that CCTL.I/D.IVALL does NOT flush —
+  a mid-run patch of an actively-executed tight loop is NEVER seen.
+  A fat loop (~2KB body) refetches per iteration and the same IVALL
+  makes the patch visible within one iteration.  => breakpoints must be
+  armed before the loop is entered.
+- Breakpoint = single-word patch (16B aligned store is single-copy
+  atomic): overwrite the site with `BRA dbgslot_k`; the slot notifies
+  the host (hit id), parks in a self-refreshing spin on a PER-SLOT
+  release word (a shared flag + slot-side self-reset races: the warp
+  can reach the next slot's load before the previous slot's reset
+  store drains to L2), then `LDG.64` the return VA and **JMX**
+  (absolute indirect jump, target = Ra + off) back.  Resume = restore
+  the site word + write the return VA + set the release flag — no
+  code patch of a spin-refetched line (a patched BRA in the spin line
+  can execute stale exactly once; if that stale word is the
+  placeholder branch the warp is lost).  **BRX is the RELATIVE twin**
+  (target = next_pc + Ra + off — Ra is kernel-relative; an absolute
+  VA in Ra faults 700).  See notes/sm90/instr/{brx,jmx}.md.
+- `sassdbg/patch.py` — M3 host API: `inject_debugger(source, max_bps)`
+  (prologue: LEPC base report + gate + hardened IVALL, reserves
+  R246–R253/UR60/61, rejected if the kernel uses them; appended
+  42-word slots; extra `dbgctrl<8>` param), `Patcher` (warm-up launch
+  mandatory), `Debugger`: `launch(args, grid, block)` (parks at the
+  gate), `arm(orig_inst_index)` / `disarm` / `wait_hit` / `resume` /
+  `wait_done` (stream_query-based; never cuCtxSynchronize while
+  parked).  Resume consumes the bp (re-arm to break again).
+  E2E: `tests/asm_construct/test_sassdbg_m3.py` (lift m2_smoke.cubin →
+  inject → 2 bps → hit/resume → correct results), 10/10 stress.
+
+M4 (`sassdbg/wtrace.py` + `sassdbg/reverse.py`) — warp-level trace +
+forward/backward state replay.  DONE: instrumenter, decoder, reverse
+engine, E2E test (`tests/asm_construct/test_sassdbg_m4.py`, divergent
+if/else kernel: forward replay == device ground truth, step_back to any
+point, partial-replay equivalence).
+
+- Warp-unit records: one record = 32 lane values contiguous (one
+  coalesced STG per lane); every record starts with a 32-lane TAG
+  subblock (`0x5A000000|kind<<16|aux`; predicated-off lanes leave zeros).
+  Four sections per warp region (MAIN/SGPR/PRED/UP, sizes in wtrace.py),
+  section header word = claim counter, data from section_base+0x80.
+  STEP carries BMOV MACTIVE; REG aux = `reg|nlog2<<8`; MEM/MEMOLD =
+  tag + addr(8B/lane) + data(size/lane); UREG adds an idx subblock.
+- **Divergence-safe allocation**: per-lane register counters CANNOT
+  survive divergence (split groups' counters drift; REDUX.MAX at a
+  reconvergence point only reconciles the group with itself — observed:
+  both branch bodies' records lost to overlapping writes).  Instead each
+  instrumented instruction CLAIMS its frame bytes per section with a
+  single-lane atomic RMW + broadcast:
+  `P2R save; BMOV MACTIVE; FLO.U32 (bfind = MSB set bit);
+  ISETP.EQ P6 vs laneid; @P6 ATOMG.E.ADD.STRONG.GPU; SHFL.IDX broadcast;
+  R2P restore`.  Claim order == issue order across groups, so the STEP
+  stream is the control-flow history (reverse PC chain = stream walked
+  backwards; a divergent if/else shows both bodies + the join steps once
+  per group with complementary masks).
+- Claim-phase gotchas (all verified): ISETP with stall 13 REQUIRES
+  yield=1 (`[7:7:{3}:13:1]`; `:13:0` trips the opex
+  batch_t/usched_info illegal-encoding table — assemble_flat does NOT
+  catch it, only full `assemble`); FLO.U32 = bfind (MSB index);
+  SHFL.IDX form `SHFL.IDX PT, Rd, Ra, Rsrc_lane, Rbound` claims its own
+  wr SB (per-section SB assignment main=4/sgpr=3/pred=2/up=1 to avoid
+  double-claim); ATOMG result lands on wr=SB5; 64-bit dest pairs must be
+  EVEN-aligned (MISALIGNED_REG_ERROR) — `{R233,R234}` is illegal.
+- Tracer registers R224-R245 + UR59/60/61 (M3 debugger keeps R246-R253;
+  disjoint by design).  `instrument_warp(source, undo=True)` appends the
+  `__trace<8>` param; grid=(1,) only; host must zero the region (claim
+  counters start at 0).
+- `reverse.py`: `WarpReplay(sidecar_json, trace_bytes, warp=0)` —
+  parses sections (4B-resync tag scan, tolerant of zero gaps), merges
+  aux-section records into per-STEP frames by idx (stream order matches
+  execution order per group), `replay(n_frames=None, state=None)`
+  (resumable), `step_back(state)` (REG/PR/UR/UPR from value-history
+  stacks; MEM from the paired MEMOLD old-bytes — undoing the first
+  traced store restores the host-written pre-kernel image; ATOM/RED
+  without MEMOLD: the restored Rd IS the old memory value, so REG undos
+  run before MEM undos within a frame).
+
+Roadmap: M5 = M3 debugger integration — single-step stepper via
+`next_pcs` static analysis + arm/resume loop, and reverse execution
+driven from a breakpoint hit.
 
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):

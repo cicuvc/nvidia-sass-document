@@ -304,6 +304,67 @@ class CudaModule:
         _check(
             _cuda().cuMemcpyHtoD(ptr, ctypes.c_char_p(data), len(data)))
 
+    # ------------------------------------------------------------------
+    # host-pinned memory + extra streams (live host<->device protocols,
+    # e.g. the sassdbg breakpoint/patcher handshake)
+    def hostmem_alloc(self, size: int) -> int:
+        """Page-locked host memory; with UVA the same pointer is usable
+        from kernels (LDG/STG)."""
+        ptr = ctypes.c_void_p()
+        _check(_cuda().cuMemAllocHost(ctypes.byref(ptr), size))
+        return ptr.value or 0
+
+    def hostmem_free(self, ptr: int) -> None:
+        _check(_cuda().cuMemFreeHost(ctypes.c_void_p(ptr)))
+
+    def managed_alloc(self, size: int) -> int:
+        """Managed (unified) memory.  NOTE: unsupported on this setup —
+        cuMemAllocManaged returns CUDA_ERROR_INVALID_CONTEXT (201) even with
+        a current context, and plain cuMemAllocHost pinned memory FAULTS on
+        device-side STG through the default cache descriptor (error 700).
+        Host<->device protocols (sassdbg probe_patch) use device memory +
+        cuMemcpy polling instead."""
+        ptr = ctypes.c_void_p()
+        _check(_cuda().cuMemAllocManaged(ctypes.byref(ptr), size, 1))
+        return ptr.value or 0  # CU_MEM_ATTACH_GLOBAL
+
+    def managed_free(self, ptr: int) -> None:
+        _check(_cuda().cuMemFree(ctypes.c_void_p(ptr)))
+
+    @staticmethod
+    def host_read32(ptr: int) -> int:
+        return ctypes.c_uint32.from_address(ptr).value
+
+    @staticmethod
+    def host_write32(ptr: int, value: int) -> None:
+        ctypes.c_uint32.from_address(ptr).value = value
+
+    @staticmethod
+    def stream_create() -> int:
+        """A non-default stream (for concurrent kernels)."""
+        s = ctypes.c_void_p()
+        _check(_cuda().cuStreamCreate(ctypes.byref(s), 1))  # NON_BLOCKING
+        return s.value or 0
+
+    @staticmethod
+    def stream_destroy(stream: int) -> None:
+        _check(_cuda().cuStreamDestroy(ctypes.c_void_p(stream)))
+
+    @staticmethod
+    def stream_query(stream: int) -> bool:
+        """True when the stream has no pending work (non-blocking)."""
+        err = _cuda().cuStreamQuery(ctypes.c_void_p(stream))
+        if err == 0:
+            return True
+        if err == 600:                      # ERROR_NOT_READY
+            return False
+        _check(err)
+        return False
+
+    @staticmethod
+    def stream_sync(stream: int) -> None:
+        _check(_cuda().cuStreamSynchronize(ctypes.c_void_p(stream)))
+
 
 def _pad3(t, default=1):
     if isinstance(t, int):
