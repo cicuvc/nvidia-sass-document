@@ -37,9 +37,17 @@ ctrl buffer layout (device memory, host polls via cuMemcpy):
   +0x00 u64 code base VA (target LEPC report)
   +0x08 u32 smid
   +0x0c u32 start gate (host: 0 -> 1)
-  +0x10 u32 hit id (1-based bp id; slot writes, host clears on resume)
+  +0x10 u32 hit id (slot number + 1; slot writes, host clears on resume)
   +0x18 u64 return VA (host writes the bp site VA at resume)
   +0x20 + 4*slot  u32 per-slot release flag (host: 0 -> 1)
+  +0x20+4*max_bps + 4*slot  u32 per-slot kernel-predicate save
+    (P2R on slot entry, R2P before the JMX back — the spin's own ISETP
+    clobbers P0 and would otherwise corrupt the kernel's control flow;
+    note the gate prologue's ISETP still leaves P0=1 at kernel entry)
+
+The hit id is the SLOT number (not the breakpoint's host-side id):
+slots recycle as breakpoints are armed/resumed, so wait_hit maps the
+slot back to the currently armed bp.
 
 The release flag is PER-SLOT, one-shot: a shared flag plus slot-side
 self-reset races (the parked warp can reach the next slot's first load
@@ -138,29 +146,38 @@ _PROLOGUE = """    LDCU.64 {UR60,UR61}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:
     STG.E.STRONG.GPU desc[{UR60,UR61}][{R246,R247}+0x8], R250;[7:7:{0,1,2}:8:0]
 #def_label(dbggate)
     LDG.E.STRONG.GPU R250, desc[{UR60,UR61}][{R246,R247}+0xc];[5:7:{0,1}:8:0]
-    ISETP.NE.AND P0, PT, R250, 0x0, PT;[7:7:{5}:4:0]
+    ISETP.NE.AND P0, PT, R250, 0x0, PT;[7:7:{5}:13:1]
     @!P0 BRA #label(dbggate);[7:7:{}:6:0]
     CCTL.I.IVALL;[7:7:{}:4:0]
 """ + "    NOP;[7:7:{}:8:0]\n" * 32 + """    CCTL.I.IVALL;[7:7:{}:4:0]
 """
 PROLOGUE_LEN = 43           # instruction count of _PROLOGUE
 
-# one breakpoint slot: notify, park (self-refreshing spin on the slot's
-# own release word), load the return VA, hardened self-invalidate, JMX
-# back to the site.  JMX (absolute indirect jump, target = Ra + off,
-# verified in notes/sm90/instr/jmx.md — BRX is the RELATIVE twin) keeps
-# the resume path entirely in data memory — no code patch of a line the
-# spin loop keeps refetching.
-SLOT_WORDS = 42
+# one breakpoint slot: save kernel predicates to the ctrl buffer (the
+# spin's own ISETP clobbers P0 — without save/restore the resumed warp
+# reads the slot's P0, not the kernel's!), notify, park (self-refreshing
+# spin on the slot's own release word), load the return VA, restore the
+# predicates, hardened self-invalidate, JMX back to the site.  JMX
+# (absolute indirect jump, target = Ra + off, verified in
+# notes/sm90/instr/jmx.md — BRX is the RELATIVE twin) keeps the resume
+# path entirely in data memory — no code patch of a line the spin loop
+# keeps refetching (a patched BRA in the spin line races the loop's own
+# refetches and can execute stale exactly once — fatal when the stale
+# word is the placeholder branch).
+SLOT_WORDS = 46
 _SLOT_TMPL = """#def_label(dbgslot{k})
-    MOV32I R251, {kid};[7:7:{{0,1,2,3,4,5}}:4:0]
+    P2R R250, PR;[7:7:{{0,1,2,3,4,5}}:4:0]
+    STG.E.STRONG.GPU desc[{{UR60,UR61}}][{{R246,R247}}+{prs}], R250;[7:7:{{}}:8:0]
+    MOV32I R251, {kid};[7:7:{{}}:4:0]
     STG.E.STRONG.GPU desc[{{UR60,UR61}}][{{R246,R247}}+0x10], R251;[7:7:{{}}:8:0]
 #def_label(dbgspin{k})
     CCTL.I.IVALL;[7:7:{{}}:4:0]
     LDG.E.STRONG.GPU R250, desc[{{UR60,UR61}}][{{R246,R247}}+{rel}];[5:7:{{}}:8:0]
-    ISETP.NE.AND P0, PT, R250, 0x0, PT;[7:7:{{5}}:4:0]
+    ISETP.NE.AND P0, PT, R250, 0x0, PT;[7:7:{{5}}:13:1]
     @!P0 BRA #label(dbgspin{k});[7:7:{{}}:6:0]
     LDG.E.64.STRONG.GPU {{R252,R253}}, desc[{{UR60,UR61}}][{{R246,R247}}+0x18];[4:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R250, desc[{{UR60,UR61}}][{{R246,R247}}+{prs}];[3:7:{{}}:8:0]
+    R2P PR, R250;[7:7:{{3}}:13:1]
     CCTL.I.IVALL;[7:7:{{}}:4:0]
 """ + "    NOP;[7:7:{{}}:8:0]\n" * 32 + """    CCTL.I.IVALL;[7:7:{{}}:4:0]
     JMX {{R252,R253}};[7:7:{{4}}:4:0]
@@ -206,10 +223,16 @@ class DebugInfo:
         return PROLOGUE_LEN + self.n_body + 1 + slot * SLOT_WORDS
 
 
-def inject_debugger(source: str, max_bps: int = 32) -> DebugInfo:
+def inject_debugger(source: str, max_bps: int = 32,
+                    allow_cdesc_urs: bool = False) -> DebugInfo:
     """Inject the debugger prologue + breakpoint slots into a single-
     function dialect source.  The function gains a trailing `dbgctrl<8>`
-    parameter the host must pass (device-memory ctrl buffer)."""
+    parameter the host must pass (device-memory ctrl buffer).
+
+    allow_cdesc_urs: skip the UR60/UR61 rejection — safe only when the
+    source uses UR60/UR61 exclusively for the default global cache
+    descriptor (e.g. wtrace-instrumented sources, which load the same
+    cdesc the debugger prologue/slots rely on)."""
     lines = source.splitlines()
     fn_at = None
     for i, ln in enumerate(lines):
@@ -221,6 +244,8 @@ def inject_debugger(source: str, max_bps: int = 32) -> DebugInfo:
         raise ValueError("no #fn header found")
     body = "\n".join(lines[fn_at:])
     for r in DBG_REGS:
+        if allow_cdesc_urs and r in ("UR60", "UR61"):
+            continue
         if re.search(rf"\b{r}\b", body):
             raise ValueError(f"kernel uses debugger-reserved {r}")
     for lbl in ("dbggate", "dbgslot", "dbgspin"):
@@ -238,7 +263,8 @@ def inject_debugger(source: str, max_bps: int = 32) -> DebugInfo:
     # instruction count of the ORIGINAL body (for index mapping)
     n_body = len(assemble_kernel(source, check_deps=False).encoded)
     slots = "".join(_SLOT_TMPL.format(k=k, kid=k + 1,
-                                      rel=hex(0x20 + 4 * k))
+                                      rel=hex(0x20 + 4 * k),
+                                      prs=hex(0x20 + 4 * max_bps + 4 * k))
                     for k in range(max_bps))
     # insert a safety EXIT + the slots before the final closing brace
     text = "\n".join(out)
@@ -276,17 +302,19 @@ class Debugger:
     """
 
     def __init__(self, source: str, func: str | None = None,
-                 max_bps: int = 32):
-        self.info = inject_debugger(source, max_bps)
+                 max_bps: int = 32, allow_cdesc_urs: bool = False):
+        self.info = inject_debugger(source, max_bps,
+                                    allow_cdesc_urs=allow_cdesc_urs)
         self.mod = CudaModule(assemble(self.info.source, check_deps=False))
         self.encoded = assemble_kernel(self.info.source,
                                        check_deps=False).encoded
         self.func = func or self._only_function()
         self.patcher = Patcher()
-        self.ctrl = self.mod.devmem_alloc(0x20 + 4 * max_bps)
-        self.mod.device_write(self.ctrl, bytes(0x20 + 4 * max_bps))
+        self.ctrl = self.mod.devmem_alloc(0x20 + 8 * max_bps)
+        self.mod.device_write(self.ctrl, bytes(0x20 + 8 * max_bps))
         self.stream = CudaModule.stream_create()
         self._bps: dict[int, Breakpoint] = {}
+        self._by_slot: dict[int, Breakpoint] = {}
         self._free_slots = list(range(max_bps))
         self._next_id = 1
 
@@ -360,6 +388,7 @@ class Debugger:
         self.patcher.patch(site, bra)
         bp = Breakpoint(self, bp_id, slot, orig_index, self.encoded[inj])
         self._bps[bp_id] = bp
+        self._by_slot[slot] = bp
         return bp
 
     def disarm(self, bp: Breakpoint) -> None:
@@ -368,6 +397,7 @@ class Debugger:
         bp.armed = False
         self._free_slots.append(bp.slot)
         del self._bps[bp.id]
+        del self._by_slot[bp.slot]
 
     def wait_hit(self, timeout: float = 30.0) -> Breakpoint:
         """Wait until a breakpoint parks the target; returns the bp."""
@@ -375,9 +405,9 @@ class Debugger:
         while True:
             hid = self._rd32(0x10)
             if hid:
-                bp = self._bps.get(hid)
+                bp = self._by_slot.get(hid - 1)
                 if bp is None:
-                    raise RuntimeError(f"unknown hit id {hid}")
+                    raise RuntimeError(f"hit from unarmed slot {hid - 1}")
                 return bp
             if time.time() - t0 > timeout:
                 raise TimeoutError("no breakpoint hit")
@@ -398,3 +428,4 @@ class Debugger:
         bp.armed = False
         self._free_slots.append(bp.slot)
         del self._bps[bp.id]
+        del self._by_slot[bp.slot]

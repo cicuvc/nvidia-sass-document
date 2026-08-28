@@ -199,9 +199,53 @@ point, partial-replay equivalence).
   without MEMOLD: the restored Rd IS the old memory value, so REG undos
   run before MEM undos within a frame).
 
-Roadmap: M5 = M3 debugger integration — single-step stepper via
-`next_pcs` static analysis + arm/resume loop, and reverse execution
-driven from a breakpoint hit.
+M5 (`sassdbg/stepper.py`) — source-level single-stepping + reverse
+from a breakpoint.  DONE: CFG/next_pcs static analysis, Stepper,
+wtrace+debugger composition, E2E test
+(`tests/asm_construct/test_sassdbg_m5.py`).
+
+- `Cfg(source)`: original-source instruction indices; `next_pcs(idx)`
+  = fall-through (+ label target for predicated BRA; BSSY falls through;
+  BSYNC → matching BSSY target via nested stack scan; EXIT/RET/KILL →
+  none; BRX/JMX/CALL raise — dynamic targets).
+- `Stepper`: park at bp → arm ALL of next_pcs (safe while parked) →
+  resume → whichever slot hits is the path taken → disarm the losers.
+  The hit sequence IS the executed path (verified: exact 26-step path
+  through a 5-iteration loop, correct result).  Self-edge steps arm
+  after resume (best effort — resume restores the site word).
+- **Two M3 latent bugs found & fixed by M5** (M3 never saw them: it
+  resumed within ~1 ms and m2_smoke left P0=0):
+  1. The slot spin's `ISETP` (stall 4) feeding `@!P0 BRA` hit the
+     ISETP→BRA CBU predicate-forwarding floor (needs stall ≥13, and
+     yield=1 — `:13:0` trips the opex table): a stale P0=1 (left by the
+     gate) made the first spin iteration FALL THROUGH to a JMX to an
+     unwritten return VA (=0) → error 700 within milliseconds of
+     parking.  Fixed: slot+gate ISETPs now `[7:7:{5}:13:1]`.
+  2. **The slot clobbered the kernel's P0**: the spin ISETP leaves
+     P0=(release!=0)=1, so a resumed kernel branch on P0 took the wrong
+     path (observed: loop ran one extra iteration).  Fixed: slots
+     save/restore the full PR file through the ctrl buffer (P2R→STG on
+     entry, LDG→R2P stall-13 before the JMX; per-slot word at
+     ctrl+0x20+4*max_bps+4*slot).  The gate's ISETP still leaves P0=1 at
+     kernel entry (predicates are architecturally 0 there; harmless in
+     practice — documented).
+  3. Hit id is now the SLOT number (slots recycle; the global bp id
+     counter outgrew them → "unknown hit id" once slot 0 recycled to
+     bp id 33).  `wait_hit` maps slot→armed bp.
+- Reverse-from-bp composition: `Debugger(instrument_warp(src).source,
+  allow_cdesc_urs=True)` (new flag: UR60/61 allowed when the source
+  uses them only for the default cdesc, which the debugger also loads).
+  wtrace R224-R245 vs debugger R246-R253 are disjoint by design.  The
+  bp-replaced instruction's post-records never emit, so
+  `WarpReplay.replay()` lands on pc=bp step with pre-instruction state;
+  step_back walks backwards (pc=N semantics: frames 0..N applied).
+- Hand-scheduled kernel gotcha (test kernels, not the tools): ALU→ALU
+  chains need the house-style `[7:7:{}:5:1]` brackets — stall 4 lets the
+  consumer read launch residue (0x3F800000 high bits observed).
+
+Roadmap: M6 = human/CLI frontend (interactive stepper UI, reverse-step
+commands), multi-warp/grid support (per-warp trace regions exist;
+breakpoint slots are warp-wide already).
 
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
