@@ -17,6 +17,9 @@ RTX 5090, and the repo's SASS assembler (`assembler/`, arch=sm120) unless stated
 | File | Topic |
 |---|---|
 | `encoding-addressing.md` | SM120 encoding substrate, control-word/stall encoding, `desc[UR]` cache-policy word decode, UTMALDG direct-pointer model, const-bank 0 layout, regcount rule, BSSY/SIMT-stack findings, S2R write-scoreboard requirement |
+| `arch/local_memory_backing_va.md` | Silicon-derived local-address → backing-VA transform; warp/SM/CTA layout, SETLMEMBASE switching, and ptxas spill-frame EIATTR metadata |
+| `instr/getlmembase.md` | Silicon semantics of the warp-local backing base and its role in the local-address → device-VA transform |
+| `instr/setlmembase.md` | Silicon proof that SETLMEMBASE redirects subsequent LDL/STL backing accesses |
 | `notes/sm120/l2_slice_probe.md` | Attempts to count L2 slices on GB202; single-L2-backend evidence |
 
 ## Blackwell-only instructions referenced from these notes

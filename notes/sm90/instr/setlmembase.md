@@ -2,12 +2,15 @@
 
 **Opcode mnemonic:** `SETLMEMBASE` = `0b1111000001` = **0x3c1** | **Pipe:** `mio_pipe` | since **sm_70**
 
-> **Status: NOT empirically verified (legacy).** ptxas/nvcc (CUDA 13.1) do not emit this.
+> **Status: silicon-verified on H20 (sm_90), 2026-08.** ptxas/nvcc does not
+> normally emit this instruction, but a hand-assembled cubin executes it.
 
-Write the executing thread's **local-memory base address** from a GPR pair — the reverse of `GETLMEMBASE`.
+Write the executing warp's **local-memory backing-aperture base** from a GPR
+pair — the reverse of `GETLMEMBASE`.
 
-## Semantics (speculation)
-`SETLMEMBASE Ra` — writes the local-mem base from a 64-bit register pair `Ra:Ra+1` (no destination; `ISRC_A_SIZE=64`).
+## Semantics
+`SETLMEMBASE Ra` writes the executing warp's local-memory backing base from a
+64-bit register pair `Ra:Ra+1` (no destination; `ISRC_A_SIZE=64`).
 
 ## Variant overview
 Single CLASS / opcode, no modifiers — guard predicate and one 64-bit register operand.
@@ -31,7 +34,7 @@ INSTRUCTION_TYPE: `INST_TYPE_DECOUPLED_RD_SCBD`, VIRTUAL_QUEUE: `$VQ_ADU`.
 ## Latency (from sm_90_latencies.txt)
 `mio_pipe` member. No GPR result, forbids write scoreboard; ordering via `src_rel_sb`.
 
-## Constructed encodings (SYNTHETIC — round-trip only, not silicon-verified)
+## Constructed encodings
 | Lo64 | Hi64* | Reconstruction |
 |------|-------|----------------|
 | `0x00000000020073c1` | `0x0001c00000000000` | `SETLMEMBASE R2` (R2:R3) |
@@ -43,23 +46,27 @@ INSTRUCTION_TYPE: `INST_TYPE_DECOUPLED_RD_SCBD`, VIRTUAL_QUEUE: `$VQ_ADU`.
 - Real cuobjdump text form unconfirmed.
 - Shares `SETCTAID`'s `VQ_ADU` queue — possibly used during kernel prologue.
 
-## Resolved: verified (SM120, 2026-08)
+## H20 silicon verification and correction (2026-08)
 
-`tests/asm_construct/test_lmembase.py` (MOV32I builds the 64-bit pair, then
-`SETLMEMBASE` → `GETLMEMBASE` round-trip):
+The full switch experiment now passes on both H20 / sm_90 and RTX 5090 /
+sm_120. On H20, switching `A → B → A → B` made the same local address alternate
+between two independent backing words. Every one of these checks passed 32/32:
 
-- `SETLMEMBASE R10` then `GETLMEMBASE R8` returns **exactly** the same 64-bit
-  value (verified for a device-buffer address and the default local base).
-  The two instructions face the SAME 64-bit address value.
-- Default `GETLMEMBASE` (no SET) returns the per-thread default local window
-  base (e.g. `0x3fffcd800000`), a valid address (STG-able).
-- `SETLMEMBASE` to an invalid address (e.g. `0x1111...`) faults with
-  `CUDA_ERROR_ILLEGAL_ADDRESS` (700) — the driver validates the window.
+- `GETLMEMBASE` immediately reported `B`;
+- an `STL` under `B` was visible through the transformed global VA in `B`;
+- the old word under `A` remained unchanged;
+- `LDL` selected the `B`, then `A`, then `B` value as the base was switched;
+- a host read of the ordinary allocation `B` observed the redirected store.
 
-**STL/LDL limitation**: "SETLMEMBASE then STL" could not be exercised — `STL
-[RZ+off]` (and the register-base form) fault 700 in a hand-built cubin.
-STL/LDL are legacy instructions that rely on a driver-established local-window
-context (the `R1` stack pointer / window) that a hand-built ELF does not
-provide; modern ptxas never emits them (local spill uses generic LDG/STG via
-the `c[0x0][0x28]` stack pointer).  SETLMEMBASE/GETLMEMBASE themselves are
-fully functional.
+The earlier text here claimed that hand-built cubins could not exercise
+`LDL`/`STL` and that modern ptxas spills used `LDG`/`STG`. Both claims were
+incorrect: the newer probe forms the ABI local address correctly, and sm_120
+ptxas emits real `LDL`/`STL` for register spills. The previous faults reflected
+an invalid address/context assumption, not unsupported instructions.
+
+This establishes the backing-base side effect on real sm_90 silicon. The exact
+state scope under divergent execution is still open; all lanes in the test warp
+executed the SET convergently.
+
+See the dedicated [sm_120 SETLMEMBASE note](../../sm120/instr/setlmembase.md)
+and the [full local-memory backing study](../../sm120/arch/local_memory_backing_va.md).

@@ -19,11 +19,10 @@ from assembler import assemble, CudaModule
 #   3. Default (no SET) GETLMEMBASE returns the per-thread default local
 #      window base (e.g. 0x3fffe6c00000), a valid address (STG-able).
 #
-# NOT verified / limitation: STL/LDL (local store/load) fault with 700 in a
-# hand-built cubin — they are legacy instructions relying on a driver-
-# established local-window context that a hand-built ELF does not provide
-# (modern ptxas never emits STL/LDL, using the R1 stack pointer + generic
-# LDG/STG instead).  So "SETLMEMBASE then STL" cannot be exercised here.
+# This small test covers only SET/GET round-trip and invalid-address behavior.
+# probe_lmem_transform.py separately verifies that SETLMEMBASE redirects real
+# LDL/STL accesses, on both H20/sm90 and RTX 5090/sm120. Modern ptxas register
+# spills also emit LDL/STL; the earlier contrary limitation was incorrect.
 # ---------------------------------------------------------------------------
 
 def build_roundtrip(addr_lo, addr_hi):
@@ -120,5 +119,5 @@ got = run_roundtrip(0x1111111100000000)
 print(f"  SET to invalid 0x1111...00000000: {'faults (700)' if got is None else 'no fault'}")
 
 print(f"\n=== SETLMEMBASE/GETLMEMBASE round-trip: {'ALL OK' if ok else 'FAILED'} ===")
-print("SET and GET face the same 64-bit value; STL/LDL not usable in hand-cubin")
+print("SET and GET face the same 64-bit value; LDL/STL redirection is covered by probe_lmem_transform.py")
 sys.exit(0 if ok else 1)
