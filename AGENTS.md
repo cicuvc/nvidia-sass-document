@@ -57,7 +57,7 @@ Source dialect essentials (see §3–§4 of the manual):
 Running tests: `python3 tools/run_tests.py [-j N]` (parallel processes; timing/descriptor-sensitive tests run serially — see `TIMING_SENSITIVE` in run_tests.py).  When adding a GPU test prefer independent buffers/streams; keep `test_cache_desc`-style per-stream state out of the parallel batch.
 
 ## Dynamic SASS instrumentation (`sassdbg/`)
-Runtime SASS tracing/debugging built on the assembler. Grows out of `mc.cu`
+Runtime SASS tracing/debugging built on the assembler. Grows out of `sassdbg/poc_code_patch.cu`
 (device-side code patching) + the finding that **`CCTL.I.IVALL` invalidates the
 non-coherent icache**, making re-patching of already-executed code work
 (without it, stores land in memory but the SM keeps executing the stale line —
