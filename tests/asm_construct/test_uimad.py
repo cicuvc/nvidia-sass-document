@@ -11,8 +11,10 @@ from archutil import adapt_source, same_as_capture, is_sm90  # noqa: E402
 #   UIMAD[.LO|.HI|.WIDE] URd, UPu, URa, URb|imm32, URc|imm32   (0x12a4 LO /
 #     0x12a6 HI / 0x12a5 WIDE; imm variants 0x18a4/0x14a4/...)
 #
-# NOTE: plain `UIMAD` (no modifier) matches the **HI** variant on sm_120
-# (opposite of IMAD, where plain = LO).  All multiplies are SIGNED (S32):
+# NOTE: plain `UIMAD` (no modifier) is the **LO** variant — nvcc emits
+# 0x12a4 and cuobjdump prints it without a modifier (verified on
+# uldc_test.cubin: `UIMAD UR4, UR5, UR4, URZ` = 0x...72a4), same convention
+# as IMAD.  All multiplies are SIGNED (S32):
 #   LO:   URd = (signed(a) * signed(b) + URc) & 0xFFFFFFFF
 #   HI:   URd = high32(signed64(a) * signed64(b)) + URc   (addend -> high!)
 #   WIDE: {URd,URd+1} = signed64(a) * signed64(b) + signed64(c) (c = pair)

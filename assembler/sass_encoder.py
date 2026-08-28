@@ -96,11 +96,11 @@ class SassEncoder:
             # complex slot_attr form (fp16/bf16 immediate conversion), not a
             # plain slot reference -- route it through _resolve_slot_attr.
             if "convertFloatType" in rhs:
-                return self._resolve_slot_attr(rhs, sm)
+                return self._resolve_slot_attr(rhs, sm, field)
             return self._resolve_slot(rhs, sm)
 
         if rk == "slot_attr":
-            return self._resolve_slot_attr(rhs, sm)
+            return self._resolve_slot_attr(rhs, sm, field)
 
         if rk == "opcode":
             op = variant.get("opcode")
@@ -156,7 +156,8 @@ class SassEncoder:
         return v // scale if scale != 1 else v
 
     # ------------------------------------------------------------------
-    def _resolve_slot_attr(self, rhs: str, sm: dict) -> int:
+    def _resolve_slot_attr(self, rhs: str, sm: dict,
+                           field: dict | None = None) -> int:
         """Handle slot_attr like Pg@not, Sb@negate, or Sb convertFloatType(...)."""
         # Simple case: slot@attr
         m = re.match(r"(\w+)@(\w+)$", rhs)
@@ -177,18 +178,28 @@ class SassEncoder:
         if m:
             slot_name, fn_name, args_str = m.group(1), m.group(2), m.group(3)
             if fn_name == "convertFloatType":
-                return self._eval_convert_float(slot_name, args_str, sm)
+                return self._eval_convert_float(slot_name, args_str, sm,
+                                                field)
 
         return 0
 
     def _eval_convert_float(self, slot_name: str, args: str,
-                            sm: dict) -> int:
+                            sm: dict, field: dict | None = None) -> int:
         """Evaluate convertFloatType(modifier_check, fmt_true, fmt_false).
 
-        Args: 'modifier == `ENUM_TYPE@VALUE, fmt_true, fmt_false'
+        Args: 'modifier_name == `ENUM_TYPE@VALUE, fmt_true, fmt_false'
         Returns 16-bit FP16 or BF16 value.
         """
         import struct
+
+        # Packed f16x2/bf16x2 immediate pair (HFMA2/HADD2/... imm forms): the
+        # matcher bound a raw 0fXXXXXXXX pattern to both half-slots — split
+        # by field target (upper half at [63:48], lower at [47:32]) with no
+        # float conversion.
+        raw32 = sm.get(f"{slot_name}_raw32")
+        if raw32 is not None and field is not None:
+            hi_half = field["targets"][0][0] >= 48
+            return ((raw32 >> 16) & 0xFFFF) if hi_half else (raw32 & 0xFFFF)
 
         val = sm.get(slot_name, 0)
         if isinstance(val, float):
@@ -340,6 +351,15 @@ class SassEncoder:
             except (ValueError, IndexError):
                 return 0
             return val if val < 8 else 7
+
+        if fn_name == "IDENTICAL":
+            # BAR RR form: one field encodes the barrier id, both register
+            # operands must name the same register.
+            try:
+                vals = [int(r, 0) for r in resolved]
+            except ValueError:
+                return 0
+            return vals[0] if vals and all(v == vals[0] for v in vals) else 0
 
         if fn_name in ("ConstBankAddress0", "ConstBankAddress2"):
             # Returns value for the specific field: bank for Sa_bank, offset for Ra_offset

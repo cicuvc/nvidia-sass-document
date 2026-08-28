@@ -56,6 +56,66 @@ Source dialect essentials (see §3–§4 of the manual):
 
 Running tests: `python3 tools/run_tests.py [-j N]` (parallel processes; timing/descriptor-sensitive tests run serially — see `TIMING_SENSITIVE` in run_tests.py).  When adding a GPU test prefer independent buffers/streams; keep `test_cache_desc`-style per-stream state out of the parallel batch.
 
+## Dynamic SASS instrumentation (`sassdbg/`)
+Runtime SASS tracing/debugging built on the assembler. Grows out of `mc.cu`
+(device-side code patching) + the finding that **`CCTL.I.IVALL` invalidates the
+non-coherent icache**, making re-patching of already-executed code work
+(without it, stores land in memory but the SM keeps executing the stale line —
+even across kernel launches).  Host `cudaMemcpy` cannot touch code VAs
+("invalid argument"); patch via a device patcher kernel.  Static anchor trick:
+put `asm("pmevent 0")` in a CUDA kernel → `PMTRIG` instruction → 16-byte
+pattern-match in the cubin → replace with any assembled instruction.
+
+- `sassdbg/instrument.py` — `instrument(source, undo=...)`: parses an
+  assembler-dialect kernel, matches every instruction with `SassMatcher`, and
+  emits a **write-set-only** trace (dest GPRs with width from `IDEST_SIZE`,
+  P2R predicate snapshots, UR dests via `MOV R,UR`, MEM records with
+  address+data, optional pre-store MEMOLD old-value loads for reverse
+  execution).  Tracer registers R240–R253 + UR60/61 are reserved (kernel
+  using them is rejected); **LDG rejects Rd ≥ R254** (window rule).
+  Tracer STGs use bracket `[7:7:{0..5}:8:0]` — claiming rd=SB1 like the test
+  kernels do causes anti-dep/divergent-retarget hazards with the interleaved
+  record traffic.  Trace = fixed 32-byte records (STEP/REG/PRED/UREG/MEM/
+  MEMOLD), per-thread 1 MiB region, running offset counter (loop-safe).
+- `sassdbg/tracer.py` — runner + decoder + diff printer:
+  `python3 -m sassdbg.tracer kernel.sass [--block N] [--no-undo] [--dump-source]`,
+  `--demo` for a built-in kernel.  Launch is grid=(1,) 1-D only for now.
+- `sassdbg/lift.py` — **M2**: cuobjdump→dialect lifter.
+  `python3 -m sassdbg.lift x.cubin [--func F] [--roundtrip]` dumps dialect
+  source (scheduling brackets decoded from the raw control bits); the
+  `#fn` header carries the real param signature read from the cubin's
+  per-function `.nv.info.<func>` KPARAM ELF records.  `--roundtrip`
+  re-assembles and byte-compares against the original text section — the
+  full tests/*.cu corpus (153 nvcc sm_120 cubins) round-trips exactly.
+  `normalize_source()` runs the repair loop that rewrites cuobjdump
+  spellings the dialect rejects (bare base reg of a 64/128-bit operand →
+  explicit `{Ra,Rb}` group, integral float immediates → `0f...`).
+  `python3 -m sassdbg.tracer x.cubin --func F` lifts + instruments + runs
+  an arbitrary cubin kernel end-to-end (auto-args: 8-byte params get a
+  64 KiB scratch buffer, scalars 0).  Smoke test:
+  `tests/asm_construct/test_sassdbg_m2.py` (+ `tests/m2_smoke.{cu,cubin}`).
+
+Roadmap: M3 = runtime breakpoints/toggles via patcher kernel +
+`CCTL.I.IVALL`; M4 = single-step / reverse execution from MEMOLD undo
+records.
+
+Assembler fixes made for M2 (all covered by the corpus round-trip +
+`tools/run_tests.py`):
+- `sass_elf.py`: `total_ps` is now `max(offset+size)` — summing param
+  sizes undercounted when a 4-byte param precedes an 8-byte one
+  (alignment gap), and the driver rejected the launch with error 701.
+- `sass_matcher.py`: address-width pins (`ONLY64`/`U32ONLY`) join their
+  operand group so a 64-bit address can't match the U32 class (ATOMG bit
+  63); plain `[Ra+off]` may match a UR-index slot defaulted to URZ
+  (STAS/REDAS); MEM_ADDR operands never match DESC-composite groups
+  (STL memdesc); `TMA` composite (UBLKPF `desc[...]`);
+  `ZeroUniformRegister`/`NonZeroUniformRegister` operand types; B3B0
+  byte-select suffix `.B0`–`.B3` on UREG operands (UR2UP); first-operand-
+  group binding tie-break (BAR single-register IR-vs-RI); IMAD/UIMAD
+  LO-vs-HI preference; HFMA2-family packed f16x2 immediates.
+- Wide-operand/group-size errors carry `operand #i` + an explicit
+  `{Ra,...}` suggestion — lift.py's repair loop consumes them.
+
 ## Documentation workflow (current effort)
 Goal: write a per-instruction reference doc for every **compute** SASS instruction. Split across sessions.
 - `TODO.md` — the master checklist (**197/207 instructions** done), grouped into 10 categories: **Integer/Vector**, **FP32**, **FP16**, **FP64**, **Convert**, **Uniform**, **Memory**, **Tensor**, **Control Flow**, **Misc**. Derived from `ref_memo.txt` (the curated sm_70..sm_90 opcode roster). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded (see its "Excluded" section). `-> MNEM` tags map ref_memo names to the canonical sm_90 mnemonic (shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated). `LDCU` is unresolved (likely an LDC variant).

@@ -122,9 +122,14 @@ def _resolve_labels_and_encode(insts, matcher, encoder, *,
                     raise ValueError(f"undefined label {op.value!r}")
                 op.kind = OperandKind.IMM_S
                 op.value = target - (ia + 16)
-        r = matcher.match(inst)
+        try:
+            r = matcher.match(inst)
+            lo, hi = encoder.encode(r, inst.sched)
+        except Exception as e:
+            # annotate with the instruction index, preserving the exception
+            # type (tests match on MatchError/EncodeError/...)
+            raise type(e)(f"inst {len(encoded)}: {e}") from e
         results.append(r)
-        lo, hi = encoder.encode(r, inst.sched)
         encoded.append((lo, hi))
 
     if check_deps:

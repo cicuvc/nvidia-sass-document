@@ -15,7 +15,8 @@ _MNEMONIC_ALIASES = {"LDCU": "ULDC", "ULDC": "LDCU"}
 # --- Slot type → OperandKind compatibility ---
 TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.REG:       {"Register", "NonZeroRegister", "ZeroRegister"},
-    OperandKind.UREG:      {"UniformRegister"},
+    OperandKind.UREG:      {"UniformRegister", "ZeroUniformRegister",
+                            "NonZeroUniformRegister"},
     OperandKind.PRED:      {"Predicate"},
     OperandKind.UPRED:     {"UniformPredicate"},
     OperandKind.IMM_U:     {"UImm", "SImm", "RSImm", "OPTIONAL_GSB", "GSB0ONLY"},
@@ -28,7 +29,7 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.LABEL:     {"RSImm", "SImm", "UImm", "BD"},
     OperandKind.BAR:       {"BD", "CBU_STATE", "CBU_STATE_NONBAR"},
     OperandKind.SPECIAL_REG: {"SpecialRegister", "CBU_STATE", "CBU_STATE_NONBAR",
-                              "ATEXIT_PCONLY", "UPRONLY"},
+                              "ATEXIT_PCONLY", "UPRONLY", "PC_REG"},
     OperandKind.PR:        {"PR"},
     OperandKind.NP:        {"NP"},
     OperandKind.BAR:       {"BD", "CBU_STATE", "CBU_STATE_NONBAR"},
@@ -41,7 +42,7 @@ SCHED_TYPES = {"REQ", "BITSET", "WR", "RD", "USCHED_INFO", "BATCH_T", "PM_PRED",
 SCHED_SLOT_NAMES = {"src_rel_sb", "dst_wr_sb", "req_bit_set", "req", "wr", "rd",
                     "pm_pred", "batch_t", "usched_info",
                     "reuse_src_a", "reuse_src_b", "reuse_src_c", "reuse_src_d"}
-COMPOSITE_TYPES = {"C", "DESC", "GMMA"}
+COMPOSITE_TYPES = {"C", "DESC", "GMMA", "TMA"}
 
 
 class MatchError(Exception):
@@ -73,8 +74,27 @@ class SassMatcher:
     # ------------------------------------------------------------------
     def match(self, inst: ParsedInstruction) -> MatchResult:
         mn = inst.mnemonic.upper()
+        # Some classes carry a modifier in the db mnemonic itself
+        # (UIADD3.64 — a distinct opcode, not a modifier slot).  A dotted
+        # prefix that exists in the db consumes those modifiers for ITS
+        # candidates only; plain-mnemonic candidates still see (and must
+        # account for) every written modifier.
+        dotted: list[dict] = []
+        dotted_inst = inst
+        if inst.modifiers:
+            for k in range(len(inst.modifiers), 0, -1):
+                dmn = mn + "." + ".".join(inst.modifiers[:k])
+                if dmn in self._by_mnemonic:
+                    dotted = self._by_mnemonic[dmn]
+                    dotted_inst = ParsedInstruction(
+                        mnemonic=mn, modifiers=inst.modifiers[k:],
+                        operands=inst.operands, pred=inst.pred,
+                        pred_not=inst.pred_not,
+                        pred_uniform=inst.pred_uniform, sched=inst.sched,
+                        label=inst.label)
+                    break
         candidates = self._by_mnemonic.get(mn, [])
-        if not candidates:
+        if not candidates and not dotted:
             # cross-arch mnemonic aliases: LDCU is the sm_120 name of sm_90's
             # ULDC.  Resolved only when the target mnemonic exists in this db.
             alias = _MNEMONIC_ALIASES.get(mn)
@@ -88,6 +108,11 @@ class SassMatcher:
         for v in candidates:
             r = self._try_match(v, inst)
             if r is not None:
+                scored.append(r)
+        for v in dotted:
+            r = self._try_match(v, dotted_inst)
+            if r is not None:
+                r.score += 1  # the dotted mnemonic literally wrote the modifier
                 scored.append(r)
 
         if not scored:
@@ -153,11 +178,24 @@ class SassMatcher:
             return None
 
         # Figure out which modifier slots were consumed by operand matching
+        # (width pins ONLY64/U32ONLY excluded: they bind from the operand
+        # width, but the written `.64` modifier must still be consumed by
+        # modifier matching below)
         consumed_mods = set()
         for grp in op_groups:
             for s in grp:
-                if s["modifier"]:
+                if s["modifier"] and s["type"] not in ("ONLY64", "U32ONLY"):
                     consumed_mods.add(s["name"])
+        # Operand byte-select suffix (.B0-.B3 on a UREG, UR2UP/P2UR) binds
+        # the B3B0-typed modifier slot; mark it consumed so modifier
+        # matching doesn't reset it to the default.
+        for op in inst.operands:
+            if op.bsel is not None:
+                bslot = next((s for s in slots if s["type"] == "B3B0"), None)
+                if bslot is None:
+                    return None
+                slot_map[bslot["name"]] = op.bsel
+                consumed_mods.add(bslot["name"])
 
         # 3. Match remaining modifiers
         enc_names = set()
@@ -185,7 +223,7 @@ class SassMatcher:
         #     (single-reg group) — a group that doesn't match the operand's
         #     real size would silently reuse/overwrite a register.
         op_sizes: list[Optional[int]] = []
-        for grp, op in zip(used_groups, inst.operands):
+        for oi, (grp, op) in enumerate(zip(used_groups, inst.operands)):
             want = self._operand_expected_size(grp, variant, slot_map)
             op_sizes.append(want)
             if want is None or op.kind not in (OperandKind.REG, OperandKind.UREG):
@@ -193,25 +231,33 @@ class SassMatcher:
             if op.regs is not None:
                 got = len(op.regs) * 32
                 if got != want:
+                    pfx = "UR" if op.kind == OperandKind.UREG else "R"
+                    base = op.regs[0]
+                    sugg = ",".join(f"{pfx}{base + i}"
+                                    for i in range(want // 32))
                     self._cond_errors.append(
-                        f"{inst.mnemonic}: {op.kind.name} group {op.regs} is "
-                        f"{got}-bit but the matched variant expects a "
-                        f"{want}-bit operand (check the .64/.128/size "
-                        f"modifier)")
+                        f"{inst.mnemonic}: operand #{oi} "
+                        f"({{{','.join(f'{pfx}{r}' for r in op.regs)}}}) is "
+                        f"{got}-bit but this variant expects a "
+                        f"{want}-bit operand — list every register "
+                        f"explicitly, e.g. {{{sugg}}}")
                     return None
             elif want > 32:
                 # RZ as a wide operand means "none/empty" (e.g. HGMMA's
                 # second accumulator Rc=RZ encodes 0); allow it.  UR-domain
-                # Z is 63 (UniformRegister enum), also a legal placeholder.
+                # Z is 255 (UniformRegister enum; 63 is the legacy sm_90
+                # 6-bit alias), also a legal placeholder.
                 if int(op.value) == 255 or (op.kind == OperandKind.UREG
-                                            and int(op.value) == 63):
+                                            and int(op.value) in (63, 255)):
                     continue
                 rv = int(op.value)
+                pfx = "UR" if op.kind == OperandKind.UREG else "R"
+                sugg = ",".join(f"{pfx}{rv + i}" for i in range(want // 32))
                 self._cond_errors.append(
-                    f"{inst.mnemonic}: operand {op.value} is a single "
-                    f"{op.kind.name.lower()} register but this variant "
-                    f"expects a {want}-bit operand — list every register "
-                    f"explicitly, e.g. {{R{rv},R{rv + 1}}}")
+                    f"{inst.mnemonic}: operand #{oi} ({pfx}{rv}) is a "
+                    f"single {op.kind.name.lower()} register but this "
+                    f"variant expects a {want}-bit operand — list every "
+                    f"register explicitly, e.g. {{{sugg}}}")
                 return None
 
         # 5. Check CONDITIONS — reject if any hard condition predicate is FALSE.
@@ -222,6 +268,15 @@ class SassMatcher:
             return None
 
         score = self._compute_score(variant, inst)
+        # Prefer variants that bind the first operand group: when a single
+        # register can serve as group #1 of one class (BAR IR form: barrier
+        # id immediate skipped) or group #0 of another (RI form: id register
+        # used), nvcc's encoding is the latter.
+        if used_groups:
+            for gi, g in enumerate(op_groups):
+                if g is used_groups[0]:
+                    score -= gi
+                    break
         return MatchResult(variant=variant, slot_map=slot_map, score=score,
                            op_sizes=op_sizes)
 
@@ -301,7 +356,12 @@ class SassMatcher:
         """Group operand slots by top-level comma boundaries in the FORMAT.
 
         Slots that belong to a DESC/C composite bracket are merged.
+        A trailing `FORMAT_ALIAS x = FN(...)` section (e.g. IMAD's
+        GetPseudoOpRIR) is disassembler metadata, not an operand — it must
+        not contribute a group.
         """
+        if "FORMAT_ALIAS" in raw_fmt:
+            raw_fmt = raw_fmt.split("FORMAT_ALIAS", 1)[0]
         def is_pg(s):
             return (s["name"] == "Pg" and s["type"] == "Predicate") or \
                    (s["name"] == "UPg" and s["type"] == "UniformPredicate")
@@ -340,6 +400,11 @@ class SassMatcher:
             elif in_composite:
                 operand_slots.append(s)  # everything inside composite group
             elif not s["modifier"]:
+                operand_slots.append(s)
+            elif s["type"] in ("ONLY64", "U32ONLY"):
+                # address-width pin inside a plain address bracket — keep it
+                # with the operand group so matching can reject width
+                # mismatches (ATOMG [R2.64] must not take the U32ONLY class)
                 operand_slots.append(s)
             # else: modifier outside composite → skip
 
@@ -443,6 +508,10 @@ class SassMatcher:
         """Match parsed operands to groups.  Optional groups (with defaults)
         can be skipped to make the count align.  Returns the group used for
         each operand, or None on failure."""
+        paired = self._match_imm_pair(groups, operands, slot_map)
+        if paired is not None:
+            return paired
+
         if len(groups) == len(operands):
             return self._match_positional(groups, operands, slot_map)
 
@@ -451,6 +520,61 @@ class SassMatcher:
 
         # groups > operands: try skipping optional groups
         return self._match_with_skips(groups, operands, 0, 0, slot_map)
+
+    def _match_imm_pair(self, groups: list[list[dict]],
+                        operands: list[Operand],
+                        slot_map: dict) -> Optional[list[list[dict]]]:
+        """f16x2/bf16x2 packed-immediate pair (HFMA2/HADD2/HMUL2/HMNMX2/
+        HSET2/HSETP2 imm forms): the FORMAT has two adjacent F64Imm
+        half-slots (Sc/Sc1, Sb/Sb1), but the assembly text carries the
+        packed 32-bit pair as ONE immediate operand (raw 0fXXXXXXXX).
+        Bind the single immediate to both half-slots; the encoder splits
+        it by field target.  Returns the used-group list or None (fall
+        through to generic matching)."""
+        pair = [s for grp in groups for s in grp
+                if s["type"] == "F64Imm" and not s["modifier"]]
+        if len(pair) != 2 or len(operands) != len(groups) - 1:
+            return None
+        pair_names = {s["name"] for s in pair}
+        pair_first_gi = next(
+            i for i, g in enumerate(groups)
+            if any(s["name"] in pair_names for s in g))
+        # Exactly one immediate operand in the text, at the pair's group
+        # position — cuobjdump prints FORMAT order, so the immediate's text
+        # index disambiguates imm-middle (RIR) from imm-last (RRI) classes.
+        imm_idx = [i for i, o in enumerate(operands)
+                   if o.kind == OperandKind.IMM_F32
+                   or (o.kind in (OperandKind.IMM_U, OperandKind.IMM_S)
+                       and o.value == 0)]
+        if len(imm_idx) != 1 or imm_idx[0] != pair_first_gi:
+            return None
+        ii = imm_idx[0]
+        rest_ops = operands[:ii] + operands[ii + 1:]
+        rest_grps = [g for g in groups
+                     if not any(s["type"] == "F64Imm" and not s["modifier"]
+                                for s in g)]
+        if len(rest_ops) != len(rest_grps):
+            return None
+        trial = dict(slot_map)
+        used: list[list[dict]] = []
+        for grp, op in zip(rest_grps, rest_ops):
+            if not self._match_group(grp, op, trial):
+                return None
+            used.append(grp)
+        op = operands[ii]
+        val = self._extract_value(pair[0], op)
+        if val is None:
+            return None
+        for s in pair:
+            trial[s["name"]] = val
+            if op.raw32 is not None:
+                trial[f"{s['name']}_raw32"] = op.raw32
+        slot_map.clear()
+        slot_map.update(trial)
+        pair_groups = [g for g in groups
+                       if any(s["type"] == "F64Imm" and not s["modifier"]
+                              for s in g)]
+        return used + pair_groups
 
     def _match_positional(self, groups: list[list[dict]],
                           operands: list[Operand],
@@ -527,10 +651,15 @@ class SassMatcher:
 
         if first_type == "C" and op.kind == OperandKind.CONST_BANK:
             return self._match_const_bank(group, op, slot_map)
-        if first_type in ("DESC", "GMMA") and op.kind in (
+        if first_type in ("DESC", "GMMA", "TMA") and op.kind in (
                 OperandKind.MEM_DESC, OperandKind.UREG):
             return self._match_mem_desc(group, op, slot_map)
         if op.kind == OperandKind.MEM_ADDR:
+            # a plain [Ra+off] operand must not match a desc[...]-composite
+            # group (e.g. STL's memdesc variant pins memdesc=1 even though
+            # the text carries no descriptor)
+            if any(s["type"] in COMPOSITE_TYPES for s in group):
+                return False
             return self._match_mem_addr(group, op, slot_map)
 
         if len(group) == 1:
@@ -543,17 +672,35 @@ class SassMatcher:
             for s in group:
                 if s["modifier"] and s["name"] not in slot_map and s.get("default") is not None:
                     slot_map[s["name"]] = self._parse_default(s["default"], s["type"])
+                # space-separated reg+offset operand (RET.REL.NODEC R2-0x340):
+                # the offset slot shares the register's operand group
+                if not s["modifier"] and "offset" in s["name"].lower() and \
+                        s["type"] in ("SImm", "RSImm", "UImm") and \
+                        s["name"] not in slot_map:
+                    slot_map[s["name"]] = op.offset
         return ok
 
     def _match_simple_slot(self, slot: dict, op: Operand, slot_map: dict) -> bool:
         st = slot["type"]
         compat = TYPE_COMPAT.get(op.kind)
         if compat is None or st not in compat:
-            return False
+            # cuobjdump prints a float immediate of exactly 0.0 as "0"
+            # (IMM_U); zero is the same bit pattern in float and int, so it
+            # is the one unambiguous coercion.  Non-zero ints stay rejected
+            # ("1" as f32 1.0 vs bit pattern 1 would be ambiguous).
+            if not (st in ("F32Imm", "F64Imm", "F16Imm")
+                    and op.kind in (OperandKind.IMM_U, OperandKind.IMM_S)
+                    and op.value == 0):
+                return False
         val = self._extract_value(slot, op)
         if val is None:
             return False
         slot_map[slot["name"]] = val
+        # register with PC-relative offset (RET.REL.NODEC R2-0x340): stash
+        # for the trailing offset group consumed by _fill_group_defaults
+        if op.offset and st in ("Register", "UniformRegister",
+                                "NonZeroRegister", "ZeroRegister"):
+            slot_map["_pending_offset"] = op.offset
         # Store negate/absolute/invert/lnot flags for slot_attr resolution
         if op.negated:
             slot_map[f"{slot['name']}_negated"] = 1
@@ -590,7 +737,11 @@ class SassMatcher:
             elif st in ("SImm", "UImm") and "offset" in s["name"].lower():
                 slot_map[s["name"]] = op.offset
             elif st in ("Register", "NonZeroRegister", "ZeroRegister"):
-                slot_map[s["name"]] = 255  # RZ
+                # register-indexed const bank c[bank][Rr+off]; plain
+                # c[bank][off] encodes the index register as RZ
+                slot_map[s["name"]] = op.cbank_reg if op.cbank_reg is not None else 255
+            elif st == "UniformRegister":
+                slot_map[s["name"]] = op.addr_ureg if op.addr_ureg is not None else 255
             elif st in ("SImm", "UImm"):
                 slot_map[s["name"]] = op.offset
             elif st == "ONLY64":
@@ -599,9 +750,17 @@ class SassMatcher:
 
     def _match_mem_desc(self, group: list[dict], op: Operand,
                         slot_map: dict) -> bool:
+        # Same width-pin rule as _match_mem_addr: the ONLY64/U32ONLY slot
+        # inside the DESC composite pins the address width (LDGSTS .E vs
+        # .E.64 descriptor forms).
+        for s in group:
+            if s["type"] == "ONLY64" and op.width != 64:
+                return False
+            if s["type"] == "U32ONLY" and op.width != 32:
+                return False
         for s in group:
             st = s["type"]
-            if st in ("DESC", "GMMA"):
+            if st in ("DESC", "GMMA", "TMA"):
                 slot_map[s["name"]] = 1
             elif st == "UniformRegister":
                 slot_map[s["name"]] = op.value  # UR from desc[UR] / gdesc[UR]
@@ -626,20 +785,38 @@ class SassMatcher:
         # index (encoding a different address) or fabricate a URb value from
         # the GPR base.
         has_ur_slot = any(s["type"] == "UniformRegister" for s in group)
-        if has_ur_slot != (op.addr_ureg is not None):
+        if has_ur_slot and op.addr_ureg is None:
+            # UR-index slot with an "absent" default (URZ): plain [Ra+off]
+            # matches, binding the default (STAS/REDAS `[{R2,R3}]`).
+            ur_slot = next(s for s in group if s["type"] == "UniformRegister")
+            ur_def = ur_slot.get("default")
+            if ur_def is None or \
+                    self._parse_default(ur_def, "UniformRegister") != 255:
+                return False
+            slot_map[ur_slot["name"]] = 255
+        elif not has_ur_slot and op.addr_ureg is not None:
             return False
+        # Address-width pins: a 64-bit address ([{R2,R3}+...]) must not match
+        # a class pinned U32ONLY (and vice versa) — the pin bit is part of
+        # the encoding, matching the wrong class silently drops it.
+        for s in group:
+            if s["type"] == "ONLY64" and op.width != 64:
+                return False
+            if s["type"] == "U32ONLY" and op.width != 32:
+                return False
         for s in group:
             st = s["type"]
             if st in ("Register", "NonZeroRegister", "ZeroRegister"):
                 slot_map[s["name"]] = op.value
             elif st == "UniformRegister":
-                slot_map[s["name"]] = op.addr_ureg
+                if op.addr_ureg is not None:
+                    slot_map[s["name"]] = op.addr_ureg
             elif st in ("SImm", "UImm") and "offset" in s["name"].lower():
                 slot_map[s["name"]] = op.offset
             elif st == "ONLY64":
-                slot_map[s["name"]] = 1 if op.width == 64 else 0
+                slot_map[s["name"]] = 1
             elif st == "U32ONLY":
-                slot_map[s["name"]] = 1 if op.width == 32 else 0
+                slot_map[s["name"]] = 0
         return True
 
     # ------------------------------------------------------------------
@@ -649,7 +826,8 @@ class SassMatcher:
         v = op.value
         if st in ("Register", "NonZeroRegister", "ZeroRegister"):
             return v if isinstance(v, int) else None
-        if st == "UniformRegister":
+        if st in ("UniformRegister", "ZeroUniformRegister",
+                  "NonZeroUniformRegister"):
             return v if isinstance(v, int) else None
         if st in ("Predicate", "UniformPredicate"):
             return v if isinstance(v, int) else None
@@ -672,7 +850,7 @@ class SassMatcher:
             return v if isinstance(v, int) else None
         if st == "NP":
             return v if isinstance(v, int) else None
-        if st in ("SpecialRegister", "UPRONLY"):
+        if st in ("SpecialRegister", "UPRONLY", "PC_REG"):
             v_str = v if isinstance(v, str) else ""
             enum_vals = self.db["enums"].get(st, {})
             for name, val in enum_vals.items():
@@ -707,6 +885,16 @@ class SassMatcher:
         return all(s.get("default") is not None for s in group)
 
     def _fill_group_defaults(self, group: list[dict], slot_map: dict) -> None:
+        # A register operand carrying a PC-relative offset (RET.REL.NODEC
+        # R2-0x340) binds its trailing all-default immediate "offset" group
+        # even though the text has no separate operand for it.
+        if "_pending_offset" in slot_map and group and all(
+                "offset" in s["name"].lower() and s.get("default") is not None
+                for s in group):
+            for s in group:
+                if s["name"] not in slot_map:
+                    slot_map[s["name"]] = slot_map.pop("_pending_offset")
+            return
         for s in group:
             if s["name"] not in slot_map and s.get("default") is not None:
                 slot_map[s["name"]] = self._parse_default(s["default"], s["type"])
@@ -942,17 +1130,25 @@ class SassMatcher:
                                 .strip().strip('"') in inst.modifiers):
                 consumed += 1
         if not inst.modifiers:
-            if inst.mnemonic.upper() == "IMAD":
-                # nvcc emits plain IMAD as LO (imad opcode 0x824); the HI
-                # variant is only reachable with an explicit .HI.
+            if inst.mnemonic.upper() in ("IMAD", "UIMAD"):
+                # nvcc emits plain IMAD/UIMAD as LO (imad 0x824 / uimad
+                # 0x12a4 — both print without a modifier in cuobjdump);
+                # the HI variant is only reachable with an explicit .HI.
                 score += sum(1 for s in mod_slots
                              if s.get("default") is not None)
             else:
                 # Historical sm_120 behavior: a plain form picks the variant
-                # whose distinguishing modifier has NO default — UIMAD plain
-                # == HI, IADD.64's width slot is optional, etc.
+                # whose distinguishing modifier has NO default — IADD.64's
+                # width slot is optional, etc.
                 score += sum(1 for s in mod_slots
                              if s.get("default") is None)
+        elif inst.mnemonic.upper() in ("IMAD", "UIMAD") and \
+                not any(m.upper() == "HI" for m in inst.modifiers):
+            # Same rule with modifiers present: IMAD.SHL/.IADD/.MOV/.ISCADD
+            # (pseudo-opcode aliases, all encoding pseudo_opcode=0) without an
+            # explicit .HI are the LO form (0x824); the HI-pseudo class
+            # (0x827) must not win the tie.
+            score += sum(2 for s in mod_slots if s["type"] == "LOOnly")
         return score + consumed * 5
 
 

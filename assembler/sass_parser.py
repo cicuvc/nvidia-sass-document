@@ -309,7 +309,7 @@ class Parser:
             val = int(t.text[2:], 16)
             import struct
             fval = struct.unpack(">f", struct.pack(">I", val))[0]
-            return Operand.imm_f32(fval)
+            return Operand.imm_f32(fval, raw32=val)
 
         # hex/number immediate
         if t.type in ("HEX", "NUMBER"):
@@ -332,17 +332,28 @@ class Parser:
         if t.type == "REG":
             self.pop()
             self._reject_width_suffix(t.text)
-            iswz = self._parse_iswz_suffix()
+            sfx = self._parse_iswz_suffix()
             op = Operand.reg(t.text, width=32)
-            op.iswz = iswz
+            if sfx is not None:
+                setattr(op, sfx[0], sfx[1])
+            # register with PC-relative offset: RET.REL.NODEC R2-0x340.
+            # Only when a number actually follows — `[RZ + URb + off]`
+            # (uniform address index) leaves the '+' for _parse_mem_addr.
+            nxt2 = self.peek2()
+            if self.peek() and self.peek().type in ("PLUS", "MINUS") and \
+                    nxt2 is not None and nxt2.type in ("HEX", "NUMBER"):
+                sign = 1 if self.pop().type == "PLUS" else -1
+                off_t = self.expect("HEX", "NUMBER")
+                op.offset = sign * int(off_t.text, 0)
             return op
 
         if t.type == "UREG":
             self.pop()
             self._reject_width_suffix(t.text)
-            iswz = self._parse_iswz_suffix()
+            sfx = self._parse_iswz_suffix()
             op = Operand.ureg(t.text, width=32)
-            op.iswz = iswz
+            if sfx is not None:
+                setattr(op, sfx[0], sfx[1])
             return op
 
         if t.type == "PRED":
@@ -481,26 +492,43 @@ class Parser:
                     raise SyntaxError(
                         f"register group must be consecutive, got {regs}")
             kind = OperandKind.UREG if uniform else OperandKind.REG
-            hi = 63 if uniform else 254
+            # sm_120: UR fields are 8-bit, MAX_UNIFORM_REG_COUNT=80, and the
+            # class conditions cap real URs at MAX-2 (=78); URZ (255) was
+            # already handled above.
+            hi = 78 if uniform else 254
             for r in regs:
                 if r > hi:
                     raise SyntaxError(
                         f"register {r} out of range for "
                         f"{'uniform' if uniform else 'general'} register group")
-        return Operand.reg_group(regs, uniform=bool(uniform))
+        op = Operand.reg_group(regs, uniform=bool(uniform))
+        # group with PC-relative offset: RET.REL.NODEC {R2,R3}-0x340.
+        # Only when a number actually follows — `[{R2,R3} + URb + off]`
+        # leaves the '+' for _parse_mem_addr's uniform-index form.
+        nxt2 = self.peek2()
+        if self.peek() and self.peek().type in ("PLUS", "MINUS") and \
+                nxt2 is not None and nxt2.type in ("HEX", "NUMBER"):
+            sign = 1 if self.pop().type == "PLUS" else -1
+            off_t = self.expect("HEX", "NUMBER")
+            op.offset = sign * int(off_t.text, 0)
+        return op
 
     _ISWZ_MAP = {"H1_H0": 0, "F32": 1, "H0_H0": 2, "H1_H1": 3, "H0_NH1": 4}
+    _BSEL_MAP = {"B0": 0, "B1": 1, "B2": 2, "B3": 3}
 
-    def _parse_iswz_suffix(self) -> int | None:
-        """Optional .H0_H0 / .H1_H1 / .F32 / .H0_NH1 lane-swizzle suffix
-        (HFMA2/HADD2 ISWZ* operand modifiers).  Returns the enum value or None."""
+    def _parse_iswz_suffix(self) -> tuple[str, int] | None:
+        """Optional lane/byte-select suffix on a register operand:
+        .H0_H0/.H1_H1/.F32/.H0_NH1 (ISWZ*) or .B0-.B3 (B3B0 byte select,
+        UR2UP/P2UR).  Returns ("iswz"|"bsel", enum value) or None."""
         if self.peek() and self.peek().type == "DOT":
             self.pop()
             t = self.expect("IDENT")
+            if t.text in self._BSEL_MAP:
+                return ("bsel", self._BSEL_MAP[t.text])
             val = self._ISWZ_MAP.get(t.text)
             if val is None:
                 raise SyntaxError(f"unknown ISWZ suffix .{t.text}")
-            return val
+            return ("iswz", val)
         return None
 
     def _parse_mem_desc(self, gdesc: bool = False) -> Operand:
@@ -568,6 +596,26 @@ class Parser:
         bank = int(bank_t.text, 0)
         self.expect("RBRACKET")
         self.expect("LBRACKET")
+        # register-indexed form: c[bank][Rr], c[bank][Rr+0xoff],
+        # c[bank][URr] (LDC/LDCU indexed variants)
+        t = self.peek()
+        if t is not None and t.type in ("REG", "UREG"):
+            self.pop()
+            uniform = t.type == "UREG"
+            rval = (255 if t.text.upper() in ("RZ", "URZ")
+                    else int(t.text[2:] if uniform else t.text[1:]))
+            offset = 0
+            if self.peek() and self.peek().type in ("PLUS", "MINUS"):
+                sign = 1 if self.pop().type == "PLUS" else -1
+                off_t = self.expect("HEX", "NUMBER")
+                offset = sign * int(off_t.text, 0)
+            self.expect("RBRACKET")
+            op = Operand.const_bank(bank, offset=offset)
+            if uniform:
+                op.addr_ureg = rval
+            else:
+                op.cbank_reg = rval
+            return op
         off_t = self.expect("HEX", "NUMBER")
         offset = int(off_t.text, 0)
         self.expect("RBRACKET")
@@ -598,6 +646,11 @@ class Parser:
             addr_ureg = base.value
             base = Operand.reg("RZ")
         offset = 0
+        # Inside brackets a reg/group offset IS the address offset
+        # ([R2-0x20], [{R2,R3}+0x4]) — the operand-level offset forms only
+        # exist outside brackets (RET.REL.NODEC R2-0x340).
+        if base.offset:
+            offset, base.offset = base.offset, 0
         if self.peek() and self.peek().type in ("PLUS", "MINUS"):
             sign = 1 if self.pop().type == "PLUS" else -1
             off_t = self.expect("HEX", "NUMBER")

@@ -77,9 +77,13 @@ class Operand:
     bank: int = 0
     addr_reg: int = 0
     addr_ureg: int | None = None   # LDS/STS uniform variant: [RZ + URb + off]
+    cbank_reg: int | None = None   # register-indexed const bank c[bank][Rr+off]
+                                   # (255=RZ; UR index in addr_ureg)
     iswz: int | None = None      # HFMA2/HADD2 lane swizzle (ISWZ* enum value)
+    bsel: int | None = None      # UR2UP/P2UR byte-select suffix .B0-.B3 (B3B0)
     regs: list[int] | None = None  # explicit multi-reg list {Ra,Rb}/{Ra,Rb,Rc,Rd};
                                    # value == regs[0], width == len(regs)*32
+    raw32: int | None = None     # 0fXXXXXXXX raw bit pattern (float imm only)
 
     @staticmethod
     def reg(name: str, width: int = 32) -> Operand:
@@ -88,10 +92,11 @@ class Operand:
 
     @staticmethod
     def ureg(name: str, width: int = 32) -> Operand:
-        # UniformRegister.URZ == 63 in the ISA enum (GPR RZ uses 255; the
-        # 6-bit field truncation previously masked this).  Matching the enum
-        # matters because CLASS conditions compare URd==URZ numerically.
-        v = 63 if name.upper() == "URZ" else int(name[2:])
+        # UniformRegister.URZ == 255 in the sm_120 ISA enum (same sentinel as
+        # GPR RZ; UR fields are 8-bit on Blackwell, MAX_UNIFORM_REG_COUNT=80).
+        # CLASS conditions compare URd==`UniformRegister@URZ` numerically, so
+        # the spec value (not the sm_90-era 6-bit truncation 63) is required.
+        v = 255 if name.upper() == "URZ" else int(name[2:])
         return Operand(OperandKind.UREG, v, width=width)
 
     @staticmethod
@@ -124,8 +129,8 @@ class Operand:
         return Operand(OperandKind.IMM_S, value)
 
     @staticmethod
-    def imm_f32(value: float) -> Operand:
-        return Operand(OperandKind.IMM_F32, value)
+    def imm_f32(value: float, raw32: int | None = None) -> Operand:
+        return Operand(OperandKind.IMM_F32, value, raw32=raw32)
 
     @staticmethod
     def np(value: int) -> Operand:

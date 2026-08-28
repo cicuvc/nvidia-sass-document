@@ -527,7 +527,7 @@ class CubinBuilder:
         if self._cluster_dims is not None:
             buf += eiattr_cluster_dims(*self._cluster_dims)
             buf += eiattr_explicit_cluster()
-        total_ps = sum(sz for _, _, sz in self._params)
+        total_ps = max((off + sz for _, off, sz in self._params), default=0)
         param_base = arch.current().param_base
         buf += eiattr_hval(0x19, total_ps)  # CBANK_PARAM_SIZE
         buf += eiattr_param_cbank(sym_c0, param_base, total_ps)  # PARAM_CBANK
