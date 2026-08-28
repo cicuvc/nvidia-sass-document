@@ -47,6 +47,7 @@ Source dialect essentials (see §3–§4 of the manual):
   sets `MAXREG_COUNT`/`SHARED`/`SHADER_TYPE`/`MBARRIER_*`; labels via
   `#def_label(name)` + `#label(name)`.
 - Scheduling bracket `[wr:rd:{req}:stall:yield[:batch_t]]` on every line; scoreboards are SB0–SB5 (7 = none, 6 rejected).
+- **Cross-barrier waits MUST go in `{req}`, not `rd`** (probe-verified the hard way, sassdbg probe3): `rd=2` on a MOV32I did NOT wait (CALL target from LDC → 718 INVALID_PC), `rd=1` on an STG.64 did NOT wait the LDC address pair (garbage → 700); the same waits via `{2}`/`{0,1}` work. LDC/LDCU/LDG are variable-latency — the first consumer of ANY result register (incl. the UR4/UR5 desc pair) must wait its barrier via req; stall cycles do NOT cover it. Re-claiming an already-used barrier (e.g. RPCMOV `wr=0` on top of LDCU's) lets one `req={0}` cover all outstanding claims on it.
 - **64/128-bit operands MUST be explicit register groups** `{Ra,Rb}`/`{Ra,Rb,Rc,Rd}` (cuobjdump prints the scalar shorthand; the assembler source requires groups — this is the #1 gotcha).
 - `LDCU` is the sm_120 name of `ULDC`.
 - HMMA/QMMA results are NOT scoreboarded (COUPLED_EMULATABLE): pad **≥16 NOP** before reading `Rd` (fewer can fault 0x715).
@@ -128,29 +129,50 @@ M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
   A fat loop (~2KB body) refetches per iteration and the same IVALL
   makes the patch visible within one iteration.  => breakpoints must be
   armed before the loop is entered.
-- Breakpoint = single-word patch (16B aligned store is single-copy
-  atomic): overwrite the site with `BRA dbgslot_k`; the slot notifies
-  the host (hit id), parks in a self-refreshing spin on a PER-SLOT
-  release word (a shared flag + slot-side self-reset races: the warp
-  can reach the next slot's load before the previous slot's reset
-  store drains to L2), then `LDG.64` the return VA and **JMX**
-  (absolute indirect jump, target = Ra + off) back.  Resume = restore
-  the site word + write the return VA + set the release flag — no
-  code patch of a spin-refetched line (a patched BRA in the spin line
-  can execute stale exactly once; if that stale word is the
-  placeholder branch the warp is lost).  **BRX is the RELATIVE twin**
-  (target = next_pc + Ra + off — Ra is kernel-relative; an absolute
-  VA in Ra faults 700).  See notes/sm90/instr/{brx,jmx}.md.
-- `sassdbg/patch.py` — M3 host API: `inject_debugger(source, max_bps)`
-  (prologue: LEPC base report + gate + hardened IVALL, reserves
-  R246–R253/UR60/61, rejected if the kernel uses them; appended
-  42-word slots; extra `dbgctrl<8>` param), `Patcher` (warm-up launch
-  mandatory), `Debugger`: `launch(args, grid, block)` (parks at the
-  gate), `arm(orig_inst_index)` / `disarm` / `wait_hit` / `resume` /
-  `wait_done` (stream_query-based; never cuCtxSynchronize while
-  parked).  Resume consumes the bp (re-arm to break again).
-  E2E: `tests/asm_construct/test_sassdbg_m3.py` (lift m2_smoke.cubin →
-  inject → 2 bps → hit/resume → correct results), 10/10 stress.
+- **M3v2 (current): slot-less breakpoints via CALL.ABS + RPCMOV**
+  (probes: `sassdbg/probe_callheap2.py` = user's, `probe_callheap3.py`):
+  the site word is overwritten with the CONSTANT word
+  `CALL.ABS.NOINC PT, {R252,R253}, 0x0` (prologue preloads R252/253 with
+  the handler VA from ctrl+0x20).  The breakpoint HANDLER is
+  **heap-resident** — plain devmem written by host cuMemcpy; the GPU
+  fetches/executes SASS from device memory with no icache ceremony.
+  Handler entry: `RPCMOV.32 R248/249, Rpc.LO/HI` → **RPC = VA of the
+  CALL instruction itself** = the breakpoint identity (no slots, no hit
+  ids, no per-site relocation).  It saves the kernel's PR (P2R→ctrl+0x18),
+  reports the site VA (ctrl+0x10), and spins on a GENERATION counter
+  (ctrl+0x08; a shared one-shot flag + self-reset races — a generation
+  compare never does).  Resume = restore site word + clear hit + bump
+  gen; the handler restores PR (LDG→R2P stall-13), runs the hardened
+  IVALL; NOP×32; IVALL, and `RET.ABS.NODEC PT, {R248,R249}, 0x0` back to
+  the SITE — re-executing the restored original instruction.  The RET
+  target lives in registers and the site line is cold (warp was parked
+  in the heap) → no hot-line patch race at all.
+  - **CALL/RET truth** (probe3 matrix): `CALL_DEPTH.INC`/`RET_DEPTH.DEC`
+    only maintain a hardware call-depth counter — the jump target is
+    ALWAYS `Ra + disp` (**disp in bytes**); nested INC/DEC with correct
+    register VAs works at depth 2; `RET.DEC RZ` faults 700.  `CALL.REL`
+    never writes RPC (RPCMOV reads indeterminate); `CALL.ABS` does.
+    `CALL.ABS` immediate form (field = VA>>2, encoding verified) faults
+    jumping anywhere — use the register form.  Divergent CALL.ABS works
+    (each group gets its own RPC).  See notes/sm90/instr/{call,ret,rpcmov}.md.
+  - The patch word is deliberately UNCONDITIONAL (@PT): a breakpoint
+    fires when execution REACHES the site, pre-predicate; the stepper's
+    arm-the-successors model depends on it (a predicate-preserving patch
+    silently skips a predicated-off `@P0 BRA` site and the kernel runs
+    to completion instead of hitting the fall-through bp).
+  - **BRX is the RELATIVE twin** of JMX (target = next_pc + Ra + off —
+    Ra kernel-relative; absolute VA faults 700).  notes/{brx,jmx}.md.
+- `sassdbg/patch.py` — M3v2 host API: `inject_debugger(source, max_bps)`
+  (prologue: LEPC base report + handler-VA load + gate + hardened IVALL,
+  reserves R246–R253/UR60/61, rejected if the kernel uses them; NO
+  appended slots — max_bps kept for API compat only; extra `dbgctrl<8>`
+  param), `Patcher` (warm-up launch mandatory — host cuMemcpy cannot
+  write module code space), `Debugger`: `launch(args, grid, block)`
+  (parks at the gate), `arm(orig_inst_index)` / `disarm` / `wait_hit`
+  (maps site VA → bp) / `resume` / `wait_done` (stream_query-based;
+  never cuCtxSynchronize while parked).  Resume consumes the bp (re-arm
+  to break again).  E2E: `tests/asm_construct/test_sassdbg_m3.py`,
+  5/5 repeat runs.
 
 M4 (`sassdbg/wtrace.py` + `sassdbg/reverse.py`) — warp-level trace +
 forward/backward state replay.  DONE: instrumenter, decoder, reverse
@@ -232,6 +254,10 @@ wtrace+debugger composition, E2E test
   3. Hit id is now the SLOT number (slots recycle; the global bp id
      counter outgrew them → "unknown hit id" once slot 0 recycled to
      bp id 33).  `wait_hit` maps slot→armed bp.
+     (All three are v1-slot history: M3v2's CALL+RPCMOV heap handler
+     has no slots and no hit ids — the site VA IS the identity — but
+     the PR save/restore and ISETP stall-13-yield-1 lessons carry over
+     to the handler.)
 - Reverse-from-bp composition: `Debugger(instrument_warp(src).source,
   allow_cdesc_urs=True)` (new flag: UR60/61 allowed when the source
   uses them only for the default cdesc, which the debugger also loads).

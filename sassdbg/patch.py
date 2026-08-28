@@ -1,59 +1,70 @@
-"""sassdbg M3 — runtime breakpoints in SASS code via device-side patching.
+"""sassdbg M3v2 — runtime breakpoints via CALL.ABS + RPCMOV (slot-less).
 
-Mechanism (all proven by probe_patch.py experiments):
+Mechanism (all proven by probe_callheap2.py / probe_callheap3.py):
 
-  * The patcher kernel below stores 16-byte instruction words into code
-    memory (STG.E.128.STRONG.GPU, single-copy atomic).  It must be warmed
-    up (launched once) before the target starts — first-use lazy module
-    load blocks while another kernel spins.
-  * CCTL.I.IVALL is SM-local, so the TARGET invalidates its own icache:
-    the injected debugger prologue parks at a start gate and runs a
-    hardened IVALL; NOP x32; IVALL sequence after release.  Breakpoints
-    armed while parked are therefore visible on first fetch.
-  * Breakpoint = overwrite the site word with `BRA slot_k`.  The slot
-    parks the warp (CCTL.I.IVALL + STRONG LDG of a per-slot release
-    flag), after notifying the host with a hit id.  Resume = restore the
-    original site word, write the return VA to the ctrl buffer, set the
-    slot's release flag; the slot then `BRX {R252,R253}` jumps back —
-    the return address travels through DATA memory, so resume needs no
-    code patch of a hot line at all (a patched BRA in the spin line
-    races the loop's own refetches and can execute stale exactly once —
-    fatal when the stale word is the placeholder branch).
-  * Mid-run arming works for code that refetches (fat regions) but NOT
-    for tight loops (loop/fetch buffer replay defeats IVALL) — arm at
-    the gate for reliability.
+  * Breakpoint = overwrite the site word with the CONSTANT word
+    `CALL.ABS.NOINC PT, {R252,R253}, 0x0` (the injected prologue preloads
+    R252/R253 with the handler VA).  Same word for every site — no
+    per-site relocation, no slots, no slot-count limit, no slot-recycling
+    hit-id aliasing.  The patch word is UNCONDITIONAL (@PT): a breakpoint
+    fires when execution REACHES the site, before the original
+    instruction's own predicate is evaluated (the original word — with
+    its predicate — is restored and re-executed on resume).  Copying the
+    site's predicate into the patch word would silently skip predicated-
+    off sites and break the stepper's arm-the-successors model.
+  * The handler is HEAP-RESIDENT: plain device memory written by the host
+    with cuMemcpy (the GPU fetches/executes SASS from devmem fine — fresh
+    pages, no icache staleness).  No patcher involvement, no code-space
+    writes beyond the site itself.
+  * The handler reads RPC with RPCMOV.32 — RPC = VA of the CALL
+    instruction itself => the breakpoint identity is the site VA, no id
+    plumbing at all.  It saves the kernel's PR (its own spin ISETP would
+    clobber P0), reports the site VA, parks in a spin on a GENERATION
+    counter (a shared one-shot flag + slot-side self-reset races; a
+    generation compare has no reset race at all).
+  * Resume = restore the site word (patcher) + clear the hit word + bump
+    the generation.  The handler then restores PR, runs the hardened
+    IVALL; NOP x32; IVALL and `RET.ABS.NODEC PT, {site}, 0x0` back to the
+    SITE, re-executing the restored original instruction.  The return
+    address lives in REGISTERS (RPCMOV result), not in data memory, and
+    the RET target line is cold (the warp was parked in the heap) — no
+    hot-line patch race at all.
+  * RET's target is ALWAYS Ra + disp(bytes): CALL_DEPTH.INC /
+    RET_DEPTH.DEC only maintain a hardware call-depth counter — they
+    neither save nor restore the PC (probe3 matrix S4: nested INC/DEC
+    with correct register VAs works; RZ faults 700).  RPCMOV after a
+    CALL.REL read 0 in probe3 S3 (only CALL.ABS populates RPC — open
+    question, we only use CALL.ABS).
+  * Divergent CALL works (probe3 P3b): a divergent group enters the
+    handler with its own RPC.  Multi-group hits share one handler: the
+    generation bump releases all parked groups; each re-executes its
+    site, so a still-armed site simply re-reports.  (grid=(1,) single-
+    warp focus, same as v1.)
+  * SCOREBOARD RULE (probe3, hard-won): explicit barrier waits MUST go in
+    the {req} bitset — the rd field does NOT reliably wait (rd=2 on a
+    MOV32I did not wait; req={2} did; an rd=1-only STG.64 read a garbage
+    LDC address pair -> 700; an unwaited CALL target register -> 718
+    INVALID_PC).  The RPCMOVs re-claim SB0 so the report STG's
+    req={0,1} covers LDCU + both RPCMOVs + the LDC ctrl pair.
 
-Host API:
+Host API (unchanged from v1):
 
     dbg = Debugger(source)              # dialect source (e.g. from lift)
     dbg.launch(args)                    # target parks at the gate
     dbg.arm(inst_index)                 # inst_index = ORIGINAL source line
     dbg.release()                       # gate open -> hits breakpoints
     bp = dbg.wait_hit()                 # returns Breakpoint
-    dbg.resume(bp)                      # continue; bp stays armed
+    dbg.resume(bp)                      # continue; bp is consumed (re-arm)
     dbg.wait_done()
 
 ctrl buffer layout (device memory, host polls via cuMemcpy):
   +0x00 u64 code base VA (target LEPC report)
-  +0x08 u32 smid
+  +0x08 u32 generation (host bumps to release a parked handler)
   +0x0c u32 start gate (host: 0 -> 1)
-  +0x10 u32 hit id (slot number + 1; slot writes, host clears on resume)
-  +0x18 u64 return VA (host writes the bp site VA at resume)
-  +0x20 + 4*slot  u32 per-slot release flag (host: 0 -> 1)
-  +0x20+4*max_bps + 4*slot  u32 per-slot kernel-predicate save
-    (P2R on slot entry, R2P before the JMX back — the spin's own ISETP
-    clobbers P0 and would otherwise corrupt the kernel's control flow;
-    note the gate prologue's ISETP still leaves P0=1 at kernel entry)
-
-The hit id is the SLOT number (not the breakpoint's host-side id):
-slots recycle as breakpoints are armed/resumed, so wait_hit maps the
-slot back to the currently armed bp.
-
-The release flag is PER-SLOT, one-shot: a shared flag plus slot-side
-self-reset races (the parked warp can reach the next slot's first load
-before the previous slot's reset store reaches L2 — STRONG loads bypass
-L1 but stores drain asynchronously).  The host zeroes the slot's flag
-when the slot is (re-)armed, i.e. when no warp can be inside it.
+  +0x10 u64 hit site VA (handler writes, host clears on resume)
+  +0x18 u32 kernel-predicate save (P2R on handler entry, R2P before RET)
+  +0x20 u64 handler VA (host writes before launch; prologue loads it
+        into R252/R253)
 """
 from __future__ import annotations
 
@@ -66,12 +77,11 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
 
-from assembler import assemble, assemble_kernel, CudaModule            # noqa: E402
-
-_BRK = "[7:7:{}:1:0]"
+from assembler import assemble, assemble_flat, assemble_kernel, CudaModule  # noqa: E402
 
 # ---------------------------------------------------------------------------
-# patcher kernel (shared with probe_patch.py)
+# patcher kernel (unchanged from v1 — host cuMemcpy cannot write module
+# code space, so a device kernel stores the 16-byte site word)
 # ---------------------------------------------------------------------------
 # cmd buffer layout:
 #   +0x00  u64 target code VA
@@ -132,55 +142,51 @@ class Patcher:
 # ---------------------------------------------------------------------------
 # source injection
 # ---------------------------------------------------------------------------
-# Debugger-reserved registers (disjoint from the tracer's R240-R245 band
-# is NOT guaranteed — a kernel under the debugger must not use any of
-# R240-R253 / UR60/UR61, same rule as instrument.py).
+# Debugger-reserved registers (disjoint from the wtrace band R224-R245).
+#   R246/R247  ctrl buffer VA          (prologue, persistent)
+#   R252/R253  handler VA              (prologue, persistent; the site
+#                                      CALL reads them)
+#   R248-R251  handler scratch (RPC site VA, PR save, generation)
+#   UR60/UR61  default global cache descriptor
 DBG_REGS = [f"R{r}" for r in range(246, 254)] + ["UR60", "UR61"]
 
-# prologue: report base+smid, park at the gate, hardened self-invalidate
+# prologue: report base, load the handler VA, park at the gate, hardened
+# self-invalidate.  LEPC stays at idx 2 (wait_base subtracts 2*16).
 _PROLOGUE = """    LDCU.64 {UR60,UR61}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R246,R247}, #param(dbgctrl);[1:7:{}:8:0]
     LEPC {R248,R249};[7:7:{}:4:0]
     STG.E.64.STRONG.GPU desc[{UR60,UR61}][{R246,R247}], {R248,R249};[7:7:{0,1}:8:0]
-    S2R R250, SR_VIRTUALSMID;[2:7:{}:8:0]
-    STG.E.STRONG.GPU desc[{UR60,UR61}][{R246,R247}+0x8], R250;[7:7:{0,1,2}:8:0]
+    LDG.E.64.STRONG.GPU {R252,R253}, desc[{UR60,UR61}][{R246,R247}+0x20];[4:7:{0,1}:8:0]
 #def_label(dbggate)
     LDG.E.STRONG.GPU R250, desc[{UR60,UR61}][{R246,R247}+0xc];[5:7:{0,1}:8:0]
     ISETP.NE.AND P0, PT, R250, 0x0, PT;[7:7:{5}:13:1]
     @!P0 BRA #label(dbggate);[7:7:{}:6:0]
+    MOV32I R250, 0x0;[7:7:{4}:5:1]
     CCTL.I.IVALL;[7:7:{}:4:0]
 """ + "    NOP;[7:7:{}:8:0]\n" * 32 + """    CCTL.I.IVALL;[7:7:{}:4:0]
 """
 PROLOGUE_LEN = 43           # instruction count of _PROLOGUE
 
-# one breakpoint slot: save kernel predicates to the ctrl buffer (the
-# spin's own ISETP clobbers P0 — without save/restore the resumed warp
-# reads the slot's P0, not the kernel's!), notify, park (self-refreshing
-# spin on the slot's own release word), load the return VA, restore the
-# predicates, hardened self-invalidate, JMX back to the site.  JMX
-# (absolute indirect jump, target = Ra + off, verified in
-# notes/sm90/instr/jmx.md — BRX is the RELATIVE twin) keeps the resume
-# path entirely in data memory — no code patch of a line the spin loop
-# keeps refetching (a patched BRA in the spin line races the loop's own
-# refetches and can execute stale exactly once — fatal when the stale
-# word is the placeholder branch).
-SLOT_WORDS = 46
-_SLOT_TMPL = """#def_label(dbgslot{k})
-    P2R R250, PR;[7:7:{{0,1,2,3,4,5}}:4:0]
-    STG.E.STRONG.GPU desc[{{UR60,UR61}}][{{R246,R247}}+{prs}], R250;[7:7:{{}}:8:0]
-    MOV32I R251, {kid};[7:7:{{}}:4:0]
-    STG.E.STRONG.GPU desc[{{UR60,UR61}}][{{R246,R247}}+0x10], R251;[7:7:{{}}:8:0]
-#def_label(dbgspin{k})
-    CCTL.I.IVALL;[7:7:{{}}:4:0]
-    LDG.E.STRONG.GPU R250, desc[{{UR60,UR61}}][{{R246,R247}}+{rel}];[5:7:{{}}:8:0]
-    ISETP.NE.AND P0, PT, R250, 0x0, PT;[7:7:{{5}}:13:1]
-    @!P0 BRA #label(dbgspin{k});[7:7:{{}}:6:0]
-    LDG.E.64.STRONG.GPU {{R252,R253}}, desc[{{UR60,UR61}}][{{R246,R247}}+0x18];[4:7:{{}}:8:0]
-    LDG.E.STRONG.GPU R250, desc[{{UR60,UR61}}][{{R246,R247}}+{prs}];[3:7:{{}}:8:0]
-    R2P PR, R250;[7:7:{{3}}:13:1]
-    CCTL.I.IVALL;[7:7:{{}}:4:0]
-""" + "    NOP;[7:7:{{}}:8:0]\n" * 32 + """    CCTL.I.IVALL;[7:7:{{}}:4:0]
-    JMX {{R252,R253}};[7:7:{{4}}:4:0]
+# heap-resident breakpoint handler: RPCMOV the site VA, report it, save
+# the kernel's PR, snapshot the generation, spin until it changes,
+# restore PR, hardened IVALL, RET to the site (re-executes the restored
+# original instruction).  Runs in the hitting warp's context with the
+# prologue-established R246/R247 (ctrl) and UR60/UR61 (cdesc).
+_HANDLER = """    RPCMOV.32 R248, Rpc.LO;[0:7:{}:13:1]
+    RPCMOV.32 R249, Rpc.HI;[0:7:{}:13:1]
+    STG.E.64.STRONG.GPU desc[{UR60,UR61}][{R246,R247}+0x10], {R248,R249};[7:7:{0,1}:8:0]
+    P2R R250, PR;[7:7:{}:4:0]
+    STG.E.STRONG.GPU desc[{UR60,UR61}][{R246,R247}+0x18], R250;[7:7:{}:8:0]
+    LDG.E.STRONG.GPU R251, desc[{UR60,UR61}][{R246,R247}+0x8];[3:7:{}:8:0]
+#def_label(dbgspin)
+    LDG.E.STRONG.GPU R250, desc[{UR60,UR61}][{R246,R247}+0x8];[5:7:{}:8:0]
+    ISETP.NE.AND P0, PT, R250, R251, PT;[7:7:{3,5}:13:1]
+    @!P0 BRA #label(dbgspin);[7:7:{}:6:0]
+    LDG.E.STRONG.GPU R250, desc[{UR60,UR61}][{R246,R247}+0x18];[2:7:{}:8:0]
+    R2P PR, R250;[7:7:{2}:13:1]
+    CCTL.I.IVALL;[7:7:{}:4:0]
+""" + "    NOP;[7:7:{}:8:0]\n" * 32 + """    CCTL.I.IVALL;[7:7:{}:4:0]
+    RET.ABS.NODEC PT, {R248,R249}, 0x0;[7:7:{}:8:1]
 """
 
 _EPILOGUE_GUARD = "    EXIT;[7:7:{}:4:0]\n"
@@ -188,29 +194,18 @@ _EPILOGUE_GUARD = "    EXIT;[7:7:{}:4:0]\n"
 _FN_RE = re.compile(r"^(#fn\s+\w+)\(([^)]*)\)\s*\{\s*$")
 
 
-def _bra_word(delta_insts: int) -> tuple[int, int]:
-    """Encoding of `BRA` branching delta_insts from its own position
-    (label self-calibration inside a dummy function)."""
-    pad = "NOP;" + _BRK + "\n"
-    if delta_insts > 0:
-        src = ("#fn x() {\nBRA #label(p);" + _BRK + "\n"
-               + pad * (delta_insts - 1)
-               + "#def_label(p)\nNOP;" + _BRK + "\n}\n")
-        return assemble_kernel(src, check_deps=False).encoded[0]
-    if delta_insts < 0:
-        src = ("#fn x() {\n#def_label(p)\n"
-               + pad * (-delta_insts - 1)
-               + "BRA #label(p);" + _BRK + "\n}\n")
-        return assemble_kernel(src, check_deps=False).encoded[-1]
-    raise ValueError("zero-length branch")
+def _call_word() -> tuple[int, int]:
+    """Encoding of the breakpoint patch word
+    `CALL.ABS.NOINC PT, {R252,R253}, 0x0` (target VA in R252/R253)."""
+    src = "#fn x() {\nCALL.ABS.NOINC PT, {R252,R253}, 0x0;[7:7:{}:5:1]\n}\n"
+    return assemble_kernel(src, check_deps=False).encoded[0]
 
 
 class DebugInfo:
     """Layout metadata of an injected source."""
-    def __init__(self, source: str, n_body: int, max_bps: int):
+    def __init__(self, source: str, n_body: int):
         self.source = source            # injected dialect source
         self.n_body = n_body            # original instruction count
-        self.max_bps = max_bps
 
     def injected_index(self, orig_index: int) -> int:
         """Original-source instruction index -> injected-source index."""
@@ -218,21 +213,20 @@ class DebugInfo:
             raise IndexError(orig_index)
         return orig_index + PROLOGUE_LEN
 
-    def slot_index(self, slot: int) -> int:
-        """Injected index of slot k's first word."""
-        return PROLOGUE_LEN + self.n_body + 1 + slot * SLOT_WORDS
 
-
-def inject_debugger(source: str, max_bps: int = 32,
+def inject_debugger(source: str, max_bps: int = 0,
                     allow_cdesc_urs: bool = False) -> DebugInfo:
-    """Inject the debugger prologue + breakpoint slots into a single-
-    function dialect source.  The function gains a trailing `dbgctrl<8>`
-    parameter the host must pass (device-memory ctrl buffer).
+    """Inject the debugger prologue into a single-function dialect source.
+    The function gains a trailing `dbgctrl<8>` parameter the host must
+    pass (device-memory ctrl buffer).
+
+    max_bps: accepted for v1 API compatibility; v2 has no slots, so the
+    number of concurrently armed breakpoints is unlimited.
 
     allow_cdesc_urs: skip the UR60/UR61 rejection — safe only when the
     source uses UR60/UR61 exclusively for the default global cache
     descriptor (e.g. wtrace-instrumented sources, which load the same
-    cdesc the debugger prologue/slots rely on)."""
+    cdesc the debugger prologue/handler rely on)."""
     lines = source.splitlines()
     fn_at = None
     for i, ln in enumerate(lines):
@@ -248,7 +242,7 @@ def inject_debugger(source: str, max_bps: int = 32,
             continue
         if re.search(rf"\b{r}\b", body):
             raise ValueError(f"kernel uses debugger-reserved {r}")
-    for lbl in ("dbggate", "dbgslot", "dbgspin"):
+    for lbl in ("dbggate", "dbgspin"):
         if lbl in body:
             raise ValueError(f"label collision: {lbl}")
 
@@ -262,19 +256,14 @@ def inject_debugger(source: str, max_bps: int = 32,
         + lines[fn_at + 1:]
     # instruction count of the ORIGINAL body (for index mapping)
     n_body = len(assemble_kernel(source, check_deps=False).encoded)
-    slots = "".join(_SLOT_TMPL.format(k=k, kid=k + 1,
-                                      rel=hex(0x20 + 4 * k),
-                                      prs=hex(0x20 + 4 * max_bps + 4 * k))
-                    for k in range(max_bps))
-    # insert a safety EXIT + the slots before the final closing brace
+    # safety EXIT before the closing brace (fall-through guard)
     text = "\n".join(out)
     close = text.rstrip().rfind("}")
-    text = (text[:close] + _EPILOGUE_GUARD + slots + text[close:])
-    info = DebugInfo(text, n_body, max_bps)
+    text = (text[:close] + _EPILOGUE_GUARD + text[close:])
+    info = DebugInfo(text, n_body)
     # validate the whole thing assembles, and self-check the layout
     enc = assemble_kernel(text, check_deps=False).encoded
-    assert len(enc) == info.slot_index(max_bps - 1) + SLOT_WORDS, \
-        "injected layout mismatch"
+    assert len(enc) == PROLOGUE_LEN + n_body + 1, "injected layout mismatch"
     return info
 
 
@@ -282,11 +271,10 @@ def inject_debugger(source: str, max_bps: int = 32,
 # host-side debugger
 # ---------------------------------------------------------------------------
 class Breakpoint:
-    def __init__(self, dbg: "Debugger", bp_id: int, slot: int,
+    def __init__(self, dbg: "Debugger", bp_id: int,
                  orig_index: int, orig_word: tuple[int, int]):
         self.dbg = dbg
-        self.id = bp_id                 # 1-based; written to ctrl+0x10
-        self.slot = slot
+        self.id = bp_id                 # host-side, monotonically increasing
         self.orig_index = orig_index    # index in the ORIGINAL source
         self.orig_word = orig_word
         self.armed = True
@@ -298,11 +286,13 @@ class Debugger:
     The kernel is launched with its normal args plus the dbgctrl buffer;
     it parks at the entry gate until release().  Arm breakpoints before
     release (reliable) — mid-run arming works only for code that
-    refetches (not tight loops).
+    refetches (not tight loops, loop/fetch-buffer replay defeats IVALL).
     """
 
+    CTRL_BYTES = 0x28
+
     def __init__(self, source: str, func: str | None = None,
-                 max_bps: int = 32, allow_cdesc_urs: bool = False):
+                 max_bps: int = 0, allow_cdesc_urs: bool = False):
         self.info = inject_debugger(source, max_bps,
                                     allow_cdesc_urs=allow_cdesc_urs)
         self.mod = CudaModule(assemble(self.info.source, check_deps=False))
@@ -310,13 +300,20 @@ class Debugger:
                                        check_deps=False).encoded
         self.func = func or self._only_function()
         self.patcher = Patcher()
-        self.ctrl = self.mod.devmem_alloc(0x20 + 8 * max_bps)
-        self.mod.device_write(self.ctrl, bytes(0x20 + 8 * max_bps))
+        self.ctrl = self.mod.devmem_alloc(self.CTRL_BYTES)
+        self.mod.device_write(self.ctrl, bytes(self.CTRL_BYTES))
+        # heap-resident handler: plain device memory, host-written
+        self.handler = self.mod.devmem_alloc(0x400)
+        words = b"".join(struct.pack("<QQ", lo, hi)
+                         for lo, hi in assemble_flat(_HANDLER))
+        self.mod.device_write(self.handler, words)
+        self._wr64(0x20, self.handler)      # prologue loads this into R252/3
         self.stream = CudaModule.stream_create()
         self._bps: dict[int, Breakpoint] = {}
-        self._by_slot: dict[int, Breakpoint] = {}
-        self._free_slots = list(range(max_bps))
+        self._by_index: dict[int, Breakpoint] = {}
         self._next_id = 1
+        self._gen = 0
+        self._patch_base = _call_word()
 
     def _only_function(self) -> str:
         m = re.search(r"#fn\s+(\w+)", self.info.source)
@@ -326,8 +323,7 @@ class Debugger:
     # -- lifecycle -----------------------------------------------------------
     def launch(self, args: list, grid=(1,), block=(1,)) -> None:
         """Launch the target (args = the kernel's normal args); it parks
-        at the gate.  dbgctrl is appended automatically.  Breakpoints
-        park the whole warp (the site BRA is warp-uniform)."""
+        at the gate.  dbgctrl is appended automatically."""
         self.mod.launch(self.func, grid=grid, block=block,
                         args=args + [self.ctrl], stream=self.stream)
 
@@ -337,6 +333,13 @@ class Debugger:
 
     def _wr32(self, off: int, val: int) -> None:
         self.mod.device_write(self.ctrl + off, struct.pack("<I", val))
+
+    def _rd64(self, off: int) -> int:
+        return struct.unpack("<Q", self.mod.device_read(
+            self.ctrl + off, 8))[0]
+
+    def _wr64(self, off: int, val: int) -> None:
+        self.mod.device_write(self.ctrl + off, struct.pack("<Q", val))
 
     def wait_base(self, timeout: float = 5.0) -> int:
         t0 = time.time()
@@ -374,58 +377,55 @@ class Debugger:
         return self.base() + self.info.injected_index(orig_index) * 16
 
     def arm(self, orig_index: int) -> Breakpoint:
-        """Patch the site word with BRA into a free slot."""
-        if not self._free_slots:
-            raise RuntimeError("no free breakpoint slots")
-        slot = self._free_slots.pop(0)
-        bp_id = self._next_id
-        self._next_id += 1
-        self._wr32(0x20 + 4 * slot, 0)   # release flag low (slot is empty)
+        """Patch the site word with the CALL into the heap handler."""
+        if orig_index in self._by_index:
+            raise RuntimeError(f"breakpoint already armed at {orig_index}")
         inj = self.info.injected_index(orig_index)
         site = self.base() + inj * 16
-        slot_idx = self.info.slot_index(slot)
-        bra = _bra_word(slot_idx - inj)
-        self.patcher.patch(site, bra)
-        bp = Breakpoint(self, bp_id, slot, orig_index, self.encoded[inj])
-        self._bps[bp_id] = bp
-        self._by_slot[slot] = bp
+        orig = self.encoded[inj]
+        self.patcher.patch(site, self._patch_base)
+        bp = Breakpoint(self, self._next_id, orig_index, orig)
+        self._next_id += 1
+        self._bps[bp.id] = bp
+        self._by_index[orig_index] = bp
         return bp
 
     def disarm(self, bp: Breakpoint) -> None:
         """Restore the original word (only when NOT parked at this bp)."""
         self.patcher.patch(self._site_va(bp.orig_index), bp.orig_word)
         bp.armed = False
-        self._free_slots.append(bp.slot)
         del self._bps[bp.id]
-        del self._by_slot[bp.slot]
+        del self._by_index[bp.orig_index]
 
     def wait_hit(self, timeout: float = 30.0) -> Breakpoint:
         """Wait until a breakpoint parks the target; returns the bp."""
         t0 = time.time()
         while True:
-            hid = self._rd32(0x10)
-            if hid:
-                bp = self._by_slot.get(hid - 1)
+            va = self._rd64(0x10)
+            if va:
+                inj = (va - self.base()) // 16
+                orig = inj - PROLOGUE_LEN
+                bp = self._by_index.get(orig)
                 if bp is None:
-                    raise RuntimeError(f"hit from unarmed slot {hid - 1}")
+                    raise RuntimeError(
+                        f"hit from unarmed site {hex(va)} (orig {orig})")
                 return bp
             if time.time() - t0 > timeout:
                 raise TimeoutError("no breakpoint hit")
             time.sleep(0.001)
 
     def resume(self, bp: Breakpoint) -> None:
-        """Restore the site, point the slot's return BRA at the site, and
-        release the parked warp.  The breakpoint is CONSUMED (site keeps
-        its original word; the slot is freed) — to break again, re-arm.
-        Re-arming mid-run against a tight loop is unreliable (loop
-        replay, see probe exp4); prefer arming at the gate."""
+        """Restore the site, then bump the generation: the parked handler
+        restores the kernel's PRs, self-invalidates, and RETs back to the
+        site, re-executing the restored original instruction.  The
+        breakpoint is CONSUMED (site keeps its original word) — to break
+        again, re-arm.  Re-arming mid-run against a tight loop is
+        unreliable (loop replay); prefer arming at the gate."""
         site = self._site_va(bp.orig_index)
         self.patcher.patch(site, bp.orig_word)           # restore
-        self.mod.device_write(self.ctrl + 0x18,
-                              struct.pack("<Q", site))   # return VA
-        self._wr32(0x10, 0)                              # clear hit
-        self._wr32(0x20 + 4 * bp.slot, 1)                # release the slot
+        self._wr64(0x10, 0)                              # clear hit
+        self._gen += 1
+        self._wr32(0x08, self._gen)                      # release
         bp.armed = False
-        self._free_slots.append(bp.slot)
         del self._bps[bp.id]
-        del self._by_slot[bp.slot]
+        del self._by_index[bp.orig_index]

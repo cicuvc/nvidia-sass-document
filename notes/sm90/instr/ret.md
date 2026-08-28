@@ -81,3 +81,18 @@ Every non-inlined `__device__` function ends in `RET.REL.NODEC R<n>` where `R<n>
   emitted by the sampled ptxas (register ABI uses `.REL.NODEC` exclusively).
 - The uniform-register (`URa`) RET forms are unexercised by ptxas here (patch-verified
   only); their ABI use case is unobserved.
+
+## Empirical (sm_120, sassdbg probes — hand-assembled, GPU-verified)
+
+- **The jump target is always `Ra + disp` (disp in bytes)**, regardless
+  of `RET_DEPTH`: `RET.ABS.DEC` with a correct return VA works at
+  nesting depth 2 (paired `CALL.INC`s), and with `Ra=RZ` faults 700 —
+  the HW call-depth stack never supplies the PC; `DEC` only decrements
+  the counter.  This resolves the open question above: `.DEC` is
+  counter bookkeeping, not a stack pop.
+- `RET.ABS.NODEC {RpcPair}, 0x10` after `RPCMOV` returns to the
+  instruction after the CALL (RPC = VA of the CALL itself); `, 0x0`
+  re-executes the CALL-site instruction — used by sassdbg's breakpoint
+  handler to re-run the restored original word.
+- Returns into **heap-resident** code (and back into kernel text) are
+  plain absolute-VA jumps; no segment checks observed on sm_120.

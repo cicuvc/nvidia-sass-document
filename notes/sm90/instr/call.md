@@ -91,3 +91,30 @@ ABI, HW call-depth stack unused). Most device functions are inlined and emit no 
   emitted by the sampled ptxas; only the register-ABI `.NOINC`/`.NODEC` path is observed.
 - Absolute/const/uniform CALL forms are unexercised by ptxas here (verified only via
   patching); their real ABI usage (e.g. indirect/virtual calls) is unobserved.
+
+## Empirical (sm_120, sassdbg probes — hand-assembled, GPU-verified)
+
+- **`CALL.ABS` (register form) can target plain device memory** ("heap
+  code"): a devmem buffer written by the host with cuMemcpy is
+  fetched/executed as SASS with no icache ceremony.  This is the
+  foundation of sassdbg's slot-less breakpoint handler.
+- **`CALL.ABS` writes RPC = VA of the CALL instruction** (see
+  [rpcmov.md](rpcmov.md)); **`CALL.REL` does not write RPC at all**
+  (RPCMOV after it reads indeterminate data).
+- `CALL_DEPTH` `INC`/`NOINC` only maintain a hardware call-depth
+  counter: all four {INC,NOINC}x{DEC,NODEC} CALL/RET combinations work
+  when the return VA is supplied in a register; the target is always
+  `Ra + disp` (disp in **bytes**).  A `RET.ABS.DEC` with `Ra=RZ` faults
+  700 — the depth counter never supplies the PC.
+- The **ABS-immediate form** (`call_abs__RIR`, field = VA>>2 verified in
+  the encoding) faulted 700 jumping at both a heap VA and a small
+  kernel-relative offset — its runtime semantics remain uncracked; use
+  the register form.
+- **Divergent CALL.ABS works**: a half-warp group enters the callee with
+  its own RPC and returns correctly.
+- **CBU operand waits need the `{req}` bitset**: a CALL whose target
+  register pair came from an LDC faulted 718 (INVALID_PC) when the wait
+  was expressed via the `rd` field alone; `req={n}` on a preceding
+  instruction (or on the CALL) works.
+- Open questions above are partially resolved by this: the register-ABI
+  observation stands, and `.INC`/`.DEC` are confirmed counter-only.
