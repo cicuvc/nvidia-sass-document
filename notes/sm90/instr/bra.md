@@ -92,9 +92,17 @@ BRA-form frequency in ~125.7k libcublas branches:
   `bra_uniform_pred_` (0x1547 / `UPq`) variant — these exist in spec but ptxas doesn't
   emit them here.
 
+The modifier machinery is bit-for-bit the same as JMP and was resolved by direct
+execution in `sassdbg/probe_jmp_modifiers.py` (H20 SM90 and RTX 5090 SM120); see
+[`jmp.md`](jmp.md#div--conv-branch-on-execution-group-convergence) for the full matrix.
+In short, base `.DIV`/`.CONV` branch on whether the current execution group is a proper
+subset/full warp; the `URb` form tests whether its requested-lane mask includes lanes
+missing from that group; and `.U.ALL/.ANY` uniformly reduces `Pg` over the current group.
+This gives the observed `BRA.DIV URb, slow_path` a concrete interpretation: enter the
+slow path when a warp collective requests participants that are absent from the current
+SIMT group.
+
 ## Open questions
-- Exact microarchitectural role of `URb` in `BRA.DIV URb` (uniform-register form): it
-  supplies a uniform value/thread-set for the divergent branch, but whether it is a target
-  set, active mask, or reconvergence hint is not pinned down from the spec alone.
-- `.CONV`, `.INC`/`.DEC`, and the `UPq` uniform-predicate form are spec-defined but
-  unsampled; their exact printed spelling/ordering is inferred from FORMAT, not verified.
+- `.INC`/`.DEC` and nontrivial simultaneous `Pg`+`Pp` combinations remain unprobed.
+- `.CONV`, `~URb`, and the `UPq` form were exercised through the encoding-identical JMP
+  classes, but are still absent from the sampled ptxas/cublas BRA corpus.

@@ -22,8 +22,9 @@ the halves as `Rpc.LO` / `Rpc.HI` (`PC_REG` operand); 64-bit forms name
   (re-execute the site — the breakpoint-handler pattern).
 - **ABS uniform-register and immediate target forms execute the call but
   do NOT populate RPC**; `RPCMOV` in their callee reads changing launch
-  residue.  This is independent of INC/NOINC.  A handler for these forms
-  must receive its return VA separately.
+  residue on sm_120 and stable zero on H20/sm_90.  This is independent
+  of INC/NOINC.  A handler for these forms must receive its return VA
+  separately.
 - **`CALL.REL` also does NOT write RPC** — `RPCMOV` after a REL call reads
   an indeterminate value (observed both `0` and launch residue across
   runs).  ptxas's `CALL.REL.NOINC` ABI never touches RPC, consistent with
@@ -38,6 +39,28 @@ the halves as `Rpc.LO` / `Rpc.HI` (`PC_REG` operand); 64-bit forms name
 - RPCMOV results feed later instructions like any `int_pipe` result;
   claiming the same write scoreboard as an outstanding LDCU lets a
   single `{req}` wait cover both (see `sassdbg/patch.py` handler).
+
+### `RPC_WRITERS` latency set vs. visible RPC writes (sm_120)
+
+`sm_90_latencies.txt` places many CBU operations in `RPC_WRITERS`, but
+this is a **resource-hazard classification**, not a promise that every
+member overwrites the value readable through `RPCMOV`.  In
+`sassdbg/probe_rpc_writers.py`, Rpc.LO was first seeded to `0x12345000`,
+then one candidate operation was executed, followed by 16 NOPs and one
+Rpc.LO read:
+
+| observed visible effect | operations |
+|---|---|
+| RPC = instruction PC | `WARPSYNC.ALL`, `BSYNC`, `BRX R`, `JMX R`, `RET R`, `CALL.ABS R` |
+| RPC = next instruction PC | `BREAK`, `YIELD`, `NANOSLEEP 0` |
+| RPC remains the sentinel | `BRA`, `JMP imm`, `BRXU`, `JMXU`, `RET UR`, `CALL.ABS UR`, `CALL.ABS imm` |
+
+NOP also preserves the sentinel as the negative control.  Thus latency
+analysis must honor the whole `RPC_WRITERS` set and its 9-cycle resource
+dependency, while semantic analysis must remain variant-specific.  The
+current-PC/next-PC values plausibly serve replay, reconvergence, and
+resume bookkeeping, but that role is an inference rather than a
+spec-stated guarantee.
 
 ## Use in sassdbg
 

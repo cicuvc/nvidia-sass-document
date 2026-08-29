@@ -1,4 +1,4 @@
-"""Probe whether CALL.ABS R/UR/IMM forms populate RPC on SM120.
+"""Probe whether CALL.ABS R/UR/IMM forms populate RPC on SM90/SM120.
 
 The heap-resident handler reports RPC at out+8 and returns through RPC+0x10.
 The caller reports a LEPC value at out+0x10, allowing an exact comparison

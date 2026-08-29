@@ -103,6 +103,10 @@ ABI, HW call-depth stack unused). Most device functions are inlined and emit no 
   the CALL instruction** (see [rpcmov.md](rpcmov.md)).  ABS uniform and
   immediate targets both reach the handler but leave RPC indeterminate;
   `CALL.REL` likewise does not write a usable RPC.
+  This target-kind split is identical on H20/sm_90 and RTX 5090/sm_120:
+  H20 reads a stable zero from the unwritten RPC for UR/imm calls, while
+  sm_120 commonly exposes changing launch residue.  INC vs NOINC does
+  not change the result.
 - `CALL_DEPTH` `INC`/`NOINC` and `RET_DEPTH` `DEC`/`NODEC` have no
   observed effect on sm_120: all four combinations work with an explicit
   return VA, `BMOV API_CALL_DEPTH` is unchanged (including when seeded to

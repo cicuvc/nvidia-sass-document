@@ -17,6 +17,50 @@ target:
 
 Like `BRA`, it takes the optional guard `@Pg` and divergence predicate operand `Pp`.
 
+### `.DIV` / `.CONV`: branch on execution-group convergence
+
+Let `A` be the lane mask of the **current SIMT execution group** (not necessarily the
+whole warp).  Direct execution on both H20 (SM90) and RTX 5090 (SM120) gives:
+
+- Base `JMP.DIV target` jumps iff the current group is divergent (`A != 0xffffffff`);
+  `JMP.CONV target` is its complement and jumps iff the full warp is present.
+- The uniform-register form treats `[~]URb` as a 32-bit requested-lane mask `M`.
+  `JMP.DIV URb, target` jumps iff `M` contains a lane absent from the current group,
+  i.e. `(M & ~A) != 0`; `JMP.CONV URb, target` jumps iff `(M & ~A) == 0`.
+  When the condition holds, every lane in `A` transfers together.  `~URb` complements
+  `M` before this test.
+- Supplying `Pp` instead gives a per-lane divergence predicate.  With a full warp and
+  `P0=true` on lanes 0--15, `JMP.DIV P0, target` transfers exactly lanes 0--15, while
+  `JMP.CONV P0, target` does not transfer; with `P0=true` on all lanes, the outcomes
+  reverse (`DIV` falls through, `CONV` transfers all lanes).  Thus `Pp` describes the
+  proposed branch subset: `.DIV` admits a partially selected/diverging subset, whereas
+  `.CONV` admits the fully selected/converged case.  The all-false edge is unobservable
+  as a transfer, and combinations of nontrivial `Pg` and `Pp` remain unprobed.
+
+The `URb` rule explains the real `BRA.DIV URb, slow_path` pattern around warp
+collectives: branch to emulation when the requested participant mask names lanes that
+are not in the currently executing group.  The base form is equivalent to requesting
+the full-warp mask for this convergence test.
+
+### `.U[.ALL|.ANY]`: uniformize the guard
+
+`.U` turns the lane predicate guard into one uniform branch decision over `A`:
+
+```
+JMP.U.ALL: take = ALL lanes in A satisfy Pg    (ALL is the encoded default)
+JMP.U.ANY: take = ANY lane  in A satisfies Pg
+```
+
+All lanes in `A` then either jump together or fall through together.  For a full warp
+where `P0` is true only on lanes 0--15, `@P0 JMP.U.ALL` falls through for all 32 lanes,
+whereas `@P0 JMP.U.ANY` transfers all 32.  After first splitting the warp so that
+`A={0..15}`, `@P0 JMP.U.ALL` transfers that entire 16-lane group, proving that the
+reduction is scoped to the current execution group rather than the original warp.
+
+The uniform-predicate form adds a uniform gate: `JMP.U[.ANY] [!]UPq, target` takes only
+when both the reduced `Pg` result and `[!]UPq` are true.  H20 tests with `UP0=false`
+showed `UP0` suppressing an otherwise-true `.ANY` and `!UP0` restoring it.
+
 ## Variant overview (12 CLASSes, 6 distinct opcodes)
 | opcode `{b91,[11:0]}` | family | CLASS | extra operand |
 |-----------------------|--------|-------|---------------|
@@ -87,11 +131,26 @@ self-test 10/10, plus a **randomized battery of 300 patched encodings decoded 10
 Hand-check absolute imm: `Sa=(1<<8)|0x24=0x124`, `0x124*4 = 0x490` (no PC added).
 Hand-check const signed off: field `0x3d78` → sx14 = `-648` → `-648*4 = -0xa20`.
 
+## Empirical modifier probe
+
+`sassdbg/probe_jmp_modifiers.py` executes absolute JMP targets from heap-resident SASS
+and records the decision per lane.  The key matrix matched exactly on H20 (SM90) and
+RTX 5090 (SM120):
+
+| current group `A` | operand / guard | `.DIV` | `.CONV` / `.U.ALL` | `.U.ANY` |
+|---|---|---|---|---|
+| all 32 | no operand | fall through | take all | — |
+| lanes 0--15 | no operand | take 0--15 | fall through | — |
+| lanes 0--15 | `URb=0x0000ffff` | fall through | take 0--15 | — |
+| lanes 0--15 | `URb=0xffff0000` | take 0--15 | fall through | — |
+| all 32 | `@P0`, P0 true on 0--15 | — | fall through all | take all |
+| lanes 0--15 | `@P0`, P0 true on 0--15 | — | take 0--15 | take 0--15 |
+
 ## Open questions
-- Since ptxas never emits `JMP`, real-world operand distributions (which banks/RTV banks,
-  `.DIV`/`.CONV` usage) are unobserved; only the patch-derived rendering is confirmed.
-- `RTV banks` (24–31) and the `depth` (`.INC`/`.DEC`) call-depth semantics for `JMP` are
-  spec-defined but unexercised here.
+- Since ptxas never emits `JMP`, real-world target operand distributions (constant/RTV
+  banks) remain unobserved; modifier semantics instead come from the direct probe above.
+- `RTV banks` (24–31), nontrivial simultaneous `Pg`+`Pp`, and `depth`
+  (`.INC`/`.DEC`) on JMP remain unexercised.
 
 ## Resolved: absolute semantics confirmed; labels do NOT work for JMP (SM120)
 
