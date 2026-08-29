@@ -40,6 +40,7 @@ Known limits:
 from __future__ import annotations
 
 import sys
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -47,6 +48,7 @@ _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
 
 from assembler.sass_parser import Lexer, Parser            # noqa: E402
+from assembler.arch import spec_const_map                  # noqa: E402
 from sassdbg.patch import Debugger, Breakpoint             # noqa: E402
 
 # branch instructions whose LABEL operand is the taken target
@@ -61,6 +63,7 @@ class CfgInst:
     mnemonic: str
     predicated: bool
     label: str | None          # LABEL operand of a branch, if any
+    text: str = ""             # raw source line (for thunk replay)
 
 
 class Cfg:
@@ -69,6 +72,8 @@ class Cfg:
 
     def __init__(self, source: str):
         decl = Parser(Lexer(source).tokenize()).parse_kernel()
+        srclines = source.splitlines()
+        self.param_names: list[str] = [p.name for p in decl.params]
         self.insts: list[CfgInst] = []
         self.labels: dict[str, int] = {}
         for inst in decl.instructions:
@@ -77,9 +82,11 @@ class Cfg:
                 continue
             lbl = next((op.value for op in inst.operands
                         if op.kind.name == "LABEL"), None)
+            text = (srclines[inst.line - 1].strip()
+                    if 0 < inst.line <= len(srclines) else "")
             self.insts.append(CfgInst(
                 idx=len(self.insts), mnemonic=inst.mnemonic.upper(),
-                predicated=inst.pred is not None, label=lbl))
+                predicated=inst.pred is not None, label=lbl, text=text))
         # BSYNC -> matching BSSY target (nearest unmatched BSSY, nested)
         self._bsync_target: dict[int, int] = {}
         stack: list[tuple[int, int]] = []      # (bssy idx, target idx)
@@ -130,6 +137,16 @@ class Stepper:
     Multi-warp (block=(32*N,)): run_to_entry_all() / step_all(state)
     drive EVERY parked warp one instruction at a time (lockstep of the
     parked set); per-warp executed paths land in self.paths[warp].
+
+    M8: divergence-aware.  Stepping uses PERSISTENT breakpoints +
+    per-group thunk replay (the site word is never restored, so there
+    is no restore-vs-refetch race and loop re-hits need no re-arm).
+    A warp may split into several parked GROUPS at different sites;
+    step_groups() advances a set of (warp, group) pairs and returns
+    the new set (a hit whose mask covers several released groups is
+    a merge — the groups reconverged at that site).  step()/step_all()
+    are the non-divergent compat wrappers (they raise if a warp is
+    parked as more than one group).
     """
 
     def __init__(self, source: str, func: str | None = None,
@@ -140,42 +157,158 @@ class Stepper:
         self.path: list[int] = []           # single-warp view (= paths[0])
         self.paths: dict[int, list[int]] = {}
         self.n_warps = 1
+        self._parked: list[tuple[int, object]] = []   # (warp, _Group)
 
     def launch(self, args: list, grid=(1,), block=(32,)) -> None:
         self.dbg.launch(args, grid=grid, block=block)
         self.n_warps = self.dbg.n_warps
         self.paths = {w: [] for w in range(self.n_warps)}
+        self.path = self.paths[0]
         self.dbg.wait_base()
+
+    def _group_of(self, w: int, bp: Breakpoint):
+        for gw, g in self._parked:
+            if gw == w and g.bp is bp:
+                return g
+        raise RuntimeError(f"no parked group of warp {w} at "
+                           f"inst {bp.orig_index}")
+
+    def _replay_insts(self, idx: int) -> list[str]:
+        """Thunk INST1 for the instruction at idx.  Plain instructions
+        replay verbatim.  BRA is PC-relative (can't reach the kernel
+        from the blob) so it becomes absolute JMP(s) — predicated BRA
+        keeps its guard predicate on the target JMP, and build_thunk's
+        appended fall-through JMP completes the emulation.  BSSY's Sa
+        is architecturally inert (probe-verified), so it replays with a
+        thunk-local label."""
+        ci = self.cfg.insts[idx]
+        if ci.mnemonic == "BRA" and ci.label is not None:
+            tgt = self.dbg._site_va(self.cfg.target(ci.label))
+            jmp = f"JMP 0x{tgt:x};[7:7:{{}}:6:0]"
+            if not ci.predicated:
+                return [jmp]
+            return [f"{ci.text.split()[0]} {jmp}"]
+        text = ci.text
+        # thunk assembly has no #fn context: resolve the const-bank
+        # directives to absolute c[0x0][...] addresses
+        text = re.sub(
+            r"#param\((\w+)\)",
+            lambda m: "c[0x0][0x%x]" % self.dbg.res_params[
+                self.cfg.param_names.index(m.group(1))][1],
+            text)
+        text = re.sub(
+            r"#spec_const\((\w+)\)",
+            lambda m: "c[0x%x][0x%x]" % spec_const_map()[m.group(1)],
+            text)
+        if "#label(" in text:               # BSSY: thunk-local label
+            text = re.sub(r"#label\([^)]*\)", "#label(tk)", text)
+            return [text, "#def_label(tk)"]
+        return [text]
+
+    def step_groups(self, groups: list, timeout: float = 30.0) -> list:
+        """Advance each parked (warp, group) by exactly one instruction;
+        returns the new list of (warp, group).  Groups whose parked
+        instruction is terminal drop out (they run to completion).
+        Several groups landing on the same site merge into one returned
+        group (combined lane mask)."""
+        succ_sites: set[int] = set()
+        live: list[tuple[int, object, list[int]]] = []
+        terminal: list[Breakpoint] = []
+        for w, g in groups:
+            nxt = self.cfg.next_pcs(g.bp.orig_index)
+            if nxt:
+                live.append((w, g, nxt))
+                succ_sites.update(nxt)
+            elif g.bp not in terminal:
+                # resume() releases EVERY group parked at the site (all
+                # warps) and consumes the bp — do it once per site
+                terminal.append(g.bp)
+        for bp in terminal:
+            self.dbg.resume(bp)              # terminal: run to exit
+        # persistent bps: arm successors not already armed (parked
+        # sites stay armed; self-edges are already armed)
+        already = {b.orig_index for b in self.dbg._bps.values()}
+        for s in sorted(succ_sites - already):
+            self.dbg.arm(s)
+        for w, g, _nxt in live:
+            self.dbg.release_group(w, g,
+                                   self._replay_insts(g.bp.orig_index))
+        # collect: pending entries track the REMAINING unaccounted lane
+        # mask of each released group — a hit may deliver a subset
+        # (the group SPLIT) or lanes of several groups at once (they
+        # MERGED at the site).  An entry completes when all its lanes
+        # have been accounted by hits at its successor sites.  p[4]
+        # marks groups released FROM a BSYNC site: their thunk replays
+        # the barrier, so they may be blocked in it waiting for lanes
+        # still in flight — only then is the barrier assist needed.
+        pending = [[w, g, set(nxt), g.mask,
+                    self.cfg.insts[g.bp.orig_index].mnemonic == "BSYNC"]
+                   for w, g, nxt in live]
+        out: list[tuple[int, object]] = []
+        while pending:
+            hw, hg = self.dbg.wait_group_hit(timeout)
+            site = hg.bp.orig_index
+            hits = [(p, hg.mask & p[3]) for p in pending
+                    if p[0] == hw and site in p[2]]
+            hits = [(p, inter) for p, inter in hits if inter]
+            if not hits:
+                raise RuntimeError(
+                    f"unexpected hit from warp {hw} at "
+                    f"orig {site} mask {hg.mask:#x}")
+            for p, inter in hits:
+                p[3] &= ~inter
+            if (self.cfg.insts[site].mnemonic == "BSYNC"
+                    and any(p[3] and p[4] for p in pending)):
+                # BARRIER ASSIST: a released group is blocked inside its
+                # thunk's BSYNC waiting for the lanes that just parked
+                # here.  Release the parked group immediately (same
+                # cached thunk VA -> same-PC rendezvous) so the barrier
+                # can complete; the just-parked lanes are in flight
+                # again and will re-hit at a successor of the barrier.
+                nxt2 = set(self.cfg.next_pcs(site))
+                already = {b.orig_index for b in self.dbg._bps.values()}
+                for s in sorted(nxt2 - already):
+                    self.dbg.arm(s)
+                self.dbg.release_group(hw, hg, self._replay_insts(site))
+                for p, inter in hits:
+                    p[2] |= nxt2
+                    p[3] |= inter
+                continue
+            pending = [p for p in pending if p[3]]
+            if not any(g is hg for _, g in out):
+                out.append((hw, hg))
+                self.paths[hw].append(site)
+        # boundary invariant: armed sites == parked sites (disarm the
+        # sites nobody took — safe: everything is parked now)
+        parked = {g.bp.orig_index for _, g in out}
+        for b in list(self.dbg._bps.values()):
+            if b.orig_index not in parked:
+                self.dbg.disarm(b)
+        self._parked = out
+        return out
 
     def run_to_entry(self, timeout: float = 30.0) -> Breakpoint:
         bp = self.dbg.arm(0)
         self.dbg.release()
-        hit = self.dbg.wait_hit(timeout)
-        self.path.append(hit.orig_index)
-        return hit
+        w, g = self.dbg.wait_group_hit(timeout)
+        self._parked = [(w, g)]
+        self.paths[w].append(g.bp.orig_index)
+        return g.bp
 
     def step(self, bp: Breakpoint, timeout: float = 30.0
              ) -> Breakpoint | None:
         """Execute exactly the parked instruction; returns the next hit
-        (None when the instruction was terminal — kernel finished)."""
-        idx = bp.orig_index
-        nxt = self.cfg.next_pcs(idx)
-        if not nxt:
-            self.dbg.resume(bp)
+        (None when the instruction was terminal — kernel finished).
+        Non-divergent compat wrapper over step_groups."""
+        w = bp.warp if bp.warp is not None else 0
+        out = self.step_groups([(w, self._group_of(w, bp))], timeout)
+        if not out:
             return None
-        # arm before resume (safe: warp is parked); a self-edge must be
-        # armed AFTER resume because resume restores the site word
-        deferred = idx in nxt
-        armed = [self.dbg.arm(i) for i in nxt if i != idx]
-        self.dbg.resume(bp)
-        if deferred:
-            armed.append(self.dbg.arm(idx))
-        hit = self.dbg.wait_hit(timeout)
-        for b in armed:
-            if b.id != hit.id:
-                self.dbg.disarm(b)
-        self.path.append(hit.orig_index)
-        return hit
+        if len(out) > 1:
+            raise RuntimeError(
+                f"warp {w} diverged into {len(out)} groups: "
+                f"use step_groups()")
+        return out[0][1].bp
 
     def run(self, bp: Breakpoint | None, max_steps: int = 100000) -> None:
         """Step until the kernel exits (or max_steps)."""
@@ -197,53 +330,29 @@ class Stepper:
         self.dbg.arm(0)
         self.dbg.release()
         state: dict[int, Breakpoint] = {}
+        self._parked = []
         while len(state) < self.n_warps:
-            hit = self.dbg.wait_hit(timeout)
-            state[hit.warp] = hit
-            self.paths[hit.warp].append(hit.orig_index)
+            w, g = self.dbg.wait_group_hit(timeout)
+            state[w] = g.bp
+            self._parked.append((w, g))
+            self.paths[w].append(g.bp.orig_index)
         return state
 
     def step_all(self, state: dict[int, Breakpoint],
                  timeout: float = 30.0) -> dict[int, Breakpoint]:
         """Advance every parked warp by exactly one instruction; returns
         the new {warp: bp} (warps that executed a terminal instruction
-        drop out — they run to completion)."""
-        # union of successors over all parked warps
-        cur_sites = {bp.orig_index for bp in state.values()}
-        live: dict[int, Breakpoint] = {}        # warps expected to hit
-        succs: set[int] = set()
-        for w, bp in state.items():
-            nxt = self.cfg.next_pcs(bp.orig_index)
-            if nxt:
-                live[w] = bp
-                succs.update(nxt)
-        # arm successors that are not currently-armed sites; successors
-        # coinciding with a parked site (self-edges, another warp's
-        # current site) must be armed AFTER the resumes restore them
-        deferred = succs & cur_sites
-        armed = [self.dbg.arm(i) for i in succs - cur_sites]
-        for bp in {id(bp): bp for bp in state.values()}.values():
-            self.dbg.resume(bp)
-        armed += [self.dbg.arm(i) for i in deferred]
-        # collect every live warp's next hit
+        drop out — they run to completion).  Non-divergent compat
+        wrapper: raises when a warp is parked as several groups."""
+        groups = [(w, self._group_of(w, bp)) for w, bp in state.items()]
+        out = self.step_groups(groups, timeout)
         new_state: dict[int, Breakpoint] = {}
-        pending = set(live)
-        while pending:
-            hit = self.dbg.wait_hit(timeout)
-            assert hit.warp is not None
-            if hit.warp not in pending:
+        for w, g in out:
+            if w in new_state:
                 raise RuntimeError(
-                    f"unexpected hit from warp {hit.warp} at "
-                    f"orig {hit.orig_index} (waiting on {sorted(pending)})")
-            pending.discard(hit.warp)
-            new_state[hit.warp] = hit
-            self.paths[hit.warp].append(hit.orig_index)
-        # disarm the sites nobody took (still armed; each taken site is
-        # now the hitting warp's parked bp)
-        taken = {bp.orig_index for bp in new_state.values()}
-        for b in armed:
-            if b.orig_index not in taken:
-                self.dbg.disarm(b)
+                    f"warp {w} diverged into multiple groups: "
+                    f"use step_groups()")
+            new_state[w] = g.bp
         return new_state
 
     def run_all(self, state: dict[int, Breakpoint],

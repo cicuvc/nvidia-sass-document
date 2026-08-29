@@ -88,6 +88,7 @@ _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
 
 from assembler import assemble, assemble_flat, assemble_kernel, CudaModule  # noqa: E402
+from assembler import arch as _arch                          # noqa: E402
 
 # ---------------------------------------------------------------------------
 # patcher kernel (unchanged from v1 — host cuMemcpy cannot write module
@@ -157,9 +158,22 @@ BLOB_SZ = 0x100000              # per-warp blob (1 MiB)
 COMMS = 0x40000                 # comms offset inside a blob
 HANDLER_OFF = 0x80000           # handler code offset inside a blob
 CMD_OFF = 0x90000               # injected-command buffer offset in a blob
+THUNK_OFF = 0xA0000             # resume-thunk arena (128B-strided slots)
 COMMS_SEQ = COMMS + 0x18        # u32 command sequence (host bumps)
 COMMS_ACK = COMMS + 0x1c        # u32 command ack (handler echoes)
+COMMS_RTGT = COMMS + 0x20       # u64 resume-target override (0 = site VA)
 COMMS_RESULTS = COMMS + 0x100   # command result scratch (dump targets)
+THUNK_STRIDE = 0x80             # one 128B icache line per thunk
+THUNK_MAX_INSTS = THUNK_STRIDE // 16
+# M8b per-group comms: hit slots are indexed by the group's LEADER lane
+# (FLO of MACTIVE — disjoint masks have disjoint FLOs, so no atomics and
+# no UR usage); per-lane release generation + per-lane thunk VA let the
+# host release exactly one execution group.
+COMMS_HSLOTS = COMMS + 0x400    # 32 x 16B {u32 mask, u32 va_lo,
+                                #           u32 va_hi, u32 seq}
+COMMS_RLGEN = COMMS + 0x600     # 32 x u32 per-lane release generation
+COMMS_RTGTV = COMMS + 0x680     # 32 x u64 per-lane thunk VA (0 = site)
+COMMS_GROUP_END = COMMS + 0x780
 
 
 def _slot(k: int) -> str:
@@ -248,6 +262,29 @@ def compose_ret_word(va: int) -> tuple[int, int]:
     return lo, hi
 
 
+def _ret_surgery(t00: int, t10: int, t11: int) -> str:
+    """Bit-surgery block: compose the immediate RET word from the 64-bit
+    VA in R246 (lo) / R247 (hi) and STG.E.128 it over the handler's own
+    last line.  Clobbers R246-R251.  (imm = va>>2, SCALE 4: field[7:0] ->
+    lo[23:16], [37:8] -> lo[63:34], [55:38] -> hi[17:0].)"""
+    return f"""\
+    SHF.R.U32.HI R248, RZ, 0x2, R246;[7:7:{{}}:5:1]
+    SHF.L.U32 R250, R247, 0x1E, RZ;[7:7:{{}}:5:1]
+    LOP3.LUT R250, R250, R248, RZ, 0xFC;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R251, RZ, 0x2, R247;[7:7:{{}}:5:1]
+    SHF.L.U32 R248, R250, 0x10, RZ;[7:7:{{}}:5:1]
+    LOP3.LUT R248, R248, 0xFF0000, RZ, 0xC0;[7:7:{{}}:5:1]
+    LOP3.LUT R248, R248, 0x{t00:08x}, RZ, 0xFC;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R249, RZ, 0x8, R250;[7:7:{{}}:5:1]
+    SHF.L.U32 R246, R251, 0x18, RZ;[7:7:{{}}:5:1]
+    LOP3.LUT R249, R249, R246, RZ, 0xFC;[7:7:{{}}:5:1]
+    SHF.L.U32 R249, R249, 0x2, RZ;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R250, RZ, 0x6, R251;[7:7:{{}}:5:1]
+    LOP3.LUT R250, R250, 0x{t10:08x}, RZ, 0xFC;[7:7:{{}}:5:1]
+    MOV32I R251, 0x{t11:08x};[7:7:{{}}:5:1]
+"""
+
+
 def _handler_src(retline: int, cmdret: int) -> str:
     t_lo, t_hi = _ret_template()
     t00, t01 = t_lo & 0xFFFFFFFF, t_lo >> 32
@@ -265,33 +302,40 @@ def _handler_src(retline: int, cmdret: int) -> str:
     RPCMOV.32 R246, Rpc.LO;[0:7:{{}}:13:1]
     RPCMOV.32 R247, Rpc.HI;[0:7:{{}}:13:1]
     STG.E.64.STRONG.GPU [{{R252,R253}}+0x{COMMS + 0x10:x}], {{R246,R247}};[7:7:{{0}}:8:0]
-    SHF.R.U32.HI R248, RZ, 0x2, R246;[7:7:{{}}:5:1]
-    SHF.L.U32 R250, R247, 0x1E, RZ;[7:7:{{}}:5:1]
-    LOP3.LUT R250, R250, R248, RZ, 0xFC;[7:7:{{}}:5:1]
-    SHF.R.U32.HI R251, RZ, 0x2, R247;[7:7:{{}}:5:1]
-    SHF.L.U32 R248, R250, 0x10, RZ;[7:7:{{}}:5:1]
-    LOP3.LUT R248, R248, 0xFF0000, RZ, 0xC0;[7:7:{{}}:5:1]
-    LOP3.LUT R248, R248, 0x{t00:08x}, RZ, 0xFC;[7:7:{{}}:5:1]
-    SHF.R.U32.HI R249, RZ, 0x8, R250;[7:7:{{}}:5:1]
-    SHF.L.U32 R246, R251, 0x18, RZ;[7:7:{{}}:5:1]
-    LOP3.LUT R249, R249, R246, RZ, 0xFC;[7:7:{{}}:5:1]
-    SHF.L.U32 R249, R249, 0x2, RZ;[7:7:{{}}:5:1]
-    SHF.R.U32.HI R250, RZ, 0x6, R251;[7:7:{{}}:5:1]
-    LOP3.LUT R250, R250, 0x{t10:08x}, RZ, 0xFC;[7:7:{{}}:5:1]
-    MOV32I R251, 0x{t11:08x};[7:7:{{}}:5:1]
-    STG.E.128.STRONG.GPU [{{R252,R253}}+0x{retline:x}], {{R248,R249,R250,R251}};[7:7:{{}}:8:0]
-    LDG.E.STRONG.GPU R250, [{{R252,R253}}+0x{COMMS + 0x8:x}];[3:7:{{}}:8:0]
-    STL {_slot(7)}, R250;[7:7:{{3}}:2:0]
+    STL {_slot(9)}, R246;[7:7:{{}}:2:0]
+    STL {_slot(10)}, R247;[7:7:{{}}:2:0]
+    S2R R249, SR_TID.X;[5:7:{{}}:5:1]
+    LOP3.LUT R249, R249, 0x1F, RZ, 0xC0;[7:7:{{5}}:5:1]
+    STL {_slot(11)}, R249;[7:7:{{}}:2:0]
+    IMAD R250, R249, 0x4, R252;[7:7:{{}}:5:1]
+    MOV R251, R253;[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R248, [{{R250,R251}}+0x{COMMS_RLGEN:x}];[3:7:{{}}:8:0]
+    STL {_slot(7)}, R248;[7:7:{{3}}:2:0]
     LDG.E.STRONG.GPU R250, [{{R252,R253}}+0x{COMMS_SEQ:x}];[3:7:{{}}:8:0]
     STL {_slot(8)}, R250;[7:7:{{3}}:2:0]
+    BMOV R248, MACTIVE;[2:7:{{}}:8:0]
+    FLO.U32 R250, PT, R248;[3:7:{{2}}:5:1]
+    ISETP.EQ.AND P6, PT, R249, R250, PT;[7:7:{{3}}:13:1]
+    IMAD R250, R250, 0x10, R252;[7:7:{{}}:5:1]
+    MOV R251, R253;[7:7:{{}}:5:1]
+    @P6 LDG.E.STRONG.GPU R249, [{{R250,R251}}+0x{COMMS_HSLOTS + 0xC:x}];[4:7:{{}}:8:0]
+    @P6 IADD3 R249, R249, 0x1, RZ;[7:7:{{4}}:5:1]
+    @P6 STG.E.STRONG.GPU [{{R250,R251}}+0x{COMMS_HSLOTS:x}], R248;[7:7:{{}}:8:0]
+    @P6 STG.E.STRONG.GPU [{{R250,R251}}+0x{COMMS_HSLOTS + 4:x}], R246;[7:7:{{}}:8:0]
+    @P6 STG.E.STRONG.GPU [{{R250,R251}}+0x{COMMS_HSLOTS + 8:x}], R247;[7:7:{{}}:8:0]
+    @P6 STG.E.STRONG.GPU [{{R250,R251}}+0x{COMMS_HSLOTS + 0xC:x}], R249;[7:7:{{}}:8:0]
 #def_label(dbgspin)
-    LDL R248, {_slot(7)};[0:7:{{}}:4:0]
-    LDG.E.STRONG.GPU R249, [{{R252,R253}}+0x{COMMS + 0x8:x}];[1:7:{{}}:8:0]
-    ISETP.NE.AND P0, PT, R249, R248, PT;[7:7:{{0,1}}:13:1]
+    LDL R246, {_slot(7)};[0:7:{{}}:4:0]
+    LDL R250, {_slot(11)};[2:7:{{}}:4:0]
+    IMAD R248, R250, 0x4, R252;[7:7:{{2}}:5:1]
+    MOV R249, R253;[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R250, [{{R248,R249}}+0x{COMMS_RLGEN:x}];[1:7:{{}}:8:0]
+    ISETP.NE.AND P0, PT, R250, R246, PT;[7:7:{{0,1}}:13:1]
     @P0 BRA #label(dbgresume);[7:7:{{}}:6:0]
     LDL R248, {_slot(8)};[0:7:{{}}:4:0]
     LDG.E.STRONG.GPU R249, [{{R252,R253}}+0x{COMMS_SEQ:x}];[1:7:{{}}:8:0]
     ISETP.NE.AND P0, PT, R249, R248, PT;[7:7:{{0,1}}:13:1]
+    NANOSLEEP 0x100;[7:7:{{}}:5:1]
     @!P0 BRA #label(dbgspin);[7:7:{{}}:6:0]
     STL {_slot(8)}, R249;[7:7:{{}}:2:0]
     CCTL.I.IVALL;[7:7:{{}}:4:0]
@@ -299,6 +343,18 @@ def _handler_src(retline: int, cmdret: int) -> str:
     CALL.ABS.NOINC PT, {{R252,R253}}, 0x{CMD_OFF:x};[7:7:{{}}:6:0]
     BRA #label(dbgspin);[7:7:{{}}:6:0]
 #def_label(dbgresume)
+    LDL R250, {_slot(11)};[2:7:{{}}:4:0]
+    IMAD R248, R250, 0x8, R252;[7:7:{{2}}:5:1]
+    MOV R249, R253;[7:7:{{}}:5:1]
+    LDG.E.64.STRONG.GPU {{R246,R247}}, [{{R248,R249}}+0x{COMMS_RTGTV:x}];[3:7:{{}}:8:0]
+    LOP3.LUT R248, R246, R247, RZ, 0xFC;[7:7:{{3}}:5:1]
+    ISETP.EQ.AND P0, PT, R248, RZ, PT;[7:7:{{}}:13:1]
+    @P0 LDL R246, {_slot(9)};[0:7:{{}}:4:0]
+    @P0 LDL R247, {_slot(10)};[1:7:{{}}:4:0]
+""" + _ret_surgery(t00, t10, t11).replace(
+        "SHF.R.U32.HI R248, RZ, 0x2, R246;[7:7:{}:5:1]",
+        "SHF.R.U32.HI R248, RZ, 0x2, R246;[7:7:{0,1}:5:1]") + f"""\
+    STG.E.128.STRONG.GPU [{{R252,R253}}+0x{retline:x}], {{R248,R249,R250,R251}};[7:7:{{}}:8:0]
     LDL R248, {_slot(6)};[0:7:{{}}:4:0]
     R2P PR, R248;[7:7:{{0}}:13:1]
     LDL R246, {_slot(0)};[0:7:{{}}:4:0]
@@ -426,6 +482,19 @@ class Breakpoint:
         self.warp: int | None = None    # set by wait_hit
 
 
+class _Group:
+    """One parked execution group of a warp (M8b).  Identity = (warp,
+    leader slot); parked groups of a warp always have pairwise-disjoint
+    lane masks."""
+    __slots__ = ("mask", "bp", "slot", "reported")
+
+    def __init__(self, mask: int, bp: Breakpoint, slot: int):
+        self.mask = mask
+        self.bp = bp
+        self.slot = slot            # leader lane = hit-slot index
+        self.reported = False
+
+
 class Debugger:
     """Runtime breakpoints for a dialect-source kernel, multi-warp.
 
@@ -450,8 +519,12 @@ class Debugger:
         self.info = inject_debugger(source, max_bps,
                                     allow_cdesc_urs=allow_cdesc_urs)
         self.mod = CudaModule(assemble(self.info.source, check_deps=True))
-        self.encoded = assemble_kernel(self.info.source,
-                                       check_deps=True).encoded
+        res = assemble_kernel(self.info.source, check_deps=True)
+        self.encoded = res.encoded
+        # (ordinal, absolute c[0x0] byte address, size) per param, in
+        # #fn declaration order (dbgctrl last) — the stepper zips this
+        # with the source decl to replay LDC #param sites in thunks
+        self.res_params = res.params
         self.func = func or self._only_function()
         self.patcher = Patcher()
         self.max_warps = max_warps
@@ -461,7 +534,9 @@ class Debugger:
         words, self.retline_off, self.cmdret_off = _handler_words()
         for w in range(max_warps):
             base = self.blobs + w * BLOB_SZ
-            self.mod.device_write(base + COMMS, bytes(0x20))
+            self.mod.device_write(base + COMMS, bytes(0x28))
+            self.mod.device_write(base + COMMS_HSLOTS,
+                                  bytes(COMMS_GROUP_END - COMMS_HSLOTS))
             self.mod.device_write(base + HANDLER_OFF, words)
         self._wr64(0x20, self.blobs)    # prologue loads the blob base
         self.stream = CudaModule.stream_create()
@@ -472,6 +547,13 @@ class Debugger:
         self._cmds = [0] * max_warps
         self._parked: dict[int, Breakpoint] = {}    # warp -> bp
         self._patch_base = _call_word()
+        self._thunk_next = [0] * max_warps          # per-warp arena bump
+        # M8b: per-warp parked execution groups + host-side shadows
+        self._groups: dict[int, list[_Group]] = \
+            {w: [] for w in range(max_warps)}
+        self._seen = [[0] * 32 for _ in range(max_warps)]
+        self._rlgen = [[0] * 32 for _ in range(max_warps)]
+        self._thunk_cache: dict[tuple[int, int], tuple[int, tuple]] = {}
 
     def _only_function(self) -> str:
         m = re.search(r"#fn\s+(\w+)", self.info.source)
@@ -501,8 +583,14 @@ class Debugger:
         self.warps_per_cta = warps_per_cta
         self._wr32(0x28, warps_per_cta)
         for w in range(warps):
-            self.mod.device_write(self._blob(w) + COMMS, bytes(0x20))
+            self.mod.device_write(self._blob(w) + COMMS, bytes(0x28))
+            self.mod.device_write(self._blob(w) + COMMS_HSLOTS,
+                                  bytes(COMMS_GROUP_END - COMMS_HSLOTS))
             self._gens[w] = 0
+            self._groups[w] = []
+            self._seen[w] = [0] * 32
+            self._rlgen[w] = [0] * 32
+        self._thunk_cache.clear()
         self._parked.clear()
         self.mod.launch(self.func, grid=grid, block=block,
                         args=args + [self.ctrl], stream=self.stream)
@@ -590,24 +678,85 @@ class Debugger:
                 f"hit from unarmed site {hex(va)} (orig {orig})")
         return bp
 
+    def _poll_groups(self) -> tuple[int, "_Group"] | None:
+        """Scan all hit slots; register newly-parked groups.  Returns
+        (warp, group) for the first group not yet reported."""
+        for w in range(self.max_warps):
+            raw = self.mod.device_read(self._blob(w) + COMMS_HSLOTS,
+                                       32 * 16)
+            seen = self._seen[w]
+            for slot in range(32):
+                mask, va_lo, va_hi, seq = struct.unpack_from(
+                    "<4I", raw, slot * 16)
+                if seq == seen[slot]:
+                    continue
+                seen[slot] = seq
+                bp = self._bp_for_va(va_lo | (va_hi << 32))
+                bp.warp = w
+                # pile-up: merge into an existing group at the same site
+                for g in self._groups[w]:
+                    if g.bp is bp:
+                        g.mask |= mask
+                        g.slot = min(g.slot, slot)
+                        g.reported = False
+                        break
+                else:
+                    self._groups[w].append(_Group(mask, bp, slot))
+                self._parked[w] = bp
+            for g in self._groups[w]:
+                if not g.reported:
+                    g.reported = True
+                    return w, g
+        return None
+
     def wait_hit(self, timeout: float = 30.0) -> Breakpoint:
-        """Wait until a breakpoint parks a warp; returns the bp with
-        bp.warp set.  Records ALL currently-parked warps, so a following
-        wait_hit returns other warps' already-pending hits."""
+        """Wait until a breakpoint parks an execution group; returns the
+        bp with bp.warp set.  Divergent groups of one warp park
+        INDEPENDENTLY and are each reported (group mask via
+        wait_group_hit)."""
         t0 = time.time()
         while True:
-            for w in range(self.max_warps):
-                if w in self._parked:
-                    continue
-                va = self._hit(w)
-                if va:
-                    bp = self._bp_for_va(va)
-                    bp.warp = w
-                    self._parked[w] = bp
-                    return bp
+            r = self._poll_groups()
+            if r is not None:
+                return r[1].bp
             if time.time() - t0 > timeout:
                 raise TimeoutError("no breakpoint hit")
             time.sleep(0.001)
+
+    def wait_group_hit(self, timeout: float = 30.0,
+                       ) -> tuple[int, _Group]:
+        """M8b: like wait_hit but returns (warp, group) with the parked
+        group's lane mask."""
+        t0 = time.time()
+        while True:
+            r = self._poll_groups()
+            if r is not None:
+                return r
+            if time.time() - t0 > timeout:
+                raise TimeoutError("no breakpoint hit")
+            time.sleep(0.001)
+
+    def _release_lanes(self, w: int, mask: int, thunk_va: int) -> None:
+        """Release exactly `mask`'s lanes of warp w: set their per-lane
+        thunk VA and bump their per-lane release generations."""
+        rl = self._rlgen[w]
+        rt = list(struct.unpack("<32Q", self.mod.device_read(
+            self._blob(w) + COMMS_RTGTV, 32 * 8)))
+        for lane in range(32):
+            if mask >> lane & 1:
+                rt[lane] = thunk_va
+                rl[lane] += 1
+        self.mod.device_write(self._blob(w) + COMMS_RTGTV,
+                              struct.pack("<32Q", *rt))
+        self.mod.device_write(self._blob(w) + COMMS_RLGEN,
+                              struct.pack("<32I", *rl))
+
+    def _drop_group(self, w: int, g: _Group) -> None:
+        self._groups[w].remove(g)
+        if self._groups[w]:
+            self._parked[w] = self._groups[w][-1].bp
+        else:
+            self._parked.pop(w, None)
 
     # -- command injection (M7) ----------------------------------------------
     def exec_cmd(self, warp: int, insts: list[str],
@@ -677,7 +826,7 @@ class Debugger:
 
     _LANE_PRELUDE = [
         "S2R R250, SR_TID.X;[5:7:{}:5:1]",
-        "LOP3.LUT R250, R250, 0x1F, RZ, 0xC0;[7:7:{}:5:1]",
+        "LOP3.LUT R250, R250, 0x1F, RZ, 0xC0;[7:7:{5}:5:1]",
         "IMAD R248, R250, 0x4, R252;[7:7:{}:5:1]",   # low blob VA + lane*4
         "MOV R249, R253;[7:7:{}:5:1]",               # {R248,R249} addr pair
     ]
@@ -747,23 +896,99 @@ class Debugger:
         self.exec_cmd(warp, insts, _trusted=True)
 
     def resume(self, bp: Breakpoint) -> None:
-        """Restore the site, then bump the generation of every warp
-        parked at this bp's site: each parked handler restores the
-        kernel's PRs and registers, self-invalidates, and RETs back to
-        the site, re-executing the restored original instruction.  The
-        breakpoint is CONSUMED (site keeps its original word) — to break
-        again, re-arm.  Re-arming mid-run against a tight loop is
-        unreliable (loop replay); prefer arming at the gate."""
+        """Restore the site, then release EVERY group parked at this
+        bp's site (any warp): each parked handler restores the kernel's
+        PRs and registers, self-invalidates, and RETs back to the site
+        (per-lane RTGTV is 0 → site-VA fallback), re-executing the
+        restored original instruction.  The breakpoint is CONSUMED
+        (site keeps its original word) — to break again, re-arm.
+        Re-arming mid-run against a tight loop is unreliable (loop
+        replay); prefer arming at the gate."""
         site = self._site_va(bp.orig_index)
         self.patcher.patch(site, bp.orig_word)           # restore
-        for w, wbp in list(self._parked.items()):
-            if wbp is bp:
-                self.mod.device_write(self._blob(w) + COMMS + 0x10,
-                                      struct.pack("<Q", 0))
-                self._gens[w] += 1
-                self.mod.device_write(self._blob(w) + COMMS + 0x8,
-                                      struct.pack("<I", self._gens[w]))
-                del self._parked[w]
+        for w in range(self.max_warps):
+            self._thunk_cache.pop((w, bp.orig_index), None)
+        for w in range(self.max_warps):
+            for g in list(self._groups[w]):
+                if g.bp is bp:
+                    self.mod.device_write(self._blob(w) + COMMS + 0x10,
+                                          struct.pack("<Q", 0))
+                    self._release_lanes(w, g.mask, 0)
+                    self._drop_group(w, g)
         bp.armed = False
         del self._bps[bp.id]
         del self._by_index[bp.orig_index]
+
+    # -- M8: resume via a per-warp resume thunk ------------------------------
+    def _thunk_alloc(self, warp: int) -> int:
+        """Bump-allocate a 128B thunk slot in the warp's blob (wraps; the
+        handler's hardened exit IVALL makes reuse safe)."""
+        arena = BLOB_SZ - THUNK_OFF
+        n = arena // THUNK_STRIDE
+        i = self._thunk_next[warp] % n
+        self._thunk_next[warp] += 1
+        return self._blob(warp) + THUNK_OFF + i * THUNK_STRIDE
+
+    def build_thunk(self, insts: list[str], fallthrough_va: int,
+                    ) -> list[tuple[int, int]]:
+        """Encode a thunk: `insts` followed by an absolute JMP IMM back to
+        `fallthrough_va`.  Callers emulate control-flow INST1 themselves
+        (e.g. conditional BRA -> `@P0 JMP T` + auto fall-through jump)."""
+        src = "\n".join(insts + [f"JMP 0x{fallthrough_va:x};[7:7:{{}}:6:0]"])
+        enc = assemble_flat(src)
+        assert 0 < len(enc) <= THUNK_MAX_INSTS, f"thunk too big: {len(enc)}"
+        return enc
+
+    def resume_thunk(self, bp: Breakpoint, insts: list[str]) -> None:
+        """M8 thunk-resume: the site STAYS PATCHED (bp is not consumed).
+        Every group parked at the site gets a thunk in its warp's blob
+        holding `insts` (normally the original instruction) + a JMP IMM
+        back to site+0x10; the handler RETs into the thunk instead of
+        the site.  Groups of one warp released by one call share the
+        thunk VA (required for BSYNC/barrier rendezvous); the (warp,
+        site) thunk VA is cached while the bp stays armed so groups
+        released by LATER calls still rendezvous at the same PC.
+        No code-space restore -> no icache race vs running groups."""
+        site = self._site_va(bp.orig_index)
+        for w in range(self.max_warps):
+            groups = [g for g in self._groups[w] if g.bp is bp]
+            if not groups:
+                continue
+            key = (w, bp.orig_index)
+            enc_key = tuple(insts)
+            cached = self._thunk_cache.get(key)
+            if cached and cached[1] == enc_key:
+                va = cached[0]
+            else:
+                enc = self.build_thunk(insts, site + 0x10)
+                words = b"".join(struct.pack("<QQ", lo, hi)
+                                 for lo, hi in enc)
+                va = self._thunk_alloc(w)
+                self.mod.device_write(va, words)
+                self._thunk_cache[key] = (va, enc_key)
+            for g in groups:
+                self._release_lanes(w, g.mask, va)
+                self._drop_group(w, g)
+
+    def release_group(self, warp: int, group: _Group,
+                      insts: list[str]) -> None:
+        """M8b: release exactly one parked group with its own thunk
+        (other groups of the same warp stay parked).  Shares the
+        (warp, site) cached thunk VA when the same insts are used, so
+        barrier-class instructions still rendezvous."""
+        bp = group.bp
+        site = self._site_va(bp.orig_index)
+        key = (warp, bp.orig_index)
+        enc_key = tuple(insts)
+        cached = self._thunk_cache.get(key)
+        if cached and cached[1] == enc_key:
+            va = cached[0]
+        else:
+            enc = self.build_thunk(insts, site + 0x10)
+            words = b"".join(struct.pack("<QQ", lo, hi)
+                             for lo, hi in enc)
+            va = self._thunk_alloc(warp)
+            self.mod.device_write(va, words)
+            self._thunk_cache[key] = (va, enc_key)
+        self._release_lanes(warp, group.mask, va)
+        self._drop_group(warp, group)

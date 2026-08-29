@@ -382,8 +382,133 @@ CLI smoke (test_sassdbg_m6.py section D).
   `#fn cmd(){}` silently yields ZERO instructions (the handler then
   CALLs a zeroed buffer → 715).  Assert `enc` non-empty.
 
+M8a (`sassdbg/probe_groups.py`, 5/5 ×3 runs) — **resume thunks**:
+resume no longer restores the site; the host builds a per-warp thunk in
+the blob arena ([THUNK_OFF=0xA0000, 1 MiB), 128B-strided) holding
+`INST1; JMP imm site+0x10`, and the handler RETs into it (comms
++0x20=COMMS_RTGT override, 0 = legacy site-RET; the RET bit-surgery
+moved from handler entry to the exit path).  Site stays patched for the
+bp's whole lifetime → the icache restore race against running groups
+disappears at the root, and bps become persistent (gdb-style; disarm
+only at a parked boundary).
+
+- **JMP imm (0x94a, UImm(57) SCALE 4, [80:34]∥[23:16]) is the absolute-
+  jump primitive** — probe_rpc_writers proved it transfers to a devmem
+  VA and preserves RPC; prefer it over RET.ABS imm for thunk jump-backs
+  (RET carries DEPTH baggage; RET.ABS imm's RPC effect untested).
+  Conditional BRA emulation: `@P0 JMP T; JMP ft` (the bp fires
+  pre-predicate, so the thunk re-evaluates it).
+- BSSY thunk = verbatim instruction (Sa target inert — bssy.md
+  "Resolved"); the participant mask collected in the thunk equals the
+  site execution's mask.  BSYNC groups of one warp share the warp's
+  blob → same thunk VA → same-PC rendezvous by construction (E4).
+- **E1: persistent bp inside a 64B TIGHT LOOP re-hits reliably** (3/3
+  hits, one arming) — the patch stays, so loop-buffer replay is a
+  non-issue (the old restore direction was the one replay defeated).
+- **KEY FINDING (E4): a tight handler spin STARVES its divergent
+  sibling** (same mechanism as test_yield: the spin monopolizes the
+  warp's issue slots; without a yield the sibling never parks, >5 s).
+  **FIX: `NANOSLEEP 0x100;[7:7:{}:5:1]` in the handler spin loop** —
+  the sibling then reaches its patched site and parks promptly (E4:
+  all 32 lanes parked, ONE resume releases both groups into the
+  shared BSYNC thunk, rendezvous correct).  NANOSLEEP, not YIELD:
+  YIELD only relinquishes ONE scheduling decision, so a parked
+  handler would regain control only when the sibling groups happen
+  to yield back — command injection (M7 exec/dump/set) and even
+  release polling could stall behind a long non-yielding stretch
+  (yield.md).  NANOSLEEP deschedules the warp for a bounded ~256 ns
+  and self-wakes, so the spin re-polls on its own; its RPC=next-PC
+  side effect is harmless (handler captured the site VA at entry).
+- **E5: with starvation cured, simultaneous-park at DIFFERENT sites is
+  the norm — and per-warp gen+RTGT+hit-word provably cannot serve it**:
+  one resume releases BOTH groups into ONE thunk (asserted: no second
+  hit, kernel completes with the sibling's lanes corrupted).
+  => M8b mandatory: per-group hit slots + per-lane release words +
+  per-group RTGT (or per-group thunk VA table).
+- E4's prompt event-loop variant also works (release on each hit; the
+  thunk's BSYNC convergence wait schedules the sibling) — keep as the
+  stepper's barrier-assist fallback.
+- Kernel-scheduling gotcha found: S2R SR_TID.X consumers need req-wait
+  on its barrier in practice (`S2R R2,SR_TID.X;[5:7:{0,1}:5:1]` then
+  consumer `[7:7:{5}:5:1]`, m5w house style) — stall-5 without req gave
+  non-deterministic per-lane garbage at the ISETP (late S2R write
+  restored the final R2, hiding it from late dumps).  depcheck flagged
+  exactly this.
+- Deferred to M8d: BAR/WARPSYNC cross-PC rendezvous probe (E6).
+
+M8b (patch.py, DONE) — **per-group comms**: simultaneous-park at
+different sites is the norm, so comms are per-GROUP/per-LANE, not
+per-warp.  E2E `tests/asm_construct/test_sassdbg_m8.py` (T1-T4).
+
+- New comms regions (zero-init at both __init__ and relaunch):
+  `COMMS_HSLOTS=COMMS+0x400` = 32×16B hit slots `{u32 mask, u32 va_lo,
+  u32 va_hi, u32 seq}` indexed by **leader lane = FLO(MACTIVE)** (FLO
+  of disjoint masks is disjoint — no atomics, no URs);
+  `COMMS_RLGEN=COMMS+0x600` = 32×u32 per-lane release generations;
+  `COMMS_RTGTV=COMMS+0x680` = 32×u64 per-lane thunk VAs (0 = RET to
+  site).  Handler: entry stores lane in local slot 11, reads its
+  RLGEN baseline into slot 7, leader-only hit-slot RMW (seq LAST);
+  spin polls its own RLGEN word + cmd_seq (+ the NANOSLEEP from M8a);
+  exit reads RTGTV[lane] (IMAD lane*8) with a zero→slot-9/10 site-VA
+  fallback.  Handler now 148 insts.
+- Host: `_Group(mask, bp, slot, reported)`; `_poll_groups()` scans
+  32 slots × warps and MERGES pile-ups at the same bp (`mask |=`,
+  `reported=False` → re-reported); `wait_group_hit()` →
+  `(warp, _Group)`; `release_group(w, g, insts)` = per-group thunk
+  release; `_release_lanes` bumps the host-side RLGEN shadow and
+  writes RLGEN+RTGTV images.  `resume()` keeps legacy semantics
+  (restore site word, release ALL groups at the site, consume bp);
+  `resume_thunk()`/persistent bps keep the site patched.  The
+  `(warp, site)` thunk VA is CACHED while the bp stays armed so
+  groups released by later calls share the VA (BSYNC/barrier
+  same-PC rendezvous by construction).
+- Alignment traps hit (handler rewrite): a 64-bit register/address
+  group must be CONSECUTIVE **and EVEN-aligned** — `{R249,R253}` is a
+  SyntaxError, `{R249,R250}` as an LDG address pair is
+  MISALIGNED_REG_ERROR.  And the M7 `_LANE_PRELUDE` S2R consumer
+  needed the req-wait (`{5}`) — stall-5 without it failed exactly on
+  the SECOND park of a session (the M8a kernel lesson applied to
+  injected commands).
+
+M8c (stepper.py, DONE) — **group state machine**: stepping now uses
+PERSISTENT bps + per-group thunk replay (the site word is never
+restored → no restore-vs-refetch race; loop re-hits need no re-arm).
+`step_groups([(warp, _Group)])` advances a set of parked groups one
+instruction each; `step()`/`step_all()` are the non-divergent compat
+wrappers (raise when a warp is parked as several groups).
+
+- `_replay_insts(idx)`: plain instructions replay verbatim; BRA is
+  PC-relative so it becomes absolute JMP(s) — predicated BRA keeps
+  its guard on the target JMP and build_thunk's appended fall-through
+  JMP completes it; BSSY's Sa is inert so it replays with a
+  thunk-local label; `#param(name)`/`#spec_const(...)` are resolved
+  to absolute `c[0x0][...]` (`res_params` = assemble_kernel's
+  (ordinal, ABSOLUTE offset, size) tuples zipped with the source
+  decl's param names — assemble_flat has no #fn context).
+- Collection tracks each released group's REMAINING unaccounted lane
+  mask: a hit may deliver a subset (the group SPLIT) or lanes of
+  several groups at once (they MERGED at the site).  Terminal sites
+  are resumed ONCE per bp (multi-warp same-site pile-up shares the
+  bp; a second resume KeyErrors).
+- **Barrier assist**: a group released FROM a BSYNC site replays the
+  barrier in its thunk and may block waiting for lanes still in
+  flight; when a hit lands at a BSYNC site while such an entry is
+  pending, the stepper arms the barrier's successors and releases the
+  freshly parked group immediately (same cached thunk VA →
+  rendezvous), re-crediting its lanes to the pending entries.  FIRST
+  assist version fired whenever ANY lanes were pending — spurious:
+  a lone group passes its thunk BSYNC before the sibling arrives at
+  any barrier (architecturally legal), which silently skipped the
+  park-at-BSYNC state.  Gate the assist on a pending
+  released-FROM-BSYNC entry.  Net effect: divergent groups step one
+  apart through the barrier — a valid schedule; results verified.
+
 Roadmap: debugger feature-complete (M1-M7: trace, lift, breakpoints,
 multi-warp/multi-CTA, stepper, reverse, CLI, command injection).
+M8 divergence-aware breakpoints: M8a probes, M8b per-group comms,
+M8c group stepper all DONE (E2E test_sassdbg_m8.py; full serial
+132/133, only the known test_uimad self-bug).  M8d next: CLI group
+display/exec filtering + E6 BAR/WARPSYNC cross-PC probe.
 
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
