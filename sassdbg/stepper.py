@@ -55,6 +55,11 @@ from sassdbg.patch import Debugger, Breakpoint             # noqa: E402
 _BR_LABEL = {"BRA", "BSSY", "CALL"}
 _TERMINAL = {"EXIT", "RET", "KILL"}
 _INDIRECT = {"BRX", "BRXU", "JMX", "JMXU", "JMP", "JMPX"}
+# barrier-class: a thunk replay of these BLOCKS until sibling lanes
+# arrive at the same barrier — the barrier assist watches for groups
+# released FROM these sites (M8d probe_bar: BAR.SYNC arrival is
+# PC-agnostic; WARPSYNC/BSYNC rendezvous via the shared thunk VA)
+_BARRIER = {"BSYNC", "WARPSYNC", "BAR"}
 
 
 @dataclass
@@ -238,11 +243,11 @@ class Stepper:
         # (the group SPLIT) or lanes of several groups at once (they
         # MERGED at the site).  An entry completes when all its lanes
         # have been accounted by hits at its successor sites.  p[4]
-        # marks groups released FROM a BSYNC site: their thunk replays
-        # the barrier, so they may be blocked in it waiting for lanes
-        # still in flight — only then is the barrier assist needed.
+        # marks groups released FROM a barrier-class site: their thunk
+        # replays the barrier, so they may be blocked in it waiting for
+        # lanes still in flight — only then is the assist needed.
         pending = [[w, g, set(nxt), g.mask,
-                    self.cfg.insts[g.bp.orig_index].mnemonic == "BSYNC"]
+                    self.cfg.insts[g.bp.orig_index].mnemonic in _BARRIER]
                    for w, g, nxt in live]
         out: list[tuple[int, object]] = []
         while pending:
@@ -257,7 +262,7 @@ class Stepper:
                     f"orig {site} mask {hg.mask:#x}")
             for p, inter in hits:
                 p[3] &= ~inter
-            if (self.cfg.insts[site].mnemonic == "BSYNC"
+            if (self.cfg.insts[site].mnemonic in _BARRIER
                     and any(p[3] and p[4] for p in pending)):
                 # BARRIER ASSIST: a released group is blocked inside its
                 # thunk's BSYNC waiting for the lanes that just parked

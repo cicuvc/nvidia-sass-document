@@ -110,7 +110,9 @@ class Shell(cmd.Cmd):
             self.dbg.mod.device_write(self.tracebuf, bytes(REGION_BYTES))
             argv.append(self.tracebuf)
         self.st.launch(argv, grid=(args.grid,), block=(args.block,))
-        self._parked: dict[int, int] = {}     # warp -> inst idx (user view)
+        self._parked: dict[int, list[tuple[int, int]]] = {}
+        # user view: warp -> [(inst idx, lane mask)] — one entry per
+        # parked GROUP (M8: divergent groups park independently)
         self._exited: set[int] = set()
         self._state = {}                       # warp -> replay state
         self._released = False
@@ -164,18 +166,33 @@ class Shell(cmd.Cmd):
                 out.append(ln)
         return out
 
-    def _show_hit(self, bp) -> None:
-        w = bp.warp
-        if w is None:
-            return
-        user_idx = int(bp.orig_index)
+    def _user_idx(self, site_idx: int) -> int:
         if self.ik is not None:
             inv = {v: k for k, v in self._orig2inst.items()}
-            user_idx = int(inv.get(bp.orig_index, bp.orig_index))
+            return int(inv.get(site_idx, site_idx))
+        return int(site_idx)
+
+    def _all_groups(self) -> list:
+        """Authoritative parked-group list: [(warp, _Group)].  The
+        debugger's _groups are dropped on release and created on hit,
+        so they always reflect what is parked RIGHT NOW (unlike the
+        stepper's _parked, which manual b/c commands desync)."""
+        return [(w, g) for w in range(self.dbg.max_warps)
+                for g in self.dbg._groups[w]]
+
+    def _show_group_hit(self, w: int, g) -> None:
+        """Record and print a parked group (M8: a warp may park as
+        several divergent groups — each gets its own lanes mask)."""
+        user_idx = self._user_idx(g.bp.orig_index)
         lines = self._unlabelled_src()
         text = lines[user_idx] if 0 <= user_idx < len(lines) else "?"
-        print(f"hit: warp {w} at inst {user_idx}: {text}")
-        self._parked[w] = user_idx
+        extra = "" if g.mask == 0xFFFFFFFF \
+            else f"  [lanes {g.mask:#010x}]"
+        print(f"hit: warp {w} at inst {user_idx}: {text}{extra}")
+        lst = [(i, m) for i, m in self._parked.get(w, [])
+               if i != user_idx]
+        lst.append((user_idx, g.mask))
+        self._parked[w] = lst
         if self.ik is not None and w == 0:
             self._update_replay(w)
 
@@ -228,9 +245,9 @@ class Shell(cmd.Cmd):
             print("already released")
             return
         self._released = True
-        hits = self.st.run_to_entry_all()
-        for w, bp in sorted(hits.items()):
-            self._show_hit(bp)
+        self.st.run_to_entry_all()
+        for w, g in sorted(self.st._parked):
+            self._show_group_hit(w, g)
 
     def do_run(self, a: str) -> None:
         self.do_r(a)
@@ -240,63 +257,83 @@ class Shell(cmd.Cmd):
             print("kernel finished")
             return
         try:
-            bp = self.dbg.wait_hit(timeout=5.0)
+            w, g = self.dbg.wait_group_hit(timeout=5.0)
         except TimeoutError:
             if CudaModule.stream_query(self.dbg.stream):
                 print("kernel finished")
             else:
                 print("(no hit within 5s; warps still running)")
             return
-        self._show_hit(bp)
+        self._show_group_hit(w, g)
+        # drain any other already-queued hits (a divergent sibling
+        # often parks in the same resume window)
+        while True:
+            try:
+                w, g = self.dbg.wait_group_hit(timeout=0.2)
+            except TimeoutError:
+                break
+            self._show_group_hit(w, g)
+        if not self._all_groups() \
+                and CudaModule.stream_query(self.dbg.stream):
+            print("kernel finished")
 
     def do_c(self, a: str) -> None:
-        """c — resume all parked warps, wait for the next hit."""
-        parked = list(self.dbg._parked.items())
-        if not parked:
+        """c — resume everything parked, wait for the next hit."""
+        groups = self._all_groups()
+        if not groups:
             print("nothing parked")
             return
         seen = set()
-        for w, bp in parked:
-            if bp.id in seen:
+        for w, g in groups:
+            if g.bp.id in seen:
                 continue
-            seen.add(bp.id)
-            self.dbg.resume(bp)
-        for w, bp in parked:
-            self._parked.pop(w, None)
+            seen.add(g.bp.id)
+            self.dbg.resume(g.bp)    # releases ALL groups at the site
+        # drop the resumed sites from the user view; re-hits come
+        # through _wait_next / the next command
+        for w, g in groups:
+            ui = self._user_idx(g.bp.orig_index)
+            self._parked[w] = [(i, m) for i, m in self._parked.get(w, [])
+                               if i != ui]
+            if not self._parked[w]:
+                del self._parked[w]
         self._wait_next()
 
     def do_continue(self, a: str) -> None:
         self.do_c(a)
 
     def do_s(self, a: str) -> None:
-        """s — single-step ALL parked warps (lockstep)."""
-        state = {w: bp for w, bp in self.dbg._parked.items()}
-        if not state:
+        """s — single-step ALL parked groups (lockstep, M8 group-aware)."""
+        self.st._parked = self._all_groups()   # re-sync (c/b desync it)
+        groups = self.st._parked
+        if not groups:
             print("nothing parked (use 'r' first)")
             return
-        # entry case: nothing stepped yet — step from the gate-hit sites
-        cur = self.st.step_all(
-            {w: bp for w, bp in state.items()})
-        for w, bp in state.items():
-            if w not in cur:
-                self._parked.pop(w, None)
-                self._exited.add(w)
-                print(f"warp {w}: exited")
-        for w, bp in cur.items():
-            self._show_hit(bp)
+        out = self.st.step_groups(groups)
+        self._parked.clear()
+        for w, g in out:
+            self._show_group_hit(w, g)
+        for w in {w for w, _ in groups} - {w for w, _ in out}:
+            self._exited.add(w)
+            print(f"warp {w}: exited")
 
     def do_step(self, a: str) -> None:
         self.do_s(a)
 
     def do_w(self, a: str) -> None:
-        """w — warp status."""
+        """w — warp status (one line per parked GROUP; M8: a divergent
+        warp parks as several groups, each with its own lane mask)."""
         for w in range(self.dbg.n_warps):
             if w in self._parked:
-                print(f"  warp {w}: parked at inst {self._parked[w]}")
+                for idx, m in self._parked[w]:
+                    n = bin(m).count("1")
+                    print(f"  warp {w}: parked at inst {idx}"
+                          f"  lanes {m:#010x} ({n})")
             elif w in self._exited:
                 print(f"  warp {w}: exited")
             else:
-                print(f"  warp {w}: running / gate")
+                done = CudaModule.stream_query(self.dbg.stream)
+                print(f"  warp {w}: {'exited' if done else 'running / gate'}")
 
     def do_warps(self, a: str) -> None:
         self.do_w(a)
@@ -316,7 +353,7 @@ class Shell(cmd.Cmd):
     def do_l(self, a: str) -> None:
         """l [N] — list source around instruction N (or parked sites)."""
         lines = self._unlabelled_src()
-        marks = set(self._parked.values())
+        marks = {idx for lst in self._parked.values() for idx, _ in lst}
         if a.strip():
             n = int(a.strip())
         elif marks:
@@ -425,14 +462,14 @@ class Shell(cmd.Cmd):
 
     def do_q(self, a: str) -> bool:
         """q — release anything still parked and quit."""
-        parked = list(self.dbg._parked.items())
-        if parked:
-            print(f"releasing {len(parked)} parked warp(s)...")
+        groups = self._all_groups()
+        if groups:
+            print(f"releasing {len(groups)} parked group(s)...")
             seen = set()
-            for w, bp in parked:
-                if bp.id not in seen:
-                    seen.add(bp.id)
-                    self.dbg.resume(bp)
+            for w, g in groups:
+                if g.bp.id not in seen:
+                    seen.add(g.bp.id)
+                    self.dbg.resume(g.bp)
             try:
                 self.dbg.wait_done(timeout=10.0)
                 print("kernel completed")

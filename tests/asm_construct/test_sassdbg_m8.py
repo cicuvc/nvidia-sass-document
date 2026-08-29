@@ -62,6 +62,47 @@ K_LOOP = """\
 }
 """
 
+K_WSYNC = """\
+#fn k(out<8>) {
+    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
+    LDC.64 {R4,R5}, #param(out);[1:7:{}:8:0]
+    S2R R2, SR_TID.X;[5:7:{0,1}:5:1]
+    LOP3.LUT R2, R2, 0x1F, RZ, 0xC0;[7:7:{5}:5:1]
+    ISETP.LT.AND P0, PT, R2, 0x10, PT;[7:7:{}:13:1]
+    @P0 BRA #label(els);[7:7:{}:5:1]
+    MOV32I R3, 0xA0;[7:7:{}:5:1]
+    BRA #label(sync);[7:7:{}:5:1]
+#def_label(els)
+    MOV32I R3, 0xB0;[7:7:{}:5:1]
+#def_label(sync)
+    WARPSYNC.ALL;[7:7:{}:5:1]
+    IMAD R3, R3, R2, RZ;[7:7:{}:5:1]
+    IMAD.WIDE.U32 {R6,R7}, R2, 0x4, {R4,R5};[7:7:{}:5:1]
+    STG.E desc[{UR4,UR5}][{R6,R7}], R3;[0:1:{}:1:0]
+    EXIT;[7:7:{}:5:0]
+}
+"""
+
+K_BAR = """\
+#fn k(out<8>) {
+    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
+    LDC.64 {R4,R5}, #param(out);[1:7:{}:8:0]
+    S2R R2, SR_TID.X;[5:7:{0,1}:5:1]
+    ISETP.LT.AND P0, PT, R2, 0x20, PT;[7:7:{5}:13:1]
+    @P0 BRA #label(w0);[7:7:{}:5:1]
+    BAR.SYNC 0;[7:7:{}:5:1]
+    BRA #label(done);[7:7:{}:5:1]
+#def_label(w0)
+    MOV32I R3, 0x11;[7:7:{}:5:1]
+    BAR.SYNC 0;[7:7:{}:5:1]
+#def_label(done)
+    IMAD.WIDE.U32 {R6,R7}, R2, 0x4, {R4,R5};[7:7:{}:5:1]
+    STG.E desc[{UR4,UR5}][{R6,R7}], R2;[0:1:{}:1:0]
+    EXIT;[7:7:{}:5:0]
+}
+"""
+
+
 K_DIV = """\
 #fn k(out<8>) {
     LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
@@ -183,10 +224,63 @@ def t4_group_stepping():
     check_div_out(st.dbg, out, "T4")
 
 
+def t5_warpsync_stepping():
+    """Step the single-site WARPSYNC kernel: the divergent halves park
+    at the WARPSYNC bp one apart; the barrier assist (WARPSYNC is in
+    _BARRIER) releases the late group into the SAME thunk VA — probe
+    E0b proved WARPSYNC needs the same PC, E4 that the shared-VA
+    sequential release rendezvous."""
+    st = Stepper(K_WSYNC)
+    out = st.dbg.mod.devmem_alloc(0x100)
+    st.dbg.mod.device_write(out, bytes(0x100))
+    st.launch(args=[out])
+    st.run_to_entry()
+    groups = st._parked
+    saw_ws_park = False
+    steps = 0
+    while groups:
+        groups = st.step_groups(groups)
+        if any(g.bp.orig_index == 9 for _, g in groups):
+            saw_ws_park = True
+        steps += 1
+        assert steps < 100, "step budget"
+    st.dbg.wait_done()
+    check("T5: a group observed parked at the WARPSYNC site",
+          saw_ws_park, True)
+    check("T5: path covers 0..13, ends at EXIT",
+          (set(st.paths[0]) == set(range(14)), st.paths[0][-1]),
+          (True, 13))
+    check_div_out(st.dbg, out, "T5")
+
+
+def t6_bar_stepping():
+    """Two-warp BAR.SYNC stepping: w1 parks at its BAR site while w0
+    walks the w0 path; when w0 parks at ITS BAR site the assist
+    releases it into a thunk BAR — BAR.SYNC arrival is PC-agnostic
+    (probe E2), so the thunk BAR rendezvous with w1's blocked one."""
+    st = Stepper(K_BAR, max_warps=2)
+    out = st.dbg.mod.devmem_alloc(0x100)
+    st.dbg.mod.device_write(out, bytes(0x100))
+    st.launch(args=[out], block=(64,))
+    st.run_to_entry_all()
+    groups = st._parked
+    steps = 0
+    while groups:
+        groups = st.step_groups(groups)
+        steps += 1
+        assert steps < 100, "step budget"
+    st.dbg.wait_done()
+    v = struct.unpack("<64I", st.dbg.mod.device_read(out, 0x100))
+    check("T6: out[tid]==tid for all 64 threads",
+          list(v), list(range(64)))
+
+
 t1()
 t2_divergent_two_sites()
 t3_bsync_shared_thunk()
 t4_group_stepping()
+t5_warpsync_stepping()
+t6_bar_stepping()
 
 if FAILS:
     print(f"=== FAILURES: {FAILS} ===")

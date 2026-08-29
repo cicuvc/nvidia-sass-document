@@ -503,12 +503,39 @@ wrappers (raise when a warp is parked as several groups).
   released-FROM-BSYNC entry.  Net effect: divergent groups step one
   apart through the barrier — a valid schedule; results verified.
 
+M8d (cli.py + stepper.py + probe_bar.py, DONE) — CLI group display +
+E6 BAR/WARPSYNC cross-PC probe.
+
+- CLI: the user view is warp → [(inst, lane mask)] per parked GROUP
+  (`_show_group_hit`); `w` prints one line per group with the mask;
+  `c`/`s`/`q` drive off `Debugger._groups` (the authoritative parked
+  set — the compat `_parked` warp→bp dict collapses groups and the
+  stepper's `_parked` desyncs under manual b/c); `_wait_next` drains
+  all queued hits (a divergent sibling usually parks in the same
+  resume window).  `s` re-syncs `st._parked` from `_groups` first.
+- **probe_bar findings** (subprocess-isolated, wedge-safe):
+  - **E0b: WARPSYNC rendezvous requires the SAME PC** — two divergent
+    halves at two DIFFERENT WARPSYNC.ALL sites deadlock with zero
+    debugger involvement (confirms warpsync.md "reach the same PC").
+  - **E2: BAR.SYNC arrival is PC-AGNOSTIC** — a thunk-replayed BAR
+    rendezvous with an in-place BAR (CTA barrier counts arrivals,
+    not fetch addresses).
+  - E3/E4: a bp on a single WARPSYNC site works because the
+    (warp, site) thunk-VA cache makes every released group execute
+    WARPSYNC at the SAME blob VA — sequential releases rendezvous
+    too (the assist pattern).
+- Stepper barrier assist extended: `_BARRIER = {BSYNC, WARPSYNC, BAR}`
+  for both the released-FROM flag and the assist trigger (the
+  from-barrier pending entry may belong to a DIFFERENT warp for BAR —
+  the `any()` scan is deliberately not warp-scoped).
+- E2E: test_sassdbg_m8.py T5 (WARPSYNC stepping via assist) + T6
+  (2-warp BAR stepping); probe_bar E0-E4 all OK.
+
 Roadmap: debugger feature-complete (M1-M7: trace, lift, breakpoints,
 multi-warp/multi-CTA, stepper, reverse, CLI, command injection).
-M8 divergence-aware breakpoints: M8a probes, M8b per-group comms,
-M8c group stepper all DONE (E2E test_sassdbg_m8.py; full serial
-132/133, only the known test_uimad self-bug).  M8d next: CLI group
-display/exec filtering + E6 BAR/WARPSYNC cross-PC probe.
+M8 divergence-aware breakpoints DONE (M8a probes, M8b per-group
+comms, M8c group stepper, M8d CLI groups + BAR/WARPSYNC probe; full
+serial 132/133, only the known test_uimad self-bug).
 
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
