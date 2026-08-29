@@ -73,6 +73,20 @@ Hand-check `NANOSLEEP 0x64`: opcode 0x95d (imm), `Sb`[63:32]=0x64 → `0x64` (10
 `__nanosleep(imm)` → `NANOSLEEP 0x<ns>`; `__nanosleep(reg)` → `NANOSLEEP R<n>`. Typically
 placed at the top of a spin/poll loop body (like YIELD, but with an escalating delay).
 
+## Intra-warp execution-group handoff (SM120)
+
+The reverse-direction state-machine probe in
+`tests/asm_construct/test_yield.py` starts with group A executing one YIELD,
+then group B owns the warp and polls a state word.  Completion is possible only
+if B hands execution back to A, whose CAS changes state 1→2.
+
+With a plain NOP in B's loop, a live snapshot after 2 seconds remains at
+`state=1`: A is not automatically rescheduled.  Replacing NOP with NANOSLEEP
+completes with `state=2`, `cas_old=1` for immediate durations **0, 1, 32, and
+100 ns**.  Therefore NANOSLEEP performs the same intra-warp execution-group
+handoff as YIELD, even at duration zero; a nonzero timed suspension is not
+required for the handoff itself.
+
 ## Open questions
 - Exact meaning of `.WARP`/`.SYNCS` modifiers and the hardware duration rounding/cap are not
   spec-stated.

@@ -115,3 +115,22 @@ case on a single warp: `{tid 0}` = producer sets a memory flag; `{tid 1..31}`
 ptxas emits exactly this for an empty `while (*flag==0) {}` spin
 (sm_120, `-O3`): `LDG.E.STRONG.SYS flag → YIELD → ISETP → @!P0 BRA` — the
 YIELD is the compiler's explicit forward-progress guarantee for spinning warps.
+
+The reverse-direction probe in the same test resolves whether a group that
+executes YIELD once is eventually scheduled again when the selected sibling
+group does not execute YIELD or exit.  An atomic state machine admits completion
+only in the order A(pre-yield) → B(state=1) → A(CAS 1→2):
+
+- B's poll loop containing **YIELD** completes with `state=2`, `cas_old=1`
+  (positive control: the order really was A→B→A).
+- Replacing YIELD with **NANOSLEEP 0/1/32/100 ns** also completes with the
+  same `state=2`, `cas_old=1`; even a zero-duration NANOSLEEP hands execution
+  back to A.
+- Replacing that instruction with **NOP** leaves the kernel running and a live
+  host snapshot after 2 seconds reads `state=1`, `success=0`, `cas_old=0`.
+
+Thus on the tested sm_120, YIELD is a one-shot execution-group handoff, not a
+fairness promise: once B owns the warp, A is not automatically scheduled again
+while B keeps polling without an explicit YIELD/NANOSLEEP/exit.  B's LDG
+traffic and the per-instruction control-code yield bit do not cause an
+intra-warp group switch; that control bit governs inter-warp scheduling instead.
