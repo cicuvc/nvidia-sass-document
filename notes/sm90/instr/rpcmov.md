@@ -16,13 +16,18 @@ the halves as `Rpc.LO` / `Rpc.HI` (`PC_REG` operand); 64-bit forms name
 
 ## Empirical (sm_120, `sassdbg/probe_callheap2.py` / `probe_callheap3.py`)
 
-- **`CALL.ABS` writes RPC = VA of the CALL instruction itself**; the
-  return address is `RPC + 0x10`.  A callee returns with
+- **`CALL.ABS` with a GPR target writes RPC = VA of the CALL instruction
+  itself**; the return address is `RPC + 0x10`.  A callee returns with
   `RET.ABS.NODEC {RpcPair}, 0x10` (skip the CALL) or `, 0x0`
   (re-execute the site — the breakpoint-handler pattern).
-- **`CALL.REL` does NOT write RPC** — `RPCMOV` after a REL call reads an
-  indeterminate value (observed both `0` and launch residue across runs).
-  ptxas's `CALL.REL.NOINC` ABI never touches RPC, consistent with this.
+- **ABS uniform-register and immediate target forms execute the call but
+  do NOT populate RPC**; `RPCMOV` in their callee reads changing launch
+  residue.  This is independent of INC/NOINC.  A handler for these forms
+  must receive its return VA separately.
+- **`CALL.REL` also does NOT write RPC** — `RPCMOV` after a REL call reads
+  an indeterminate value (observed both `0` and launch residue across
+  runs).  ptxas's `CALL.REL.NOINC` ABI never touches RPC, consistent with
+  this.
 - RPC is a **single register, not a stack**: nesting overwrites it
   (a callee that CALLs again must spill RPC first), and `RET_DEPTH.DEC`
   does not restore any outer value.

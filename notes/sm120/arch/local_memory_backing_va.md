@@ -484,3 +484,21 @@ Important subprobes in the script:
 - Re-test on sm_90 hardware; all results here are sm_120 silicon only.
 - Test whether `SETLMEMBASE` is warp-scoped under divergent execution and how it
   interacts with multiple simultaneously resident warps.
+
+## SETLMEMBASE settling latency & RZ+imm24 reach (sassdbg probe_mwarp.py)
+
+- **SETLMEMBASE does not take effect immediately.**  Local accesses within the
+  first ~10s of cycles after it are flaky: LDLs can observe a lane-split view
+  (lane 0 on the new LMB, other lanes still on the old one) or fault 700 when
+  the target address was never device-written.  An unbounded delay (a spin
+  gate) makes it deterministic; a 4×stall-15 NOP pad (~60 cycles) was *not*
+  reliably enough.  Rule: after SETLMEMBASE, never let the first local access
+  be time-critical or a read of host-written data.
+- **Device-side STL→LDL round-trips at LMEMHIOFF+0x00..0x1B are rock solid**
+  once settled (the M3v3 breakpoint handler spills/restores six registers +
+  PR this way, across multi-millisecond host-observed parks, two warps
+  concurrently on their own LMBs).
+- **`STL/LDL [RZ+uImm24]` reach only the low 0x640 dwords of the window**:
+  LMEMHIOFF+0x640 = 0x1000000 crosses 2^24 and the assembler silently
+  truncates the immediate (observed: 0x10009c0 encoded as 0x0009c0 → 700).
+  Deeper frames need register-based local addressing (`STL [R14]`).

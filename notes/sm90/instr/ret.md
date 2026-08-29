@@ -96,3 +96,12 @@ Every non-inlined `__device__` function ends in `RET.REL.NODEC R<n>` where `R<n>
   handler to re-run the restored original word.
 - Returns into **heap-resident** code (and back into kernel text) are
   plain absolute-VA jumps; no segment checks observed on sm_120.
+- **The immediate form works for RET**: `RET.ABS.NODEC
+  PT, RZ, <byte_va>` assembled (imm field = va>>2, SCALE 4) OR
+  bit-surgery-composed at runtime and stored over a handler's own last
+  line (STG.E.128 + hardened IVALL) returns correctly
+  (`sassdbg/probe_mwarp.py` P6a/P6b — the M3v3 breakpoint handler
+  returns this way, freeing the return-pair register reservation).
+  `CALL.ABS` immediate also reaches its target, but unlike the GPR-target
+  CALL form it does not populate RPC; its old 718 result was a subsequent
+  return through the indeterminate RPC, not failure of the CALL jump.

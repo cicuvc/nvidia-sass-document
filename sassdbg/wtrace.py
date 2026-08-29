@@ -307,8 +307,8 @@ def _emit_claims(sections: dict[str, int]) -> list[str]:
     so divergent groups allocate disjoint, issue-ordered frames."""
     out = [
         f"P2R {RPRS}, PR;{_B_ALU}",
-        f"BMOV {RMACT}, MACTIVE;{_B_ALU}",
-        f"FLO.U32 {RFLO}, PT, {RMACT};[3:7:{{}}:5:1]",
+        f"BMOV {RMACT}, MACTIVE;[2:7:{{}}:8:0]",
+        f"FLO.U32 {RFLO}, PT, {RMACT};[3:7:{{2}}:5:1]",
         f"ISETP.EQ.AND P6, PT, {RLANE}, {RFLO}, PT;[7:7:{{3}}:13:1]",
     ]
     for sec in SEC_ORDER:
@@ -517,7 +517,7 @@ def instrument_warp(source: str, *, undo: bool = True) -> WInstrumentedKernel:
         "S2R R235, SR_TID.X;[0:7:{}:8:0]",
         "SHF.R.U32 R235, R235, 0x5, RZ;[7:7:{0}:8:0]",
         f"IMAD.WIDE.U32 {{R224,R225}}, R235, 0x{REGION_BYTES:x}, "
-        "{R224,R225};[7:7:{}:8:0]",
+        "{R224,R225};[7:7:{1}:8:0]",   # req the __trace LDC (SB1)
     ]
     steps: list[WStep] = []
     idx = 0

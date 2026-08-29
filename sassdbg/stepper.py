@@ -118,7 +118,7 @@ class Cfg:
 class Stepper:
     """Single-step a dialect-source kernel via M3 breakpoints.
 
-    Usage:
+    Usage (single warp):
         st = Stepper(source)
         st.launch(args)                       # parks at the gate
         bp = st.run_to_entry()                # break before inst 0
@@ -126,16 +126,25 @@ class Stepper:
             ... inspect bp.orig_index ...
             bp = st.step(bp)
         st.dbg.wait_done()
+
+    Multi-warp (block=(32*N,)): run_to_entry_all() / step_all(state)
+    drive EVERY parked warp one instruction at a time (lockstep of the
+    parked set); per-warp executed paths land in self.paths[warp].
     """
 
     def __init__(self, source: str, func: str | None = None,
-                 max_bps: int = 32):
+                 max_bps: int = 32, max_warps: int = 1):
         self.cfg = Cfg(source)
-        self.dbg = Debugger(source, func=func, max_bps=max_bps)
-        self.path: list[int] = []
+        self.dbg = Debugger(source, func=func, max_bps=max_bps,
+                            max_warps=max_warps)
+        self.path: list[int] = []           # single-warp view (= paths[0])
+        self.paths: dict[int, list[int]] = {}
+        self.n_warps = 1
 
     def launch(self, args: list, grid=(1,), block=(32,)) -> None:
         self.dbg.launch(args, grid=grid, block=block)
+        self.n_warps = self.dbg.n_warps
+        self.paths = {w: [] for w in range(self.n_warps)}
         self.dbg.wait_base()
 
     def run_to_entry(self, timeout: float = 30.0) -> Breakpoint:
@@ -173,6 +182,76 @@ class Stepper:
         n = 0
         while bp is not None:
             bp = self.step(bp)
+            n += 1
+            if n > max_steps:
+                raise RuntimeError("step budget exhausted")
+        self.dbg.wait_done()
+
+    # -- multi-warp (M3v3) ---------------------------------------------------
+    # Invariant at step boundaries: the set of armed sites == the set of
+    # sites where a warp is currently parked.
+    def run_to_entry_all(self, timeout: float = 30.0
+                         ) -> dict[int, Breakpoint]:
+        """Arm inst 0, open the gate, and park EVERY warp; returns
+        {warp: bp}."""
+        self.dbg.arm(0)
+        self.dbg.release()
+        state: dict[int, Breakpoint] = {}
+        while len(state) < self.n_warps:
+            hit = self.dbg.wait_hit(timeout)
+            state[hit.warp] = hit
+            self.paths[hit.warp].append(hit.orig_index)
+        return state
+
+    def step_all(self, state: dict[int, Breakpoint],
+                 timeout: float = 30.0) -> dict[int, Breakpoint]:
+        """Advance every parked warp by exactly one instruction; returns
+        the new {warp: bp} (warps that executed a terminal instruction
+        drop out — they run to completion)."""
+        # union of successors over all parked warps
+        cur_sites = {bp.orig_index for bp in state.values()}
+        live: dict[int, Breakpoint] = {}        # warps expected to hit
+        succs: set[int] = set()
+        for w, bp in state.items():
+            nxt = self.cfg.next_pcs(bp.orig_index)
+            if nxt:
+                live[w] = bp
+                succs.update(nxt)
+        # arm successors that are not currently-armed sites; successors
+        # coinciding with a parked site (self-edges, another warp's
+        # current site) must be armed AFTER the resumes restore them
+        deferred = succs & cur_sites
+        armed = [self.dbg.arm(i) for i in succs - cur_sites]
+        for bp in {id(bp): bp for bp in state.values()}.values():
+            self.dbg.resume(bp)
+        armed += [self.dbg.arm(i) for i in deferred]
+        # collect every live warp's next hit
+        new_state: dict[int, Breakpoint] = {}
+        pending = set(live)
+        while pending:
+            hit = self.dbg.wait_hit(timeout)
+            assert hit.warp is not None
+            if hit.warp not in pending:
+                raise RuntimeError(
+                    f"unexpected hit from warp {hit.warp} at "
+                    f"orig {hit.orig_index} (waiting on {sorted(pending)})")
+            pending.discard(hit.warp)
+            new_state[hit.warp] = hit
+            self.paths[hit.warp].append(hit.orig_index)
+        # disarm the sites nobody took (still armed; each taken site is
+        # now the hitting warp's parked bp)
+        taken = {bp.orig_index for bp in new_state.values()}
+        for b in armed:
+            if b.orig_index not in taken:
+                self.dbg.disarm(b)
+        return new_state
+
+    def run_all(self, state: dict[int, Breakpoint],
+                max_steps: int = 100000) -> None:
+        """step_all until every warp exited (or max_steps)."""
+        n = 0
+        while state:
+            state = self.step_all(state)
             n += 1
             if n > max_steps:
                 raise RuntimeError("step budget exhausted")

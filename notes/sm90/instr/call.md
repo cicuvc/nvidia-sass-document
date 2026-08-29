@@ -89,8 +89,9 @@ ABI, HW call-depth stack unused). Most device functions are inlined and emit no 
 ## Open questions
 - `CALL.INC`/register-stack returns (`RET` without `.NODEC`) are spec-supported but not
   emitted by the sampled ptxas; only the register-ABI `.NOINC`/`.NODEC` path is observed.
-- Absolute/const/uniform CALL forms are unexercised by ptxas here (verified only via
-  patching); their real ABI usage (e.g. indirect/virtual calls) is unobserved.
+- Absolute/const/uniform CALL forms are unexercised by ptxas here.  ABS uniform and
+  immediate targets now have runtime probes, but their real ABI usage (e.g.
+  indirect/virtual calls) is unobserved; the const-target form remains patch-only.
 
 ## Empirical (sm_120, sassdbg probes — hand-assembled, GPU-verified)
 
@@ -98,18 +99,19 @@ ABI, HW call-depth stack unused). Most device functions are inlined and emit no 
   code"): a devmem buffer written by the host with cuMemcpy is
   fetched/executed as SASS with no icache ceremony.  This is the
   foundation of sassdbg's slot-less breakpoint handler.
-- **`CALL.ABS` writes RPC = VA of the CALL instruction** (see
-  [rpcmov.md](rpcmov.md)); **`CALL.REL` does not write RPC at all**
-  (RPCMOV after it reads indeterminate data).
-- `CALL_DEPTH` `INC`/`NOINC` only maintain a hardware call-depth
-  counter: all four {INC,NOINC}x{DEC,NODEC} CALL/RET combinations work
-  when the return VA is supplied in a register; the target is always
-  `Ra + disp` (disp in **bytes**).  A `RET.ABS.DEC` with `Ra=RZ` faults
-  700 — the depth counter never supplies the PC.
-- The **ABS-immediate form** (`call_abs__RIR`, field = VA>>2 verified in
-  the encoding) faulted 700 jumping at both a heap VA and a small
-  kernel-relative offset — its runtime semantics remain uncracked; use
-  the register form.
+- **Only the ABS register-target form is observed to write RPC = VA of
+  the CALL instruction** (see [rpcmov.md](rpcmov.md)).  ABS uniform and
+  immediate targets both reach the handler but leave RPC indeterminate;
+  `CALL.REL` likewise does not write a usable RPC.
+- `CALL_DEPTH` `INC`/`NOINC` and `RET_DEPTH` `DEC`/`NODEC` have no
+  observed effect on sm_120: all four combinations work with an explicit
+  return VA, `BMOV API_CALL_DEPTH` is unchanged (including when seeded to
+  5), and 100 nested INC calls do not fault.  A `RET.ABS.DEC` with
+  `Ra=RZ` still faults because the depth mechanism never supplies the PC.
+- The **ABS-immediate form works as a jump**: a field value verified as
+  `heap_va>>2` reaches and executes heap-resident code.  The earlier 718
+  result came from attempting to return through its indeterminate RPC;
+  returning through a separately supplied GPR pair succeeds.
 - **Divergent CALL.ABS works**: a half-warp group enters the callee with
   its own RPC and returns correctly.
 - **CBU operand waits need the `{req}` bitset**: a CALL whose target

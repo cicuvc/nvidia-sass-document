@@ -47,7 +47,8 @@ Source dialect essentials (see §3–§4 of the manual):
   sets `MAXREG_COUNT`/`SHARED`/`SHADER_TYPE`/`MBARRIER_*`; labels via
   `#def_label(name)` + `#label(name)`.
 - Scheduling bracket `[wr:rd:{req}:stall:yield[:batch_t]]` on every line; scoreboards are SB0–SB5 (7 = none, 6 rejected).
-- **Cross-barrier waits MUST go in `{req}`, not `rd`** (probe-verified the hard way, sassdbg probe3): `rd=2` on a MOV32I did NOT wait (CALL target from LDC → 718 INVALID_PC), `rd=1` on an STG.64 did NOT wait the LDC address pair (garbage → 700); the same waits via `{2}`/`{0,1}` work. LDC/LDCU/LDG are variable-latency — the first consumer of ANY result register (incl. the UR4/UR5 desc pair) must wait its barrier via req; stall cycles do NOT cover it. Re-claiming an already-used barrier (e.g. RPCMOV `wr=0` on top of LDCU's) lets one `req={0}` cover all outstanding claims on it.
+- **Cross-barrier waits MUST go in `{req}`, not `rd`** (probe-verified the hard way, sassdbg probe3): `rd=2` on a MOV32I did NOT wait (CALL target from LDC → 718 INVALID_PC), `rd=1` on an STG.64 did NOT wait the LDC address pair (garbage → 700); the same waits via `{2}`/`{0,1}` work. LDC/LDCU/LDG are variable-latency — the first consumer of ANY result register (incl. the UR4/UR5 desc pair) must wait its barrier via req; stall cycles do NOT cover it. (Re-claiming an already-used barrier (e.g. RPCMOV `wr=0` on top of LDCU's) lets one `req={0}` cover all outstanding claims on it.
+- **S2R SR_CTAID.X is a SLOW scoreboarded read** (probe: /tmp bisect, m3c bring-up): nvcc claims a barrier on it and the consumer waits via req (`S2R R7, SR_CTAID.X;[0:7:{}:7:0]` … `IMAD …;[7:7:{0}:4:1]`).  Stall cycles alone need ≥8 NOPs (~100+ cyc) to be safe; a stall-5 consumer reads PER-LANE GARBAGE (launch residue), and different consumers in adjacent instructions can disagree.  Waiting the claimed barrier via `{req}` is exact even at zero padding.  SR_TID.X is fast (stall 5 suffices).  Local memory addressing gotcha re-confirmed during the same bring-up: `STL/LDL [RZ+imm]` must target ≥ LMEMHIOFF (0xfff9c0) — address 0 faults 700; and when fixing a 64-bit address by hand, add offsets to the LOW register of the pair.
 - **64/128-bit operands MUST be explicit register groups** `{Ra,Rb}`/`{Ra,Rb,Rc,Rd}` (cuobjdump prints the scalar shorthand; the assembler source requires groups — this is the #1 gotcha).
 - `LDCU` is the sm_120 name of `ULDC`.
 - HMMA/QMMA results are NOT scoreboarded (COUPLED_EMULATABLE): pad **≥16 NOP** before reading `Rd` (fewer can fault 0x715).
@@ -129,8 +130,9 @@ M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
   A fat loop (~2KB body) refetches per iteration and the same IVALL
   makes the patch visible within one iteration.  => breakpoints must be
   armed before the loop is entered.
-- **M3v2 (current): slot-less breakpoints via CALL.ABS + RPCMOV**
-  (probes: `sassdbg/probe_callheap2.py` = user's, `probe_callheap3.py`):
+- **M3v2: slot-less breakpoints via CALL.ABS + RPCMOV**
+  (superseded by M3v3 below; probes: `sassdbg/probe_callheap2.py` =
+  user's, `probe_callheap3.py`):
   the site word is overwritten with the CONSTANT word
   `CALL.ABS.NOINC PT, {R252,R253}, 0x0` (prologue preloads R252/253 with
   the handler VA from ctrl+0x20).  The breakpoint HANDLER is
@@ -162,17 +164,57 @@ M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
     to completion instead of hitting the fall-through bp).
   - **BRX is the RELATIVE twin** of JMX (target = next_pc + Ra + off —
     Ra kernel-relative; absolute VA faults 700).  notes/{brx,jmx}.md.
-- `sassdbg/patch.py` — M3v2 host API: `inject_debugger(source, max_bps)`
-  (prologue: LEPC base report + handler-VA load + gate + hardened IVALL,
-  reserves R246–R253/UR60/61, rejected if the kernel uses them; NO
-  appended slots — max_bps kept for API compat only; extra `dbgctrl<8>`
-  param), `Patcher` (warm-up launch mandatory — host cuMemcpy cannot
+- **M3v3 (current): multi-warp breakpoints via per-warp blobs**
+  (probe `sassdbg/probe_mwarp.py`, E2E
+  `tests/asm_construct/test_sassdbg_m3w.py`):
+  - Patch word = CONSTANT `CALL.ABS.NOINC PT, {R252,R253}, 0x80000` —
+    R252/253 = the PER-WARP blob base, so one word serves all sites and
+    all warps.  Kernel reservation dropped to **R252/R253 only** (v2
+    needed R246–R253 + UR60/61).
+  - Per-warp blob (1 MiB devmem, warpid = SR_CTAID.X*ctawarps +
+    SR_TID.X>>5, ctawarps passed via ctrl+0x28; multi-CTA supported,
+    E2E `tests/asm_construct/test_sassdbg_m3c.py` = 2 CTAs x 2 warps;
+    **HARD constraint: all CTAs must be CO-RESIDENT** — parked warps
+    never exit, so a grid exceeding resident capacity deadlocks at the
+    gate; LMB verified per-warp even across CTAs by
+    `sassdbg/probe_lmbshare.py`):
+    [0,0x20000) local backing / [0x40000,...) comms (gen + hit VA) /
+    [0x80000,...) handler code.  The prologue runs **SETLMEMBASE once,
+    permanently** — the blob doubles as the warp's local backing, so the
+    handler spills/restores R246–R251 + PR with `STL/LDL [RZ+uImm24]`
+    (zero scratch register needed — breaks the "need a register to save
+    a register" bootstrap).  Comms are **desc-less**
+    `STG/LDG.E.STRONG.GPU [{R252,R253}+COMMS+k]` (URs freed).
+  - The handler returns through a **self-constructed
+    `RET.ABS.NODEC RZ, imm`**: RPCMOV → site VA → bit-surgery compose
+    (imm = va>>2, SCALE 4: field[7:0]→lo[23:16], [37:8]→lo[63:34],
+    [55:38]→hi[17:0]; `compose_ret_word()` in patch.py) → STG.E.128
+    over the handler's OWN last line → hardened IVALL covers the fetch.
+    NOTE: CALL.ABS imm form faults 700 (probe3 P4) but RET imm form
+    WORKS (probe P6b).  When validating via the assembler pass the BYTE
+    address (it does the /4); self-modifying code must >>2 itself.
+  - **SETLMEMBASE has a settling latency**: local accesses in the first
+    ~10s of cycles after it are flaky (lane-split LMB views, 700s on
+    never-device-written addrs).  The prologue's gate spin provides the
+    settling window — never let the first local access be time-critical
+    or a host-data read.  STL/LDL `[RZ+uImm24]` reach only the low
+    0x640 dwords of the local window (LMEMHIOFF+0x640 crosses 2^24);
+    deeper frames need register-based local addressing.
+  - Host: `Debugger(src, max_warps=N)`; `wait_hit()` sets `bp.warp`;
+    `resume(bp)` bumps the generation of exactly the warps parked at
+    that site (one resume releases a multi-warp pile-up at one site).
+    M2/M3/M4/M5 tests + full serial regression all pass (127/128, the
+    one failure = known test_uimad self-bug).
+- `sassdbg/patch.py` — M3v3 host API: `inject_debugger(source, max_bps)`
+  (prologue: LEPC base report at inst 1 + per-warp blob setup + gate +
+  hardened IVALL, reserves R252/R253 only; extra `dbgctrl<8>` param),
+  `Patcher` (warm-up launch mandatory — host cuMemcpy cannot
   write module code space), `Debugger`: `launch(args, grid, block)`
   (parks at the gate), `arm(orig_inst_index)` / `disarm` / `wait_hit`
   (maps site VA → bp) / `resume` / `wait_done` (stream_query-based;
   never cuCtxSynchronize while parked).  Resume consumes the bp (re-arm
-  to break again).  E2E: `tests/asm_construct/test_sassdbg_m3.py`,
-  5/5 repeat runs.
+  to break again).  E2E: `tests/asm_construct/test_sassdbg_m3.py` (5/5),
+  `test_sassdbg_m3w.py` (2-warp, 3/3).
 
 M4 (`sassdbg/wtrace.py` + `sassdbg/reverse.py`) — warp-level trace +
 forward/backward state replay.  DONE: instrumenter, decoder, reverse
@@ -199,15 +241,22 @@ point, partial-replay equivalence).
   stream is the control-flow history (reverse PC chain = stream walked
   backwards; a divergent if/else shows both bodies + the join steps once
   per group with complementary masks).
-- Claim-phase gotchas (all verified): ISETP with stall 13 REQUIRES
-  yield=1 (`[7:7:{3}:13:1]`; `:13:0` trips the opex
-  batch_t/usched_info illegal-encoding table — assemble_flat does NOT
-  catch it, only full `assemble`); FLO.U32 = bfind (MSB index);
-  SHFL.IDX form `SHFL.IDX PT, Rd, Ra, Rsrc_lane, Rbound` claims its own
-  wr SB (per-section SB assignment main=4/sgpr=3/pred=2/up=1 to avoid
-  double-claim); ATOMG result lands on wr=SB5; 64-bit dest pairs must be
-  EVEN-aligned (MISALIGNED_REG_ERROR) — `{R233,R234}` is illegal.
-- Tracer registers R224-R245 + UR59/60/61 (M3 debugger keeps R246-R253;
+ - Claim-phase gotchas (all verified): ISETP with stall 13 REQUIRES
+   yield=1 (`[7:7:{3}:13:1]`; `:13:0` trips the opex
+   batch_t/usched_info illegal-encoding table — assemble_flat does NOT
+   catch it, only full `assemble`); FLO.U32 = bfind (MSB index);
+   SHFL.IDX form `SHFL.IDX PT, Rd, Ra, Rsrc_lane, Rbound` claims its own
+   wr SB (per-section SB assignment main=4/sgpr=3/pred=2/up=1 to avoid
+   double-claim); ATOMG result lands on wr=SB5; 64-bit dest pairs must be
+   EVEN-aligned (MISALIGNED_REG_ERROR) — `{R233,R234}` is illegal.
+   **depcheck is ON for all sassdbg-generated code** (patch.py, cli.py
+   assemble with check_deps=True; default-on in assemble already); it
+   caught two real wtrace bugs, now fixed: the head's per-warp region
+   IMAD.WIDE now req-waits the `__trace` LDC (`{1}`), and the claim
+   phase's BMOV MACTIVE claims SB2 with FLO.U32 req-waiting it (`{2}`) —
+   BMOV is variable-latency, its result was previously unscoreboarded.
+- Tracer registers R224-R245 + UR59/60/61 (M3v3 debugger reserves only
+  R252/R253 — its handler scratch R246-R251 is spill-restored via local;
   disjoint by design).  `instrument_warp(source, undo=True)` appends the
   `__trace<8>` param; grid=(1,) only; host must zero the region (claim
   counters start at 0).
@@ -235,6 +284,18 @@ wtrace+debugger composition, E2E test
   The hit sequence IS the executed path (verified: exact 26-step path
   through a 5-iteration loop, correct result).  Self-edge steps arm
   after resume (best effort — resume restores the site word).
+- **Multi-warp (M3v3)**: `Stepper(..., max_warps=N)` +
+  `run_to_entry_all()` / `step_all(state)` / `run_all(state)` drive
+  every parked warp in lockstep: union-arm successors → resume all
+  current bps (one resume releases a same-site pile-up) → deferred-arm
+  successors that coincide with a parked site → collect each warp's
+  next hit (`bp.warp`) → disarm untaken sites.  Boundary invariant:
+  armed sites == parked sites.  Per-warp paths in `st.paths[w]`.
+  A warp MAY re-park at its current site if another warp's successor
+  re-armed it before its refetch — a harmless duplicate step (the
+  original instruction still executes exactly once, one step later).
+  E2E: `tests/asm_construct/test_sassdbg_m5w.py` (2-warp divergent
+  if/else, exact per-warp paths, 3/3 repeat runs).
 - **Two M3 latent bugs found & fixed by M5** (M3 never saw them: it
   resumed within ~1 ms and m2_smoke left P0=0):
   1. The slot spin's `ISETP` (stall 4) feeding `@!P0 BRA` hit the
@@ -258,10 +319,11 @@ wtrace+debugger composition, E2E test
      has no slots and no hit ids — the site VA IS the identity — but
      the PR save/restore and ISETP stall-13-yield-1 lessons carry over
      to the handler.)
-- Reverse-from-bp composition: `Debugger(instrument_warp(src).source,
-  allow_cdesc_urs=True)` (new flag: UR60/61 allowed when the source
-  uses them only for the default cdesc, which the debugger also loads).
-  wtrace R224-R245 vs debugger R246-R253 are disjoint by design.  The
+ - Reverse-from-bp composition: `Debugger(instrument_warp(src).source,
+   allow_cdesc_urs=True)` (accepted for API compat; v3 touches NO uniform
+   registers, so wtrace's UR60/61 cdesc usage composes freely).
+   wtrace R224-R245 vs debugger R252/R253 are disjoint by design (the
+   v3 handler's R246-R251 scratch is spill-restored via local).  The
   bp-replaced instruction's post-records never emit, so
   `WarpReplay.replay()` lands on pc=bp step with pre-instruction state;
   step_back walks backwards (pc=N semantics: frames 0..N applied).
@@ -269,9 +331,59 @@ wtrace+debugger composition, E2E test
   chains need the house-style `[7:7:{}:5:1]` brackets — stall 4 lets the
   consumer read launch residue (0x3F800000 high bits observed).
 
-Roadmap: M6 = human/CLI frontend (interactive stepper UI, reverse-step
-commands), multi-warp/grid support (per-warp trace regions exist;
-breakpoint slots are warp-wide already).
+M6 (`sassdbg/cli.py`) — interactive CLI frontend (cmd.Cmd REPL,
+scriptable via stdin).  DONE: E2E smoke
+`tests/asm_construct/test_sassdbg_m6.py`.
+
+- `python3 -m sassdbg.cli --sass k.sass | --cubin x.cubin [--func F]
+  [--grid G] [--block B] [--max-warps N] [--trace]` — auto-args (8-byte
+  params get a zeroed 64 KiB scratch buffer, scalars zero-filled;
+  `--trace` appends the wtrace region).  Launches parked at the gate.
+- Commands: `b N`/`d N` (arm/disarm, ORIGINAL-source instruction
+  numbering — with --trace the CLI maps through the wtrace scaffolding
+  internally), `info b`, `r` (run_to_entry_all), `c` (resume all parked,
+  wait next hit), `s` (step_all lockstep), `w`, `p [w]` (per-warp
+  paths), `l [N]`, `back [w]` / `regs w lane Rx` (--trace reverse via
+  WarpReplay; updated on warp-0 hits), `dump w [lane] Rx…` /
+  `set w [lane] Rx val` / `exec w <sass line>` (M7 injection on a
+  PARKED warp), `q` (resumes anything parked so the kernel can
+  finish).
+- Limitations: don't mix manual `b` with `s` (step_all manages its own
+  armed set; arming an already-armed site raises); a bp is CONSUMED on
+  resume; --trace is single-CTA (wtrace region index = tid>>5, no
+  CTAID) and reverse replay is single-warp.
+
+M7 (patch.py `exec_cmd`/`dump_regs`/`set_reg` + CLI `dump`/`set`/`exec`)
+— on-demand command injection at a breakpoint: dump/set ANY register of
+a PARKED warp (per-lane), probe architectural state, repeatable until
+resume.  DONE: E2E `tests/asm_construct/test_sassdbg_m7.py` (E1-E5) +
+CLI smoke (test_sassdbg_m6.py section D).
+
+- Blob layout gains [0x90000=CMD_OFF,...) command buffer; comms gains
+  +0x18 cmd_seq (host bump) / +0x1c ack (handler echo) / +0x100 results
+  window.  Handler spin loop polls BOTH gen and cmd_seq (baselines in
+  local spill slots 7/8); dispatch = update slot8 → hardened
+  IVALL;NOP×32;IVALL → `CALL.ABS.NOINC PT, {R252,R253}, 0x90000` →
+  command code ends with `RET.ABS.NODEC PT, {R252,R253}, cmdret_off`
+  back to the spin top (anchors found by two-pass `_handler_anchors`).
+- Command contract: R246-R251 + P0-P6 are free scratch (kernel's values
+  live in local slots 0-6); WRITING R252/R253 is rejected (dest-parse;
+  read-only use as STG address base allowed); control-flow mnemonics
+  rejected; straight-line only.  Result readback via `cmd_read` /
+  STG to [{R252,R253}+0x40100+k].
+- Per-lane dump/set: `_LANE_PRELUDE` computes SR_TID.X&31 → lane*4
+  address pair {R248,R249} (64-bit groups must be CONSECUTIVE — {R249,
+  R253} is a SyntaxError); results window is reg-major ×32 lanes
+  (reg i at +0x40100+4*i*32, lane at +4*lane).  set_reg predicates on
+  `ISETP.EQ.AND P0, PT, R250, <lane>, PT` (imm-compare form NEEDS the
+  bool-op suffix `.AND` — bare `ISETP.EQ ... imm` fails to match).
+  P2R PR packing: bit i → Pi (P0 = bit 0).
+- `assemble_flat` takes PLAIN SASS — wrapping the command in
+  `#fn cmd(){}` silently yields ZERO instructions (the handler then
+  CALLs a zeroed buffer → 715).  Assert `enc` non-empty.
+
+Roadmap: debugger feature-complete (M1-M7: trace, lift, breakpoints,
+multi-warp/multi-CTA, stepper, reverse, CLI, command injection).
 
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
