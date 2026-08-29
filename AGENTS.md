@@ -531,11 +531,94 @@ E6 BAR/WARPSYNC cross-PC probe.
 - E2E: test_sassdbg_m8.py T5 (WARPSYNC stepping via assist) + T6
   (2-warp BAR stepping); probe_bar E0-E4 all OK.
 
+M9 (probe stage DONE: `sassdbg/probe_stub.py`, `probe_stub2.py`;
+patch.py rewrite PENDING) — eliminate ALL reserved registers (drop the
+R252/R253 reservation and the R246-R251 handler scratch; abandon
+SETLMEMBASE/LMEM entirely).
+
+- Motivation: real cubins have a compile-time register budget — a
+  kernel may legitimately use every register, so no reservation is
+  safe.  ptxas guarantees >= 24 registers (R0-R21 always exist) -> the
+  stub borrows R0/R1, the handler borrows R2-R7, all spill-restored.
+- **SETLMEMBASE abandoned** (user probe
+  `tests/asm_construct/probe_setlmembase_lanes.py` +
+  notes/sm120/instr/setlmembase.md): the base value is WARP-shared, so
+  a debugger-set base disturbs sibling execution groups' local memory
+  access.  Spills go to absolute devmem addresses instead.
+- **probe_rpc_write.py**: RPCMOV register->RPC write forms exist and
+  work (rpcmov_dstPc_ 0x352 = 32-bit PC_REG<-Register:
+  `RPCMOV Rpc.LO, R0` / `RPCMOV Rpc.HI, R1`; rpcmov_dstPc64__Imm 0x954
+  = RPC<-UImm(57)).  JMP IMM preserves RPC (does NOT write it) — so RPC
+  is a usable 64-bit spill slot across a JMP.
+- New patch scheme (probe-verified): the site word is overwritten with
+  a per-site constant `JMP <stub_va>` (JMP IMM 0x94a, UImm(57) SCALE 4,
+  [80:34]||[23:16]; pass the BYTE address to assemble_flat, it does the
+  /4).  Each bp owns a 0x100 stub slot in a shared devmem arena; the
+  stub JMPs to ONE shared handler; resume goes through a per-site thunk
+  + a shared epilogue.
+- Stub (borrows R0/R1 only, ~14 insts):
+  `RPCMOV Rpc.LO, R0 / RPCMOV Rpc.HI, R1` (kernel R0/R1 -> RPC);
+  `S2R R0, SR_CTAID.X; IMAD R0, R0, K, RZ` (K = ctawarps*32, baked);
+  `S2R R1, SR_TID.X; IADD3 R0, R0, R1` (f = global lane-frame index —
+  key identity `gwarp*32+lane == ctaid*(ctawarps*32)+tid`, so no
+  laneid/warpid extraction is needed); `MOV32I R1, pool_lo;
+  IMAD R0, R0, FRAME, R1` (lo32 must NOT carry); `MOV32I R1, pool_hi`;
+  `JMP handler_va`.  ctawarps/FRAME/pool are baked immediates written
+  at launch/relaunch time.
+- Frame (per (warp,lane), FRAME=0x40): +0x00..0x14 R2-R7 spill, +0x18
+  PR (P2R), +0x1C hits, +0x20 kernel R0/R1 (8B — MUST be 8B-aligned;
+  0x1C faulted 716 MISALIGNED_ADDRESS), +0x28 release generation.
+- Handler (shared; borrows R2-R7 + P0): spill R2-R7+PR; RPCMOV
+  R2/R3 <- Rpc.LO/HI + STG.E.64 -> frame (kernel R0/R1); read the
+  release BASELINE **before** the hit-report STG (host race: the host
+  bumps release the moment it sees hits++, so a baseline read after the
+  report can sample the already-bumped value -> deadlock); hits++
+  (STRONG.GPU); spin `NANOSLEEP 0x100` + LDG release != baseline (M8a
+  starvation lesson); restore PR (LDG->R2P, stall 13 **yield=1** —
+  `:13:0` trips the opex illegal-encoding table) + R2-R7 (all LDGs
+  chain-claim SB2 — one req{2} covers all outstanding claims); JMP
+  thunk_va.
+- Thunk (per-site, host-built): `replay ; JMP epi_va`.  The replay
+  instruction carries req{2} -> covers every restore LDG.  BRA sites
+  become absolute JMP(s) with the predicate re-evaluated (M8c rules).
+- Epi (shared): `LDG.E.64 {R0,R1}, [{R0,R1}+0x20]` — one 64-bit load
+  self-restores kernel R0/R1 (address regs are read before the write);
+  then a dummy `MOV R1, R1;[7:7:{2}:5:1]` scoreboard-waits the restore
+  so the kernel never reads a pending variable-latency R0/R1; JMP
+  site+0x10.
+- **RPC lifetime rule**: RPC holds kernel R0/R1 from the stub until the
+  handler's frame store; NO RPC-writing instruction (NANOSLEEP/BSYNC/
+  WARPSYNC/CALL/RET/BRX — rpcmov.md RPC_WRITERS) may execute before
+  that store.  Afterwards RPC is dead (the epi restores R0/R1 from the
+  frame, not from RPC), so the spin's NANOSLEEP and an RPC-writing
+  replayed site instruction are both safe.
+- Site identity (planned for the rewrite): the stub spills R2/R3 to the
+  frame right after computing {R0,R1}, then MOV32I R2/R3 = baked site
+  VA + `STG.E.64 [frame+F_SITE]`; the handler reads the site VA from
+  the frame and runs the M8b hit-slot RMW with a GLOBAL slot index
+  `gwarp*32+FLO(MACTIVE)` (stubs are shared across warps, so per-warp
+  comms indexing is impossible).  ~14 insts fits the 0x100 stub slot.
+- probe_stub.py OK + probe_stub2.py OK (10 bp round trips: out=70, and
+  R4-R7 constants + P1-P3 folded to exactly 0xA00 — spill/restore
+  lossless).  Probe-phase bugs fixed, all must be respected by the
+  rewrite:
+  1. A kernel that parks MUST be launched on a NON_BLOCKING stream —
+     synchronous cuMemcpyDtoH queues behind a default-stream spinner
+     and deadlocks the host poll loop.
+  2. 64-bit frame slots need 8B-aligned offsets.
+  3. R2P (like ISETP) needs yield=1 at stall 13.
+  4. Baseline-before-report ordering (above).
+  5. **Arena slot overlap**: the handler is ~45 insts — a too-small
+     code slot silently SPLICES the next slot's code into the live
+     stream (the "hit 2 never arrives" bug: thunk/epi overwrote handler
+     insts 16-26).  Always assert `len(enc)*16 <= slot_size`.
+
 Roadmap: debugger feature-complete (M1-M7: trace, lift, breakpoints,
 multi-warp/multi-CTA, stepper, reverse, CLI, command injection).
 M8 divergence-aware breakpoints DONE (M8a probes, M8b per-group
 comms, M8c group stepper, M8d CLI groups + BAR/WARPSYNC probe; full
-serial 132/133, only the known test_uimad self-bug).
+serial 132/133, only the known test_uimad self-bug).  M9 (zero register
+reservation) probes DONE, patch.py rewrite in progress.
 
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):

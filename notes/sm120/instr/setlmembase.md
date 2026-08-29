@@ -67,13 +67,63 @@ interleave unchanged; it replaces only the first term.
 ## Scope and safety
 
 The observed `GETLMEMBASE` allocation is per warp, and the successful switch
-affected all lanes of the probing warp. Divergent execution has not yet been
-tested, so the exact convergence/warp-state semantics remain open.
+affected all lanes of the probing warp. A predicated, partial-warp SET also
+updates this single warp-wide state; source-lane selection is described below.
 
 The replacement allocation must cover every transformed offset that may be
 accessed. Supplying an invalid address such as `0x1111111100000000` caused
 `CUDA_ERROR_ILLEGAL_ADDRESS` (700). Restore the original base before `EXIT`;
 leaving driver-managed local state redirected has not been characterized.
+
+## Lane-varying source operand
+
+Probe: `tests/asm_construct/probe_setlmembase_lanes.py` (RTX 5090 / sm_120).
+Each lane was given a different valid address:
+
+```text
+Ra[lane] = arena + slot(lane) * 1 MiB
+```
+
+`SETLMEMBASE` does not retain 32 independent bases. It elects the operand of
+the **lowest-numbered active lane** at that instruction and broadcasts it into
+the warp-wide LMB state:
+
+```text
+leader = find-first-set(execution_mask)       // lowest physical lane ID
+warp_lmem_base = Ra[leader]
+```
+
+Evidence:
+
+| SET execution mask | Forward slots `slot(l)=l` | Reverse slots `slot(l)=31-l` |
+|---|---:|---:|
+| lanes 0–31 | selected slot 0 | selected slot 31 |
+| lanes 1–31 | selected slot 1 | selected slot 30 |
+| lanes 7–31 | selected slot 7 | selected slot 24 |
+| lanes 16–31 | selected slot 16 | selected slot 15 |
+| lane 31 only | selected slot 31 | selected slot 0 |
+
+The reverse mapping proves selection is by physical lane ID, not by minimum
+address. For every case and repeat:
+
+- the first `GETLMEMBASE` after SET returned one uniform elected value in all
+  32 lanes;
+- a second GET after 0, 1, 4, 16 or 64 stall-8 NOPs returned the same value;
+- the subsequent STL placed all 32 lane words in one 128-byte segment under
+  only the elected arena slot;
+- the LDL round-trip matched 32/32 lanes.
+
+The probe deliberately uses valid addresses in every lane. It does not yet
+establish whether invalid values in non-elected lanes are ignored before any
+address validation, nor what happens when separate divergent SIMT groups
+execute different SETs before reconvergence. Since the architectural state is
+warp-wide, code should treat such competing SETs as order-dependent rather
+than as per-group local-memory contexts.
+
+The zero-NOP case still executes two GETs before its first STL. It therefore
+shows immediate GET visibility of the elected value, but does not contradict
+the separately observed settling latency for a local access placed directly
+after SET.
 
 ## Correction to the earlier probe
 

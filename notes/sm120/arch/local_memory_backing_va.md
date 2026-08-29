@@ -325,6 +325,31 @@ transform unchanged. The supplied allocation must cover every derived backing
 offset the warp may access. Restoring the original base before returning is the
 safe practice.
 
+### Lane-varying SET operand: lowest active lane wins
+
+`tests/asm_construct/probe_setlmembase_lanes.py` supplied a different valid
+1 MiB-spaced base in every lane of one warp. The result is not per-lane state:
+SET selects the operand belonging to the lowest-numbered lane in its current
+execution mask and installs that one value warp-wide.
+
+With all lanes active, forward lane→slot mapping selected lane 0's slot 0;
+reversing the mapping selected lane 0's slot 31. Predicating SET to lanes
+`k..31` for `k = 1, 7, 16, 31` selected physical lane `k` in every case. Both
+GET readbacks were uniform, exactly one candidate arena slot received the
+complete 32-lane backing segment, and LDL matched 32/32. Repeats and 0–64
+stall-8 NOPs between GET readbacks did not change the election.
+
+In compact form:
+
+```text
+leader = ffs(active_mask)
+GETLMEMBASE(after SET) = SET_source[leader]    // uniform across the warp
+```
+
+This experiment had two GETs between SET and the first local access, so it
+does not remove the separate settling-latency requirement for an LDL/STL
+placed immediately after SET.
+
 ## Cubin EIATTRs controlling a ptxas spill frame
 
 Test source: `tests/spill_eiattr_probe.cu`. It keeps 96 FP32 values live across
@@ -471,6 +496,8 @@ Important subprobes in the script:
 - `build_multicta_verify()` / `run_multicta_verify()` — multi-CTA and
   `SR_VIRTUALSMID` verification; `run_multicta_verify(400, 256)` is the stress
   configuration.
+- `probe_setlmembase_lanes.py` — lane-varying source election and predicated
+  partial-warp SET behavior.
 
 ## Open questions
 
@@ -482,8 +509,8 @@ Important subprobes in the script:
 - Measure `SR_LMEMHIOFF` inside ptxas kernels across the spill-frame matrix to
   recover loader rounding and ABI reserve overhead.
 - Re-test on sm_90 hardware; all results here are sm_120 silicon only.
-- Test whether `SETLMEMBASE` is warp-scoped under divergent execution and how it
-  interacts with multiple simultaneously resident warps.
+- Test competing SETs issued by separate divergent SIMT groups before
+  reconvergence; partial-mask election is known, but group ordering is not.
 
 ## SETLMEMBASE settling latency & RZ+imm24 reach (sassdbg probe_mwarp.py)
 
