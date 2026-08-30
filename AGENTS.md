@@ -204,7 +204,10 @@ M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
     `resume(bp)` bumps the generation of exactly the warps parked at
     that site (one resume releases a multi-warp pile-up at one site).
     M2/M3/M4/M5 tests + full serial regression all pass (127/128, the
-    one failure = known test_uimad self-bug).
+    one failure = known test_uimad self-bug — since fixed: its REF table
+    skipped the duplicated plain-LO encoding (6 source lines vs 5 REF
+    entries) and its plain-UIMAD==HI expectation contradicted the file's
+    own header note; both corrected, test now passes clean).
 - `sassdbg/patch.py` — M3v3 host API: `inject_debugger(source, max_bps)`
   (prologue: LEPC base report at inst 1 + per-warp blob setup + gate +
   hardened IVALL, reserves R252/R253 only; extra `dbgctrl<8>` param),
@@ -533,7 +536,8 @@ E6 BAR/WARPSYNC cross-PC probe.
 
 M9 (DONE: probes `sassdbg/probe_stub.py`/`probe_stub2.py`, engine in
 `sassdbg/patch.py`, all m3-m9 tests migrated; full serial 133/134, only
-the known test_uimad self-bug) — eliminate ALL reserved registers (drop
+the known test_uimad self-bug — fixed since, see the M3v3 note) —
+eliminate ALL reserved registers (drop
 the R252/R253 reservation and the R246-R251 handler scratch; abandon
 SETLMEMBASE/LMEM entirely).
 
@@ -674,7 +678,7 @@ multi-warp/multi-CTA, stepper, reverse, CLI, command injection).
 M8 divergence-aware breakpoints DONE (M8a probes, M8b per-group
 comms, M8c group stepper, M8d CLI groups + BAR/WARPSYNC probe).
 M9 (zero register reservation) DONE — full serial 133/134, only the
-known test_uimad self-bug.
+known test_uimad self-bug (fixed since).
 
 M10/M11 (per-warp private heap code, `SASSDBG_WARP_PRIVATE_PLAN.md`):
 M11a (freeze protocol + minimum-IVALL production probe) DONE on sm_120
@@ -708,7 +712,8 @@ and sm_90.  M11c is DONE on RTX 5090/sm_120: the hardware E2E
 real cubin) passes four consecutive runs, and M10/M2 regressions pass.  The
 sm_90 dispatcher has static assembly/dependency coverage but has not yet had
 an M11c hardware run.  Full runner is 134/137 with every sassdbg test green;
-the failures are the known `test_uimad` self-bug plus `test_hadd2_hmul2` and
+the failures are the known `test_uimad` self-bug (fixed since) plus
+`test_hadd2_hmul2` and
 `test_hfma2`, which reach their optional `import numpy` and fail because NumPy
 is not installed in the current system Python.
 

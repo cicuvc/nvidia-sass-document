@@ -24,6 +24,7 @@ REF = [
     (0x00000007060472a4, 0x000fca000f8e0208),  # UIMAD.LO UR4, UR6, UR7, UR8
     (0x00000007060472a6, 0x000fca000f8e0208),  # UIMAD.HI UR4, UR6, UR7, UR8
     (0x12345678060478a6, 0x000fca000f8e0208),  # UIMAD.HI UR4, UR6, imm, UR8
+    (0x00000007060472a4, 0x000fca000f8e0208),  # UIMAD.LO UR4, UR6, UR7, UR8 (again: first line of _S)
     (0x12345678060474a4, 0x000fca000f8e0207),  # UIMAD.LO UR4, UR6, UR7, imm
     (0x00000007060472a5, 0x000fca000f8e0208),  # UIMAD.WIDE
 ]
@@ -154,12 +155,16 @@ if not is_sm90():
 else:
     print("info HI forms skipped: no UIMAD .HI variant in the sm_90 spec")
 
-# Plain UIMAD == HI (sm_120 default). Skipped on sm90 for the same reason.
+# Plain UIMAD == LO (sm_120 default; like IMAD, the bare mnemonic is the LO
+# variant and prints without a modifier — header note + GPU probe agree;
+# the earlier "== HI / exp 6" expectation was wrong: HI semantics would give
+# (0x100000000>>32)+5 = 6, but the real result is LO: (0x100000000+5)&2^32-1 = 5).
+# Skipped on sm90 for the same reason.
 if not is_sm90():
     lo, _ = run("UIMAD UR17, UR6, UR7, UR8;", 0x10000, 0x10000, 5)
-    good = lo == 6
+    good = lo == ((0x10000 * 0x10000 + 5) & 0xFFFFFFFF)
     ok &= good
-    print(f"{'ok ' if good else 'FAIL'} plain UIMAD == HI: 0x{lo:08X} (exp 0x6)")
+    print(f"{'ok ' if good else 'FAIL'} plain UIMAD == LO: 0x{lo:08X} (exp 0x{((0x10000 * 0x10000 + 5) & 0xFFFFFFFF):08X})")
 
 # WIDE: signed 64-bit product.
 wide_cases = [
