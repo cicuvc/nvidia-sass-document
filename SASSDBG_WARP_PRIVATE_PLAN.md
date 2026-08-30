@@ -490,13 +490,31 @@ The 10k shortest-sequence gate PASSED at warps=1 (10,541 valid /
 count, consistent with the known one-shot NANOSLEEP handoff flakiness
 being per-warp).
 
-### M11b — `CodeTemplate`, analyzer, layout, and CPU-only tests
+### M11b — `CodeTemplate`, analyzer, layout, and CPU-only tests  (DONE)
 
 - Add immutable template and per-warp instance classes.
 - Refactor address mapping and `Layout(code_size=...)`.
 - Implement copyability classification and fail-closed diagnostics.
 - Unit-test mapping, alignment, overlays, epochs, masks, replay-plan cache keys,
   memory budgeting, and relocation rejection without a GPU.
+
+Status: `sassdbg/warpcode.py` ships CodeTemplate (from_source/
+from_cubin via sassdbg.cubin), CodeInstance, Breakpoint bindings with
+lane masks, AddressMap hit decoding, Layout(max_bps, max_warps,
+code_size) with the plan section 5 regions, OverlayBatch (words first,
+every warp's code_epoch bump last) and the PrivateCodeSet arm/disarm/
+set_break_mask scope rules.  CodeImageAnalyzer classifies every word
+POSITION_INDEPENDENT / REWRITE / UNSUPPORTED (relocations writing the
+copied text, PC-sensitive LEPC/RPCMOV/CALL/RET/JMX/BRX/CCTL, and
+out-of-function BRA/BSSY targets reject fail-closed with instruction
+index + reason; internal absolute JMPs become REWRITE with the
+in-function index).  Field decode (crossing the lo/hi 64-bit
+boundary, SCALE 4, sign) verified against assemble_flat round-trips:
+BRA target = pc+16+sImm*4, BSSY Sa likewise, JMP imm absolute.
+43 CPU-only tests in tests/asm_construct/test_warpcode.py cover all
+M11b bullets; full runner 135/136 (only the known test_uimad
+self-bug), M10/M2 regression green.  cubin.py gained sh_addr
+(link_addr) + all-text reloc offsets for the analyzer.
 
 ### M11c — private-code bootstrap, no breakpoints
 

@@ -31,6 +31,7 @@ class Section:
     link: int
     entsize: int
     index: int
+    addr: int = 0              # sh_addr (link-time VA)
 
 
 @dataclass
@@ -51,17 +52,17 @@ def _sections(data: bytes) -> list[Section]:
     raw = []
     for i in range(shnum):
         b = shoff + i * shentsize
-        name, typ, _fl, _ad, off, size, link, _info, _al, es = \
+        name, typ, _fl, addr, off, size, link, _info, _al, es = \
             struct.unpack_from("<IIQQQQIIQQ", data, b)
-        raw.append((name, typ, off, size, link, es))
+        raw.append((name, typ, off, size, link, es, addr))
     stroff = raw[shstrndx][2]
 
     def name_of(n: int) -> str:
         e = data.index(b"\0", stroff + n)
         return data[stroff + n:e].decode()
 
-    return [Section(name_of(n), t, off, sz, lk, es, i)
-            for i, (n, t, off, sz, lk, es) in enumerate(raw)]
+    return [Section(name_of(n), t, off, sz, lk, es, i, ad)
+            for i, (n, t, off, sz, lk, es, ad) in enumerate(raw)]
 
 
 def _symbols(data: bytes, secs: list[Section]) -> list[Symbol]:
@@ -104,6 +105,9 @@ class KernelText:
     file_off: int                 # file offset of the entry instruction
     n_insts: int
     words: list[tuple[int, int]]  # (lo64, hi64) per instruction
+    link_addr: int = 0            # sh_addr + entry: link-time VA base
+    entry_off: int = 0            # entry offset within .text
+    relocs: tuple[int, ...] = ()  # ALL text r_offsets (text-relative)
 
     def word(self, i: int) -> tuple[int, int]:
         return self.words[i]
@@ -154,13 +158,16 @@ def load_kernel(cubin_path: str, func: str | None = None) -> KernelText:
                 f"relocation at text+{r:#x} overlaps the M10 trampoline "
                 f"window [{entry:#x}, {entry + 0x20:#x}) — kernel not "
                 "supported")
+    all_relocs = tuple(text_reloc_offsets(
+        data, secs, sec.name[len(".text."):]))
     body = data[sec.off + entry: sec.off + entry + sym.size] \
         if sym.size else data[sec.off + entry: sec.off + sec.size]
     assert len(body) % 16 == 0 and len(body) >= 0x20
     words = [struct.unpack_from("<QQ", body, i)
              for i in range(0, len(body), 16)]
     return KernelText(sec.name[len(".text."):], sec.off + entry,
-                      len(words), words)
+                      len(words), words, sec.addr + entry, entry,
+                      all_relocs)
 
 
 def cuobjdump_sass(cubin_path: str) -> str:
