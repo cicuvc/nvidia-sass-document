@@ -155,10 +155,14 @@ class Stepper:
     """
 
     def __init__(self, source: str, func: str | None = None,
-                 max_bps: int = 32, max_warps: int = 1):
+                 max_bps: int = 32, max_warps: int = 1,
+                 dbg=None):
         self.cfg = Cfg(source)
-        self.dbg = Debugger(source, func=func, max_bps=max_bps,
-                            max_warps=max_warps)
+        # dbg: a prebuilt Debugger (M10 real-cubin path — the source is
+        # the lifted text, the engine a CubinDebugger; orig indices
+        # align because the trampoline lives outside the body).
+        self.dbg = dbg or Debugger(source, func=func, max_bps=max_bps,
+                                   max_warps=max_warps)
         self.path: list[int] = []           # single-warp view (= paths[0])
         self.paths: dict[int, list[int]] = {}
         self.n_warps = 1

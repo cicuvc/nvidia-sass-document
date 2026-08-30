@@ -27,6 +27,7 @@ Round-trip check: assemble_flat(lifted) == original (lo64, hi64) words.
 from __future__ import annotations
 
 import re
+import shutil
 import struct
 import subprocess
 import sys
@@ -124,7 +125,15 @@ def extract_params(cubin_data: bytes, func: str) -> list[tuple[int, int, int]]:
 
 
 def dump_cubin(cubin: str, cuda_arch: str = "sm_120") -> list[RawFunc]:
-    out = subprocess.run(["cuobjdump", "-sass", cubin],
+    cuobjdump = shutil.which("cuobjdump")
+    if cuobjdump is None:
+        default = Path("/usr/local/cuda/bin/cuobjdump")
+        if default.is_file():
+            cuobjdump = str(default)
+        else:
+            raise FileNotFoundError(
+                "cuobjdump not found in PATH or /usr/local/cuda/bin")
+    out = subprocess.run([cuobjdump, "-sass", cubin],
                          capture_output=True, text=True, check=True).stdout
     try:
         cubin_data = open(cubin, "rb").read()

@@ -140,6 +140,7 @@ THUNK_STRIDE = 0x100            # 16 insts per thunk slot
 THUNK_MAX_INSTS = THUNK_STRIDE // 16
 CMDBUF_SZ = 0x400               # per-warp command buffer (64 insts)
 RESULTS_SZ = 0x400              # per-warp command result window
+KPROL_SZ = 0x400                # heap entry prologue (real-cubin path)
 
 
 class Layout:
@@ -165,7 +166,8 @@ class Layout:
         self.cmdbuf = self.cmdseq + max_warps * 16
         self.results = self.cmdbuf + max_warps * CMDBUF_SZ
         self.pool = self.results + max_warps * RESULTS_SZ
-        self.total = self.pool + max_warps * 32 * FRAME
+        self.kprol = self.pool + max_warps * 32 * FRAME
+        self.total = self.kprol + KPROL_SZ
 
     def handler_va(self, arena: int, warp: int) -> int:
         return arena + self.handler_off + warp * HANDLER_STRIDE
@@ -197,6 +199,75 @@ PROLOGUE_LEN = sum(1 for ln in _PROLOGUE.splitlines() if ";[" in ln)
 _FN_RE = re.compile(r"^(#fn\s+\w+)\(([^)]*)\)\s*\{\s*$")
 
 _EPILOGUE_GUARD = "    EXIT;[7:7:{}:4:0]\n"
+
+
+# ---------------------------------------------------------------------------
+# real-cubin path (M10): the kernel entry's first two instructions are
+# overwritten (in the cubin image, BEFORE cuModuleLoadData) with a
+# LEPC + JMP trampoline into a heap-resident prologue whose immediates
+# carry the arena VA (no dbgctrl parameter exists on a real kernel).
+# The prologue reports the kernel base, parks at the gate, then replays
+# the two displaced instructions verbatim and RETs back to entry+0x20.
+# ---------------------------------------------------------------------------
+def _trampoline_src(prol_va: int) -> str:
+    """Entry patch: LEPC captures the kernel base (entry+0), JMP to the
+    heap prologue.  Exactly two instructions (0x20 bytes)."""
+    return f"""\
+    LEPC {{R8,R9}};[7:7:{{}}:4:0]
+    JMP 0x{prol_va:x};[7:7:{{}}:6:0]
+"""
+
+
+def _real_prologue_src(arena: int, self_va: int,
+                       replay: list[str]) -> tuple[str, int]:
+    """Heap entry prologue for a real cubin.  Entry: {R8,R9} = kernel
+    base (trampoline LEPC).  Returns (source, replay_index) — the
+    instruction index of the first replayed instruction (= the bp site
+    of orig inst 0).
+
+    The return JMP is self-constructed *before* replay.  Consequently no
+    instruction after the two displaced instructions reads or writes a
+    GPR or predicate: their complete architectural output reaches the
+    original instruction 2 unchanged.  This matters for kernels whose
+    entry instructions define one of the registers used by the prologue.
+    """
+    assert len(replay) == 2
+    j_lo, j_hi = assemble_flat("JMP 0x0;[7:7:{}:6:0]")[0]
+    j00, j01 = j_lo & 0xFFFFFFFF, j_lo >> 32
+    j10, j11 = j_hi & 0xFFFFFFFF, j_hi >> 32
+    assert j01 == 0, "JMP template lo_hi expected 0"
+
+    # The last instruction follows the fixed prelude and two replay words.
+    # First render with a dummy address to count the prelude, then bake the
+    # actual self-modification target into its STG address.
+    def prelude(ret_va: int) -> str:
+        return f"""\
+    MOV32I R4, 0x{arena & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R5, 0x{arena >> 32:08x};[7:7:{{}}:5:1]
+    STG.E.64.STRONG.GPU [{{R4,R5}}+0x{CTRL_BASE:x}], {{R8,R9}};[7:1:{{}}:8:0]
+#def_label(dbggate)
+    LDG.E.STRONG.GPU R6, [{{R4,R5}}+0x{CTRL_GATE:x}];[2:7:{{}}:8:0]
+    ISETP.NE.AND P0, PT, R6, 0x0, PT;[7:7:{{2}}:13:1]
+    @!P0 BRA #label(dbggate);[7:7:{{}}:6:0]
+    MOV R2, R8;[7:7:{{}}:5:1]
+    IADD3 R2, P1, R2, 0x20, RZ;[7:7:{{}}:5:1]
+    IADD3.X R3, R9, RZ, RZ, P1, !PT;[7:7:{{}}:5:1]
+""" + _imm57_surgery(j00, j10, j11) + f"""\
+    MOV32I R8, 0x{ret_va & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R9, 0x{ret_va >> 32:08x};[7:7:{{}}:5:1]
+    STG.E.128.STRONG.GPU [{{R8,R9}}], {{R4,R5,R6,R7}};[7:1:{{}}:8:0]
+    CCTL.I.IVALL;[7:7:{{1}}:4:0]
+""" + "    NOP;[7:7:{}:8:0]\n" * 32 + f"""    CCTL.I.IVALL;[7:7:{{}}:4:0]
+    R2P PR, RZ, 0x7F;[7:7:{{}}:13:1]
+"""
+
+    dummy = prelude(0)
+    idx = sum(1 for ln in dummy.splitlines() if ";[" in ln)
+    ret_off = (idx + len(replay)) * 16
+    head = prelude(self_va + ret_off)
+    assert sum(1 for ln in head.splitlines() if ";[" in ln) == idx
+    body = "".join(f"    {ln.strip()}\n" for ln in replay)
+    return head + body + "    JMP 0x0;[7:7:{}:6:0]\n", idx
 
 
 class DebugInfo:
@@ -298,8 +369,9 @@ def _ret_template() -> tuple[int, int]:
         "    RET.ABS.NODEC PT, RZ, 0x0;[7:7:{}:5:1]\n")[0]
 
 
-def _ret_surgery(t00: int, t10: int, t11: int) -> str:
-    """Compose the RET-imm word from the 64-bit VA in R2 (lo) / R3 (hi)
+def _imm57_surgery(t00: int, t10: int, t11: int) -> str:
+    """Compose a UImm(57), SCALE-4 instruction word from the 64-bit VA
+    in R2 (lo) / R3 (hi)
     into {R4,R5,R6,R7}.  Clobbers R2-R7.  (imm = va>>2, SCALE 4:
     field[7:0]->lo[23:16], [37:8]->lo[63:34], [55:38]->hi[17:0].)"""
     return f"""\
@@ -392,7 +464,7 @@ def _handler_src(lay: Layout, arena: int, warp: int,
     BRA #label(dbgspin);[7:7:{{}}:6:0]
 #def_label(dbgresume)
     LDG.E.64.STRONG.GPU {{R2,R3}}, [{{R0,R1}}+0x{F_RTGT:x}];[2:7:{{}}:8:0]
-""" + _ret_surgery(t00, t10, t11) + f"""\
+""" + _imm57_surgery(t00, t10, t11) + f"""\
     MOV32I R2, 0x{ret_va & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
     MOV32I R3, 0x{ret_va >> 32:08x};[7:7:{{}}:5:1]
     STG.E.128.STRONG.GPU [{{R2,R3}}], {{R4,R5,R6,R7}};[7:1:{{}}:8:0]
@@ -500,10 +572,21 @@ class Debugger:
         self.encoded = res.encoded
         self.res_params = res.params
         self.func = func or self._only_function()
-        self.patcher = Patcher()
+        self._base_delta = 16       # source prologue: LEPC is inst 1
+        self._append_dbgctrl = True
+        self._setup(max_bps, max_warps)
+
+    def _setup(self, max_bps: int, max_warps: int,
+               arena: int | None = None) -> None:
+        """Shared tail of both constructor paths (source / real cubin).
+        The real-cubin path passes a pre-allocated arena whose VA was
+        baked into the trampoline/prologue before module load."""
+        if not hasattr(self, "patcher"):
+            self.patcher = Patcher()
         self.max_warps = max_warps
         self.lay = Layout(max_bps, max_warps)
-        self.arena = self.mod.devmem_alloc(self.lay.total)
+        self.arena = arena if arena is not None \
+            else self.mod.devmem_alloc(self.lay.total)
         assert self.arena % 16 == 0, "arena base must be 16-aligned"
         pool = self.arena + self.lay.pool
         assert (pool & 0xFFFFFFFF) + max_warps * 32 * FRAME \
@@ -515,6 +598,7 @@ class Debugger:
         self.stream = CudaModule.stream_create()
         self._bps: dict[int, Breakpoint] = {}
         self._by_index: dict[int, Breakpoint] = {}
+        self._bp_by_va: dict[int, Breakpoint] = {}
         self._free_slots = list(range(max_bps))
         self._next_id = 1
         self._groups: dict[int, list[_Group]] = \
@@ -604,8 +688,10 @@ class Debugger:
         self._cmds = [0] * self.max_warps
         self._go = [0] * self.max_warps
         self._thunk_cache.clear()
+        if self._append_dbgctrl:        # source path: dbgctrl param
+            args = args + [self.arena]
         self.mod.launch(self.func, grid=grid, block=block,
-                        args=args + [self.arena], stream=self.stream)
+                        args=args, stream=self.stream)
 
     def wait_base(self, timeout: float = 5.0) -> int:
         t0 = time.time()
@@ -617,7 +703,7 @@ class Debugger:
             if time.time() - t0 > timeout:
                 raise TimeoutError("target did not report its code base")
             time.sleep(0.001)
-        return ((hi << 32) | lo) - 1 * 16      # LEPC = prologue inst 1
+        return ((hi << 32) | lo) - self._base_delta  # LEPC off
 
     def base(self) -> int:
         if not hasattr(self, "_base"):
@@ -641,6 +727,9 @@ class Debugger:
     def _site_va(self, orig_index: int) -> int:
         return self.base() + self.info.injected_index(orig_index) * 16
 
+    def _orig_word(self, orig_index: int) -> tuple[int, int]:
+        return self.encoded[self.info.injected_index(orig_index)]
+
     def arm(self, orig_index: int) -> Breakpoint:
         """Patch the site word with a JMP into the bp's stub slot.
         The site STAYS patched for the bp's whole lifetime (persistent,
@@ -649,9 +738,8 @@ class Debugger:
             raise RuntimeError(f"breakpoint already armed at {orig_index}")
         if not self._free_slots:
             raise RuntimeError("out of stub slots (max_bps)")
-        inj = self.info.injected_index(orig_index)
-        site = self.base() + inj * 16
-        orig = self.encoded[inj]
+        site = self._site_va(orig_index)
+        orig = self._orig_word(orig_index)
         slot = self._free_slots.pop(0)
         bp = Breakpoint(self, self._next_id, orig_index, orig, slot)
         self._next_id += 1
@@ -659,6 +747,7 @@ class Debugger:
         self.patcher.patch(site, self._jmp_word(self._stub_va(slot)))
         self._bps[bp.id] = bp
         self._by_index[orig_index] = bp
+        self._bp_by_va[site] = bp
         return bp
 
     def disarm(self, bp: Breakpoint) -> None:
@@ -669,16 +758,14 @@ class Debugger:
         self._free_slots.sort()
         del self._bps[bp.id]
         del self._by_index[bp.orig_index]
+        self._bp_by_va.pop(self._site_va(bp.orig_index), None)
         for k in [k for k in self._thunk_cache if k[0] == bp.orig_index]:
             del self._thunk_cache[k]
 
     def _bp_for_va(self, va: int) -> Breakpoint:
-        inj = (va - self.base()) // 16
-        orig = inj - PROLOGUE_LEN
-        bp = self._by_index.get(orig)
+        bp = self._bp_by_va.get(va)
         if bp is None:
-            raise RuntimeError(
-                f"hit from unarmed site {hex(va)} (orig {orig})")
+            raise RuntimeError(f"hit from unarmed site {hex(va)}")
         return bp
 
     # -- group hit reporting ----------------------------------------------------
@@ -831,6 +918,7 @@ class Debugger:
         self._free_slots.sort()
         del self._bps[bp.id]
         del self._by_index[bp.orig_index]
+        self._bp_by_va.pop(self._site_va(bp.orig_index), None)
 
     # -- command injection (M7 semantics, M9 frame-based) ----------------------
     def exec_cmd(self, warp: int, insts: list[str],

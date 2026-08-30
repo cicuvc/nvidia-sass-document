@@ -68,10 +68,25 @@ class Shell(cmd.Cmd):
         self.args = args
         self.trace_mode = args.trace
         self.ik = None
+        cubin_dbg = None
         if args.sass:
             src = _parse_source(args.sass)
-        else:
+        elif self.trace_mode:
+            # trace instruments the SOURCE and re-assembles — keep the
+            # M2 lift+inject path for --cubin --trace
             src = _lift_cubin(args.cubin, args.func)
+        else:
+            # M10 real-cubin path: patch the entry trampoline in the
+            # cubin image; no lift-inject-reassemble round trip
+            from sassdbg.real import CubinDebugger
+            cubin_dbg = "pending"
+            src = None
+        n_warps = args.grid * ((args.block + 31) // 32)
+        max_warps = max(args.max_warps, n_warps)
+        if cubin_dbg is not None:
+            cubin_dbg = CubinDebugger(args.cubin, args.func,
+                                      max_bps=32, max_warps=max_warps)
+            src = cubin_dbg.source
         self.user_src = src
         if self.trace_mode:
             from sassdbg.wtrace import instrument_warp
@@ -80,20 +95,20 @@ class Shell(cmd.Cmd):
             self.ik = instrument_warp(src)
             src = self.ik.source
             self._orig2inst = self._build_idx_map(self.ik)
-        n_warps = args.grid * ((args.block + 31) // 32)
-        max_warps = max(args.max_warps, n_warps)
-        self.st = Stepper(src, max_warps=max_warps)
+        self.st = Stepper(src, max_warps=max_warps, dbg=cubin_dbg)
         self.dbg: Debugger = self.st.dbg
-        # auto args from the (instrumented) kernel's param list
-        res = assemble_kernel(self.dbg.info.source, check_deps=True)
+        # auto args from the kernel's param list
+        names = self._param_names(self.user_src)
+        if cubin_dbg is not None:
+            params = cubin_dbg.params       # (ordinal, offset, size)
+        else:
+            res = assemble_kernel(self.dbg.info.source, check_deps=True)
+            params = [p for p in res.params][:len(names)]
         self._scratch: list[int] = []
         argv: list = []
-        names = self._param_names(self.user_src)
-        sizes = {off: sz for _, off, sz in res.params}
         # params in declaration order; the dbgctrl param is appended by
-        # launch() itself, and __trace by us below
-        user_params = [p for p in res.params][:len(names)]
-        for i, (_, off, sz) in enumerate(user_params):
+        # launch() itself (source path only), and __trace by us below
+        for i, (_, off, sz) in enumerate(params):
             if sz >= 8:
                 buf = self.dbg.mod.devmem_alloc(0x10000)
                 self.dbg.mod.device_write(buf, bytes(0x10000))
