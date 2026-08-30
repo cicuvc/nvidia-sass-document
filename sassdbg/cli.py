@@ -42,7 +42,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from assembler import CudaModule, assemble_kernel     # noqa: E402
 from sassdbg.stepper import Stepper                  # noqa: E402
-from sassdbg.patch import Debugger, COMMS            # noqa: E402
+from sassdbg.patch import Debugger            # noqa: E402
 from sassdbg.wtrace import REGION_BYTES              # noqa: E402
 
 
@@ -410,7 +410,7 @@ class Shell(cmd.Cmd):
             print(self.do_dump.__doc__)
             return
         w = int(toks[0])
-        if w not in self.dbg._parked:
+        if not any(gw == w for gw, _ in self._all_groups()):
             print(f"warp {w} is not parked (hit a breakpoint first)")
             return
         i = 1
@@ -429,7 +429,7 @@ class Shell(cmd.Cmd):
             print(self.do_set.__doc__)
             return
         w = int(toks[0])
-        if w not in self.dbg._parked:
+        if not any(gw == w for gw, _ in self._all_groups()):
             print(f"warp {w} is not parked (hit a breakpoint first)")
             return
         i = 1
@@ -443,15 +443,14 @@ class Shell(cmd.Cmd):
     def do_exec(self, a: str) -> None:
         """exec w <sass line> — run one instruction on the PARKED warp (M7).
 
-        Straight-line code only; R252/R253 write-protected; use
-        [{R252,R253}+0x40100+k] as the results window, then read it back
-        with the host API. Include the scheduling bracket yourself."""
+        Straight-line code only; R0/R1 (frame pointer) write-protected;
+        R2-R7/P0-P6 are scratch. Include the scheduling bracket yourself."""
         toks = a.strip().split(None, 1)
         if len(toks) < 2:
             print(self.do_exec.__doc__)
             return
         w = int(toks[0])
-        if w not in self.dbg._parked:
+        if not any(gw == w for gw, _ in self._all_groups()):
             print(f"warp {w} is not parked (hit a breakpoint first)")
             return
         try:

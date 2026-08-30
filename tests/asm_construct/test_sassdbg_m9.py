@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from sassdbg.lift import lift, normalize_source
-from sassdbg.patch9 import Debugger
+from sassdbg.patch import Debugger
 
 ok = True
 

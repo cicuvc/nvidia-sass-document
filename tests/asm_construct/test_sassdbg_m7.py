@@ -1,20 +1,22 @@
 """sassdbg M7 — command injection at a breakpoint (on-demand state access).
 
 While a warp is parked at a breakpoint, the host injects arbitrary
-instruction sequences into the warp's per-blob command buffer
-(blob+0x90000, heap-resident — no code patching); the parked handler
-dispatches them via CALL.ABS + RET round-trip (hardened IVALL covers
-the refetch) and stays parked.  Repeatable until resume.
+instruction sequences into the warp's per-warp command buffer
+(heap-resident — no code patching); the parked handler dispatches them
+via CALL.ABS + RET round-trip (hardened IVALL covers the refetch) and
+stays parked.  Repeatable until resume.  M9: commands run with
+{R0,R1} = the lane's frame pointer and R2-R7/P0-P6 as scratch (no
+reserved registers anywhere).
 
 E1  static command round-trip: dump a kernel register (R10 magic)
 E2  command REWRITE between dispatches: second command sees fresh
     content (IVALL works) — two different dumps from the same VA
-E3  dump spilled state: R246 (spill slot 0, not the live scratch reg)
-    and PR (slot 6)
+E3  dump preserved state: R246 (never touched by the M9 handler — read
+    live) and PR (frame snapshot)
 E4  set register: set_reg R10 -> resumed kernel output reflects it;
-    set_reg R248 via spill slot likewise
+    set_reg R246 likewise
 E5  exec_cmd raw: probe SR_SMID (architecture state probe), and the
-    R252/R253 + control-flow guards fire
+    R0/R1 (frame pointer) + control-flow guards fire
 
 Run: python3 tests/asm_construct/test_sassdbg_m7.py
 """
@@ -24,7 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from sassdbg.patch import Debugger, COMMS_RESULTS  # noqa: E402
+from sassdbg.patch import Debugger  # noqa: E402
 
 B = "[7:7:{}:5:1]"
 
@@ -78,28 +80,33 @@ r = dbg.dump_regs(0, ["R20", "R10"])
 check("E2 rewritten command: R20=tid", r["R20"] < 32, hex(r["R20"]))
 check("E2 rewritten command: R10 still magic", r["R10"] == 0xC0DE0001)
 
-# E3: spilled state — R246 comes from spill slot 0 (kernel's value, not
-# the handler scratch sitting in live R246), PR from slot 6 ------------
+# E3: preserved state — the M9 handler borrows only R2-R7, so R246 is
+# read LIVE (still the kernel's value); PR comes from the frame snapshot
 r = dbg.dump_regs(0, ["R246", "PR"])
-check("E3 dump R246 via spill slot", r["R246"] == 0xBEEF246, hex(r["R246"]))
+check("E3 dump R246 (live, handler never touched it)",
+      r["R246"] == 0xBEEF246, hex(r["R246"]))
 check("E3 dump PR via spill slot (P0 set, bit i -> Pi)",
       r["PR"] & 0x1 == 0x1, hex(r["PR"]))
 
 # E5a: exec raw — probe SR_SMID ----------------------------------------------
+# results window VA is per-warp; commands address it absolutely (there is
+# no reserved blob-base register in M9 — {R2,R3} is a scratch pair here)
+res = dbg.arena + dbg.lay.results
 dbg.exec_cmd(0, [
-    "S2R R249, SR_SMID;[4:7:{}:5:1]",
-    f"STG.E.STRONG.GPU [{{R252,R253}}+0x{COMMS_RESULTS:x}], R249;"
-    "[7:7:{4}:8:0]",
+    "S2R R4, SR_SMID;[4:7:{}:5:1]",
+    f"MOV32I R2, 0x{res & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]",
+    f"MOV32I R3, 0x{res >> 32:08x};[7:7:{{}}:5:1]",
+    "STG.E.STRONG.GPU [{R2,R3}], R4;[7:7:{4}:8:0]",
 ])
 smid = struct.unpack("<I", dbg.cmd_read(0, 0, 4))[0]
 check("E5 exec: SR_SMID probe", 0 <= smid < 4096, hex(smid))
 
 # E5b: guards ----------------------------------------------------------------
 try:
-    dbg.exec_cmd(0, ["MOV32I R252, 0x0;[7:7:{}:5:1]"])
-    check("E5 guard: R252 write rejected", False)
+    dbg.exec_cmd(0, ["MOV32I R0, 0x0;[7:7:{}:5:1]"])
+    check("E5 guard: R0 (frame ptr) write rejected", False)
 except ValueError:
-    check("E5 guard: R252 write rejected", True)
+    check("E5 guard: R0 (frame ptr) write rejected", True)
 try:
     dbg.exec_cmd(0, ["BRA #label(x);[7:7:{}:6:0]"])
     check("E5 guard: control flow rejected", False)

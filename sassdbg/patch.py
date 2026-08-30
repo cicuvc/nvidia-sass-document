@@ -1,81 +1,46 @@
-"""sassdbg M3v3 — multi-warp runtime breakpoints via per-warp blobs,
-CALL.ABS + RPCMOV, and a SELF-CONSTRUCTED immediate RET.
+"""sassdbg debugger — runtime SASS breakpoints with ZERO register
+reservation (M9 engine; replaces the M3v3 per-warp-blob design).
 
-Mechanism (proven by probe_callheap2/3.py and probe_mwarp.py):
+Motivation: real cubins have a compile-time register budget — a kernel
+may legitimately use every register, so no reservation is safe (ptxas
+guarantees >= 24 registers, so R0-R21 always exist and may be borrowed
+with spill/restore).  SETLMEMBASE/LMEM is abandoned entirely (the base
+is warp-shared and disturbs sibling execution groups' local memory —
+see tests/asm_construct/probe_setlmembase_lanes.py).
 
-  * Breakpoint = overwrite the site word with the CONSTANT word
-    `CALL.ABS.NOINC PT, {R252,R253}, HANDLER_OFF`.  R252/R253 hold the
-    PER-WARP blob base, so the same patch word serves every site AND
-    every warp — no per-site relocation, no slots, no warp-id plumbing.
-    The patch word is UNCONDITIONAL (@PT): a breakpoint fires when
-    execution REACHES the site, before the original instruction's own
-    predicate is evaluated (the original word — with its predicate — is
-    restored and re-executed on resume).  Copying the site's predicate
-    into the patch word would silently skip predicated-off sites and
-    break the stepper's arm-the-successors model.
-  * Per-warp BLOB (1 MiB device memory, warp_id = SR_TID.X>>5, grid=(1,)
-    only): [0,0x20000) local backing, [0x40000,...) comms (generation /
-    hit site VA), [0x80000,...) the handler CODE.  The prologue computes
-    the warp's blob base into R252/R253 and runs SETLMEMBASE once,
-    PERMANENTLY — the blob doubles as the warp's local-memory backing,
-    so the handler spills/restores kernel registers with plain STL/LDL
-    at fixed RZ+uImm24 slots (no scratch register needed to spill; the
-    classic "need a register to save a register" bootstrap problem).
-    RULE: SETLMEMBASE must be far from the first local access (the gate
-    spin provides the distance — short NOP pads proved flaky, and
-    host-prefill reads right after the switch can lane-split or 700).
-  * Kernel register reservation: R252/R253 ONLY (plus UR60/UR61 are NOT
-    needed — comms use DESC-LESS STG/LDG.STRONG.GPU, probe P2).  The
-    handler's scratch R246-R251 and PR are spilled to local slots and
-    restored before the RET.
-  * The handler returns through a RET.ABS.NODEC RZ, imm word it BUILDS
-    ITSELF: RPCMOV gives the site VA (= breakpoint identity), the
-    handler composes the 128-bit RET word (imm field = va>>2, SCALE 4)
-    and STG.E.128s it over its own last line, then the tail IVALL;
-    NOP x32; IVALL makes the store visible to the fetch.  This frees
-    the R246/R247 return-pair reservation v2 needed.  (RET's target is
-    ALWAYS Ra + disp(bytes); with Ra=RZ the target is the imm itself.
-    CALL.ABS imm form faults 700 on sm_120 — probe3 P4 — but the RET
-    imm form works: probe P6b.)
-  * Resume = restore the site word (patcher) + clear the hit word + bump
-    the GENERATION of every warp parked at that site.  Each handler
-    restores PR, re-fetches (hardened IVALL), and RETs to the SITE,
-    re-executing the restored original instruction.  The breakpoint is
-    CONSUMED (re-arm to break again).
-  * SCOREBOARD RULE (probe3, hard-won): explicit barrier waits MUST go
-    in the {req} bitset — the rd field does NOT reliably wait.  All
-    cross-barrier consumers below use req.
+Architecture (probe_stub.py / probe_stub2.py verified):
 
-ctrl buffer layout (shared, device memory, host polls via cuMemcpy):
-  +0x00 u64 code base VA (target LEPC report; LEPC is prologue inst 1)
-  +0x0c u32 start gate (host: 0 -> 1)
-  +0x20 u64 blob base VA (host writes before launch; warps stride
-        BLOB_SZ from it)
-  +0x28 u32 warps per CTA (host writes at launch; warpid =
-        SR_CTAID.X * ctawarps + SR_TID.X>>5)
+  * patch word = per-site constant `JMP <stub_va>` (JMP IMM 0x94a,
+    UImm(57) SCALE 4 — absolute, preserves RPC).
+  * per-bp STUB (0x200 slot, shared across warps; borrows R0/R1 via
+    RPC spill — RPCMOV Rpc.LO/HI write forms, probe_rpc_write.py):
+    spills kernel R2/R3 + R0/R1 (from RPC) + the baked site VA into the
+    lane's FRAME, then CALL.ABS {R2,R3} into the PER-WARP handler copy
+    (gwarp recovered from the frame address; CALL clobbers RPC — dead
+    by then).  f = CTAID*(ctawarps*32) + TID is the global lane-frame
+    index (gwarp*32+lane == ctaid*(ctawarps*32)+tid).
+  * per-warp HANDLER copy (borrows R2-R7 + P0, spill-restored through
+    the frame): spills R4-R7+PR, reads the release baseline BEFORE the
+    hit report (host race), leader-only (FLO(MACTIVE)) hit-slot RMW
+    into the GLOBAL HSLOTS[slot = leader's f], spins on
+    NANOSLEEP 0x100 + per-lane release generation (+ M7 command poll),
+    on release: loads the thunk VA from the frame, composes a
+    `RET.ABS.NODEC RZ, <thunk_va>` over its OWN last line (bit surgery,
+    hardened IVALL — M3v3 machinery, per-warp copy = no retline
+    sharing), restores PR/R2-R7 (LDG chain on SB2), self-restores
+    kernel R0/R1 with one `LDG.E.64 {R0,R1}, [{R0,R1}+0x20]` +
+    `MOV R1, R1` req-wait, and falls into the composed RET -> thunk.
+  * THUNK (per release, host-built, global bump arena): `replay … ;
+    JMP <target>` — target = site+0x10 (plain resume; the site stays
+    patched = persistent bp, M8a) or an armed successor's site VA
+    (stepper).  The replay carries req{2} covering every restore LDG.
 
-per-warp comms (blob + COMMS):
-  +0x08 u32 generation (host bumps to release that warp)
-  +0x10 u64 hit site VA (handler writes, host clears on resume)
-  +0x18 u32 command sequence (host bumps to dispatch a command — M7)
-  +0x1c u32 command ack (handler echoes after the command RETs)
-  +0x100 .. command result scratch (dump_regs targets)
-
-spill slots (local addr LMEMHIOFF+4k, RZ+uImm24 — reach only the low
-0x640 dwords of the local window, which is all we need):
-  slot 0-5: R246-R251   slot 6: PR   slot 7: gen baseline
-  slot 8: cmd_seq baseline
-
-Host API (unchanged from v2):
-
-    dbg = Debugger(source, max_warps=2)   # dialect source (e.g. lift)
-    dbg.launch(args, block=(64,))         # target parks at the gate
-    dbg.arm(inst_index)                   # inst_index = ORIGINAL source
-    dbg.release()                         # gate open -> hits breakpoints
-    bp = dbg.wait_hit()                   # bp.warp = hitting warp
-    dbg.resume(bp)                        # continue; bp is consumed
-    dbg.wait_done()
+Probe-phase lessons baked in (see AGENTS.md M9 section):
+  NON_BLOCKING stream for parked launches; 8B-aligned 64-bit frame
+  slots; R2P/ISETP need yield=1 at stall 13; baseline-before-report;
+  code-fetch VAs 16B-aligned; assert every code image fits its slot.
 """
+
 from __future__ import annotations
 
 import re
@@ -150,73 +115,80 @@ class Patcher:
             time.sleep(0.0005)
 
 
+
 # ---------------------------------------------------------------------------
-# layout constants (probe_mwarp.py)
+# layout
 # ---------------------------------------------------------------------------
-LMEMHIOFF = 0x00fff9c0          # SR_LMEMHIOFF on sm_120
-BLOB_SZ = 0x100000              # per-warp blob (1 MiB)
-COMMS = 0x40000                 # comms offset inside a blob
-HANDLER_OFF = 0x80000           # handler code offset inside a blob
-CMD_OFF = 0x90000               # injected-command buffer offset in a blob
-THUNK_OFF = 0xA0000             # resume-thunk arena (128B-strided slots)
-COMMS_SEQ = COMMS + 0x18        # u32 command sequence (host bumps)
-COMMS_ACK = COMMS + 0x1c        # u32 command ack (handler echoes)
-COMMS_RTGT = COMMS + 0x20       # u64 resume-target override (0 = site VA)
-COMMS_RESULTS = COMMS + 0x100   # command result scratch (dump targets)
-THUNK_STRIDE = 0x80             # one 128B icache line per thunk
+FRAME = 0x80                    # per (gwarp, lane) frame in the pool
+F_R2 = 0x00                     # R2..R7 spill (6 x 4B, through +0x14)
+F_PR = 0x18                     # P2R PR snapshot
+F_R01 = 0x20                    # kernel R0/R1 (8B — 8B-aligned, fault 716)
+F_SITE = 0x28                   # site VA (8B, stub-baked)
+F_RELEASE = 0x30                # u32 per-lane release generation
+F_F = 0x34                      # u32 global lane-frame index
+F_RTGT = 0x38                   # u64 thunk VA for the pending release
+F_CMD = 0x40                    # u32 per-lane command baseline
+F_RELBASE = 0x44                # u32 release-baseline save across an
+F_GOBASE = 0x48                 #   injected command (commands may
+                                #   clobber R2-R7; F_GOBASE at 0x48)
+
+STUB_OFF = 0x100                # after the ctrl block
+STUB_SZ = 0x200                 # per-bp stub slot (32 insts; stub ~24)
+HANDLER_STRIDE = 0x1000         # per-warp handler copy (256 insts max)
+THUNK_ARENA = 0x10000
+THUNK_STRIDE = 0x100            # 16 insts per thunk slot
 THUNK_MAX_INSTS = THUNK_STRIDE // 16
-# M8b per-group comms: hit slots are indexed by the group's LEADER lane
-# (FLO of MACTIVE — disjoint masks have disjoint FLOs, so no atomics and
-# no UR usage); per-lane release generation + per-lane thunk VA let the
-# host release exactly one execution group.
-COMMS_HSLOTS = COMMS + 0x400    # 32 x 16B {u32 mask, u32 va_lo,
-                                #           u32 va_hi, u32 seq}
-COMMS_RLGEN = COMMS + 0x600     # 32 x u32 per-lane release generation
-COMMS_RTGTV = COMMS + 0x680     # 32 x u64 per-lane thunk VA (0 = site)
-COMMS_GROUP_END = COMMS + 0x780
+CMDBUF_SZ = 0x400               # per-warp command buffer (64 insts)
+RESULTS_SZ = 0x400              # per-warp command result window
 
 
-def _slot(k: int) -> str:
-    """Local addr (RZ+uImm24 form) of spill slot k."""
-    return f"[RZ+0x{LMEMHIOFF + 4 * k:x}]"
+class Layout:
+    """Arena offsets derived from (max_bps, max_warps)."""
 
+    def __init__(self, max_bps: int, max_warps: int):
+        self.max_bps = max_bps
+        self.max_warps = max_warps
+        self.handler_off = STUB_OFF + max_bps * STUB_SZ
+        self.thunk_off = self.handler_off + max_warps * HANDLER_STRIDE
+        self.comms = self.thunk_off + THUNK_ARENA
+        self.hslots = self.comms                 # mw*32 x 16B hit slots
+        self.go = self.hslots + max_warps * 32 * 16  # mw x 16B; the
+        # per-warp GO word (at +0) releases a whole warp's parked lanes
+        # in ONE poll window — host bumps per-lane F_RELEASE/F_RTGT
+        # first, GO last; lanes then check their own F_RELEASE in the
+        # same converged poll, so a released group exits TOGETHER (no
+        # per-lane drip -> no fragmented thunk BAR/WARPSYNC arrivals).
+        # cmdseq entries are 16B so cmdbuf stays 16-ALIGNED (an 8-aligned
+        # command-buffer VA faults the dispatch CALL with 718 INVALID_PC
+        # — instruction fetch requires 16B alignment)
+        self.cmdseq = self.go + max_warps * 16   # mw x 16B
+        self.cmdbuf = self.cmdseq + max_warps * 16
+        self.results = self.cmdbuf + max_warps * CMDBUF_SZ
+        self.pool = self.results + max_warps * RESULTS_SZ
+        self.total = self.pool + max_warps * 32 * FRAME
+
+    def handler_va(self, arena: int, warp: int) -> int:
+        return arena + self.handler_off + warp * HANDLER_STRIDE
+
+    def frame_va(self, arena: int, f: int) -> int:
+        return arena + self.pool + f * FRAME
+
+
+# ctrl block (arena+0): the dbgctrl param points at the arena base
+CTRL_BASE = 0x00                # u64 code-base report (LEPC)
+CTRL_GATE = 0x08                # u32 start-gate flag
 
 # ---------------------------------------------------------------------------
-# source injection
+# prologue (no register reservation; entry state is architecturally
+# undefined, so the prologue may clobber R4-R9 outright)
 # ---------------------------------------------------------------------------
-# Debugger-reserved registers: the per-warp blob base ONLY.  Handler
-# scratch (R246-R251) and PR are spilled to local slots; URs are free.
-DBG_REGS = ["R252", "R253"]
-
-# prologue: report base, compute the GLOBAL warp id
-# (SR_CTAID.X * ctawarps + SR_TID.X>>5; ctawarps from ctrl+0x28, written
-# by launch()) -> per-warp blob base, permanent SETLMEMBASE, park at the
-# gate (which doubles as the SETLMEMBASE settling window), zero the
-# scratch the prologue borrowed, hardened self-invalidate.
-# LEPC stays at idx 1 (wait_base subtracts 1*16).
-_PROLOGUE = """    LDC.64 {R252,R253}, #param(dbgctrl);[1:7:{}:8:0]
-    LEPC {R246,R247};[7:7:{}:4:0]
-    STG.E.64.STRONG.GPU [{R252,R253}], {R246,R247};[7:7:{1}:8:0]
-    LDG.E.64.STRONG.GPU {R248,R249}, [{R252,R253}+0x20];[2:7:{1}:8:0]
-    LDG.E.STRONG.GPU R250, [{R252,R253}+0x28];[3:7:{1}:8:0]
-    MOV R246, R252;[7:7:{}:5:1]
-    MOV R247, R253;[7:7:{}:5:1]
-    S2R R251, SR_TID.X;[5:7:{}:5:1]
-    SHF.R.U32.HI R251, RZ, 0x5, R251;[7:7:{5}:5:1]
-    S2R R252, SR_CTAID.X;[4:7:{}:5:1]
-    IMAD R250, R252, R250, R251;[7:7:{3,4}:5:1]
-    IMAD.WIDE.U32 {R252,R253}, R250, 0x100000, {R248,R249};[7:7:{2}:13:1]
-    SETLMEMBASE {R252,R253};[7:7:{}:5:1]
+_PROLOGUE = """    LDC.64 {R4,R5}, #param(dbgctrl);[1:7:{}:8:0]
+    LEPC {R8,R9};[7:7:{}:4:0]
+    STG.E.64.STRONG.GPU [{R4,R5}], {R8,R9};[7:7:{1}:8:0]
 #def_label(dbggate)
-    LDG.E.STRONG.GPU R250, [{R246,R247}+0xc];[5:7:{}:8:0]
-    ISETP.NE.AND P0, PT, R250, 0x0, PT;[7:7:{5}:13:1]
+    LDG.E.STRONG.GPU R6, [{R4,R5}+0x8];[2:7:{}:8:0]
+    ISETP.NE.AND P0, PT, R6, 0x0, PT;[7:7:{2}:13:1]
     @!P0 BRA #label(dbggate);[7:7:{}:6:0]
-    MOV32I R246, 0x0;[7:7:{}:5:1]
-    MOV32I R247, 0x0;[7:7:{}:5:1]
-    MOV32I R248, 0x0;[7:7:{}:5:1]
-    MOV32I R249, 0x0;[7:7:{}:5:1]
-    MOV32I R250, 0x0;[7:7:{}:5:1]
-    MOV32I R251, 0x0;[7:7:{}:5:1]
     CCTL.I.IVALL;[7:7:{}:4:0]
 """ + "    NOP;[7:7:{}:8:0]\n" * 32 + """    CCTL.I.IVALL;[7:7:{}:4:0]
 """
@@ -224,194 +196,16 @@ PROLOGUE_LEN = sum(1 for ln in _PROLOGUE.splitlines() if ";[" in ln)
 
 _FN_RE = re.compile(r"^(#fn\s+\w+)\(([^)]*)\)\s*\{\s*$")
 
-
-def _call_word() -> tuple[int, int]:
-    """Encoding of the breakpoint patch word
-    `CALL.ABS.NOINC PT, {R252,R253}, HANDLER_OFF` — the SAME word for
-    every site and every warp (the per-warp handler VA comes from the
-    per-warp R252/R253 blob base)."""
-    src = ("#fn x() {\nCALL.ABS.NOINC PT, {R252,R253}, "
-           f"0x{HANDLER_OFF:x};[7:7:{{}}:5:1]\n}}\n")
-    return assemble_kernel(src, check_deps=True).encoded[0]
-
-
-# ---------------------------------------------------------------------------
-# handler: spill, report site VA, compose the imm-RET word over its own
-# last line, park on the generation, restore, hardened IVALL, fall into
-# the constructed RET (Ra=RZ -> target = imm = the site VA; resume has
-# restored the original instruction there).
-# ---------------------------------------------------------------------------
-def _ret_template() -> tuple[int, int]:
-    """(lo64, hi64) of `RET.ABS.NODEC PT, RZ, 0x0` carrying the FINAL
-    bracket (req of the 6 restore LDLs) so the runtime-composed word
-    inherits it."""
-    return assemble_flat(
-        "    RET.ABS.NODEC PT, RZ, 0x0;[7:7:{0,1,2,3,4,5}:8:1]\n")[0]
-
-
-def compose_ret_word(va: int) -> tuple[int, int]:
-    """(lo64, hi64) of `RET.ABS.NODEC PT, RZ, <va>` by bit surgery.
-    va is the BYTE return address (16-aligned).  imm field = va>>2
-    (SCALE 4): field[7:0]->lo[23:16], field[37:8]->lo[63:34],
-    field[55:38]->hi[17:0].  (Mirrored in probe_mwarp.py P6a.)"""
-    assert va % 16 == 0
-    t_lo, t_hi = _ret_template()
-    f = va >> 2
-    lo = t_lo | ((f & 0xFF) << 16) | (((f >> 8) & 0x3FFFFFFF) << 34)
-    hi = t_hi | ((f >> 38) & 0x3FFFF)
-    return lo, hi
-
-
-def _ret_surgery(t00: int, t10: int, t11: int) -> str:
-    """Bit-surgery block: compose the immediate RET word from the 64-bit
-    VA in R246 (lo) / R247 (hi) and STG.E.128 it over the handler's own
-    last line.  Clobbers R246-R251.  (imm = va>>2, SCALE 4: field[7:0] ->
-    lo[23:16], [37:8] -> lo[63:34], [55:38] -> hi[17:0].)"""
-    return f"""\
-    SHF.R.U32.HI R248, RZ, 0x2, R246;[7:7:{{}}:5:1]
-    SHF.L.U32 R250, R247, 0x1E, RZ;[7:7:{{}}:5:1]
-    LOP3.LUT R250, R250, R248, RZ, 0xFC;[7:7:{{}}:5:1]
-    SHF.R.U32.HI R251, RZ, 0x2, R247;[7:7:{{}}:5:1]
-    SHF.L.U32 R248, R250, 0x10, RZ;[7:7:{{}}:5:1]
-    LOP3.LUT R248, R248, 0xFF0000, RZ, 0xC0;[7:7:{{}}:5:1]
-    LOP3.LUT R248, R248, 0x{t00:08x}, RZ, 0xFC;[7:7:{{}}:5:1]
-    SHF.R.U32.HI R249, RZ, 0x8, R250;[7:7:{{}}:5:1]
-    SHF.L.U32 R246, R251, 0x18, RZ;[7:7:{{}}:5:1]
-    LOP3.LUT R249, R249, R246, RZ, 0xFC;[7:7:{{}}:5:1]
-    SHF.L.U32 R249, R249, 0x2, RZ;[7:7:{{}}:5:1]
-    SHF.R.U32.HI R250, RZ, 0x6, R251;[7:7:{{}}:5:1]
-    LOP3.LUT R250, R250, 0x{t10:08x}, RZ, 0xFC;[7:7:{{}}:5:1]
-    MOV32I R251, 0x{t11:08x};[7:7:{{}}:5:1]
-"""
-
-
-def _handler_src(retline: int, cmdret: int) -> str:
-    t_lo, t_hi = _ret_template()
-    t00, t01 = t_lo & 0xFFFFFFFF, t_lo >> 32
-    t10, t11 = t_hi & 0xFFFFFFFF, t_hi >> 32
-    assert t01 == 0, "template lo_hi expected 0"
-    return f"""\
-    STL {_slot(0)}, R246;[7:7:{{}}:2:0]
-    STL {_slot(1)}, R247;[7:7:{{}}:2:0]
-    STL {_slot(2)}, R248;[7:7:{{}}:2:0]
-    STL {_slot(3)}, R249;[7:7:{{}}:2:0]
-    STL {_slot(4)}, R250;[7:7:{{}}:2:0]
-    STL {_slot(5)}, R251;[7:7:{{}}:2:0]
-    P2R R246, PR;[7:7:{{}}:4:0]
-    STL {_slot(6)}, R246;[7:7:{{}}:2:0]
-    RPCMOV.32 R246, Rpc.LO;[0:7:{{}}:13:1]
-    RPCMOV.32 R247, Rpc.HI;[0:7:{{}}:13:1]
-    STG.E.64.STRONG.GPU [{{R252,R253}}+0x{COMMS + 0x10:x}], {{R246,R247}};[7:7:{{0}}:8:0]
-    STL {_slot(9)}, R246;[7:7:{{}}:2:0]
-    STL {_slot(10)}, R247;[7:7:{{}}:2:0]
-    S2R R249, SR_TID.X;[5:7:{{}}:5:1]
-    LOP3.LUT R249, R249, 0x1F, RZ, 0xC0;[7:7:{{5}}:5:1]
-    STL {_slot(11)}, R249;[7:7:{{}}:2:0]
-    IMAD R250, R249, 0x4, R252;[7:7:{{}}:5:1]
-    MOV R251, R253;[7:7:{{}}:5:1]
-    LDG.E.STRONG.GPU R248, [{{R250,R251}}+0x{COMMS_RLGEN:x}];[3:7:{{}}:8:0]
-    STL {_slot(7)}, R248;[7:7:{{3}}:2:0]
-    LDG.E.STRONG.GPU R250, [{{R252,R253}}+0x{COMMS_SEQ:x}];[3:7:{{}}:8:0]
-    STL {_slot(8)}, R250;[7:7:{{3}}:2:0]
-    BMOV R248, MACTIVE;[2:7:{{}}:8:0]
-    FLO.U32 R250, PT, R248;[3:7:{{2}}:5:1]
-    ISETP.EQ.AND P6, PT, R249, R250, PT;[7:7:{{3}}:13:1]
-    IMAD R250, R250, 0x10, R252;[7:7:{{}}:5:1]
-    MOV R251, R253;[7:7:{{}}:5:1]
-    @P6 LDG.E.STRONG.GPU R249, [{{R250,R251}}+0x{COMMS_HSLOTS + 0xC:x}];[4:7:{{}}:8:0]
-    @P6 IADD3 R249, R249, 0x1, RZ;[7:7:{{4}}:5:1]
-    @P6 STG.E.STRONG.GPU [{{R250,R251}}+0x{COMMS_HSLOTS:x}], R248;[7:7:{{}}:8:0]
-    @P6 STG.E.STRONG.GPU [{{R250,R251}}+0x{COMMS_HSLOTS + 4:x}], R246;[7:7:{{}}:8:0]
-    @P6 STG.E.STRONG.GPU [{{R250,R251}}+0x{COMMS_HSLOTS + 8:x}], R247;[7:7:{{}}:8:0]
-    @P6 STG.E.STRONG.GPU [{{R250,R251}}+0x{COMMS_HSLOTS + 0xC:x}], R249;[7:7:{{}}:8:0]
-#def_label(dbgspin)
-    LDL R246, {_slot(7)};[0:7:{{}}:4:0]
-    LDL R250, {_slot(11)};[2:7:{{}}:4:0]
-    IMAD R248, R250, 0x4, R252;[7:7:{{2}}:5:1]
-    MOV R249, R253;[7:7:{{}}:5:1]
-    LDG.E.STRONG.GPU R250, [{{R248,R249}}+0x{COMMS_RLGEN:x}];[1:7:{{}}:8:0]
-    ISETP.NE.AND P0, PT, R250, R246, PT;[7:7:{{0,1}}:13:1]
-    @P0 BRA #label(dbgresume);[7:7:{{}}:6:0]
-    LDL R248, {_slot(8)};[0:7:{{}}:4:0]
-    LDG.E.STRONG.GPU R249, [{{R252,R253}}+0x{COMMS_SEQ:x}];[1:7:{{}}:8:0]
-    ISETP.NE.AND P0, PT, R249, R248, PT;[7:7:{{0,1}}:13:1]
-    NANOSLEEP 0x100;[7:7:{{}}:5:1]
-    @!P0 BRA #label(dbgspin);[7:7:{{}}:6:0]
-    STL {_slot(8)}, R249;[7:7:{{}}:2:0]
-    CCTL.I.IVALL;[7:7:{{}}:4:0]
-""" + "    NOP;[7:7:{}:8:0]\n" * 32 + f"""    CCTL.I.IVALL;[7:7:{{}}:4:0]
-    CALL.ABS.NOINC PT, {{R252,R253}}, 0x{CMD_OFF:x};[7:7:{{}}:6:0]
-    BRA #label(dbgspin);[7:7:{{}}:6:0]
-#def_label(dbgresume)
-    LDL R250, {_slot(11)};[2:7:{{}}:4:0]
-    IMAD R248, R250, 0x8, R252;[7:7:{{2}}:5:1]
-    MOV R249, R253;[7:7:{{}}:5:1]
-    LDG.E.64.STRONG.GPU {{R246,R247}}, [{{R248,R249}}+0x{COMMS_RTGTV:x}];[3:7:{{}}:8:0]
-    LOP3.LUT R248, R246, R247, RZ, 0xFC;[7:7:{{3}}:5:1]
-    ISETP.EQ.AND P0, PT, R248, RZ, PT;[7:7:{{}}:13:1]
-    @P0 LDL R246, {_slot(9)};[0:7:{{}}:4:0]
-    @P0 LDL R247, {_slot(10)};[1:7:{{}}:4:0]
-""" + _ret_surgery(t00, t10, t11).replace(
-        "SHF.R.U32.HI R248, RZ, 0x2, R246;[7:7:{}:5:1]",
-        "SHF.R.U32.HI R248, RZ, 0x2, R246;[7:7:{0,1}:5:1]") + f"""\
-    STG.E.128.STRONG.GPU [{{R252,R253}}+0x{retline:x}], {{R248,R249,R250,R251}};[7:7:{{}}:8:0]
-    LDL R248, {_slot(6)};[0:7:{{}}:4:0]
-    R2P PR, R248;[7:7:{{0}}:13:1]
-    LDL R246, {_slot(0)};[0:7:{{}}:4:0]
-    LDL R247, {_slot(1)};[1:7:{{}}:4:0]
-    LDL R248, {_slot(2)};[2:7:{{}}:4:0]
-    LDL R249, {_slot(3)};[3:7:{{}}:4:0]
-    LDL R250, {_slot(4)};[4:7:{{}}:4:0]
-    LDL R251, {_slot(5)};[5:7:{{}}:4:0]
-    CCTL.I.IVALL;[7:7:{{}}:4:0]
-""" + "    NOP;[7:7:{}:8:0]\n" * 32 + """    CCTL.I.IVALL;[7:7:{}:4:0]
-    RET.ABS.NODEC PT, RZ, 0x0;[7:7:{0,1,2,3,4,5}:8:1]
-"""
-
-
-def _handler_anchors(src: str) -> tuple[int, int]:
-    """(retline, cmdret) blob-relative byte offsets for a handler source.
-    retline = the final RET (self-overwritten); cmdret = the instruction
-    the injected-command buffer RETs to (the BRA right after the CALL,
-    which re-enters the spin)."""
-    n = 0
-    cmdret = None
-    for ln in src.splitlines():
-        ln = ln.strip()
-        if ln.startswith("#def_label"):
-            continue
-        if ln.startswith("BRA #label(dbgspin)"):
-            cmdret = HANDLER_OFF + n * 16
-        n += 1
-    assert cmdret is not None
-    return HANDLER_OFF + (n - 1) * 16, cmdret
-
-
-def _handler_words() -> tuple[bytes, int, int]:
-    """(handler image, retline off, cmdret off).  Two-pass: the STG that
-    rewrites the RET line and the command buffer's RET disp both need
-    offsets that depend on the instruction count."""
-    retline, cmdret = _handler_anchors(_handler_src(0, 0))
-    src = _handler_src(retline, cmdret)
-    enc = assemble_flat(src)
-    retline2, cmdret2 = _handler_anchors(src)
-    assert (retline2, cmdret2) == (retline, cmdret)
-    assert len(enc) * 16 <= CMD_OFF - HANDLER_OFF, "handler too big"
-    return (b"".join(struct.pack("<QQ", lo, hi) for lo, hi in enc),
-            retline, cmdret)
-
-
 _EPILOGUE_GUARD = "    EXIT;[7:7:{}:4:0]\n"
 
 
 class DebugInfo:
     """Layout metadata of an injected source."""
     def __init__(self, source: str, n_body: int):
-        self.source = source            # injected dialect source
-        self.n_body = n_body            # original instruction count
+        self.source = source
+        self.n_body = n_body
 
     def injected_index(self, orig_index: int) -> int:
-        """Original-source instruction index -> injected-source index."""
         if not 0 <= orig_index < self.n_body:
             raise IndexError(orig_index)
         return orig_index + PROLOGUE_LEN
@@ -420,16 +214,11 @@ class DebugInfo:
 def inject_debugger(source: str, max_bps: int = 0,
                     allow_cdesc_urs: bool = False) -> DebugInfo:
     """Inject the debugger prologue into a single-function dialect source.
+
     The function gains a trailing `dbgctrl<8>` parameter the host must
-    pass (device-memory ctrl buffer).
-
-    max_bps: accepted for v1 API compatibility; since v2 there are no
-    slots, so the number of concurrently armed breakpoints is unlimited.
-
-    allow_cdesc_urs: v3 no longer touches ANY uniform register (comms
-    are desc-less), so this is accepted for API compatibility and is a
-    no-op — wtrace-instrumented sources (UR60/UR61 = default cdesc)
-    compose freely."""
+    pass (the arena base VA).  M9 reserves NO registers — every kernel
+    register is preserved through breakpoints (R0/R1 via the RPC spill
+    in the stub, R2-R7/PR via the per-lane frame)."""
     lines = source.splitlines()
     fn_at = None
     for i, ln in enumerate(lines):
@@ -440,9 +229,6 @@ def inject_debugger(source: str, max_bps: int = 0,
     if fn_at is None:
         raise ValueError("no #fn header found")
     body = "\n".join(lines[fn_at:])
-    for r in DBG_REGS:
-        if re.search(rf"\b{r}\b", body):
-            raise ValueError(f"kernel uses debugger-reserved {r}")
     for lbl in ("dbggate", "dbgspin"):
         if lbl in body:
             raise ValueError(f"label collision: {lbl}")
@@ -455,122 +241,342 @@ def inject_debugger(source: str, max_bps: int = 0,
 
     out = lines[:fn_at] + [new_hdr, _PROLOGUE.rstrip("\n")] \
         + lines[fn_at + 1:]
-    # instruction count of the ORIGINAL body (for index mapping)
     n_body = len(assemble_kernel(source, check_deps=True).encoded)
-    # safety EXIT before the closing brace (fall-through guard)
     text = "\n".join(out)
     close = text.rstrip().rfind("}")
     text = (text[:close] + _EPILOGUE_GUARD + text[close:])
     info = DebugInfo(text, n_body)
-    # validate the whole thing assembles, and self-check the layout
     enc = assemble_kernel(text, check_deps=True).encoded
     assert len(enc) == PROLOGUE_LEN + n_body + 1, "injected layout mismatch"
     return info
 
 
 # ---------------------------------------------------------------------------
+# stub (per bp, shared across warps): spill R0/R1 (via RPC) + R2/R3 +
+# the baked site VA into the lane's frame, then CALL.ABS into the
+# PER-WARP handler copy (gwarp recovered from the frame address).
+# ---------------------------------------------------------------------------
+def _stub_src(site_va: int, k: int, pool: int, h0: int) -> str:
+    """k = ctawarps*32, pool = pool base VA, h0 = handler area base VA
+    (0x1000-aligned).  pool_lo + (mw*32-1)*FRAME must not carry."""
+    return f"""\
+    RPCMOV Rpc.LO, R0;[3:7:{{}}:9:0]
+    RPCMOV Rpc.HI, R1;[4:7:{{}}:9:0]
+    S2R R0, SR_CTAID.X;[5:7:{{}}:5:1]
+    IMAD R0, R0, 0x{k:x}, RZ;[7:7:{{5}}:5:1]
+    S2R R1, SR_TID.X;[5:7:{{}}:5:1]
+    IADD3 R0, R0, R1, RZ;[7:7:{{5}}:5:1]
+    MOV32I R1, 0x{pool & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    IMAD R0, R0, 0x{FRAME:x}, R1;[7:7:{{5}}:5:1]
+    MOV32I R1, 0x{pool >> 32:08x};[7:7:{{}}:5:1]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2:x}], R2;[7:1:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 4:x}], R3;[7:1:{{}}:8:0]
+    RPCMOV R2, Rpc.LO;[2:7:{{1,3}}:9:0]
+    RPCMOV R3, Rpc.HI;[2:7:{{1,4}}:9:0]
+    STG.E.64.STRONG.GPU [{{R0,R1}}+0x{F_R01:x}], {{R2,R3}};[7:1:{{2}}:8:0]
+    MOV32I R2, 0x{site_va & 0xFFFFFFFF:08x};[7:7:{{1}}:5:1]
+    MOV32I R3, 0x{site_va >> 32:08x};[7:7:{{}}:5:1]
+    STG.E.64.STRONG.GPU [{{R0,R1}}+0x{F_SITE:x}], {{R2,R3}};[7:1:{{}}:8:0]
+    MOV32I R2, 0x{pool & 0xFFFFFFFF:08x};[7:7:{{1}}:5:1]
+    IADD3 R2, R0, -R2, RZ;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R2, RZ, 0xC, R2;[7:7:{{}}:5:1]
+    SHF.L.U32 R2, R2, 0xC, RZ;[7:7:{{}}:5:1]
+    IADD3 R2, R2, 0x{h0 & 0xFFFFFFFF:08x}, RZ;[7:7:{{}}:13:1]
+    MOV32I R3, 0x{h0 >> 32:08x};[7:7:{{}}:13:1]
+    CALL.ABS.NOINC PT, {{R2,R3}}, 0x0;[7:7:{{}}:6:0]
+"""
+
+
+# ---------------------------------------------------------------------------
+# handler (one copy per warp; borrows R2-R7 + P0, spill-restored via the
+# frame; RPC is DEAD on entry — the stub already stashed kernel R0/R1)
+# ---------------------------------------------------------------------------
+def _ret_template() -> tuple[int, int]:
+    """(lo64, hi64) of `RET.ABS.NODEC PT, RZ, 0x0` — the runtime-composed
+    word inherits everything but the imm field."""
+    return assemble_flat(
+        "    RET.ABS.NODEC PT, RZ, 0x0;[7:7:{}:5:1]\n")[0]
+
+
+def _ret_surgery(t00: int, t10: int, t11: int) -> str:
+    """Compose the RET-imm word from the 64-bit VA in R2 (lo) / R3 (hi)
+    into {R4,R5,R6,R7}.  Clobbers R2-R7.  (imm = va>>2, SCALE 4:
+    field[7:0]->lo[23:16], [37:8]->lo[63:34], [55:38]->hi[17:0].)"""
+    return f"""\
+    SHF.R.U32.HI R4, RZ, 0x2, R2;[7:7:{{2}}:5:1]
+    SHF.L.U32 R6, R3, 0x1E, RZ;[7:7:{{}}:5:1]
+    LOP3.LUT R6, R6, R4, RZ, 0xFC;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R7, RZ, 0x2, R3;[7:7:{{}}:5:1]
+    SHF.L.U32 R4, R6, 0x10, RZ;[7:7:{{}}:5:1]
+    LOP3.LUT R4, R4, 0xFF0000, RZ, 0xC0;[7:7:{{}}:5:1]
+    LOP3.LUT R4, R4, 0x{t00:08x}, RZ, 0xFC;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R5, RZ, 0x8, R6;[7:7:{{}}:5:1]
+    SHF.L.U32 R2, R7, 0x18, RZ;[7:7:{{}}:5:1]
+    LOP3.LUT R5, R5, R2, RZ, 0xFC;[7:7:{{}}:5:1]
+    SHF.L.U32 R5, R5, 0x2, RZ;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R6, RZ, 0x6, R7;[7:7:{{}}:5:1]
+    LOP3.LUT R6, R6, 0x{t10:08x}, RZ, 0xFC;[7:7:{{}}:5:1]
+    MOV32I R7, 0x{t11:08x};[7:7:{{}}:5:1]
+"""
+
+
+def _handler_src(lay: Layout, arena: int, warp: int,
+                 retline: int, cmdret: int) -> str:
+    pool = arena + lay.pool
+    hslots = arena + lay.hslots
+    go = arena + lay.go + warp * 16
+    cmdseq = arena + lay.cmdseq + warp * 16
+    cmdbuf = arena + lay.cmdbuf + warp * CMDBUF_SZ
+    self_va = lay.handler_va(arena, warp)
+    t_lo, t_hi = _ret_template()
+    t00, t01 = t_lo & 0xFFFFFFFF, t_lo >> 32
+    t10, t11 = t_hi & 0xFFFFFFFF, t_hi >> 32
+    assert t01 == 0, "template lo_hi expected 0"
+    ret_va = self_va + retline
+    return f"""\
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 8:x}], R4;[7:0:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0xC:x}], R5;[7:0:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0x10:x}], R6;[7:0:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0x14:x}], R7;[7:0:{{}}:8:0]
+    P2R R2, PR;[2:7:{{1}}:6:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_PR:x}], R2;[7:0:{{2}}:8:0]
+    LDG.E.STRONG.GPU R6, [{{R0,R1}}+0x{F_RELEASE:x}];[2:7:{{0}}:8:0]
+    MOV32I R4, 0x{go & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R5, 0x{go >> 32:08x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R7, [{{R4,R5}}];[3:1:{{}}:8:0]
+    LDG.E.64.STRONG.GPU {{R2,R3}}, [{{R0,R1}}+0x{F_SITE:x}];[4:7:{{}}:8:0]
+    MOV32I R4, 0x{pool & 0xFFFFFFFF:08x};[7:7:{{1}}:5:1]
+    IADD3 R4, R0, -R4, RZ;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R4, RZ, 0x7, R4;[7:7:{{}}:5:1]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_F:x}], R4;[7:1:{{}}:8:0]
+    ELECT P6, URZ, PT;[7:7:{{}}:13:1]
+    MOV32I R5, 0x{hslots & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    IMAD R4, R4, 0x10, R5;[7:7:{{1}}:5:1]
+    MOV32I R5, 0x{hslots >> 32:08x};[7:7:{{}}:5:1]
+    @P6 STG.E.STRONG.GPU [{{R4,R5}}+0x4], R2;[7:1:{{4}}:8:0]
+    @P6 STG.E.STRONG.GPU [{{R4,R5}}+0x8], R3;[7:1:{{}}:8:0]
+    @P6 BMOV R2, MACTIVE;[4:7:{{1}}:8:0]
+    @P6 STG.E.STRONG.GPU [{{R4,R5}}], R2;[7:1:{{4}}:8:0]
+    @P6 LDG.E.STRONG.GPU R3, [{{R4,R5}}+0xC];[4:1:{{1}}:8:0]
+    @P6 IADD3 R3, R3, 0x1, RZ;[7:7:{{4}}:5:1]
+    @P6 STG.E.STRONG.GPU [{{R4,R5}}+0xC], R3;[7:1:{{4}}:8:0]
+#def_label(dbgspin)
+    NANOSLEEP 0x100;[7:7:{{}}:5:1]
+    MOV32I R4, 0x{go & 0xFFFFFFFF:08x};[7:7:{{1}}:5:1]
+    MOV32I R5, 0x{go >> 32:08x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R2, [{{R4,R5}}];[3:1:{{}}:8:0]
+    ISETP.NE.AND P0, PT, R2, R7, PT;[7:7:{{3}}:13:1]
+    @!P0 BRA #label(dbgcmd);[7:7:{{}}:6:0]
+    MOV R7, R2;[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_RELEASE:x}];[2:7:{{}}:8:0]
+    ISETP.NE.AND P0, PT, R2, R6, PT;[7:7:{{2}}:13:1]
+    @P0 BRA #label(dbgresume);[7:7:{{}}:6:0]
+    BRA #label(dbgspin);[7:7:{{}}:6:0]
+#def_label(dbgcmd)
+    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_CMD:x}];[2:7:{{}}:8:0]
+    MOV32I R4, 0x{cmdseq & 0xFFFFFFFF:08x};[7:7:{{1}}:5:1]
+    MOV32I R5, 0x{cmdseq >> 32:08x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R3, [{{R4,R5}}];[3:7:{{}}:8:0]
+    ISETP.NE.AND P0, PT, R3, R2, PT;[7:7:{{2,3}}:13:1]
+    @!P0 BRA #label(dbgspin);[7:7:{{}}:6:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_CMD:x}], R3;[7:1:{{3}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_RELBASE:x}], R6;[7:1:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_GOBASE:x}], R7;[7:1:{{}}:8:0]
+    CCTL.I.IVALL;[7:7:{{}}:4:0]
+""" + "    NOP;[7:7:{}:8:0]\n" * 32 + f"""    CCTL.I.IVALL;[7:7:{{}}:4:0]
+    MOV32I R2, 0x{cmdbuf & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{cmdbuf >> 32:08x};[7:7:{{}}:13:1]
+    CALL.ABS.NOINC PT, {{R2,R3}}, 0x0;[7:7:{{}}:6:0]
+    LDG.E.STRONG.GPU R6, [{{R0,R1}}+0x{F_RELBASE:x}];[2:7:{{1}}:8:0]
+    LDG.E.STRONG.GPU R7, [{{R0,R1}}+0x{F_GOBASE:x}];[3:7:{{}}:8:0]
+    BRA #label(dbgspin);[7:7:{{}}:6:0]
+#def_label(dbgresume)
+    LDG.E.64.STRONG.GPU {{R2,R3}}, [{{R0,R1}}+0x{F_RTGT:x}];[2:7:{{}}:8:0]
+""" + _ret_surgery(t00, t10, t11) + f"""\
+    MOV32I R2, 0x{ret_va & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{ret_va >> 32:08x};[7:7:{{}}:5:1]
+    STG.E.128.STRONG.GPU [{{R2,R3}}], {{R4,R5,R6,R7}};[7:1:{{}}:8:0]
+    CCTL.I.IVALL;[7:7:{{}}:4:0]
+""" + "    NOP;[7:7:{}:8:0]\n" * 32 + f"""    CCTL.I.IVALL;[7:7:{{}}:4:0]
+    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_PR:x}];[2:7:{{1}}:8:0]
+    R2P PR, R2, 0x7F;[7:7:{{2}}:13:1]
+    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_R2:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R3, [{{R0,R1}}+0x{F_R2 + 4:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R4, [{{R0,R1}}+0x{F_R2 + 8:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R5, [{{R0,R1}}+0x{F_R2 + 0xC:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R6, [{{R0,R1}}+0x{F_R2 + 0x10:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R7, [{{R0,R1}}+0x{F_R2 + 0x14:x}];[2:7:{{}}:8:0]
+    LDG.E.64.STRONG.GPU {{R0,R1}}, [{{R0,R1}}+0x{F_R01:x}];[2:7:{{}}:8:0]
+    MOV R1, R1;[7:7:{{2}}:5:1]
+    RET.ABS.NODEC PT, RZ, 0x0;[7:7:{{}}:5:1]
+"""
+
+
+def _handler_anchors(src: str) -> tuple[int, int]:
+    """(retline, cmdret) handler-relative byte offsets.  retline = the
+    final RET (self-overwritten); cmdret = the first instruction after
+    the command CALL (reloads the release/GO baselines the command may
+    have clobbered, then re-enters the spin)."""
+    n = 0
+    cmdret = None
+    prev_call = False
+    for ln in src.splitlines():
+        ln = ln.strip()
+        if ln.startswith("#def_label"):
+            continue
+        if prev_call and cmdret is None:
+            cmdret = n * 16
+        prev_call = ln.startswith("CALL.ABS")
+        n += 1
+    assert cmdret is not None
+    return (n - 1) * 16, cmdret
+
+
+def _handler_image(lay: Layout, arena: int, warp: int,
+                   ) -> tuple[bytes, int, int]:
+    """(image, retline off, cmdret off) — two-pass: the baked retline VA
+    depends on the instruction count."""
+    retline, cmdret = _handler_anchors(
+        _handler_src(lay, arena, warp, 0, 0))
+    src = _handler_src(lay, arena, warp, retline, cmdret)
+    enc = assemble_flat(src)
+    anchors2 = _handler_anchors(src)
+    assert anchors2 == (retline, cmdret)
+    assert len(enc) * 16 <= HANDLER_STRIDE, "handler too big"
+    return (b"".join(struct.pack("<QQ", lo, hi) for lo, hi in enc),
+            retline, cmdret)
+
+
+# ---------------------------------------------------------------------------
 # host-side debugger
 # ---------------------------------------------------------------------------
 class Breakpoint:
-    def __init__(self, dbg: "Debugger", bp_id: int,
-                 orig_index: int, orig_word: tuple[int, int]):
+    def __init__(self, dbg: "Debugger", bp_id: int, orig_index: int,
+                 orig_word: tuple[int, int], slot: int):
         self.dbg = dbg
-        self.id = bp_id                 # host-side, monotonically increasing
+        self.id = bp_id
         self.orig_index = orig_index    # index in the ORIGINAL source
         self.orig_word = orig_word
+        self.slot = slot                # stub slot (site identity in code)
         self.armed = True
         self.warp: int | None = None    # set by wait_hit
 
 
 class _Group:
-    """One parked execution group of a warp (M8b).  Identity = (warp,
-    leader slot); parked groups of a warp always have pairwise-disjoint
-    lane masks."""
+    """One parked execution group of a warp.  Identity = (warp, leader
+    slot); parked groups of a warp have pairwise-disjoint lane masks."""
     __slots__ = ("mask", "bp", "slot", "reported")
 
     def __init__(self, mask: int, bp: Breakpoint, slot: int):
         self.mask = mask
         self.bp = bp
-        self.slot = slot            # leader lane = hit-slot index
+        self.slot = slot            # leader's global lane-frame index
         self.reported = False
 
 
 class Debugger:
-    """Runtime breakpoints for a dialect-source kernel, multi-warp.
+    """Runtime breakpoints for a dialect-source kernel — zero register
+    reservation (M9).
 
-    The kernel is launched with its normal args plus the dbgctrl buffer;
-    it parks at the entry gate until release().  Arm breakpoints before
-    release (reliable) — mid-run arming works only for code that
-    refetches (not tight loops, loop/fetch-buffer replay defeats IVALL).
+    The kernel is launched with its normal args plus dbgctrl (the arena
+    base, appended automatically); it parks at the entry gate until
+    release().  Arm breakpoints before release (reliable) — mid-run
+    arming works only for code that refetches (loop/fetch-buffer replay
+    defeats IVALL in tight loops).
 
-    Multi-warp / multi-CTA: launch with block=(32*N,), grid=(G,); each
-    warp gets its own blob (warpid = SR_CTAID.X*ctawarps + SR_TID.X>>5,
-    ctawarps passed via ctrl+0x28).  Every warp arms the same sites (the
-    patch word is warp-generic); hits report the hitting warp via
-    bp.warp; resume(bp) releases exactly the warps parked at that bp's
-    site.
+    Multi-warp / multi-CTA: launch with block=(32*N,), grid=(G,);
+    f = CTAID*(ctawarps*32) + TID indexes frames/hit slots globally.
+    HARD constraint: all CTAs must be CO-RESIDENT — parked warps never
+    exit, so a grid exceeding resident capacity deadlocks at the gate.
     """
 
-    CTRL_BYTES = 0x30
-
     def __init__(self, source: str, func: str | None = None,
-                 max_bps: int = 0, allow_cdesc_urs: bool = False,
+                 max_bps: int = 16, allow_cdesc_urs: bool = False,
                  max_warps: int = 1):
         self.info = inject_debugger(source, max_bps,
                                     allow_cdesc_urs=allow_cdesc_urs)
         self.mod = CudaModule(assemble(self.info.source, check_deps=True))
         res = assemble_kernel(self.info.source, check_deps=True)
         self.encoded = res.encoded
-        # (ordinal, absolute c[0x0] byte address, size) per param, in
-        # #fn declaration order (dbgctrl last) — the stepper zips this
-        # with the source decl to replay LDC #param sites in thunks
         self.res_params = res.params
         self.func = func or self._only_function()
         self.patcher = Patcher()
         self.max_warps = max_warps
-        self.ctrl = self.mod.devmem_alloc(self.CTRL_BYTES)
-        self.mod.device_write(self.ctrl, bytes(self.CTRL_BYTES))
-        self.blobs = self.mod.devmem_alloc(max_warps * BLOB_SZ)
-        words, self.retline_off, self.cmdret_off = _handler_words()
-        for w in range(max_warps):
-            base = self.blobs + w * BLOB_SZ
-            self.mod.device_write(base + COMMS, bytes(0x28))
-            self.mod.device_write(base + COMMS_HSLOTS,
-                                  bytes(COMMS_GROUP_END - COMMS_HSLOTS))
-            self.mod.device_write(base + HANDLER_OFF, words)
-        self._wr64(0x20, self.blobs)    # prologue loads the blob base
+        self.lay = Layout(max_bps, max_warps)
+        self.arena = self.mod.devmem_alloc(self.lay.total)
+        assert self.arena % 16 == 0, "arena base must be 16-aligned"
+        pool = self.arena + self.lay.pool
+        assert (pool & 0xFFFFFFFF) + max_warps * 32 * FRAME \
+            < 0x100000000, "pool lo32 carry — realign"
+        # zero the lot (frames' release/cmd/rtgt state, hit slots, ctrl)
+        self.mod.device_write(self.arena, bytes(self.lay.total))
+        # per-warp handler copies (retline restored on every launch too)
+        self._hdl = [self._write_handler(w) for w in range(max_warps)]
         self.stream = CudaModule.stream_create()
         self._bps: dict[int, Breakpoint] = {}
         self._by_index: dict[int, Breakpoint] = {}
+        self._free_slots = list(range(max_bps))
         self._next_id = 1
-        self._gens = [0] * max_warps
-        self._cmds = [0] * max_warps
-        self._parked: dict[int, Breakpoint] = {}    # warp -> bp
-        self._patch_base = _call_word()
-        self._thunk_next = [0] * max_warps          # per-warp arena bump
-        # M8b: per-warp parked execution groups + host-side shadows
         self._groups: dict[int, list[_Group]] = \
             {w: [] for w in range(max_warps)}
-        self._seen = [[0] * 32 for _ in range(max_warps)]
+        self._seen = [0] * (max_warps * 32)
         self._rlgen = [[0] * 32 for _ in range(max_warps)]
-        self._thunk_cache: dict[tuple[int, int], tuple[int, tuple]] = {}
+        self._cmds = [0] * max_warps
+        self._go = [0] * max_warps
+        self._thunk_next = 0
+        self._thunk_cache: dict[tuple, int] = {}
+        self.n_warps = 0
+        self.warps_per_cta = 1
 
+    # -- setup helpers --------------------------------------------------------
     def _only_function(self) -> str:
         m = re.search(r"#fn\s+(\w+)", self.info.source)
         assert m
         return m.group(1)
 
-    def _blob(self, warp: int) -> int:
-        return self.blobs + warp * BLOB_SZ
+    def _write_handler(self, warp: int) -> tuple[int, int]:
+        img, retline, cmdret = _handler_image(self.lay, self.arena, warp)
+        self.mod.device_write(self.lay.handler_va(self.arena, warp), img)
+        return retline, cmdret
+
+    def _stub_va(self, slot: int) -> int:
+        return self.arena + STUB_OFF + slot * STUB_SZ
+
+    def _write_stub(self, bp: Breakpoint) -> None:
+        site = self._site_va(bp.orig_index)
+        k = self.warps_per_cta * 32
+        h0 = self.arena + self.lay.handler_off
+        src = _stub_src(site, k, self.arena + self.lay.pool, h0)
+        enc = assemble_flat(src)
+        assert 0 < len(enc) <= STUB_SZ // 16, "stub too big"
+        self.mod.device_write(
+            self._stub_va(bp.slot),
+            b"".join(struct.pack("<QQ", lo, hi) for lo, hi in enc))
+
+    def _jmp_word(self, va: int) -> tuple[int, int]:
+        # req={0..5}: the patch word must wait for ALL outstanding
+        # scoreboarded producers before transferring control — the
+        # original instruction's bracket only covered ITS sources, but
+        # the stub spills R0-R7+PR wholesale, and an in-flight LDG/LDC/
+        # S2R into ANY of them would otherwise be captured pre-write
+        # (observed: FFMA bp hit with the a[i] LDG still in flight ->
+        # R2 spilled as the pre-LDG address; m3w: handler spilled R4/R5
+        # before the param LDC landed -> resume restored garbage -> 700).
+        enc = assemble_flat(f"    JMP 0x{va:x};[7:7:{{0,1,2,3,4,5}}:6:0]\n")
+        assert len(enc) == 1
+        return enc[0]
+
+    def _rd32(self, off: int) -> int:
+        return struct.unpack("<I", self.mod.device_read(
+            self.arena + off, 4))[0]
+
+    def _wr32(self, off: int, val: int) -> None:
+        self.mod.device_write(self.arena + off, struct.pack("<I", val))
 
     # -- lifecycle -----------------------------------------------------------
     def launch(self, args: list, grid=(1,), block=(32,)) -> None:
         """Launch the target (args = the kernel's normal args); it parks
-        at the gate.  dbgctrl is appended automatically.  1-D grid/block;
-        multi-CTA capable (warpid = CTAID.X*ctawarps + tid.x>>5).
-        HARD constraint: all CTAs must be CO-RESIDENT — parked warps
-        never exit, so a grid exceeding the GPU's resident capacity
-        deadlocks at the gate."""
+        at the gate.  dbgctrl is appended automatically."""
         if tuple(grid[1:]) not in ((), (1, 1)) or \
                 tuple(block[1:]) not in ((), (1, 1)):
             raise ValueError("only 1-D grid/block supported")
@@ -581,42 +587,31 @@ class Debugger:
                              f"max_warps={self.max_warps}")
         self.n_warps = warps
         self.warps_per_cta = warps_per_cta
-        self._wr32(0x28, warps_per_cta)
-        for w in range(warps):
-            self.mod.device_write(self._blob(w) + COMMS, bytes(0x28))
-            self.mod.device_write(self._blob(w) + COMMS_HSLOTS,
-                                  bytes(COMMS_GROUP_END - COMMS_HSLOTS))
-            self._gens[w] = 0
-            self._groups[w] = []
-            self._seen[w] = [0] * 32
-            self._rlgen[w] = [0] * 32
+        # reset comms/frame state
+        self.mod.device_write(self.arena, bytes(0x100))
+        self.mod.device_write(self.arena + self.lay.hslots,
+                              bytes(self.lay.results - self.lay.hslots
+                                    + self.max_warps * RESULTS_SZ))
+        self.mod.device_write(self.arena + self.lay.pool,
+                              bytes(self.max_warps * 32 * FRAME))
+        for w in range(max(warps, 1)):
+            self._write_handler(w)          # restore the retline word
+        for bp in self._bps.values():       # ctawarps may have changed
+            self._write_stub(bp)
+        self._groups = {w: [] for w in range(self.max_warps)}
+        self._seen = [0] * (self.max_warps * 32)
+        self._rlgen = [[0] * 32 for _ in range(self.max_warps)]
+        self._cmds = [0] * self.max_warps
+        self._go = [0] * self.max_warps
         self._thunk_cache.clear()
-        self._parked.clear()
         self.mod.launch(self.func, grid=grid, block=block,
-                        args=args + [self.ctrl], stream=self.stream)
-
-    def _rd32(self, off: int) -> int:
-        return struct.unpack("<I", self.mod.device_read(
-            self.ctrl + off, 4))[0]
-
-    def _wr32(self, off: int, val: int) -> None:
-        self.mod.device_write(self.ctrl + off, struct.pack("<I", val))
-
-    def _rd64(self, off: int) -> int:
-        return struct.unpack("<Q", self.mod.device_read(
-            self.ctrl + off, 8))[0]
-
-    def _wr64(self, off: int, val: int) -> None:
-        self.mod.device_write(self.ctrl + off, struct.pack("<Q", val))
-
-    def _hit(self, warp: int) -> int:
-        return struct.unpack("<Q", self.mod.device_read(
-            self._blob(warp) + COMMS + 0x10, 8))[0]
+                        args=args + [self.arena], stream=self.stream)
 
     def wait_base(self, timeout: float = 5.0) -> int:
         t0 = time.time()
         while True:
-            lo, hi = self._rd32(0x0), self._rd32(0x4)
+            lo = self._rd32(CTRL_BASE)
+            hi = self._rd32(CTRL_BASE + 4)
             if lo or hi:
                 break
             if time.time() - t0 > timeout:
@@ -632,11 +627,9 @@ class Debugger:
     def release(self) -> None:
         """Open the start gate.  The prologue self-invalidates, so every
         breakpoint armed while parked is live from the first fetch."""
-        self._wr32(0x0c, 1)
+        self._wr32(CTRL_GATE, 1)
 
     def wait_done(self, timeout: float = 120.0) -> None:
-        # poll stream_query: the target exits normally; if a breakpoint
-        # is still parked this would block forever, so time out loudly
         t0 = time.time()
         while not CudaModule.stream_query(self.stream):
             if time.time() - t0 > timeout:
@@ -649,15 +642,21 @@ class Debugger:
         return self.base() + self.info.injected_index(orig_index) * 16
 
     def arm(self, orig_index: int) -> Breakpoint:
-        """Patch the site word with the CALL into the blob handler."""
+        """Patch the site word with a JMP into the bp's stub slot.
+        The site STAYS patched for the bp's whole lifetime (persistent,
+        gdb-style; resume goes through a thunk — no restore race)."""
         if orig_index in self._by_index:
             raise RuntimeError(f"breakpoint already armed at {orig_index}")
+        if not self._free_slots:
+            raise RuntimeError("out of stub slots (max_bps)")
         inj = self.info.injected_index(orig_index)
         site = self.base() + inj * 16
         orig = self.encoded[inj]
-        self.patcher.patch(site, self._patch_base)
-        bp = Breakpoint(self, self._next_id, orig_index, orig)
+        slot = self._free_slots.pop(0)
+        bp = Breakpoint(self, self._next_id, orig_index, orig, slot)
         self._next_id += 1
+        self._write_stub(bp)
+        self.patcher.patch(site, self._jmp_word(self._stub_va(slot)))
         self._bps[bp.id] = bp
         self._by_index[orig_index] = bp
         return bp
@@ -666,8 +665,12 @@ class Debugger:
         """Restore the original word (only when NOT parked at this bp)."""
         self.patcher.patch(self._site_va(bp.orig_index), bp.orig_word)
         bp.armed = False
+        self._free_slots.append(bp.slot)
+        self._free_slots.sort()
         del self._bps[bp.id]
         del self._by_index[bp.orig_index]
+        for k in [k for k in self._thunk_cache if k[0] == bp.orig_index]:
+            del self._thunk_cache[k]
 
     def _bp_for_va(self, va: int) -> Breakpoint:
         inj = (va - self.base()) // 16
@@ -678,42 +681,39 @@ class Debugger:
                 f"hit from unarmed site {hex(va)} (orig {orig})")
         return bp
 
-    def _poll_groups(self) -> tuple[int, "_Group"] | None:
+    # -- group hit reporting ----------------------------------------------------
+    def _poll_groups(self) -> tuple[int, _Group] | None:
         """Scan all hit slots; register newly-parked groups.  Returns
         (warp, group) for the first group not yet reported."""
+        raw = self.mod.device_read(self.arena + self.lay.hslots,
+                                   self.max_warps * 32 * 16)
+        for slot in range(self.max_warps * 32):
+            mask, va_lo, va_hi, seq = struct.unpack_from(
+                "<4I", raw, slot * 16)
+            if seq == self._seen[slot]:
+                continue
+            self._seen[slot] = seq
+            w, lane = divmod(slot, 32)
+            bp = self._bp_for_va(va_lo | (va_hi << 32))
+            for g in self._groups[w]:
+                if g.bp is bp:              # pile-up at the same site
+                    g.mask |= mask
+                    g.slot = min(g.slot, slot)
+                    g.reported = False
+                    break
+            else:
+                self._groups[w].append(_Group(mask, bp, slot))
         for w in range(self.max_warps):
-            raw = self.mod.device_read(self._blob(w) + COMMS_HSLOTS,
-                                       32 * 16)
-            seen = self._seen[w]
-            for slot in range(32):
-                mask, va_lo, va_hi, seq = struct.unpack_from(
-                    "<4I", raw, slot * 16)
-                if seq == seen[slot]:
-                    continue
-                seen[slot] = seq
-                bp = self._bp_for_va(va_lo | (va_hi << 32))
-                bp.warp = w
-                # pile-up: merge into an existing group at the same site
-                for g in self._groups[w]:
-                    if g.bp is bp:
-                        g.mask |= mask
-                        g.slot = min(g.slot, slot)
-                        g.reported = False
-                        break
-                else:
-                    self._groups[w].append(_Group(mask, bp, slot))
-                self._parked[w] = bp
             for g in self._groups[w]:
                 if not g.reported:
                     g.reported = True
-                    return w, g
+                    g.bp.warp = w     # report-time: the bp object is
+                    return w, g       # shared across warps' groups
         return None
 
     def wait_hit(self, timeout: float = 30.0) -> Breakpoint:
         """Wait until a breakpoint parks an execution group; returns the
-        bp with bp.warp set.  Divergent groups of one warp park
-        INDEPENDENTLY and are each reported (group mask via
-        wait_group_hit)."""
+        bp with bp.warp set."""
         t0 = time.time()
         while True:
             r = self._poll_groups()
@@ -725,7 +725,7 @@ class Debugger:
 
     def wait_group_hit(self, timeout: float = 30.0,
                        ) -> tuple[int, _Group]:
-        """M8b: like wait_hit but returns (warp, group) with the parked
+        """Like wait_hit but returns (warp, group) with the parked
         group's lane mask."""
         t0 = time.time()
         while True:
@@ -736,131 +736,204 @@ class Debugger:
                 raise TimeoutError("no breakpoint hit")
             time.sleep(0.001)
 
+    # -- resume machinery ---------------------------------------------------------
+    def _thunk_alloc(self) -> int:
+        """Bump-allocate a 128B thunk slot in the global arena (wraps;
+        the handler's hardened exit IVALL makes reuse safe)."""
+        n = THUNK_ARENA // THUNK_STRIDE
+        i = self._thunk_next % n
+        self._thunk_next += 1
+        return self.arena + self.lay.thunk_off + i * THUNK_STRIDE
+
+    def build_thunk(self, insts: list[str], fallthrough_va: int,
+                    ) -> list[tuple[int, int]]:
+        """Encode a thunk: `insts` followed by an absolute JMP IMM back
+        to `fallthrough_va`.  Callers emulate control-flow INST1
+        themselves (conditional BRA -> `@P0 JMP T` + fall-through jump)."""
+        src = "\n".join(insts + [f"JMP 0x{fallthrough_va:x};[7:7:{{}}:6:0]"])
+        enc = assemble_flat(src)
+        assert 0 < len(enc) <= THUNK_MAX_INSTS, f"thunk too big: {len(enc)}"
+        return enc
+
+    def _thunk_for(self, bp: Breakpoint, insts: list[str],
+                   target_va: int) -> int:
+        """(site, insts, target)-cached thunk VA — groups released with
+        the same insts share the VA (barrier same-PC rendezvous)."""
+        key = (bp.orig_index, tuple(insts), target_va)
+        va = self._thunk_cache.get(key)
+        if va is None:
+            enc = self.build_thunk(insts, target_va)
+            va = self._thunk_alloc()
+            self.mod.device_write(
+                va, b"".join(struct.pack("<QQ", lo, hi) for lo, hi in enc))
+            self._thunk_cache[key] = va
+        return va
+
     def _release_lanes(self, w: int, mask: int, thunk_va: int) -> None:
         """Release exactly `mask`'s lanes of warp w: set their per-lane
-        thunk VA and bump their per-lane release generations."""
-        rl = self._rlgen[w]
-        rt = list(struct.unpack("<32Q", self.mod.device_read(
-            self._blob(w) + COMMS_RTGTV, 32 * 8)))
+        thunk VA (F_RTGT first!), then bump their release generations."""
         for lane in range(32):
             if mask >> lane & 1:
-                rt[lane] = thunk_va
-                rl[lane] += 1
-        self.mod.device_write(self._blob(w) + COMMS_RTGTV,
-                              struct.pack("<32Q", *rt))
-        self.mod.device_write(self._blob(w) + COMMS_RLGEN,
-                              struct.pack("<32I", *rl))
+                fva = self.lay.frame_va(self.arena, w * 32 + lane)
+                self.mod.device_write(fva + F_RTGT,
+                                      struct.pack("<Q", thunk_va))
+                self._rlgen[w][lane] += 1
+                self.mod.device_write(fva + F_RELEASE,
+                                      struct.pack("<I", self._rlgen[w][lane]))
+        # GO broadcast LAST: wakes every parked lane of the warp in one
+        # converged poll; each then checks its own F_RELEASE (already
+        # written above) and the released group exits together.
+        self._go[w] += 1
+        self._wr32(self.lay.go + w * 16, self._go[w])
 
     def _drop_group(self, w: int, g: _Group) -> None:
         self._groups[w].remove(g)
-        if self._groups[w]:
-            self._parked[w] = self._groups[w][-1].bp
-        else:
-            self._parked.pop(w, None)
 
-    # -- command injection (M7) ----------------------------------------------
+    def _groups_at(self, bp: Breakpoint) -> list[tuple[int, _Group]]:
+        return [(w, g) for w in range(self.max_warps)
+                for g in self._groups[w] if g.bp is bp]
+
+    def resume_thunk(self, bp: Breakpoint, insts: list[str]) -> None:
+        """Release EVERY group parked at this bp's site with a thunk
+        holding `insts` (normally the original instruction) + a JMP back
+        to site+0x10.  The site STAYS PATCHED (persistent bp — to break
+        again, do nothing; to remove, disarm at a parked boundary)."""
+        site = self._site_va(bp.orig_index)
+        va = self._thunk_for(bp, insts, site + 0x10)
+        for w, g in self._groups_at(bp):
+            self._release_lanes(w, g.mask, va)
+            self._drop_group(w, g)
+
+    def release_group(self, warp: int, group: _Group,
+                      insts: list[str]) -> None:
+        """Release exactly one parked group with its thunk (other groups
+        of the same warp stay parked)."""
+        site = self._site_va(group.bp.orig_index)
+        va = self._thunk_for(group.bp, insts, site + 0x10)
+        self._release_lanes(warp, group.mask, va)
+        self._drop_group(warp, group)
+
+    def resume(self, bp: Breakpoint) -> None:
+        """LEGACY semantics: restore the site word and release every
+        group parked there with a bare `JMP site` thunk (the original
+        instruction re-executes IN PLACE); the bp is CONSUMED.
+        Caveat (M8a): the restore races in-flight refetches of running
+        groups — prefer resume_thunk (persistent bps) when any other
+        group may be running."""
+        site = self._site_va(bp.orig_index)
+        self.patcher.patch(site, bp.orig_word)           # restore
+        va = self._thunk_for(bp, [], site)               # JMP site
+        for w, g in self._groups_at(bp):
+            self._release_lanes(w, g.mask, va)
+            self._drop_group(w, g)
+        bp.armed = False
+        self._free_slots.append(bp.slot)
+        self._free_slots.sort()
+        del self._bps[bp.id]
+        del self._by_index[bp.orig_index]
+
+    # -- command injection (M7 semantics, M9 frame-based) ----------------------
     def exec_cmd(self, warp: int, insts: list[str],
                  timeout: float = 5.0, _trusted: bool = False) -> None:
         """Assemble `insts` (dialect lines) into the warp's command
-        buffer (blob+CMD_OFF), and have the PARKED handler execute them
-        (CALL/RET round-trip, hardened IVALL covers the refetch), then
-        return to the park spin.  Repeatable any number of times until
-        resume().
+        buffer and have the PARKED handler(s) execute them, then return
+        to the park spin.  Repeatable until resume.
 
         Contract for command code:
-          * R246-R251 and P0-P6 are free scratch (the kernel's values
-            live in local spill slots 0-6; the kernel's R246-R251 / PR
-            are dumped or set by LD[ST]L on those slots, see
-            dump_regs/set_reg).
-          * MUST NOT touch R252/R253 (blob base; the handler's comms
-            and the command's own RET depend on it).
+          * R2-R7 and P0-P6 are free scratch (the kernel's values live
+            in the frame; dumped/set via dump_regs/set_reg).
+          * MUST NOT write R0/R1 (the lane's frame pointer).
           * Straight-line only: no BRA/CALL/RET/JMX/BRX/EXIT/BSSY/BSYNC.
-          * Read results back via STG.E.STRONG.GPU to
-            [{R252,R253}+0x{COMMS_RESULTS:x}+...] and device_read.
+          * Read results back via STG.E.STRONG.GPU to the per-warp
+            results window (see dump_regs' lane prelude) + device_read.
         """
-        import time as _time
-        if warp not in self._parked:
+        if not any(self._groups[warp]):
             raise RuntimeError(f"warp {warp} not parked")
         if not _trusted:
             for ln in insts:
                 body_ln = re.sub(r"^\s*@!?P[T0-6]\s*", "", ln).strip()
-                # R252/R253 as a WRITE destination is fatal (blob base);
-                # read-only use (e.g. STG address base) is fine
                 parts = body_ln.split(None, 1)
                 dest = parts[1].split(",")[0].strip() if len(parts) > 1 \
                     else ""
-                if re.fullmatch(r"\{?R25[23]\}?", dest):
+                if re.fullmatch(r"\{?R[01]\}?", dest):
                     raise ValueError(
-                        f"command may not write R252/R253: {ln}")
+                        f"command may not write R0/R1 (frame ptr): {ln}")
                 if re.match(r"(BRA|CALL|RET|JMX|BRX|EXIT|KILL|BSSY|BSYNC)\b",
                             body_ln):
                     raise ValueError(f"no control flow in commands: {ln}")
-        if len(insts) > 60:
-            raise ValueError("command too long (max 60 instructions)")
+        if len(insts) > 56:
+            raise ValueError("command too long (max 56 instructions)")
+        cmdseq = self.arena + self.lay.cmdseq + warp * 16
+        hdl = self.lay.handler_va(self.arena, warp)
+        _, cmdret = self._hdl[warp]
         body = "\n".join(f"    {ln}" for ln in insts)
         src = f"""{body}
-    LDG.E.STRONG.GPU R246, [{{R252,R253}}+0x{COMMS_SEQ:x}];[2:7:{{}}:8:0]
-    STG.E.STRONG.GPU [{{R252,R253}}+0x{COMMS_ACK:x}], R246;[7:7:{{2}}:8:0]
-    RET.ABS.NODEC PT, {{R252,R253}}, 0x{self.cmdret_off:x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_CMD:x}];[2:7:{{1}}:8:0]
+    MOV32I R4, 0x{cmdseq & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R5, 0x{cmdseq >> 32:08x};[7:7:{{}}:5:1]
+    STG.E.STRONG.GPU [{{R4,R5}}+0x4], R2;[7:1:{{2}}:8:0]
+    MOV32I R2, 0x{hdl & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{hdl >> 32:08x};[7:7:{{}}:13:1]
+    RET.ABS.NODEC PT, {{R2,R3}}, 0x{cmdret:x};[7:7:{{}}:5:1]
 """
         enc = assemble_flat(src)
         assert enc, "command assembled to nothing"
-        blob = self._blob(warp)
-        self.mod.device_write(blob + CMD_OFF,
-                              b"".join(struct.pack("<QQ", lo, hi)
-                                       for lo, hi in enc))
+        assert len(enc) * 16 <= CMDBUF_SZ, "command image too big"
+        self.mod.device_write(
+            self.arena + self.lay.cmdbuf + warp * CMDBUF_SZ,
+            b"".join(struct.pack("<QQ", lo, hi) for lo, hi in enc))
         self._cmds[warp] += 1
         seq = self._cmds[warp]
-        self.mod.device_write(blob + COMMS_SEQ, struct.pack("<I", seq))
-        t0 = _time.time()
+        self.mod.device_write(cmdseq, struct.pack("<I", seq))
+        t0 = time.time()
         while struct.unpack("<I", self.mod.device_read(
-                blob + COMMS_ACK, 4))[0] != seq:
-            if _time.time() - t0 > timeout:
+                cmdseq + 4, 4))[0] != seq:
+            if time.time() - t0 > timeout:
                 raise TimeoutError(f"command ack timeout (warp {warp})")
-            _time.sleep(0.001)
+            time.sleep(0.001)
 
     def cmd_read(self, warp: int, off: int, size: int) -> bytes:
-        """Read the command result scratch (COMMS_RESULTS+off)."""
-        return bytes(self.mod.device_read(self._blob(warp)
-                                          + COMMS_RESULTS + off, size))
+        """Read the warp's command result window (+off)."""
+        return bytes(self.mod.device_read(
+            self.arena + self.lay.results + warp * RESULTS_SZ + off, size))
 
-    _LANE_PRELUDE = [
-        "S2R R250, SR_TID.X;[5:7:{}:5:1]",
-        "LOP3.LUT R250, R250, 0x1F, RZ, 0xC0;[7:7:{5}:5:1]",
-        "IMAD R248, R250, 0x4, R252;[7:7:{}:5:1]",   # low blob VA + lane*4
-        "MOV R249, R253;[7:7:{}:5:1]",               # {R248,R249} addr pair
-    ]
+    def _lane_prelude(self, warp: int) -> list[str]:
+        """{R2,R3} = results(warp) + lane*4 (lane = f & 31)."""
+        results = self.arena + self.lay.results + warp * RESULTS_SZ
+        return [
+            f"LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_F:x}];[2:7:{{}}:8:0]",
+            "LOP3.LUT R2, R2, 0x1F, RZ, 0xC0;[7:7:{2}:5:1]",
+            f"MOV32I R3, 0x{results & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]",
+            "IMAD R2, R2, 0x4, R3;[7:7:{}:5:1]",
+            f"MOV32I R3, 0x{results >> 32:08x};[7:7:{{}}:5:1]",
+        ]
+
+    _FRAME_SLOT = {"PR": F_PR, "R0": F_R01, "R1": F_R01 + 4,
+                   **{f"R{k}": F_R2 + 4 * (k - 2) for k in range(2, 8)}}
 
     def dump_regs(self, warp: int, regs: list[str],
                   lane: int = 0) -> dict[str, int]:
-        """Dump register values from a parked warp (one lane).  R246-R251
-        and PR are transparently read from the per-lane local spill slots
-        (the live registers hold handler scratch while parked); everything
-        else is read directly.  Returns {name: value}."""
+        """Dump register values from a parked warp (one lane).  R0-R7
+        and PR are read from the frame (the live registers hold handler
+        scratch while parked); everything else is read directly."""
         if not 0 <= lane < 32:
             raise ValueError("lane out of range")
-        insts: list[str] = list(self._LANE_PRELUDE)
+        insts: list[str] = self._lane_prelude(warp)
         out: dict[str, int] = {}
         for i, r in enumerate(regs):
-            dst_s = f"0x{COMMS + 0x100 + 4 * (i * 32):x}"
-            m = re.fullmatch(r"R(\d+)", r.upper())
-            if r.upper() == "PR":
+            dst_s = f"0x{4 * (i * 32):x}"
+            ru = r.upper()
+            if ru in self._FRAME_SLOT:
                 insts += [
-                    f"LDL R251, {_slot(6)};[2:7:{{}}:13:1]",
-                    f"STG.E.STRONG.GPU [{{R248,R249}}+{dst_s}], R251;"
-                    f"[7:7:{{2}}:8:0]",
+                    f"LDG.E.STRONG.GPU R4, [{{R0,R1}}+0x"
+                    f"{self._FRAME_SLOT[ru]:x}];[2:7:{{1}}:8:0]",
+                    f"STG.E.STRONG.GPU [{{R2,R3}}+{dst_s}], R4;"
+                    f"[7:1:{{2}}:8:0]",
                 ]
-            elif m and 246 <= int(m.group(1)) <= 251:
-                k = int(m.group(1)) - 246
-                insts += [
-                    f"LDL R251, {_slot(k)};[2:7:{{}}:13:1]",
-                    f"STG.E.STRONG.GPU [{{R248,R249}}+{dst_s}], R251;"
-                    f"[7:7:{{2}}:8:0]",
-                ]
-            elif m:
+            elif re.fullmatch(r"R\d+", ru):
                 insts.append(
-                    f"STG.E.STRONG.GPU [{{R248,R249}}+{dst_s}], "
-                    f"{r.upper()};[7:7:{{}}:8:0]")
+                    f"STG.E.STRONG.GPU [{{R2,R3}}+{dst_s}], {ru};"
+                    f"[7:7:{{}}:8:0]")
             else:
                 raise ValueError(f"cannot dump {r!r} (use exec_cmd)")
         self.exec_cmd(warp, insts, _trusted=True)
@@ -871,124 +944,25 @@ class Debugger:
         return out
 
     def set_reg(self, warp: int, reg: str, val: int, lane: int = 0) -> None:
-        """Set a register of a parked warp (one lane).  R246-R251 / PR
-        write the spill slot (the resume path restores from there);
-        anything else writes the live register directly."""
+        """Set a register of a parked warp (one lane).  R0-R7 / PR write
+        the frame slot (the resume path restores from there); anything
+        else writes the live register directly."""
         if not 0 <= lane < 32:
             raise ValueError("lane out of range")
         r = reg.upper()
-        m = re.fullmatch(r"R(\d+)", r)
-        pre = self._LANE_PRELUDE[:2] + [
-            f"ISETP.EQ.AND P0, PT, R250, {lane}, PT;[7:7:{{}}:13:1]"]
-        if r == "PR":
-            insts = pre + [f"MOV32I R249, 0x{val:x};[7:7:{{}}:5:1]",
-                           f"@P0 STL {_slot(6)}, R249;[7:7:{{}}:2:0]"]
-        elif m and 246 <= int(m.group(1)) <= 251:
-            insts = pre + [f"MOV32I R249, 0x{val:x};[7:7:{{}}:5:1]",
-                           f"@P0 STL {_slot(int(m.group(1)) - 246)}, R249;"
-                           f"[7:7:{{}}:2:0]"]
-        elif m:
-            if int(m.group(1)) in (252, 253):
-                raise ValueError("R252/R253 are debugger-reserved")
+        pre = [
+            f"LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_F:x}];[2:7:{{}}:8:0]",
+            "LOP3.LUT R2, R2, 0x1F, RZ, 0xC0;[7:7:{2}:5:1]",
+            f"ISETP.EQ.AND P0, PT, R2, {lane}, PT;[7:7:{{}}:13:1]",
+        ]
+        if r in self._FRAME_SLOT:
+            insts = pre + [
+                f"MOV32I R3, 0x{val:x};[7:7:{{}}:5:1]",
+                f"@P0 STG.E.STRONG.GPU [{{R0,R1}}+0x"
+                f"{self._FRAME_SLOT[r]:x}], R3;[7:1:{{}}:8:0]",
+            ]
+        elif re.fullmatch(r"R\d+", r):
             insts = pre + [f"@P0 MOV32I {r}, 0x{val:x};[7:7:{{}}:5:1]"]
         else:
             raise ValueError(f"cannot set {reg!r} (use exec_cmd)")
         self.exec_cmd(warp, insts, _trusted=True)
-
-    def resume(self, bp: Breakpoint) -> None:
-        """Restore the site, then release EVERY group parked at this
-        bp's site (any warp): each parked handler restores the kernel's
-        PRs and registers, self-invalidates, and RETs back to the site
-        (per-lane RTGTV is 0 → site-VA fallback), re-executing the
-        restored original instruction.  The breakpoint is CONSUMED
-        (site keeps its original word) — to break again, re-arm.
-        Re-arming mid-run against a tight loop is unreliable (loop
-        replay); prefer arming at the gate."""
-        site = self._site_va(bp.orig_index)
-        self.patcher.patch(site, bp.orig_word)           # restore
-        for w in range(self.max_warps):
-            self._thunk_cache.pop((w, bp.orig_index), None)
-        for w in range(self.max_warps):
-            for g in list(self._groups[w]):
-                if g.bp is bp:
-                    self.mod.device_write(self._blob(w) + COMMS + 0x10,
-                                          struct.pack("<Q", 0))
-                    self._release_lanes(w, g.mask, 0)
-                    self._drop_group(w, g)
-        bp.armed = False
-        del self._bps[bp.id]
-        del self._by_index[bp.orig_index]
-
-    # -- M8: resume via a per-warp resume thunk ------------------------------
-    def _thunk_alloc(self, warp: int) -> int:
-        """Bump-allocate a 128B thunk slot in the warp's blob (wraps; the
-        handler's hardened exit IVALL makes reuse safe)."""
-        arena = BLOB_SZ - THUNK_OFF
-        n = arena // THUNK_STRIDE
-        i = self._thunk_next[warp] % n
-        self._thunk_next[warp] += 1
-        return self._blob(warp) + THUNK_OFF + i * THUNK_STRIDE
-
-    def build_thunk(self, insts: list[str], fallthrough_va: int,
-                    ) -> list[tuple[int, int]]:
-        """Encode a thunk: `insts` followed by an absolute JMP IMM back to
-        `fallthrough_va`.  Callers emulate control-flow INST1 themselves
-        (e.g. conditional BRA -> `@P0 JMP T` + auto fall-through jump)."""
-        src = "\n".join(insts + [f"JMP 0x{fallthrough_va:x};[7:7:{{}}:6:0]"])
-        enc = assemble_flat(src)
-        assert 0 < len(enc) <= THUNK_MAX_INSTS, f"thunk too big: {len(enc)}"
-        return enc
-
-    def resume_thunk(self, bp: Breakpoint, insts: list[str]) -> None:
-        """M8 thunk-resume: the site STAYS PATCHED (bp is not consumed).
-        Every group parked at the site gets a thunk in its warp's blob
-        holding `insts` (normally the original instruction) + a JMP IMM
-        back to site+0x10; the handler RETs into the thunk instead of
-        the site.  Groups of one warp released by one call share the
-        thunk VA (required for BSYNC/barrier rendezvous); the (warp,
-        site) thunk VA is cached while the bp stays armed so groups
-        released by LATER calls still rendezvous at the same PC.
-        No code-space restore -> no icache race vs running groups."""
-        site = self._site_va(bp.orig_index)
-        for w in range(self.max_warps):
-            groups = [g for g in self._groups[w] if g.bp is bp]
-            if not groups:
-                continue
-            key = (w, bp.orig_index)
-            enc_key = tuple(insts)
-            cached = self._thunk_cache.get(key)
-            if cached and cached[1] == enc_key:
-                va = cached[0]
-            else:
-                enc = self.build_thunk(insts, site + 0x10)
-                words = b"".join(struct.pack("<QQ", lo, hi)
-                                 for lo, hi in enc)
-                va = self._thunk_alloc(w)
-                self.mod.device_write(va, words)
-                self._thunk_cache[key] = (va, enc_key)
-            for g in groups:
-                self._release_lanes(w, g.mask, va)
-                self._drop_group(w, g)
-
-    def release_group(self, warp: int, group: _Group,
-                      insts: list[str]) -> None:
-        """M8b: release exactly one parked group with its own thunk
-        (other groups of the same warp stay parked).  Shares the
-        (warp, site) cached thunk VA when the same insts are used, so
-        barrier-class instructions still rendezvous."""
-        bp = group.bp
-        site = self._site_va(bp.orig_index)
-        key = (warp, bp.orig_index)
-        enc_key = tuple(insts)
-        cached = self._thunk_cache.get(key)
-        if cached and cached[1] == enc_key:
-            va = cached[0]
-        else:
-            enc = self.build_thunk(insts, site + 0x10)
-            words = b"".join(struct.pack("<QQ", lo, hi)
-                             for lo, hi in enc)
-            va = self._thunk_alloc(warp)
-            self.mod.device_write(va, words)
-            self._thunk_cache[key] = (va, enc_key)
-        self._release_lanes(warp, group.mask, va)
-        self._drop_group(warp, group)

@@ -531,9 +531,10 @@ E6 BAR/WARPSYNC cross-PC probe.
 - E2E: test_sassdbg_m8.py T5 (WARPSYNC stepping via assist) + T6
   (2-warp BAR stepping); probe_bar E0-E4 all OK.
 
-M9 (probe stage DONE: `sassdbg/probe_stub.py`, `probe_stub2.py`;
-patch.py rewrite PENDING) — eliminate ALL reserved registers (drop the
-R252/R253 reservation and the R246-R251 handler scratch; abandon
+M9 (DONE: probes `sassdbg/probe_stub.py`/`probe_stub2.py`, engine in
+`sassdbg/patch.py`, all m3-m9 tests migrated; full serial 133/134, only
+the known test_uimad self-bug) — eliminate ALL reserved registers (drop
+the R252/R253 reservation and the R246-R251 handler scratch; abandon
 SETLMEMBASE/LMEM entirely).
 
 - Motivation: real cubins have a compile-time register budget — a
@@ -613,12 +614,67 @@ SETLMEMBASE/LMEM entirely).
      stream (the "hit 2 never arrives" bug: thunk/epi overwrote handler
      insts 16-26).  Always assert `len(enc)*16 <= slot_size`.
 
+M9 rewrite (patch.py, DONE — supersedes the planned details above where
+they differ): per-bp stub (0x200 slot) borrows R0/R1 (RPC spill), JMPs to
+a PER-WARP handler copy (0x1000 stride, borrows R2-R7 + P0/P6); the
+per-(gwarp,lane) frame (FRAME=0x80: F_R2..F_R7=0x00-0x14, F_PR=0x18,
+F_R01=0x20, F_SITE=0x28, F_RELEASE=0x30, F_F=0x34, F_RTGT=0x38,
+F_CMD=0x40, F_RELBASE=0x44, F_GOBASE=0x48) lives in a global pool
+indexed by `f = ctaid*(ctawarps*32) + tid`.  Leader election per group
+= `ELECT P6, URZ, PT` (candidates = MACTIVE); the hit-slot RMW is
+leader-only with seq written LAST.  Release = per-lane F_RTGT/F_RELEASE
+writes, then ONE per-warp GO-word bump — the spin polls GO first, then
+its own F_RELEASE, so a released group exits CONVERGED (no per-lane drip
+-> no fragmented thunk BAR/WARPSYNC arrivals).  Command dispatch saves
+the release/GO baselines to F_RELBASE/F_GOBASE first (injected commands
+may clobber R2-R7) and cmdret reloads them.  Patch word = `JMP stub_va`
+with **req={0,1,2,3,4,5}** (waits every outstanding in-flight producer
+before the stub spills R0-R7+PR wholesale).
+
+- **THE M9 hazard class (flaky 700s at arm(0)-style fast-arrival
+  sites): LDG.E samples its ADDRESS registers AFTER issue** — a
+  following `MOV32I R4, ...` can overwrite R4 before an in-flight
+  `LDG.E R7, [{R4,R5}]` sampled it -> wild address -> 700 (found by
+  EXIT-bisection of the handler: insert EXIT after instruction k in a
+  subprocess; 700 gone = everything up to k is clean).  depcheck does
+  NOT catch this anti-dep class.  Same for STG late reads of its
+  address AND data registers.  **Fix pattern: the memory op claims a
+  READ scoreboard (rd field, e.g. `[3:1:{}:8:0]`) and the overwriting
+  instruction waits it via req (`[7:7:{1}:5:1]`)**.  Notes:
+  * Waiting an instruction's wr barrier also covers its source reads
+    (the claim completes only after sources are consumed) — no separate
+    rd needed when a wr claim exists and gets waited.
+  * Re-claiming the same barrier along a chain lets one req cover all
+    outstanding claims on it (spill-STG chains use rd=0/rd=1 chains).
+  * Scoreboard claims SURVIVE a CALL/RET — the handler's first P2R R2
+    req-waits the stub's last STG's rd claim (stub->handler R2/R3
+    hand-off hazard).
+  * CBU register-target reads (CALL.ABS/RET.ABS {Ra,Rb} forms) are also
+    late — pad the target-producing MOV32I/IADD3 to stall 13 (+yield=1).
+  * All of this is in the stub/handler/command-epilogue brackets; when
+    in doubt add the rd claim + req wait — it only costs cycles, never
+    deadlocks (claims are per-warp and self-clearing).
+  * Debugging tooling: compute-sanitizer CANNOT be used — it flags the
+    patcher's code-space STG as OOB (module text is not a tracked
+    allocation) and kills the kernel; cuda-gdb is useless (the
+    assembler emits no debug info).  Use STG-marker instrumentation
+    (per-frame scratch slots, clobber only R4-class reloaded regs) or
+    EXIT bisection.
+- Test migrations: `COMMS_RESULTS` is gone — the results window is
+  per-warp (`lay.results + warp*RESULTS_SZ`), addressed in commands by
+  baked MOV32I absolutes (64-bit address pairs must be EVEN-aligned:
+  `{R2,R3}` not `{R3,R4}`).  exec_cmd's scratch view is R2-R7 — a raw
+  `exec` on R2-R7 sees handler scratch, while `dump`/`set` on R2-R7 go
+  to the FRAME (kernel view); the two are consistent only for
+  non-scratch registers (m6 test uses R10 for exec-then-dump).  The
+  exec guard now rejects R0/R1 writes (frame pointer), not R252/R253.
+
 Roadmap: debugger feature-complete (M1-M7: trace, lift, breakpoints,
 multi-warp/multi-CTA, stepper, reverse, CLI, command injection).
 M8 divergence-aware breakpoints DONE (M8a probes, M8b per-group
-comms, M8c group stepper, M8d CLI groups + BAR/WARPSYNC probe; full
-serial 132/133, only the known test_uimad self-bug).  M9 (zero register
-reservation) probes DONE, patch.py rewrite in progress.
+comms, M8c group stepper, M8d CLI groups + BAR/WARPSYNC probe).
+M9 (zero register reservation) DONE — full serial 133/134, only the
+known test_uimad self-bug.
 
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):

@@ -112,8 +112,9 @@ out = run_cli("b 4\nr\nc\n"
               "dump 0 5 R2\n"                     # per-lane (uniform kernel)
               "set 0 R2 0x40\n"
               "dump 0 R2\n"
-              "exec 0 IADD3 R2, R2, 0x1, RZ;[7:7:{}:5:1]\n"
-              "dump 0 R2\n"
+              "set 0 R10 0x40\n"
+              "exec 0 IADD3 R10, R10, 0x1, RZ;[7:7:{}:5:1]\n"
+              "dump 0 R10\n"
               "exec 0 BRA 0x0\n"                  # must be rejected
               "c\nq\n",
               "--sass", str(f_sum5))
@@ -121,7 +122,8 @@ check("D: dump parked regs (R2=0, R3=0 at first loop entry)",
       "w0 lane0 R2 = 0x0" in out and "w0 lane0 R3 = 0x0" in out)
 check("D: per-lane dump (lane 5)", "w0 lane5 R2 = 0x0" in out)
 check("D: set then dump", "w0 lane0 R2 = 0x40" in out)
-check("D: exec IADD3 then dump", "w0 lane0 R2 = 0x41" in out)
+check("D: exec IADD3 then dump (R10: live reg — exec scratch "
+      "view is R2-R7 only)", "w0 lane0 R10 = 0x41" in out)
 check("D: control-flow exec rejected", "rejected:" in out)
 check("D: kernel finished after continue", "kernel finished" in out)
 
