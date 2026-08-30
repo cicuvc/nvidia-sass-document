@@ -2,6 +2,8 @@
 sm90.json
 sm100.json
 sm120.json
+sm75.json
+sm80.json
 
 # Compiled test binaries (regenerable: nvcc -cubin)
 *.cubin
