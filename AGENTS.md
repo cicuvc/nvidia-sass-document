@@ -676,6 +676,25 @@ comms, M8c group stepper, M8d CLI groups + BAR/WARPSYNC probe).
 M9 (zero register reservation) DONE — full serial 133/134, only the
 known test_uimad self-bug.
 
+M10/M11 (per-warp private heap code, `SASSDBG_WARP_PRIVATE_PLAN.md`):
+M11a (freeze protocol + minimum-IVALL production probe) DONE on sm_120
+AND on Hopper H20/sm_90 (`sassdbg/probe_warp_mutable.py`: multi-warp/
+multi-CTA matrix, staggered release, C1 command-buffer/self-modified-
+retline case, 10k shortest-sequence gate PASS at warps=1 and 3 on both
+GPUs; on the H20 use `ASSEMBLER_ARCH=sm90` + `--handoff nanosleep` and
+~10.7k iters to clear `--gate-min 10000` given the ~1.5%/warp NANOSLEEP
+handoff setup skips).  **Gotcha that cost a day of debugging**: in ANY
+wrapper-JMP-to-heap scheme the wrapper cubin's declared REGCOUNT is
+auto-computed from the wrapper's own registers ONLY (16 from R4/R5);
+heap code executing registers beyond that window is undefined — at
+<= 2 warps the overrun lands in unallocated RF space (harmless), at
+>= 3 warps the CTA's RF allocation geometry changes and it faults 715
+before any heap store lands.  The wrapper must declare
+`#pragma MAXREG_COUNT` computed over every word the GPU can execute
+from the heap (`CubinBuilder._compute_regcount`; see the probe's
+run_child).  M9's stub/handler never tripped this because it only
+borrowed R0-R7, inside the guaranteed minimum.
+
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
 - `sass_elf.py`: `total_ps` is now `max(offset+size)` — summing param

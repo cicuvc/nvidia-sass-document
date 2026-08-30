@@ -448,7 +448,7 @@ live patch.
 
 ## 14. Implementation milestones
 
-### M11a — freeze protocol and minimum-IVALL production probe
+### M11a — freeze protocol and minimum-IVALL production probe  (DONE: sm_120 + Hopper sm_90)
 
 - Extend `probe_warp_mutable.py` with immediate-after-ack patching, configurable
   settling iterations, multiple warps, and multiple CTAs.
@@ -457,6 +457,38 @@ live patch.
 - Local gate: no sibling progress after freeze ack and no stale fetch in at
   least 10,000 valid shortest-sequence iterations.
 - Hopper gate: repeat the selected protocol when SM90 hardware is available.
+
+Status (RTX 5090, sm_120): every bullet above is implemented and green.
+Full F0/F1/P1-P5/C1 matrix passes at warps=1..4 (per-warp 0x100-stride
+control slots, per-warp freeze/ack/release/deltas), ctas=2x2, 4x1 and
+2x4 (8 total warps) all PASS, staggered release (warp 0 runs while the
+others must stay frozen) PASSes at warps=3, and the yield handoff works
+at warps=2.  The 10k shortest-sequence gate (1x IVALL + 0 NOPs) PASSED
+at warps=1 and at warps=3 (10,000/10,000 valid, zero freeze failures,
+zero stale fetches; `--gate-min 10000`).
+
+Root cause found while extending past 2 warps (>= 3 warps faulted 715
+before any heap store): the wrapper cubin's declared REGCOUNT is
+auto-computed from the wrapper's own registers only (16 from R4/R5),
+while the heap program executes R14-R30.  Out-of-window register access
+is undefined rather than always-faulting: at <= 2 warps the overrun
+lands in unallocated RF space (harmless); at >= 3 warps the CTA's RF
+allocation geometry changes and it faults 715.  Fix: the wrapper now
+declares `#pragma MAXREG_COUNT` computed over every word the GPU can
+execute from the heap via `CubinBuilder._compute_regcount`.  This rule
+applies to any wrapper-JMP-to-heap scheme (M9's stub only borrowed
+R0-R7, which is why it never tripped).
+
+Hopper deferral resolved (2026-08-31, H20 sm_90, driver 580.65.06,
+``ASSEMBLER_ARCH=sm90``, ``--handoff nanosleep``): the full matrix
+passes x3 at warps=1; multi-warp P3+C1 pass at warps=2/3/4; ctas=2x2
+and ctas=4x1 pass; staggered warps=3 (P3+P4 x2) passes — the first
+multi-warp sm_90 runs, also validating the REGCOUNT fix on Hopper.
+The 10k shortest-sequence gate PASSED at warps=1 (10,541 valid /
+159 SETUP / 0 visibility / 0 freeze) and at warps=3 (10,306 valid /
+394 SETUP / 0 visibility / 0 freeze; the skip rate grows with warp
+count, consistent with the known one-shot NANOSLEEP handoff flakiness
+being per-warp).
 
 ### M11b — `CodeTemplate`, analyzer, layout, and CPU-only tests
 
