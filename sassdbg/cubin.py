@@ -14,6 +14,7 @@ import struct
 import shutil
 import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 
 SHT_SYMTAB = 2
 SHT_RELA = 4
@@ -120,7 +121,7 @@ def load_kernel(cubin_path: str, func: str | None = None) -> KernelText:
     The entry window [entry, entry+0x20) must be relocation-free (the
     M10 trampoline goes there).
     """
-    data = open(cubin_path, "rb").read()
+    data = Path(cubin_path).read_bytes()
     secs = _sections(data)
     funcs = [s for s in _symbols(data, secs)
              if (s.info & 0xF) == STT_FUNC and s.shndx]

@@ -1,11 +1,13 @@
-"""tests/asm_construct/test_warpcode.py — M11b CPU-only unit tests.
+"""tests/asm_construct/test_warpcode.py — M11b/M11c CPU-only unit tests.
 
 Covers (SASSDBG_WARP_PRIVATE_PLAN.md section 14/M11b): address mapping,
 alignment, overlays, epochs, masks, replay-plan cache keys, memory
-budgeting, and relocation/PC-sensitive rejection — all without a GPU.
+budgeting, relocation/PC-sensitive rejection, materialization, dispatcher
+assembly, wrapper ABI, and cubin entry patching — all without a GPU.
 """
 import os
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -17,11 +19,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(
 from sassdbg.warpcode import (  # noqa: E402
     AddressMap, Binding, CodeImageAnalyzer, CodeImageError,
     CodeMapError, CodeTemplate, Layout, LayoutError,
-    Outcome, OverlayBatch, PrivateCodeSet, ScopeError,
+    Outcome, OverlayBatch, PrivateCodeSet, ReplayPlan, ScopeError,
     WarpState, _field_value, _OPCODE_INDEX,
 )
 
 from assembler import assemble_flat  # noqa: E402
+from assembler.sass_parser import parse_kernel  # noqa: E402
+from sassdbg.private import (  # noqa: E402
+    BootstrapError, _checked_words, _dispatcher_src, _patch_cubin_entry,
+    _source_wrapper, _trampoline_src,
+)
+from sassdbg.cubin import load_kernel  # noqa: E402
 
 
 # A tiny valid kernel: internal relative BRA only.
@@ -264,6 +272,25 @@ class TestAnalyzer(unittest.TestCase):
         enc = _OPCODE_INDEX.encoding("JMP")
         self.assertEqual(_field_value(enc, "Sb", lo, hi, False) * 4, VA)
 
+    def test_materialize_rewrites_internal_absolute_jmp(self):
+        old = 0x7f8a00001000
+        new = 0x7f8b00002000
+        words = tuple(assemble_flat(
+            f"JMP 0x{old + 0x20:x};[7:7:{{}}:6:0]\n"
+            "NOP;[7:7:{}:8:0]\n"
+            "EXIT;[7:7:{}:5:0]\n"))
+        classifications = CodeImageAnalyzer().validate(
+            words, link_base=old)
+        t = CodeTemplate("j", words, 999, classifications,
+                         tuple(ReplayPlan(i, "verbatim")
+                               for i in range(len(words))))
+        placed = t.materialize(new)
+        enc = _OPCODE_INDEX.encoding("JMP")
+        got = _field_value(enc, "Sb", *placed[0], signed=False) * 4
+        self.assertEqual(got, new + 0x20)
+        # Only the immediate field changed; untouched words stay exact.
+        self.assertEqual(placed[1:], words[1:])
+
 
 class TestTemplate(unittest.TestCase):
     def test_from_source(self):
@@ -312,6 +339,60 @@ class TestTemplate(unittest.TestCase):
         # distinct indices -> distinct keys
         keys = {p.key(t1.template_id) for p in t1.replay_plans}
         self.assertEqual(len(keys), t1.n_insts)
+
+
+class TestBootstrapStatic(unittest.TestCase):
+    """M11c assembly/ABI checks that do not require a CUDA device."""
+
+    def test_dispatcher_fits_and_trampoline_is_two_words(self):
+        t = _template()
+        lay = Layout(0, 4, t.size)
+        arena = 0x7F8000000000
+        words = _checked_words(_dispatcher_src(lay, arena), "dispatch")
+        self.assertGreater(len(words), 8)
+        self.assertLessEqual(len(words) * 16, lay.DISPATCHER_SZ)
+        self.assertEqual(len(assemble_flat(
+            _trampoline_src(arena + lay.dispatcher))), 2)
+
+    def test_source_wrapper_preserves_abi_attrs_and_regcount(self):
+        src = """#fn attr(p0<4>, p1<8>) {
+    #pragma SHARED(64)
+    #pragma SHADER_TYPE(1)
+    MOV32I R20, 0x1;[7:7:{}:5:1]
+    EXIT;[7:7:{}:5:0]
+}
+"""
+        t = CodeTemplate.from_source(src, "attr")
+        wrapper, name = _source_wrapper(
+            src, 0x7F8000010000, list(t.words))
+        decl = parse_kernel(wrapper)
+        self.assertEqual(name, "attr")
+        self.assertEqual([(p.name, p.size, p.ordinal) for p in decl.params],
+                         [("p0", 4, 0), ("p1", 8, 8),
+                          ("dbgctrl", 8, 16)])
+        self.assertEqual(decl.attributes["SHARED"], 64)
+        self.assertEqual(decl.attributes["SHADER_TYPE"], 1)
+        self.assertGreaterEqual(decl.attributes["MAXREG_COUNT"], 24)
+        self.assertLess(decl.attributes["MAXREG_COUNT"], 256)
+
+    def test_real_cubin_patch_changes_only_entry_window(self):
+        path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                            "m2_smoke.cubin")
+        with open(path, "rb") as f:
+            raw = f.read()
+        kt = load_kernel(path)
+        dispatcher = 0x7F8000123400
+        patched = _patch_cubin_entry(raw, kt.file_off, dispatcher)
+        self.assertEqual(patched[:kt.file_off], raw[:kt.file_off])
+        self.assertEqual(patched[kt.file_off + 32:], raw[kt.file_off + 32:])
+        self.assertEqual(
+            patched[kt.file_off:kt.file_off + 32],
+            b"".join(struct.pack("<QQ", *w) for w in
+                     assemble_flat(_trampoline_src(dispatcher))))
+
+    def test_real_cubin_patch_checks_entry_bounds(self):
+        with self.assertRaises(BootstrapError):
+            _patch_cubin_entry(bytes(31), 0, 0x7F8000123400)
 
 
 class TestBreakpointsAndOverlays(unittest.TestCase):

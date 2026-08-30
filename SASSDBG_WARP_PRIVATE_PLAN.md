@@ -516,7 +516,7 @@ M11b bullets; full runner 135/136 (only the known test_uimad
 self-bug), M10/M2 regression green.  cubin.py gained sh_addr
 (link_addr) + all-text reloc offsets for the analyzer.
 
-### M11c — private-code bootstrap, no breakpoints
+### M11c — private-code bootstrap, no breakpoints  (DONE: sm_120)
 
 - Implement source dispatcher and real-cubin static trampoline/dispatcher.
 - Write canonical copies and execute each warp from its reported private base.
@@ -524,6 +524,21 @@ self-bug), M10/M2 regression green.  cubin.py gained sh_addr
 - E2E: one/two/many warps, two CTAs, tight loops, divergence and relaunch all
   produce baseline-identical results; record PCs prove different warps use
   different code bases.
+
+Status (2026-08-31, RTX 5090 sm_120): `sassdbg/private.py` implements the
+source wrapper and real-cubin two-word trampoline, immutable heap dispatcher,
+per-warp canonical materialization (including internal absolute-JMP rewrite),
+entry gate, global-warp mapping, canonical relaunch, and state transitions.
+The source wrapper appends `dbgctrl<8>` without moving the original parameter
+offsets; the real-cubin path changes only the entry 32 bytes before module
+load.  `test_warpcode.py` has 48 CPU/static checks green under both sm_120 and
+sm_90.  `test_sassdbg_m11c.py` passes the one/four-warp, 2-CTA, divergent
+tight-loop, relaunch, and real-cubin E2E matrix four consecutive times.  M10
+real-cubin attach and M2 lift/instrument regressions also pass.  The sm_90
+dispatcher assembles and passes static dependency checks; an sm_90 hardware
+run is desirable but is not a gate for the sm_120 M11c milestone.  Full runner:
+134/137; all sassdbg tests pass, with only the pre-existing `test_uimad`
+self-bug and two FP16 scripts whose optional NumPy dependency is absent.
 
 ### M11d — per-warp breakpoint mutation
 

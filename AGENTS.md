@@ -695,6 +695,23 @@ from the heap (`CubinBuilder._compute_regcount`; see the probe's
 run_child).  M9's stub/handler never tripped this because it only
 borrowed R0-R7, inside the guaranteed minimum.
 
+M11b DONE in `sassdbg/warpcode.py`: immutable `CodeTemplate`, per-warp
+`CodeInstance`/address maps, breakpoint overlays/epochs/masks, explicit arena
+`Layout`, and fail-closed copyability analysis.  M11c implementation is in
+`sassdbg/private.py`: source and real-cubin entry trampolines feed an immutable
+R0-R5 heap dispatcher, which maps CTAID/TID to a private canonical code image;
+source parameter offsets and pragmas are preserved (trailing `dbgctrl<8>`),
+real cubins change only their entry 32 bytes, and relaunch reconstructs code.
+The dispatcher and its dependency schedule pass 48 static tests under sm_120
+and sm_90.  M11c is DONE on RTX 5090/sm_120: the hardware E2E
+(`test_sassdbg_m11c.py`: 1/4 warps, 2 CTAs, divergence+tight loop, relaunch,
+real cubin) passes four consecutive runs, and M10/M2 regressions pass.  The
+sm_90 dispatcher has static assembly/dependency coverage but has not yet had
+an M11c hardware run.  Full runner is 134/137 with every sassdbg test green;
+the failures are the known `test_uimad` self-bug plus `test_hadd2_hmul2` and
+`test_hfma2`, which reach their optional `import numpy` and fail because NumPy
+is not installed in the current system Python.
+
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
 - `sass_elf.py`: `total_ps` is now `max(offset+size)` — summing param

@@ -161,6 +161,31 @@ def _field_value(encoding: list[dict], name: str,
     return v
 
 
+def _set_field_value(encoding: list[dict], name: str,
+                     lo: int, hi: int, value: int) -> tuple[int, int]:
+    """Inverse of :func:`_field_value` for an unsigned field.
+
+    Encoding targets are concatenated in ascending target order.  Work on one
+    128-bit integer so fields crossing lo64/hi64 need no special case.
+    """
+    rec = next((e for e in encoding if e["name"] == name), None)
+    if rec is None:
+        raise WarpCodeError(f"field {name!r} not in encoding")
+    if value < 0 or value >= 1 << rec["width"]:
+        raise WarpCodeError(
+            f"field {name!r} value {value:#x} does not fit "
+            f"{rec['width']} bits")
+    word = lo | (hi << 64)
+    shift = 0
+    for hi_bit, lo_bit in sorted(rec["targets"]):
+        width = hi_bit - lo_bit + 1
+        mask = ((1 << width) - 1) << lo_bit
+        part = (value >> shift) & ((1 << width) - 1)
+        word = (word & ~mask) | (part << lo_bit)
+        shift += width
+    return word & ((1 << 64) - 1), word >> 64
+
+
 class _OpcodeIndex:
     """Lazy opcode -> frozenset(mnemonics) from the assembler's ISA DB."""
 
@@ -408,6 +433,34 @@ class CodeTemplate:
                       for i in range(len(kt.words)))
         return cls(kt.func, tuple(kt.words), next(_TEMPLATE_IDS),
                    classifications, plans)
+
+    def materialize(self, code_base: int) -> tuple[tuple[int, int], ...]:
+        """Return the executable image for one warp-private placement.
+
+        Position-independent words are copied byte-for-byte.  The only M11b
+        `REWRITE` form is an internal absolute JMP; preserve every opcode,
+        predicate and scheduling bit while replacing its scaled immediate with
+        the corresponding address in this copy.
+        """
+        if code_base % 16:
+            raise CodeMapError(f"code base {code_base:#x} not 16B aligned")
+        enc = _OPCODE_INDEX.encoding("JMP")
+        if enc is None:
+            raise WarpCodeError("JMP encoding unavailable")
+        out = list(self.words)
+        for c in self.classifications:
+            if c.outcome is not Outcome.REWRITE:
+                continue
+            if c.rewrite_index is None:
+                raise WarpCodeError(
+                    f"rewrite at instruction {c.index} has no target")
+            target = code_base + c.rewrite_index * 16
+            if target & 3:
+                raise CodeMapError(f"JMP target {target:#x} not 4B aligned")
+            lo, hi = out[c.index]
+            out[c.index] = _set_field_value(
+                enc, "Sb", lo, hi, target >> 2)
+        return tuple(out)
 
 
 class AddressMap:
