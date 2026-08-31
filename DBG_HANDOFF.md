@@ -229,20 +229,26 @@ python3 tools/run_tests.py -j 1     # 串行全量(基线 133/134)
 本节覆盖并更新上面的 M10 工作树描述；详细设计和验证记录见
 `SASSDBG_WARP_PRIVATE_PLAN.md`。
 
-- M11a/M11b/M11c/M11d 均已完成；M11c/M11d 在 RTX 5090 sm_120 上通过。
+- M11a/M11b/M11c/M11d/M11e 均已完成；M11c-M11e 在 RTX 5090 sm_120 上通过。
 - 新后端入口：`sassdbg/private.py::PrivateKernel`，同时支持 source 与真实
   cubin。每个 global warp 执行独立的 mutable heap SASS copy。
-- M11d API：`arm(..., warps=...)`、`disarm`、`wait_hit`、`resume_hit`。
+- M11e API：`arm(..., warps=..., lane_masks=...)`、`disarm`、`wait_hit`、
+  `cooperate(warp)`、`freeze(warp)`、`configure_breakpoints`、`resume_hit`。
   运行期 executable write 只能落在 arena 内；module text 不参与 patch。
-- 默认 stop 为 tight freeze：handler 没有 NANOSLEEP/YIELD。提交顺序为
-  words/metadata -> code epoch -> COMMIT；handler 单次 IVALL -> ACK；host
-  收到 ACK 后才 RELEASE。
+- 默认 stop 为 tight freeze；显式 `cooperate` 后 handler 用 NANOSLEEP 让
+  sibling execution-group 报告，再以 `freeze` 回到可修改边界。提交顺序为
+  words/metadata -> code epoch -> COMMIT；M11e 在 cooperative->freeze 后用
+  IVALL/NOPx32/IVALL 排空 sibling 的 in-flight fetch，再 ACK/RELEASE。
 - persistent breakpoint 通过 per-warp thunk 重放，disarm 从 materialized
   immutable template 恢复；relaunch 会重建 canonical image 和 overlay。
 - `test_sassdbg_m11d.py`：warp 隔离、运行中只 patch frozen warp、多 CTA
   独立断点、tight-loop re-hit、恢复、改变 block/grid 的 relaunch、真实
   cubin FFMA 均通过，专项连续 5 轮稳定。
-- 当前边界：M11d 仅接受 full/zero lane mask；partial mask、cooperative
-  execution-group 收集和 group stepper 迁移属于 M11e。
-- 当前全量：136/138；所有 sassdbg 测试通过，两个失败仅因为系统 Python
-  缺少可选 NumPy（`test_hadd2_hmul2`、`test_hfma2`）。
+- stop mask 在 stub 中与 MACTIVE 相交；不相交的 group 通过 immutable
+  per-(warp,site) epilogue 透明 replay。hit slot 由 leader lane 索引，可收集
+  同 warp 的多个 sibling group。
+- `Stepper.step_groups()` private 路径维护 per-warp successor masks，并包含
+  BSYNC/WARPSYNC 同址和 CTA BAR 跨-warp barrier assist；BSSY thunk 会重定位
+  到 private reconvergence target。
+- `test_sassdbg_m11e.py` 覆盖 mask 过滤、双模式握手、对抗性 union-successor、
+  split/merge、BSYNC、WARPSYNC、BAR。`blkw` conda 全量 139/139 通过。

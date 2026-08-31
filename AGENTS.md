@@ -736,6 +736,28 @@ Full runner 136/138, all sassdbg green; only the two optional-NumPy FP16 tests
 fail because NumPy is absent.  M11d accepts only full/zero masks; partial masks
 and cooperative group collection are M11e.
 
+M11e DONE on RTX 5090/sm_120 (`sassdbg/private.py`, private branch in
+`sassdbg/stepper.py`, `test_sassdbg_m11e.py`).  The shared stub loads the
+per-(warp,slot) stop mask and compares it with the current execution-group's
+MACTIVE: a disjoint group restores state through its immutable site epilogue
+and transparently replays the displaced instruction; an intersecting group
+publishes a leader-lane hit slot.  `cooperate(warp)` uses NANOSLEEP so sibling
+groups can report, while `freeze(warp)` reacquires a no-yield boundary before
+any executable write.  `PARKED_COOPERATIVE` is deliberately not a legal code
+mutation state.  A freeze following cooperative execution uses the hardened
+IVALL/NOPx32/IVALL commit sequence to drain a sibling's in-flight fetch.
+
+`Stepper.step_groups()` now has a warp-private path whose desired overlay is
+`warp -> {successor: lane_mask}`, eliminating the old global union-successor
+false-hit.  Replay/restore thunks are immutable per `(warp, orig_index)` and
+survive stub-slot recycling.  BSSY replay relocates Sa from the thunk VA to
+the private reconvergence target.  Barrier assist tracks groups blocked in
+the replay thunk: BSYNC/WARPSYNC rendezvous by the shared per-warp/site VA;
+BAR rendezvous is CTA-wide and PC-independent across private warps.  M11e E2E
+covers transparent filtering, dual-mode collection/freeze, the adversarial
+split/merge stepper case, BSYNC, WARPSYNC and two-warp BAR.  Full runner in
+the `blkw` conda environment: 139/139 pass.
+
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
 - `sass_elf.py`: `total_ps` is now `max(offset+size)` — summing param

@@ -579,7 +579,7 @@ runner: 136/138, with only two unrelated FP16 scripts failing at their optional
 `import numpy` because NumPy is absent.  Partial lane masks/cooperative group
 collection remain deliberately rejected until M11e.
 
-### M11e — lane masks and group-aware stepping
+### M11e — lane masks and group-aware stepping  (DONE: sm_120)
 
 - Implement stop-mask filtering and transparent replay.
 - Implement cooperative-collection and tight-freeze mode handshakes.
@@ -589,6 +589,29 @@ collection remain deliberately rejected until M11e.
   sibling groups need not be simultaneously reported.
 - Add the adversarial union-successor test that currently can stop the wrong
   group.
+
+Status (2026-08-31, RTX 5090 sm_120): implemented.  The stub intersects each
+binding's per-warp stop mask with MACTIVE.  A disjoint execution group takes a
+transparent restore/replay epilogue without publishing a hit; selected groups
+publish independent leader-lane hit slots.  The host explicitly switches a
+parked warp between cooperative NANOSLEEP collection and tight freeze, and
+`PARKED_COOPERATIVE` is no longer a legal executable-write boundary.  The
+cooperative-to-freeze commit uses IVALL/NOPx32/IVALL so an immediately prior
+sibling fetch cannot survive the acknowledgement.
+
+Replay and restore code is immutable per `(warp, orig_index)` rather than per
+recyclable stub slot.  BSSY Sa is relocated from the heap thunk to the
+warp-private reconvergence target.  The private `Stepper.step_groups()` path
+builds a complete `warp -> {successor: lane_mask}` overlay transaction at each
+boundary, so a group outside the source mask transparently crosses a globally
+shared successor.  Barrier assist records groups already blocked inside a
+replay barrier: BSYNC/WARPSYNC use the common per-warp/site thunk VA, while BAR
+matches arrivals across private warps without requiring equal PCs.
+
+`test_sassdbg_m11e.py` covers nonmatching transparent replay, cooperative
+split collection and freeze reacquisition, the adversarial successor-mask
+case, BSYNC, WARPSYNC, and two-warp CTA BAR.  M11d, legacy M8/M5w and the
+50-test CPU/static suite pass; full `blkw` runner: 139/139.
 
 ### M11f — command, dump/set/exec, CLI
 

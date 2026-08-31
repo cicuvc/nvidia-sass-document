@@ -50,6 +50,7 @@ sys.path.insert(0, str(_REPO))
 from assembler.sass_parser import Lexer, Parser            # noqa: E402
 from assembler.arch import spec_const_map                  # noqa: E402
 from sassdbg.patch import Debugger, Breakpoint             # noqa: E402
+from sassdbg.private import PrivateKernel                  # noqa: E402
 
 # branch instructions whose LABEL operand is the taken target
 _BR_LABEL = {"BRA", "BSSY", "CALL"}
@@ -163,6 +164,7 @@ class Stepper:
         # align because the trampoline lives outside the body).
         self.dbg = dbg or Debugger(source, func=func, max_bps=max_bps,
                                    max_warps=max_warps)
+        self._private = isinstance(self.dbg, PrivateKernel)
         self.path: list[int] = []           # single-warp view (= paths[0])
         self.paths: dict[int, list[int]] = {}
         self.n_warps = 1
@@ -173,7 +175,10 @@ class Stepper:
         self.n_warps = self.dbg.n_warps
         self.paths = {w: [] for w in range(self.n_warps)}
         self.path = self.paths[0]
-        self.dbg.wait_base()
+        if self._private:
+            self.dbg.wait_ready()
+        else:
+            self.dbg.wait_base()
 
     def _group_of(self, w: int, bp: Breakpoint):
         for gw, g in self._parked:
@@ -220,6 +225,8 @@ class Stepper:
         instruction is terminal drop out (they run to completion).
         Several groups landing on the same site merge into one returned
         group (combined lane mask)."""
+        if self._private:
+            return self._step_private_groups(groups, timeout)
         succ_sites: set[int] = set()
         live: list[tuple[int, object, list[int]]] = []
         terminal: list[Breakpoint] = []
@@ -293,6 +300,137 @@ class Stepper:
         for b in list(self.dbg._bps.values()):
             if b.orig_index not in parked:
                 self.dbg.disarm(b)
+        self._parked = out
+        return out
+
+    def _step_private_groups(self, groups: list,
+                             timeout: float = 30.0) -> list:
+        """M11e stepping with successor masks scoped to each private warp.
+
+        A successor receives only the lane masks of source groups for which it
+        is statically possible.  Unrelated groups reaching that same logical
+        instruction transparently replay it instead of becoming a false hit.
+        """
+        live: list[tuple[int, object, list[int]]] = []
+        desired: dict[int, dict[int, int]] = {}
+        affected = sorted({w for w, _ in groups})
+        for w in affected:
+            self.dbg.freeze(w)
+            desired[w] = {}
+        for w, g in groups:
+            nxt = self.cfg.next_pcs(g.bp.orig_index)
+            if not nxt:
+                continue
+            live.append((w, g, nxt))
+        for item in live:
+            w, _g, nxt = item
+            for site in item[2]:
+                desired[w][site] = (desired[w].get(site, 0) | item[1].mask)
+
+        # One code transaction per warp: old boundary sites disappear and
+        # the per-warp successor mask map becomes the complete desired state.
+        for w in affected:
+            self.dbg.configure_breakpoints(w, desired[w])
+
+        # Release from tight mode.  The first successor therefore establishes
+        # an unambiguous frozen boundary; cooperative collection is requested
+        # only after its report (unless barrier assist must run first).
+        by_warp: dict[int, list[object]] = {}
+        for w, g in groups:
+            by_warp.setdefault(w, []).append(g)
+        for w in affected:
+            self.dbg.resume_hit(by_warp[w][0])
+
+        # [warp, expected_sites, remaining_mask, blocked_barrier_site]
+        pending = [[w, set(nxt), g.mask,
+                    (g.bp.orig_index
+                     if self.cfg.insts[g.bp.orig_index].mnemonic in _BARRIER
+                     else None)]
+                   for w, g, nxt in live]
+        out: list[tuple[int, object]] = []
+        cooperative: set[int] = set()
+        while pending:
+            hw, hg = self.dbg.wait_group_hit(timeout)
+            matches = [(p, hg.mask & p[2]) for p in pending
+                       if p[0] == hw and hg.bp.orig_index in p[1]]
+            matches = [(p, mask) for p, mask in matches if mask]
+            if not matches:
+                raise RuntimeError(
+                    f"unexpected private hit from warp {hw} at "
+                    f"orig {hg.bp.orig_index} mask {hg.mask:#x}")
+            current_mn = self.cfg.insts[hg.bp.orig_index].mnemonic
+            others = [p for p in pending
+                      if (current_mn == "BAR" or p[0] == hw)
+                      and not any(p is mp for mp, _ in matches)]
+            waiting_at_barrier = any(
+                any(self.cfg.insts[s].mnemonic in _BARRIER for s in p[1])
+                for p in others)
+            waiting_at_barrier |= any(p[3] is not None for p in others)
+            assist = ((current_mn in _BARRIER and others)
+                      or waiting_at_barrier)
+            if assist:
+                # A sibling may be blocked in a replayed BSYNC/WARPSYNC/BAR
+                # waiting for the just-parked group.  Advance this group into
+                # the same immutable barrier thunk and account for it at the
+                # barrier's successors instead.  BAR is PC-agnostic; the warp
+                # barriers share the per-(warp,index) replay VA.
+                nxt2 = set(self.cfg.next_pcs(hg.bp.orig_index))
+                if current_mn in _BARRIER:
+                    # Groups already blocked inside this barrier's replay
+                    # thunk will leave it together with the reported group.
+                    had_blocked = any(
+                        p[3] is not None
+                        and ((current_mn == "BAR"
+                              and self.cfg.insts[p[3]].mnemonic == "BAR")
+                             or (p[0] == hw and p[3] == hg.bp.orig_index))
+                        for p in pending)
+                    for p in pending:
+                        if p[0] == hw and hg.bp.orig_index in p[1]:
+                            p[1] = nxt2
+                            p[3] = hg.bp.orig_index
+                    # If another group was already blocked inside this exact
+                    # replay thunk, this release completes the rendezvous.
+                    if had_blocked:
+                        for p in pending:
+                            if ((current_mn == "BAR" and p[3] is not None
+                                 and self.cfg.insts[p[3]].mnemonic == "BAR")
+                                    or (p[0] == hw
+                                        and p[3] == hg.bp.orig_index)):
+                                p[3] = None
+                else:
+                    for p, mask in matches:
+                        p[1] = nxt2
+                        p[2] = mask
+                wanted: dict[int, int] = {}
+                for p in pending:
+                    if p[0] == hw:
+                        for site in p[1]:
+                            wanted[site] = wanted.get(site, 0) | p[2]
+                self.dbg.configure_breakpoints(hw, wanted)
+                self.paths[hw].append(hg.bp.orig_index)
+                self.dbg.resume_hit(hg)
+                cooperative.discard(hw)
+                continue
+            for p, mask in matches:
+                p[2] &= ~mask
+            pending = [p for p in pending if p[2]]
+            if not any(w == hw and x.site == hg.site for w, x in out):
+                out.append((hw, hg))
+                self.paths[hw].append(hg.bp.orig_index)
+            if hw not in cooperative:
+                self.dbg.cooperate(hw)
+                cooperative.add(hw)
+
+        # Reacquire the no-yield boundary, then retain exactly the sites and
+        # masks represented by the newly parked groups.
+        for w in sorted({w for w, _ in out}):
+            self.dbg.freeze(w)
+            parked: dict[int, int] = {}
+            for ow, g in out:
+                if ow == w:
+                    parked[g.bp.orig_index] = (
+                        parked.get(g.bp.orig_index, 0) | g.mask)
+            self.dbg.configure_breakpoints(w, parked)
         self._parked = out
         return out
 

@@ -81,8 +81,7 @@ class WarpState(Enum):
 # States in which host code writes to the warp's private text are legal
 # (plan invariant 4) and an omitted breakpoint scope may be defaulted.
 SAFE_BOUNDARY = frozenset({
-    WarpState.UNLAUNCHED, WarpState.GATED, WarpState.PARKED_COOPERATIVE,
-    WarpState.FROZEN, WarpState.DONE,
+    WarpState.UNLAUNCHED, WarpState.GATED, WarpState.FROZEN, WarpState.DONE,
 })
 
 
@@ -329,7 +328,7 @@ class ReplayPlan:
     per-warp thunk.  `lines` may contain a `{tgt}` placeholder expanded
     with the warp-private absolute target VA."""
     orig_index: int
-    kind: str                    # verbatim | bra_abs | label_local
+    kind: str                    # verbatim | bra_abs | bssy_rel
     lines: tuple[str, ...] = ()
     target_index: int | None = None
 
@@ -352,8 +351,7 @@ def _replay_plans_from_cfg(cfg) -> tuple[ReplayPlan, ...]:
     """One ReplayPlan per instruction, M8c rules: plain instructions
     replay verbatim; label BRA becomes absolute JMP(s) to the warp-
     private target (predication preserved, fall-through appended by the
-    thunk builder); BSSY's Sa is architecturally inert so it replays
-    with a thunk-local label."""
+    thunk builder); BSSY is relocated to its private reconvergence target."""
     plans = []
     for ci in cfg.insts:
         if ci.mnemonic == "BRA" and ci.label is not None:
@@ -362,10 +360,8 @@ def _replay_plans_from_cfg(cfg) -> tuple[ReplayPlan, ...]:
             line = f"{guard} JMP {{tgt}};[7:7:{{}}:6:0]".strip()
             plans.append(ReplayPlan(ci.idx, "bra_abs", (line,), tgt_idx))
         elif ci.mnemonic == "BSSY":
-            ln = ci.text
-            import re
-            ln = re.sub(r"#label\([^)]*\)", "#label(tk)", ln)
-            plans.append(ReplayPlan(ci.idx, "label_local", (ln,)))
+            plans.append(ReplayPlan(ci.idx, "bssy_rel", (ci.text,),
+                                    cfg.target(ci.label)))
         else:
             plans.append(ReplayPlan(ci.idx, "verbatim", (ci.text,)))
     return tuple(plans)
@@ -766,7 +762,7 @@ class Layout:
     CTRL_SZ = 0x100             # module base, gate, launch dims
     PARK_MODE_SZ = 0x10         # requested/observed mode generations
     FREEZE_STRIDE = 0x100       # cache-line-separated ack/go per warp
-    STUB_SZ = 0x200
+    STUB_SZ = 0x400
     HANDLER_STRIDE = 0x1000
     THUNK_ARENA = 0x10000       # per-warp thunk arena (0x100 multiple)
     CMDBUF_SZ = 0x400
@@ -799,6 +795,8 @@ class Layout:
             off + max_warps * self.FREEZE_STRIDE, 0x100)
         self.bp_masks = off;         off = _align(
             off + max_warps * max_bps * 4, 16)
+        self.bp_thunks = off;        off = _align(
+            off + max_warps * max_bps * 8, 16)
         self.stubs = off;            off = _align(
             off + max_bps * self.STUB_SZ, 0x100)
         self.handlers = off;         off = _align(
@@ -849,6 +847,7 @@ class Layout:
             "park_mode": self.max_warps * self.PARK_MODE_SZ,
             "freeze_ctl": self.max_warps * self.FREEZE_STRIDE,
             "bp_masks": self.max_warps * self.max_bps * 4,
+            "bp_thunks": self.max_warps * self.max_bps * 8,
             "stubs": self.max_bps * self.STUB_SZ,
             "handlers": self.max_warps * self.HANDLER_STRIDE,
             "thunks": self.max_warps * self.thunk_arena,

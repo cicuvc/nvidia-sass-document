@@ -1,4 +1,4 @@
-"""M11c/M11d warp-private heap-code bootstrap and mutation backend.
+"""M11c-M11e warp-private heap-code bootstrap and mutation backend.
 
 `PrivateKernel.from_source()` preserves the original parameter offsets and
 appends the debugger-control argument; `.from_cubin()` preserves the target
@@ -6,10 +6,10 @@ ABI exactly.  Both replace the entry with an immutable LEPC+JMP trampoline.  A
 shared heap dispatcher computes the global warp id and jumps to that warp's
 full private copy of the canonical function image.
 
-M11d adds direct per-warp heap breakpoints, tight-freeze handlers, transactional
-code epochs, one target-side IVALL per commit, persistent replay thunks, and
-canonical restoration.  Partial lane masks and cooperative group collection
-remain the M11e boundary.
+M11d adds direct per-warp heap breakpoints and transactional code epochs. M11e
+filters breakpoints by execution-group masks, transparently replays unselected
+groups, and switches parked warps explicitly between cooperative collection and
+tight freeze.
 """
 from __future__ import annotations
 
@@ -24,7 +24,8 @@ from assembler.sass_parser import parse_kernel
 
 from .cubin import load_kernel
 from .warpcode import (Breakpoint as WarpBreakpoint, CodeTemplate, Layout,
-                       OverlayBatch, PrivateCodeSet, ScopeError, WarpState)
+                       OverlayBatch, PrivateCodeSet, ScopeError, WarpState,
+                       _OPCODE_INDEX, _set_field_value)
 
 
 # ctrl (Layout.ctrl == 0)
@@ -47,6 +48,13 @@ FC_RELEASE = 0x10                # u32 host release generation
 FC_COMMIT = 0x14                 # u32 host executable-code commit generation
 FC_ACK = 0x18                    # u32 handler-acked commit generation
 
+# Per-warp park-mode handshake (Layout.park_mode, 16 bytes per warp).
+PM_MODE = 0x00                   # u32: MODE_FROZEN / MODE_COOPERATIVE
+PM_GEN = 0x04                    # u32 host request generation
+PM_ACK = 0x08                    # u32 handler observed generation
+MODE_FROZEN = 0
+MODE_COOPERATIVE = 1
+
 # Per-lane spill frame.  F_CODEBASE is initialized by the host, which lets a
 # shared logical stub derive code_base[warp]+orig_index*16 without reserving a
 # scratch register before R2/R3 have been saved.
@@ -55,9 +63,13 @@ F_PR = 0x18
 F_R01 = 0x20                    # u64, naturally aligned
 F_SITE = 0x28                   # u64
 F_CODEBASE = 0x30               # u64 immutable launch metadata
+F_EPILOGUE = 0x38               # u64 restore + site-specific replay target
+F_COMMIT_BASE = 0x40            # u32 handler-local generation baseline
+F_RELEASE_BASE = 0x44           # u32 handler-local generation baseline
 
 THUNK_STRIDE = 0x100
 THUNK_MAX_INSTS = THUNK_STRIDE // 16
+BP_THUNK_STRIDE = 0x200
 
 
 class BootstrapError(RuntimeError):
@@ -66,11 +78,13 @@ class BootstrapError(RuntimeError):
 
 @dataclass(frozen=True)
 class PrivateHit:
-    """One M11d tight-frozen warp/group at a logical breakpoint."""
+    """One reported execution group at a logical private breakpoint."""
     warp: int
     bp: WarpBreakpoint
     site: int
     mask: int
+    slot: int = 0
+    seq: int = 0
 
 
 def _pack(words) -> bytes:
@@ -134,8 +148,8 @@ def _dispatcher_src(lay: Layout, arena: int) -> str:
 
 
 def _m11d_stub_src(lay: Layout, arena: int, orig_index: int,
-                   warps_per_cta: int) -> str:
-    """Shared logical-breakpoint stub; no module/private site is baked.
+                   stub_slot: int, warps_per_cta: int) -> str:
+    """Shared logical-breakpoint stub with M11e group-mask filtering.
 
     R0/R1 are bootstrapped through RPC exactly as in M9.  The host seeds each
     lane frame's F_CODEBASE, so after R2/R3 are safe the stub derives the
@@ -145,6 +159,8 @@ def _m11d_stub_src(lay: Layout, arena: int, orig_index: int,
     """
     frames = arena + lay.frames
     handlers = arena + lay.handlers
+    masks = arena + lay.bp_masks + stub_slot * 4
+    epilogues = arena + lay.bp_thunks + stub_slot * 8
     lanes_per_cta = warps_per_cta * 32
     site_off = orig_index * 16
     return f"""\
@@ -157,75 +173,108 @@ def _m11d_stub_src(lay: Layout, arena: int, orig_index: int,
     MOV32I R1, 0x{frames & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
     IMAD R0, R0, 0x{lay.FRAME:x}, R1;[7:7:{{}}:5:1]
     MOV32I R1, 0x{frames >> 32:08x};[7:7:{{}}:5:1]
-    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2:x}], R2;[7:1:{{}}:8:0]
-    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 4:x}], R3;[7:1:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2:x}], R2;[7:7:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 4:x}], R3;[7:7:{{}}:8:0]
     RPCMOV R2, Rpc.LO;[2:7:{{1,3}}:9:0]
     RPCMOV R3, Rpc.HI;[2:7:{{1,4}}:9:0]
-    STG.E.64.STRONG.GPU [{{R0,R1}}+0x{F_R01:x}], {{R2,R3}};[7:1:{{2}}:8:0]
+    STG.E.64.STRONG.GPU [{{R0,R1}}+0x{F_R01:x}], {{R2,R3}};[7:7:{{2}}:8:0]
     LDG.E.64.STRONG.GPU {{R2,R3}}, [{{R0,R1}}+0x{F_CODEBASE:x}];[2:1:{{1}}:8:0]
     IADD3 R2, R2, 0x{site_off:x}, RZ;[7:7:{{2}}:5:1]
-    STG.E.64.STRONG.GPU [{{R0,R1}}+0x{F_SITE:x}], {{R2,R3}};[7:1:{{}}:8:0]
+    STG.E.64.STRONG.GPU [{{R0,R1}}+0x{F_SITE:x}], {{R2,R3}};[7:7:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 8:x}], R4;[7:7:{{1}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0xC:x}], R5;[7:7:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0x10:x}], R6;[7:7:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0x14:x}], R7;[7:7:{{3}}:8:0]
+    P2R R2, PR;[2:7:{{0}}:6:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_PR:x}], R2;[7:7:{{2}}:8:0]
     MOV32I R2, 0x{frames & 0xFFFFFFFF:08x};[7:7:{{1}}:5:1]
     IADD3 R2, R0, -R2, RZ;[7:7:{{}}:5:1]
-    SHF.R.U32.HI R2, RZ, 0xC, R2;[7:7:{{}}:5:1]
-    SHF.L.U32 R2, R2, 0xC, RZ;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R4, RZ, 0xC, R2;[7:7:{{}}:5:1]
+    MOV32I R2, 0x{masks & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{masks >> 32:08x};[7:7:{{}}:5:1]
+    IMAD.WIDE.U32 {{R2,R3}}, R4, 0x{lay.max_bps * 4:x}, {{R2,R3}};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R6, [{{R2,R3}}];[2:1:{{}}:8:0]
+    BMOV R7, MACTIVE;[3:7:{{}}:8:0]
+    LOP3.LUT R6, R6, R7, RZ, 0xC0;[7:7:{{2,3}}:5:1]
+    MOV32I R2, 0x{epilogues & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{epilogues >> 32:08x};[7:7:{{}}:5:1]
+    IMAD.WIDE.U32 {{R2,R3}}, R4, 0x{lay.max_bps * 8:x}, {{R2,R3}};[7:7:{{}}:5:1]
+    LDG.E.64.STRONG.GPU {{R2,R3}}, [{{R2,R3}}];[2:1:{{}}:8:0]
+    STG.E.64.STRONG.GPU [{{R0,R1}}+0x{F_EPILOGUE:x}], {{R2,R3}};[7:7:{{2}}:8:0]
+    ISETP.EQ.AND P0, PT, R6, RZ, PT;[7:7:{{}}:13:1]
+    @P0 JMX {{R2,R3}}, 0x0;[7:7:{{}}:6:0]
+    SHF.L.U32 R2, R4, 0xC, RZ;[7:7:{{}}:5:1]
     IADD3 R2, R2, 0x{handlers & 0xFFFFFFFF:08x}, RZ;[7:7:{{}}:13:1]
     MOV32I R3, 0x{handlers >> 32:08x};[7:7:{{}}:13:1]
-    CALL.ABS.NOINC PT, {{R2,R3}}, 0x0;[7:7:{{}}:6:0]
+    JMX {{R2,R3}}, 0x0;[7:7:{{}}:6:0]
 """
 
 
 def _m11d_handler_src(lay: Layout, arena: int, warp: int) -> str:
-    """Per-warp tight-freeze handler with a host-patched final JMP.
+    """Per-warp M11e handler with cooperative/tight mode polling.
 
-    COMMIT is polled independently of RELEASE.  Each commit executes exactly
-    one target-side IVALL and publishes ACK while remaining frozen.  Thus the
-    host can wait for executable visibility before allowing any group to
-    leave the handler.
+    COMMIT is polled independently of RELEASE.  Each commit executes a
+    hardened target-side IVALL/drain/IVALL sequence and publishes ACK while
+    remaining frozen.  Thus the host can wait for executable visibility
+    before allowing any group to leave the handler.
     """
     ctl = arena + lay.freeze_ctl + warp * lay.FREEZE_STRIDE
+    mode = arena + lay.park_mode + warp * lay.PARK_MODE_SZ
+    hslots = arena + lay.hslots + warp * 32 * 16
+    # A cooperative sibling may have fetched the soon-to-be-patched successor
+    # immediately before the freeze acknowledgement.  Drain that in-flight
+    # fill between invalidates; this is the M3 hardened sequence, applied only
+    # to executable commits (ordinary release remains data-only).
+    ivall = ("    CCTL.I.IVALL;[7:7:{}:4:0]\n"
+             + "    NOP;[7:7:{}:8:0]\n" * 32
+             + "    CCTL.I.IVALL;[7:7:{}:4:0]")
     return f"""\
-    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 8:x}], R4;[7:0:{{1}}:8:0]
-    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0xC:x}], R5;[7:0:{{}}:8:0]
-    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0x10:x}], R6;[7:0:{{}}:8:0]
-    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_R2 + 0x14:x}], R7;[7:0:{{3}}:8:0]
-    P2R R2, PR;[2:7:{{0}}:6:0]
-    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_PR:x}], R2;[7:0:{{2}}:8:0]
+    BMOV R2, MACTIVE;[4:7:{{1}}:8:0]
+    FLO.U32 R3, PT, R2;[3:7:{{4}}:5:1]
+    MOV32I R4, 0x{hslots & 0xFFFFFFFF:08x};[7:7:{{3}}:5:1]
+    MOV32I R5, 0x{hslots >> 32:08x};[7:7:{{}}:5:1]
+    IMAD.WIDE.U32 {{R4,R5}}, R3, 0x10, {{R4,R5}};[7:7:{{}}:13:1]
+    LDG.E.STRONG.GPU R3, [{{R4,R5}}+0xc];[3:1:{{}}:8:0]
+    IADD3 R3, R3, 0x1, RZ;[7:7:{{3}}:5:1]
+    STG.E.STRONG.GPU [{{R4,R5}}], R2;[7:7:{{}}:8:0]
+    LDG.E.64.STRONG.GPU {{R6,R7}}, [{{R0,R1}}+0x{F_SITE:x}];[4:7:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R4,R5}}+0x4], R6;[7:7:{{4}}:8:0]
+    STG.E.STRONG.GPU [{{R4,R5}}+0x8], R7;[7:7:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R4,R5}}+0xc], R3;[7:7:{{}}:8:0]
     MOV32I R4, 0x{ctl & 0xFFFFFFFF:08x};[7:7:{{0}}:5:1]
     MOV32I R5, 0x{ctl >> 32:08x};[7:7:{{}}:5:1]
     LDG.E.STRONG.GPU R6, [{{R4,R5}}+0x{FC_COMMIT:x}];[2:1:{{}}:8:0]
     LDG.E.STRONG.GPU R7, [{{R4,R5}}+0x{FC_RELEASE:x}];[3:1:{{}}:8:0]
-    LDG.E.64.STRONG.GPU {{R2,R3}}, [{{R0,R1}}+0x{F_SITE:x}];[4:7:{{}}:8:0]
-    STG.E.64.STRONG.GPU [{{R4,R5}}+0x{FC_SITE:x}], {{R2,R3}};[7:1:{{4}}:8:0]
-    BMOV R2, MACTIVE;[4:7:{{1}}:8:0]
-    STG.E.STRONG.GPU [{{R4,R5}}+0x{FC_MASK:x}], R2;[7:1:{{4}}:8:0]
-    MOV32I R3, 0x1;[7:7:{{1}}:5:1]
-    STG.E.STRONG.GPU [{{R4,R5}}+0x{FC_HIT:x}], R3;[7:1:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_COMMIT_BASE:x}], R6;[7:7:{{2}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_RELEASE_BASE:x}], R7;[7:7:{{3}}:8:0]
 #def_label(m11d_spin)
     LDG.E.STRONG.GPU R2, [{{R4,R5}}+0x{FC_COMMIT:x}];[2:1:{{1}}:8:0]
-    ISETP.NE.AND P0, PT, R2, R6, PT;[7:7:{{2}}:13:1]
+    LDG.E.STRONG.GPU R3, [{{R0,R1}}+0x{F_COMMIT_BASE:x}];[3:1:{{}}:8:0]
+    ISETP.NE.AND P0, PT, R2, R3, PT;[7:7:{{2,3}}:13:1]
     @P0 BRA #label(m11d_commit);[7:7:{{}}:6:0]
     LDG.E.STRONG.GPU R2, [{{R4,R5}}+0x{FC_RELEASE:x}];[2:1:{{1}}:8:0]
-    ISETP.NE.AND P0, PT, R2, R7, PT;[7:7:{{2,3}}:13:1]
+    LDG.E.STRONG.GPU R3, [{{R0,R1}}+0x{F_RELEASE_BASE:x}];[3:1:{{}}:8:0]
+    ISETP.NE.AND P0, PT, R2, R3, PT;[7:7:{{2,3}}:13:1]
     @P0 BRA #label(m11d_resume);[7:7:{{}}:6:0]
+    MOV32I R2, 0x{mode & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{mode >> 32:08x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R6, [{{R2,R3}}+0x{PM_MODE:x}];[2:1:{{}}:8:0]
+    LDG.E.STRONG.GPU R7, [{{R2,R3}}+0x{PM_GEN:x}];[3:1:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R2,R3}}+0x{PM_ACK:x}], R7;[7:7:{{3}}:8:0]
+    ISETP.NE.AND P0, PT, R6, RZ, PT;[7:7:{{2}}:13:1]
+    @P0 BRA #label(m11d_coop);[7:7:{{}}:6:0]
+    BRA #label(m11d_spin);[7:7:{{}}:6:0]
+#def_label(m11d_coop)
+    NANOSLEEP 0x100;[7:7:{{}}:5:1]
     BRA #label(m11d_spin);[7:7:{{}}:6:0]
 #def_label(m11d_commit)
-    MOV R6, R2;[7:7:{{}}:5:1]
-    CCTL.I.IVALL;[7:7:{{}}:4:0]
-    STG.E.STRONG.GPU [{{R4,R5}}+0x{FC_ACK:x}], R6;[7:1:{{}}:8:0]
+{ivall}
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_COMMIT_BASE:x}], R2;[7:7:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R4,R5}}+0x{FC_ACK:x}], R2;[7:7:{{}}:8:0]
     BRA #label(m11d_spin);[7:7:{{}}:6:0]
 #def_label(m11d_resume)
-    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_PR:x}];[2:7:{{1}}:8:0]
-    R2P PR, R2, 0x7F;[7:7:{{2}}:13:1]
-    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_R2:x}];[2:7:{{}}:8:0]
-    LDG.E.STRONG.GPU R3, [{{R0,R1}}+0x{F_R2 + 4:x}];[2:7:{{}}:8:0]
-    LDG.E.STRONG.GPU R4, [{{R0,R1}}+0x{F_R2 + 8:x}];[2:7:{{}}:8:0]
-    LDG.E.STRONG.GPU R5, [{{R0,R1}}+0x{F_R2 + 0xC:x}];[2:7:{{}}:8:0]
-    LDG.E.STRONG.GPU R6, [{{R0,R1}}+0x{F_R2 + 0x10:x}];[2:7:{{}}:8:0]
-    LDG.E.STRONG.GPU R7, [{{R0,R1}}+0x{F_R2 + 0x14:x}];[2:7:{{}}:8:0]
-    LDG.E.64.STRONG.GPU {{R0,R1}}, [{{R0,R1}}+0x{F_R01:x}];[2:7:{{}}:8:0]
-    MOV R1, R1;[7:7:{{2}}:5:1]
-    JMP 0x0;[7:7:{{}}:6:0]
+    LDG.E.64.STRONG.GPU {{R2,R3}}, [{{R0,R1}}+0x{F_EPILOGUE:x}];[2:1:{{1}}:8:0]
+    JMX {{R2,R3}}, 0x0;[7:7:{{2}}:6:0]
 """
 
 
@@ -236,6 +285,23 @@ def _m11d_handler_image(lay: Layout, arena: int, warp: int) \
     if len(words) * 16 > lay.HANDLER_STRIDE:
         raise BootstrapError("M11d handler exceeds per-warp slot")
     return _pack(words), (len(words) - 1) * 16
+
+
+def _restore_epilogue_src(replay_va: int) -> str:
+    """Restore the stub-spilled architectural state, then replay the site."""
+    return f"""\
+    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_PR:x}];[2:7:{{1}}:8:0]
+    R2P PR, R2, 0x7F;[7:7:{{2}}:13:1]
+    LDG.E.STRONG.GPU R2, [{{R0,R1}}+0x{F_R2:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R3, [{{R0,R1}}+0x{F_R2 + 4:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R4, [{{R0,R1}}+0x{F_R2 + 8:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R5, [{{R0,R1}}+0x{F_R2 + 0xC:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R6, [{{R0,R1}}+0x{F_R2 + 0x10:x}];[2:7:{{}}:8:0]
+    LDG.E.STRONG.GPU R7, [{{R0,R1}}+0x{F_R2 + 0x14:x}];[2:7:{{}}:8:0]
+    LDG.E.64.STRONG.GPU {{R0,R1}}, [{{R0,R1}}+0x{F_R01:x}];[2:7:{{}}:8:0]
+    MOV R1, R1;[7:7:{{2}}:5:1]
+    JMP 0x{replay_va:x};[7:7:{{}}:6:0]
+"""
 
 
 def _checked_words(body: str, name: str) -> list[tuple[int, int]]:
@@ -354,12 +420,13 @@ class PrivateKernel:
         self.n_warps = 0
         self.warps_per_cta = 0
         self._module_base: int | None = None
-        self._handler_retline = [0] * max_warps
         self._commit_gen = [0] * max_warps
         self._release_gen = [0] * max_warps
-        self._hits: dict[int, PrivateHit] = {}
+        self._mode_gen = [0] * max_warps
+        self._hits: dict[tuple[int, int], PrivateHit] = {}
+        self._hslot_seq = [[0] * 32 for _ in range(max_warps)]
         self._thunk_next = [0] * max_warps
-        self._thunk_cache: dict[tuple, int] = {}
+        self._thunk_cache: dict[tuple[int, int], int] = {}
 
     @classmethod
     def from_source(cls, source: str, func: str | None = None, *,
@@ -447,7 +514,8 @@ class PrivateKernel:
         if not self.warps_per_cta:
             return
         src = _m11d_stub_src(
-            self.lay, self.arena, bp.orig_index, self.warps_per_cta)
+            self.lay, self.arena, bp.orig_index, bp.stub_slot,
+            self.warps_per_cta)
         words = _checked_words(src, f"__m11d_stub_{bp.stub_slot}")
         if not 0 < len(words) * 16 <= self.lay.STUB_SZ:
             raise BootstrapError("M11d stub exceeds slot")
@@ -456,9 +524,76 @@ class PrivateKernel:
 
     def _write_handlers(self, warps) -> None:
         for w in warps:
-            img, retline = _m11d_handler_image(self.lay, self.arena, w)
+            img, _ = _m11d_handler_image(self.lay, self.arena, w)
             self._write_executable(self.lay.handler_va(self.arena, w), img)
-            self._handler_retline[w] = retline
+
+    def _replay_words(self, warp: int, idx: int,
+                      replay_va: int) -> list[tuple[int, int]]:
+        plan = self.template.replay_plans[idx]
+        fallthrough = self.codes.amap.site_va(warp, idx) + 16
+        if plan.kind == "verbatim":
+            words = [self.template.materialize(self.code_base(warp))[idx]]
+            words += assemble_flat(
+                f"JMP 0x{fallthrough:x};[7:7:{{}}:6:0]")
+        elif plan.kind == "bra_abs":
+            src = "\n".join(list(plan.expand(self.code_base(warp)))
+                              + [f"JMP 0x{fallthrough:x};[7:7:{{}}:6:0]"])
+            words = assemble_flat(src)
+        elif plan.kind == "bssy_rel":
+            if plan.target_index is None:
+                raise BootstrapError(f"BSSY replay at {idx} has no target")
+            target = self.code_base(warp) + plan.target_index * 16
+            delta = target - (replay_va + 16)
+            if delta & 3:
+                raise BootstrapError("BSSY replay target is not 4B aligned")
+            scaled = delta // 4
+            if not -(1 << 29) <= scaled < (1 << 29):
+                raise BootstrapError("BSSY replay target is out of range")
+            enc = _OPCODE_INDEX.encoding("BSSY")
+            lo, hi = self.template.materialize(self.code_base(warp))[idx]
+            word = _set_field_value(enc, "Sa", lo, hi,
+                                     scaled & ((1 << 30) - 1))
+            words = [word]
+            words += assemble_flat(
+                f"JMP 0x{fallthrough:x};[7:7:{{}}:6:0]")
+        else:
+            raise BootstrapError(
+                f"unsupported replay plan {plan.kind!r} at {idx}")
+        if not 0 < len(words) <= THUNK_MAX_INSTS:
+            raise BootstrapError(f"replay thunk has {len(words)} words")
+        return words
+
+    def _write_bp_thunks(self, bp: WarpBreakpoint, warps) -> None:
+        """Build immutable per-(warp,index) replay and restore epilogues.
+
+        Stub slots may be recycled while their old stopped group still owns a
+        frame.  Thunk addresses therefore remain unique for the launch and the
+        slot-indexed table only points new entrants at the current epilogue.
+        """
+        for w in warps:
+            key = (w, bp.orig_index)
+            ep_va = self._thunk_cache.get(key)
+            if ep_va is None:
+                slot = self._thunk_next[w]
+                if ((slot + 1) * BP_THUNK_STRIDE
+                        > self.lay.thunk_arena):
+                    raise BootstrapError(f"warp {w} thunk arena exhausted")
+                base = (self.lay.thunk_va(self.arena, w)
+                        + slot * BP_THUNK_STRIDE)
+                self._thunk_next[w] += 1
+                replay = self._replay_words(w, bp.orig_index, base)
+                ep_va = base + THUNK_STRIDE
+                ep = _checked_words(_restore_epilogue_src(base),
+                                    f"__m11e_ep_{w}_{bp.orig_index}")
+                if len(ep) > THUNK_MAX_INSTS:
+                    raise BootstrapError(
+                        "restore epilogue exceeds 0x100 bytes")
+                self._write_executable(base, _pack(replay))
+                self._write_executable(ep_va, _pack(ep))
+                self._thunk_cache[key] = ep_va
+            table = (self.arena + self.lay.bp_thunks
+                     + (w * self.lay.max_bps + bp.stub_slot) * 8)
+            self.owner.device_write(table, struct.pack("<Q", ep_va))
 
     def _seed_frames(self, warps) -> None:
         for w in warps:
@@ -559,6 +694,10 @@ class PrivateKernel:
                               self.lay.CTRL_SZ // 4)
         self.owner.devmem_set(self.arena + self.lay.freeze_ctl, 0,
                               self.max_warps * self.lay.FREEZE_STRIDE // 4)
+        self.owner.devmem_set(self.arena + self.lay.park_mode, 0,
+                              self.max_warps * self.lay.PARK_MODE_SZ // 4)
+        self.owner.devmem_set(self.arena + self.lay.hslots, 0,
+                              self.max_warps * 32 * 16 // 4)
         self.owner.device_write(
             self.arena + CTRL_WARPS_PER_CTA,
             struct.pack("<II", wpc, total))
@@ -567,7 +706,9 @@ class PrivateKernel:
         self._module_base = None
         self._commit_gen = [0] * self.max_warps
         self._release_gen = [0] * self.max_warps
+        self._mode_gen = [0] * self.max_warps
         self._hits.clear()
+        self._hslot_seq = [[0] * 32 for _ in range(self.max_warps)]
         self._thunk_next = [0] * self.max_warps
         self._thunk_cache.clear()
         for w, inst in enumerate(self.codes.instances):
@@ -577,6 +718,7 @@ class PrivateKernel:
             self._seed_frames(range(total))
             for bp in self.codes.breakpoints:
                 self._write_stub(bp)
+                self._write_bp_thunks(bp, range(total))
             # Fresh, never-fetched addresses: publish the persistent overlay
             # before launch without an IVALL/ack transaction.
             self._apply_overlay(range(total), commit_frozen=False)
@@ -639,17 +781,6 @@ class PrivateKernel:
         for inst in self.codes.instances[:self.n_warps]:
             inst.state = WarpState.RUNNING
 
-    # -- M11d per-warp breakpoint mutation ---------------------------------
-    @staticmethod
-    def _require_full_masks(warps, lane_masks) -> None:
-        if lane_masks is None:
-            return
-        values = ([lane_masks] if isinstance(lane_masks, int)
-                  else [lane_masks.get(w, 0xFFFFFFFF) for w in warps])
-        if any((m & 0xFFFFFFFF) not in (0, 0xFFFFFFFF) for m in values):
-            raise NotImplementedError(
-                "partial lane masks are M11e; M11d accepts only 0/all")
-
     def arm(self, orig_index: int, *, warps=None,
             lane_masks=None) -> WarpBreakpoint:
         """Arm one logical site on explicit private warp copies.
@@ -658,7 +789,6 @@ class PrivateKernel:
         warp may remain RUNNING because its executable words are disjoint.
         """
         ws = self.codes._resolve_warps(warps)
-        self._require_full_masks(ws, lane_masks)
         bp = self.codes.by_index.get(orig_index)
         if bp is None:
             bp = self.codes.arm(orig_index, warps=ws, lane_masks=lane_masks)
@@ -677,6 +807,7 @@ class PrivateKernel:
             for w in ws:
                 self.codes.set_break_mask(bp, w, masks[w])
         self._write_stub(bp)
+        self._write_bp_thunks(bp, ws)
         self._apply_overlay(ws)
         return bp
 
@@ -686,103 +817,120 @@ class PrivateKernel:
         self.codes.disarm(bp, warps=ws)
         self._apply_overlay(ws)
 
+    def configure_breakpoints(self, warp: int,
+                              masks: dict[int, int]) -> None:
+        """Atomically replace one frozen warp's logical stop-mask map.
+
+        All replay/epilogue and site writes are published before the single
+        code-generation commit/IVALL.  Other warps' bindings are untouched.
+        """
+        self.codes._check_write_legal([warp])
+        wanted = {idx: mask & 0xFFFFFFFF for idx, mask in masks.items()
+                  if mask & 0xFFFFFFFF}
+        for bp in list(self.codes.breakpoints):
+            b = bp.bindings.get(warp)
+            if b is not None and b.armed and bp.orig_index not in wanted:
+                self.codes.disarm(bp, warps=[warp])
+        for idx, mask in sorted(wanted.items()):
+            bp = self.codes.by_index.get(idx)
+            if bp is None:
+                bp = self.codes.arm(idx, warps=[warp], lane_masks=mask)
+            else:
+                self.codes.set_break_mask(bp, warp, mask)
+            self._write_stub(bp)
+            self._write_bp_thunks(bp, [warp])
+        self._apply_overlay([warp])
+
     def wait_hit(self, timeout: float = 30.0) -> PrivateHit:
-        """Wait for an unreported tight-frozen warp breakpoint hit."""
+        """Wait for one newly reported execution-group hit.
+
+        Hit slots are indexed by the group's leader lane, so disjoint sibling
+        groups can report different sites while the warp is in cooperative
+        mode without overwriting one another.
+        """
         t0 = time.time()
         while True:
             for w in range(self.n_warps):
-                if w in self._hits:
-                    continue
-                va = (self.arena + self.lay.freeze_ctl
-                      + w * self.lay.FREEZE_STRIDE)
-                site, mask, hit = self._rd(va, "<QII")
-                if hit != 1:
-                    continue
-                idx = self.codes.amap.orig_index(w, site)
-                bp = self.codes.by_index.get(idx)
-                binding = bp.bindings.get(w) if bp is not None else None
-                if bp is None or binding is None or not binding.armed:
-                    raise BootstrapError(
-                        f"warp {w} hit unarmed private site {site:#x}")
-                rec = PrivateHit(w, bp, site, mask)
-                self._hits[w] = rec
-                self.codes.instances[w].state = WarpState.FROZEN
-                self.codes.instances[w].parked_groups = [(mask, idx)]
-                return rec
+                for slot in range(32):
+                    va = (self.arena + self.lay.hslots
+                          + (w * 32 + slot) * 16)
+                    mask, lo, hi, seq = self._rd(va, "<IIII")
+                    if seq == self._hslot_seq[w][slot]:
+                        continue
+                    self._hslot_seq[w][slot] = seq
+                    site = lo | (hi << 32)
+                    idx = self.codes.amap.orig_index(w, site)
+                    bp = self.codes.by_index.get(idx)
+                    binding = bp.bindings.get(w) if bp is not None else None
+                    if bp is None or binding is None or not binding.armed:
+                        raise BootstrapError(
+                            f"warp {w} hit unarmed private site {site:#x}")
+                    rec = PrivateHit(w, bp, site, mask, slot, seq)
+                    self._hits[(w, slot)] = rec
+                    inst = self.codes.instances[w]
+                    if inst.state is WarpState.RUNNING:
+                        inst.state = WarpState.FROZEN
+                    inst.parked_groups.append((mask, idx))
+                    return rec
             if CudaModule.stream_query(self.stream):
                 CudaModule.stream_sync(self.stream)
                 raise BootstrapError("target completed before breakpoint hit")
             if time.time() - t0 > timeout:
-                raise TimeoutError("no M11d breakpoint hit")
+                raise TimeoutError("no M11e group breakpoint hit")
             time.sleep(0.001)
 
-    def _build_replay_thunk(self, hit: PrivateHit) -> tuple[int, bytes]:
-        w, idx = hit.warp, hit.bp.orig_index
-        key = (w, idx, self.template.template_id)
-        va = self._thunk_cache.get(key)
-        if va is None:
-            slot = self._thunk_next[w]
-            if (slot + 1) * THUNK_STRIDE > self.lay.thunk_arena:
-                raise BootstrapError(f"warp {w} thunk arena exhausted")
-            va = self.lay.thunk_va(self.arena, w) + slot * THUNK_STRIDE
-            self._thunk_next[w] += 1
-            plan = self.template.replay_plans[idx]
-            fallthrough = self.codes.amap.site_va(w, idx) + 16
-            if plan.kind == "verbatim":
-                words = [self.template.materialize(self.code_base(w))[idx]]
-                words += assemble_flat(
-                    f"JMP 0x{fallthrough:x};[7:7:{{}}:6:0]")
-            elif plan.kind == "bra_abs":
-                src = "\n".join(
-                    list(plan.expand(self.code_base(w)))
-                    + [f"JMP 0x{fallthrough:x};[7:7:{{}}:6:0]"])
-                words = assemble_flat(src)
-            elif plan.kind == "label_local":
-                src = ("\n".join(plan.lines) + "\n#def_label(tk)\n"
-                       + f"JMP 0x{fallthrough:x};[7:7:{{}}:6:0]")
-                words = assemble_flat(src)
-            else:
-                raise BootstrapError(
-                    f"unsupported replay plan {plan.kind!r} at {idx}")
-            if not 0 < len(words) <= THUNK_MAX_INSTS:
-                raise BootstrapError(f"replay thunk has {len(words)} words")
-            image = _pack(words)
-            self._write_executable(va, image)
-            self._thunk_cache[key] = va
-        else:
-            image = b""
-        return va, image
+    def wait_group_hit(self, timeout: float = 30.0):
+        hit = self.wait_hit(timeout)
+        return hit.warp, hit
+
+    def _set_mode(self, warp: int, mode: int,
+                  timeout: float = 5.0) -> None:
+        if not any(w == warp for w, _ in self._hits):
+            raise ScopeError(f"warp {warp} has no parked group")
+        self._mode_gen[warp] += 1
+        gen = self._mode_gen[warp]
+        va = self.arena + self.lay.park_mode + warp * self.lay.PARK_MODE_SZ
+        self.owner.device_write(va + PM_MODE, struct.pack("<II", mode, gen))
+        t0 = time.time()
+        while self._rd(va + PM_ACK, "<I")[0] != gen:
+            if CudaModule.stream_query(self.stream):
+                CudaModule.stream_sync(self.stream)
+                raise BootstrapError("target exited during park-mode handshake")
+            if time.time() - t0 > timeout:
+                raise TimeoutError(
+                    f"warp {warp} mode {mode} generation {gen} not acked")
+            time.sleep(0.0005)
+        self.codes.instances[warp].state = (
+            WarpState.FROZEN if mode == MODE_FROZEN
+            else WarpState.PARKED_COOPERATIVE)
+
+    def cooperate(self, warp: int, timeout: float = 5.0) -> None:
+        """Let sibling execution groups run and publish their own hit slots."""
+        self._set_mode(warp, MODE_COOPERATIVE, timeout)
+
+    def freeze(self, warp: int, timeout: float = 5.0) -> None:
+        """Reacquire a tight no-yield boundary before executable mutation."""
+        if self.codes.instances[warp].state is WarpState.FROZEN:
+            return
+        self.codes.instances[warp].state = WarpState.FREEZING
+        self._set_mode(warp, MODE_FROZEN, timeout)
 
     def resume_hit(self, hit: PrivateHit) -> None:
-        """Replay the displaced word in a per-warp thunk and resume.
+        """Release every currently parked group of `hit.warp`.
 
-        The site remains patched while its binding is armed.  Thunk and final
-        handler-JMP writes are committed first; the frozen handler performs
-        one IVALL and ACKs before RELEASE is published.
+        Each frame already names its site-specific immutable restore/replay
+        epilogue, so release is data-only and is legal in either park mode.
         """
-        if self._hits.get(hit.warp) is not hit:
-            raise BootstrapError("hit is not the warp's current frozen stop")
-        if self.codes.instances[hit.warp].state is not WarpState.FROZEN:
-            raise ScopeError(f"warp {hit.warp} is not FROZEN")
-        thunk, _ = self._build_replay_thunk(hit)
-        jmp = assemble_flat(f"JMP 0x{thunk:x};[7:7:{{}}:6:0]")
-        if len(jmp) != 1:
-            raise BootstrapError("resume JMP is not one word")
-        ret_va = (self.lay.handler_va(self.arena, hit.warp)
-                  + self._handler_retline[hit.warp])
-        self._write_executable(ret_va, _pack(jmp))
-        # Always commit a release, even if the thunk was cached: the final
-        # handler line is executable mutable state and M11d intentionally uses
-        # one IVALL on every release.
-        self._commit_frozen(hit.warp)
+        if self._hits.get((hit.warp, hit.slot)) is not hit:
+            raise BootstrapError("hit is not a current parked group")
         ctl = (self.arena + self.lay.freeze_ctl
                + hit.warp * self.lay.FREEZE_STRIDE)
-        self.owner.device_write(ctl + FC_HIT, struct.pack("<I", 0))
         self._release_gen[hit.warp] += 1
         self.owner.device_write(
             ctl + FC_RELEASE,
             struct.pack("<I", self._release_gen[hit.warp]))
-        del self._hits[hit.warp]
+        for key in [k for k in self._hits if k[0] == hit.warp]:
+            del self._hits[key]
         inst = self.codes.instances[hit.warp]
         inst.parked_groups.clear()
         inst.state = WarpState.RUNNING

@@ -115,7 +115,7 @@ class TestLayout(unittest.TestCase):
     def test_regions_16b_aligned(self):
         lay = Layout(4, 8, 0x123)
         for name in ("ctrl", "code_base_table", "code_epoch", "park_mode",
-                     "freeze_ctl", "bp_masks", "stubs", "handlers",
+                     "freeze_ctl", "bp_masks", "bp_thunks", "stubs", "handlers",
                      "thunks", "hslots", "cmdseq", "cmdbuf", "results",
                      "frames", "dispatcher", "code"):
             off = getattr(lay, name)
@@ -359,7 +359,7 @@ class TestBootstrapStatic(unittest.TestCase):
         lay = Layout(4, 4, t.size)
         arena = 0x7F8000000000
         stub = _checked_words(
-            _m11d_stub_src(lay, arena, 3, 2), "m11d_stub")
+            _m11d_stub_src(lay, arena, 3, 0, 2), "m11d_stub")
         handler, retline = _m11d_handler_image(lay, arena, 0)
         self.assertLessEqual(len(stub) * 16, lay.STUB_SZ)
         self.assertLessEqual(len(handler), lay.HANDLER_STRIDE)
