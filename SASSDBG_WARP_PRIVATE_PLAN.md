@@ -667,12 +667,25 @@ full runner: **141/141**.
 
 ### M11h — cleanup and source-default switch
 
-- Make `backend="warp_private"` the source `Debugger` default after all gates
-  pass (real `CubinDebugger` already switched in M11g).
-- Remove `Patcher` construction from the new path; retain legacy code only
-  behind the fallback until one full release cycle.
-- Update `DBG_HANDOFF.md`, `AGENTS.md`, CLI help and architecture diagrams.
-- Run serial full regression and repeated M3–M11 stress batches.
+**DONE.** `Debugger(source)`, `Stepper(source)`, and every CLI input mode
+(`--sass`, direct `--cubin`, and lifted `--cubin/--sass --trace`) now default to
+`backend="warp_private"`.  `SharedDebugger` and `SharedCubinDebugger` retain the
+M9/M10 implementation only behind explicit `backend="shared"`.  Copyability
+failure is fail-closed and never retries shared text.
+
+The public factories build `PrivateKernel` directly.  No `Patcher` object is
+constructed and no patcher module is launched on the default path; the old
+device patcher exists only inside the two shared fallback constructors.
+M3–M10 tests and the old CLI regression explicitly select shared so the
+rollback implementation continues to receive coverage.  `Stepper` accepts an
+explicit `backend=` for the same purpose.
+
+`test_sassdbg_m11h.py` proves factory selection without a GPU, then verifies
+the default Stepper, divergent WARPSYNC replay, fail-closed PC-sensitive source,
+source CLI scope, and wtrace reverse composition on the private backend.  Its
+release stress mode executes 168 divergent loop iterations and **1015 actual
+private step transitions**, including one WARPSYNC per iteration.  M3–M11
+mixed batches pass 3/3 and the `blkw` serial full runner passes **142/142**.
 
 ### M12 — call closure and advanced relocation (follow-up)
 
@@ -712,19 +725,30 @@ Before making the backend default, run at least:
 Do not rewrite M9 in place at the start.  Introduce a backend boundary:
 
 ```
-SharedTextBackend       # current M9/M10 implementation
-WarpPrivateBackend      # M11 implementation
+Debugger / CubinDebugger / Stepper / CLI
+                  |
+                  +-- default: WarpPrivateBackend (PrivateKernel)
+                  |             |
+                  |             +-- immutable template
+                  |             +-- mutable code copy per global warp
+                  |             +-- arena-only executable writes
+                  |             `-- no Patcher / no runtime module-text write
+                  |
+                  `-- explicit backend="shared"
+                                |
+                                `-- SharedTextBackend (M9/M10 + Patcher)
 ```
 
 `Debugger`, `CubinDebugger`, `Stepper`, and CLI depend on the backend's
 logical operations (`site_va`, `arm_scope`, `commit_mutations`, `release`,
 `replay_plan`) rather than direct dictionaries or `Patcher.patch()`.
 
-During migration, tests run against both backends where semantics overlap.
-The private backend becomes default only after M11g gates pass.  A failure in
+Tests run against both backends where semantics overlap.  Since M11h the
+private backend is the default for source and real cubin inputs.  A failure in
 private copyability analysis may offer the legacy backend only when the user
-explicitly selects it; it must not silently fall back to unsafe shared
-runtime patching.
+explicitly selects it; it must not silently fall back to unsafe shared runtime
+patching.  Keep the legacy implementation for one release cycle, then reassess
+removal separately from M12 call-closure work.
 
 ## 17. First implementation slice
 

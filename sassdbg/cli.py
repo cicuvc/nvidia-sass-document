@@ -70,26 +70,14 @@ class Shell(cmd.Cmd):
         super().__init__()
         self.args = args
         self.trace_mode = args.trace
-        # M11g: real cubins default private.  Source kernels retain the
-        # shared default until M11h; --trace likewise uses shared composition.
-        self.backend = (args.backend or
-                        ("warp_private" if args.cubin and not args.trace
-                         else "shared"))
+        self.backend = args.backend or "warp_private"
         self.private = self.backend == "warp_private"
-        if self.trace_mode and self.private:
-            raise ValueError("--trace currently requires --backend shared")
         self.ik = None
         cubin_dbg = None
         if args.sass:
             src = _parse_source(args.sass)
-            if self.private:
-                cubin_dbg = PrivateKernel.from_source(
-                    src, max_bps=32,
-                    max_warps=max(args.max_warps,
-                                  args.grid * ((args.block + 31) // 32)))
         elif self.trace_mode:
-            # trace instruments the SOURCE and re-assembles — keep the
-            # M2 lift+inject path for --cubin --trace
+            # Reverse tracing instruments lifted source and re-assembles it.
             src = _lift_cubin(args.cubin, args.func)
         else:
             # M10 real-cubin path: patch the entry trampoline in the
@@ -112,11 +100,14 @@ class Shell(cmd.Cmd):
             self.ik = instrument_warp(src)
             src = self.ik.source
             self._orig2inst = self._build_idx_map(self.ik)
+        if cubin_dbg is None:
+            cubin_dbg = Debugger(src, max_bps=32, max_warps=max_warps,
+                                 backend=self.backend)
         self.st = Stepper(src, max_warps=max_warps, dbg=cubin_dbg)
         self.dbg = self.st.dbg
         # auto args from the kernel's param list
         names = self._param_names(self.user_src)
-        if cubin_dbg is not None and hasattr(cubin_dbg, "params"):
+        if args.cubin and not self.trace_mode:
             params = cubin_dbg.params       # (ordinal, offset, size)
         else:
             res = assemble_kernel(self.user_src, check_deps=True)
@@ -600,8 +591,8 @@ def main() -> None:
     ap.add_argument("--max-warps", type=int, default=1)
     ap.add_argument("--backend", choices=("shared", "warp_private"),
                     default=None,
-                    help="debugger code backend (default: warp_private for "
-                         "real cubins, shared for source until M11h)")
+                    help="debugger code backend (default: warp_private; "
+                         "shared is the legacy fallback)")
     ap.add_argument("--trace", action="store_true",
                     help="wtrace-instrument for reverse stepping "
                          "(single CTA, single warp replay)")

@@ -1,5 +1,10 @@
-"""sassdbg debugger — runtime SASS breakpoints with ZERO register
-reservation (M9 engine; replaces the M3v3 per-warp-blob design).
+"""sassdbg source-debugger backend selection.
+
+``Debugger`` defaults to the M11 warp-private engine.  The M9 zero-reservation
+shared-text implementation below is exported as ``SharedDebugger`` and is
+constructed only by the explicit ``backend="shared"`` fallback.
+
+Legacy shared-text architecture (replaces the M3v3 per-warp-blob design):
 
 Motivation: real cubins have a compile-time register budget — a kernel
 may legitimately use every register, so no reservation is safe (ptxas
@@ -523,7 +528,7 @@ def _handler_image(lay: Layout, arena: int, warp: int,
 # host-side debugger
 # ---------------------------------------------------------------------------
 class Breakpoint:
-    def __init__(self, dbg: "Debugger", bp_id: int, orig_index: int,
+    def __init__(self, dbg: "SharedDebugger", bp_id: int, orig_index: int,
                  orig_word: tuple[int, int], slot: int):
         self.dbg = dbg
         self.id = bp_id
@@ -546,9 +551,8 @@ class _Group:
         self.reported = False
 
 
-class Debugger:
-    """Runtime breakpoints for a dialect-source kernel — zero register
-    reservation (M9).
+class SharedDebugger:
+    """Legacy shared-text source debugger (M9 explicit fallback).
 
     The kernel is launched with its normal args plus dbgctrl (the arena
     base, appended automatically); it parks at the entry gate until
@@ -1054,3 +1058,38 @@ class Debugger:
         else:
             raise ValueError(f"cannot set {reg!r} (use exec_cmd)")
         self.exec_cmd(warp, insts, _trusted=True)
+
+
+from .private import PrivateKernel  # noqa: E402  (factory after legacy class)
+
+
+class Debugger(PrivateKernel):
+    """Construct a source debugger using the requested code backend.
+
+    M11h makes ``warp_private`` the default.  The M9 engine remains available
+    only through ``backend="shared"`` and is never selected automatically when
+    private copyability preflight fails.
+    """
+
+    def __new__(cls, source: str, func: str | None = None,
+                max_bps: int = 16, allow_cdesc_urs: bool = False,
+                max_warps: int = 1, *, backend: str = "warp_private",
+                budget: int | None = None):
+        if backend == "shared":
+            return SharedDebugger(
+                source, func=func, max_bps=max_bps,
+                allow_cdesc_urs=allow_cdesc_urs, max_warps=max_warps)
+        if backend != "warp_private":
+            raise ValueError(
+                f"unknown source debugger backend {backend!r}; expected "
+                "'warp_private' or 'shared'")
+        seed = PrivateKernel.from_source(
+            source, func=func, max_bps=max_bps, max_warps=max_warps,
+            budget=budget)
+        obj = object.__new__(cls)
+        obj.__dict__.update(seed.__dict__)
+        return obj
+
+    def __init__(self, *args, **kwargs):
+        # PrivateKernel.from_source() built the complete instance in __new__.
+        pass

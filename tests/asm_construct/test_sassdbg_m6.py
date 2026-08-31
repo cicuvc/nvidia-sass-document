@@ -62,7 +62,10 @@ CLI = [sys.executable, "-m", "sassdbg.cli"]
 
 
 def run_cli(script: str, *cli_args: str) -> str:
-    r = subprocess.run(CLI + list(cli_args), input=script,
+    # M6 is the legacy shared-backend regression; M11h separately verifies
+    # that the CLI default is warp_private.
+    r = subprocess.run(CLI + list(cli_args) + ["--backend", "shared"],
+                       input=script,
                        capture_output=True, text=True, timeout=300,
                        cwd=Path(__file__).resolve().parents[2])
     if r.returncode != 0:

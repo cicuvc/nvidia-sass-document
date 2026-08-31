@@ -31,12 +31,12 @@ from assembler import CudaModule, assemble_flat  # noqa: F401  (re-export)
 
 from .cubin import load_kernel, KernelText  # noqa: F401
 from .lift import lift, extract_params
-from .patch import (Debugger, Layout, KPROL_SZ, _real_prologue_src,
+from .patch import (SharedDebugger, Layout, KPROL_SZ, _real_prologue_src,
                     _trampoline_src)
 from .private import PrivateKernel
 
 
-class SharedCubinDebugger(Debugger):
+class SharedCubinDebugger(SharedDebugger):
     """Legacy M10 shared-text debugger for a real cubin kernel.
 
     `cubin_path` is loaded, the chosen kernel's entry gets the

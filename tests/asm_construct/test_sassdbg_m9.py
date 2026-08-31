@@ -42,7 +42,7 @@ insts = [ln.strip() for ln in src.splitlines()[1:]
 i_ffma = next(i for i, t in enumerate(insts) if t.startswith("FFMA"))
 i_stg = next(i for i, t in enumerate(insts) if t.startswith("STG"))
 
-dbg = Debugger(src, max_bps=4)
+dbg = Debugger(src, max_bps=4, backend="shared")
 n = 8
 a = dbg.mod.devmem_alloc(n * 4)
 b = dbg.mod.devmem_alloc(n * 4)
@@ -120,7 +120,7 @@ insts2 = [ln.strip() for ln in K2.splitlines()
 i_loop = insts2.index("IADD3 R2, R2, 0x7, RZ;[7:7:{}:5:1]")
 orig_loop = "IADD3 R2, R2, 0x7, RZ;[7:7:{}:5:1]"
 
-dbg2 = Debugger(K2, max_bps=4)
+dbg2 = Debugger(K2, max_bps=4, backend="shared")
 out = dbg2.mod.devmem_alloc(0x200)
 dbg2.mod.device_write(out, bytes(0x200))
 dbg2.launch([out], block=(32,))
@@ -166,7 +166,7 @@ lines3 = [ln.strip() for ln in K3.splitlines()
 i_lo = lines3.index("MOV32I R6, 0x111;[7:7:{}:5:1]")
 i_hi = lines3.index("MOV32I R6, 0x222;[7:7:{}:5:1]")
 
-dbg3 = Debugger(K3, max_bps=4)
+dbg3 = Debugger(K3, max_bps=4, backend="shared")
 out3 = dbg3.mod.devmem_alloc(0x100)
 dbg3.mod.device_write(out3, bytes(0x100))
 dbg3.launch([out3], block=(32,))
@@ -194,7 +194,7 @@ check("T3 divergent results correct",
 # ---------------------------------------------------------------------------
 # T4 — command injection: dump_regs / set_reg on a parked warp
 # ---------------------------------------------------------------------------
-dbg4 = Debugger(K2, max_bps=4)
+dbg4 = Debugger(K2, max_bps=4, backend="shared")
 out4 = dbg4.mod.devmem_alloc(0x200)
 dbg4.mod.device_write(out4, bytes(0x200))
 dbg4.launch([out4], block=(32,))

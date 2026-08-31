@@ -136,7 +136,7 @@ K_NODIV = """\
 
 
 def _mk(src: str) -> tuple[Debugger, int]:
-    dbg = Debugger(src)
+    dbg = Debugger(src, backend="shared")
     out = dbg.mod.devmem_alloc(0x100)
     dbg.mod.device_write(out, bytes(0x100))
     dbg.launch(args=[out])

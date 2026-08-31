@@ -38,7 +38,7 @@ def check(name, got, want):
 
 
 def mk(source, buf_sz=0x100):
-    dbg = Debugger(source)
+    dbg = Debugger(source, backend="shared")
     out = dbg.mod.devmem_alloc(buf_sz)
     dbg.mod.device_write(out, bytes(buf_sz))
     dbg.launch(args=[out])
@@ -192,7 +192,7 @@ def t3_bsync_shared_thunk():
 
 
 def t4_group_stepping():
-    st = Stepper(K_DIV)
+    st = Stepper(K_DIV, backend="shared")
     out = st.dbg.mod.devmem_alloc(0x100)
     st.dbg.mod.device_write(out, bytes(0x100))
     st.launch(args=[out])
@@ -230,7 +230,7 @@ def t5_warpsync_stepping():
     _BARRIER) releases the late group into the SAME thunk VA — probe
     E0b proved WARPSYNC needs the same PC, E4 that the shared-VA
     sequential release rendezvous."""
-    st = Stepper(K_WSYNC)
+    st = Stepper(K_WSYNC, backend="shared")
     out = st.dbg.mod.devmem_alloc(0x100)
     st.dbg.mod.device_write(out, bytes(0x100))
     st.launch(args=[out])
@@ -258,7 +258,7 @@ def t6_bar_stepping():
     walks the w0 path; when w0 parks at ITS BAR site the assist
     releases it into a thunk BAR — BAR.SYNC arrival is PC-agnostic
     (probe E2), so the thunk BAR rendezvous with w1's blocked one."""
-    st = Stepper(K_BAR, max_warps=2)
+    st = Stepper(K_BAR, max_warps=2, backend="shared")
     out = st.dbg.mod.devmem_alloc(0x100)
     st.dbg.mod.device_write(out, bytes(0x100))
     st.launch(args=[out], block=(64,))

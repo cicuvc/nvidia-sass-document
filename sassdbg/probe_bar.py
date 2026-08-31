@@ -87,7 +87,8 @@ K_WS_2SITE = K_WS.replace("""    BRA #label(sync);[7:7:{}:5:1]
 
 
 def _mk(source, block):
-    dbg = Debugger(source, max_warps=(block + 31) // 32)
+    dbg = Debugger(source, max_warps=(block + 31) // 32,
+                   backend="shared")
     out = dbg.mod.devmem_alloc(0x100)
     dbg.mod.device_write(out, bytes(0x100))
     dbg.launch(args=[out], block=(block,))

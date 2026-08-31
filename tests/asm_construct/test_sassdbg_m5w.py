@@ -55,7 +55,7 @@ def check(name, cond, extra=""):
     print(f"{'ok ' if cond else 'FAIL'} {name:<52} {extra}")
 
 
-st = Stepper(SRC, max_warps=2)
+st = Stepper(SRC, max_warps=2, backend="shared")
 out = st.dbg.mod.devmem_alloc(64)
 st.dbg.mod.device_write(out, bytes(64))
 

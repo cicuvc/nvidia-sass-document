@@ -273,3 +273,15 @@ python3 tools/run_tests.py -j 1     # 串行全量(基线 133/134)
   提前移除 barrier bp，造成两组分别在 private PC/thunk PC 执行 WARPSYNC
   而永久等待。现只推进当前 hit 实际覆盖的 pending group；M11e 连续 5/5，
   `blkw` 串行全量 **141/141**。
+- M11h 已完成默认切换：`Debugger(source)`、`Stepper(source)`、CLI 的
+  `--sass`/`--cubin`/`--trace` 均默认 `warp_private`。旧类改名为
+  `SharedDebugger`/`SharedCubinDebugger`，仅由显式 `backend="shared"` 创建；
+  M3–M10 历史测试已显式选择 shared，继续覆盖回退实现。
+- 默认 factory 直接构造 `PrivateKernel`，不会创建 `Patcher`、不会启动
+  patcher kernel，也不会在运行期写 module text。copyability 失败直接报错，
+  不会静默降级。`test_sassdbg_m11h.py` 同时验证 source CLI scope 和 private
+  wtrace reverse composition。
+- M11h release gate：168 轮 divergence+WARPSYNC，实际 **1015** 次 private
+  step transition；M3–M11 混合批次 3/3；`blkw` 串行全量 **142/142**。
+  M11a 的 minimum-IVALL 10k gate 已在 RTX 5090 与 H20/sm_90 完成；M11 至此
+  收尾，下一阶段是 M12 call closure/advanced relocation。

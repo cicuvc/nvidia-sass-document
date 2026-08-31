@@ -69,7 +69,7 @@ check("cfg: predicated BRA successors", cfg.next_pcs(7), [8, 4])
 check("cfg: plain fall-through", cfg.next_pcs(4), [5])
 check("cfg: EXIT terminal", cfg.next_pcs(9), [])
 
-st = Stepper(LOOP_KERNEL)
+st = Stepper(LOOP_KERNEL, backend="shared")
 d = st.dbg.mod.devmem_alloc(64)
 st.launch([d], block=(32,))
 bp = st.run_to_entry()
@@ -111,7 +111,8 @@ def want2(t):
 
 
 ik = instrument_warp(CALC_KERNEL)
-dbg = Debugger(ik.source, max_bps=8, allow_cdesc_urs=True)
+dbg = Debugger(ik.source, max_bps=8, allow_cdesc_urs=True,
+               backend="shared")
 
 # locate the final IADD3 (bp target) in the WTRACE-source numbering
 decl = Parser(Lexer(ik.source).tokenize()).parse_kernel()

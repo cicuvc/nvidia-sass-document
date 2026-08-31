@@ -786,6 +786,19 @@ replay-thunk WARPSYNC PC while the sibling executes WARPSYNC at the private-
 code PC.  Fixed in `Stepper._step_private_groups`; M11e repeated 5/5 and the
 `blkw` serial full runner is 141/141.
 
+M11h DONE on RTX 5090/sm_120.  `sassdbg.patch.Debugger(source)`, `Stepper`, and
+all CLI input modes now default to `PrivateKernel`; the M9/M10 classes are
+named `SharedDebugger`/`SharedCubinDebugger` and require
+`backend="shared"`.  The default factory never constructs `Patcher`; runtime
+executable writes remain arena-only and copyability failures never silently
+fall back.  Legacy M3–M10 tests explicitly select shared so the rollback path
+stays covered for one release cycle.  `test_sassdbg_m11h.py` covers CPU-only
+factory selection, default private Stepper, divergent WARPSYNC, fail-closed
+LEPC, source CLI scope, and private wtrace reverse.  Release stress: 168 loop
+iterations = 1015 actual private step transitions, M3–M11 mixed batches 3/3,
+full `blkw` serial regression 142/142.  M11 is complete; M12 owns device-call
+closure and advanced relocation.
+
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
 - `sass_elf.py`: `total_ps` is now `max(offset+size)` — summing param

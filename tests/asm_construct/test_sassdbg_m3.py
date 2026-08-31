@@ -35,7 +35,7 @@ insts = [ln.strip() for ln in src.splitlines()[1:]
 i_ffma = next(i for i, t in enumerate(insts) if t.startswith("FFMA"))
 i_stg = next(i for i, t in enumerate(insts) if t.startswith("STG"))
 
-dbg = Debugger(src, max_bps=4)
+dbg = Debugger(src, max_bps=4, backend="shared")
 n = 8
 a = dbg.mod.devmem_alloc(n * 4)
 b = dbg.mod.devmem_alloc(n * 4)

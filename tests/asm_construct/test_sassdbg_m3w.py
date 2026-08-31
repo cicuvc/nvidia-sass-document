@@ -64,7 +64,7 @@ def check(name, cond, extra=""):
     print(f"{'ok ' if cond else 'FAIL'} {name:<52} {extra}")
 
 
-dbg = Debugger(SRC, max_warps=2)
+dbg = Debugger(SRC, max_warps=2, backend="shared")
 out = dbg.mod.devmem_alloc(64)
 dbg.mod.device_write(out, bytes(64))
 
