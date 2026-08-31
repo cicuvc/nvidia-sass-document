@@ -569,12 +569,22 @@ class CodeInstance:
     def base(self) -> int:
         return self.amap.code_base(self.warp)
 
+    def canonical_image(self) -> tuple[tuple[int, int], ...]:
+        """Placed relocation image, or raw words for CPU-only model tests."""
+        try:
+            base = self.base
+        except CodeMapError:
+            return self.template.words
+        return self.template.materialize(base)
+
     def word_at(self, idx: int) -> tuple[int, int]:
         """The word the device copy currently holds at idx."""
-        return self.applied_words.get(idx, self.template.words[idx])
+        if idx in self.applied_words:
+            return self.applied_words[idx]
+        return self.canonical_image()[idx]
 
     def image(self) -> list[tuple[int, int]]:
-        img = list(self.template.words)
+        img = list(self.canonical_image())
         for idx, w in self.applied_words.items():
             img[idx] = w
         return img
@@ -655,8 +665,10 @@ class PrivateCodeSet:
                      else 0xFFFFFFFF for w in ws}
         else:
             masks = dict(lane_masks)
-        bp = Breakpoint(index, self.template.words[index],
-                        len(self.breakpoints))
+        used_slots = {x.stub_slot for x in self.breakpoints}
+        stub_slot = next(s for s in range(self.max_bps)
+                         if s not in used_slots)
+        bp = Breakpoint(index, self.template.words[index], stub_slot)
         self.by_index[index] = bp
         self.breakpoints.append(bp)
         for w in ws:
@@ -698,6 +710,7 @@ class PrivateCodeSet:
         batch = OverlayBatch()
         for w in ws:
             inst = self.instances[w]
+            canonical = inst.canonical_image()
             desired: dict[int, tuple[int, int]] = {}
             for idx, bp in self.by_index.items():
                 b = bp.bindings.get(w)
@@ -710,7 +723,7 @@ class PrivateCodeSet:
                 batch.writes.append((w, idx, word))
             for idx in sorted(set(inst.applied) - set(desired)):
                 batch.writes.append(
-                    (w, idx, self.template.words[idx]))
+                    (w, idx, canonical[idx]))
             if any(wa == w for wa, _, _ in batch.writes):
                 inst.code_epoch += 1
                 inst.dirty = True

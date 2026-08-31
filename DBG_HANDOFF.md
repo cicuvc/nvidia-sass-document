@@ -221,3 +221,28 @@ printf 'r\nb 12\nc\ndump 0 R2\nc\nq\n' | \
 python3 tests/asm_construct/test_sassdbg_m10.py
 python3 tools/run_tests.py -j 1     # 串行全量(基线 133/134)
 ```
+
+---
+
+## 6. M11 warp-private backend 更新（2026-08-31）
+
+本节覆盖并更新上面的 M10 工作树描述；详细设计和验证记录见
+`SASSDBG_WARP_PRIVATE_PLAN.md`。
+
+- M11a/M11b/M11c/M11d 均已完成；M11c/M11d 在 RTX 5090 sm_120 上通过。
+- 新后端入口：`sassdbg/private.py::PrivateKernel`，同时支持 source 与真实
+  cubin。每个 global warp 执行独立的 mutable heap SASS copy。
+- M11d API：`arm(..., warps=...)`、`disarm`、`wait_hit`、`resume_hit`。
+  运行期 executable write 只能落在 arena 内；module text 不参与 patch。
+- 默认 stop 为 tight freeze：handler 没有 NANOSLEEP/YIELD。提交顺序为
+  words/metadata -> code epoch -> COMMIT；handler 单次 IVALL -> ACK；host
+  收到 ACK 后才 RELEASE。
+- persistent breakpoint 通过 per-warp thunk 重放，disarm 从 materialized
+  immutable template 恢复；relaunch 会重建 canonical image 和 overlay。
+- `test_sassdbg_m11d.py`：warp 隔离、运行中只 patch frozen warp、多 CTA
+  独立断点、tight-loop re-hit、恢复、改变 block/grid 的 relaunch、真实
+  cubin FFMA 均通过，专项连续 5 轮稳定。
+- 当前边界：M11d 仅接受 full/zero lane mask；partial mask、cooperative
+  execution-group 收集和 group stepper 迁移属于 M11e。
+- 当前全量：136/138；所有 sassdbg 测试通过，两个失败仅因为系统 Python
+  缺少可选 NumPy（`test_hadd2_hmul2`、`test_hfma2`）。

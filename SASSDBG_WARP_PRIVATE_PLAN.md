@@ -540,7 +540,7 @@ run is desirable but is not a gate for the sm_120 M11c milestone.  Full runner:
 134/137; all sassdbg tests pass, with only the pre-existing `test_uimad`
 self-bug and two FP16 scripts whose optional NumPy dependency is absent.
 
-### M11d — per-warp breakpoint mutation
+### M11d — per-warp breakpoint mutation  (DONE: sm_120)
 
 - Make the stub position-independent with respect to warp site VA.
 - Implement direct heap writes, per-warp bindings, mutation batching and code
@@ -549,6 +549,35 @@ self-bug and two FP16 scripts whose optional NumPy dependency is absent.
 - E2E: arm warp 0 only while warp 1 runs; per-CTA isolation; independent
   arm/disarm sets; tight-loop persistent hit; restore canonical word; relaunch.
 - Verify the original module text is never runtime-written.
+
+Status (2026-08-31, RTX 5090 sm_120): implemented in `sassdbg/private.py`.
+The shared 24-instruction logical stub spills R0-R7/PR, uses the host-seeded
+per-lane `F_CODEBASE` cache to derive `code_base[warp] + orig_index*16`, and
+dispatches to a 38-instruction per-warp handler.  The handler publishes the
+private site/mask, enters a tight poll with no NANOSLEEP/YIELD, and handles an
+independent COMMIT generation by executing exactly one `CCTL.I.IVALL` and
+publishing ACK before the host may publish RELEASE.  Stubs, thunks, handler
+return JMPs, and private words are written directly through a fail-closed
+arena-only executable-write API; the Patcher/module-text path is never used.
+
+`PrivateKernel.arm/disarm/wait_hit/resume_hit` apply per-warp `OverlayBatch`
+transactions and code epochs, keep armed sites persistent, replay displaced
+instructions in per-warp thunks, and restore from the materialized immutable
+template.  Relaunch clears APPLIED state, reconstructs canonical images,
+reapplies persistent bindings, and performs one target-side launch IVALL for
+breakpoint-capable instances so reused heap VAs and wpc-dependent stubs cannot
+execute stale lines.
+
+`test_sassdbg_m11d.py` passes five consecutive runs and covers: arming a new
+warp-0 site while warp 1 demonstrably advances; per-CTA independent sites;
+tight-loop persistent re-hit; canonical restore; code-epoch isolation;
+relaunch with 1x64 -> 2x32 shape change; real-cubin FFMA replay; and an
+executable-write journal proving every runtime target stays inside the heap
+arena and outside module text.  M11c/M10 regressions pass.  Static stub/handler
+assembly + depcheck passes under sm_120 and sm_90 (50 CPU/static tests).  Full
+runner: 136/138, with only two unrelated FP16 scripts failing at their optional
+`import numpy` because NumPy is absent.  Partial lane masks/cooperative group
+collection remain deliberately rejected until M11e.
 
 ### M11e — lane masks and group-aware stepping
 

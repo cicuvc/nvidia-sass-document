@@ -27,7 +27,7 @@ from assembler import assemble_flat  # noqa: E402
 from assembler.sass_parser import parse_kernel  # noqa: E402
 from sassdbg.private import (  # noqa: E402
     BootstrapError, _checked_words, _dispatcher_src, _patch_cubin_entry,
-    _source_wrapper, _trampoline_src,
+    _m11d_handler_image, _m11d_stub_src, _source_wrapper, _trampoline_src,
 )
 from sassdbg.cubin import load_kernel  # noqa: E402
 
@@ -354,6 +354,17 @@ class TestBootstrapStatic(unittest.TestCase):
         self.assertEqual(len(assemble_flat(
             _trampoline_src(arena + lay.dispatcher))), 2)
 
+    def test_m11d_stub_and_handler_fit_with_clean_dependencies(self):
+        t = _template()
+        lay = Layout(4, 4, t.size)
+        arena = 0x7F8000000000
+        stub = _checked_words(
+            _m11d_stub_src(lay, arena, 3, 2), "m11d_stub")
+        handler, retline = _m11d_handler_image(lay, arena, 0)
+        self.assertLessEqual(len(stub) * 16, lay.STUB_SZ)
+        self.assertLessEqual(len(handler), lay.HANDLER_STRIDE)
+        self.assertEqual(retline, len(handler) - 16)
+
     def test_source_wrapper_preserves_abi_attrs_and_regcount(self):
         src = """#fn attr(p0<4>, p1<8>) {
     #pragma SHARED(64)
@@ -438,6 +449,16 @@ class TestBreakpointsAndOverlays(unittest.TestCase):
         s.arm(1)
         with self.assertRaises(Exception):
             s.arm(1)
+
+    def test_disarm_reuses_free_stub_without_collision(self):
+        s = self._set(nwarps=1)
+        a = s.arm(0)
+        b = s.arm(1)
+        self.assertEqual((a.stub_slot, b.stub_slot), (0, 1))
+        s.disarm(a)
+        c = s.arm(2)
+        self.assertEqual(c.stub_slot, 0)
+        self.assertNotEqual(c.stub_slot, b.stub_slot)
 
     def test_overlay_patches_only_armed(self):
         s = self._set()

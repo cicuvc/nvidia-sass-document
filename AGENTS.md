@@ -717,6 +717,25 @@ the failures are the known `test_uimad` self-bug (fixed since) plus
 `test_hfma2`, which reach their optional `import numpy` and fail because NumPy
 is not installed in the current system Python.
 
+M11d DONE on RTX 5090/sm_120 (`sassdbg/private.py`,
+`test_sassdbg_m11d.py`).  Breakpoint sites are direct per-warp heap writes;
+the shared 24-inst stub derives the private site from a host-seeded per-lane
+code-base frame field and enters a 38-inst per-warp tight-freeze handler (no
+NANOSLEEP/YIELD).  Mutation publication is executable metadata/words ->
+per-warp code epoch -> COMMIT; the handler performs exactly one
+`CCTL.I.IVALL`, writes ACK while still frozen, and only then can the host write
+RELEASE.  Persistent sites replay through per-warp thunks; disarm restores the
+materialized immutable canonical word.  Every executable write passes an
+arena bounds check and is journaled; tests prove module text is never a runtime
+write destination.  Relaunch reconstructs canonical images and persistent
+overlays; breakpoint-capable dispatchers run one launch IVALL to cover reused
+heap VAs and wpc-dependent stubs.  E2E x5: mutate warp 0 while warp 1 advances,
+2-CTA independent sites, tight-loop re-hit, restore, 1x64->2x32 relaunch, and
+real-cubin FFMA replay.  sm_120/sm_90 static tests: 50 pass (one nvcc skip).
+Full runner 136/138, all sassdbg green; only the two optional-NumPy FP16 tests
+fail because NumPy is absent.  M11d accepts only full/zero masks; partial masks
+and cooperative group collection are M11e.
+
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
 - `sass_elf.py`: `total_ps` is now `max(offset+size)` — summing param
