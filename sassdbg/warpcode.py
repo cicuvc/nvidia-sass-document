@@ -367,6 +367,26 @@ def _replay_plans_from_cfg(cfg) -> tuple[ReplayPlan, ...]:
     return tuple(plans)
 
 
+def _trim_lifted_source(source: str, n_insts: int) -> str:
+    """Drop cuobjdump's section-alignment NOPs beyond ELF symbol.size."""
+    out = []
+    seen = 0
+    for line in source.splitlines():
+        if line.strip() == "}":
+            continue
+        is_inst = ";[" in line
+        if is_inst and seen >= n_insts:
+            break
+        out.append(line)
+        if is_inst:
+            seen += 1
+    if seen != n_insts:
+        raise CodeImageError(
+            f"lift produced only {seen} instructions for {n_insts} text words")
+    out.append("}")
+    return "\n".join(out) + "\n"
+
+
 # ---------------------------------------------------------------------------
 # CodeTemplate / CodeInstance / Breakpoint
 # ---------------------------------------------------------------------------
@@ -418,17 +438,26 @@ class CodeTemplate:
             -> "CodeTemplate":
         """Load a kernel's .text from a cubin and validate it."""
         from sassdbg.cubin import load_kernel
+        from sassdbg.lift import lift
+        from sassdbg.stepper import Cfg
         kt = load_kernel(path, func)
         cls_ = analyzer or CodeImageAnalyzer()
-        classifications = cls_.validate(
-            kt.words, link_base=kt.link_addr,
-            reloc_offsets=tuple(r - kt.entry_off for r in kt.relocs
-                                if r >= kt.entry_off))
-        # cubin images have no dialect source: verbatim replay only.
-        plans = tuple(ReplayPlan(i, "verbatim")
-                      for i in range(len(kt.words)))
+        try:
+            classifications = cls_.validate(
+                kt.words, link_base=kt.link_addr,
+                reloc_offsets=tuple(r - kt.entry_off for r in kt.relocs
+                                    if r >= kt.entry_off))
+        except CodeImageError as e:
+            raise CodeImageError(
+                f"function {kt.func!r} cannot use backend='warp_private': "
+                f"{e}. Rebuild without text relocations/PC-sensitive SASS, "
+                "or explicitly request backend='shared'") from e
+        source = _trim_lifted_source(lift(path, kt.func)[kt.func],
+                                     len(kt.words))
+        plans = _replay_plans_from_cfg(Cfg(source))
+        assert len(plans) == len(kt.words)
         return cls(kt.func, tuple(kt.words), next(_TEMPLATE_IDS),
-                   classifications, plans)
+                   classifications, plans, tuple(source.splitlines()))
 
     def materialize(self, code_base: int) -> tuple[tuple[int, int], ...]:
         """Return the executable image for one warp-private placement.

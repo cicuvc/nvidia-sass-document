@@ -258,3 +258,18 @@ python3 tools/run_tests.py -j 1     # 串行全量(基线 133/134)
   高寄存器，避免迟到 group 重放旧命令。CLI 新增 `--backend warp_private`
   和 `b N [warp W] [mask M]`。`test_sassdbg_m11f.py` 的双 warp、双 divergent
   group、连续改写、恢复输出及 CLI 测试通过；M11d/M11e/M6 回归通过。
+- M11g 已把真实 cubin 的 `CubinDebugger` 默认路径切到 `PrivateKernel`；旧
+  M10 引擎仅由显式 `backend="shared"` 选择，copyability 失败不会自动降级。
+  `CodeTemplate.from_cubin` 现在从 lifted CFG 生成 BRA/BSSY replay plan，并
+  按 ELF `symbol.size` 去除 cuobjdump 的 section padding NOP，支持 nonzero
+  symbol entry。函数内 text relocation 与 LEPC/RPCMOV/CALL 等 PC-sensitive
+  指令会在 module load 前给出含函数/指令和显式 fallback 的错误。
+- `test_sassdbg_m11g.py` 覆盖 bare/entry-0、双 warp FFMA dump/set、persistent
+  relaunch、Stepper、entry outputs、nonzero entry、双 CTA、拒绝诊断、shared
+  fallback 与 CLI cubin 默认路径；旧 M10 shared 回归通过。source `Debugger`
+  的默认切换仍留给 M11h。
+- M11g 全量回归首次暴露了 M11e barrier assist 的次序 bug：先到 barrier 的
+  group 命中时，旧逻辑错误地连尚在途的 sibling 一起改写为 successor，
+  提前移除 barrier bp，造成两组分别在 private PC/thunk PC 执行 WARPSYNC
+  而永久等待。现只推进当前 hit 实际覆盖的 pending group；M11e 连续 5/5，
+  `blkw` 串行全量 **141/141**。

@@ -639,16 +639,36 @@ scope/dump/set.  M11d, M11e, M6/M7 and the 50-test static suite pass.
 
 ### M11g — real-cubin default path
 
-- Move `CubinDebugger` to the private backend.
-- Reject whole-function text relocations and unsupported PC-sensitive code,
-  with actionable messages.
-- Re-run M10 entry-output, nonzero symbol entry, multi-warp, persistence and
-  stepper tests; add multi-CTA real-cubin E2E.
-- Keep `backend="shared"` as an explicit fallback during this milestone.
+**DONE.** `CubinDebugger(...)` now constructs a `PrivateKernel` unless the
+caller explicitly requests `backend="shared"`; an unsupported private image
+never silently retries the shared runtime patcher.  The CLI follows the same
+default for `--cubin` while source kernels remain shared-by-default until
+M11h.
 
-### M11h — cleanup and default switch
+`CodeTemplate.from_cubin()` validates the complete ELF function slice before
+module load.  Any text relocation in that slice or unsupported PC-sensitive
+instruction raises an actionable error naming the function, instruction and
+explicit compatibility option.  Lifted replay plans now cover BRA/BSSY rather
+than treating every cubin word as verbatim.  cuobjdump's section-alignment NOPs
+are trimmed to the exact ELF `symbol.size`, including symbols with nonzero text
+entry offsets.
 
-- Make `backend="warp_private"` the default after all gates pass.
+`test_sassdbg_m11g.py` covers bare output, entry instruction zero, two-warp
+FFMA inspection/mutation, persistent relaunch, lifted-CFG stepping, first-two-
+instruction outputs, nonzero symbol entry, two CTAs, fail-closed diagnostics,
+explicit shared fallback, and the CLI cubin default.  The old M10 suite now
+requests `backend="shared"` and passes unchanged, preserving the rollback
+gate.  The migration regression also exposed and fixed an M11e barrier-assist
+ordering bug: only groups covered by the current hit may advance from the
+barrier site to its successor set; moving an in-flight sibling early made it
+execute WARPSYNC at the private PC while the first group waited at the thunk
+PC.  Five adversarial M11e repeats and the complete serial suite pass; `blkw`
+full runner: **141/141**.
+
+### M11h — cleanup and source-default switch
+
+- Make `backend="warp_private"` the source `Debugger` default after all gates
+  pass (real `CubinDebugger` already switched in M11g).
 - Remove `Patcher` construction from the new path; retain legacy code only
   behind the fallback until one full release cycle.
 - Update `DBG_HANDOFF.md`, `AGENTS.md`, CLI help and architecture diagrams.

@@ -350,7 +350,14 @@ class Stepper:
         out: list[tuple[int, object]] = []
         cooperative: set[int] = set()
         while pending:
-            hw, hg = self.dbg.wait_group_hit(timeout)
+            try:
+                hw, hg = self.dbg.wait_group_hit(timeout)
+            except TimeoutError as e:
+                diag = [(p[0], sorted(p[1]), hex(p[2]), p[3])
+                        for p in pending]
+                raise TimeoutError(
+                    f"private step timed out; pending={diag}, "
+                    f"paths={self.paths}") from e
             matches = [(p, hg.mask & p[2]) for p in pending
                        if p[0] == hw and hg.bp.orig_index in p[1]]
             matches = [(p, mask) for p, mask in matches if mask]
@@ -384,10 +391,16 @@ class Stepper:
                               and self.cfg.insts[p[3]].mnemonic == "BAR")
                              or (p[0] == hw and p[3] == hg.bp.orig_index))
                         for p in pending)
-                    for p in pending:
-                        if p[0] == hw and hg.bp.orig_index in p[1]:
-                            p[1] = nxt2
-                            p[3] = hg.bp.orig_index
+                    # Advance only groups represented by THIS hit.  Another
+                    # divergent group may still be in flight toward the same
+                    # barrier site.  Moving every pending entry here removes
+                    # that site's breakpoint too early: the late group then
+                    # executes WARPSYNC at the private-code PC while the first
+                    # group waits in the replay thunk PC, so they can never
+                    # rendezvous (order-dependent 30s timeout).
+                    for p, _mask in matches:
+                        p[1] = nxt2
+                        p[3] = hg.bp.orig_index
                     # If another group was already blocked inside this exact
                     # replay thunk, this release completes the rendezvous.
                     if had_blocked:
@@ -447,7 +460,15 @@ class Stepper:
         """Execute exactly the parked instruction; returns the next hit
         (None when the instruction was terminal — kernel finished).
         Non-divergent compat wrapper over step_groups."""
-        w = bp.warp if bp.warp is not None else 0
+        if self._private:
+            matches = [(w, g) for w, g in self._parked if g.bp is bp]
+            if len(matches) != 1:
+                raise RuntimeError(
+                    f"private breakpoint at {bp.orig_index} belongs to "
+                    f"{len(matches)} parked groups; use step_groups()")
+            w = matches[0][0]
+        else:
+            w = bp.warp if bp.warp is not None else 0
         out = self.step_groups([(w, self._group_of(w, bp))], timeout)
         if not out:
             return None

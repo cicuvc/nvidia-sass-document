@@ -1,7 +1,12 @@
-"""sassdbg.real — M10: attach the debugger to a REAL nvcc cubin.
+"""sassdbg.real — real-cubin debugger backend selection.
 
-No source, no re-assembly: the cubin image is patched in memory before
-cuModuleLoadData.  The target kernel's first two instructions (entry
+M11g makes warp-private heap code the normal real-cubin path: the function is
+lifted for CFG/replay metadata, but its original words execute from per-warp
+heap copies.  The M10 shared module-text patcher remains available only through
+``backend="shared"``.
+
+That legacy path patches the cubin image in memory before cuModuleLoadData.
+The target kernel's first two instructions (entry
 trampoline window, 0x20 bytes) become
 
     LEPC {R8,R9}            # captures the kernel base (entry VA)
@@ -28,10 +33,11 @@ from .cubin import load_kernel, KernelText  # noqa: F401
 from .lift import lift, extract_params
 from .patch import (Debugger, Layout, KPROL_SZ, _real_prologue_src,
                     _trampoline_src)
+from .private import PrivateKernel
 
 
-class CubinDebugger(Debugger):
-    """Debugger for a real cubin kernel (no dialect source needed).
+class SharedCubinDebugger(Debugger):
+    """Legacy M10 shared-text debugger for a real cubin kernel.
 
     `cubin_path` is loaded, the chosen kernel's entry gets the
     trampoline, and the patched image is what CudaModule loads.
@@ -89,3 +95,33 @@ class CubinDebugger(Debugger):
 
     def _orig_word(self, orig_index: int) -> tuple[int, int]:
         return self._kt.words[orig_index]
+
+
+class CubinDebugger(PrivateKernel):
+    """Construct a real-cubin debugger using the requested code backend.
+
+    ``warp_private`` is the M11g default for real cubins.  It never mutates
+    loaded module text after launch.  ``shared`` preserves the M10 engine as
+    an explicit compatibility fallback; unsupported private images never
+    select it silently.
+    """
+
+    def __new__(cls, cubin_path: str, func: str | None = None,
+                max_bps: int = 16, max_warps: int = 1, *,
+                backend: str = "warp_private"):
+        if backend == "shared":
+            return SharedCubinDebugger(
+                cubin_path, func, max_bps=max_bps, max_warps=max_warps)
+        if backend != "warp_private":
+            raise ValueError(
+                f"unknown cubin debugger backend {backend!r}; expected "
+                "'warp_private' or 'shared'")
+        seed = PrivateKernel.from_cubin(
+            cubin_path, func, max_bps=max_bps, max_warps=max_warps)
+        obj = object.__new__(cls)
+        obj.__dict__.update(seed.__dict__)
+        return obj
+
+    def __init__(self, *args, **kwargs):
+        # PrivateKernel.from_cubin() built the complete instance in __new__.
+        pass

@@ -70,7 +70,12 @@ class Shell(cmd.Cmd):
         super().__init__()
         self.args = args
         self.trace_mode = args.trace
-        self.private = args.backend == "warp_private"
+        # M11g: real cubins default private.  Source kernels retain the
+        # shared default until M11h; --trace likewise uses shared composition.
+        self.backend = (args.backend or
+                        ("warp_private" if args.cubin and not args.trace
+                         else "shared"))
+        self.private = self.backend == "warp_private"
         if self.trace_mode and self.private:
             raise ValueError("--trace currently requires --backend shared")
         self.ik = None
@@ -97,7 +102,7 @@ class Shell(cmd.Cmd):
         if cubin_dbg == "pending":
             cubin_dbg = CubinDebugger(args.cubin, args.func,
                                       max_bps=32, max_warps=max_warps,
-                                      backend=args.backend)
+                                      backend=self.backend)
             src = cubin_dbg.source
         self.user_src = src
         if self.trace_mode:
@@ -594,9 +599,9 @@ def main() -> None:
     ap.add_argument("--block", type=int, default=32)
     ap.add_argument("--max-warps", type=int, default=1)
     ap.add_argument("--backend", choices=("shared", "warp_private"),
-                    default="shared",
-                    help="debugger code backend (M11 private is opt-in until "
-                         "the M11h default switch)")
+                    default=None,
+                    help="debugger code backend (default: warp_private for "
+                         "real cubins, shared for source until M11h)")
     ap.add_argument("--trace", action="store_true",
                     help="wtrace-instrument for reverse stepping "
                          "(single CTA, single warp replay)")

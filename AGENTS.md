@@ -758,6 +758,34 @@ covers transparent filtering, dual-mode collection/freeze, the adversarial
 split/merge stepper case, BSYNC, WARPSYNC and two-warp BAR.  Full runner in
 the `blkw` conda environment: 139/139 pass.
 
+M11f DONE on RTX 5090/sm_120.  The private handler polls a per-warp command
+generation, records baseline/completion in every selected lane's spill frame,
+and intersects the requested mask with MACTIVE before a group-uniform command
+CALL; P6 guards the requested lanes inside the command.  Command return
+reconstructs handler-private R4/R5, and generated memory readbacks wait their
+read barrier before reusing R2/R3.  `exec_cmd`/`dump_regs`/`set_reg` cover
+frame-backed R0-R7/PR plus live high GPRs.  The CLI accepts
+`--backend warp_private` and `b N [warp W] [mask M]`.
+`test_sassdbg_m11f.py` covers two warps with two divergent groups each,
+disjoint commands, stale-image prevention, validation, resumed output and CLI.
+
+M11g DONE on RTX 5090/sm_120.  `sassdbg.real.CubinDebugger` and the CLI real-
+cubin path now default to `PrivateKernel`; `backend="shared"` is the explicit
+M10 fallback and is never selected after a private preflight failure.  Real
+cubin templates derive BRA/BSSY replay plans from the lifted CFG and trim
+cuobjdump section-padding NOPs to ELF symbol.size (including nonzero entries).
+Whole-function text relocations and PC-sensitive code fail before module load
+with actionable diagnostics.  `test_sassdbg_m11g.py` covers entry 0, multi-
+warp persistence/inspection, Stepper, entry outputs, nonzero entry, multi-CTA,
+CLI and fallback; the M10 shared suite remains green.  Source `Debugger`
+default migration and legacy cleanup remain M11h.  The M11g regression found
+one latent M11e barrier-assist ordering bug: a barrier hit must advance only
+the pending groups intersecting that hit, never an in-flight sibling merely
+because it expects the same site.  Otherwise the first group waits at the
+replay-thunk WARPSYNC PC while the sibling executes WARPSYNC at the private-
+code PC.  Fixed in `Stepper._step_private_groups`; M11e repeated 5/5 and the
+`blkw` serial full runner is 141/141.
+
 Assembler fixes made for M2 (all covered by the corpus round-trip +
 `tools/run_tests.py`):
 - `sass_elf.py`: `total_ps` is now `max(offset+size)` — summing param

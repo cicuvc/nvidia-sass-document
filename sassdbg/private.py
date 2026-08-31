@@ -504,9 +504,13 @@ class PrivateKernel:
                 source, dispatcher_va, list(template.words))
             return assemble(wrapper, check_deps=True)
 
-        return cls(template, max_warps=max_warps, max_bps=max_bps,
-                   budget=budget, module_builder=build, func=decl.name,
-                   append_dbgctrl=True)
+        obj = cls(template, max_warps=max_warps, max_bps=max_bps,
+                  budget=budget, module_builder=build, func=decl.name,
+                  append_dbgctrl=True)
+        obj.source = source
+        obj.params = assemble_kernel(source, check_deps=True).params
+        obj.res_params = obj.params
+        return obj
 
     @classmethod
     def from_cubin(cls, cubin_path: str | Path, func: str | None = None, *,
@@ -520,9 +524,18 @@ class PrivateKernel:
             return _patch_cubin_entry(
                 Path(path).read_bytes(), kt.file_off, dispatcher_va)
 
-        return cls(template, max_warps=max_warps, max_bps=max_bps,
-                   budget=budget, module_builder=build, func=kt.func,
-                   append_dbgctrl=False)
+        obj = cls(template, max_warps=max_warps, max_bps=max_bps,
+                  budget=budget, module_builder=build, func=kt.func,
+                  append_dbgctrl=False)
+        from .lift import extract_params
+        obj.cubin_path = path
+        obj._kt = kt
+        obj.source = "\n".join(template.source_lines) + "\n"
+        obj.params = extract_params(Path(path).read_bytes(), kt.func)
+        # Lifted cubin operands already carry absolute constant-bank offsets;
+        # this is retained only for the Stepper/backend compatibility surface.
+        obj.res_params = []
+        return obj
 
     def _padded_image(self, warp: int) -> bytes:
         words = list(self.template.materialize(

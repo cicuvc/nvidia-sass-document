@@ -40,7 +40,7 @@ def check(name, cond, extra=""):
     print(f"{'ok ' if cond else 'FAIL'} {name:<52} {extra}")
 
 
-dbg = CubinDebugger(CUBIN, max_warps=2)
+dbg = CubinDebugger(CUBIN, max_warps=2, backend="shared")
 a = dbg.mod.devmem_alloc(N * 4)
 b = dbg.mod.devmem_alloc(N * 4)
 dbg.mod.device_write(a, b"".join(struct.pack("<f", float(i + 1))
@@ -107,7 +107,7 @@ check("T2 relaunched kernel output correct",
 # --- T3: stepper on the lifted source (single warp) --------------------------
 from sassdbg.stepper import Stepper  # noqa: E402
 
-dbg2 = CubinDebugger(CUBIN, max_warps=1)
+dbg2 = CubinDebugger(CUBIN, max_warps=1, backend="shared")
 a2 = dbg2.mod.devmem_alloc(32 * 4)
 b2 = dbg2.mod.devmem_alloc(32 * 4)
 dbg2.mod.device_write(a2, b"".join(struct.pack("<f", float(i + 1))
@@ -145,7 +145,7 @@ K_ENTRY_OUTPUTS = """\
 with tempfile.NamedTemporaryFile(suffix=".cubin") as f:
     f.write(assemble(K_ENTRY_OUTPUTS))
     f.flush()
-    dbg3 = CubinDebugger(f.name)
+    dbg3 = CubinDebugger(f.name, backend="shared")
     out3 = dbg3.mod.devmem_alloc(8)
     dbg3.mod.device_write(out3, bytes(8))
     dbg3.launch([out3], block=(1,))
