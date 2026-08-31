@@ -360,10 +360,11 @@ class TestBootstrapStatic(unittest.TestCase):
         arena = 0x7F8000000000
         stub = _checked_words(
             _m11d_stub_src(lay, arena, 3, 0, 2), "m11d_stub")
-        handler, retline = _m11d_handler_image(lay, arena, 0)
+        handler, cmdret = _m11d_handler_image(lay, arena, 0)
         self.assertLessEqual(len(stub) * 16, lay.STUB_SZ)
         self.assertLessEqual(len(handler), lay.HANDLER_STRIDE)
-        self.assertEqual(retline, len(handler) - 16)
+        self.assertEqual(cmdret % 16, 0)
+        self.assertLess(cmdret, len(handler))
 
     def test_source_wrapper_preserves_abi_attrs_and_regcount(self):
         src = """#fn attr(p0<4>, p1<8>) {

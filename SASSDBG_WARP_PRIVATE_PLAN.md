@@ -615,9 +615,27 @@ case, BSYNC, WARPSYNC, and two-warp CTA BAR.  M11d, legacy M8/M5w and the
 
 ### M11f — command, dump/set/exec, CLI
 
-- Add command masks/per-lane generations and prevent stale command replay.
-- Update CLI states and breakpoint scope syntax (`b N [warp W] [mask M]`).
-- Re-run M6/M7 inspection tests with divergent groups and multiple warps.
+**DONE.** Command dispatch is per warp, selection is per lane, and completion
+is acknowledged in each lane's spill frame.  Rewriting the command buffer
+cannot make a late-arriving group replay a stale image: the handler compares
+the warp command generation with its frame-local baseline before calling it.
+The selected mask is intersected with MACTIVE before the group-uniform CALL;
+P6 predicates the requested lanes inside the command.
+
+`exec_cmd`, `cmd_read`, `dump_regs`, and `set_reg` preserve the handler's frame
+pointer and rebuild its R4/R5 control pointer on command return.  R0-R7 and PR
+inspection uses the saved architectural frame, while higher GPRs are accessed
+live.  Generated memory commands claim/read-wait their address barrier before
+the return sequence reuses R2/R3.  Straight-line validation rejects control
+flow and writes to the live R0/R1 frame pointer.
+
+The CLI accepts `--backend warp_private` and scoped breakpoints
+`b N [warp W] [mask M]`; `info b` reports per-warp masks.  Its hit drain
+temporarily enters cooperative mode to collect divergent siblings, then
+reacquires tight freeze before inspection.  `test_sassdbg_m11f.py` covers two
+warps with two parked groups each, disjoint lane commands, stale-image
+prevention, frame/live registers, validation, resumed output, and scripted CLI
+scope/dump/set.  M11d, M11e, M6/M7 and the 50-test static suite pass.
 
 ### M11g — real-cubin default path
 

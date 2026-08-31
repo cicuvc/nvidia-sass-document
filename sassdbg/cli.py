@@ -6,8 +6,8 @@ Usage:
   python3 -m sassdbg.cli --cubin x.cubin --trace        # reverse enabled
 
 Commands (cmd.Cmd — also scriptable via stdin):
-  b N / break N     arm breakpoint at instruction N (original numbering)
-  d N / delete N    disarm
+  b N [warp W] [mask M]  arm breakpoint (scope needs warp_private backend)
+  d N [warp W]      disarm
   info b            list breakpoints
   r / run           release the gate, run to first hit (or completion)
   c / continue      resume all parked warps, wait for the next hit
@@ -23,7 +23,9 @@ Semantics notes:
   * Instruction numbers are ORIGINAL-source indices (the Stepper/Cfg
     numbering; labels excluded).  With --trace the wtrace scaffolding is
     hidden — the CLI maps original idx -> instrumented idx internally.
-  * A breakpoint is CONSUMED on hit (v3 semantics): re-arm with `b N`.
+  * Shared-backend breakpoints are consumed on resume; warp-private
+    breakpoints are persistent until `d` or a stepping transaction replaces
+    that warp's breakpoint map.
   * Do not mix manual `b` with `s`: step_all disarms the armed sites it
     armed itself; a foreign armed site may produce an "unexpected hit".
   * --trace (wtrace reverse) is single-CTA only (wtrace region indexing
@@ -43,6 +45,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from assembler import CudaModule, assemble_kernel     # noqa: E402
 from sassdbg.stepper import Stepper                  # noqa: E402
 from sassdbg.patch import Debugger            # noqa: E402
+from sassdbg.private import PrivateKernel     # noqa: E402
 from sassdbg.wtrace import REGION_BYTES              # noqa: E402
 
 
@@ -67,10 +70,18 @@ class Shell(cmd.Cmd):
         super().__init__()
         self.args = args
         self.trace_mode = args.trace
+        self.private = args.backend == "warp_private"
+        if self.trace_mode and self.private:
+            raise ValueError("--trace currently requires --backend shared")
         self.ik = None
         cubin_dbg = None
         if args.sass:
             src = _parse_source(args.sass)
+            if self.private:
+                cubin_dbg = PrivateKernel.from_source(
+                    src, max_bps=32,
+                    max_warps=max(args.max_warps,
+                                  args.grid * ((args.block + 31) // 32)))
         elif self.trace_mode:
             # trace instruments the SOURCE and re-assembles — keep the
             # M2 lift+inject path for --cubin --trace
@@ -83,9 +94,10 @@ class Shell(cmd.Cmd):
             src = None
         n_warps = args.grid * ((args.block + 31) // 32)
         max_warps = max(args.max_warps, n_warps)
-        if cubin_dbg is not None:
+        if cubin_dbg == "pending":
             cubin_dbg = CubinDebugger(args.cubin, args.func,
-                                      max_bps=32, max_warps=max_warps)
+                                      max_bps=32, max_warps=max_warps,
+                                      backend=args.backend)
             src = cubin_dbg.source
         self.user_src = src
         if self.trace_mode:
@@ -96,13 +108,13 @@ class Shell(cmd.Cmd):
             src = self.ik.source
             self._orig2inst = self._build_idx_map(self.ik)
         self.st = Stepper(src, max_warps=max_warps, dbg=cubin_dbg)
-        self.dbg: Debugger = self.st.dbg
+        self.dbg = self.st.dbg
         # auto args from the kernel's param list
         names = self._param_names(self.user_src)
-        if cubin_dbg is not None:
+        if cubin_dbg is not None and hasattr(cubin_dbg, "params"):
             params = cubin_dbg.params       # (ordinal, offset, size)
         else:
-            res = assemble_kernel(self.dbg.info.source, check_deps=True)
+            res = assemble_kernel(self.user_src, check_deps=True)
             params = [p for p in res.params][:len(names)]
         self._scratch: list[int] = []
         argv: list = []
@@ -192,8 +204,29 @@ class Shell(cmd.Cmd):
         debugger's _groups are dropped on release and created on hit,
         so they always reflect what is parked RIGHT NOW (unlike the
         stepper's _parked, which manual b/c commands desync)."""
+        if isinstance(self.dbg, PrivateKernel):
+            return [(g.warp, g) for g in self.dbg._hits.values()]
         return [(w, g) for w in range(self.dbg.max_warps)
                 for g in self.dbg._groups[w]]
+
+    @staticmethod
+    def _scope(a: str) -> tuple[int, int | None, int | None]:
+        """Parse `N [warp W] [mask M]` without making ordering special."""
+        toks = shlex.split(a)
+        if not toks:
+            raise ValueError("missing instruction number")
+        n, warp, mask = int(toks[0], 0), None, None
+        i = 1
+        while i < len(toks):
+            if i + 1 >= len(toks) or toks[i] not in ("warp", "mask"):
+                raise ValueError("expected: N [warp W] [mask M]")
+            val = int(toks[i + 1], 0)
+            if toks[i] == "warp":
+                warp = val
+            else:
+                mask = val
+            i += 2
+        return n, warp, mask
 
     def _show_group_hit(self, w: int, g) -> None:
         """Record and print a parked group (M8: a warp may park as
@@ -223,23 +256,42 @@ class Shell(cmd.Cmd):
 
     # -- commands ------------------------------------------------------------
     def do_b(self, a: str) -> None:
-        """b N — arm a breakpoint at original instruction N."""
-        n = int(a.strip())
-        bp = self.dbg.arm(self._site(n))
+        """b N [warp W] [mask M] — arm a scoped breakpoint."""
+        n, warp, mask = self._scope(a)
+        if isinstance(self.dbg, PrivateKernel):
+            bp = self.dbg.arm(self._site(n),
+                              warps=None if warp is None else [warp],
+                              lane_masks=mask)
+        elif warp is not None or mask is not None:
+            print("warp/mask scope requires --backend warp_private")
+            return
+        else:
+            bp = self.dbg.arm(self._site(n))
         print(f"armed bp#{bp.id} at inst {n}")
 
     def do_break(self, a: str) -> None:
         self.do_b(a)
 
     def do_d(self, a: str) -> None:
-        """d N — disarm the breakpoint at original instruction N."""
-        n = int(a.strip())
+        """d N [warp W] — disarm a breakpoint scope."""
+        n, warp, mask = self._scope(a)
+        if mask is not None:
+            print("delete accepts warp scope, not mask")
+            return
         site = self._site(n)
-        bp = self.dbg._by_index.get(site)
+        bp = (self.dbg.codes.by_index.get(site)
+              if isinstance(self.dbg, PrivateKernel)
+              else self.dbg._by_index.get(site))
         if bp is None:
             print(f"no bp armed at inst {n}")
             return
-        self.dbg.disarm(bp)
+        if isinstance(self.dbg, PrivateKernel):
+            self.dbg.disarm(bp, warps=None if warp is None else [warp])
+        elif warp is not None:
+            print("warp scope requires --backend warp_private")
+            return
+        else:
+            self.dbg.disarm(bp)
         print(f"disarmed inst {n}")
 
     def do_delete(self, a: str) -> None:
@@ -250,9 +302,16 @@ class Shell(cmd.Cmd):
         if a.strip() != "b":
             print("usage: info b")
             return
-        for bp in sorted(self.dbg._bps.values(), key=lambda b: b.id):
-            print(f"  bp#{bp.id} inst={bp.orig_index} armed={bp.armed}"
-                  f" warp={bp.warp}")
+        if isinstance(self.dbg, PrivateKernel):
+            for bp in sorted(self.dbg.codes.breakpoints, key=lambda b: b.id):
+                scopes = ", ".join(
+                    f"w{w}:{b.stop_mask:#010x}" for w, b in
+                    sorted(bp.bindings.items()) if b.armed)
+                print(f"  bp#{bp.id} inst={bp.orig_index} scopes=[{scopes}]")
+        else:
+            for bp in sorted(self.dbg._bps.values(), key=lambda b: b.id):
+                print(f"  bp#{bp.id} inst={bp.orig_index} armed={bp.armed}"
+                      f" warp={bp.warp}")
 
     def do_r(self, a: str) -> None:
         """r — release the gate and park every warp at instruction 0."""
@@ -280,6 +339,10 @@ class Shell(cmd.Cmd):
                 print("(no hit within 5s; warps still running)")
             return
         self._show_group_hit(w, g)
+        cooperative = set()
+        if isinstance(self.dbg, PrivateKernel):
+            self.dbg.cooperate(w)
+            cooperative.add(w)
         # drain any other already-queued hits (a divergent sibling
         # often parks in the same resume window)
         while True:
@@ -288,6 +351,11 @@ class Shell(cmd.Cmd):
             except TimeoutError:
                 break
             self._show_group_hit(w, g)
+            if isinstance(self.dbg, PrivateKernel) and w not in cooperative:
+                self.dbg.cooperate(w)
+                cooperative.add(w)
+        for w in cooperative:
+            self.dbg.freeze(w)
         if not self._all_groups() \
                 and CudaModule.stream_query(self.dbg.stream):
             print("kernel finished")
@@ -300,10 +368,14 @@ class Shell(cmd.Cmd):
             return
         seen = set()
         for w, g in groups:
-            if g.bp.id in seen:
+            key = w if isinstance(self.dbg, PrivateKernel) else g.bp.id
+            if key in seen:
                 continue
-            seen.add(g.bp.id)
-            self.dbg.resume(g.bp)    # releases ALL groups at the site
+            seen.add(key)
+            if isinstance(self.dbg, PrivateKernel):
+                self.dbg.resume_hit(g)
+            else:
+                self.dbg.resume(g.bp)    # releases ALL groups at the site
         # drop the resumed sites from the user view; re-hits come
         # through _wait_next / the next command
         for w, g in groups:
@@ -480,10 +552,22 @@ class Shell(cmd.Cmd):
         if groups:
             print(f"releasing {len(groups)} parked group(s)...")
             seen = set()
-            for w, g in groups:
-                if g.bp.id not in seen:
-                    seen.add(g.bp.id)
-                    self.dbg.resume(g.bp)
+            if isinstance(self.dbg, PrivateKernel):
+                # Remove persistent private breakpoints before release, or a
+                # tight loop could immediately park again while quitting.
+                for w, _g in groups:
+                    if w not in seen:
+                        seen.add(w)
+                        self.dbg.configure_breakpoints(w, {})
+                for w, g in groups:
+                    if w in seen:
+                        self.dbg.resume_hit(g)
+                        seen.remove(w)
+            else:
+                for w, g in groups:
+                    if g.bp.id not in seen:
+                        seen.add(g.bp.id)
+                        self.dbg.resume(g.bp)
             try:
                 self.dbg.wait_done(timeout=10.0)
                 print("kernel completed")
@@ -509,6 +593,10 @@ def main() -> None:
     ap.add_argument("--grid", type=int, default=1)
     ap.add_argument("--block", type=int, default=32)
     ap.add_argument("--max-warps", type=int, default=1)
+    ap.add_argument("--backend", choices=("shared", "warp_private"),
+                    default="shared",
+                    help="debugger code backend (M11 private is opt-in until "
+                         "the M11h default switch)")
     ap.add_argument("--trace", action="store_true",
                     help="wtrace-instrument for reverse stepping "
                          "(single CTA, single warp replay)")

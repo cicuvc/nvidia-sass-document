@@ -229,7 +229,7 @@ python3 tools/run_tests.py -j 1     # 串行全量(基线 133/134)
 本节覆盖并更新上面的 M10 工作树描述；详细设计和验证记录见
 `SASSDBG_WARP_PRIVATE_PLAN.md`。
 
-- M11a/M11b/M11c/M11d/M11e 均已完成；M11c-M11e 在 RTX 5090 sm_120 上通过。
+- M11a/M11b/M11c/M11d/M11e/M11f 均已完成；M11c-M11f 在 RTX 5090 sm_120 上通过。
 - 新后端入口：`sassdbg/private.py::PrivateKernel`，同时支持 source 与真实
   cubin。每个 global warp 执行独立的 mutable heap SASS copy。
 - M11e API：`arm(..., warps=..., lane_masks=...)`、`disarm`、`wait_hit`、
@@ -252,3 +252,9 @@ python3 tools/run_tests.py -j 1     # 串行全量(基线 133/134)
   到 private reconvergence target。
 - `test_sassdbg_m11e.py` 覆盖 mask 过滤、双模式握手、对抗性 union-successor、
   split/merge、BSYNC、WARPSYNC、BAR。`blkw` conda 全量 139/139 通过。
+- M11f 在每个 lane 的 spill frame 中维护 command generation/ack；handler
+  仅在 generation 变化时进入 per-warp command buffer，并用 P6 对请求 lane
+  做屏蔽。`exec_cmd`/`dump_regs`/`set_reg` 支持 frame-backed R0-R7/PR 与 live
+  高寄存器，避免迟到 group 重放旧命令。CLI 新增 `--backend warp_private`
+  和 `b N [warp W] [mask M]`。`test_sassdbg_m11f.py` 的双 warp、双 divergent
+  group、连续改写、恢复输出及 CLI 测试通过；M11d/M11e/M6 回归通过。

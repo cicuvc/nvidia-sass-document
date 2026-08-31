@@ -1,4 +1,4 @@
-"""M11c-M11e warp-private heap-code bootstrap and mutation backend.
+"""M11c-M11f warp-private heap-code bootstrap and mutation backend.
 
 `PrivateKernel.from_source()` preserves the original parameter offsets and
 appends the debugger-control argument; `.from_cubin()` preserves the target
@@ -10,11 +10,16 @@ M11d adds direct per-warp heap breakpoints and transactional code epochs. M11e
 filters breakpoints by execution-group masks, transparently replays unselected
 groups, and switches parked warps explicitly between cooperative collection and
 tight freeze.
+
+M11f adds masked command injection with per-lane generations, frame-aware
+dump/set helpers, and a command return path that reconstructs handler-private
+state before resuming the polling loop.
 """
 from __future__ import annotations
 
 import struct
 import time
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -66,6 +71,8 @@ F_CODEBASE = 0x30               # u64 immutable launch metadata
 F_EPILOGUE = 0x38               # u64 restore + site-specific replay target
 F_COMMIT_BASE = 0x40            # u32 handler-local generation baseline
 F_RELEASE_BASE = 0x44           # u32 handler-local generation baseline
+F_CMD_BASE = 0x48               # u32 last command generation observed
+F_CMD_ACK = 0x4C                # u32 last command generation completed
 
 THUNK_STRIDE = 0x100
 THUNK_MAX_INSTS = THUNK_STRIDE // 16
@@ -221,6 +228,9 @@ def _m11d_handler_src(lay: Layout, arena: int, warp: int) -> str:
     ctl = arena + lay.freeze_ctl + warp * lay.FREEZE_STRIDE
     mode = arena + lay.park_mode + warp * lay.PARK_MODE_SZ
     hslots = arena + lay.hslots + warp * 32 * 16
+    cmdseq = arena + lay.cmdseq + warp * 16
+    cmdbuf = arena + lay.cmdbuf + warp * lay.CMDBUF_SZ
+    frames = arena + lay.frames
     # A cooperative sibling may have fetched the soon-to-be-patched successor
     # immediately before the freeze acknowledgement.  Drain that in-flight
     # fill between invalidates; this is the M3 hardened sequence, applied only
@@ -247,6 +257,11 @@ def _m11d_handler_src(lay: Layout, arena: int, warp: int) -> str:
     LDG.E.STRONG.GPU R7, [{{R4,R5}}+0x{FC_RELEASE:x}];[3:1:{{}}:8:0]
     STG.E.STRONG.GPU [{{R0,R1}}+0x{F_COMMIT_BASE:x}], R6;[7:7:{{2}}:8:0]
     STG.E.STRONG.GPU [{{R0,R1}}+0x{F_RELEASE_BASE:x}], R7;[7:7:{{3}}:8:0]
+    MOV32I R2, 0x{cmdseq & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{cmdseq >> 32:08x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R6, [{{R2,R3}}];[2:1:{{}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_CMD_BASE:x}], R6;[7:7:{{2}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_CMD_ACK:x}], R6;[7:7:{{}}:8:0]
 #def_label(m11d_spin)
     LDG.E.STRONG.GPU R2, [{{R4,R5}}+0x{FC_COMMIT:x}];[2:1:{{1}}:8:0]
     LDG.E.STRONG.GPU R3, [{{R0,R1}}+0x{F_COMMIT_BASE:x}];[3:1:{{}}:8:0]
@@ -256,6 +271,12 @@ def _m11d_handler_src(lay: Layout, arena: int, warp: int) -> str:
     LDG.E.STRONG.GPU R3, [{{R0,R1}}+0x{F_RELEASE_BASE:x}];[3:1:{{}}:8:0]
     ISETP.NE.AND P0, PT, R2, R3, PT;[7:7:{{2,3}}:13:1]
     @P0 BRA #label(m11d_resume);[7:7:{{}}:6:0]
+    MOV32I R2, 0x{cmdseq & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{cmdseq >> 32:08x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R6, [{{R2,R3}}];[2:1:{{}}:8:0]
+    LDG.E.STRONG.GPU R7, [{{R0,R1}}+0x{F_CMD_BASE:x}];[3:1:{{}}:8:0]
+    ISETP.NE.AND P0, PT, R6, R7, PT;[7:7:{{2,3}}:13:1]
+    @P0 BRA #label(m11f_cmd);[7:7:{{}}:6:0]
     MOV32I R2, 0x{mode & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
     MOV32I R3, 0x{mode >> 32:08x};[7:7:{{}}:5:1]
     LDG.E.STRONG.GPU R6, [{{R2,R3}}+0x{PM_MODE:x}];[2:1:{{}}:8:0]
@@ -272,6 +293,34 @@ def _m11d_handler_src(lay: Layout, arena: int, warp: int) -> str:
     STG.E.STRONG.GPU [{{R0,R1}}+0x{F_COMMIT_BASE:x}], R2;[7:7:{{}}:8:0]
     STG.E.STRONG.GPU [{{R4,R5}}+0x{FC_ACK:x}], R2;[7:7:{{}}:8:0]
     BRA #label(m11d_spin);[7:7:{{}}:6:0]
+#def_label(m11f_cmd)
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_CMD_BASE:x}], R6;[7:7:{{}}:8:0]
+    MOV32I R2, 0x{cmdseq & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{cmdseq >> 32:08x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R7, [{{R2,R3}}+0x4];[3:1:{{}}:8:0]
+    MOV32I R2, 0x{frames & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    IADD3 R2, R0, -R2, RZ;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R2, RZ, 0x7, R2;[7:7:{{}}:5:1]
+    LOP3.LUT R2, R2, 0x1F, RZ, 0xC0;[7:7:{{}}:5:1]
+    SHF.R.U32.HI R7, RZ, R2, R7;[7:7:{{3}}:5:1]
+    LOP3.LUT R7, R7, 0x1, RZ, 0xC0;[7:7:{{}}:5:1]
+    ISETP.NE.AND P6, PT, R7, RZ, PT;[7:7:{{}}:13:1]
+    MOV32I R2, 0x{cmdseq & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{cmdseq >> 32:08x};[7:7:{{}}:5:1]
+    LDG.E.STRONG.GPU R7, [{{R2,R3}}+0x4];[3:1:{{}}:8:0]
+    BMOV R2, MACTIVE;[4:7:{{}}:8:0]
+    LOP3.LUT R7, R7, R2, RZ, 0xC0;[7:7:{{3,4}}:5:1]
+    ISETP.NE.AND P0, PT, R7, RZ, PT;[7:7:{{}}:13:1]
+    MOV32I R2, 0x{cmdbuf & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R3, 0x{cmdbuf >> 32:08x};[7:7:{{}}:5:1]
+    @!P0 BRA #label(m11f_cmdret);[7:7:{{}}:6:0]
+    CALL.ABS.NOINC PT, {{R2,R3}}, 0x0;[7:7:{{}}:6:0]
+#def_label(m11f_cmdret)
+    LDG.E.STRONG.GPU R6, [{{R0,R1}}+0x{F_CMD_BASE:x}];[2:1:{{1}}:8:0]
+    STG.E.STRONG.GPU [{{R0,R1}}+0x{F_CMD_ACK:x}], R6;[7:7:{{2}}:8:0]
+    MOV32I R4, 0x{ctl & 0xFFFFFFFF:08x};[7:7:{{}}:5:1]
+    MOV32I R5, 0x{ctl >> 32:08x};[7:7:{{}}:5:1]
+    BRA #label(m11d_spin);[7:7:{{}}:6:0]
 #def_label(m11d_resume)
     LDG.E.64.STRONG.GPU {{R2,R3}}, [{{R0,R1}}+0x{F_EPILOGUE:x}];[2:1:{{1}}:8:0]
     JMX {{R2,R3}}, 0x0;[7:7:{{2}}:6:0]
@@ -284,7 +333,17 @@ def _m11d_handler_image(lay: Layout, arena: int, warp: int) \
     words = _checked_words(src, f"__m11d_handler_{warp}")
     if len(words) * 16 > lay.HANDLER_STRIDE:
         raise BootstrapError("M11d handler exceeds per-warp slot")
-    return _pack(words), (len(words) - 1) * 16
+    n = 0
+    cmdret = None
+    for line in src.splitlines():
+        stripped = line.strip()
+        if stripped == "#def_label(m11f_cmdret)":
+            cmdret = n * 16
+        elif stripped and not stripped.startswith("#def_label"):
+            n += 1
+    if cmdret is None:
+        raise BootstrapError("M11f command-return anchor missing")
+    return _pack(words), cmdret
 
 
 def _restore_epilogue_src(replay_va: int) -> str:
@@ -423,10 +482,12 @@ class PrivateKernel:
         self._commit_gen = [0] * max_warps
         self._release_gen = [0] * max_warps
         self._mode_gen = [0] * max_warps
+        self._cmd_gen = [0] * max_warps
         self._hits: dict[tuple[int, int], PrivateHit] = {}
         self._hslot_seq = [[0] * 32 for _ in range(max_warps)]
         self._thunk_next = [0] * max_warps
         self._thunk_cache: dict[tuple[int, int], int] = {}
+        self._handler_cmdret = [0] * max_warps
 
     @classmethod
     def from_source(cls, source: str, func: str | None = None, *,
@@ -524,8 +585,9 @@ class PrivateKernel:
 
     def _write_handlers(self, warps) -> None:
         for w in warps:
-            img, _ = _m11d_handler_image(self.lay, self.arena, w)
+            img, cmdret = _m11d_handler_image(self.lay, self.arena, w)
             self._write_executable(self.lay.handler_va(self.arena, w), img)
+            self._handler_cmdret[w] = cmdret
 
     def _replay_words(self, warp: int, idx: int,
                       replay_va: int) -> list[tuple[int, int]]:
@@ -707,6 +769,7 @@ class PrivateKernel:
         self._commit_gen = [0] * self.max_warps
         self._release_gen = [0] * self.max_warps
         self._mode_gen = [0] * self.max_warps
+        self._cmd_gen = [0] * self.max_warps
         self._hits.clear()
         self._hslot_seq = [[0] * 32 for _ in range(self.max_warps)]
         self._thunk_next = [0] * self.max_warps
@@ -934,6 +997,164 @@ class PrivateKernel:
         inst = self.codes.instances[hit.warp]
         inst.parked_groups.clear()
         inst.state = WarpState.RUNNING
+
+    # -- M11f command injection --------------------------------------------
+    _FRAME_SLOT = {
+        "PR": F_PR, "R0": F_R01, "R1": F_R01 + 4,
+        **{f"R{k}": F_R2 + 4 * (k - 2) for k in range(2, 8)},
+    }
+
+    def _parked_mask(self, warp: int) -> int:
+        mask = 0
+        for (w, _slot), hit in self._hits.items():
+            if w == warp:
+                mask |= hit.mask
+        return mask & 0xFFFFFFFF
+
+    def exec_cmd(self, warp: int, insts: list[str], *,
+                 lane_mask: int | None = None, timeout: float = 5.0,
+                 _trusted: bool = False) -> None:
+        """Execute straight-line SASS on selected parked lanes.
+
+        The command image is committed while tightly frozen.  A per-lane
+        generation in each spill frame is then used for completion, so a lane
+        entering the handler later cannot replay a stale command.
+        """
+        parked = self._parked_mask(warp)
+        if not parked:
+            raise ScopeError(f"warp {warp} has no parked execution group")
+        selected = parked if lane_mask is None else lane_mask & 0xFFFFFFFF
+        if not selected or selected & ~parked:
+            raise ScopeError(
+                f"command mask {selected:#x} is not a nonempty subset of "
+                f"parked mask {parked:#x}")
+        if not _trusted:
+            for line in insts:
+                body = re.sub(r"^\s*@!?P[T0-6]\s*", "", line).strip()
+                parts = body.split(None, 1)
+                dest = (parts[1].split(",", 1)[0].strip()
+                        if len(parts) > 1 else "")
+                if re.fullmatch(r"\{?R[01]\}?", dest):
+                    raise ValueError(
+                        f"command may not write R0/R1 (frame ptr): {line}")
+                if re.match(
+                        r"(BRA|CALL|RET|JMX|JMP|BRX|EXIT|KILL|BSSY|BSYNC)\b",
+                        body):
+                    raise ValueError(f"no control flow in commands: {line}")
+        if len(insts) > self.lay.CMDBUF_SZ // 16 - 3:
+            raise ValueError("command too long for per-warp command buffer")
+
+        self.freeze(warp)
+        handler = self.lay.handler_va(self.arena, warp)
+        cmdret = self._handler_cmdret[warp]
+        body = list(insts)
+        if lane_mask is not None and not _trusted:
+            body = [line if re.match(r"\s*@", line)
+                    else "@P6 " + line.lstrip() for line in body]
+        src = "\n".join(body + [
+            f"MOV32I R2, 0x{handler & 0xFFFFFFFF:08x};"
+            "[7:7:{0,1,2,3,4,5}:5:1]",
+            f"MOV32I R3, 0x{handler >> 32:08x};[7:7:{{}}:13:1]",
+            f"RET.ABS.NODEC PT, {{R2,R3}}, 0x{cmdret:x};"
+            "[7:7:{}:5:1]",
+        ])
+        enc = assemble_flat(src)
+        if not enc:
+            raise BootstrapError("command assembled to no instructions")
+        image = _pack(enc)
+        if len(image) > self.lay.CMDBUF_SZ:
+            raise BootstrapError("command image exceeds command buffer")
+        self._write_executable(
+            self.arena + self.lay.cmdbuf + warp * self.lay.CMDBUF_SZ,
+            image)
+        self._commit_frozen(warp)
+
+        # Multiple sibling handlers must all get issue opportunities.  Code is
+        # already committed; only data generations change in cooperative mode.
+        self.cooperate(warp)
+        self._cmd_gen[warp] += 1
+        seq = self._cmd_gen[warp]
+        cmdseq = self.arena + self.lay.cmdseq + warp * 16
+        self.owner.device_write(cmdseq, struct.pack("<II", seq, selected))
+        t0 = time.time()
+        lanes = [lane for lane in range(32) if selected & (1 << lane)]
+        while True:
+            pending = []
+            for lane in lanes:
+                va = (self.arena + self.lay.frames
+                      + (warp * 32 + lane) * self.lay.FRAME + F_CMD_ACK)
+                if self._rd(va, "<I")[0] != seq:
+                    pending.append(lane)
+            if not pending:
+                break
+            if CudaModule.stream_query(self.stream):
+                CudaModule.stream_sync(self.stream)
+                raise BootstrapError("target exited during command")
+            if time.time() - t0 > timeout:
+                raise TimeoutError(
+                    f"command {seq} ack timeout on warp {warp}, "
+                    f"lanes {pending}")
+            time.sleep(0.0005)
+        self.freeze(warp)
+
+    def cmd_read(self, warp: int, off: int, size: int) -> bytes:
+        if off < 0 or size < 0 or off + size > self.lay.RESULTS_SZ:
+            raise ValueError("command result read outside results window")
+        return bytes(self.owner.device_read(
+            self.arena + self.lay.results + warp * self.lay.RESULTS_SZ + off,
+            size))
+
+    def dump_regs(self, warp: int, regs: list[str], *,
+                  lane: int = 0) -> dict[str, int]:
+        if not 0 <= lane < 32:
+            raise ValueError("lane out of range")
+        if not (self._parked_mask(warp) & (1 << lane)):
+            raise ScopeError(f"warp {warp} lane {lane} is not parked")
+        results = self.arena + self.lay.results + warp * self.lay.RESULTS_SZ
+        insts = []
+        for i, reg in enumerate(regs):
+            ru = reg.upper()
+            dst = results + 4 * (i * 32 + lane)
+            insts += [
+                f"MOV32I R2, 0x{dst & 0xFFFFFFFF:08x};"
+                "[7:7:{1}:5:1]",
+                f"MOV32I R3, 0x{dst >> 32:08x};[7:7:{{}}:5:1]",
+            ]
+            if ru in self._FRAME_SLOT:
+                insts += [
+                    f"LDG.E.STRONG.GPU R4, [{{R0,R1}}+0x"
+                    f"{self._FRAME_SLOT[ru]:x}];[4:7:{{}}:8:0]",
+                    f"@P6 STG.E.STRONG.GPU [{{R2,R3}}], R4;"
+                    f"[7:1:{{4}}:8:0]",
+                ]
+            elif re.fullmatch(r"R\d+", ru):
+                insts.append(
+                    f"@P6 STG.E.STRONG.GPU [{{R2,R3}}], {ru};"
+                    "[7:1:{}:8:0]")
+            else:
+                raise ValueError(f"cannot dump {reg!r}")
+        self.exec_cmd(warp, insts, lane_mask=1 << lane, _trusted=True)
+        data = self.cmd_read(warp, 0, 4 * 32 * len(regs))
+        return {reg.upper(): struct.unpack_from(
+                    "<I", data, 4 * (i * 32 + lane))[0]
+                for i, reg in enumerate(regs)}
+
+    def set_reg(self, warp: int, reg: str, val: int, *, lane: int = 0) -> None:
+        if not 0 <= lane < 32:
+            raise ValueError("lane out of range")
+        ru = reg.upper()
+        if ru in self._FRAME_SLOT:
+            insts = [
+                f"MOV32I R2, 0x{val & 0xFFFFFFFF:x};[7:7:{{}}:5:1]",
+                f"@P6 STG.E.STRONG.GPU [{{R0,R1}}+0x"
+                f"{self._FRAME_SLOT[ru]:x}], R2;[7:1:{{}}:8:0]",
+            ]
+        elif re.fullmatch(r"R\d+", ru):
+            insts = [
+                f"@P6 MOV32I {ru}, 0x{val & 0xFFFFFFFF:x};[7:7:{{}}:5:1]"]
+        else:
+            raise ValueError(f"cannot set {reg!r}")
+        self.exec_cmd(warp, insts, lane_mask=1 << lane, _trusted=True)
 
     def wait_done(self, timeout: float = 120.0) -> None:
         t0 = time.time()
