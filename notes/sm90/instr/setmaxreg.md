@@ -127,6 +127,19 @@ The instruction is guarded by a uniform predicate `@UPg`, so a SASS issue is
 uniform within each warp.  PTX's stronger `.aligned` rule additionally
 requires all four warps in the warpgroup to participate identically.
 
+This remains a hardware precondition when issuing raw SASS, even though the
+encoding has no field that checks it.  Valid probes always committed or
+rejected allocation for a complete four-warp group.  A one-warp `DEALLOC`
+did not make the proportional register quantity available to a peer group.
+Deliberately violating participation/target consistency produced unstable
+undefined behavior across trials: CUDA 715 in one case, corrupted live GPR
+values in another, and disturbed later dynamic-allocation probes even in new
+CUDA contexts until the device was reset.  Therefore raw SASS must give the
+four warps the same mode, pool and absolute target at the same collective
+point; absence of an encoding-time check does not make per-warp allocation a
+supported mode.  These destructive malformed cases are intentionally not in
+the regular regression suite.
+
 ## Variant taxonomy and encoding
 
 The dump contains four primary classes and four alternate `usetmaxregAlloc*`
