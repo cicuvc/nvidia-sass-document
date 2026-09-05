@@ -51,12 +51,20 @@ stores (`ST.E.STRONG.GPU`) and atomics, not the TMA or TC queue.
 st.bulk.shared::cta [dst], n, 0  →  UMEMSETS.64 [UR5], URZ, UR4
   opcode=0x13cb  URa=UR5(dst)  URb=URZ(0xff)  URc=4(n>>3)  ONLY64=1
 ```
-pxtas generates `USHF.R.U32.HI UR4, URZ, 0x3, UR4` to compute `n>>3` before
+ptxas generates `USHF.R.U32.HI UR4, URZ, 0x3, UR4` to compute `n>>3` before
 issuing UMEMSETS.
+
+`ACQSHMINIT` is the control-side waiter for Blackwell's shared-memory
+initialization *release warp state*, but it is not emitted after ordinary PTX
+`st.bulk` and does not drain a same-warp UMEMSETS AGU queue in a normal cubin.
+The pair belongs to a lower-level initialization protocol whose release-state
+setup is not exposed by documented PTX; see `acqshminit.md`.
 
 ## Cross-references
 - `notes/sm100/instr/utcatomsws.md` — TMEM allocator (different queue but same
   uniform-shmem-management pattern).
+- `notes/sm100/instr/acqshminit.md` — release-state wait side of the internal
+  shared-memory initialization protocol.
 - `notes/sm90/arch/memory_model.md` — shared-memory bulk zero-init is a
   sm100-new feature.
 

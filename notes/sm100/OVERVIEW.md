@@ -193,6 +193,10 @@ python3 tools/query_sm100.py pipe TTUGO
 - **`UMEMSETS`** (`st.bulk`) — documented (`notes/sm100/instr/umemsets.md`).
   Opcode 0x13cb, bulk shared-memory zero-init via AGU queue (`$VQ_AGU`).
   `URa`=dst addr, `URb`=URZ, `URc`=size/8. Verified on sm_100a.
+- **`ACQSHMINIT`** — documented (`notes/sm100/instr/acqshminit.md`). Opcode
+  0x877, operandless CBU wait for the shared-memory-initialization release warp
+  state. Protocol companion of `UMEMSETS`, but not a per-`st.bulk` queue drain;
+  the public trigger that establishes a pending release state remains unknown.
 - **`CREDUX`** (`redux.sync` F32 extension) — documented
   (`notes/sm100/instr/credux.md`). Opcode 0x2cc, coupled uniform reduction
   (`INST_TYPE_COUPLED_MATH`), sm100-new. Adds F32 (MIN/MAX + ABS/NaN) to the
