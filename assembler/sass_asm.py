@@ -236,6 +236,9 @@ def main() -> int:
             if kernel:
                 regcount = int(kernel.attributes.get("MAXREG_COUNT", 8))
             cb.set_regcount(regcount)
+            if kernel and "MAXREG_COUNT" in kernel.attributes:
+                cb.set_pragma("MAXREG_COUNT",
+                              str(kernel.attributes["MAXREG_COUNT"]))
             if kernel and kernel.params:
                 kparams = [(i, p.ordinal, p.size) for i, p in enumerate(kernel.params)]
                 cb.set_params(kparams)

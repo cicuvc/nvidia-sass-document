@@ -194,6 +194,12 @@ def assemble_kernel(source: str, *, check_deps: bool = True,
             cb.set_params([(i, p.ordinal, p.size)
                            for i, p in enumerate(k.params)])
         cb.set_regcount(int(k.attributes.get("MAXREG_COUNT", 8)))
+        if "MAXREG_COUNT" in k.attributes:
+            # Dynamic register allocation (USETMAXREG / PTX setmaxnreg)
+            # requires the per-kernel EIATTR_MAXREG_COUNT to describe the
+            # warp's entry allocation.  ptxas writes the same value as the
+            # kernel REGCOUNT selected by -maxrregcount.
+            cb.set_pragma("MAXREG_COUNT", str(k.attributes["MAXREG_COUNT"]))
         if "SHARED" in k.attributes:
             cb.set_shared_mem(int(k.attributes["SHARED"]))
         if "SHADER_TYPE" in k.attributes:

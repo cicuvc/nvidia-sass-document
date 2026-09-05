@@ -161,6 +161,11 @@ def eiattr_bval(etype: int, value: int) -> bytes:
     return struct.pack("<BBBB", 2, etype, value & 0xFF, 0)
 
 
+def eiattr_nval(etype: int) -> bytes:
+    """Empty EIATTR marker (EIFMT_NVAL)."""
+    return struct.pack("<BBH", 1, etype, 0)
+
+
 def eiattr_regcount(func_sym: int, count: int) -> bytes:
     return struct.pack("<BBHII", 4, 0x2f, 8, func_sym, count)
 
@@ -293,7 +298,15 @@ class CubinBuilder:
         # [39:32] is NOT a register.  A large immediate such as 0xFFFFE
         # (count encoding for mbarrier.init) used to inflate the computed
         # regcount to 264 and fail the launch with OUT_OF_RESOURCES.)
-        imm_lo32_opcodes = {0x802, 0x402, 0x882}
+        imm_lo32_opcodes = {
+            0x802, 0x402, 0x882,
+            0x80c,  # ISETP immediate: bits [55:32] are the comparison value
+            # USETMAXREG immediate/UR forms use bits [41:32]/[37:32] for
+            # a count or a UNIFORM register, never a GPR.  Treating the low
+            # byte of target 0x80 as R128 silently raised REGCOUNT to 136 and
+            # changed the direction of the requested reconfiguration.
+            0x9c8, 0x3c8,
+        }
         for lo, hi in instructions:
             op = lo & 0xFFF
             positions = (16, 24) if op in imm_lo32_opcodes else (16, 24, 32)
@@ -481,7 +494,12 @@ class CubinBuilder:
         # Auto-compute regcount from instructions — latest register used
         if self._instructions:
             computed = self._compute_regcount(self._instructions)
-            if computed > self._regcount:
+            # An explicit MAXREG_COUNT is authoritative.  This is required
+            # for USETMAXREG experiments: inflating the entry REGCOUNT from
+            # instruction-bit heuristics changes the CTA-pool accounting and
+            # can reverse an INC/DEC direction.  Sources that omit the pragma
+            # retain the conservative auto-growth behavior.
+            if "MAXREG_COUNT" not in self._pragma_attrs and computed > self._regcount:
                 self._regcount = computed
             # Auto-compute EXIT offsets — all EXIT instructions
             if not self._exit_offsets:
@@ -499,11 +517,22 @@ class CubinBuilder:
         sec(".nv.info", SHT_CUDA_INFO, content=nv_info)
 
         # 8: .nv.info.<mangled> (per-kernel)
+        has_reg_reconfig = any(
+            ((((hi >> 27) & 1) << 12) | (lo & 0xfff)) in (0x19c8, 0x13c8)
+            for lo, hi in self._instructions
+        )
         buf = eiattr_sval(0x37, 0x80)  # CUDA_API_VERSION
         for ordinal, offset, size in self._params:
             buf += eiattr_kparam(ordinal, offset, size)
         buf += eiattr_hval(0x50, 0)    # SPARSE_MMA_MASK
-        buf += eiattr_hval(0x1b, 0xff)  # MAXREG_COUNT
+        maxreg_count = int(self._pragma_attrs.get("MAXREG_COUNT", 0xff))
+        buf += eiattr_hval(0x1b, maxreg_count)  # MAXREG_COUNT
+        # Match ptxas: every kernel containing PTX setmaxnreg/USETMAXREG is
+        # tagged EIATTR_REG_RECONFIG.  Current sm_120 hardware also executed
+        # without the marker, so this is metadata fidelity rather than the
+        # mechanism that enables the instruction.
+        if has_reg_reconfig:
+            buf += eiattr_nval(0x54)  # REG_RECONFIG
         buf += eiattr_bval(0x4a, 0)    # VRC_CTA_INIT_COUNT
         # EXIT_INSTR_OFFSETS — one or more 4-byte offsets
         if self._exit_offsets:

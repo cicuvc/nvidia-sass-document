@@ -45,7 +45,11 @@ CLI: `python -m assembler.sass_asm input.sass [-o out.cubin] [-n kernel] [--dump
   cache descriptor used as `desc[...]` for global accesses.
 - **`#pragma NAME(value)`** sets kernel attributes: `MAXREG_COUNT`,
   `SHARED`, `SHADER_TYPE`, `NUM_MBARRIERS`, `MBARRIER_*`.  These flow into
-  the ELF pragma/metadata.
+  the ELF pragma/metadata.  An explicit `MAXREG_COUNT` is authoritative and
+  sets both the entry REGCOUNT and per-kernel maximum-register metadata; this
+  distinction matters for `USETMAXREG`/PTX `setmaxnreg`, whose CTA-pool
+  accounting starts from that entry allocation.  Without the pragma, the
+  assembler conservatively grows REGCOUNT from decoded GPR operands.
 - **`#def_label(name)`** defines a label; **`#label(name)`** references one
   (used as the target of `BRA`, `BSSY`, `BSSY`-style branches).  A bare
   `name:` also defines a label.

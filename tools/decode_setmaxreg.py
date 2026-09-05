@@ -14,10 +14,11 @@ POOL = {1: "CTAPOOL"}
 def decode(lo64, hi64):
     w = (hi64 << 64) | lo64
     opcode = (bits(w, 91, 91) << 12) | bits(w, 11, 0)
-    assert opcode == 0x19c8, f"unexpected opcode {opcode:#x}"
+    assert opcode in (0x19c8, 0x13c8), f"unexpected opcode {opcode:#x}"
     Pg      = bits(w, 14, 12)
     Pg_not  = bits(w, 15, 15)
     Sb      = bits(w, 41, 32)      # imm register count
+    URb     = bits(w, 37, 32)      # UR register count
     num     = bits(w, 73, 72)      # mode
     sh      = bits(w, 74, 74)      # pool
     Pu      = bits(w, 83, 81)      # dest uniform predicate (alloc only)
@@ -28,13 +29,14 @@ def decode(lo64, hi64):
     # predicate guard prefix
     pred = ""
     if not (Pg == 7 and Pg_not == 0):
-        pred = f"@{'!' if Pg_not else ''}UP{Pg} "
+        pg = "UPT" if Pg == 7 else f"UP{Pg}"
+        pred = f"@{'!' if Pg_not else ''}{pg} "
 
     s = f"{pred}USETMAXREG.{mode}.{pool} "
     if num == 2:                   # alloc/try_alloc has a dest predicate
         upu = "UPT" if Pu == 7 else f"UP{Pu}"
         s += f"{upu}, "
-    s += f"{Sb:#x}"
+    s += f"{Sb:#x}" if opcode == 0x19c8 else ("URZ" if URb == 63 else f"UR{URb}")
     return s + " ;"
 
 # (lo64, hi64, expected)
@@ -47,6 +49,10 @@ VEC = [
     (0x000000c0000079c8, 0x000e240008000600, "USETMAXREG.TRY_ALLOC.CTAPOOL UP0, 0xc0 ;"),
     (0x00000080000079c8, 0x000e240008000600, "USETMAXREG.TRY_ALLOC.CTAPOOL UP0, 0x80 ;"),
     (0x00000040000079c8, 0x000e240008000600, "USETMAXREG.TRY_ALLOC.CTAPOOL UP0, 0x40 ;"),
+    (0x00000008000073c8, 0x000e8a0008020600, "USETMAXREG.TRY_ALLOC.CTAPOOL UP1, UR8 ;"),
+    (0x0000000a000073c8, 0x000e8a00080e0500, "USETMAXREG.DEALLOC.CTAPOOL UR10 ;"),
+    (0x000000810000f9c8, 0x000e8a0008040600,
+     "@!UPT USETMAXREG.TRY_ALLOC.CTAPOOL UP2, 0x81 ;"),
 ]
 
 if __name__ == "__main__":
