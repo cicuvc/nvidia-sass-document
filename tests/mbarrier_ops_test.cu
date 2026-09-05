@@ -178,3 +178,101 @@ extern "C" __global__ void mb_try_wait_state(uint64_t *g, uint64_t state) {
         : "=r"(done) : "r"(p), "l"(state));
     if (threadIdx.x == 0) g[0] = done;
 }
+
+// Hopper count form (ART0): one instruction decrements pending arrivals by n.
+extern "C" __global__ void mb_arrive_count(uint64_t *g) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar);
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 4;" :: "r"(p));
+    __syncthreads();
+    uint64_t tok;
+    asm volatile("mbarrier.arrive.shared::cta.b64 %0, [%1], %2;"
+                 : "=l"(tok) : "r"(p), "r"(2));
+    if (threadIdx.x == 0) g[0] = tok;
+}
+
+// noComplete returns the TMASK-flavoured token and promises not to finish
+// the phase (count must be smaller than pending).
+extern "C" __global__ void mb_arrive_no_complete(uint64_t *g) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar);
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 4;" :: "r"(p));
+    __syncthreads();
+    uint64_t tok;
+    asm volatile("mbarrier.arrive.noComplete.shared::cta.b64 %0, [%1], %2;"
+                 : "=l"(tok) : "r"(p), "r"(2));
+    if (threadIdx.x == 0) g[0] = tok;
+}
+
+extern "C" __global__ void mb_arrive_drop_count(uint64_t *g) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar);
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 4;" :: "r"(p));
+    __syncthreads();
+    uint64_t tok;
+    asm volatile("mbarrier.arrive_drop.shared::cta.b64 %0, [%1], %2;"
+                 : "=l"(tok) : "r"(p), "r"(2));
+    if (threadIdx.x == 0) g[0] = tok;
+}
+
+extern "C" __global__ void mb_arrive_drop_no_complete(uint64_t *g) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar);
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 4;" :: "r"(p));
+    __syncthreads();
+    uint64_t tok;
+    asm volatile("mbarrier.arrive_drop.noComplete.release.cta.shared::cta.b64 %0, [%1], %2;"
+                 : "=l"(tok) : "r"(p), "r"(2));
+    if (threadIdx.x == 0) g[0] = tok;
+}
+
+extern "C" __global__ void mb_arrive_drop_expect_tx(uint64_t *g) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar);
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 4;" :: "r"(p));
+    __syncthreads();
+    uint64_t tok;
+    asm volatile("mbarrier.arrive_drop.expect_tx.relaxed.cta.shared::cta.b64 %0, [%1], %2;"
+                 : "=l"(tok) : "r"(p), "r"(128));
+    if (threadIdx.x == 0) g[0] = tok;
+}
+
+extern "C" __global__ void mb_test_wait_state(uint64_t *g, uint64_t state) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar), done;
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 1;" :: "r"(p));
+    __syncthreads();
+    asm volatile("{.reg .pred q; mbarrier.test_wait.shared::cta.b64 q,[%1],%2; selp.u32 %0,1,0,q;}"
+                 : "=r"(done) : "r"(p), "l"(state));
+    if (threadIdx.x == 0) g[0] = done;
+}
+
+extern "C" __global__ void mb_try_wait_hint(uint64_t *g, uint64_t state, unsigned hint) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar), done;
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 1;" :: "r"(p));
+    __syncthreads();
+    asm volatile("{.reg .pred q; mbarrier.try_wait.relaxed.cta.shared::cta.b64 q,[%1],%2,%3; selp.u32 %0,1,0,q;}"
+                 : "=r"(done) : "r"(p), "l"(state), "r"(hint));
+    if (threadIdx.x == 0) g[0] = done;
+}
+
+extern "C" __global__ void mb_try_wait_parity_hint(uint64_t *g, unsigned parity, unsigned hint) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar), done;
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 1;" :: "r"(p));
+    __syncthreads();
+    asm volatile("{.reg .pred q; mbarrier.try_wait.parity.relaxed.cluster.shared::cta.b64 q,[%1],%2,%3; selp.u32 %0,1,0,q;}"
+                 : "=r"(done) : "r"(p), "r"(parity), "r"(hint));
+    if (threadIdx.x == 0) g[0] = done;
+}
+
+extern "C" __global__ void mb_tx_relaxed_cluster(uint64_t *g) {
+    __shared__ uint64_t bar;
+    unsigned p = smem_addr(&bar);
+    if (threadIdx.x == 0) asm volatile("mbarrier.init.shared::cta.b64 [%0], 1;" :: "r"(p));
+    __syncthreads();
+    asm volatile("mbarrier.expect_tx.relaxed.cluster.shared::cta.b64 [%0], %1;" :: "r"(p), "r"(64));
+    asm volatile("mbarrier.complete_tx.relaxed.cluster.shared::cta.b64 [%0], %1;" :: "r"(p), "r"(64));
+    if (threadIdx.x == 0) g[0] = bar;
+}

@@ -8,15 +8,17 @@
 //   bit0       reserved
 //   bits[1:20]  Expected  (int20 two's complement of the per-phase arrival
 //                          count, i.e. init(n) stores (0x100000 - n) & 0xFFFFF)
-//   bits[21:41] tx        (int21 outstanding transaction bytes; expect_tx sets
-//                          it toward -bytes, TMA complete_tx adds bytes back)
-//   bit42       Lock      (over-arrival / deadlock sticky bit)
+//   bits[21:41] tx        (int21 two's complement of outstanding transaction
+//                          bytes: expect_tx subtracts bytes from this field,
+//                          TMA/complete_tx adds bytes back toward zero)
+//   bit42       Lock/poison (normally zero; injecting one makes the next
+//                            mbarrier operation fault on real sm_120)
 //   bits[43:62] Arrive    (int20 two's complement of the remaining arrivals in
 //                          the current phase)
 //   bit63       Phase     (current phase parity)
 //
-// Observations (verified on sm_120, notes/sm90/instr/syncs.md and
-// tests/asm_construct/test_mbarrier.py; Phase 9 subset unit/interp tests):
+// Observations (verified on sm_120 after SYNCS.CCTL.IV evicted the mbarrier
+// cache entry to shared memory; tests/asm_construct/test_mbarrier_state.py):
 //
 //   init(n)    -> phase 0 expects n arrivals; pending arrivals = n; pending
 //                 tx = 0.  init(0) writes a word with bit63 already SET, so
@@ -25,9 +27,10 @@
 //                 AND the pending tx reaches 0 the phase completes: the
 //                 parity bit flips and the arrival count reloads to n.
 //   arrive     -> arriving when the current phase's arrivals are already
-//                 satisfied (over-arrival) sets the Lock bit and FAULTS the
-//                 op (the barrier is permanently stuck; verified boundary:
-//                 init(0) then arrive traps).
+//                 satisfied (over-arrival) FAULTS.  The logical model marks
+//                 it locked/permanently stuck; the device boundary is
+//                 verified (init(0) then arrive traps), but a natural
+//                 transient write of physical bit42 was not observed.
 //   expect_tx  -> pending tx += k (A0TR / A1TR tx part).
 //   complete_tx-> pending tx -= k; an underflow (> pending) corrupts the
 //                 barrier: the op itself does not trap but the NEXT mbarrier
@@ -71,7 +74,9 @@ struct MbarrierState {
         const std::uint64_t arrive_field =
             (static_cast<std::uint64_t>(0x100000) - pending) & 0xFFFFF;
         w |= expected_field << 1;
-        w |= (pending_tx & 0x1FFFFF) << 21;
+        const std::uint64_t tx_field =
+            (static_cast<std::uint64_t>(0x200000) - pending_tx) & 0x1FFFFF;
+        w |= tx_field << 21;
         if (locked) w |= kMbarrierLockBit;
         w |= arrive_field << 43;
         if (phase) w |= kMbarrierPhaseBit;

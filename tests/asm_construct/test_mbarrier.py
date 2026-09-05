@@ -19,15 +19,15 @@ from archutil import adapt_source  # noqa: E402
 #   test_wait.parity SYNCS.PHASECHK.TRANS64      P, [UR], R
 #   inval           SYNCS.CCTL.IV [UR]
 #
-# Empirically verified on sm_120 (RTX 5090, CUDA 13.0):
+# Empirically verified on sm_120 (RTX 5090, CUDA 13.1):
 #   * the phase-parity operand of PHASECHK is bit 31 of Rb
 #     (parity 0 -> 0x00000000, parity 1 -> 0x80000000); the instruction
 #     returns TRUE iff the phase with that parity has completed.
-#   * A0TR ADDS the register value to the pending-tx count (expect_tx);
-#     A0TX SUBTRACTS it (complete_tx).  ptxas emits complete_tx as
-#     A0TR(R0=0) + A0TX(R2=+count).
-#   * mbarrier state is NOT reliably readable with plain LDS right after
-#     init (reads 0); observe completion through PHASECHK / arrive tokens.
+#   * A0TR ADDS the register value to the logical pending-tx count
+#     (expect_tx); A0TX SUBTRACTS it (complete_tx).  The physical tx field
+#     is -pending_tx in 21-bit two's complement.
+#   * mbarrier state is cache-resident and a plain LDS can read stale backing.
+#     test_mbarrier_state.py evicts with SYNCS.CCTL.IV before observing it.
 #   * boundaries: init(0) makes phase 0 immediately complete; a subsequent
 #     arrive traps (719); a negative tx count traps (719).
 # ---------------------------------------------------------------------------

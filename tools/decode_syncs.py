@@ -2,7 +2,7 @@
 """Decoder for the sm_90 SYNCS instruction family — shared-memory synchronization
 (mbarrier ops + shared uniform atomics), on mio_pipe, compute-only.
 
-9 CLASSes, dispatched by opcode:
+9 sm_90 variants (10 on sm_100+, which adds FLUSH), dispatched by opcode:
   0x19a7 ARRIVE/TCNT   SYNCS.ARRIVE.TRANS64[.RED|.TMASK][.<paramtype>] Rd, [addr], Rb
   0x15a7 PHASECHK      SYNCS.PHASECHK.TRANS64[.TRYWAIT] Pu, [addr], Rb
   0x15b2 uniform EXCH  SYNCS.EXCH.64  URd, [URa(+off)], URb
@@ -11,9 +11,10 @@
   0x19b1 CCTL          SYNCS.CCTL...  (mbarrier cache control)
   0x09b1 CCTL_ALL      SYNCS.CCTL...ALL
   0x15b1 LD (GPR)      SYNCS.LD[.WATCH] Rd, [addr]
+  0x03a7 FLUSH         SYNCS.FLUSH (sm_100+)
 
 mbarrier semantics (tx-count arrive/expect_tx, phase-parity try_wait) are covered in
-notes/tma_mbarrier.md; this decoder reconstructs the disassembly text.
+notes/sm90/arch/tma_mbarrier.md; this decoder reconstructs the disassembly text.
 
 Key fields (ARRIVE 0x19a7 / PHASECHK 0x15a7):
   paramtype=[86:84] PARAMTYPE {0 A1TR(hidden),1 A1T0,2 A0T1,3 A0TR,4 A0TX,5 ART0}
@@ -54,7 +55,9 @@ def _addr(inst):
     parts = []
     if ra != 0xff:
         parts.append(reg(ra))
-    if urc != 63:
+    # cuobjdump keeps the explicit +URZ component for GPR-based shared
+    # addresses, but suppresses the RZ component for uniform-only addresses.
+    if urc != 63 or ra != 0xff:
         parts.append(ureg(urc))
     if off:
         parts.append("%#x" % off)
@@ -83,7 +86,10 @@ def decode(lo64, hi64, pc=0):
 
 def _body(inst, opcode):
     if opcode == 0x19a7:                                    # ARRIVE / TCNT
-        m = "SYNCS.ARRIVE.TRANS64" + RETVAL[bits(inst, 74, 73)] + PARAMTYPE[bits(inst, 86, 84)]
+        m = "SYNCS.ARRIVE.TRANS64" + RETVAL[bits(inst, 74, 73)]
+        if bits(inst, 75, 75):
+            m += ".OPTOUT"
+        m += PARAMTYPE[bits(inst, 86, 84)]
         return "%s %s, %s, %s" % (m, reg(bits(inst, 23, 16)), _addr(inst), reg(bits(inst, 39, 32)))
     if opcode == 0x15a7:                                    # PHASECHK
         w = ".TRYWAIT" if bits(inst, 72, 72) else ""
@@ -93,14 +99,23 @@ def _body(inst, opcode):
         return "SYNCS.EXCH.64 %s, %s, %s" % (
             ureg(bits(inst, 21, 16)), _uaddr(inst), ureg(bits(inst, 37, 32)))
     if opcode == 0x13b2:                                    # uniform CAS
+        urcmp = bits(inst, 37, 32)
         return "SYNCS.CAS.64 %s, %s, %s, %s" % (
-            ureg(bits(inst, 21, 16)), _uaddr(inst), ureg(bits(inst, 37, 32)), ureg(bits(inst, 45, 40)))
+            ureg(bits(inst, 21, 16)), _uaddr(inst), ureg(urcmp), ureg(urcmp + 2))
     if opcode == 0x19b2:                                    # uniform LD
         return "SYNCS.LD.64 %s, %s" % (ureg(bits(inst, 21, 16)), _uaddr(inst))
-    if opcode in (0x19b1, 0x9b1):
-        return "SYNCS.CCTL"
+    if opcode == 0x19b1:
+        op = "WB" if bits(inst, 72, 72) else "IV"
+        return "SYNCS.CCTL.%s %s" % (op, _addr(inst))
+    if opcode == 0x09b1:
+        op = "WBALL" if bits(inst, 72, 72) else "IVALL"
+        return "SYNCS.CCTL.%s" % op
     if opcode == 0x15b1:
-        return "SYNCS.LD %s, %s" % (reg(bits(inst, 23, 16)), _addr(inst))
+        watch = ".WATCH" if bits(inst, 74, 74) else ""
+        return "SYNCS.LD.64%s %s, %s" % (
+            watch, reg(bits(inst, 23, 16)), _addr(inst))
+    if opcode == 0x03a7:
+        return "SYNCS.FLUSH"
     return "?opcode 0x%x" % opcode
 
 
@@ -113,6 +128,16 @@ VECTORS = [
     (0x00000000ff0075a7, 0x000e240008000144, "SYNCS.PHASECHK.TRANS64.TRYWAIT P0, [UR4], R0"),
     (0x00000004063f85b2, 0x0000640008000100, "@!UP0 SYNCS.EXCH.64 URZ, [UR6], UR4"),
     (0x00000004093f75b2, 0x0010640008000100, "SYNCS.EXCH.64 URZ, [UR9], UR4"),
+    (0x00000004ff0279a7, 0x000e8a0008500a06,
+     "SYNCS.ARRIVE.TRANS64.TMASK.OPTOUT.ART0 R2, [UR6], R4"),
+    (0x00000000ff0079b1, 0x000e8a0008000006, "SYNCS.CCTL.IV [UR6]"),
+    (0x00000000ff0079b1, 0x000e8a0008000106, "SYNCS.CCTL.WB [UR6]"),
+    (0x00000000000079b1, 0x000e8a0000000000, "SYNCS.CCTL.IVALL"),
+    (0x00000000000079b1, 0x000e8a0000000100, "SYNCS.CCTL.WBALL"),
+    (0x00000000ff0875b1, 0x000e8a0008000606, "SYNCS.LD.64.WATCH R8, [UR6]"),
+    (0x00000008060c73b2, 0x000e8a0008000200,
+     "SYNCS.CAS.64 UR12, [UR6], UR8, UR10"),
+    (0x00000000000073a7, 0x000e8a0000002000, "SYNCS.FLUSH"),
 ]
 
 

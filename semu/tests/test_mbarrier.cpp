@@ -52,6 +52,8 @@ TEST(mbarrier_expect_tx_blocks_completion) {
     auto e = mbarrier_arrive(&s, 0, 128, /*tx_is_complete=*/false);
     CHECK(e.ok);
     CHECK(s.pending_tx == 128);
+    // Real sm_120 backing word after CCTL.IV: tx[21] stores -outstanding_tx.
+    CHECK(((s.encode() >> 21) & 0x1FFFFF) == 0x1FFF80);
     // arrive: pending 0 but tx 128 -> NOT complete.
     auto a = mbarrier_arrive(&s, 1, 0, false);
     CHECK(a.ok);
@@ -123,6 +125,23 @@ TEST(mbarrier_encode_roundtrip) {
     const std::uint64_t enc = s.encode();
     CHECK(((enc >> 1) & 0xFFFFF) == 0x100000ULL - 3);
     CHECK(((enc >> 63) & 1) == 0);
+}
+
+TEST(mbarrier_physical_words_sm120) {
+    // Exact words observed on an RTX 5090 only after SYNCS.CCTL.IV evicted
+    // the live mbarrier-cache entry and LDS.64 read its shared backing.
+    MbarrierState s = MbarrierState::from_init_word(0x7fffe800001ffffaULL);
+    CHECK(s.expected == 3);
+    CHECK(s.pending == 3);
+    CHECK(s.encode() == 0x7fffe800001ffffaULL);
+
+    auto e = mbarrier_arrive(&s, 0, 0x12345, false);
+    CHECK(e.ok);
+    CHECK(s.encode() == 0x7fffebdb977ffffaULL);
+
+    auto a = mbarrier_arrive(&s, 1, 0, false);
+    CHECK(a.ok);
+    CHECK(s.encode() == 0x7ffff3db977ffffaULL);
 }
 
 int main() {

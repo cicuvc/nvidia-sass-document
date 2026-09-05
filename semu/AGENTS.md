@@ -102,12 +102,15 @@ LDGSTS corpus **520/520**（纯计数 == 硬件测量）、tensor differential�
    - `tests/asm_construct/` 的 GPU 实验
    - PTX ISA 语义（SASS 行为的上层契约）
    - 禁止只翻 sm120_instructions.txt/json 的编码表就写语义。
-2. **mbarrier 64-bit 位布局（权威，Phase 9 落地）**：
-   `bit0=保留`；`bits[1:20]=Expected`（int20 补码）；`bits[21:41]=tx`（int21）；
-   `bit42=Lock`；`bits[43:62]=Arrive`（int20 补码）；`bit63=Phase`。
-   arrive 到 0 → phase 翻转 + Arrive 重置 Expected；>0 → Lock 锁死 fault；
+2. **mbarrier 64-bit v0 位布局（RTX 5090 上 CCTL.IV 排出后实测）**：
+   `bit0=0`；`bits[1:20]=Expected`（int20 补码）；`bits[21:41]=tx`
+   （int21，物理值为 outstanding tx 的负数）；`bit42=Lock/poison`；
+   `bits[43:62]=Arrive`（int20 补码）；`bit63=Phase`。
+   arrive 到 0 → phase 翻转 + Arrive 重置 Expected；over-arrival 会 fault，
+   SEMU 用 locked 模拟永久损坏（真实 bit42 的自然瞬态尚未直接观测）；
    expect_tx 设 tx=-bytes，TMA 完成 tx+=量，**arrive+tx 双零才翻转**；
-   wait(phase) parity 满足即过；SYNCS 在 barrier cache 内操作不写回共享内存。
+   wait(phase) parity 满足即过；SYNCS 在 barrier cache 内操作，须用
+   `SYNCS.CCTL.IV` 排出后再由 LDS 观察 shared backing。
 3. **HMMA/QMMA 结果不 scoreboard**（COUPLED_EMULATABLE）：读 Rd 前需 **≥16 NOP**
    （少了会 fault 0x715）。QMMA srcFmt enum（实测）：`E4M3=0, E3M4=1, E2M3=2,
    E5M2=4, E3M2=5, E2M1=6`（k16 只允许 raw 0/1）。

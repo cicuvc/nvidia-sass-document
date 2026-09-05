@@ -1823,16 +1823,18 @@ B1（coupled LDGSTS prediction==false 不得污染 L1 line/sector/cache 状态�
 
 #### Phase 9 子集修复记录（2026-08-17，semu 实现者，mbarrier 位布局 / SYNCS / init 路径）
 
-**权威 64-bit mbarrier 位布局（本轮落地）**：`bit0=保留`；
+**权威 64-bit mbarrier v0 位布局（2026-09-05 经 RTX 5090 上 CCTL.IV 后 LDS 实测）**：`bit0=0`（v0 保留；PTX 9.3 后可能兼作 layout discriminator）；
 `bits[1:20]=Expected`（int20 对 expected 的补码，init(n) 写 `(0x100000-n)&0xFFFFF`）；
-`bits[21:41]=tx`（int21）；`bit42=Lock`；`bits[43:62]=Arrive`（int20 对剩余到达数的
+`bits[21:41]=tx`（int21，物理值为 outstanding tx 的负数）；`bit42=Lock/poison`；`bits[43:62]=Arrive`（int20 对剩余到达数的
 补码）；`bit63=Phase`。语义：arrive 使 Arrive 计数到 **0** → phase 翻转 + Arrive
 重置为 Expected；只有当 **arrive==0 且 tx==0 双零**才翻转；本 phase 计数已满足后
-再次 arrive（over-arrival）置 Lock 并 fault（barrier 永久卡死）；expect_tx 令
+再次 arrive（over-arrival）会 fault；SEMU 逻辑模型以 Lock/locked 表示其永久损坏，
+但真实设备静止写回时尚未观测到 bit42 的自然瞬态（只验证了强制置 1 后下一操作 fault）。expect_tx 令
 tx 朝 -bytes 走、TMA 完成 tx += 量；wait(phase) 满足 parity 即过；SYNCS 在 barrier
-cache 内操作、不写回共享内存。`sim.py` 未修改。
+cache 内操作、普通 LDS 读不到实时值；`SYNCS.CCTL.IV` 将其排出并写回共享内存后
+才能可靠观察。`sim.py` 未修改。
 
-- `semu/include/semu/mbarrier.hpp` / `semu/src/mbarrier.cpp`：按上述布局重写
+- `semu/include/semu/tensor/mbarrier.hpp` / `semu/src/tensor/mbarrier.cpp`：按上述布局重写
   `encode()`/`from_init_word()`（Expected @[1:20]、tx @[21:41]、Lock @bit42、
   Arrive @[43:62]、Phase @bit63）；over-arrival 置 `locked` 并 fault（配合既有
   `corrupted`=tx-underflow「本次不 trap、下次 op trap」与 `invalid`=CCTL.IV 语义）；
