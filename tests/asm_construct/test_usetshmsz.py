@@ -8,7 +8,7 @@ from assembler import assemble, CudaModule
 # USETSHMSZ — set shared-memory size (udp_pipe, sm90 opcode 0x19c9 / UR 0x13c9).
 #
 # Empirically verified on SM120 (RTX 5090), per case in a clean subprocess:
-#   1. It SHRINKS the CTA's shared-memory window to the given byte size.
+#   1. It SHRINKS the issuing warp's shared-memory address bound.
 #   2. Monotone decrease ONLY: a value > the CURRENT window -> ILLEGAL_INSTRUCTION
 #      (CUDA 715).  You cannot grow it back, but you can keep shrinking.
 #   3. The constraint is relative to the CURRENT size, not the initial one
@@ -18,11 +18,13 @@ from assembler import assemble, CudaModule
 #   5. The shrink really takes effect: after setting 0x200, LDS/STS @0x80 is OK
 #      but @0x400 (beyond the new window) faults with ILLEGAL_ADDRESS (700).
 #   6. Initial window = the size the driver allocated for the CTA (the cubin
-#      SHARED declaration).  USETSHMSZ > that is illegal.
+#      SHARED declaration plus the reserved 1 KiB prefix).
 #   7. Per-launch: the window resets on the next kernel launch — a shrink in
 #      one kernel does not affect a later kernel's initial window.
 #   8. .FLUSH executes cleanly and does NOT lift the monotone constraint.
 #   9. UR form: size comes from a uniform register, same monotone rule.
+#  10. The size state is per-warp; .FLUSH commits the issuing warp's value as
+#      the CTA allocator target. Shrink alone does not raise occupancy.
 #
 # ptxas/nvcc never emit this instruction (absent from cublas/cublasLt); it is a
 # runtime shrink-only knob on the uniform datapath.
@@ -89,6 +91,8 @@ def SZ_UR():
 
 cases = [
     ("equal 0x1000",          SZ(0x1000),                              "OK", None),
+    ("initial top 0x1400",    SZ(0x1400),                              "OK", None),
+    ("beyond top 0x1480",     SZ(0x1480),                              "ERR 715", None),
     ("decrease chain",        SZ(0x800)+SZ(0x400)+SZ(0x200),           "OK", None),
     ("step to 0",             SZ(0x200)+SZ(0x100)+SZ(0x80)+SZ(0x0),    "OK", None),
     ("gran 0x180",            SZ(0x180),                               "OK", None),
@@ -99,7 +103,7 @@ cases = [
     ("ur form 0x200",         "    LDCU.32 UR6, #param(sz);[7:7:{1}:5:1]\n"+SZ_UR(), "OK", "ur"),
     ("grow-back",             SZ(0x800)+SZ(0x1000),                    "ERR 715", None),
     ("grow relative",         SZ(0x200)+SZ(0x400),                     "ERR 715", None),
-    ("grow beyond decl",      SZ(0x2000),                              "ERR 715", None),
+    ("grow beyond initial",   SZ(0x2000),                              "ERR 715", None),
     ("gran 0x40",             SZ(0x40),                                "ERR 715", None),
     ("gran 0x7F",             SZ(0x7F),                                "ERR 715", None),
     ("gran 0x101",            SZ(0x101),                               "ERR 715", None),
@@ -113,7 +117,7 @@ def ur_args():
     return (0x200,)
 
 
-print("=== USETSHMSZ (SM120): shrink-only shared-memory window ===")
+print("=== USETSHMSZ (SM120): per-warp bound + CTA allocator commit ===")
 ok = True
 for name, body, expect, tag in cases:
     args = ur_args() if tag == "ur" else None
@@ -157,10 +161,10 @@ except RuntimeError as e:
     print(f"  {'per-launch reset':<22} expect OK     -> ERR {str(e)[:44]}  FAIL")
 ok &= per
 
-# occupancy: shrinking must NOT raise the peak concurrent CTA count.
-# CTA residency is fixed at launch by the static shared decl (see note).
+# Occupancy: size writes only update the per-warp bound. FLUSH commits the
+# issuing warp's value to the CTA allocator and permits scheduler backfill.
 OCC = ("""#fn k(state<8>) {
-    #pragma SHARED(0x10000)
+    #pragma SHARED({shared})
     LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
     LDC.64 {R6,R7}, #param(state);[1:7:{}:1:0]
 {usi}    MOV32I R10, 0x1;[7:7:{}:5:1]
@@ -170,7 +174,7 @@ OCC = ("""#fn k(state<8>) {
     LDG.E R18, [{R6,R7}];[5:7:{0,1}:8:1]
     ATOM.MAX P2, RZ, [{R6,R7}+4], R18;[5:7:{0,1,5}:8:1]
     IADD3 R20, R20, -1, RZ;[7:7:{0}:5:1]
-    ISETP.GT.AND P0, PT, R20, RZ, PT;[7:7:{}:5:1]
+    ISETP.GT.AND P0, PT, R20, RZ, PT;[7:7:{}:13:1]
     @P0 BRA #label(spin);[7:7:{}:5:1]
     MOV32I R10, -1;[7:7:{}:5:1]
     ATOM.ADD P3, RZ, [{R6,R7}], R10;[5:7:{0,1}:8:1]
@@ -178,10 +182,10 @@ OCC = ("""#fn k(state<8>) {
 }""")
 
 
-def occ_peak(use_usi):
+def occ_peak(control="", shared=0x10000):
     reset_context()
     mod = CudaModule(assemble(
-        OCC.replace("{usi}", "    USETSHMSZ 0x1000;[7:7:{}:1:0]\n" if use_usi else "")))
+        OCC.replace("{shared}", f"0x{shared:X}").replace("{usi}", control)))
     d = mod.devmem_alloc(4096)
     mod.device_write(d, struct.pack("<1024I", *([0] * 1024)))
     mod.launch("k", grid=(1000,), block=(32,), args=[d])
@@ -189,13 +193,19 @@ def occ_peak(use_usi):
     return struct.unpack("<4I", mod.device_read(d, 16))[1]
 
 
-p_ctrl, p_usi = occ_peak(False), occ_peak(True)
-occ = p_ctrl == p_usi
-print(f"  {'occupancy unchanged':<22} expect ctrl==USI -> ctrl={p_ctrl} USI={p_usi}  {'ok' if occ else 'FAIL'}")
+p_ctrl = occ_peak()
+p_shrink = occ_peak("    USETSHMSZ 0x1000;[7:7:{}:1:0]\n")
+p_flush = occ_peak("    USETSHMSZ 0x1000;[7:7:{}:1:0]\n"
+                   "    USETSHMSZ.FLUSH;[7:7:{}:1:0]\n")
+p_static = occ_peak(shared=0xC00)  # + reserved 1 KiB = 4 KiB total
+occ = p_ctrl == p_shrink and p_flush > p_shrink and p_flush == p_static
+print(f"  {'FLUSH releases SRAM':<22} expect ctrl==shrink < flush==static-total4K"
+      f" -> {p_ctrl} == {p_shrink} < {p_flush} == {p_static}"
+      f"  {'ok' if occ else 'FAIL'}")
 ok &= occ
 
 print(f"\n=== USETSHMSZ shrink-only semantics: {'ALL OK' if ok else 'FAILED'} ===")
-print("USETSHMSZ shrinks the CTA shared window (128B granule); growing -> 715,"
-      "\nshrink persists within the launch only, .FLUSH does not unlock growth,"
-      "\nand shrinking does not raise the concurrent CTA count.")
+print("USETSHMSZ shrinks a per-warp shared bound (128B granule); growing -> 715,"
+      "\n.FLUSH does not unlock growth, but commits the CTA allocation target and"
+      "\nreleases SRAM so the scheduler can admit additional CTAs.")
 sys.exit(0 if ok else 1)

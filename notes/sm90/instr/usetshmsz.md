@@ -1,4 +1,4 @@
-# SETSMEMSIZE (USETSHMSZ) — Set shared-memory size (shrink-only, uniform)
+# SETSMEMSIZE (USETSHMSZ) — Shrink per-warp shared bound, then release CTA SRAM
 
 **Opcode mnemonic:** `USETSHMSZ` = `0b1100111001001` = **0x19c9** (imm / FLUSH) / `0b1001111001001` = **0x13c9** (UR form) | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`, `VIRTUAL_QUEUE=$VQ_UNORDERED` | compute-only (`SHADER_TYPE==CS`)
 
@@ -11,9 +11,11 @@
 
 ## Semantics (verified on silicon)
 
-`USETSHMSZ` **shrinks the CTA's shared-memory window** to the given byte size,
-issued from the uniform datapath. The window is a runtime, per-launch state:
-the instruction may only **decrease** it, never grow it back.
+`USETSHMSZ size` **shrinks the issuing hardware warp's shared-memory address
+bound**.  `USETSHMSZ.FLUSH` is the separate commit operation that submits the
+executing warp's current value to the CTA resource allocator and allows the
+scheduler to backfill the released SRAM with more CTAs. A size may only
+**decrease**; it can never grow back after SRAM may have been reassigned.
 
 Empirically confirmed rules (SM120, decl `#pragma SHARED(0x1000)`, block 32):
 
@@ -28,49 +30,96 @@ Empirically confirmed rules (SM120, decl `#pragma SHARED(0x1000)`, block 32):
 3. **128-byte granularity.** Legal values are multiples of 128 B: `0x0`,
    `0x80`, `0x100`, `0x180`, `0x1000` … are fine; `0x40`, `0x7F`, `0x101`,
    `0x1C0` trap 715. (0x1C0 = 448 = 3.5·128.)
-4. **Initial window = the size the driver allocated for the CTA** (here the
-   cubin `SHARED` declaration). Setting a value above it is illegal — which is
-   also why `USETSHMSZ` is per-launch: the next kernel launch resets the
-   window to its own allocation, so a shrink in one kernel does **not** affect
-   a later kernel's initial window.
-5. **The shrink takes effect immediately on the window.** After setting
-   `0x200`, `STS/LDS` at `@0x80` works but `@0x400` (beyond the new window)
-   faults with `ILLEGAL_ADDRESS` (CUDA error 700). So the reduction is real,
-   not a no-op.
-6. **`.FLUSH`** executes cleanly and does **not** lift the monotone rule:
+4. **The state is per hardware warp, not per CTA and not per active SIMT
+   group.** With two warps in one CTA, shrinking warp 0 does not prevent warp
+   1 from accessing a high shared address, and their monotone bounds evolve
+   independently.  But if only lanes 0--15 execute the size instruction on a
+   divergent path, lanes 16--31 of the same warp subsequently observe the
+   smaller bound.  This reconciles the instruction's uniform datapath with
+   the apparently CTA-wide resource it controls.
+5. **Each warp's initial bound includes the reserved 1 KiB prefix.** For a
+   cubin user declaration `S`, it is `0x400 + align_up(S,0x80)`.  Thus with
+   `#pragma SHARED(0x1000)`, `USETSHMSZ 0x1400` is legal and `0x1480` traps
+   715.  A fresh CTA/launch receives a fresh initial bound.
+6. **The shrink takes effect immediately on that warp's address checks.**
+   After setting `0x200`, `STS/LDS` at `@0x80` works but `@0x400` (beyond the new window)
+   faults with `ILLEGAL_ADDRESS` (CUDA error 700). Another warp in the CTA can
+   still access `@0x400` until it updates its own bound.
+7. **`.FLUSH` does not lift the monotone rule:**
    after `0x200` + `.FLUSH`, growing to `0x400` still traps, shrinking to
-   `0x100` is still fine. It commits the pending size; the "can't grow back"
-   constraint is unaffected.
-7. **UR form** (`0x13c9`, size from a uniform register) obeys the same
+   `0x100` is still fine.
+8. **UR form** (`0x13c9`, size from a uniform register) obeys the same
    monotone + granularity rules.
 
-### Occupancy effect: verified NEGATIVE
+### Attempts to find a growth protocol (negative)
 
-The natural guess — "shrinking hands SRAM back so the block scheduler can
-reside more CTAs" — was tested and **does not hold** on SM120 (RTX 5090).
-An occupancy probe (block 32, decl 16K/32K/64K, 1000 blocks, each CTA bumps
-a global active counter and atomically max-tracks the peak during a fixed
-spin) shows the peak concurrent CTA count is determined **statically by the
-launched shared size**, and USETSHMSZ does not change it:
+The shrink-only conclusion was retested on an idle RTX 5090 specifically to
+exclude a missing timing or allocation handshake.  After shrinking from
+`0x800` and attempting to return to `0x1000`, every tested sequence trapped
+with error 715:
 
-| decl | peak CTA/SM (no USI) | peak CTA/SM (USETSHMSZ 4K) |
-|------|---------------------|----------------------------|
-| 16K  | 5 | 5 |
-| 32K  | 3 | 3 |
-| 64K  | 1 | 1 |
+- adjacent shrink/grow and shrink followed by 256 long-stall NOPs;
+- a CTA `BAR.SYNC` between the operations, including both warps participating;
+- `.FLUSH`, a long wait, and a second `.FLUSH`;
+- `ACQSHMINIT` before and/or after `.FLUSH` (despite its name, that instruction
+  waits for shared-memory-initialization release status; it is not an allocator
+  acquire operation).
 
-So the shrink tightens the **current CTA's** window (verified: a shrunk CTA
-faults on accesses beyond the new window) but the released SRAM is **not**
-used to schedule additional CTAs.  CTA residency is fixed at launch by the
-cubin `SHARED` declaration; the instruction does not feed the block
-scheduler.  What the freed SRAM *does* change (L1 carve-out?) was not
-measurable in this harness and remains open.
+Launching the kernel with an additional 4 KiB of dynamic shared memory raised
+the fresh-warp bound as expected: a direct `USETSHMSZ 0x2400` succeeded.  It
+still did not permit `0x800 -> 0x1800`, proving the failure is the monotone
+current-bound check rather than exhaustion of the CTA's original allocation.
 
-Reading: it is a fire-and-forget configuration hint on the uniform datapath
-(`DECOUPLED_RD_SCBD`, no destination, `VQ_UNORDERED`) — hardware turns a
-"too large" request into `ILLEGAL_INSTRUCTION`. Likely purpose is Blackwell
-L1/shared re-partitioning where a CTA can hand SRAM back to the L1/shared
-pool at runtime; the shrink persists only for the lifetime of the launch.
+The encoding audit also found no hidden USETMAXREG-like allocation mode.
+Bits 73--90 are marked unused in the USETSHMSZ immediate form.  Setting each
+one individually left a legal initial size operation executable but did not
+make a subsequent growth legal.  The structured patterns corresponding to
+USETMAXREG's `TRY_ALLOC`, `TRY_ALLOC.CTAPOOL`, and `UPT` output-predicate fields
+also still trapped on growth.  This does not mathematically exclude a wholly
+unknown opcode or a complex multi-bit protocol, but it rules out the plausible
+documented, synchronization, resource, and adjacent-encoding paths.  The
+observed USETSHMSZ state is therefore strictly monotone for a warp lifetime.
+
+### `.FLUSH` and dynamic occupancy (verified positive)
+
+The original probe tested the size write alone and therefore produced a
+misleading negative result.  The operation is explicitly two-phase:
+
+1. one or more warps update their bounds with `USETSHMSZ size`;
+2. a warp executes `USETSHMSZ.FLUSH`, committing its current value as the
+   CTA allocator target.
+
+On the 170-SM RTX 5090, with 5000 launched CTAs and a global live-CTA peak
+counter, the block-32 results are:
+
+| static declaration / runtime action | GPU-wide peak CTAs | CTA/SM |
+|---|---:|---:|
+| 64 KiB / none | 170 | 1 |
+| 64 KiB / shrink to 4 KiB only | 170 | 1 |
+| 64 KiB / shrink to 4 KiB + FLUSH | 1360 | 8 |
+| 64 KiB / FLUSH only | 170 | 1 |
+| 3 KiB user / none (4 KiB total static control) | 1360 | 8 |
+
+Thus `.FLUSH` really returns shared SRAM to the scheduler; this is not an L1
+carve-out hint.  With block 64, 64 KiB→32 KiB+FLUSH reaches 2 CTA/SM while a
+static 32 KiB kernel reaches 3 CTA/SM.  This follows the measured progressive
+backfill rule exactly: a newly admitted CTA must initially fit its static
+`64 KiB + 1 KiB reserved` charge before it can execute its own shrink+FLUSH,
+so dynamic residency need not equal a kernel launched with the smaller static
+declaration.
+
+The allocator charge after FLUSH is exactly the immediate total-window value;
+the static 1 KiB prefix is not added again.  Full allocation/fragmentation
+measurements and the admission formula are in
+`notes/sm120/arch/shared_memory_allocator.md`.
+
+A single warp's shrink+FLUSH is sufficient to release CTA SRAM on an idle GPU,
+even if another warp retains its larger address bound. Hardware therefore does
+not enforce a collective update. This is unsafe unless software guarantees the
+other warps will never use the released range. Having multiple warps FLUSH
+different values produced launch failure 719; the exact disagreement semantics
+remain undefined. Earlier apparent 700 faults from partial FLUSH coincided with
+another training workload occupying the GPU and are withdrawn.
 
 ## Variant overview (3 CLASS variants)
 | CLASS | opcode | operand | `e`[72] | ISRC_B_SIZE |
@@ -123,15 +172,13 @@ applies when the size comes from a freshly-loaded UR.
 | `0x00000000000079c9` | `0x000fe20008000100` | `USETSHMSZ.FLUSH` | FLUSH form |
 
 Decoder + round-trip test: `tools/decode_usetshmsz.py`. GPU behavior probe:
-`tests/asm_construct/test_usetshmsz.py`.
+`tests/asm_construct/test_usetshmsz.py`.  Scope/collective/backfill research
+probe: `tests/asm_construct/probe_usetshmsz_scope.py`. Growth-protocol and
+reserved-bit falsification probe:
+`tests/asm_construct/probe_usetshmsz_grow.py`.
 
 ## Open questions
-- Why does the ISA expose a shrink-only runtime knob? It does **not** raise
-  occupancy (verified); the freed SRAM's actual effect (L1 carve-out? cluster
-  pool hand-back?) needs a performance probe. On Blackwell it may exist for
-  future/driver-driven use or PDL-style dependent launches, none of which
-  this harness exercises.
-- Whether the freed window is actually re-partitioned toward L1 (performance
-  probe possible: shrunk kernel vs same kernel with no USETSHMSZ, measure
-  local-memory/global latency).
-- CTA- vs cluster-scoped effects when multiple CTAs share an SM.
+- Exact hardware contract when CTA warps disagree needs a dedicated corruption
+  probe after another CTA actually occupies the prematurely released range.
+  Multiple inconsistent FLUSH values faulted 719.
+- Interaction with clusters and PDL/dependent launches.
