@@ -689,10 +689,243 @@ mixed batches pass 3/3 and the `blkw` serial full runner passes **142/142**.
 
 ### M12 — call closure and advanced relocation (follow-up)
 
-- Copy reachable device functions per warp.
-- Apply supported text relocations and rewrite internal absolute targets.
-- Define LEPC/code-address semantics and dynamic JMX/BRX stepping.
-- Revisit physical version sharing only after fixed per-warp copies are stable.
+M12 extends the private backend from a single copied kernel image to mixed
+user/device/runtime call graphs.  **Reachability, placement, and stepping are
+separate decisions:** a reachable function is not automatically copied, and a
+copied function is not automatically Just My Code.
+
+The default remains fail-closed.  M12 must never absorb driver/runtime code,
+patch shared module text, or silently let a supposedly private path return to
+the original kernel image.
+
+#### M12 preflight findings (2026-09-06, RTX 5090/sm_120)
+
+`tests/call_test.cu` was rebuilt with CUDA 13.1.  Its kernel, recursive `fib`,
+and `leaf` are three FUNC symbols in one 0x580-byte `.text` section.  The
+linked image has no ordinary `.rela.text` entries: direct edges are already
+`CALL.REL.NOINC`, and returns are `RET.REL.NODEC Rxx`.  CUDA 13 also emits
+three retained `.nv.merc.rela.text` records, but those records belong to the
+capmerc capsule's **separate Mercury address space**, not native SASS text.
+They must be segregated from native relocations rather than projected onto
+native instruction indices.
+
+Three process-local analyzer-bypass probes established:
+
+1. Copying the complete linked text image byte-for-byte to a warp-private heap
+   image executes `leaf` plus recursive `fib` correctly.
+2. A breakpoint inside private `leaf`, scoped only to warp 0, hits while warp
+   1 completes and the final 64-thread result remains correct.  Existing M11
+   handlers already work inside a device function.
+3. Redirecting the private caller's leaf CALL to the original module leaf,
+   without converting its return token, completes through original text and
+   does **not** hit the private continuation.  Moving leaf from section offset
+   0x450 to 0x600 while changing only CALL also faults 700.  Therefore
+   `CALL.REL` target relocation alone is insufficient: program-base-relative
+   return materialization/RET semantics and the linked text layout are part of
+   the ABI.
+
+These probes make preservation of the linked text layout the first safe path.
+Function-granular packing and private/shared boundaries require an explicit
+return-ABI transform and may not infer correctness from final output alone.
+
+#### Ownership and stepping policy
+
+Each resolved function/target receives two independent classifications:
+
+```text
+placement: PRIVATE_EAGER | PRIVATE_LAZY | SHARED_OPAQUE | INDIRECT_UNKNOWN
+stepping:  STEP_INTO     | STEP_OVER
+```
+
+- The selected kernel is always `PRIVATE_EAGER`.
+- User compilation units and explicit include patterns are eligible for
+  `PRIVATE_LAZY`.
+- Undefined symbols, driver runtime address ranges, and explicit excludes are
+  `SHARED_OPAQUE` and default to step-over.
+- An unresolved indirect target is `INDIRECT_UNKNOWN`; continue-only behavior
+  must be explicit, otherwise reject before launch.
+- Symbol names are hints, not ownership proof.  `DEVICE_PRINT.md` shows that
+  undefined `vprintf` resolves to `syscall_trampoline_vprintf`, not to the
+  same-named implementation entry.  Static symbol/relocation evidence must be
+  combined with runtime module address ranges.
+
+CLI/API policy surface:
+
+```text
+set just-my-code on|off
+set step-filter include <regex>
+set step-filter exclude <regex>
+info functions
+materialize <function>
+```
+
+`step` steps over opaque calls; an explicit instruction/assembly step may try
+to enter only when the target can be safely materialized.  Breakpoint reports
+must say when a shared caller path cannot reach a private function instance.
+
+#### Module, function, and address model
+
+Replace the single flat template assumption with:
+
+```text
+ModuleTemplate
+  TextIsland[]                  # one linked text/program-base domain
+    FunctionTemplate[]         # symbol range + CFG + relocation records
+    CallEdge[]                 # target class + return ABI
+
+CodeLoc(module, island, function, instruction)
+
+WarpProgram
+  island_base[island]          # fixed for the launch
+  FunctionInstance[]           # state/base/overlays/incoming edges
+```
+
+`FunctionInstance.state` is `UNMATERIALIZED`, `MATERIALIZING`, `PRIVATE`, or
+`OPAQUE`.  Once a private VA becomes observable during a launch it is never
+moved or freed until that launch ends.
+
+The initial local-call implementation copies a complete `TextIsland` while
+preserving every original section-relative offset.  This retains linked
+CALL/return conventions and provides a correctness oracle.  Function-level
+placement is enabled only after its return ABI is decoded and tested.
+
+The ELF reader must retain full **native** relocations, not only offsets:
+
+```python
+Relocation(section, offset, type, symbol, addend, mercury)
+```
+
+In practice this should become separate `NativeRelocation` and
+`CapsuleRelocation` types: `.nv.merc.symtab` and `.nv.merc.rela.*` use standard
+ELF64 record layouts, but their symbol values, offsets and addends name
+Mercury/MPE positions.  They are not applied to finalized `.text`.  The
+current `cubin.py` inclusion of `.nv.merc.rela.text.*` in native
+`text_reloc_offsets()` is deliberately conservative but wrong for M12 and
+causes false instruction-index rejection.
+
+Build the native direct call graph from decoded finalized CALL targets,
+primary symbols and ordinary relocations; use `.nv.callgraph` as a
+cross-check.  The retained capsule may be inspected independently, but without
+a verified Mercury-to-SASS map/finalizer it cannot supply native addresses.
+Recursion and mutually recursive functions are one SCC placement unit.
+Supported native relocations use a strict whitelist and preserve opcode,
+guard, divergence predicate, scheduling, and call-depth fields.
+
+Runtime materialization remains two-phase: the entry gate reports the loaded
+module base, then the host applies private/module address mappings, writes only
+heap executable ranges, commits, target-invalidates, and finally opens the
+gate.
+
+#### Call-boundary rules
+
+M12 records a return protocol on every direct call edge.
+
+- **Private local relative ABI:** linked `CALL.REL.NOINC` plus
+  `RET.REL.NODEC` stays inside the same private text island with original
+  offsets for the first implementation.
+- **Opaque absolute-return ABI:** `LEPC` constructs an absolute private
+  continuation and `CALL.ABS.NOINC` calls a loader-resolved target.  This is
+  the expected `printf` fast path, pending its dedicated probe.
+- **Opaque relative-return ABI:** a raw private-to-module CALL is forbidden.
+  A bridge must replace the caller's relative return token with one that the
+  original callee's `RET.REL` resolves to the private continuation.  A
+  site-specific bridge can write the known return register pair without
+  scratch registers, execute the original guarded CALL, and let the callee
+  return directly to private code.
+- **Unknown return ABI / shared-to-private callback:** reject or report an
+  explicitly incomplete breakpoint scope.  No shared module site is patched.
+
+An opaque boundary must also be checked for re-entry.  A PRIVATE -> OPAQUE
+edge is safe only when the opaque subgraph does not silently call a function
+that is expected to be private on that path.  SCCs are indivisible; static
+OPAQUE -> PRIVATE back-edges either promote the boundary or receive a precise
+diagnostic.
+
+#### Just My Code and demand copying
+
+Implement demand copying in two steps:
+
+1. **Mixed eager placement:** at the entry gate, materialize only the root
+   text island and explicitly selected user islands; route verified opaque
+   edges to their original runtime targets and step over them.  This delivers
+   Just My Code before adding a transparent resolver.
+2. **First-use resolver:** unresolved `PRIVATE_LAZY` call sites target a
+   debugger-owned resolver.  It reports `(warp, group, callee)`, freezes the
+   warp, materializes the whole callee SCC, applies relocations, commits and
+   invalidates, then replays the call.  Subsequent calls may be patched to the
+   direct private target.  The permanent-resolver form is the simpler initial
+   correctness path; direct-call promotion is the later fast path.
+
+Setting a breakpoint in an unmaterialized function queues/promotes the
+necessary SCC and its private incoming edges.  An invocation already running
+in shared code is never migrated mid-function.  Removing all breakpoints
+restores canonical words but does not change that function's VA or reclaim it
+until the next launch.
+
+For very large same-section images, copying on first use only reduces transfer
+cost unless storage is sparse.  The preferred physical-memory experiment is
+CUDA VMM: reserve a stable per-warp virtual text layout, map executable pages
+on demand, and use page COW for mutation while preserving all architectural
+PCs.  It is gated on executable-fetch, alias-icache, remap/TLB, and IVALL
+experiments; regular `cuMemAlloc` remains the fallback.
+
+#### LEPC and dynamic control flow
+
+Debugger-visible locations are logical `CodeLoc`s; hardware control flow uses
+private physical VAs.  Arbitrary LEPC-as-data is not bit-identical after
+copying and remains rejected in strict mode.  Recognized control-flow uses may
+return the private address and are translated back to `CodeLoc` for display.
+
+Replay encoding becomes placement-aware rather than a tuple of source lines:
+
+```python
+ReplayPlan.encode(logical_site, site_va, thunk_va, address_map)
+```
+
+- LEPC immediate replay adjusts by `site_next - thunk_next`; bare LEPC can use
+  the immediate form to reproduce the private site address.
+- BRX replay adjusts its relative immediate by the same delta.
+- JMX is absolute and can replay unchanged when its register already contains
+  a private target.
+- CALL/RET replay uses the edge's recorded return protocol, never generic
+  verbatim replay.
+
+At a stopped JMX/BRX, M11f command injection reads predicate and target
+registers per active lane.  The host computes and validates targets, maps them
+to `CodeLoc`, partitions lane masks by successor, and arms scoped private
+breakpoints.  Targets outside owned address maps are step-over/continue-only
+or fail closed; external text is never patched.
+
+#### Milestones and mandatory probes
+
+- **M12a — ELF/call ABI foundation:** parse complete native symbols and
+  relocations, separate retained Mercury capsule records so they can never be
+  mistaken for native text offsets, and add `ModuleTemplate`, `TextIsland`,
+  `FunctionTemplate`, `CodeLoc`, `CallEdge`, SCC and ownership-policy unit
+  tests.  Probe the exact `RET.REL` program base and each observed return-token
+  materialization.
+- **M12b — local call closure:** execute preserved-layout text islands with
+  nested/recursive/divergent calls; support breakpoints in callees and
+  placement-aware CALL/RET replay.  Prove every return remains private by
+  continuation breakpoints, not only output comparison.
+- **M12c — Just My Code / opaque calls:** verify heap-resident `LDC c[4]`
+  observes loader relocation, then run private `LEPC + CALL.ABS` through the
+  full printf syscall chain and back to a private continuation.  Add default
+  step-over and relative-return bridge tests.
+- **M12d — lazy materialization:** resolver, per-warp/SCC state machine,
+  breakpoint-triggered promotion, relaunch cleanup, and multi-warp isolation.
+- **M12e — LEPC/JMX/BRX:** supported PC semantics, dynamic lane-target
+  partitioning, indirect internal calls, and precise unsupported diagnostics.
+- **M12f — physical sharing experiment:** only after fixed-VA demand copies
+  pass.  Try VMM sparse mapping/page COW first; do not switch a live warp to a
+  different virtual code base because return registers and reconvergence
+  state may retain old physical PCs.
+
+Required gates include nested and mutually recursive calls, a breakpoint on
+callee entry/body/RET, simultaneous warps with different callee breakpoints,
+divergent calls, opaque-call step-over, printf return to private code, lazy SCC
+first-use races, relaunch, and fail-closed unknown relocation/indirect target.
+The full M2-M12 serial regression and Hopper cross-check remain release gates.
 
 ## 15. Test matrix and release gates
 
