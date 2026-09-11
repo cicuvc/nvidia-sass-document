@@ -221,17 +221,42 @@ def eiattr_param_cbank(sym_idx: int, base: int, param_size: int) -> bytes:
 
 
 # ---------------------------------------------------------------------------
-def note_nv_tkinfo() -> bytes:
-    """NOTE section for toolkit info (0xa4 bytes, directly from reference cubin)."""
+def _minimal_section(name: str) -> bytes:
+    """Extract a section's content from the reference nvcc cubin by name."""
     with open(Path(__file__).resolve().parent / "minimal.cubin", "rb") as f:
         d = f.read()
-    return d[0x4b8:0x4b8 + 0xa4]
+    shoff = struct.unpack("<Q", d[0x28:0x30])[0]
+    shnum = struct.unpack("<H", d[0x3C:0x3E])[0]
+    secs = [struct.unpack("<IIQQQQIIQQ", d[shoff + i * 64: shoff + (i + 1) * 64])
+            for i in range(shnum)]
+    stroff = secs[1][4]
+    for s in secs:
+        end = d.index(b"\x00", stroff + s[0])
+        if d[stroff + s[0]:end].decode() == name:
+            return d[s[4]:s[4] + s[5]]
+    raise ElfError(f"section {name!r} not found in minimal.cubin")
+
+
+def note_nv_tkinfo() -> bytes:
+    """NOTE section for toolkit info (0xa4 bytes, directly from reference cubin)."""
+    return _minimal_section(".note.nv.tkinfo")
 
 
 def note_nv_cuver() -> bytes:
-    with open(Path(__file__).resolve().parent / "minimal.cubin", "rb") as f:
-        d = f.read()
-    return d[0x55c:0x55c + 0x24]
+    return _minimal_section(".note.nv.cuver")
+
+
+def debug_frame() -> bytes:
+    """.debug_frame template (CIE+FDE) from the reference nvcc cubin.
+
+    cuobjdump -elf rejects any cubin whose section #4 is not .debug_frame
+    ("cuobjdump fatal : Invalid ELF") — probed empirically: the section must
+    exist at exactly index 4 (right after .symtab, mirroring nvcc), but its
+    CONTENT is never parsed (a 4-byte zero stub also passes).  The driver,
+    cuobjdump -sass and nvdisasm don't care either way.  We emit the genuine
+    nvcc template bytes for fidelity.
+    """
+    return _minimal_section(".debug_frame")
 
 
 
@@ -444,7 +469,15 @@ class CubinBuilder:
         # 3: .symtab
         sec(".symtab", SHT_SYMTAB, align=8, entsize=24)
 
-        # 4/6: .note.nv.tkinfo / .note.nv.cuver — sm120-only (nvcc sm90 cubins
+        # 4: .debug_frame — MUST be section index 4 (immediately after
+        # .symtab, mirroring every nvcc cubin): cuobjdump -elf rejects the
+        # file as "Invalid ELF" when .debug_frame is missing or sits at any
+        # other index.  Both arches need it (sm_90 and sm_120 nvcc cubins
+        # alike).  Content is not validated by cuobjdump; we emit the nvcc
+        # template anyway.
+        sec(".debug_frame", SHT_PROGBITS, content=debug_frame(), align=1)
+
+        # 5/6: .note.nv.tkinfo / .note.nv.cuver — sm120-only (nvcc sm90 cubins
         # carry no note sections; the sm120 template bytes would be rejected
         # on Hopper with CUDA_ERROR_NO_BINARY_FOR_GPU).
         _is_sm120 = arch.current().name == "sm120"

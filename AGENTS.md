@@ -55,6 +55,12 @@ Source dialect essentials (see §3–§4 of the manual):
 - QMMA srcFmt enum (probed): `E4M3=0, E3M4=1, E2M3=2, E5M2=4, E3M2=5, E2M1=6`.
 - `CudaModule.launch` packs pointer args as 8 bytes and `bytes` args (tensor
   maps) at their full size; param sizes are read from the cubin's KPARAM.
+- **cuobjdump -elf requires `.debug_frame` at section index 4** (immediately
+  after `.symtab`, mirroring every nvcc cubin): missing or at any other index
+  → `cuobjdump fatal : Invalid ELF` (while the driver, `cuobjdump -sass` and
+  nvdisasm all accept the file).  Content is never parsed (a zero stub
+  passes); the builder emits the genuine template from `minimal.cubin`.
+  `.rela.debug_frame` and program headers are NOT required.
 
 Running tests: `python3 tools/run_tests.py [-j N]` (parallel processes; timing/descriptor-sensitive tests run serially — see `TIMING_SENSITIVE` in run_tests.py).  When adding a GPU test prefer independent buffers/streams; keep `test_cache_desc`-style per-stream state out of the parallel batch.
 
