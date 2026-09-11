@@ -31,7 +31,7 @@ A stdlib-only extractor turns the spec into a queryable JSON DB — prefer it ov
 Parser gotchas already handled (don't reintroduce): sub-section keywords and even the next `CLASS` can be **glued after `;` with no newline** (`;OPCODES`, `ENCODING!..._unused`, `;CLASS "..."`); multiple `BITS_` statements may share one physical line; field names can contain digits, so bit-pairs are consumed until their count equals the declared width; `imad_pseudo_*` classes carry a `REMAP "..."` directive instead of `BITS_` (no opcode field — expected).
 
 ## Assembler (`assembler/`)
-A hand-written SASS → cubin toolchain targeting **sm_120** (regenerated `sm120.json`), plus a CTypes CUDA runner and a scoreboard dependency checker.  Full syntax and feature list: **`ASSEMBLER_MANUAL.md`** (read it before writing SASS-by-hand tests).
+A hand-written SASS → cubin toolchain targeting **sm_120** (regenerated `sm120.json`), plus a CTypes CUDA runner and a scoreboard dependency checker.  Full syntax and feature list: **`ASSEMBLER_MANUAL.md`** (read it before writing SASS-by-hand tests).  Cubin ELF 格式(段结构/EIATTR 编码/加载器硬性要求)的完整规范: **`notes/CUBIN_STRUCTURE.md`**.
 
 Key entry points (`from assembler import ...`):
 - `assemble(source, kernel_name="", check_deps=True, strict_deps=False) -> bytes` (cubin)
