@@ -42,7 +42,7 @@ SCHED_TYPES = {"REQ", "BITSET", "WR", "RD", "USCHED_INFO", "BATCH_T", "PM_PRED",
 SCHED_SLOT_NAMES = {"src_rel_sb", "dst_wr_sb", "req_bit_set", "req", "wr", "rd",
                     "pm_pred", "batch_t", "usched_info",
                     "reuse_src_a", "reuse_src_b", "reuse_src_c", "reuse_src_d"}
-COMPOSITE_TYPES = {"C", "DESC", "GMMA", "TMA"}
+COMPOSITE_TYPES = {"C", "CX", "DESC", "GMMA", "TMA"}
 
 
 class MatchError(Exception):
@@ -196,6 +196,10 @@ class SassMatcher:
                     return None
                 slot_map[bslot["name"]] = op.bsel
                 consumed_mods.add(bslot["name"])
+            if op.row is not None:
+                consumed_mods.add("row_A")
+            if op.col is not None:
+                consumed_mods.add("col_B")
 
         # 3. Match remaining modifiers
         enc_names = set()
@@ -298,6 +302,8 @@ class SassMatcher:
             elif name in ("Rb",):      key = "ISRC_B_SIZE"
             elif name in ("Rc",):      key = "ISRC_C_SIZE"
             elif name in ("Re",):      key = "ISRC_E_SIZE"
+            elif name == "URd2" or name == "Rd2":
+                key = "IDEST2_SIZE"
             elif name.startswith("Rd") or name.startswith("URd"):
                 key = "IDEST_SIZE"
             break  # primary (first non-modifier) slot decides
@@ -649,7 +655,7 @@ class SassMatcher:
 
         first_type = primary["type"]
 
-        if first_type == "C" and op.kind == OperandKind.CONST_BANK:
+        if first_type in ("C", "CX") and op.kind == OperandKind.CONST_BANK:
             return self._match_const_bank(group, op, slot_map)
         if first_type in ("DESC", "GMMA", "TMA") and op.kind in (
                 OperandKind.MEM_DESC, OperandKind.UREG):
@@ -682,6 +688,13 @@ class SassMatcher:
 
     def _match_simple_slot(self, slot: dict, op: Operand, slot_map: dict) -> bool:
         st = slot["type"]
+        base = slot["name"].upper().rstrip("0123456789")
+        # IMMA's matrix-layout attributes are operand-specific, not generic
+        # spellings for the two fixed encoding bits.
+        if op.row is not None and base != "RA":
+            return False
+        if op.col is not None and base != "RB":
+            return False
         compat = TYPE_COMPAT.get(op.kind)
         if compat is None or st not in compat:
             # cuobjdump prints a float immediate of exactly 0.0 as "0"
@@ -710,12 +723,15 @@ class SassMatcher:
             slot_map[f"{slot['name']}_invert"] = 1
         if op.lnot:
             slot_map[f"{slot['name']}_not"] = 1
+        if op.row is not None:
+            slot_map["row_A"] = op.row
+        if op.col is not None:
+            slot_map["col_B"] = op.col
         # HFMA2/HADD2 lane swizzle: an operand .H0_H0/.H1_H1/.F32/.H0_NH1
         # maps to the matching iswz<X> modifier slot (Ra->iswzA, Rb->iswzB,
         # Rc->iswzC; note iswzC is also typed ISWZA; HADD2 names its C-operand
         # swizzle slot iswzB_as_C instead of iswzC).
         if op.iswz is not None:
-            base = slot["name"].upper().rstrip("0123456789")
             key = {"RA": "iswzA", "RB": "iswzB", "RC": "iswzC"}.get(base)
             if key:
                 slot_map[key] = op.iswz
@@ -728,9 +744,17 @@ class SassMatcher:
     # ------------------------------------------------------------------
     def _match_const_bank(self, group: list[dict], op: Operand,
                           slot_map: dict) -> bool:
+        # A bindless CX operand (`c[URa][...]`) must only match a CX class, and
+        # a bound numeric-bank operand must not leak into a CX class (the CX
+        # slot would otherwise be filled from the bank number).
+        has_cx = any(s["type"] == "CX" for s in group)
+        if has_cx != (op.cx_ureg is not None):
+            return False
         for s in group:
             st = s["type"]
             if st == "C":
+                slot_map[s["name"]] = 1
+            elif st == "CX":
                 slot_map[s["name"]] = 1
             elif st in ("UImm",) and ("bank" in s["name"].lower() or "Sa_bank" == s["name"]):
                 slot_map[s["name"]] = op.value  # bank number
@@ -741,7 +765,14 @@ class SassMatcher:
                 # c[bank][off] encodes the index register as RZ
                 slot_map[s["name"]] = op.cbank_reg if op.cbank_reg is not None else 255
             elif st == "UniformRegister":
-                slot_map[s["name"]] = op.addr_ureg if op.addr_ureg is not None else 255
+                # In a CX (bindless) group `URa` is the 64-bit handle and the
+                # second uniform register is the index; in a plain C group the
+                # single uniform slot is the c[bank][URa+off] byte offset.
+                nm = s["name"].upper()
+                if op.cx_ureg is not None and nm in ("URA", "SA"):
+                    slot_map[s["name"]] = op.cx_ureg
+                else:
+                    slot_map[s["name"]] = op.addr_ureg if op.addr_ureg is not None else 255
             elif st in ("SImm", "UImm"):
                 slot_map[s["name"]] = op.offset
             elif st == "ONLY64":

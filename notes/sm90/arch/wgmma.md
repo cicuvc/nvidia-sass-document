@@ -534,6 +534,214 @@ measured ~5-7 entries. Practical headroom: 5-7 outstanding × ~33 cyc ≈
 ~200 cyc of run-ahead, which is why `commit_group`/`wait_group` discipline
 never throttles real GEMM K-loops.
 
+### HGMMA versus the generic MIO paths (H20, 2026-09)
+
+Hand-SASS probe `tests/asm_construct/probe_hgmma_mio_interaction.py` puts one
+HGMMA warpgroup (warps 0--3) and one contender warpgroup (warps 4--7) in the
+same 256-thread CTA.  All four contender warps run one copy of the stream, so
+each subcore is loaded symmetrically.  Each side clocks its own issue span;
+HGMMA also clocks the tail `WARPGROUP.DEPBAR.LE gsb0,0`.  An active n16 chain,
+a duration-matched all-lanes-false HGMMA chain, and an inactive warpgroup are
+separate controls.
+
+The main asymmetry is decisive: **generic MIO work never measurably slows
+HGMMA admission or completion, but active HGMMA slows several generic MIO
+streams.**  For a 64-MMA n16 chain HGMMA stays at 30.0 cyc/MMA to issue and
+32.9 cyc/MMA through DEPBAR under every tested contender.  This remains true
+for a pre-existing 64-instruction MUFU, SHFL, LDS, 32-wavefront LDS, or LDG
+flood: a single HGMMA remains ~9 cycles to issue and ~60 cycles to complete.
+The K=1,2,4,6,8,12,16 issue curves are also identical with no contender and
+with four LDS or MUFU warps; in particular the existing ~5--7-entry FIFO knee
+does not move.
+
+Long-stream contender results (cycles/instruction, n16 HGMMA):
+
+| contender | solo | active HGMMA | predicated-off HGMMA control |
+|---|---:|---:|---:|
+| NOP | 2.01 | 2.02 | 2.09 |
+| IADD3 | 2.01 | 2.28 | 2.15 |
+| BMOV | 3.99 | 4.48 | 3.99 |
+| MUFU.RCP | 7.99 | 8.47 | 8.09 |
+| SHFL | 4.16 | 6.63 | 4.84 |
+| LDS broadcast | 4.12 | 6.68 | 4.29 |
+| LDS, 32 wavefronts | 124.42 | 127.15 | 124.43 |
+| LDSM.16.M88.4 | 15.73 | 18.27 | 15.80 |
+| STS | 15.76 | 18.27 | 15.72 |
+| LDG | 4.92 | 6.63 | 5.95 |
+| STG | 8.56 | 9.50 | 8.86 |
+
+The duration-matched predicated-off stream accounts for warpgroup control,
+ordinary warp scheduling, and front-end instruction slots but performs no TC
+or shared-memory work.  It explains only a small part of the active SHFL/LDS
+penalty.  The nearly equal active-HGMMA increment for every shared-data op is
+especially useful: SHFL +2.47, broadcast LDS +2.56, 32-wavefront LDS +2.73,
+LDSM +2.54, and STS +2.51 cyc/instruction.  Making an LDS request 32
+wavefronts changes its own cost by ~120 cycles but hardly changes the HGMMA
+increment.  Thus HGMMA does not appear to consume entries in the LDS
+wavefront/downstream queue.  Its direct shared-operand fetch instead takes
+priority service slots at a later shared-data/crossbar arbiter that is also
+used by LDS, STS, LDSM, and SHFL.
+
+Shape scaling supports a command/service-window effect.  H20's n8/n16/n64
+chains issue at 17.45/30.0/118.4 cyc/MMA.  During short fully-overlapped
+streams, LDS and SHFL take respectively ~13.4/~9.17/~4.70 cyc/instruction
+(solo ~4.6--4.7).  Narrow, frequent HGMMA commands cause the strongest
+interference; sparse n64 commands are easy for a short shared stream to fit
+around even though each n64 MMA has the larger operand/result footprint.
+
+#### H800 replication: removing H20's TC-rate cap (2026-09)
+
+The same hand-SASS cubins were rerun on an H800 PCIe (full-rate GH100).  This
+shows that the H20 shape trend above is mostly a consequence of its reduced
+tensor arithmetic rate, not a native preference for narrow commands:
+
+| shape | H20 issue / DEPBAR | H800 issue / DEPBAR | H800 speedup |
+|---|---:|---:|---:|
+| n8 | 17.45 / 19.50 | 17.36 / 19.44 | ~1.00x |
+| n16 | 30.00 / 32.92 | 19.23 / 21.56 | ~1.56x |
+| n64 | 118.41 / 128.58 | 30.42 / 34.25 | ~3.89x |
+
+n8 is nearly identical on the two GPUs and is therefore already limited by
+fixed/operand-delivery machinery.  Wider shapes increasingly expose H20's
+TC-rate cap.  The contender sees the corresponding reversal:
+
+| fully-overlapped contender | H20 n8 / n16 / n64 | H800 n8 / n16 / n64 |
+|---|---:|---:|
+| SHFL | 13.38 / 9.17 / 4.70 | 13.41 / 14.54 / 20.63 |
+| LDS broadcast | 13.41 / 9.17 / 4.70 | 13.49 / 14.51 / 20.63 |
+| LDSM.4 | 23.97 / 25.06 / 18.84 | 24.09 / 25.09 / 31.08 |
+| STS | 24.05 / 25.04 / 18.73 | 24.06 / 25.06 / 31.07 |
+
+(Solo short-stream baselines are ~4.6--4.7 cyc for SHFL/LDS and ~15 cyc for
+LDSM/STS.)  H800's n64 HGMMA is almost four times as frequent as H20's and
+now creates the strongest shared-path interference.  The useful rule is:
+**generic shared-data service lost to HGMMA tracks the actual HGMMA
+command/operand-service rate**, not N by itself or merely the static HGMMA
+opcode issue rate.
+
+Long n16 streams reproduce the same service-slot signature as H20: SHFL
+4.17 -> 6.64, LDS 4.12 -> 6.63, 32-wavefront LDS 124.34 -> 126.85, LDSM
+15.74 -> 18.24, and STS 15.76 -> 18.27 cyc/instruction.  Every shared-data
+family again pays ~+2.5 cycles.  HGMMA itself stays at its isolated rate
+within measurement noise (19.23/21.56 isolated versus 19.27/21.59 with
+LDS/SHFL and 19.31/21.64 with LDSM/STS).  A co-resident short NOP/MUFU/BMOV
+stream can improve HGMMA issue by ~4% through warpgroup scheduling/alignment,
+so that overlay is not a clean bandwidth baseline; shared traffic never makes
+HGMMA slower than its isolated rate.
+
+The FIFO tests also replicate unchanged.  For n16, K=1/2/4/6/8/12/16 has
+the same issue curve with no contender, four LDS warps, or four MUFU warps;
+the knee remains between K=6 and K=8 (~5--7 usable entries).  Starting one
+HGMMA behind a 64-instruction MUFU, LDS, 32-wavefront LDS, or LDG flood still
+gives exactly ~9 cycles to issue and ~60 cycles through DEPBAR.  Hence the
+independent/high-priority `$VQ_UMMA` conclusion is not an artifact of H20's
+reduced TC rate.
+
+#### Exact shared-wavefront accounting: SS versus RS
+
+The SS operand sizes predict a particularly simple count for bf16
+`m64nNk16`:
+
+- A is 64x16x2 B = 2048 B = **16 shared wavefronts**.
+- Each additional n8 of B is 16x8x2 B = 256 B = **2 wavefronts**, broadcast
+  from the L1TEX/shared path to the four subcore tensor cores.
+- Therefore `W_SS = 16 + 2*(N/8)`: n8/n16/n64 require 18/20/32 wavefronts.
+- In RS form A comes from four registers per warp, so `W_RS = 2*(N/8)`:
+  2/4/16 wavefronts.
+
+The H800 SS issue rates already nearly equal the first prediction:
+17.36/19.23/30.42 cycles versus 18/20/32 wavefronts.  More decisively, STS
+can be used as an occupancy meter for the shared-data arbiter.  With `Nh=64`
+HGMMAs and a longer `Nc=512` STS stream, convert the STS issue-span increase
+back to cycles per HGMMA as
+
+```
+blocked_cycles_per_HGMMA = (C_overlay - C_solo) * Nc / Nh
+```
+
+The measured result is essentially exact:
+
+| shape | predicted SS wf | measured SS block | predicted RS wf | measured RS block |
+|---|---:|---:|---:|---:|
+| n8 | 18 | 18.26 cyc | 2 | 2.11 cyc |
+| n16 | 20 | 20.13 cyc | 4 | 4.22 cyc |
+| n64 | 32 | 32.13 cyc | 16 | 16.11 cyc |
+
+Repeating with Nh=16 and 32 gives the same total blocking proportional to Nh
+(the two-wavefront RS n8 case is noisier because its total delta is small).
+Thus the shared-data arbiter exposes almost exactly **one 128-B wavefront per
+cycle**, and HGMMA receives priority for exactly its operand-wavefront count.
+RS removes an N-independent ~16-cycle block -- precisely the A tile -- while
+retaining the 2 cycles per n8 B tile.  The equal LDS/SHFL effects are
+consistent with this accounting; STS is the cleanest meter because it has no
+destination-register completion traffic.
+
+RS HGMMA's own steady issue intervals are 12.0/12.0/28.92 cyc for n8/n16/n64,
+so they should not be equated directly with B's 2/4/16 shared wavefronts.
+For narrow shapes the RS input-staging/command floor dominates; for n64 the
+TC arithmetic path dominates.  Operand service overlaps those stages.  The
+conserved contender blocking above, rather than RS wall time alone, isolates
+the shared operand traffic.
+
+The same accounting predicts LDS/SHFL average issue time.  With Nh=64 and
+Nc=512, the expected increment is simply `W/8`:
+
+| SS shape | predicted delta | LDS measured delta | SHFL measured delta |
+|---|---:|---:|---:|
+| n8 | +2.250 | +2.268 | +2.193 |
+| n16 | +2.500 | +2.527 | +2.475 |
+| n64 | +4.000 | +4.037 | +3.986 |
+
+The worst error is 0.057 cyc/instruction.  Thus the apparently mysterious
+average slowdown is just conservation of HGMMA operand wavefronts over the
+longer contender stream; no separate LDS/SHFL-specific penalty is needed for
+SS.
+
+RS exposes a second, RF-side effect unless the contender's result is
+discarded.  `LDS RZ,[RZ]` and `SHFL.BFLY PT,RZ,RZ,...` both give the following
+identical pure-exchange result (solo = 4.170 cyc/instruction):
+
+| RS shape | B-wavefront prediction | measured issue | measured delta |
+|---|---:|---:|---:|
+| n8 | +0.250 | 4.414 | +0.244 |
+| n16 | +0.500 | 4.664 | +0.494 |
+| n64 | +2.000 | 6.129 | +1.959 |
+
+Ordinary destination-writing LDS instead measures 4.639/5.104/7.104, and
+ordinary SHFL measures 4.682/5.139/7.113.  Relative to the RZ-destination
+forms, this is another ~2/~4/~8 cycles per HGMMA after multiplying by Nc/Nh.
+It appears only with RS, whose A fragment must be collected from four GPRs per
+warp, so it is an RF collection/writeback arbitration effect rather than
+additional shared wavefronts.  A destination-discarding SHFL that still reads
+R40 retains ~2 extra cycles per HGMMA; changing its source to RZ removes that
+remainder too.  This independently matches the earlier finding that SHFL has
+a late GPR-source collection cost, whereas `LDS RZ,[RZ]` has neither a GPR
+address read nor a destination writeback.
+
+Current topology interpretation:
+
+1. `$VQ_UMMA` and the ~5--7-entry TC command FIFO are independent of the
+   subcore LSU/XU queues.  The latency table's common `mio_pipe` label is an
+   instruction-class/scheduling umbrella, not proof of a common FIFO.
+2. HGMMA admission has strict or near-strict priority over already queued
+   generic MIO work.  Backpressure propagates TC FIFO -> HGMMA issuer, not
+   LSU/XU queue -> HGMMA issuer.
+3. The SS tensor operand reader joins the shared-memory exchange path after
+   those front queues and is preferentially arbitrated there.  The identical
+   SHFL/LDS signature is independent evidence that SHFL reaches this shared
+   exchange backend, despite its distinct late-RF collection behavior.
+4. MUFU/XU and BMOV/CBU see only small scheduling/arbitration effects.  Global
+   LDG/STG see a weaker effect than the shared family, consistent with sharing
+   some LSU/L1TEX admission or fabric but not HGMMA's shared operand service.
+
+This also reconciles profiler-visible `mio_throttle` from HGMMA with a
+dedicated FIFO: once `$VQ_UMMA`/the TC FIFO is full, an HGMMA-class instruction
+waits for its own queue entry and the stall is naturally charged to the MIO
+instruction class.  It does **not** imply that HGMMA occupies a subcore LSU or
+XU FIFO.  Direct counter attribution could not be repeated on either the H20
+or H800 host because Nsight Compute reports `ERR_NVGPUCTRPERM`; the conclusions
+above use mutually timed issue/completion spans and predication controls.
+
 ## Round 4 — the ptxas wgmma-DCE trap; sustained throughput is plain MAC-bound (H20, 2026-08; nvcc variant chains)
 
 **ptxas dead-code-eliminates `wgmma.mma_async` when the kernel never
@@ -794,3 +1002,54 @@ both avoidable from source:
   into an extra rank-1 K-slice (A′=ones column, B′=bias row, zero-padded
   to k16) so the first MMA delivers `A·B + bias` with zero fences beyond
   the mandatory opening one.
+
+## RF write-port discriminator (H800, hand SASS)
+
+A zero-GPR-read `MOV32I` write storm distinguishes HGMMA completion from
+its previously observed sensitivity to ALU operand collection.  Relative
+to the identical `MOV32I RZ` control, real GPR writes add 1.875, 3.891,
+and 15.687 cycles/MMA for n8, n16, and n64 respectively, tracking the
+4/8/32-register accumulator widths.  `scaleD=0` overwrite and `scaleD=1`
+RMW behave identically, so the collision is at final destination commit,
+not the accumulator read.  Normal delayed-completion probes on this same
+H800 independently show one write service per RF bank per cycle.
+
+Therefore HGMMA may retain a dedicated wide result transport/staging
+path, but it has **no fully independent architectural RF write port**:
+its final writes arbitrate in the ordinary per-bank 1W commit domain.
+See `register_bandwidth.md` Round 3 for controls and limitations.
+
+A follow-up read-only storm (`FFMA RZ` with three rotating, non-reused
+sources) finds RMW and all-overwrite chains identical, including n64
+chains of 32 and 128 MMAs.  Hence the logical old-accumulator read does
+not traverse the ordinary ALU 2R collector once per destination register;
+it is supplied by a dedicated accumulator-read or bank-local RMW path.
+See `register_bandwidth.md` Round 4.
+
+A direct marker race subsequently exposes that path.  For an n64 F32
+accumulate, a scalar write swept across completion produces, in order,
+`marker+delta`, `base+delta`, and `marker`; the middle state is a stable
+read-before-write window.  It spans six calibrated stall-1 NOP slots,
+approximately 12 clocks.  Moving from accumulator pair `{R24,R25}` to
+`{R54,R55}` shifts the write boundary by about 28 clocks, indicating one
+even+odd pair per approximately two clocks.  See `register_bandwidth.md`
+Round 5 and `probe_hgmma_rmw_window.py`.
+
+## FP8 QGMMA correspondence (H800, hand SASS)
+
+Dense E4M3 QGMMA reproduces the BF16 HGMMA timing and RF signatures
+essentially exactly.  K doubles from 16 to 32 while the operands halve
+from two bytes to one, so both A (`64x32 FP8 = 2048 B = 16 wavefronts`)
+and each n8 B tile (`32x8 FP8 = 256 B = 2 wavefronts`) retain the same
+shared-path cost.  STS contention recovers SS 18.12/20.12/32.12 and RS
+2.016/4.016/16.016 blocked cycles for n8/n16/n64.
+
+The TC output unit remains one m8n8 F32 tile per subcore every about two
+clocks, but each output now contains a K=32 dot product: 2048 MACs/tile,
+or 1024 MAC/clock/subcore.  Across four subcores this is 4096 MAC/clock/SM
+(8192 FLOP/clock/SM), exactly twice BF16 and equal to the published dense
+FP8 rate.  QGMMA's marker-race boundaries and n64 MOV-write penalty are
+bit-for-bit/timing-identical to HGMMA, showing that both feed the same F32
+accumulator/RMW backend.  See `../instr/qgmma.md` for the complete data.
+An E5M2 n64 spot check repeats the E4M3 timing, 32-wavefront SS block, and
+RMW boundary exactly.

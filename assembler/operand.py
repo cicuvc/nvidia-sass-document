@@ -79,8 +79,12 @@ class Operand:
     addr_ureg: int | None = None   # LDS/STS uniform variant: [RZ + URb + off]
     cbank_reg: int | None = None   # register-indexed const bank c[bank][Rr+off]
                                    # (255=RZ; UR index in addr_ureg)
+    cx_ureg: int | None = None     # bindless const handle c[URa][URb+off]
+                                   # (CX slot; URa is a 64-bit uniform pair)
     iswz: int | None = None      # HFMA2/HADD2 lane swizzle (ISWZ* enum value)
     bsel: int | None = None      # UR2UP/P2UR byte-select suffix .B0-.B3 (B3B0)
+    row: int | None = None       # IMMA matrix-A layout attribute .ROW
+    col: int | None = None       # IMMA matrix-B layout attribute .COL
     regs: list[int] | None = None  # explicit multi-reg list {Ra,Rb}/{Ra,Rb,Rc,Rd};
                                    # value == regs[0], width == len(regs)*32
     raw32: int | None = None     # 0fXXXXXXXX raw bit pattern (float imm only)

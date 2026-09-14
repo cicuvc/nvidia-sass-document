@@ -84,3 +84,66 @@ Sparse variants add `sp`/`spformat` fields; URa_Rb_Rc_ (0x15f3) swaps Ra/URb; UR
 
 ## Latency
 `mio_pipe`, async GMMA scoreboard. See `../arch/wgmma.md` for GMMA completion model.
+
+## H800 throughput and operand-service model (2026-09)
+
+Hand-SASS timing shows that dense E4M3 QGMMA has the same wall-clock shape
+as BF16 HGMMA, while performing twice as many MACs because K is 32 instead
+of 16.  For F32 accumulation:
+
+| shape | SS issue / drain | RS issue / drain |
+|---|---:|---:|
+| m64n8k32 | 17.359 / 19.438 | 12.000 / 13.516 |
+| m64n16k32 | 19.234 / 21.562 | 12.016 / 13.578 |
+| m64n64k32 | 30.422 / 34.250 | 28.922 / 32.656 |
+
+An overlapping STS stream measures the shared operand service directly:
+
+| shape | predicted SS wavefronts | measured SS block | predicted RS wavefronts | measured RS block |
+|---|---:|---:|---:|---:|
+| n8 | 18 | 18.12 | 2 | 2.016 |
+| n16 | 20 | 20.12 | 4 | 4.016 |
+| n64 | 32 | 32.12 | 16 | 16.016 |
+
+The byte accounting is identical to dense BF16 HGMMA:
+
+```text
+A = 64x32 FP8 = 2048 B = 16 wavefronts
+B per n8 = 32x8 FP8 = 256 B = 2 wavefronts
+SS = 16 + 2*(N/8); RS = 2*(N/8)
+```
+
+Thus the FP8 RHS unit tile is **32x8**, not 16x8.  It takes two cycles on
+the one-128-B-wavefront/cycle shared path and is broadcast to all four
+subcore Tensor Cores.  Halving element width is exactly cancelled by
+doubling K.
+
+The F32 output/RMW backend is also identical to HGMMA.  A marker race sees
+the same three states (`marker+delta`, `base+delta`, `marker`) at exactly
+the same accumulator-pair boundaries: an approximately 12-clock
+read-to-write aperture and one 32-lane `{even,odd}` register pair every
+approximately two clocks.  A real-GPR `MOV32I` storm slows n64 QGMMA from
+64.641 to 80.328 cycles/MMA relative to its `RZ` control, the exact HGMMA
+write-port signature.
+
+An E5M2 n64 spot check is indistinguishable: 30.422/34.250 issue/drain,
+31.984 STS-blocked cycles (expected 32), and exactly the same six-slot
+RMW aperture.  The model therefore belongs to the common FP8 QGMMA path,
+not specifically to E4M3.
+
+One register pair contains 64 F32 outputs, i.e. one m8n8 tile per subcore.
+For QGMMA that tile performs `8*8*32 = 2048` MACs every two clocks:
+
+```text
+per subcore: 1024 MAC/clock = 2048 FLOP/clock
+per SM:      4096 MAC/clock = 8192 FLOP/clock
+```
+
+At 132 SMs and the 1.83-GHz low-precision Tensor clock this gives 1.979
+PFLOP/s dense FP8, exactly the published H100 SXM value (3.958 PFLOP/s
+with 2:4 sparsity).  Consequently m64n8/n16/n64 have MAC lower bounds of
+4/8/32 clocks, the same cycle counts as BF16 despite twice the MAC count.
+
+Probe sources: `tests/asm_construct/probe_hgmma_mio_interaction.py`
+(`--mma qgmma`) and `tests/asm_construct/probe_hgmma_rmw_window.py`
+(`--mma qgmma`).

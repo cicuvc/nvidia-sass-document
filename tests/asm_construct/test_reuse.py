@@ -2,7 +2,6 @@ import sys, struct
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from assembler import assemble, CudaModule
-
 # ---------------------------------------------------------------------------
 # Operand reuse cache — FFMA runtime semantics on SM120 (RTX 5090).
 #

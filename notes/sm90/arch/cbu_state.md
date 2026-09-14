@@ -117,7 +117,9 @@ Interpretation:
 - **TRAP_RETURN_MASK records the parked (branch-taken) lanes during divergence**
   — the BSSY/BSYNC reconvergence machinery reuses the trap-return state.
 - **ATEXIT_PC is NOT set by BSSY** (0x0 baseline and after BSSY) — it is the
-  separate at-exit-handler PC, written only via `BMOV.64 ATEXIT_PC, <src>`.
+  separate at-exit-handler PC, provisioned only by privileged trap/at-exit
+  machinery (the ISA exposes `BMOV.64 ATEXIT_PC, <src>`, but user SASS cannot
+  execute that write; see below).
 - The BSSY reconvergence *target* is carried by the BSSY instruction's own Sa
   field (PC-relative); the *return* PC bookkeeping surfaces here as
   TRAP_RETURN_PC/TRAP_RETURN_MASK during the divergent region.
@@ -155,6 +157,35 @@ and are only READ-able (they read the live PC during divergence as a side
 effect).  Consequence: one cannot set TRAP_RETURN_PC to a valid PC and then
 NANOTRAP to make the trap "return" there; NANOTRAP is swallowed and execution
 continues fall-through.
+
+## Resolved: ordinary compute `EXIT` has no readable ATEXIT target (SM120, 2026-09)
+
+`tests/asm_construct/probe_atexit_pc.py` reads both halves of `ATEXIT_PC` in
+an ordinary compute kernel, then repeats after lanes 0..15 have executed
+`@P0 EXIT` and the surviving lanes observe `MEXITED=0x0000ffff`:
+
+| observation point | ATEXIT_PC | MATEXIT | MEXITED |
+|---|---:|---:|---:|
+| before any EXIT | `0x0000000000000000` | `0xffffffff` | `0x00000000` |
+| after lanes 0..15 EXIT | `0x0000000000000000` | `0xffffffff` | `0x0000ffff` |
+
+Thus `ATEXIT_PC` is **not the ordinary kernel-completion destination** made
+visible before or after an `EXIT`; in a normal compute launch there is no
+address to follow.  The `.NO_ATEXIT` encoding still proves the CBU has an
+optional at-exit path, but its PC is meaningful only when privileged driver
+machinery has installed such a handler.
+
+The probe also validates the negative result's readout method.  A dedicated
+device kernel can `LDG.E.128.STRONG.GPU` from a known `LEPC` code VA and copy
+the bytes to ordinary device allocation; the first copied word exactly equals
+the assembled `LEPC` instruction.  Direct `cuMemcpyDtoH` from that same code
+VA fails with `CUDA_ERROR_INVALID_VALUE`.  Copied words are placed in a
+synthetic cubin and passed through `tools/disasm.py` (currently its generic
+solver leaves BMOV words undecoded, while preserving their raw 128 bits).
+
+An attempted `#pragma SHADER_TYPE(7)` (`ST_TRAP`) owner-context probe is
+rejected by `cuModuleLoadData` with `CUDA_ERROR_INVALID_IMAGE`; a launchable
+compute cubin cannot impersonate the driver's trap/at-exit shader context.
 
 ## Resolved: RTT (0x94f) is the privileged trap-return instruction (SM120, 2026-08)
 

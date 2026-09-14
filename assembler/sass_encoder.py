@@ -370,6 +370,12 @@ class SassEncoder:
                 return 0
             if "bank" in field_name.lower():
                 return bank & 0x1F
+            # Volta's composite constant-address helpers encode a dword
+            # index even though the assembly syntax and disassembler expose
+            # a byte address.  Newer ISA dumps use byte offsets here.
+            if self.db.get("meta", {}).get("source") in {
+                    "sm_70_instructions.txt", "sm_80_instructions.txt"}:
+                offset //= 4
             return offset & 0xFFFF
 
         return 0

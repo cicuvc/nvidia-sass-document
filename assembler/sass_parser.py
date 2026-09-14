@@ -502,6 +502,9 @@ class Parser:
                         f"register {r} out of range for "
                         f"{'uniform' if uniform else 'general'} register group")
         op = Operand.reg_group(regs, uniform=bool(uniform))
+        sfx = self._parse_iswz_suffix()
+        if sfx is not None:
+            setattr(op, sfx[0], sfx[1])
         # group with PC-relative offset: RET.REL.NODEC {R2,R3}-0x340.
         # Only when a number actually follows — `[{R2,R3} + URb + off]`
         # leaves the '+' for _parse_mem_addr's uniform-index form.
@@ -519,12 +522,17 @@ class Parser:
     def _parse_iswz_suffix(self) -> tuple[str, int] | None:
         """Optional lane/byte-select suffix on a register operand:
         .H0_H0/.H1_H1/.F32/.H0_NH1 (ISWZ*) or .B0-.B3 (B3B0 byte select,
-        UR2UP/P2UR).  Returns ("iswz"|"bsel", enum value) or None."""
+        UR2UP/P2UR), or IMMA .ROW/.COL matrix layout attributes.  Returns the
+        Operand attribute name and value, or None."""
         if self.peek() and self.peek().type == "DOT":
             self.pop()
             t = self.expect("IDENT")
             if t.text in self._BSEL_MAP:
                 return ("bsel", self._BSEL_MAP[t.text])
+            if t.text == "ROW":
+                return ("row", 0)
+            if t.text == "COL":
+                return ("col", 1)
             val = self._ISWZ_MAP.get(t.text)
             if val is None:
                 raise SyntaxError(f"unknown ISWZ suffix .{t.text}")
@@ -592,6 +600,46 @@ class Parser:
     def _parse_const_bank(self) -> Operand:
         self.pop()  # c
         self.expect("LBRACKET")
+        # bindless / CX form: c[URa][URb+off] / c[URa][Rr+off] /
+        # c[{URa,URb}][...].  URa is a 64-bit bindless-constant handle
+        # (LDC_UR / LDCU CX variants); the second bracket is the index.
+        t0 = self.peek()
+        if t0 is not None and t0.type in ("UREG", "LBRACE"):
+            if t0.type == "LBRACE":
+                cx = self._parse_reg_group().value
+            else:
+                self.pop()
+                cx = 255 if t0.text.upper() == "URZ" else int(t0.text[2:])
+            self.expect("RBRACKET")
+            self.expect("LBRACKET")
+            index_ureg = None
+            index_reg = None
+            t = self.peek()
+            if t is not None and t.type in ("REG", "UREG"):
+                self.pop()
+                uniform = t.type == "UREG"
+                rval = (255 if t.text.upper() in ("RZ", "URZ")
+                        else int(t.text[2:] if uniform else t.text[1:]))
+                if uniform:
+                    index_ureg = rval
+                else:
+                    index_reg = rval
+            offset = 0
+            has_index = index_ureg is not None or index_reg is not None
+            if self.peek() and self.peek().type in ("PLUS", "MINUS"):
+                sign = 1 if self.pop().type == "PLUS" else -1
+                off_t = self.expect("HEX", "NUMBER")
+                offset = sign * int(off_t.text, 0)
+            elif not has_index:
+                off_t = self.expect("HEX", "NUMBER")
+                offset = int(off_t.text, 0)
+            self.expect("RBRACKET")
+            op = Operand.const_bank(cx, offset=offset)
+            op.cx_ureg = cx
+            op.addr_ureg = index_ureg if index_ureg is not None else 255
+            if index_reg is not None:
+                op.cbank_reg = index_reg
+            return op
         bank_t = self.expect("HEX", "NUMBER")
         bank = int(bank_t.text, 0)
         self.expect("RBRACKET")
@@ -640,15 +688,16 @@ class Parser:
         # the uniform register, so normalize it to an explicit UR index with
         # an RZ GPR part (the parser dialect spells this [RZ+URb+off]).
         base_width = base.width
+        base_offset = base.offset
         if base.kind == OperandKind.UREG:
             if addr_ureg is not None:
                 raise SyntaxError("uniform register given twice in address")
             addr_ureg = base.value
             base = Operand.reg("RZ")
-        offset = 0
         # Inside brackets a reg/group offset IS the address offset
-        # ([R2-0x20], [{R2,R3}+0x4]) — the operand-level offset forms only
-        # exist outside brackets (RET.REL.NODEC R2-0x340).
+        # ([R2-0x20], [{R2,R3}+0x4]) — keep the group's own offset across the
+        # UR->[RZ+URb] normalization above.
+        offset = base_offset or 0
         if base.offset:
             offset, base.offset = base.offset, 0
         if self.peek() and self.peek().type in ("PLUS", "MINUS"):

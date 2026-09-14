@@ -124,6 +124,68 @@ by the drain time of ~56 queued 16 B/thread stores.
   retractions: "commit capacity ~35", "retired accumulator", "back-to-back
   commit loss").
 
+### LDG address: local queue departure vs downstream LSU (GB202, 2026-09-14)
+
+The option labels above contrast issue/enqueue `(a)` with arbiter/LSU consume
+`(b)`.  A newer experiment further splits the latter handoff into (i) removal
+from the subcore-local LSU queue and (ii) later progress inside the shared LSU
+backend.  See `notes/sm120/mio_lsu_xu_topology.md` and
+`probe_ldg_address_latch{,_cross}.py`.
+
+An LDG address overwrite selects the new pointer for roughly 16 one-stall NOP
+gaps when the LDG is queued behind same-subcore STG.128 traffic.  The same
+overwrite is already too late at gap zero with an empty queue.  Most
+importantly, a 32--256-instruction STG.128 flood on a **different** subcore,
+given a 64-NOP head start, never extends the window: all trials use the old
+address.  Moving that identical flood to the target's subcore gives the new
+address through gap 16 and the old address at gap 20.
+
+Thus the earlier conclusion is sharpened: the RF sample is tied to local LSU
+queue selection/departure (the MIO-output/LSU-input handoff), not a later stage
+deep in the shared LSU/L1TEX backend.  In the newer question's terminology
+this is option `(a)`; it is still option `(b)` relative to this note's older
+issue-vs-consume naming.
+
+Short-burst probes on GB202 additionally expose about 16--18 post-MIOC request
+credits once multi-wavefront LDS makes downstream drain slower than the
+approximately 0.5-request/clock handoff.  `LDS.128` broadcast/consecutive/
+stride-2 forms produce exactly 2/4/8 NCU wavefronts and reproduce scalar
+2/4/8-way-conflict burst curves.  Cross-subcore mixed probes are positive in
+both directions: a 32-wavefront LDS backlog delays LDG admission, and a
+scattered-global backlog delays LDS admission.  Consequently that capacity is
+at least a common shared/global credit/backpressure domain, not an independent
+shared-only path.  One physical mixed FIFO remains indistinguishable from
+typed queues coupled by common LSU/L1TEX credits; see the sm_120 note for the
+tables and probe construction.
+
+SHFL participates in the same GB202 credit domain.  With one long LDS blocking
+drain, inserting 0/4/8 zero-GPR-source SHFL requests moves the long-LDS knee
+from N=18 to N=14/N=10: `N_LDS + N_SHFL = 18` in every case.  A concurrent
+32-wavefront LDS backlog on another subcore also expands eight SHFL issue time
+from about 21 clocks to 601--649 clocks.  Since the SHFL uses RZ, neither
+result can be attributed to late RF operand collection.  SHFL occupies one
+request credit, produces one LSU data wavefront, and bypasses T-stage lookup.
+
+### STG address vs data operand sampling (GB202, 2026-09-14)
+
+`tests/asm_construct/probe_stg_operand_latch.py` separates a 32-bit STG's
+store-data WAR from its 64-bit GPR-address WAR.  Both are late: with an empty
+queue a gap-zero overwrite is too late, but behind two or more older
+STG.E.128 requests either overwrite can select the new register value.  The
+data sampling boundary precedes the observed address-low boundary by exactly
+two one-stall NOP gaps (prefix 2: data locks at gap 8, address at gap 10;
+prefix 4: gap 18 vs 20).  Joint overwrites produce old-data/new-address in
+that middle window, establishing data-before-address collection rather than
+a timing artifact from overwrite program order.
+
+This is consistent with the sm_120 MIO collector accepting approximately one
+warp-wide 32-bit GPR operand per two clocks: a 32-bit STG contributes one data
+operand plus two address operands.  Only the address low half was varied
+directly; address-high following it is inferred.  In contrast, a uniform
+offset in `STG [{RaLo,RaHi}+URc],Rb` is captured early: overwriting URc after
+issue never retargets a queued store.  The read scoreboard protects the GPR
+data and GPR address group, not a continuing URF read.
+
 ## Q1 (MIO in-order vs reorder) — resolved with caveat
 The MP litmus (Message-Passing: `D=1 ; F=1 // rf=F; rd=D`) tests whether two
 stores to *different* addresses can complete out of program order. It is the
@@ -160,6 +222,10 @@ GPU would likely need asymmetric proxy/path semantics (`.mmio`, texture, or
 mixed-state-space).
 
 ## Open questions
+- H800/H20 queue/throughput comparison with GB202 is recorded in
+  `h800_mio_queue_topology.md`: about 8 local LSU credits/subcore, 30 common
+  post-MIOC credits/SM, and 1 LSU request/clock aggregate, while late-RF and
+  XU limits remain approximately 0.51 operand/clock/subcore and two credits.
 - Clean (a)-vs-(b): isolate arbiter contention from issue contention (needs a
   concurrent flood on *other* SMs without perturbing the timed SM's issue).
 - Does a store ever receive an arbiter *response* at all (for ECC/fault via

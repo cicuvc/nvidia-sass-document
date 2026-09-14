@@ -32,8 +32,9 @@ Caveats confirmed on silicon: LDCU param reads lag ~4 launches with module
 reuse (fresh module per launch reads correctly); the first udp read of a
 freshly loaded UR is stale (dummy UMOV settles it); >8-byte params can't be
 passed via the runner's uint64 arg convention (use contiguous 8-byte
-params). The sm_120 `.256` form (two register operands + word_mask) is not
-yet reachable through the assembler.
+params). The sm_120 `.256` form (two register operands + word_mask) *is*
+now reachable through the assembler (its masked-compaction semantics are
+documented in `notes/sm120/instr/ldcu.md`).
 
 **Scoreboard:** Coupled (unified read+write scoreboard), consistent with all `udp_pipe` instructions. The source release and destination write scoreboards are hardwired to `*7` (inactive), since constant memory loads on the UDP pipe are serialized through the CBU.
 
@@ -219,6 +220,11 @@ Constant memory itself has a fixed 2-cycle true-dependency latency through the C
 | Sub-word constant loads | `LDG.E.{U8,S8,U16,S16}.CONSTANT` (not ULDC directly) |
 
 ## Open questions
+
+> The sm_120 classes and their silicon-verified semantics (including the
+> three source families bound / bindless CX / VA and the `.256` `word_mask`)
+> are documented in `notes/sm120/instr/ldcu.md`.  The questions below are the
+> sm_90 `ULDC` ones.
 
 - **uldc_imm_ (0x18b8) variant:** No empirical examples found. When would ptxas emit a ULDC with an immediate value instead of a constant-bank load? Possibly for driver-internal uniform-register initialization or for the `uldc_ur_offs_` pattern.
 - **uldc_ur_offs_ (0x18b8) vs uldc_ur_offset_ (0x1abb):** Both handle register-indexed constant loads, but ptxas on sm_90 exclusively uses `0x1abb` (the variant with explicit bank+ConstBankAddress0). The `0x18b8` variant has a 32-bit immediate offset field (vs 16-bit in 0x1abb), suggesting it supports larger offsets. Under what circumstances is it preferred?

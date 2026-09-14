@@ -60,7 +60,8 @@ Mechanism (the 1:1 lowering):
   (`wr_sb=7`). It feeds a hidden async-completion tracker.
 - `cp.async.commit_group` → **LDGDEPBAR** — `wr_sb=k`: **increments the group
   counter on scoreboard `SBk` by 1**, binding the just-issued batch of LDGSTS as
-  one group. When every copy in that group completes, `SBk` decrements by 1.
+  one group. When every copy in that group completes, it becomes eligible for
+  retirement from the ordered group tracker.
 - `cp.async.wait_group N` → **DEPBAR.LE SBk, N** — wait until the group counter
   `≤ N`. `cp.async.wait_all` → `DEPBAR.LE SBk, 0x0`.
 
@@ -70,6 +71,100 @@ groups of 4 / 1 / 2 copies: `wait_group 2/1/0` emitted `DEPBAR.LE SB0, 0x2/0x1/0
 `wait_group` argument regardless of ops-per-group. So one scoreboard holds the
 warp's whole cp.async group count; `cnt=1` keeps one group in flight
 (double-buffering), `cnt=0` drains all.
+
+### Partial waits retire committed groups in order (SM120 silicon)
+
+`probe_ldgsts_group_order.py` commits three one-copy groups and makes exactly
+one group slow by scattering its 32 lanes over 32 independent 128-byte lines;
+the other groups are coalesced and explicitly preheated.
+
+| wait | slow group(s) that extend the wait | groups allowed to remain |
+|---|---|---|
+| `LE SB0,2` | position 0 only | 1 and 2 |
+| `LE SB0,1` | position 0 or 1 | 2 |
+| `LE SB0,0` | any position | none |
+
+For `wait_group 2`, all-fast and slow-at-1/2 take about 374--379 clocks,
+while slow-at-0 takes about 417.  For `wait_group 1`, slow-at-0/1 takes about
+422--429 while slow-at-2 remains about 374.  A threshold of 3 returns in 10
+clocks and observes stale shared data, providing the no-wait control.  Every
+group that the partial wait promises to drain contains the correct data.
+
+Thus this is not merely an unordered count of completed groups.  The hidden
+tracker preserves commit order: `wait_group N` drains the oldest groups and
+permits only the N youngest groups to remain, even if a younger group reaches
+physical completion first.  A FIFO of group-closure records is a sufficient
+implementation; the experiment does not determine its physical depth.
+
+### Effective committed-group capacity: 54 (SM120, one warp)
+
+`probe_ldgsts_group_depth.py` compares identical copy traffic with one commit
+at the end against one `LDGDEPBAR` after every copy.  A stronger variant keeps
+group 0 incomplete with 8--24 scattered copies, then rapidly appends
+coalesced one-copy groups.  Ordered retirement prevents any younger group
+record from escaping around the long head.
+
+With 54 committed groups, issue remains on the exact linear marker-cost line.
+Attempting group 55 stalls until group 0 closes: for 16 head copies, issue
+jumps from 560 clocks at 54 groups to about 963 at 55; for 8/12/20/24 head
+copies the knee remains exactly 54->55.  Moving the knee neither with copy
+count nor with head latency rules out a shared copy-token limit.
+
+The observed capacity is therefore **54 simultaneously committed, incomplete
+cp.async groups per warp** on GB202.  `probe_ldgsts_group_sharing.py` makes
+warp 0+4 share a subcore or places warp 0+1 on different subcores.  With 28
+groups each, a partial wait confirms both head groups are still incomplete,
+yet all 56 records coexist without a knee.  With a 12-copy long head, both
+warps independently stall their 55th commit until their own group 0 closes;
+placement does not change the boundary.  This excludes one 54-credit pool per
+subcore or per SM.
+
+This is an effective credit count; it does not establish whether the storage
+is a literal 54-entry FIFO or includes an active head/commit slot under a
+different physical accounting scheme.
+
+#### Scoreboard-index partitioning
+
+The same long-head construction routed alternately to SB0 and SB1 continues
+linearly through 108 total groups, exactly 54 per scoreboard.  Group 109 is
+assigned to SB0 and stalls until SB0's long head closes.  In contrast, 55
+groups all assigned to SB0 already stall.  Thus SB0 and SB1 have independently
+accounted 54-credit domains; there is no single 54-credit total shared by all
+scoreboard indices in a warp.
+
+A three-scoreboard run did not expose a useful 162->163 boundary because the
+long heads completed before all three domains could be filled at the available
+issue rate.  The present evidence therefore does not prove six fully separate
+54-entry physical arrays, nor exclude an additional warp-wide ceiling at 108
+or above.
+
+#### Divergence / pipeline-sequence entanglement
+
+`probe_ldgsts_divergent_commit.py` shows that the counter is updated per
+dynamic converged execution group, not per static `LDGDEPBAR` PC.  Two halves
+of a BSSY region that funnel through the same LDGSTS and LDGDEPBAR instructions
+before their matching BSYNC leave two incomplete groups (`LE 1` waits, `LE 2`
+passes).  Moving the same instructions after BSYNC leaves only one.  Repeating
+the construction gives exact 2/4/6 versus 1/2/3 threshold sequences.
+
+A four-way fan-out through one common commit PC creates four groups.  An
+eight-way test held retirement behind an extra long FIFO head and observed a
+pass boundary of nine: one head record plus eight divergent-subgroup records.
+Those records also reproduce the 54->55 allocation knee, so this is physical
+group-credit consumption rather than only a conservative per-thread software
+sequence number.
+
+This is the SASS-level manifestation of the converged-subset accounting
+described in NVIDIA US12118382B2.  Structured divergence makes the result
+deterministic in these probes, although the patent permits an increment from
+1 through 32 when the runtime convergence partition is not fixed.
+
+An ordering probe commits an older scattered group to SB0 and younger hot
+groups to SB1.  Waiting only for SB1 is delayed by the older SB0 group (about
+426 versus 348 clocks for all-hot).  This is compatible with a global commit
+order above the per-SB accounting, but is not decisive: ordered service in the
+LDGSTS/shared completion datapath can create the same timing without a global
+retirement FIFO.
 
 ## Latency relationship (`sm_90_latencies.txt`)
 - `DEPBAR ∈ fe_pipe`; `DEPBAR_OP` is subtracted out of the math-vs-uniform

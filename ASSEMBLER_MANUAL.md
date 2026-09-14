@@ -98,6 +98,11 @@ Example used throughout the tests:
 | Scoreboard | `SB0`..`SB5` | as `&req=` / `&rd=` forms where applicable |
 | Immediate | `0x400`, `1`, `-1`, `0f3F800000` | `0f` + 8 hex digits = raw FP32 bits |
 
+Register and register-group operands may carry instruction-specific suffixes.
+In particular, dense IMMA uses `.ROW` on its A group and `.COL` on its B
+register, for example
+`IMMA.16816.U8.U8 {R32,R33,R34,R35}, {R16,R17}.ROW, R20.COL, {R24,R25,R26,R27}, !UPT`.
+
 ### 3.2 Scheduling bracket
 
 `[wr:rd:{req}:stall:yield[:batch_t]]`
@@ -201,8 +206,8 @@ out = mod.device_read(d, 128)
 
 ## 7. Features currently exercised
 
-- **Tensor-core MMA**: `HMMA.16816.F32.BF16/.F16` (m16n8k16) and
-  `QMMA.16832.F32.E4M3.E4M3` (m16n8k32 fp8), plus block-scaled
+- **Tensor-core MMA**: `HMMA.16816.F32.BF16/.F16` (m16n8k16),
+  `IMMA.16816.U8.U8`, and `QMMA.16832.F32.E4M3.E4M3` (m16n8k32 fp8), plus block-scaled
   `QMMA.SF.16832.F32.<f>.<f>.E8 ... Re, Rh, URi` (MXFP8) and `MXQMMA`
   (`S2_6`).  A bit-accurate FDA model lives in `tools/hmma_model.py`.
 - **Memory**: `LDG`/`STG` with `.E`/`.U8`/`.U16`/`.32`/`.64`/`.128`, `desc[]`
@@ -221,7 +226,7 @@ out = mod.device_read(d, 128)
 
 ## 8. Known limits & sharp edges
 
-1. **Result wait for MMA (HMMA/QMMA)**: these are
+1. **Result wait for MMA (HMMA/IMMA/QMMA)**: these are
    `INST_TYPE_COUPLED_EMULATABLE` and emit **no write scoreboard**.  Reading
    `Rd` too early faults with `CUDA_ERROR_ILLEGAL_INSTRUCTION` (0x715).
    Use **≥16 NOP after the MMA** before consuming the result (8 NOP is not

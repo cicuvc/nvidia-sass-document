@@ -5,7 +5,7 @@
 The normal thread terminator. Every compute thread finishes with `EXIT`.
 
 ## Semantics
-`@Pg EXIT{.mode}{.NO_ATEXIT} [Pp]` — terminates the guarded lanes: they enter the `MEXITED` state and stop fetching. Exiting lanes are removed from convergence-barrier participant sets (so a later `BSYNC` won't wait on them). By default the per-warp **at-exit handler** (`ATEXIT_PC`, part of `CBU_STATE`) is invoked; `.NO_ATEXIT` skips it.
+`@Pg EXIT{.mode}{.NO_ATEXIT} [Pp]` — terminates the guarded lanes: they enter the `MEXITED` state and stop fetching. Exiting lanes are removed from convergence-barrier participant sets (so a later `BSYNC` won't wait on them). The default encoding permits an optional per-warp **at-exit handler** (`ATEXIT_PC`, part of `CBU_STATE`); `.NO_ATEXIT` suppresses that path.  On an ordinary compute launch, `ATEXIT_PC` reads as zero both before EXIT and from surviving lanes after a partial-warp EXIT, so it is not the normal kernel-completion destination; a nonzero handler evidently requires privileged driver setup (probe: `tests/asm_construct/probe_atexit_pc.py`).
 
 ## Variant overview
 Single CLASS / opcode. Carries two modifier fields.

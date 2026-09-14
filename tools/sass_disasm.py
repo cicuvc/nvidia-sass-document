@@ -430,17 +430,10 @@ class SASSDisasm:
         neg = self.slot_attr(v, fields, name, "negate")
         abs_ = self.slot_attr(v, fields, name, "absolute")
 
-        if t == "C":
-            bank = 0
-            off = 0
+        def _const_offset() -> int:
             for s2 in v["format"]["slots"]:
-                if s2["name"].endswith("_bank") and s2["type"] == "UImm":
-                    bv = self.slot_value(v, fields, s2["name"])
-                    if bv is not None:
-                        bank = bv
-                elif (s2["name"].endswith("_offset") or s2["name"].endswith("_addr")) \
+                if (s2["name"].endswith("_offset") or s2["name"].endswith("_addr")) \
                         and s2["type"] == "SImm":
-                    ov = None
                     f2 = None
                     for f in v["encoding"]:
                         if s2["name"] in f["rhs"] and (
@@ -450,19 +443,48 @@ class SASSDisasm:
                             break
                     if f2 is not None:
                         ov = self._field_val(fields, f2)
-                    if ov is not None:
-                        w = sum(h - l + 1 for h, l in f2["targets"]) if f2 else 32
-                        off = self._signed(ov, w)
-            txt = f"c[0x{bank:x}][0x{off:x}]"
+                        if ov is not None:
+                            w = sum(h - l + 1 for h, l in f2["targets"])
+                            return self._signed(ov, w)
+            return 0
+
+        if t in ("C", "CX"):
+            off = _const_offset()
+            used.add(name)
             # consume the bank/offset/address register slots that encode with
             # this constant-bank operand (LDC's Ra/Ra_offset, LDCU's URa/...)
-            used.add(name)
+            reg_slots = {}
             for s2 in v["format"]["slots"]:
                 if s2["name"].endswith("_bank") or s2["name"].endswith("_offset"):
                     used.add(s2["name"])
-                if s2["name"] in ("Ra", "Ra_URb", "URa", "URb", "URc") and s2["type"] in (
-                        "Register", "NonZeroRegister", "UniformRegister"):
+                if s2["name"] in ("Ra", "Ra_URb", "Rb", "URa", "URb", "URc") and \
+                        s2["type"] in ("Register", "NonZeroRegister",
+                                       "ZeroRegister", "UniformRegister"):
                     used.add(s2["name"])
+                    reg_slots[s2["name"]] = (
+                        s2["type"], self.slot_value(v, fields, s2["name"]))
+
+            def _reg(slot_name: str):
+                st, rv = reg_slots.get(slot_name, (None, None))
+                if rv is None or rv == 255:
+                    return None
+                return f"UR{rv}" if st == "UniformRegister" else f"R{rv}"
+
+            if t == "C":
+                bank = 0
+                for s2 in v["format"]["slots"]:
+                    if s2["name"].endswith("_bank") and s2["type"] == "UImm":
+                        bv = self.slot_value(v, fields, s2["name"])
+                        if bv is not None:
+                            bank = bv
+                idx = _reg("Ra") or _reg("URa")
+                txt = (f"c[0x{bank:x}][{idx}+0x{off:x}]" if idx
+                       else f"c[0x{bank:x}][0x{off:x}]")
+            else:  # CX: c[URa][URb+off], handle is a 64-bit uniform pair
+                handle = _reg("URa")
+                index = _reg("URb") or _reg("Rb")
+                inner = f"{index}+0x{off:x}" if index else f"0x{off:x}"
+                txt = f"c[{handle or 'URZ'}][{inner}]"
         elif t in ("Register", "NonZeroRegister"):
             width = self.size_of(v, sm, name)
             txt = self.reg_text(val, width, ureg=self.slot_is_ureg(v, name))
@@ -477,6 +499,12 @@ class SASSDisasm:
             else:
                 txt = f"P{val}"
         elif t == "UniformPredicate":
+            # `UPp` is a pinned no-op on the optional_upx alternate (its real
+            # content is the memdesc bit, not a predicate) — never print it.
+            if name == "UPp" and any(
+                    f["name"] == "Pp" and f["rhs_kind"] == "star_slot"
+                    for f in v["encoding"]):
+                return None
             if val == 7:
                 txt = "UPT"
             else:

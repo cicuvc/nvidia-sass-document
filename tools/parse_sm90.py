@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract the sm_90 (Hopper) SASS ISA description into a queryable JSON DB.
+"""Extract an nvdisasm SASS ISA description into a queryable JSON DB.
 
 Reads:  sm_90_instructions.txt, sm_90_latencies.txt
 Writes: sm90.json  (default: repo root)
@@ -534,15 +534,15 @@ def parse_variants(lines, start):
 
 
 # --------------------------------------------------------------------------
-def validate(db):
+def validate(db, expected_variants=None, expected_mnemonics=None):
     v = db["variants"]
     errs, warns = [], list(db.get("_warnings", []))
     n = len(v)
-    if n != 1589:
-        warns.append(f"expected 1589 variants, got {n}")
+    if expected_variants is not None and n != expected_variants:
+        warns.append(f"expected {expected_variants} variants, got {n}")
     mnems = {x["mnemonic"] for x in v if x["mnemonic"]}
-    if len(mnems) != 238:
-        warns.append(f"expected 238 mnemonics, got {len(mnems)}")
+    if expected_mnemonics is not None and len(mnems) != expected_mnemonics:
+        warns.append(f"expected {expected_mnemonics} mnemonics, got {len(mnems)}")
     for x in v:
         if x.get("remap"):
             continue  # pseudo-instruction: REMAP directive, no bit encoding
@@ -562,13 +562,19 @@ def validate(db):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Extract sm_90 SASS ISA -> JSON")
+    ap = argparse.ArgumentParser(description="Extract an nvdisasm SASS ISA -> JSON")
     ap.add_argument("-o", "--out", default=str(REPO / "sm90.json"))
+    ap.add_argument("--instructions", default=str(INSTR),
+                    help="instruction-description dump (default: sm_90)")
+    ap.add_argument("--latencies", default=str(LAT),
+                    help="optional latency-description dump; pass an empty string to omit")
     ap.add_argument("--indent", type=int, default=1)
     args = ap.parse_args()
 
-    lines = read_lines(INSTR)
-    lat_lines = read_lines(LAT)
+    instr = Path(args.instructions)
+    latency = Path(args.latencies) if args.latencies else None
+    lines = read_lines(instr)
+    lat_lines = read_lines(latency) if latency else []
 
     i_params = find_line(lines, lambda l: l.rstrip() == "PARAMETERS")
     i_consts = find_line(lines, lambda l: l.rstrip() == "CONSTANTS")
@@ -581,10 +587,10 @@ def main():
 
     db = {}
     db["meta"] = {
-        "source": INSTR.name,
+        "source": instr.name,
         "arch_header": lines[0].strip(),
         "encoding_width": 128,
-        "note": "Header says WORD_SIZE 64 / Volta, but sm_90 instructions are 128-bit.",
+        "note": "The dump header's WORD_SIZE is 64, while FUNIT encoding width is 128 bits.",
     }
     db["parameters"] = parse_kv_block(lines, i_params + 1, i_consts)
     db["constants"] = parse_kv_block(lines, i_consts + 1, i_strmap if i_strmap > 0 else i_regs)
@@ -597,7 +603,9 @@ def main():
     db["variants"] = variants
     db["_warnings"] = warnings
 
-    errs, warns = validate(db)
+    is_default_sm90 = instr.resolve() == INSTR.resolve()
+    errs, warns = validate(db, 1589 if is_default_sm90 else None,
+                           238 if is_default_sm90 else None)
     db["meta"]["counts"] = {
         "variants": len(variants),
         "mnemonics": len({x["mnemonic"] for x in variants if x["mnemonic"]}),

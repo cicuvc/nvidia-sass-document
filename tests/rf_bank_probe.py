@@ -1,4 +1,4 @@
-"""RF bank-structure probe (H800/sm_90): 2 parity banks x 2R1W, .reuse bypass.
+"""RF bank-structure probe (H800/sm_90): parity banks and .reuse bypass.
 
 Hand-written SASS FFMA storms with fully controlled register-number parity
 and .reuse flags (sched bracket 6th field: bit0=srcA, bit1=srcB, bit2=srcC).
@@ -7,8 +7,13 @@ One warp, 16 independent accumulator chains, stall=1 (~2.1-2.4 cyc/op floor).
 Results (H800, 1 warp, cyc/op):
     nop 2.44 | eee/ooo 3.11 (conflict +1) | eeo/eoe/oee 2.11 (clean)
     eee+reuseA 2.11 | eee+reuseB 2.11 | eee+reuseAB(C) 2.43 (=baseline)
-=> bank = register-number LSB parity; 2 reads/bank/instr free, 3rd = +1 cyc;
-   .reuse operands are served from the reuse cache, not the RF ports.
+=> bank = register-number LSB parity; 2 same-bank operands fit under this
+   probe's existing ~2-cycle single-warp floor, while the 3rd adds one cycle;
+   .reuse operands are served from the reuse cache, not the RF collector.
+
+Historical caution: this does NOT prove two independently addressed full-warp
+read ports per bank per clock.  A one-full-warp-operand/bank/clock model gives
+the same EE/O=2 and EEE=3 result because the harness floor is already 2.
 
 Run: assemble locally, scp rf_*.cubin to the GPU host, then execute each
 with CudaModule(block=(32,)) and read (t1-t0)/512 from the first 8 bytes.

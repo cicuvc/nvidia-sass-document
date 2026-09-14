@@ -19,6 +19,9 @@ RTX 5090, and the repo's SASS assembler (`assembler/`, arch=sm120) unless stated
 | `encoding-addressing.md` | SM120 encoding substrate, control-word/stall encoding, `desc[UR]` cache-policy word decode, UTMALDG direct-pointer model, const-bank 0 layout, regcount rule, BSSY/SIMT-stack findings, S2R write-scoreboard requirement |
 | `arch/local_memory_backing_va.md` | Silicon-derived local-address → backing-VA transform; warp/SM/CTA layout, SETLMEMBASE switching, and ptxas spill-frame EIATTR metadata |
 | `arch/shared_memory_allocator.md` | Shared allocator: 100 KiB/SM pool, 128-byte quantum, 1 KiB static reserved prefix, USETSHMSZ accounting, and fragmentation probes |
+| `subcore_compute_conflict.md` | GB202 per-subcore scalar/tensor execution conflicts, forwarding-based ALU topology, and raw NCU math/MIO throttle evidence |
+| `rf_writeback_conflict.md` | Even/odd 2R1W register-file writeback arbitration and same-subcore collision probes |
+| `mio_lsu_xu_topology.md` | MIO/LSU/XU queue locality, LDG address-latch boundary, SM-wide LSU scaling, SHFL placement, throttle/OOO-completion behavior, and RF return paths |
 | `instr/getlmembase.md` | Silicon semantics of the warp-local backing base and its role in the local-address → device-VA transform |
 | `instr/setlmembase.md` | Silicon proof that SETLMEMBASE redirects subsequent LDL/STL backing accesses |
 | `notes/sm120/l2_slice_probe.md` | Attempts to count L2 slices on GB202; single-L2-backend evidence |

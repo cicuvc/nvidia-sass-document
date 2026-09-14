@@ -582,9 +582,10 @@ class TestCubinTemplate(unittest.TestCase):
         self.assertTrue(all(
             c.outcome in (Outcome.POSITION_INDEPENDENT, Outcome.REWRITE)
             for c in t.classifications))
-        # cubin templates get verbatim replay plans only
-        self.assertTrue(all(p.kind == "verbatim"
-                            for p in t.replay_plans))
+        # cubin templates get verbatim (or in-function bra_abs) replay plans
+        # only — a tail self-BRA padding is still within the function
+        for p in t.replay_plans:
+            self.assertIn(p.kind, ("verbatim", "bra_abs"))
 
 
 if __name__ == "__main__":

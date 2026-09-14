@@ -20,7 +20,7 @@ microarchitectural speculation.
 | `sm_90_latencies.txt` | Hopper pipe grouping + scoreboard/latency tables (~441 lines). |
 | `sm100_instructions.txt` | Blackwell full instruction/encoding spec. |
 | `sm100_latencies.txt` | Blackwell pipe grouping + scoreboard/latency tables. |
-| `sm_75_instructions.txt`, `sm_80_instructions.txt` | Older-arch dumps for cross-arch comparison. |
+| `sm_70_instructions.txt`, `sm_75_instructions.txt`, `sm_80_instructions.txt` | Older-arch dumps for cross-arch comparison and Volta assembly probes. |
 | `tools/` | stdlib-only extractors + query CLIs + per-instruction decoders (sm_90 and sm100) + bit-accurate MMA model (`hmma_model.py`). |
 | `assembler/` | Hand-written SASS → cubin toolchain (sm_120) + CTypes GPU runner + scoreboard dependency checker. See `ASSEMBLER_MANUAL.md`. |
 | `ASSEMBLER_MANUAL.md` | Full assembler syntax, features, and usage notes. |
@@ -32,7 +32,7 @@ microarchitectural speculation.
 | `tests/` | CUDA (`.cu`) kernels that force specific SASS encodings and probe microarch behavior (177 files), plus `tests/asm_construct/` assembler round-trip + GPU tests (87 `.py` files). |
 | `TODO.md` | Master checklist of sm_90 instructions to document (197/207 done). |
 | `ref_memo.txt` | Curated sm_70..sm_90 opcode roster (source of the checklist). |
-| `sm90.json`, `sm100.json` | Generated queryable DBs (~21 MB each, gitignored/regenerable). |
+| `sm70.json`, `sm90.json`, `sm100.json` | Generated queryable DBs (gitignored/regenerable). |
 
 ## Tooling
 
@@ -41,6 +41,14 @@ The specs are parsed into queryable JSON DBs — prefer them over ad-hoc `grep`.
 ```bash
 # Parse both .txt files -> sm90.json (has a built-in validation gate)
 python3 tools/parse_sm90.py
+
+# Volta has no latency dump here; encoding extraction is still complete.
+python3 tools/parse_sm90.py --instructions sm_70_instructions.txt \
+  --latencies '' -o sm70.json
+
+# Ampere encoding DB (also no latency dump in this checkout).
+python3 tools/parse_sm90.py --instructions sm_80_instructions.txt \
+  --latencies '' -o sm80.json
 
 # Query the DB (sm90)
 python3 tools/query_sm90.py mnem <NAME>       # variants, opcodes, format, pipe

@@ -22,10 +22,11 @@ minimal `.reuse` hits), all-storm block scaling:
 Aggregate is pinned at **~0.64 warp-FFMA/cyc/SMSP independent of warp
 count** → not issue-limited (scheduler could do 1.0), not pipe-latency
 (ILP=8 ≫ FFMA latency) — the limit is operand delivery. Naively this
-looks like a flat ~2-reads/cyc budget (0.64 × 3 reads ≈ 1.9), but the
-controlled-parity experiment below shows the real structure is **2 banks
-× 2R** and the storm's 0.64 is explained by parity conflicts in ptxas's
-register allocation, not a flat cap.
+looks like a flat ~2-operand/cyc budget (0.64 × 3 reads ≈ 1.9), but the
+controlled-parity experiment below shows that operands are split across
+**two parity banks**.  The storm's 0.64 is explained by per-bank collection
+pressure in ptxas's register allocation, not a flat unbanked cap.  That
+experiment does not determine the number or width of physical read ports.
 
 Reference point — cuBLAS SGEMM 8192³ (torch): 39.4 TFLOPS @1635 MHz =
 105 FMA/cyc/SM = 0.82 FFMA/cyc/SMSP. cuBLAS beats the storm by register
@@ -33,7 +34,7 @@ blocking: high operand-reuse ratios (`.reuse` flags, repeated operands)
 reduce fresh RF reads per FMA. So the RF read structure is a real
 scheduling constraint for ptxas, not just a microbenchmark curiosity.
 
-## RF structure: 2 banks by register-number parity, 2R per bank (proven)
+## RF structure: two parity banks; single-warp test alone is ambiguous
 
 Controlled hand-written-SASS FFMA storms (512 independent-chain FFMAs,
 16 accumulators, one warp, stall=1 → ~2.1-2.4 cyc/op issue floor;
@@ -50,18 +51,24 @@ controlled; `.reuse` flags set via the sched-bracket batch field
 | `eee` + `.reuse` srcB | 2E | 2.11 | conflict gone |
 | `eee` + reuse A+B / A+B+C | ≤1E | 2.43 | = baseline |
 
-Verdicts on the folklore claim "2 banks split by register parity, 2R1W
-each":
+The original interpretation called this "2 banks split by register parity,
+2R1W each".  The bank mapping and reuse conclusion survive, but the read-port
+count was overclaimed:
 
 - **2 banks by register-number LSB parity — CONFIRMED.** `eee` ≡ `ooo`
   (3.11), and every 2-even-1-odd permutation is conflict-free, so the
   bank selector is the register number's low bit, not operand slot or
   register range.
-- **2 reads per bank per instruction — CONFIRMED.** 2 same-parity reads
-  are free; the 3rd costs exactly ~+1 cyc (the operand collector
-  pipelines the extra read). A flat-2R-total model is REJECTED: it
-  predicts `eeo` = `eee`, measured 2.11 vs 3.11. (Total RF read
-  capacity is thus 2 banks × 2R × 128 B = 1024 B/cyc/SM, not ~512.)
+- **At most one full-warp operand per bank per clock is sufficient to explain
+  the result; two independent full-warp reads per bank were not proven.**
+  This H800 single-warp harness already has an approximately two-clock
+  instruction floor.  A one-operand/bank/clock model predicts
+  `T = max(2, n_even, n_odd)`: `eeo` takes two clocks and `eee` takes three,
+  exactly the observed 2.11 versus 3.11.  Saying that two same-parity sources
+  are "free" only meant that their collection fits under the existing
+  two-clock instruction cadence; it did not show that they were read in the
+  same clock.  Consequently the old `2 banks x 2R x 128 B` bandwidth
+  calculation is withdrawn.
 - **1W per bank — not observable at instruction level.** One warp
   issues ≤1 instr/cyc/SMSP so ≤1 write/cyc total; a per-bank write cap
   can never bind. Nothing measured contradicts it.
@@ -75,6 +82,35 @@ This also corrects the "second-order effect" caveat above: the 1.56 vs
 it is first-order for 3-fresh-read code. ptxas mitigates by assigning
 parities 2:1 across each instruction's sources and inserting `.reuse`;
 hand-scheduled SASS must do the same.
+
+The later GB202 yield-zero FADD/FFMA discriminator removes the hidden
+two-clock floor: `1E+1O` takes about one clock, `2E` takes two, and `3E` takes
+three.  Partial-lane predicates down to lane 0 do not change those slopes.
+That directly establishes one *independently addressed full-warp operand* per
+bank per clock at the exposed ALU collector on GB202.
+
+### H800 two-warp aggregate resolves the ambiguity (2026-09)
+
+The H20 same-subcore discriminator was subsequently rerun on the full H800.
+Warp 0 is timed; warp 4 is the same-subcore contender and warp 1 is the
+different-subcore control.  Each body has 512 independent destinations and
+the contender is four times longer.  `@P6` uses the identical instruction
+with a false predicate.
+
+| victim / contender | aggregate source demand | solo | same active | same `@P6` | different active |
+|---|---:|---:|---:|---:|---:|
+| FADD balanced / balanced | 2E+2O | 2.094 | 2.096 | — | 2.076 |
+| FADD all-even / all-even | 4E | 2.094 | **4.287** | 2.100 | 2.076 |
+| FFMA 2E+1O / same phase | 4E+2O | 2.094 | **4.287** | 2.100 | 2.076 |
+| FFMA 2E+1O / complement | 3E+3O | 2.094 | **2.992** | 2.100 | 2.076 |
+| FFMA all-even / all-even | 6E | 3.090 | **5.574** | 3.086 | 3.072 |
+
+The 128/256/512 length sweep has the same slopes.  Predicate-off and
+different-subcore contenders return to the solo rate, excluding a generic
+instruction issue or backend conflict.  The demand law is the same as H20:
+approximately one independently addressed full-warp operand per parity bank
+per clock.  Therefore H800/H20 Hopper does **not** retain the Volta/Ampere
+two-operand-per-bank service exposed by the V100/A100 probe.
 
 Assembler quirks found building the probe (arch=sm90, for the manual):
 `[7:7:{}:0:0]` is an illegal opex combo for FFMA (stall=0 requires
@@ -136,7 +172,7 @@ top of the RMW.
   the practical impact is small; the +140% figure is the adversarial
   ceiling.
 
-## Open questions
+## Open questions (before the hand-SASS write-only probe)
 
 - Exact budget decomposition: read-only ~256 B/cyc/SMSP vs combined
   read+write ~330 B/cyc/SMSP (current points fit both). Discriminator:
@@ -147,7 +183,8 @@ top of the RMW.
   register numbers). The 1.56-vs-2.04 compilation-luck spread suggests
   ~30% bank effects.
 - Does the TC RMW have any dedicated RF write port, or is it fully
-  behind ALU traffic? (The constant +30 cyc suggests "mostly behind".)
+  behind ALU traffic?  Round 3 below resolves the architectural-port
+  part of this question, though not the exact location of the mux.
 - Does the same threshold hold on H20 (its HGMMA chain is MAC-bound at
   32.4 cyc/MMA with more RF headroom per cycle — prediction: FFMA-rot
   storm slows it less in absolute cyc/MMA)?
@@ -174,10 +211,11 @@ four parameter-free predictions — and fails two decisively:
 n8/n16/n64 — completely independent of accumulator width.** A per-register
 shared-2R model is therefore wrong for the RMW. What survives:
 
-1. **2R1W does explain the storm side**: 3-fresh-read FFMA caps at
-   ~1.9 lane-reads/cyc/SMSP (0.64 instr/cyc) — the 2R budget — flat over
-   warp count.
-2. **The RMW does not trickle through the shared 2R ports per register.**
+1. **Two parity banks with about one independently addressed full-warp
+   operand/bank/clock explain the storm side**: 3-fresh-read FFMA caps at
+   ~1.9 operand-reads/cyc/SMSP (0.64 instr/cyc), flat over warp count.
+2. **The RMW does not trickle through the ordinary ALU collector per
+   register.**
    Instead, each MMA's writeback/completion carries a **fixed-cost
    arbitration step (~+30 cyc) that serializes only when co-resident ALU
    RF-read traffic exceeds ~650-700 B/cyc/SM** (threshold probes: ffma2
@@ -198,3 +236,175 @@ shared-2R model is therefore wrong for the RMW. What survives:
 compile-time; an `add.s32 v, v, 7` chain was linear-folded to one IMAD.
 Only non-foldable recurrences (xorshift) or register-operand forms
 survive ptxas/cicc.)
+
+## Round 3 — H800 bank calibration and a zero-read HGMMA write probe
+
+Hand-SASS probes on the same H800 remove the two ambiguities left by
+the compiler-generated storms.
+
+First, a delayed `LDG.32` completion was overlaid with an all-`.reuse`
+FFMA stream whose destinations were forced to one register parity.  A
+same-bank completion is delayed by 7--8 cycles while the opposite-bank
+completion is not (for example at 40 FFMA instructions: 60 versus 52
+cycles).  Swapping even/odd gives the exact mirror image.  Predicated-off
+instructions and no-reuse controls have no parity effect.  Thus this
+H800's normal completion path independently confirms **two RF banks with
+one architectural write service per bank per cycle**; this is not an
+assumption imported from Blackwell.
+
+The HGMMA discriminator uses four contender warps, one on each SMSP,
+and a warpgroup running 64 dependent SS HGMMA instructions.  The clean
+contender is `MOV32I`:
+
+- `MOV32I R_even, imm` has no GPR source operand, so it is a pure RF
+  write stream.
+- `MOV32I RZ, imm` has identical instruction/scheduler pressure but no
+  architectural RF write.
+- All measurements compare against this simultaneous `RZ` control;
+  comparing with an isolated HGMMA is invalid because a non-yielding
+  four-warp contender changes warpgroup scheduling by itself.
+
+| HGMMA shape | accumulator regs/thread | real-GPR Hissue | `RZ` Hissue | write-only penalty |
+|---|---:|---:|---:|---:|
+| m64n8k16 | 4 | 66.484 | 64.609 | **+1.875 cyc/MMA** |
+| m64n16k16 | 8 | 68.469 | 64.578 | **+3.891 cyc/MMA** |
+| m64n64k16 | 32 | 80.328 | 64.641 | **+15.687 cyc/MMA** |
+
+The penalty is proportional to destination width: approximately
+0.49 cycle per accumulator register per MMA.  The contender is also
+backpressured (`MOV32I` issue rises from 2.002 cycles solo to 2.510 in
+the n64 overlay), so this is mutual arbitration rather than merely an
+HGMMA scheduling side effect.  Even-only, odd-only, and balanced
+contender destinations give the same total penalty.  This is expected:
+every legal HGMMA accumulator group is even-aligned and spans both banks
+equally, so moving all contender writes to either bank conserves the
+aggregate number of collisions.
+
+Two controls locate the effect:
+
+1. Replacing the real destination with `RZ` removes it, excluding
+   decode, issue, constant generation, and source collection.
+2. `scaleD=0` overwrite and `scaleD=1` RMW chains give the same result,
+   excluding the old-accumulator read.  The shared resource is the
+   final architectural destination write/commit.
+
+**Conclusion:** HGMMA does not have a fully independent RF write port.
+It may have a dedicated wide TC-to-RF transport or completion buffer,
+but its final architectural writes enter the same per-bank 1W service
+domain as ordinary GPR writes.  The experiment cannot determine whether
+the physical mux is before the bank write driver or one stage earlier
+at a bank-local commit arbiter; "shared final per-bank commit" is the
+narrowest model justified by the data.
+
+A direct one-word WAW boundary probe does not sharpen that conclusion.
+An immediately following scalar write switches winner at a fixed
+schedule boundary, but external same/opposite-parity writer traffic does
+not shift it.  Dependency/forwarding ordering hides the physical word
+commit time.  Nor can HGMMA create a one-bank-only destination: even the
+smallest F16 n8 result is an aligned two-register `{even,odd}` group.
+
+Probe sources:
+`tests/asm_construct/probe_mio_rf_writeback.py`,
+`tests/asm_construct/probe_hgmma_mio_interaction.py`, and
+`tests/asm_construct/probe_hgmma_rf_write_port.py`.
+
+## Round 4 — does RMW consume a normal RF read port?
+
+The direct discriminator is a read-only contender:
+
+```text
+FFMA RZ, R_even_i, R_odd_j, R_even_k
+```
+
+The three sources rotate through 60 registers, carry no `.reuse` flags,
+and the destination is `RZ`; therefore it stresses normal operand
+collection without generating an architectural RF write.  Its solo rate
+is 2.014 cycles/instruction versus 1.165 for the otherwise similar fixed-
+source, all-`.reuse` `FFMA RZ` control, confirming that the source reads
+were not elided merely because the result is discarded.
+
+With four such warps and 64 SS HGMMAs, all-overwrite (`scaleD=0` on every
+MMA) versus RMW (first overwrite, 63 `scaleD=1` MMAs) gives:
+
+| shape | overwrite issue / drain | RMW issue / drain | RMW minus overwrite |
+|---|---:|---:|---:|
+| n8 | 80.844 / 82.922 | 80.875 / 82.953 | +0.031 / +0.031 |
+| n16 | 82.656 / 84.984 | 82.719 / 85.047 | +0.063 / +0.063 |
+| n64 | 93.469 / 97.297 | 93.719 / 97.547 | +0.250 / +0.250 |
+
+Those small 64-MMA differences initially look width-proportional, but
+they are only 2/4/16 clocks over the *entire* chain.  Repeating n64 at
+32 and 128 MMAs makes RMW and overwrite exactly equal:
+
+| n64 chain | overwrite issue / drain | RMW issue / drain |
+|---:|---:|---:|
+| 32 | 90.375 / 98.094 | 90.375 / 98.094 |
+| 128 | 95.094 / 96.961 | 95.094 / 96.961 |
+
+Thus an HGMMA RMW logically reads the current architectural accumulator
+(the WAW probes prove that), but it does **not** consume the ordinary ALU
+ordinary ALU collector once per accumulator register.  Otherwise 31 extra n64
+RMWs under saturated read traffic would add a large repeatable cost, not
+zero.  The old value is more likely obtained through a dedicated TC
+accumulator-read path or a bank-local read-before-write primitive.  Only
+the resulting write/commit is observably shared with the normal per-bank
+1W domain.  A small fixed arbitration action below timing resolution is
+not excluded; a per-register ordinary-read-port implementation is.
+
+## Round 5 — directly exposing the bank-local RMW aperture
+
+`probe_hgmma_rmw_window.py` races one scalar marker write against one
+n64 accumulating HGMMA.  Every accumulator starts at 1.0, the HGMMA
+adds exactly 16.0, and the racing `MOV32I` writes 2.0.  After DEPBAR the
+three possible values locate the marker relative to the RMW stages:
+
+- 18.0 (`marker + delta`): marker committed before the old-value read;
+- 17.0 (`base + delta`): marker committed after read but before write;
+- 2.0 (`marker`): marker committed after the HGMMA write.
+
+This is intentionally undefined async-proxy ordering, but the observed
+boundaries are completely deterministic across 30 runs x 128 threads.
+For tail pair `{R54,R55}`, with HGMMA stall=4 and stall-1 delay NOPs:
+
+| delay-NOP count | final value | interpretation |
+|---:|---:|---|
+| 0--24 | 18.0 | marker before RMW read |
+| 25--30 | 17.0 | marker inside read-to-write aperture |
+| 31+ | 2.0 | marker after RMW write |
+
+Even and odd words have identical boundaries.  Sweeping HGMMA's own
+stall field from 1 through 7 merely translates the phase: every case
+retains exactly six intermediate delay slots.  A stall-1 NOP stream is
+independently measured at 2.003 cycles/instruction, making the exposed
+read-to-write aperture approximately **12 clocks** (allow a one-clock
+endpoint convention uncertainty).  Stall-0 NOPs are not a usable finer
+ruler: one such instruction jumps across completion while further ones
+do not translate it, apparently due to batch/scheduler semantics.
+
+Scanning the n64 accumulator pair gives the first post-write (`2.0`)
+boundary:
+
+| pair | registers | first post-write delay |
+|---:|---|---:|
+| 0 | R24/R25 | 17 |
+| 4 | R32/R33 | 21 |
+| 8 | R40/R41 | 25 |
+| 12 | R48/R49 | 29 |
+| 15 | R54/R55 | 31 |
+
+Thus four successive `{even,odd}` pairs move the boundary by four NOP
+slots = about eight clocks: the completion sequencer processes roughly
+**one even+odd pair every two clocks**.  Pair 0 to pair 15 spans about
+28 clocks, consistent with the same cadence within endpoint quantization.
+
+The resulting concrete model is a bank-local pipelined RMW engine.  It
+starts a dedicated old-value read, carries the value and TC delta through
+an approximately 12-clock RMW datapath (including FP32 add and staging),
+then requests the already-proven
+shared per-bank 1W commit.  The engine initiates/commits one register from
+each bank every two clocks.  "Shared address sequencer" is plausible;
+literally one unpipelined decoder is not, because steady state must overlap
+a future read with an older write.  Separate read/write decode phases or a
+pipelined decoder can implement the observation.
+
+Probe source: `tests/asm_construct/probe_hgmma_rmw_window.py`.
