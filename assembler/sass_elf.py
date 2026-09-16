@@ -479,9 +479,9 @@ class CubinBuilder:
 
         # 5/6: .note.nv.tkinfo / .note.nv.cuver — Blackwell-only (nvcc sm90
         # cubins carry no note sections; these template bytes would be
-        # rejected on Hopper with CUDA_ERROR_NO_BINARY_FOR_GPU).  sm100 and
-        # sm120 share the CUDA-12.8 note/compat container ABI.
-        _is_blackwell = arch.current().name in ("sm100", "sm120")
+        # rejected on Hopper with CUDA_ERROR_NO_BINARY_FOR_GPU).  sm100,
+        # sm103 and sm120 share the Blackwell note/compat container ABI.
+        _is_blackwell = arch.current().name in ("sm100", "sm103", "sm120")
         if _is_blackwell:
             sec(".note.nv.tkinfo", SHT_NOTE, content=note_nv_tkinfo(),
                 flags=SHF_CUDA_LINK_ONCE)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Distinguish parity-bank/1R from mod4/2R B200 GPR collection on Modal.
+"""Distinguish parity-bank/1R from mod4/2R B200/B300 GPR collection on Modal.
 
 The two-source FADD/HADD2 matrix first establishes whether two reads can be
 served from one candidate bank.  The decisive three-source comparison is:
@@ -87,8 +87,7 @@ def source(op: str, ra: int, rb: int, count: int, rc: int | None = None,
     return "\n".join(lines)
 
 
-@app.function(gpu="B200", image=CUDA_IMAGE, timeout=600)
-def run_batch(items: list[tuple[str, bytes]], reps: int) -> dict[str, list[int]]:
+def _run_batch(items: list[tuple[str, bytes]], reps: int) -> dict[str, list[int]]:
     cuda = ctypes.CDLL("libcuda.so.1")
     CUdevice = ctypes.c_int
     CUcontext = ctypes.c_void_p
@@ -193,6 +192,16 @@ def run_batch(items: list[tuple[str, bytes]], reps: int) -> dict[str, list[int]]
     return results
 
 
+@app.function(gpu="B200", image=CUDA_IMAGE, timeout=600)
+def run_batch_b200(items: list[tuple[str, bytes]], reps: int) -> dict[str, list[int]]:
+    return _run_batch(items, reps)
+
+
+@app.function(gpu="B300", image=CUDA_IMAGE, timeout=600)
+def run_batch_b300(items: list[tuple[str, bytes]], reps: int) -> dict[str, list[int]]:
+    return _run_batch(items, reps)
+
+
 def fit_slope(points: list[tuple[int, float]]) -> float:
     xm = statistics.mean(x for x, _ in points)
     ym = statistics.mean(y for _, y in points)
@@ -204,7 +213,8 @@ def fit_slope(points: list[tuple[int, float]]) -> float:
 
 @app.local_entrypoint()
 def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
-         ffma2: bool = False, reuse: bool = False) -> None:
+         ffma2: bool = False, reuse: bool = False,
+         target: str = "b200") -> None:
     # Modal ships this script alone to /root for the remote function.  Keep
     # repository-relative imports local: run_batch only consumes cubin bytes.
     import sys
@@ -212,11 +222,19 @@ def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from assembler import assemble
 
+    target = target.lower()
+    if target == "b200":
+        runner, asm_arch, gpu_label = run_batch_b200, "sm100", "B200"
+    elif target == "b300":
+        runner, asm_arch, gpu_label = run_batch_b300, "sm103", "B300"
+    else:
+        raise ValueError("target must be b200 or b300")
+
     if smoke:
-        image = assemble(source("nop", 24, 28, 16), arch="sm100",
+        image = assemble(source("nop", 24, 28, 16), arch=asm_arch,
                          check_deps=False)
-        raw = run_batch.remote([("smoke", image)], max(reps, 1))
-        print(f"B200 smoke cycles: {raw['smoke']}")
+        raw = runner.remote([("smoke", image)], max(reps, 1))
+        print(f"{gpu_label} smoke cycles: {raw['smoke']}")
         return
 
     lengths = (128, 256, 512)
@@ -248,17 +266,17 @@ def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
             for n in lengths:
                 items.append((
                     f"reuse:{label}:N{n}",
-                    assemble(source(op, ra, rb, n, rc, mask), arch="sm100",
+                    assemble(source(op, ra, rb, n, rc, mask), arch=asm_arch,
                              check_deps=False),
                 ))
         for n in lengths:
             items.append((
                 f"nop:00:N{n}",
-                assemble(source("nop", 24, 28, n), arch="sm100",
+                assemble(source("nop", 24, 28, n), arch=asm_arch,
                          check_deps=False),
             ))
-        raw = run_batch.remote(items, reps)
-        print("B200 explicit reuse slopes (cycles/instruction)")
+        raw = runner.remote(items, reps)
+        print(f"{gpu_label} explicit reuse slopes (cycles/instruction)")
         for label in cases:
             points = [(n, float(min(raw[f"reuse:{label}:N{n}"])))
                       for n in lengths]
@@ -284,17 +302,17 @@ def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
             for n in lengths:
                 items.append((
                     f"ffma2:{label}:N{n}",
-                    assemble(source("ffma2", ra, rb, n, rc), arch="sm100",
+                    assemble(source("ffma2", ra, rb, n, rc), arch=asm_arch,
                              check_deps=False),
                 ))
         for n in lengths:
             items.append((
                 f"nop:00:N{n}",
-                assemble(source("nop", 24, 28, n), arch="sm100",
+                assemble(source("nop", 24, 28, n), arch=asm_arch,
                          check_deps=False),
             ))
-        raw = run_batch.remote(items, reps)
-        print("B200 packed FFMA2 slopes (SR_CLOCK ticks/instruction)")
+        raw = runner.remote(items, reps)
+        print(f"{gpu_label} packed FFMA2 slopes (SR_CLOCK ticks/instruction)")
         for label in patterns:
             points = [(n, float(min(raw[f"ffma2:{label}:N{n}"])))
                       for n in lengths]
@@ -328,17 +346,17 @@ def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
             for n in lengths:
                 items.append((
                     f"ffma:{label}:N{n}",
-                    assemble(source("ffma", ra, rb, n, rc), arch="sm100",
+                    assemble(source("ffma", ra, rb, n, rc), arch=asm_arch,
                              check_deps=False),
                 ))
         for n in lengths:
             items.append((
                 f"nop:00:N{n}",
-                assemble(source("nop", 24, 28, n), arch="sm100",
+                assemble(source("nop", 24, 28, n), arch=asm_arch,
                          check_deps=False),
             ))
-        raw = run_batch.remote(items, reps)
-        print("B200 three-source FFMA slopes (SR_CLOCK ticks/instruction)")
+        raw = runner.remote(items, reps)
+        print(f"{gpu_label} three-source FFMA slopes (SR_CLOCK ticks/instruction)")
         for label in patterns:
             points = [(n, float(min(raw[f"ffma:{label}:N{n}"])))
                       for n in lengths]
@@ -360,16 +378,16 @@ def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
                     label = f"{op}:{a}{b}:N{n}"
                     items.append(
                         (label, assemble(source(op, ra, rb, n),
-                                         arch="sm100", check_deps=False))
+                                         arch=asm_arch, check_deps=False))
                     )
     for n in lengths:
         items.append(
             (f"nop:00:N{n}", assemble(source("nop", 24, 28, n),
-                                       arch="sm100", check_deps=False))
+                                       arch=asm_arch, check_deps=False))
         )
 
-    raw = run_batch.remote(items, reps)
-    print("B200 RF source-collection slopes (cycles/instruction)")
+    raw = runner.remote(items, reps)
+    print(f"{gpu_label} RF source-collection slopes (cycles/instruction)")
     for op in ("fadd", "hadd2"):
         matrix = []
         print(f"\n{op.upper()} rows=Ra mod4, columns=Rb mod4")

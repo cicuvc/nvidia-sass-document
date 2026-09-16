@@ -3,7 +3,7 @@
 The `assembler/` package is a hand-written SASS parser,
 matcher and encoder that turns source text into loadable cubin bytes, plus a
 CTypes CUDA runner for executing those cubins on a GPU and a scoreboard
-dependency checker.  It supports **sm_70/sm_80/sm_90/sm_100/sm_120** ISA
+dependency checker.  It supports **sm_70/sm_80/sm_90/sm_100/sm_103/sm_120** ISA
 databases (default `sm120.json`; select another with `arch=`); every SASS
 instruction is **16 bytes / 128 bits**
 (hi64 + lo64), regardless of the `WORD_SIZE 64` header line.
@@ -25,11 +25,12 @@ Architecture selection examples:
 
 ```python
 cubin_b200 = assemble(source, arch="sm100")  # B200 / sm_100(a)
+cubin_b300 = assemble(source, arch="sm103")  # B300 / sm_103(a)
 cubin_rtx = assemble(source, arch="sm120")   # RTX Blackwell
 cubin_hopper = assemble(source, arch="sm90")
 ```
 
-`sm100` and `sm120` share the Blackwell parameter/cache-descriptor ABI but
+`sm100`, `sm103` and `sm120` share the Blackwell parameter/cache-descriptor ABI but
 emit different ELF architecture flags and use different instruction DBs.
 
 CLI: `python -m assembler.sass_asm input.sass [-o out.cubin] [-n kernel] [--dump-text ...] [--strict-deps] [--no-check-deps] [--debug-tokens]`.

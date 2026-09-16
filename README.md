@@ -20,6 +20,7 @@ microarchitectural speculation.
 | `sm_90_latencies.txt` | Hopper pipe grouping + scoreboard/latency tables (~441 lines). |
 | `sm100_instructions.txt` | Blackwell full instruction/encoding spec. |
 | `sm100_latencies.txt` | Blackwell pipe grouping + scoreboard/latency tables. |
+| `sm_103_instructions.txt`, `sm_103_latencies.txt` | Blackwell Ultra / B300 instruction and latency dumps. |
 | `sm_70_instructions.txt`, `sm_75_instructions.txt`, `sm_80_instructions.txt` | Older-arch dumps for cross-arch comparison and Volta assembly probes. |
 | `tools/` | stdlib-only extractors + query CLIs + per-instruction decoders (sm_90 and sm100) + bit-accurate MMA model (`hmma_model.py`). |
 | `assembler/` | Hand-written SASS → cubin toolchain (sm_120) + CTypes GPU runner + scoreboard dependency checker. See `ASSEMBLER_MANUAL.md`. |
@@ -32,7 +33,7 @@ microarchitectural speculation.
 | `tests/` | CUDA (`.cu`) kernels that force specific SASS encodings and probe microarch behavior (177 files), plus `tests/asm_construct/` assembler round-trip + GPU tests (87 `.py` files). |
 | `TODO.md` | Master checklist of sm_90 instructions to document (197/207 done). |
 | `ref_memo.txt` | Curated sm_70..sm_90 opcode roster (source of the checklist). |
-| `sm70.json`, `sm90.json`, `sm100.json` | Generated queryable DBs (gitignored/regenerable). |
+| `sm70.json`, `sm90.json`, `sm100.json`, `sm103.json` | Generated queryable DBs (gitignored/regenerable). |
 
 ## Tooling
 
@@ -65,6 +66,10 @@ python3 tools/parse_sm100.py
 python3 tools/query_sm100.py mnem <NAME>
 python3 tools/query_sm100.py pipe <MNEMONIC>
 # ... same subcommands as query_sm90.py
+
+# Generate sm103.json from the Blackwell Ultra dumps
+python3 tools/parse_sm100.py --instructions sm_103_instructions.txt \
+  --latencies sm_103_latencies.txt -o sm103.json
 ```
 
 `tools/decode_<mnem>.py` are minimal per-instruction decoders: they extract

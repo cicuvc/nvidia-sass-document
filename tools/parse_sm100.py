@@ -554,12 +554,16 @@ def validate(db):
 
 def main():
     ap = argparse.ArgumentParser(description="Extract sm100 SASS ISA -> JSON")
+    ap.add_argument("--instructions", default=str(INSTR),
+                    help="instruction dump (default: sm100_instructions.txt)")
+    ap.add_argument("--latencies", default=str(LAT),
+                    help="latency dump (default: sm100_latencies.txt)")
     ap.add_argument("-o", "--out", default=str(REPO / "sm100.json"))
     ap.add_argument("--indent", type=int, default=1)
     args = ap.parse_args()
 
-    lines = read_lines(INSTR)
-    lat_lines = read_lines(LAT)
+    lines = read_lines(Path(args.instructions))
+    lat_lines = read_lines(Path(args.latencies))
 
     i_params = find_line(lines, lambda l: l.rstrip() == "PARAMETERS")
     i_consts = find_line(lines, lambda l: l.rstrip() == "CONSTANTS")
