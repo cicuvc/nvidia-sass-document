@@ -1,11 +1,11 @@
-# SM120 SASS Assembler — Syntax, Features & Usage Notes
+# NVIDIA SASS Assembler — Syntax, Features & Usage Notes
 
-The `assembler/` package is a hand-written SASS (Sierra/SM120 assembly) parser,
+The `assembler/` package is a hand-written SASS parser,
 matcher and encoder that turns source text into loadable cubin bytes, plus a
 CTypes CUDA runner for executing those cubins on a GPU and a scoreboard
-dependency checker.  It targets the **sm_120** ISA spec (`sm120.json`,
-regenerated from `sm_90_instructions.txt` / `sm_90_latencies.txt` by
-`tools/parse_sm90.py`); every SASS instruction is **16 bytes / 128 bits**
+dependency checker.  It supports **sm_70/sm_80/sm_90/sm_100/sm_120** ISA
+databases (default `sm120.json`; select another with `arch=`); every SASS
+instruction is **16 bytes / 128 bits**
 (hi64 + lo64), regardless of the `WORD_SIZE 64` header line.
 
 ---
@@ -20,6 +20,17 @@ regenerated from `sm_90_instructions.txt` / `sm_90_latencies.txt` by
 
 `AssembleResult` fields: `code` (cubin bytes), `kernel_name`, `encoded`,
 `params` (`[(ordinal, 0x380+ordinal, size)]`).
+
+Architecture selection examples:
+
+```python
+cubin_b200 = assemble(source, arch="sm100")  # B200 / sm_100(a)
+cubin_rtx = assemble(source, arch="sm120")   # RTX Blackwell
+cubin_hopper = assemble(source, arch="sm90")
+```
+
+`sm100` and `sm120` share the Blackwell parameter/cache-descriptor ABI but
+emit different ELF architecture flags and use different instruction DBs.
 
 CLI: `python -m assembler.sass_asm input.sass [-o out.cubin] [-n kernel] [--dump-text ...] [--strict-deps] [--no-check-deps] [--debug-tokens]`.
 

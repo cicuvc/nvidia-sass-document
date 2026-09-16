@@ -1,3 +1,4 @@
+import struct
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -9,7 +10,7 @@ from assembler import assemble_kernel, assemble_flat, arch
 #
 #   sm90 (Hopper/H800):  SLOT_DEFAULT_CDESC = c[0x0][0x208], param base 0x210,
 #                        LDCU is spelled ULDC (opcode 0xab9).
-#   sm120 (Blackwell):   SLOT_DEFAULT_CDESC = c[0x0][0x358], param base 0x380,
+#   sm100/sm120 (Blackwell): SLOT_DEFAULT_CDESC = c[0x0][0x358], param base 0x380,
 #                        LDCU (opcode 0x77ac).
 # Default process arch is sm120 (historical behaviour); arch= switches just
 # the call, and the previous arch is restored afterwards.
@@ -62,9 +63,19 @@ r90 = assemble_kernel(SRC, arch="sm90")
 check("arch=sm90 param base", r90.params[0][1], 0x210)
 check("arch restored after kwarg", arch.current().name, before)
 
+r100 = assemble_kernel(SRC, arch="sm100")
+check("sm100 param base", r100.params[0][1], 0x380)
+check("sm100 LDCU enc (UR4 + c[0x0][0x358])",
+      r100.encoded[0][0], 0x00006b00ff0477ac)
+check("sm100 ELF e_flags", struct.unpack_from("<I", r100.code, 48)[0],
+      0x06006402)
+check("sm100 carries Blackwell compat section", b".nv.compat" in r100.code,
+      True)
+check("arch restored after sm100 kwarg", arch.current().name, before)
+
 # --- unknown arch rejected -------------------------------------------------
 try:
-    assemble_kernel(SRC, arch="sm100")
+    assemble_kernel(SRC, arch="sm110")
     check("unknown arch rejected", "no-error", "ValueError")
 except ValueError:
     check("unknown arch rejected", "ValueError", "ValueError")

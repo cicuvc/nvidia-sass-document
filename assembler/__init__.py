@@ -1,7 +1,8 @@
-"""SASS assembler (sm90/sm120) — assemble and run GPU kernels from Python.
+"""SASS assembler (sm70/sm80/sm90/sm100/sm120) — assemble GPU kernels.
 
-Target arch is selected with ``arch=`` ("sm90" Hopper / "sm120" Blackwell,
-process default sm120), or ``set_arch``/``assembler.arch`` for the default.
+Target arch is selected with ``arch=`` (for example "sm90" Hopper,
+"sm100" datacenter Blackwell, or "sm120" RTX Blackwell; process default
+sm120), or ``set_arch``/``assembler.arch`` for the default.
 
 Quick start:
     from assembler import assemble, CudaModule

@@ -477,11 +477,12 @@ class CubinBuilder:
         # template anyway.
         sec(".debug_frame", SHT_PROGBITS, content=debug_frame(), align=1)
 
-        # 5/6: .note.nv.tkinfo / .note.nv.cuver — sm120-only (nvcc sm90 cubins
-        # carry no note sections; the sm120 template bytes would be rejected
-        # on Hopper with CUDA_ERROR_NO_BINARY_FOR_GPU).
-        _is_sm120 = arch.current().name == "sm120"
-        if _is_sm120:
+        # 5/6: .note.nv.tkinfo / .note.nv.cuver — Blackwell-only (nvcc sm90
+        # cubins carry no note sections; these template bytes would be
+        # rejected on Hopper with CUDA_ERROR_NO_BINARY_FOR_GPU).  sm100 and
+        # sm120 share the CUDA-12.8 note/compat container ABI.
+        _is_blackwell = arch.current().name in ("sm100", "sm120")
+        if _is_blackwell:
             sec(".note.nv.tkinfo", SHT_NOTE, content=note_nv_tkinfo(),
                 flags=SHF_CUDA_LINK_ONCE)
             sec(".note.nv.cuver", SHT_NOTE, content=note_nv_cuver(),
@@ -597,9 +598,9 @@ class CubinBuilder:
         sec(f".nv.info.{mn}", SHT_CUDA_INFO, content=buf,
             flags=SHF_INFO_LINK)
 
-        # 9: .nv.compat — sm120-only (Blackwell driver expectation; nvcc sm90
-        # cubins carry no compat section).
-        if _is_sm120:
+        # 9: .nv.compat — Blackwell driver expectation; nvcc sm90 cubins carry
+        # no compat section.
+        if _is_blackwell:
             compat = bytes([
                 0x02, 0x02, 0x01, 0x00,  # ISA_CLASS=1
                 0x02, 0x05, 0x05, 0x00,  # TCGEN05_MMA=5
