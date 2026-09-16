@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Cross-warp localization of the parity-banked GPR write port on GB202.
 
-Warp 0 times a warmed LDG.32 -> R40(E) through its real SB4 release.  A
-contender warp issues a reuse-fed FFMA stream whose destinations are all E or
-all O.  Warp 4 is on warp 0's subcore; warp 1 is the different-subcore control.
+Warp 0 times a scoreboarded LDG.32 or MUFU -> R40(E) through its real SB4
+release.  A contender warp issues a reuse-fed FFMA stream whose destinations
+are all E or all O.  Warp 4 is on warp 0's subcore; warp 1 is the
+different-subcore control.
 Predicated-off FFMA streams retain fetch/issue/dispatch but perform no operand
 read, execution, or GPR write.
 
@@ -30,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from assembler import CudaModule, assemble  # noqa: E402
 
 
-def source(n: int, parity: str, pred: bool, phase: int) -> str:
+def source(producer: str, n: int, parity: str, pred: bool, phase: int) -> str:
     p = 0 if parity == "E" else 1
     dsts = [42 + p + 2 * i for i in range(20)]
     vpad, cpad = max(0, -phase), max(0, phase)
@@ -62,9 +63,15 @@ def source(n: int, parity: str, pred: bool, phase: int) -> str:
         "#def_label(victim)",
     ]
     lines += ["    NOP;[7:7:{}:1:0]" for _ in range(vpad)]
+    if producer == "ldg":
+        producer_inst = "LDG.E R40, desc[{UR4,UR5}][{R6,R7}]"
+    elif producer == "mufu":
+        producer_inst = "MUFU.RCP R40, R24"
+    else:
+        raise ValueError(producer)
     lines += [
         "    CS2R {R20,R21}, SR_CLOCKLO;[7:7:{}:5:0]",
-        "    LDG.E R40, desc[{UR4,UR5}][{R6,R7}];[4:7:{}:1:1]",
+        f"    {producer_inst};[4:7:{{}}:1:1]",
         "    IADD3 R32, R40, RZ, RZ;[7:7:{4}:5:1]",
         "    CS2R {R22,R23}, SR_CLOCKLO;[7:7:{}:5:0]",
     ]
@@ -85,9 +92,10 @@ def source(n: int, parity: str, pred: bool, phase: int) -> str:
     return "\n".join(lines)
 
 
-def run_case(n: int, parity: str, pred: bool, phase: int,
+def run_case(producer: str, n: int, parity: str, pred: bool, phase: int,
              contender_warp: int, reps: int) -> list[int]:
-    mod = CudaModule(assemble(source(n, parity, pred, phase), check_deps=True))
+    mod = CudaModule(assemble(
+        source(producer, n, parity, pred, phase), check_deps=True))
     out = mod.devmem_alloc(32)
     data = mod.devmem_alloc(128)
     mod.device_write(data, struct.pack("<32I", *([0x12345678] * 32)))
@@ -98,7 +106,8 @@ def run_case(n: int, parity: str, pred: bool, phase: int,
                        args=[out, data, contender_warp])
             mod.synchronize()
             t0, t1, got = struct.unpack("<QQI", mod.device_read(out, 20))
-            if got != 0x12345678:
+            expected = 0x12345678 if producer == "ldg" else 0x3f800000
+            if got != expected:
                 raise RuntimeError(f"bad victim result 0x{got:08x}")
             if rep:
                 vals.append((t1 - t0) & ((1 << 64) - 1))
@@ -110,6 +119,7 @@ def run_case(n: int, parity: str, pred: bool, phase: int,
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--producer", choices=("ldg", "mufu"), default="ldg")
     p.add_argument("--counts", default="8,16,24,32,40,48,64")
     p.add_argument("--phases", default="-8,-4,0,4,8")
     p.add_argument("--reps", type=int, default=30)
@@ -118,7 +128,7 @@ def main() -> int:
     phases = [int(x) for x in ns.phases.split(",") if x.strip()]
     if not counts or min(counts) < 0 or not phases or ns.reps <= 0:
         p.error("counts must be nonnegative; phases nonempty; reps positive")
-    print("cross-warp FFMA-write storm vs warp0 hot LDG->R40(E)")
+    print(f"cross-warp FFMA-write storm vs warp0 {ns.producer}->R40(E)")
     print(" N phase  sEa sEp  sOa sOp  dEa dEp  dOa dOp | Escore Oscore E-O")
     for n in counts:
         for phase in phases:
@@ -127,7 +137,7 @@ def main() -> int:
                 for parity in ("E", "O"):
                     for pred in (False, True):
                         rows[(place, parity, pred)] = run_case(
-                            n, parity, pred, phase, warp, ns.reps)
+                            ns.producer, n, parity, pred, phase, warp, ns.reps)
             med = {k: statistics.median(v) for k, v in rows.items()}
             es = ((med[("s", "E", False)] - med[("s", "E", True)])
                   - (med[("d", "E", False)] - med[("d", "E", True)]))

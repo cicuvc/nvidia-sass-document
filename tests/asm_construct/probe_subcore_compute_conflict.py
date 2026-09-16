@@ -115,9 +115,40 @@ OPS = {
                      "[7:7:{}:1:0]"),
     "iadd3_ra": Op("iadd3_ra", "int/alu", "IADD3 R{d}, R24, R27, R28",
                      "[7:7:{}:1:0:1]"),
+    "iadd3_rabc": Op(
+        "iadd3_rabc", "int/alu-reuse",
+        "IADD3 R{d}, R24, R27, R28", "[7:7:{}:1:0:7]"),
+    "iadd3_rz": Op(
+        "iadd3_rz", "int/alu-reuse-no-wb",
+        "IADD3 RZ, R24, R27, R28", "[7:7:{}:1:0:7]"),
     "lop3": Op("lop3", "int/alu", "LOP3.LUT R{d}, R24, R27, R28, 0x96"),
     "shf": Op("shf", "int/alu", "SHF.R.U32.HI R{d}, R24, R27, R28"),
     "imad": Op("imad", "fmalighter/intmul", "IMAD R{d}, R24, R27, R28"),
+    "imad_rabc": Op(
+        "imad_rabc", "fmaheavy/intmul-reuse",
+        "IMAD R{d}, R24, R27, R28", "[7:7:{}:1:0:7]"),
+    "imad_rz": Op(
+        "imad_rz", "fmaheavy/intmul-reuse-no-wb",
+        "IMAD RZ, R24, R27, R28", "[7:7:{}:1:0:7]"),
+    "imad_hi": Op(
+        "imad_hi", "fmaheavy/intmul-high",
+        "IMAD.HI R{d}, PT, R24, R27, {{R28,R29}}"),
+    "imad_hi_rabc": Op(
+        "imad_hi_rabc", "fmaheavy/intmul-high-reuse",
+        "IMAD.HI R{d}, PT, R24, R27, {{R28,R29}}", "[7:7:{}:1:0:7]"),
+    "imad_wide": Op(
+        "imad_wide", "fmaheavy/intmul-wide",
+        "IMAD.WIDE.U32 {{R{de0},R{de1}}}, PT, R24, R27, {{R28,R29}}"),
+    "imad_wide_rabc": Op(
+        "imad_wide_rabc", "fmaheavy/intmul-wide-reuse",
+        "IMAD.WIDE.U32 {{R{de0},R{de1}}}, PT, R24, R27, {{R28,R29}}",
+        "[7:7:{}:1:0:7]"),
+    "idp4": Op(
+        "idp4", "fmaheavy/int-dot",
+        "IDP.4A.U8.U8 R{d}, R24, R27, R28"),
+    "idp2": Op(
+        "idp2", "fmaheavy/int-dot",
+        "IDP.2A.LO.U16.U8 R{d}, R24, R27, R28"),
     "imad_o": Op("imad_o", "fmalighter/intmul", "IMAD R{do}, R24, R27, R28"),
     "imad_s": Op("imad_s", "fmalighter/intmul", "IMAD R{do}, R25, R26, R29"),
     "imad_y0": Op("imad_y0", "fmalighter/intmul", "IMAD R{d}, R24, R27, R28",
@@ -145,7 +176,12 @@ OPS = {
                        "FFMA R{d}, R24, R26, R28", "[7:7:{}:1:0:3]"),
     "ffma_e_rabc": Op("ffma_e_rabc", "fmalighter",
                         "FFMA R{d}, R24, R26, R28", "[7:7:{}:1:0:7]"),
+    "ffma_rz": Op(
+        "ffma_rz", "fmalighter/reuse-no-wb",
+        "FFMA RZ, R24, R27, R28", "[7:7:{}:1:0:7]"),
     "fadd": Op("fadd", "fmalighter", "FADD R{d}, R24, R27"),
+    "fadd32i": Op(
+        "fadd32i", "fmalighter", "FADD32I R{d}, R24, 0f3f800000"),
     "fadd_o": Op("fadd_o", "fmalighter", "FADD R{do}, R24, R27"),
     "fadd_s": Op("fadd_s", "fmalighter", "FADD R{do}, R25, R26"),
     "fadd_e": Op("fadd_e", "fmalighter", "FADD R{d}, R24, R26"),
@@ -157,6 +193,89 @@ OPS = {
                     "[7:7:{}:1:0]"),
     "fadd_rab": Op("fadd_rab", "fmalighter", "FADD R{d}, R24, R27",
                      "[7:7:{}:1:0:3]"),
+    "ffma32i": Op(
+        "ffma32i", "fmalighter",
+        "FFMA32I R{d}, R24, 0f3f800000, R28"),
+    "fhadd": Op("fhadd", "fmalighter", "FHADD.F16 R{d}, R24, R27"),
+    "fhfma": Op(
+        "fhfma", "fmalighter", "FHFMA.F16 R{d}, R24, R27, R28"),
+    "fmul": Op("fmul", "fmalighter", "FMUL R{d}, R24, R27"),
+    "fmul32i": Op(
+        "fmul32i", "fmalighter", "FMUL32I R{d}, R24, 0f3f800000"),
+    "fswzadd": Op(
+        "fswzadd", "fmalighter",
+        "FSWZADD.NDV R{d}, R24, R27, PPPPPPPP"),
+    "imul": Op("imul", "fmalighter", "IMUL.U32 R{d}, R24, R27"),
+    "imul32i": Op(
+        "imul32i", "fmalighter", "IMUL32I.U32 R{d}, R24, 0x3"),
+    "mov": Op("mov", "alu", "MOV R{d}, R24"),
+    "mov_ra": Op(
+        "mov_ra", "alulite/reuse", "MOV R{d}, R24", "[7:7:{}:1:0:1]"),
+    "mov_rz": Op(
+        "mov_rz", "alulite/reuse-no-wb", "MOV RZ, R24",
+        "[7:7:{}:1:0:1]"),
+    "mov_imad_pair": Op(
+        "mov_imad_pair", "alulite+fmaheavy",
+        "MOV R{d}, R24;[7:7:{{}}:1:0:1]\n"
+        "    IMAD R{do}, R24, R27, R28", "[7:7:{}:1:0:7]"),
+    "ffma_imad_pair": Op(
+        "ffma_imad_pair", "fmalite+fmaheavy",
+        "FFMA R{d}, R24, R27, R28;[7:7:{{}}:1:0:7]\n"
+        "    IMAD R{do}, R24, R27, R28", "[7:7:{}:1:0:7]"),
+    "mov32i": Op("mov32i", "alu", "MOV32I R{d}, 0x12345678"),
+    "sel": Op("sel", "alu", "SEL R{d}, R24, R27, PT"),
+    "lea": Op("lea", "alu", "LEA R{d}, R24, R27, 0x4"),
+    "sgxt": Op("sgxt", "alu", "SGXT R{d}, R24, 0x5"),
+    "imnmx": Op("imnmx", "alu", "IMNMX.U32 R{d}, R24, R27, PT"),
+    "vimnmx": Op("vimnmx", "alu", "VIMNMX.U32 R{d}, R24, R27, PT"),
+    "viadd": Op("viadd", "alu", "VIADD.U32 R{d}, R24, R27"),
+    "fmnmx": Op("fmnmx", "alu", "FMNMX R{d}, R24, R27, PT"),
+    "fsel": Op("fsel", "alu", "FSEL R{d}, R24, R27, PT"),
+    "fset": Op(
+        "fset", "alu", "FSET.BF.LT.AND R{d}, R24, R27, PT"),
+    "fsetp": Op(
+        "fsetp", "alu", "FSETP.LT.AND P0, P1, R24, R27, PT"),
+    "plop3": Op(
+        "plop3", "alu", "PLOP3.LUT P0, PT, PT, PT, PT, 0x96"),
+    "isetp": Op(
+        "isetp", "alu", "ISETP.NE.AND P0, PT, R24, R27, PT"),
+    "bmsk": Op("bmsk", "alu", "BMSK R{d}, R24, R27"),
+    "iabs": Op("iabs", "alu", "IABS R{d}, R24"),
+    "f2fp": Op(
+        "f2fp", "alu", "F2FP.F16.F32.PACK_AB R{d}, R24, R27"),
+    "f2ip": Op(
+        "f2ip", "alu", "F2IP.U8.F32 R{d}, RZ, R24, RZ"),
+    "i2fp": Op("i2fp", "alu", "I2FP.F32.S32 R{d}, R24"),
+    "i2i": Op("i2i", "alu", "I2I.SAT.U8 R{d}, R24"),
+    "i2ip": Op(
+        "i2ip", "alu", "I2IP.U8.S32 R{d}, RZ, R24, RZ"),
+    "iadd": Op("iadd", "alu", "IADD R{d}, PT, R24, R27"),
+    "iadd_rab": Op(
+        "iadd_rab", "alulite/reuse", "IADD R{d}, PT, R24, R27",
+        "[7:7:{}:1:0:3]"),
+    "iadd_rz": Op(
+        "iadd_rz", "alulite/reuse-no-wb", "IADD RZ, PT, R24, R27",
+        "[7:7:{}:1:0:3]"),
+    "iadd_imad_pair": Op(
+        "iadd_imad_pair", "alulite-add+fmaheavy",
+        "IADD R{d}, PT, R24, R27;[7:7:{{}}:1:0:3]\n"
+        "    IMAD R{do}, R24, R27, R28", "[7:7:{}:1:0:7]"),
+    "iadd32i": Op("iadd32i", "alu", "IADD32I R{d}, PT, R24, 0x1"),
+    "iscadd": Op(
+        "iscadd", "alu", "ISCADD R{d}, PT, R24, R27, 0x2"),
+    "iscadd32i": Op(
+        "iscadd32i", "alu", "ISCADD32I R{d}, PT, R24, 0x1, 0x2"),
+    "lop": Op("lop", "alu", "LOP.XOR PT, R{d}, R24, R27"),
+    "lop32i": Op(
+        "lop32i", "alu", "LOP32I.XOR PT, R{d}, R24, 0x12345678"),
+    "mov64iur": Op(
+        "mov64iur", "alu", "MOV64IUR {{R{de0},R{de1}}}, 0x12345678"),
+    "p2r": Op("p2r", "alu", "P2R R{d}, PR, RZ, 0x7f"),
+    "psetp": Op("psetp", "alu", "PSETP.AND P0, PT, PT"),
+    "r2p": Op("r2p", "alu", "R2P PR, R24, 0x7f"),
+    "shl": Op("shl", "alu", "SHL R{d}, R24, R27"),
+    "shr": Op("shr", "alu", "SHR.U32 R{d}, R24, R27"),
+    "prmt": Op("prmt", "alu", "PRMT R{d}, R24, R27, R28"),
     "hfma2": Op("hfma2", "fp16", "HFMA2 R{d}, R24, R27, R28"),
     "hfma2_o": Op("hfma2_o", "fp16", "HFMA2 R{do}, R24, R27, R28"),
     "hfma2_s": Op("hfma2_s", "fp16", "HFMA2 R{do}, R25, R26, R29"),
@@ -166,14 +285,45 @@ OPS = {
     "hfma2_ra": Op("hfma2_ra", "fp16", "HFMA2 R{d}, R24, R27, R28",
                      "[7:7:{}:1:0:1]"),
     "hadd2": Op("hadd2", "fp16", "HADD2 R{d}, R24, R27"),
+    "hadd2_32i": Op(
+        "hadd2_32i", "fp16",
+        "HADD2_32I R{d}, R24, 0f3f800000, 0f3f800000"),
     "hadd2_y0": Op("hadd2_y0", "fp16", "HADD2 R{d}, R24, R27",
                      "[7:7:{}:1:0]"),
+    "hfma2_32i": Op(
+        "hfma2_32i", "fp16",
+        "HFMA2_32I R{d}, R24, 0f3f800000, 0f3f800000, R28"),
+    "hfma2_mma": Op(
+        "hfma2_mma", "fma64lite/hfma2mma",
+        "HFMA2.MMA R{d}, R24, R27, R28"),
+    "hadd2_f32": Op(
+        "hadd2_f32", "fp16/widen", "HADD2.F32 R{d}, -RZ, R24.H0_H0"),
+    "hmnmx2": Op(
+        "hmnmx2", "fp16", "HMNMX2 R{d}, R24, R27, PT"),
+    "hmul2": Op("hmul2", "fp16", "HMUL2 R{d}, R24, R27"),
+    "hmul2_32i": Op(
+        "hmul2_32i", "fp16",
+        "HMUL2_32I R{d}, R24, 0f3f800000, 0f3f800000"),
+    "hset2": Op(
+        "hset2", "fp16", "HSET2.BF.LT.AND R{d}, R24, R27, PT"),
+    "hsetp2": Op(
+        "hsetp2", "fp16", "HSETP2.LT.AND P0, P1, R24, R27, PT"),
     "dfma": Op(
         "dfma", "fma64lite",
         "DFMA {{R{de0},R{de1}}}, {{R24,R25}}, {{R26,R27}}, {{R28,R29}}"),
     "dadd": Op(
         "dadd", "fma64lite",
         "DADD {{R{de0},R{de1}}}, {{R24,R25}}, {{R26,R27}}"),
+    "dmul": Op(
+        "dmul", "fma64lite",
+        "DMUL {{R{de0},R{de1}}}, {{R24,R25}}, {{R26,R27}}"),
+    "dsetp": Op(
+        "dsetp", "fma64lite",
+        "DSETP.LT.AND P0, P1, {{R24,R25}}, {{R26,R27}}, PT"),
+    "clmad": Op(
+        "clmad", "fma64lite/clmad",
+        "CLMAD.LO {{R{de0},R{de1}}}, {{R24,R25}}, {{R26,R27}}, {{R28,R29}}",
+        "[7:7:{}:8:1]"),
     "mufu": Op("mufu", "mio/mufu", "MUFU.RCP R{d}, R24"),
     "shfl": Op("shfl", "mio/shfl", "SHFL.BFLY PT, R{d}, R24, 0x1, 0x1f"),
     # All lanes read the same shared word, which is a broadcast rather than a

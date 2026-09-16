@@ -17,6 +17,7 @@ TYPE_COMPAT: dict[OperandKind, set[str]] = {
     OperandKind.REG:       {"Register", "NonZeroRegister", "ZeroRegister"},
     OperandKind.UREG:      {"UniformRegister", "ZeroUniformRegister",
                             "NonZeroUniformRegister"},
+    OperandKind.INDEXED_RF: {"RF"},
     OperandKind.PRED:      {"Predicate"},
     OperandKind.UPRED:     {"UniformPredicate"},
     OperandKind.IMM_U:     {"UImm", "SImm", "RSImm", "OPTIONAL_GSB", "GSB0ONLY"},
@@ -42,7 +43,7 @@ SCHED_TYPES = {"REQ", "BITSET", "WR", "RD", "USCHED_INFO", "BATCH_T", "PM_PRED",
 SCHED_SLOT_NAMES = {"src_rel_sb", "dst_wr_sb", "req_bit_set", "req", "wr", "rd",
                     "pm_pred", "batch_t", "usched_info",
                     "reuse_src_a", "reuse_src_b", "reuse_src_c", "reuse_src_d"}
-COMPOSITE_TYPES = {"C", "CX", "DESC", "GMMA", "TMA"}
+COMPOSITE_TYPES = {"C", "CX", "DESC", "GMMA", "TMA", "RF"}
 
 
 class MatchError(Exception):
@@ -660,6 +661,8 @@ class SassMatcher:
         if first_type in ("DESC", "GMMA", "TMA") and op.kind in (
                 OperandKind.MEM_DESC, OperandKind.UREG):
             return self._match_mem_desc(group, op, slot_map)
+        if first_type == "RF" and op.kind == OperandKind.INDEXED_RF:
+            return self._match_indexed_rf(group, op, slot_map)
         if op.kind == OperandKind.MEM_ADDR:
             # a plain [Ra+off] operand must not match a desc[...]-composite
             # group (e.g. STL's memdesc variant pins memdesc=1 even though
@@ -805,6 +808,16 @@ class SassMatcher:
                 slot_map[s["name"]] = 1 if op.width == 64 else 0
             elif st == "U32ONLY":
                 slot_map[s["name"]] = 1 if op.width == 32 else 0
+        return True
+
+    def _match_indexed_rf(self, group: list[dict], op: Operand,
+                          slot_map: dict) -> bool:
+        """Expand ``R[URx]`` into the spec's RF:indexUR[UR] composite."""
+        for s in group:
+            if s["type"] == "RF":
+                slot_map[s["name"]] = 1
+            elif s["type"] == "UniformRegister":
+                slot_map[s["name"]] = op.value
         return True
 
     def _match_mem_addr(self, group: list[dict], op: Operand,

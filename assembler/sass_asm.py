@@ -29,6 +29,9 @@ def fmt_operand(op) -> str:
             return "{" + ", ".join("URZ" if r in (63, 255) else f"UR{r}" for r in op.regs) + "}"
         s = "URZ" if op.value in (63, 255) else f"UR{op.value}"
         return s
+    if kind == OperandKind.INDEXED_RF:
+        s = "URZ" if op.value in (63, 255) else f"UR{op.value}"
+        return f"R[{s}]"
     if kind == OperandKind.PRED:
         return f"P{op.value}" if op.value != 7 else "PT"
     if kind == OperandKind.UPRED:

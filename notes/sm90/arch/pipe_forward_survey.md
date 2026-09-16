@@ -22,8 +22,9 @@ Reproduce: `python3 tests/asm_construct/test_*_forward.py`.
 | fe_pipe | **nothing** (NOP/DEPBAR/PMTRIG/STP/VOTE_VTG/CSMTEST) | UR (DEPBAR count), scoreboards |
 
 Consequences: udp is a UR-domain producer only (no GPR writes); fe is a
-consumer only (no data writes); the int→udp GPR path goes through the
-cross-lane `R2UR`.
+consumer only (no data writes); the fixed→udp GPR path goes through the
+cross-lane `R2UR`.  R2UR's early GPR collector participates in the fixed-pipe
+bypass network even though its later UR result path is much slower.
 
 ## Measured matrix (27 edges, all deterministic; spec = sm120 TABLE_TRUE)
 
@@ -34,8 +35,8 @@ cross-lane `R2UR`.
 | int → int (`IADD3`→`IADD3`) | 6 | **2** | fast |
 | fmal → fmal (`FADD`→`FADD`) | 4 | **2** | fast |
 | fp16 → fp16 (`HADD2`→`HADD2`) | 5 | **2** | fast |
-| int → fmal (`IADD3`→`FADD`) | 6 | **3** | fast |
-| fmal → int (`FADD`→`IADD3`) | 5 | **3** | fast |
+| int → fmal (`IADD3`→`FADD`) | 6 | **2 isolated / 3 combined-layout** | fast |
+| fmal → int (`FADD`→`IADD3`) | 5 | **2 isolated / 3 combined-layout** | fast |
 | int → fp16 (`IADD3`→`HADD2`) | 6 | **2** | fast |
 | fmal → fp16 (`FADD`→`HADD2`) | 6 | **2** | fast |
 | fp16 → int (`HADD2`→`IADD3`) | 5 | **2** | fast |
@@ -102,9 +103,12 @@ the consumer still hazards on the intermediate PLOP3 result.  Concretely:
    (`ISETP`/`HSETP2`) → a branch's predicate read has **no fast bypass**: the
    spec 13 is exact in coarse scheduling, and fine-grain stall-1 fillers only
    open a fragile alignment window at S=3 that doesn't hold.
-7. **Cross-lane (inferred) — ~40 cyc.** `int/fmal/fp16 → udp` goes through
-   `R2UR` (cross-lane broadcast), which needs the ~8×`UMOV` settle seen in
-   `test_r2ur.py` (~40 cycles).
+7. **Cross-lane R2UR has a fast input and slow output.** Direct poison/fresh
+   sweeps give `IADD3→R2UR` minG 2 and `FADD/HADD2→R2UR` minG 3.  A younger
+   overwrite immediately after R2UR does not affect the captured value, so
+   its GPR source is collected early through the ordinary fixed bypass.  The
+   old ~40-cycle figure was an intentionally excessive settle sequence for
+   R2UR's 13--15-cycle UR output, not its input-forwarding latency.
 
 ## Not-constructible edges
 
@@ -126,11 +130,12 @@ the consumer still hazards on the intermediate PLOP3 result.  Concretely:
 | cbu(BMOV) → int | 2 | 6 | **spec too optimistic** |
 | predicate → branch | 13 | 12–13 | **spec exact** (coarse) |
 
-## Inferred edges (not measured; classified by the taxonomy)
+## Remaining inferred edges
 
 | edge | class |
 |---|---|
-| int/fmal/fp16 → udp (R2UR) | cross-lane ~40 cyc |
+| int → udp (`IADD3→R2UR`) | measured fast input: table 6, minG 2 |
+| fmal/fp16 → udp (`FADD/HADD2→R2UR`) | measured fast input: table 6, minG 3 |
 | mio → cbu (NANOSLEEP reading a mio result) | scoreboard ~8+ |
 | udp → cbu (BRXU/JMXU via UR) | UR domain, likely fast |
 | int → mio (STG data, vs the measured LDG addr) | late-read ~1 |
@@ -145,8 +150,9 @@ the consumer still hazards on the intermediate PLOP3 result.  Concretely:
   table says int→int-predicated = 5; not swept here.
 - Whether the cbu→int `minG=6` is the BMOV barrier-state read or a cbu-write
   path artifact (a second cbu GPR writer would separate them).
-- Exact `R2UR` cross-lane latency (documented ~40 cyc from the settle pad, not
-  swept with the boundary method).
+- Exact R2UR UR-result latency by consumer class (the input-forwarding edge is
+  now resolved; the output table gives 13--15 cycles but has not received the
+  same fine-grained boundary sweep).
 
 ## Cross-notes
 

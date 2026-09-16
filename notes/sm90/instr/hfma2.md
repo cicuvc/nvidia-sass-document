@@ -36,8 +36,11 @@
 pairs. Three source operands (Ra multiplicand, Rb multiplier, Rc accumulator),
 each with independent ISWZA/ISWZB lane swizzles and sign control (negate/absolute).
 
-**HFMA2.MMA variant:** Identical computational semantics but runs on `fma64lite_pipe`
-and strips the ISWZ lane swizzles. Uses `OFMT_F16_V2_BF16_V2` (F16_V2/BF16_V2 only)
+**HFMA2.MMA variant:** Identical computational semantics but runs on
+`fma64lite_pipe` **on sm_90** and strips the ISWZ lane swizzles.  On sm_120,
+a minimal NCU scan gives the same +1 FMA Heavy, +1 FMA Lite, +1 FP16-type
+counter signature per instruction as plain HFMA2, and zero FP64 operations.
+It uses `OFMT_F16_V2_BF16_V2` (F16_V2/BF16_V2 only)
 and `FMZ_hfma2` (no `OOB` value). No `.F32` output format unlike HADD2.
 Compiler universally emits HFMA2.MMA for all `fma.f16x2` and `add.f16x2` PTX
 operations on sm_90.
@@ -141,8 +144,10 @@ is achieved via hardware negate bits; negation on Rb would require negative
 immediates. ISWZ lane swizzles are not used by the compiler — it selects lanes
 via shuffle/permute instructions instead.
 
-The `.MMA` suffix selects the `fma64lite_pipe` scheduling — the hardware can
-co-issue MMA loads and MMA math for tensor-core-adjacent throughput.
+On sm_90 the `.MMA` suffix selects `fma64lite_pipe` scheduling — the hardware
+can co-issue MMA loads and MMA math for tensor-core-adjacent throughput.  This
+statement does not carry over to sm_120, where the alternate syntax has the
+same measured FMA-leaf occupancy as ordinary HFMA2.
 
 ## Latency (from sm_90_latencies.txt)
 

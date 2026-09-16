@@ -364,6 +364,16 @@ class Parser:
             self.pop()
             return Operand.upred(t.text)
 
+        # Uniform-register-indexed GPR operand: R[URx].  HMMA indexedRF uses
+        # one such operand for the in-place destination/accumulator group.
+        if t.type == "IDENT" and t.text in ("R", "RF") and \
+                self.peek2() is not None and self.peek2().type == "LBRACKET":
+            self.pop()
+            self.expect("LBRACKET")
+            ur = self.expect("UREG")
+            self.expect("RBRACKET")
+            return Operand.indexed_rf(ur.text)
+
         # memory descriptor: desc[URx.64] / gdesc[URx] (GMMA/HGMMA/QMMA)
         if t.type == "IDENT" and t.text in ("desc", "gdesc"):
             return self._parse_mem_desc(gdesc=(t.text == "gdesc"))

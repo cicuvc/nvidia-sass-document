@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1240"
+     viewBox="0 0 1600 1240" role="img"
+     aria-labelledby="title desc">
+  <title id="title">GB202 SM execution and memory topology</title>
+  <desc id="desc">Silicon-derived block diagram of an RTX 5090 streaming
+  multiprocessor, showing its shared instruction cache, four subcores,
+  per-subcore queues and collectors, SM-wide MIO, ADU, CBU and LSU services,
+  L1TEX, shared memory and asynchronous-copy tracking.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#334155"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7"
+            refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="7"
+            refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#dc2626"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.14"/>
+    </filter>
+    <style>
+      text { font-family: Inter, "Noto Sans", "Noto Sans CJK SC", Arial, sans-serif; fill:#172033; }
+      .title { font-size:26px; font-weight:700; }
+      .subtitle { font-size:13px; fill:#526176; }
+      .region { fill:#f8fafc; stroke:#64748b; stroke-width:1.7; rx:14; }
+      .region-title { font-size:17px; font-weight:700; fill:#334155; }
+      .subcore { fill:#f8fafc; stroke:#475569; stroke-width:1.5; rx:12; filter:url(#shadow); }
+      .subcore-head { fill:#dbeafe; stroke:#3b82f6; stroke-width:1.2; rx:8; }
+      .box { stroke:#475569; stroke-width:1.15; rx:6; }
+      .front { fill:#fed7aa; }
+      .sched { fill:#bfdbfe; }
+      .rf { fill:#ddd6fe; }
+      .queue { fill:#fef3c7; }
+      .compute { fill:#bbf7d0; }
+      .tensor { fill:#fbcfe8; }
+      .control { fill:#e9d5ff; }
+      .memory { fill:#bae6fd; }
+      .shared { fill:#99f6e4; }
+      .tma { fill:#fecaca; }
+      .label { font-size:13px; font-weight:600; text-anchor:middle; }
+      .small { font-size:10.5px; font-weight:400; fill:#475569; text-anchor:middle; }
+      .tiny { font-size:9.5px; fill:#526176; text-anchor:middle; }
+      .flow { fill:none; stroke:#334155; stroke-width:1.6; marker-end:url(#arrow); }
+      .bus { fill:none; stroke:#2563eb; stroke-width:2.5; marker-end:url(#arrow-blue); }
+      .feedback { fill:none; stroke:#dc2626; stroke-width:1.5; stroke-dasharray:7 5; marker-end:url(#arrow-red); }
+      .inferred { fill:none; stroke:#64748b; stroke-width:1.5; stroke-dasharray:7 5; marker-end:url(#arrow); }
+      .note { font-size:10px; fill:#64748b; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1240" fill="#ffffff"/>
+  <text x="52" y="38" class="title">NVIDIA GB202 SM — measured behavioral topology</text>
+  <text x="52" y="61" class="subtitle">RTX 5090 / sm_120 · solid = silicon-supported path · dashed gray = equivalent centralized model · dashed red = feedback / completion</text>
+
+  <rect x="35" y="78" width="1530" height="1080" class="region"/>
+  <text x="55" y="106" class="region-title">Streaming Multiprocessor (SM)</text>
+
+  <!-- Shared frontend -->
+  <rect x="65" y="120" width="1470" height="142" class="region" fill="#fff7ed"/>
+  <text x="84" y="146" class="region-title">Shared frontend</text>
+  <rect x="91" y="165" width="178" height="72" class="box front"/>
+  <text x="180" y="192" class="label">GCC / lower I$</text>
+  <text x="180" y="211" class="small">≥ 1 MiB warmed residency</text>
+  <text x="180" y="226" class="tiny">sharing scope unresolved</text>
+
+  <rect x="316" y="157" width="230" height="88" class="box front"/>
+  <text x="431" y="182" class="label">ICC · 64 KiB / SM</text>
+  <text x="431" y="202" class="small">32 sets × 16 ways × 128 B</text>
+  <text x="431" y="219" class="small">set = VA[11:7]</text>
+  <text x="431" y="235" class="tiny">virtual-address tag identity</text>
+
+  <rect x="594" y="165" width="224" height="72" class="box front"/>
+  <text x="706" y="190" class="label">Target / trace buffer</text>
+  <text x="706" y="210" class="small">≈12 early-JMP targets</text>
+  <text x="706" y="226" class="tiny">branch-position dependent</text>
+
+  <rect x="866" y="157" width="625" height="88" class="box sched"/>
+  <text x="1178" y="180" class="label">Fetch, decode and warp dispatch fabric</text>
+  <text x="1178" y="199" class="small">four independent subcore streams can progress without slowdown</text>
+  <text x="1178" y="216" class="tiny">ICC lookup conflicts depend on relative set and fall-through fetch window</text>
+  <text x="1178" y="233" class="tiny">fixed BRA may resolve here without counted MIOC / ADU / CBU execution</text>
+
+  <path d="M269 201 H316" class="flow"/>
+  <path d="M546 201 H594" class="flow"/>
+  <path d="M818 201 H866" class="flow"/>
+  <path d="M1178 245 V278 H250 M1178 278 H1350" class="bus"/>
+
+  <!-- Long writeback routes are painted behind functional blocks. -->
+  <path d="M516 1047 V986 H52 V800 H1518" class="feedback"/>
+  <path d="M52 800 V453 H85" class="feedback"/>
+  <path d="M428 800 V453 H458" class="feedback"/>
+  <path d="M801 800 V453 H831" class="feedback"/>
+  <path d="M1174 800 V453 H1204" class="feedback"/>
+
+  <!-- Subcore 0 -->
+  <g transform="translate(65,292)">
+    <rect width="350" height="500" class="subcore"/>
+    <rect x="12" y="12" width="326" height="40" class="subcore-head"/>
+    <text x="175" y="38" class="region-title" text-anchor="middle">Subcore 0</text>
+    <rect x="20" y="68" width="310" height="48" class="box sched"/>
+    <text x="175" y="88" class="label">Warp scheduler + scoreboard</text>
+    <text x="175" y="105" class="small">group mask · RPC · dependency closure</text>
+    <rect x="20" y="132" width="310" height="58" class="box rf"/>
+    <text x="175" y="153" class="label">Register file · even / odd banks</text>
+    <text x="175" y="171" class="small">effective 1 warp operand / bank / cycle</text>
+    <text x="175" y="185" class="tiny">1W/bank final commit arbitration</text>
+    <rect x="20" y="208" width="148" height="70" class="box queue"/>
+    <text x="94" y="229" class="label">Local MIO queues</text>
+    <text x="94" y="247" class="small">LSU ≈4 · XU ≈2</text>
+    <text x="94" y="264" class="small">VQ_CBU ≈10–12</text>
+    <rect x="182" y="208" width="148" height="70" class="box compute"/>
+    <text x="256" y="229" class="label">Scalar dispatch</text>
+    <text x="256" y="247" class="small">FP32 · INT · IMAD</text>
+    <text x="256" y="264" class="small">FP16 mode ingress</text>
+    <rect x="20" y="296" width="148" height="74" class="box control"/>
+    <text x="94" y="317" class="label">Late RF collector</text>
+    <text x="94" y="335" class="small">GPR-dependent MIO PQ</text>
+    <text x="94" y="352" class="tiny">≈0.5 GPR operand/cycle</text>
+    <rect x="182" y="296" width="70" height="74" class="box compute"/>
+    <text x="217" y="322" class="label">XU</text>
+    <text x="217" y="341" class="small">MUFU</text>
+    <text x="217" y="357" class="tiny">local · own WB</text>
+    <rect x="260" y="296" width="70" height="74" class="box tensor"/>
+    <text x="295" y="319" class="label">TC</text>
+    <text x="295" y="337" class="small">HMMA</text>
+    <text x="295" y="353" class="tiny">IMMA/QMMA</text>
+    <rect x="20" y="392" width="310" height="82" class="box compute"/>
+    <text x="175" y="414" class="label">Fixed-latency execution backends</text>
+    <text x="175" y="433" class="small">FP32 up to 1/cycle when RF permits</text>
+    <text x="175" y="450" class="small">simple INT / packed FP / IMAD ≈0.5/cycle</text>
+    <text x="175" y="466" class="tiny">family steering and RF collection are distinct limits</text>
+    <path d="M175 52 V68 M175 116 V132 M94 190 V208 M256 190 V208 M94 278 V296 M168 333 H182 M295 278 V296 M256 278 V392" class="flow"/>\n    <path d="M217 370 V380 H340 V161 H330" class="feedback"/>
+  </g>
+
+  <!-- Subcore 1 -->
+  <g transform="translate(438,292)">
+    <rect width="350" height="500" class="subcore"/>
+    <rect x="12" y="12" width="326" height="40" class="subcore-head"/>
+    <text x="175" y="38" class="region-title" text-anchor="middle">Subcore 1</text>
+    <rect x="20" y="68" width="310" height="48" class="box sched"/><text x="175" y="88" class="label">Warp scheduler + scoreboard</text><text x="175" y="105" class="small">group mask · RPC · dependency closure</text>
+    <rect x="20" y="132" width="310" height="58" class="box rf"/><text x="175" y="153" class="label">Register file · even / odd banks</text><text x="175" y="171" class="small">effective 1 warp operand / bank / cycle</text><text x="175" y="185" class="tiny">1W/bank final commit arbitration</text>
+    <rect x="20" y="208" width="148" height="70" class="box queue"/><text x="94" y="229" class="label">Local MIO queues</text><text x="94" y="247" class="small">LSU ≈4 · XU ≈2</text><text x="94" y="264" class="small">VQ_CBU ≈10–12</text>
+    <rect x="182" y="208" width="148" height="70" class="box compute"/><text x="256" y="229" class="label">Scalar dispatch</text><text x="256" y="247" class="small">FP32 · INT · IMAD</text><text x="256" y="264" class="small">FP16 mode ingress</text>
+    <rect x="20" y="296" width="148" height="74" class="box control"/><text x="94" y="317" class="label">Late RF collector</text><text x="94" y="335" class="small">GPR-dependent MIO PQ</text><text x="94" y="352" class="tiny">≈0.5 GPR operand/cycle</text>
+    <rect x="182" y="296" width="70" height="74" class="box compute"/><text x="217" y="322" class="label">XU</text><text x="217" y="341" class="small">MUFU</text><text x="217" y="357" class="tiny">local · own WB</text>
+    <rect x="260" y="296" width="70" height="74" class="box tensor"/><text x="295" y="319" class="label">TC</text><text x="295" y="337" class="small">HMMA</text><text x="295" y="353" class="tiny">IMMA/QMMA</text>
+    <rect x="20" y="392" width="310" height="82" class="box compute"/><text x="175" y="414" class="label">Fixed-latency execution backends</text><text x="175" y="433" class="small">FP32 up to 1/cycle when RF permits</text><text x="175" y="450" class="small">simple INT / packed FP / IMAD ≈0.5/cycle</text><text x="175" y="466" class="tiny">family steering and RF collection are distinct limits</text>
+    <path d="M175 52 V68 M175 116 V132 M94 190 V208 M256 190 V208 M94 278 V296 M168 333 H182 M295 278 V296 M256 278 V392" class="flow"/>\n    <path d="M217 370 V380 H340 V161 H330" class="feedback"/>
+  </g>
+
+  <!-- Subcore 2 -->
+  <g transform="translate(811,292)">
+    <rect width="350" height="500" class="subcore"/>
+    <rect x="12" y="12" width="326" height="40" class="subcore-head"/>
+    <text x="175" y="38" class="region-title" text-anchor="middle">Subcore 2</text>
+    <rect x="20" y="68" width="310" height="48" class="box sched"/><text x="175" y="88" class="label">Warp scheduler + scoreboard</text><text x="175" y="105" class="small">group mask · RPC · dependency closure</text>
+    <rect x="20" y="132" width="310" height="58" class="box rf"/><text x="175" y="153" class="label">Register file · even / odd banks</text><text x="175" y="171" class="small">effective 1 warp operand / bank / cycle</text><text x="175" y="185" class="tiny">1W/bank final commit arbitration</text>
+    <rect x="20" y="208" width="148" height="70" class="box queue"/><text x="94" y="229" class="label">Local MIO queues</text><text x="94" y="247" class="small">LSU ≈4 · XU ≈2</text><text x="94" y="264" class="small">VQ_CBU ≈10–12</text>
+    <rect x="182" y="208" width="148" height="70" class="box compute"/><text x="256" y="229" class="label">Scalar dispatch</text><text x="256" y="247" class="small">FP32 · INT · IMAD</text><text x="256" y="264" class="small">FP16 mode ingress</text>
+    <rect x="20" y="296" width="148" height="74" class="box control"/><text x="94" y="317" class="label">Late RF collector</text><text x="94" y="335" class="small">GPR-dependent MIO PQ</text><text x="94" y="352" class="tiny">≈0.5 GPR operand/cycle</text>
+    <rect x="182" y="296" width="70" height="74" class="box compute"/><text x="217" y="322" class="label">XU</text><text x="217" y="341" class="small">MUFU</text><text x="217" y="357" class="tiny">local · own WB</text>
+    <rect x="260" y="296" width="70" height="74" class="box tensor"/><text x="295" y="319" class="label">TC</text><text x="295" y="337" class="small">HMMA</text><text x="295" y="353" class="tiny">IMMA/QMMA</text>
+    <rect x="20" y="392" width="310" height="82" class="box compute"/><text x="175" y="414" class="label">Fixed-latency execution backends</text><text x="175" y="433" class="small">FP32 up to 1/cycle when RF permits</text><text x="175" y="450" class="small">simple INT / packed FP / IMAD ≈0.5/cycle</text><text x="175" y="466" class="tiny">family steering and RF collection are distinct limits</text>
+    <path d="M175 52 V68 M175 116 V132 M94 190 V208 M256 190 V208 M94 278 V296 M168 333 H182 M295 278 V296 M256 278 V392" class="flow"/>\n    <path d="M217 370 V380 H340 V161 H330" class="feedback"/>
+  </g>
+
+  <!-- Subcore 3 -->
+  <g transform="translate(1184,292)">
+    <rect width="350" height="500" class="subcore"/>
+    <rect x="12" y="12" width="326" height="40" class="subcore-head"/>
+    <text x="175" y="38" class="region-title" text-anchor="middle">Subcore 3</text>
+    <rect x="20" y="68" width="310" height="48" class="box sched"/><text x="175" y="88" class="label">Warp scheduler + scoreboard</text><text x="175" y="105" class="small">group mask · RPC · dependency closure</text>
+    <rect x="20" y="132" width="310" height="58" class="box rf"/><text x="175" y="153" class="label">Register file · even / odd banks</text><text x="175" y="171" class="small">effective 1 warp operand / bank / cycle</text><text x="175" y="185" class="tiny">1W/bank final commit arbitration</text>
+    <rect x="20" y="208" width="148" height="70" class="box queue"/><text x="94" y="229" class="label">Local MIO queues</text><text x="94" y="247" class="small">LSU ≈4 · XU ≈2</text><text x="94" y="264" class="small">VQ_CBU ≈10–12</text>
+    <rect x="182" y="208" width="148" height="70" class="box compute"/><text x="256" y="229" class="label">Scalar dispatch</text><text x="256" y="247" class="small">FP32 · INT · IMAD</text><text x="256" y="264" class="small">FP16 mode ingress</text>
+    <rect x="20" y="296" width="148" height="74" class="box control"/><text x="94" y="317" class="label">Late RF collector</text><text x="94" y="335" class="small">GPR-dependent MIO PQ</text><text x="94" y="352" class="tiny">≈0.5 GPR operand/cycle</text>
+    <rect x="182" y="296" width="70" height="74" class="box compute"/><text x="217" y="322" class="label">XU</text><text x="217" y="341" class="small">MUFU</text><text x="217" y="357" class="tiny">local · own WB</text>
+    <rect x="260" y="296" width="70" height="74" class="box tensor"/><text x="295" y="319" class="label">TC</text><text x="295" y="337" class="small">HMMA</text><text x="295" y="353" class="tiny">IMMA/QMMA</text>
+    <rect x="20" y="392" width="310" height="82" class="box compute"/><text x="175" y="414" class="label">Fixed-latency execution backends</text><text x="175" y="433" class="small">FP32 up to 1/cycle when RF permits</text><text x="175" y="450" class="small">simple INT / packed FP / IMAD ≈0.5/cycle</text><text x="175" y="466" class="tiny">family steering and RF collection are distinct limits</text>
+    <path d="M175 52 V68 M175 116 V132 M94 190 V208 M256 190 V208 M94 278 V296 M168 333 H182 M295 278 V296 M256 278 V392" class="flow"/>\n    <path d="M217 370 V380 H340 V161 H330" class="feedback"/>
+  </g>
+
+  <!-- Fetch fanout to schedulers -->
+  <path d="M250 278 V360" class="flow"/><path d="M623 278 V360" class="flow"/>
+  <path d="M986 278 V360" class="flow"/><path d="M1359 278 V360" class="flow"/>
+
+  <!-- Subcore-local collectors fan into behavioral MIOC -->
+  <path d="M159 662 V806 H151 V859" class="inferred"/>
+  <path d="M532 662 V802 H211 V859" class="inferred"/>
+  <path d="M905 662 V798 H271 V859" class="inferred"/>
+  <path d="M1278 662 V794 H331 V859" class="inferred"/>
+
+  <!-- SM-wide middle/backend -->
+  <rect x="65" y="814" width="1470" height="180" class="region" fill="#f5f3ff"/>
+  <text x="84" y="840" class="region-title">SM-wide MIO / control / execution services</text>
+  <rect x="91" y="859" width="300" height="105" class="box queue"/>
+  <text x="241" y="883" class="label">MIOC-equivalent arbitration</text>
+  <text x="241" y="902" class="small">fair selection among 4 local LSU queues</text>
+  <text x="241" y="920" class="small">scoreboard-aware request / completion tracking</text>
+  <text x="241" y="938" class="tiny">may be distributed rather than one physical controller</text>
+  <text x="241" y="954" class="tiny">post-MIOC LSU credits ≈16–18 / SM</text>
+
+  <rect x="435" y="859" width="210" height="105" class="box control"/>
+  <text x="540" y="883" class="label">ADU service</text>
+  <text x="540" y="902" class="small">computed BRX · indexed LDC</text>
+  <text x="540" y="920" class="small">CTA BAR request splitting</text>
+  <text x="540" y="938" class="tiny">one transaction / unique target</text>
+  <text x="540" y="954" class="tiny">replay feedback to late collector</text>
+
+  <rect x="689" y="859" width="210" height="105" class="box control"/>
+  <text x="794" y="883" class="label">CBU state/control</text>
+  <text x="794" y="902" class="small">warp convergence and barriers</text>
+  <text x="794" y="920" class="small">group merge · runnable state</text>
+  <text x="794" y="938" class="tiny">work-conserving shared service</text>
+  <text x="794" y="954" class="tiny">WARPSYNC.ALL has local fast path</text>
+
+  <rect x="943" y="859" width="190" height="105" class="box compute"/>
+  <text x="1038" y="884" class="label">Shared FP64 pipe</text>
+  <text x="1038" y="906" class="small">DADD / DFMA</text>
+  <text x="1038" y="926" class="small">≈1 instruction / 16 cycles</text>
+  <text x="1038" y="946" class="tiny">one SM-wide arbitration domain</text>
+
+  <rect x="1177" y="859" width="330" height="105" class="box memory"/>
+  <text x="1342" y="883" class="label">Shared LSU request/data service</text>
+  <text x="1342" y="902" class="small">LDG · STG · LDS · STS · LDGSTS · SHFL</text>
+  <text x="1342" y="920" class="small">≈0.5 warp instruction / cycle</text>
+  <text x="1342" y="938" class="tiny">SHFL uses exchange data path, bypasses tag lookup</text>
+  <text x="1342" y="954" class="tiny">variable wavefront work drains downstream</text>
+
+  <path d="M391 911 H435" class="inferred"/>
+  <path d="M391 940 V979 H1342 V964" class="bus"/>
+  <path d="M645 911 H689" class="flow"/>
+  <path d="M794 859 V816 H1178 V245" class="feedback"/>
+  <path d="M540 859 V830 H290 V662" class="feedback"/>
+
+  <!-- Memory / shared-data layer -->
+  <rect x="65" y="1010" width="1470" height="122" class="region" fill="#ecfeff"/>
+  <text x="84" y="1036" class="region-title">L1TEX and shared-memory complex</text>
+  <rect x="91" y="1052" width="190" height="58" class="box tma"/>
+  <text x="186" y="1075" class="label">LDGSTS async-copy</text>
+  <text x="186" y="1093" class="small">group / completion tracking</text>
+
+  <rect x="326" y="1047" width="380" height="68" class="box memory"/>
+  <text x="516" y="1070" class="label">L1TEX LSU + exchange datapath</text>
+  <text x="516" y="1089" class="small">≈1 × 128-B shared-data wavefront / cycle</text>
+  <text x="516" y="1106" class="tiny">LDS/SHFL/TC operands share visible service resources</text>
+
+  <rect x="751" y="1047" width="315" height="68" class="box shared"/>
+  <text x="908" y="1070" class="label">Shared-memory array + port arbiter</text>
+  <text x="908" y="1089" class="small">bank conflicts expand one request into wavefronts</text>
+  <text x="908" y="1106" class="tiny">shared read/write requests join the array arbiter</text>
+
+  <rect x="1111" y="1047" width="190" height="68" class="box memory"/>
+  <text x="1206" y="1071" class="label">L1 data / tags</text>
+  <text x="1206" y="1091" class="small">global/local/constant path</text>
+  <text x="1206" y="1107" class="tiny">cache descriptors / IDC</text>
+
+  <rect x="1346" y="1047" width="161" height="68" class="box front"/>
+  <text x="1426" y="1072" class="label">L2 / memory fabric</text>
+  <text x="1426" y="1093" class="small">outside the SM</text>
+
+  <path d="M1342 964 V1026 H516 V1047" class="bus"/>
+  <path d="M706 1072 H751" class="flow"/>
+  <path d="M751 1098 H706" class="flow"/>
+  <path d="M1111 1098 H1085 V1124 H706 V1103" class="flow"/>
+  <path d="M1301 1081 H1346" class="flow"/>
+  <path d="M281 1081 H326" class="flow"/>
+
+  <!-- RF return/closure annotation -->
+  <text x="59" y="774" class="note" transform="rotate(-90 59 774)">MIO2RF return → per-subcore 1W bank arbiters</text>
+
+  <!-- Legend -->
+  <rect x="65" y="1173" width="1470" height="48" fill="#ffffff" stroke="#cbd5e1" rx="8"/>
+  <path d="M89 1197 H137" class="flow"/><text x="151" y="1202" class="note">measured data/control path</text>
+  <path d="M338 1197 H386" class="inferred"/><text x="400" y="1202" class="note">behaviorally supported; physical centralization unresolved</text>
+  <path d="M763 1197 H811" class="feedback"/><text x="825" y="1202" class="note">feedback / completion path</text>
+  <rect x="1006" y="1184" width="20" height="20" class="box queue"/><text x="1037" y="1202" class="note">queue/admission</text>
+  <rect x="1160" y="1184" width="20" height="20" class="box control"/><text x="1191" y="1202" class="note">control/divergence</text>
+  <rect x="1351" y="1184" width="20" height="20" class="box memory"/><text x="1382" y="1202" class="note">memory/data exchange</text>
+</svg>

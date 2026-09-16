@@ -22,6 +22,23 @@ RTX 5090, and the repo's SASS assembler (`assembler/`, arch=sm120) unless stated
 | `subcore_compute_conflict.md` | GB202 per-subcore scalar/tensor execution conflicts, forwarding-based ALU topology, and raw NCU math/MIO throttle evidence |
 | `rf_writeback_conflict.md` | Even/odd 2R1W register-file writeback arbitration and same-subcore collision probes |
 | `mio_lsu_xu_topology.md` | MIO/LSU/XU queue locality, LDG address-latch boundary, SM-wide LSU scaling, SHFL placement, throttle/OOO-completion behavior, and RF return paths |
+| `adu_topology.md` | GB202 ADU placement after late MIO operand collection; BRX target replay, LDC/BAR classification, predication, and shared-vs-local scaling |
+| `cbu_topology.md` | GB202 CBU queues and state paths; ADU-assisted group splitting, convergence fast path, scheduler stalls, effective credits, and cross-queue arbitration |
+| `icache_topology.md` | GB202 frontend instruction cache: SM-wide 64 KiB ICC, 32 sets x 16 ways x 128 B, direct VA[11:7] index, virtual tag identity, ~12-target trace buffer, multi-subcore lookup conflicts, and GCC lower bound |
+| `indexed_rf_topology.md` | Uniform-indexed GPR addressing (`R[URx]`) for MOV/HMMA: no extra pipe or throughput cost, early committed-URF selector snapshot, and no UDP forwarding |
+| `udp_urf_topology.md` | GB202 uniform datapath: one fixed scalar UDP instruction/clock/subcore; 80-entry URF as 20 x 128-bit rows with a measured 1R2W throughput model |
+| `gb202_sm_topology.svg` | Whole-SM architecture map synthesized from the frontend, RF, scalar/tensor, MIO, ADU/CBU, LSU/L1TEX, shared-memory, and LDGSTS probes |
+| `gb202_compute_pipelines.svg` | One-subcore scalar/tensor pipeline hypothesis: RF collection, INT/FP family admission, specialized bodies, tensor subpipes, forwarding, and RF commit |
+| `gb202_compute_pipelines.md` | Textual companion to the compute-pipeline diagram: measured hierarchy, family queue/pipe assignments, forwarding/writeback, and throttle relationships |
+| `fixed_pipeline_forwarding_latency_zh.md` | 固定执行管线转发延迟中文总表：各 scalar leaf、predicate、MIO/CBU/R2UR/UDP 边、旁路带宽与 RF commit 建模规则 |
+| `fixed_pipeline_issue_to_use_zh.md` | 固定管线持续依赖链的真实 issue-to-use 周期：phase-safe 4-cycle scalar path、WIDE low/high 的 consumer-specific 2/3/4/5/7-cycle 路径、HI operand-specific 4/9-cycle 路径、predicate guard 分流和转发修正规则 |
+| `fixed_pipeline_latency_handoff_zh.md` | 固定管线延迟研究暂停交接：已确认参数、探针入口、复现命令、设计陷阱、未完成矩阵和恢复检查清单 |
+| `alulite_latency.md` | ALU-Lite GPR/predicate pipeline latency: consumer-specific bypass boundaries, selector-vs-guard predicate paths, and initial cycle-simulator parameters |
+| `aluheavy_latency.md` | Complete ALU-Heavy latency matrix: same-leaf and producer-class cross-leaf GPR bypasses, predicate loopback, and guard/CBU distribution |
+| `fmalite_latency.md` | FMA-Lite latency matrix: universal t+2 FP32 bypass and the raw FP16/BF16 vs formatted-FP32 scalar result stages |
+| `fmaheavy_latency.md` | FMA-Heavy latency matrix: early `Ra` payload, split WIDE low/high readiness, multiply `Pu`, and consumer-specific bypasses |
+| `fp16_latency.md` | Coupled packed-FP latency: universal t+2 result broadcast, immediate-form `Ra` window, and HADD2.F32 crossing |
+| `fp64_redirect_latency.md` | FP64/CLMAD redirected completion: layout-dependent unsafe visibility and the required event/scoreboard simulator model |
 | `instr/getlmembase.md` | Silicon semantics of the warp-local backing base and its role in the local-address → device-VA transform |
 | `instr/setlmembase.md` | Silicon proof that SETLMEMBASE redirects subsequent LDL/STL backing accesses |
 | `notes/sm120/l2_slice_probe.md` | Attempts to count L2 slices on GB202; single-L2-backend evidence |

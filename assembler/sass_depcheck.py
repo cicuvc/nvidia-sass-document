@@ -186,11 +186,17 @@ def extract_instr(inst, match, db: dict) -> InstrInfo:
     # dest width (bits) from IDEST_SIZE; None -> 32
     idest = _eval_size(db, variant, slot_map, "IDEST_SIZE")
     n_dest = (idest or 32) // 32
+    indexed_rf = any(s["type"] == "RF"
+                     for s in variant["format"]["slots"])
 
     # def registers: first FORMAT def-reg slot (type Register/Uniform) that
     # has a value expands to n_dest registers.  Only trust slots that exist
     # in FORMAT — slot_map may carry default filler names (e.g. LDCU's "Rd").
     for s in variant["format"]["slots"]:
+        # In an indexedRF class URd is a read-only selector for a dynamic GPR
+        # destination, not a uniform-register destination.
+        if indexed_rf and s["name"] == "URd":
+            continue
         nm = s["name"]
         if nm not in _DEF_REG_SLOTS:
             continue

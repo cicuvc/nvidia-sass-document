@@ -17,9 +17,9 @@ Supports `.reuse` on the source operand for pipeline optimization (officially ex
 | `mov__RC` | `0xa02` | `MOV Rd, c[bank][offset], PixMask` | ConstBankAddress |
 | `mov__RCx` | `0x1a02` | `MOV Rd, c[URb][offset], PixMask` | Extended const |
 | `mov__RU` | `0x1c02` | `MOV Rd, URb, PixMask` | [39:32]=URb |
-| `mov_indexedRF_IRFd__Rb` | `0x1478` | `MOV URd[R], Rb, PixMask` | Indexed reg file |
-| `mov_indexedRF_IRFd__Ib` | `0x1878` | `MOV URd[R], imm32, PixMask` | Indexed imm |
-| `mov_indexedRF_IRFd__Cb` | `0x1a78` | `MOV URd[R], c[bank][offset], PixMask` | Indexed const |
+| `mov_indexedRF_IRFd__Rb` | `0x1478` | `MOV R[URd], Rb, PixMask` | Indexed GPR destination |
+| `mov_indexedRF_IRFd__Ib` | `0x1878` | `MOV R[URd], imm32, PixMask` | Indexed GPR destination |
+| `mov_indexedRF_IRFd__Cb` | `0x1a78` | `MOV R[URd], c[bank][offset], PixMask` | Indexed GPR destination |
 | `mov_indexedRF_Rd_` | `0x1c78` | `MOV Rd, R[URb], PixMask` | Reversed indexed |
 
 ## Bit layout (RR — opcode 0x202)
@@ -39,7 +39,11 @@ RI variant: Rb replaced with 32-bit immediate at [63:32].
 
 - `PixMask` / `PixMaskU04`: 4-bit field (default 0xf = all four 8-bit channels). Used for pixel-shader channel select, but present on all MOV variants including compute.
 - `.reuse`: Pipeline optimization flag embedded in opex bits, controlled by `TABLES_opex_7`.
-- **Indexed Register File**: `mov_indexedRF_*` variants access `URd[R]` — uniform-register-indexed register file, used for parameter/constant spilling.
+- **Indexed Register File**: `R[URx]` means the GPR whose number is held in
+  uniform register URx.  It does not access URF data as the moved value.
+  Both dynamic GPR reads (`MOV Rd,R[URb]`) and writes
+  (`MOV R[URd],Rb|imm|constant`) are provided.  Both directions are
+  silicon-verified on sm_120; see `../../sm120/indexed_rf_topology.md`.
 
 ## Latency
 

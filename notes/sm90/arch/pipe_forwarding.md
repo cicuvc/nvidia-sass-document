@@ -78,8 +78,8 @@ producer writes R10, consumer reads it.  Producer/consumer ops: `IADD3`
 |---|---|--:|--:|--:|
 | int→int (`IADD3`→`IADD3`, FXU→FXU) | 6 | **2** | ~2.4 cyc | 4 |
 | fmal→fmal (`FADD`→`FADD`, FMAI→FMAI) | 4 | **2** | ~2.4 cyc | 2 |
-| int→fmal (`IADD3`→`FADD`) | 6 | **3** | ~3.4 cyc | 3 |
-| fmal→int (`FADD`→`IADD3`) | 5 | **3** | ~3.4 cyc | 2 |
+| int→fmal (`IADD3`→`FADD`) | 6 | **2 isolated / 3 combined-layout** | ~2.4 cyc isolated | 4 |
+| fmal→int (`FADD`→`IADD3`) | 5 | **2 isolated / 3 combined-layout** | ~2.4 cyc isolated | 3 |
 
 All four are deterministic and hazards are real at stall 1 (reads poison).
 Verdicts:
@@ -90,8 +90,12 @@ Verdicts:
   the sm90 "no bypass" conclusion for fp pipes does not hold at this granularity
   on sm120 (the value is usable in ~2 cycles; the tabulated 4 is what the
   scoreboard/issue model still pads to).
-- **Cross-pipe** int↔fmal needs `minG=3` — the extra cycle is the cross-pipe
-  operand-collect (matching the udp→int `minG=3`).
+- The original all-gaps-in-one-kernel sweep made **cross-pipe** int↔fmal look
+  like `minG=3`.  Re-running each gap in a separate module with a fixed
+  producer position gives `minG=2` in both directions.  The extra combined-
+  layout cycle is an instruction-position/issue-group phase effect, not an
+  intrinsic cross-pipe transport latency.  See the isolated methodology in
+  `notes/sm120/aluheavy_latency.md`.
 - Forwarding taxonomy so far on sm120: every fixed-latency datapath (int,
   fmalighter, udp) delivers its value to any consumer within ~2–3 cycles of
   issue; the spec `TABLE_TRUE` values are conservative upper bounds used by
@@ -151,7 +155,7 @@ marker.  Two filler structures:
 | udp → fmalighter (`UIADD3`→`FFMA.RRU` reads UR, UR) | 12 | 3 |
 | int → int (`IADD3`→`IADD3`, GPR) | 6 | 2 |
 | fmal → fmal (`FADD`→`FADD`, GPR) | 4 | 2 |
-| int ↔ fmal (GPR) | 5–6 | 3 |
+| int ↔ fmal (GPR) | 5–6 | 2 isolated / 3 combined-layout |
 | int → cbu late-read (`IADD3`→`NANOSLEEP`, GPR) | 6 | 1 |
 | int → mio address (`MOV.64`→`LDG` addr/AGU, GPR) | 6 | 1 |
 | fmal → mio address (`FFMA`×2→`LDG` addr/AGU, GPR) | 6 | 1 |
@@ -204,6 +208,18 @@ path is slow like mio (spec 13 exact, no fast bypass).
    the worst-case commit path ptxas models.  So on sm120 the *value* is
    usable at ~3 cyc, but ptxas still pads to 4–6 because not every consumer
    path (memory pipes, scoreboard-tracked ops) can use the bypass.
+
+4. **sm120 bypass collection is parity-phased and tag-broadcasting.**  A
+   matched pending-versus-committed throughput probe finds no cost for one
+   pending result, for an E+O pair, for a 2+1 three-source parity split, or for
+   repeating one pending tag in all operand slots.  Two tags of the same
+   parity, or three tags all of one parity, add one approximately two-clock
+   collection phase.  The effective model is one distinct warp-wide result
+   tag per parity per two clocks, with broadcast after lookup: about
+   64 B/clock/parity and 128 B/clock/subcore aggregate.  Cross INT/FMA edges at
+   their legal gap 3 show no additional sustained penalty through three
+   sources.  See `notes/sm120/gb202_compute_pipelines.md` and
+   `tests/asm_construct/probe_fixed_bypass_{width,throughput,cross_throughput}.py`.
 
 ## Cross-checks and controls (all pass)
 
@@ -296,9 +312,13 @@ Probe scripts used during development (not committed): `/tmp/opencode/probe_*.py
   clean edge.  Stable-fresh requires producer stall ≥6 *or* ≥2 intervening
   instructions.  The 8-identical-instance runs show a deterministic
   per-instance pattern (`SFSSSSSS`) whose period is not yet explained.
-- **Reverse direction** (int→udp): the only GPR→UR mover `R2UR` is a
-  cross-lane op with ~40-cyc settle — there is no fast int→udp path to
-  measure with this harness.
+- **Reverse direction** (fixed→udp through `R2UR`) is now measured directly.
+  `IADD3→R2UR` first reads fresh at gap 2; `FADD→R2UR` and `HADD2→R2UR`
+  first read fresh at gap 3.  An immediate younger overwrite after R2UR never
+  changes its captured value, so this is an early GPR-collector forwarding
+  edge, not a late source read.  The formerly quoted ~40-cycle settle belongs
+  to the R2UR **output** becoming safely consumable in UR domain and had
+  conflated the two sides of the instruction.
 - **Other cross-pipe pairs** (udp→fma64, udp→fp16, int→fma64) would extend
   the table; the existing `usched_latency.md` sm90 corpus suggests fma64
   carries no bypass (overlap 0).

@@ -27,7 +27,12 @@ from assembler.runner import reset_context
 #   fmal->fmal    (FMAI->FMAI)                 L = 4
 #   int->fmal     (FXU_OPS->FMAI)              L = 6
 #   fmal->int     (FMAI->FXU_OPS)              L = 5
-# The sweep reports the measured minG stall per pair (usched_latency's
+# This combined-layout sweep reports a layout-sensitive minG per pair.  A
+# later one-module-per-gap calibration gives minG=2 for both cross-pipe edges;
+# the combined kernel can show 3 because consumer PC/issue-group phase changes
+# across the concatenated instances.  Keep this as a phase regression, not as
+# the intrinsic cross-pipe latency.  (See notes/sm120/aluheavy_latency.md.)
+# usched_latency's
 # usched_probe found sm90 int->int minG=4, i.e. overlap 2; fmal->fmal 4).
 # See notes/sm90/arch/pipe_forwarding.md.
 # ---------------------------------------------------------------------------

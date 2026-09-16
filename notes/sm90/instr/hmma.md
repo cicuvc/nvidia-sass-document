@@ -53,7 +53,7 @@ Lower 12 bits identical (`0x23c`).
 @P0 HMMA.16832.F16.SP.TID R2, R4.reuse, R6.reuse, R8, !UPT, R10.reuse, 0x1
 
 // Indexed register file
-@P0 HMMA.16816.F16 RF:URd[UR4], R8.reuse, R10.reuse, RF:URc[UR4], !UPT
+@P0 HMMA.16816.F16 R[UR4], R8.reuse, R10.reuse, R[UR4], !UPT
 ```
 
 ### Dense vs Sparse differences
@@ -71,11 +71,15 @@ Lower 12 bits identical (`0x23c`).
 
 | Feature | Register file (`hmma_*_`) | IndexedRF (`hmma_*_indexedRF_`) |
 |---|---|---|
-| Rd source | 8-bit register Rd [23:16] | RF:indexURd — reads from uniform register file at index URd |
-| Rc source | 8-bit register Rc [71:64] | RF:indexURc — reads from uniform register file at index URc |
-| IDEST_SIZE | 64 (F16 dst) / 128 (F32 dst) | 32 |
-| ISRC_C_SIZE | 64 (F16) / 128 (F32) | 32 |
+| Rd source | 8-bit register Rd [23:16] | `R[URd]` — URd contains the destination GPR-group number |
+| Rc source | 8-bit register Rc [71:64] | `R[URc]` — URc contains the accumulator GPR-group number |
+| IDEST_SIZE metadata | 64 (F16 dst) / 128 (F32 dst) | reports 32 |
+| ISRC_C_SIZE metadata | 64 (F16) / 128 (F32) | reports 32 |
 | URd==URc constraint | none | **must be equal** |
+
+The indexed class's 32-bit size metadata does not describe the physical F32
+accumulator footprint: on sm_120, UR=40 selects and updates all four registers
+`{R40,R41,R42,R43}`, exactly matching the ordinary F32 HMMA result.
 
 ## Modifiers
 
@@ -227,7 +231,8 @@ compiler infers it from operand lifetimes.
 - [43:42] `id` (2-bit immediate 0/1)
 
 ### IndexedRF variant differences (0x1e79)
-- `Rd`/`Rc` fields replaced by `URd`/`URc` indexing the uniform register file
+- `Rd`/`Rc` fields are replaced by `URd`/`URc`; the selected object is still
+  a GPR accumulator group, while the UR holds its base register number
 - Bit [91]=1 distinguishes from dense register-file variant
 
 ## Cross-comparison
@@ -242,9 +247,9 @@ compiler infers it from operand lifetimes.
 
 ## Open questions
 
-- **IndexedRF usage**: When does ptxas choose indexed register file
-  addressing over standard register file? Possibly for uniform-register-resident
-  accumulators or warp-uniform matrices.
+- **IndexedRF usage**: When does ptxas choose dynamic accumulator addressing
+  over standard register-file encoding?  The mechanism and sm_120 timing are
+  now verified, but compiler selection remains unknown.
 - **Sparse / indexed-RF layouts**: the metadata register layout for
   `HMMA.SP` and the descriptor format for `HMMA...INDF` are unverified
   (documented from the spec tables only).

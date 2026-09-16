@@ -20,13 +20,14 @@ from assembler.runner import reset_context
 #   fine   : producer stall=1 + (S-1) NOPs of stall=1    (many instructions)
 #
 # Measured (3 deterministic reps, sm_120):
-#   coarse : SSSSSSSSSSSFFFFF   minG = 13  == the spec TABLE_TRUE(PRED) L=13
+#   coarse : stable fresh tail begins at minG = 12; the DUALALU_OPS producer
+#            row gives TABLE_TRUE(PRED) L=14 to BRU_OPS
 #   fine   : SSSFSSFFFFFFFFFF   minG = 7   (reliable tail; S=3 is a narrow
 #            alignment bypass that does NOT hold at S=4..6)
 # So the predicate path does NOT forward early like the GPR paths (2-3 cyc):
-# the genuine writeback latency is ~13 cycles (spec is exact for coarse
-# scheduling).  Fine-grain stall-1 fillers open a fragile bypass window, but
-# the safe rule is stall >= 13 (or >= 7 with fine fillers).
+# the genuine distributed-predicate latency is ~12 cycles in this schedule.
+# Fine-grain stall-1 fillers open a fragile bypass window, but the safe rule is
+# stall >= 12 in this coarse form (or >= 7 with fine fillers).
 #
 # This also explains test_break.py's ISETP->@P0 BRA needing stall=13.
 # See notes/sm90/arch/pipe_forwarding.md.
@@ -36,7 +37,7 @@ M_STALE = 0x5AA50000
 M_TRUE  = 0x5AA50001
 STALLS = [0] + list(range(1, 17)) + [30]
 SWEEP = slice(1, 1 + 16)
-SPEC_L = 13                    # TABLE_TRUE(PRED) FXU_WITH_IMMA -> BRU_OPS
+SPEC_L = 14                    # DUALALU_OPS producer -> BRU_OPS
 
 
 def build_kernel(stalls, coarse):
@@ -146,7 +147,7 @@ else:
         ok = False
         print("FAIL: minG out of sweep range")
     # the predicate path is genuinely slow (unlike GPR's 2-3 cyc):
-    # coarse (few-instruction gap) must land at/near the spec's 13
+    # Coarse (few-instruction gap) remains close to the conservative table.
     if not (SPEC_L - 3 <= minG_c <= SPEC_L):
         ok = False
         print(f"FAIL: expected coarse-mode minG near L_table ({SPEC_L}), got {minG_c}")

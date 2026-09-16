@@ -517,6 +517,147 @@ backend subpipes.  Since the predicated-off contender reproduces both the
 subpipe counters and throttle almost exactly, that common resource is acquired
 before effective predication.
 
+### Tensor operand and result connection to the RF
+
+`tests/asm_construct/probe_tensor_rf_paths.py` separates the tensor backend
+from its register traffic.  Its collection mode holds tensor execution and
+four-register result writes constant, while replacing selected A/B/C sources
+with RZ.  Against a same-subcore two-even-row `FADD RZ` victim, full GPR
+sources add 1.97 clocks/HMMA, 1.85 clocks/QMMA and 1.77 clocks/IMMA relative
+to the all-RZ form after subtracting the different-subcore control.  All
+different-subcore GPR/RZ pairs are identical.  HMMA A-only, B-only and C-only
+sources add approximately 0.71, 0.51 and 0.96 clocks/instruction.  Therefore
+all explicit tensor operand groups contend with scalar RF delivery, including
+the non-aliased C accumulator source.  On RTX 5090 the visible cost is smaller
+than one collection clock per parity-paired register row, but the full-rate
+control below shows that backend idle slots, rather than a separate wide RF
+port, hide the remaining transactions.
+
+The table above is a reuse=0 characterization.  The dense sm_120 HMMA/QMMA/
+IMMA classes have one reuse flag on Rb (schedule mask 2), while Ra and Rc are
+not reusable in these classes.  A back-to-back HMMA RMW test proves that the
+flag is functional: without reuse the second instruction observes the first
+instruction's new Rb value (`0x42a80000` result), while Rb reuse supplies the
+cached pre-write value (`0x41800000`).  The reuse/no-reuse cross-warp collector
+timings are identical; scalar instructions issue between consecutive HMMAs,
+so this is consistent with displacement of the short-lived reuse entry (as
+already established for scalar reuse), rather than evidence that the bit is
+ineffective.  Thus optimized consecutive tensor code can remove some
+B-fragment reads even though the cold-source probe correctly locates the
+underlying shared RF path.
+
+An explicit in-place discriminator further constrains Rc.  Two HMMA streams
+use A=B=RZ and identical 20-group rotations; one keeps Rc in a disjoint group
+at a fixed +96-register displacement, while the other sets `Rc==Rd`.  Across
+512 HMMAs their same-subcore scalar-victim minimum/median timings are exactly
+the same (8884/8950 clocks), as are the different-subcore controls
+(8325/8355.5).  Therefore destination aliasing does not move Rc onto an
+observably independent RMW read service.  A physically separate port that
+still shares the same row decoder/admission credit remains indistinguishable,
+but it provides no additional architectural collection bandwidth.
+
+### Full-rate RTX PRO 6000 control
+
+RTX 5090 limits the tested FP32-accumulating HMMA/QMMA forms to exactly 32
+clocks/instruction.  A naked `cycles = slope*N + intercept` run on an RTX PRO
+6000 Server Edition gives exactly 16 clocks/instruction for HMMA, QMMA and
+IMMA; the corresponding RTX 5090 slopes are 32/32/16.  Nsight Compute was
+present remotely but performance-counter access was disabled, so these are
+unprofiled `SR_CLOCKLO` slopes rather than NCU estimates.
+
+This changes the operand-contention result in precisely the expected way:
+
+| cold GPR sources versus all RZ | RTX 5090 | RTX PRO 6000 |
+|---|---:|---:|
+| HMMA ABC | about 1.88--1.97 clocks/inst | 4.43 |
+| QMMA ABC | 1.85 | 4.43 |
+| IMMA ABC | 1.77 | 1.77 |
+
+On RTX PRO 6000 the HMMA A/B/C components are 1.77/1.32/2.21 clocks per
+instruction, close to their 2/1/2 logical register rows per parity bank.  The
+full-rate SKU therefore reveals the normal shared RF collector demand that
+fits into otherwise idle tensor-backend slots on RTX 5090.  It strengthens,
+rather than weakens, the shared scalar/tensor operand-frontend conclusion.
+
+The full-rate control also reproduces the exact equality between separate C
+and in-place `Rc==Rd` (4664 minimum, 4667 median in both cases).  Hence the
+absence of extra RMW read bandwidth is not caused by the RTX 5090 throttle.
+Single-result LDG collision phases are also identical across SKUs; admission
+throughput changes, but the latency/phase of one tensor return does not.
+
+### Ampere-style fixed-Ra scheduling does not carry over
+
+Ampere's dense HMMA class exposes both `Ra.reuse` and `Rb.reuse`, matching the
+common compiler schedule that holds one A fragment while rotating B and the
+C/D accumulator groups.  The dense sm_120 class exposes only `Rb.reuse`.
+
+Two independent tests find no hidden replacement for the removed Ra flag:
+
+- In a back-to-back `Rd==Ra` hazard, RTX 5090 exactly matches the newly written
+  Ra reference (`42b00000,42b00000,42c00000,42c00000`), not the old-Ra
+  reference (`41800000` repeated).  Full-rate RTX PRO 6000 exposes the latency
+  hidden by the 5090 admission floor: gaps 0--5 return the same stable mixed
+  fragment (`41800000,41800000,42500000,42500000`), and gap 6 onward returns
+  the complete new reference.  It never returns the complete old reference,
+  so the early result is streaming non-scoreboarded RAW overlap rather than
+  default Ra reuse.
+- Holding Ra fixed versus rotating it every HMMA, while B and in-place C/D
+  follow identical rotations, gives bit-identical timing distributions.  On
+  RTX 5090 the same-subcore minimum/median is 9266/9313 clocks for both; on RTX
+  PRO 6000 it is 10466/10471 for both.  Different-subcore controls are also
+  identical.  A PRO 6000 single-warp sweep with 3--8 bank-stressing FADDs
+  between HMMAs crosses several 16-cycle admission/collection thresholds and
+  still reports exactly 0.0000 clocks/block fixed-minus-rotating.
+
+Therefore repeated Ra addresses neither hit a visible coherent tensor
+fragment cache nor reduce shared RF collection demand.  The Ampere ordering
+may remain harmless for register lifetime or source-code tiling reasons, but
+on the tested Blackwell SASS it has no measured execution advantage.
+
+The PRO 6000 gap sweep also adds a scheduling warning independent of reuse:
+at full 16-clock HMMA throughput, a tensor result used as the next HMMA's Ra
+needs about six additional issue slots in this construction to avoid a
+partially updated four-register fragment.  RTX 5090's 32-clock backend limit
+hides this RAW window automatically.
+
+### Fixed Rb and the surviving reuse bit
+
+The complementary Blackwell-style schedule rotates Ra and C/D while holding
+Rb fixed.  Merely repeating the Rb register address has no automatic effect:
+with the reuse mask clear, fixed-Rb and rotating-Rb streams are cycle-for-cycle
+identical on both RTX 5090 and full-rate RTX PRO 6000.  This is consistent
+with the functional hazard test: reuse is controlled by the explicit Rb bit,
+not by an address-tagged implicit cache.
+
+Setting `Rb.reuse` (schedule mask 2) is functionally real but does not improve
+the measured issue time of the valid fixed-Rb stream relative to the same
+stream with reuse disabled.  On PRO 6000, both curves remain identical
+through 3--8 interleaved two-even-row FADDs.  A stricter version
+replaces Ra, Rc and Rd with RZ so Rb is the only tensor RF operand and sweeps
+0--10 FADDs; reuse-on and reuse-off curves are still identical on both GPUs.
+The same-subcore scalar victim also sees the same 10466/10471-clock minimum /
+median on PRO 6000 (9266/9313 on RTX 5090), with or without the reuse bit.
+(Rotating Rb while setting reuse is only a timing control: it intentionally
+consumes the retained previous value and is not numerically equivalent.)
+
+Therefore the bit demonstrably supplies a retained old Rb value, but saving
+that read does not move a visible admission or shared-collector bottleneck in
+these HMMA streams.  It can still save RF activity/energy, and it is the only
+dense-sm_120 source-reuse mechanism software can intentionally exploit.  This
+supports mapping the fragment intended for repeated use into physical Rb,
+even though the benefit is not a higher naked HMMA issue rate.
+
+Its retirement mode instead holds sources and tensor execution constant and
+changes only the destination between four GPRs and RZ.  A phase sweep against
+a warmed scoreboarded LDG finds a repeatable +1-clock GPR-result penalty for
+both load parities: phases 2/6/10 for HMMA and QMMA, and 3/7/11 for IMMA.  The
+four-register result covers both RF parities, so this is evidence that tensor
+completion joins the normal parity-bank commit service.  Because tensor RAW
+is not covered by the general scoreboards and no test exposes the fixed-pipe
+2--3-clock forwarding behavior, the data do not place tensor completion in
+the INT/FP bypass/result queue; the conservative model keeps an independent
+tensor accumulator-return path until the final commit merge.
+
 The best current interpretation is that `math_pipe_throttle` is an OR/summary
 of **per-target execution-pipe credit/backpressure conditions**, not evidence
 for one global math FIFO.  On GB202 the tested heavy scalar paths (`aluheavy`
@@ -529,6 +670,62 @@ current result shows that its purpose is to preserve issue capacity for
 non-math operations.  Likewise, the official LG definition is simply LSU
 instruction-queue fullness; shared-memory/MUFU-style traffic has a separately
 reported MIO queue, even if those paths share structures farther downstream.
+
+## Heavy/Lite leaf-pipe discrimination
+
+The extended probe adds `MOV`, `PRMT`, `IMAD.HI`, `IMAD.WIDE.U32`,
+`IDP.4A.U8.U8`, and `IDP.2A.LO.U16.U8`.  NCU was collected with the four
+leaf counters rather than inferred from the latency-table family name.  The
+NOP control and multiply cases below use N=256; values are executed
+instructions summed over all SMSPs:
+
+| stream | ALU Heavy | Shared-FMA-Heavy / ALU Lite | Shared-FMA-Heavy / FMA Heavy | FMA Lite |
+|---|---:|---:|---:|---:|
+| NOP/control framework | 73 | 330 | 8 | 0 |
+| IMAD.LO | 73 | 330 | 264 | 0 |
+| IMAD.HI | 74 | 329 | 264 | 0 |
+| IMAD.WIDE.U32 | 74 | 329 | 264 | 0 |
+| IDP.4A | 73 | 330 | 264 | 0 |
+| IDP.2A | 73 | 330 | 264 | 0 |
+
+Every multiply/dot form therefore contributes exactly N operations to FMA
+Heavy irrespective of input element width or low/high/wide result selection.
+
+The first expanded ALU scan made an invalid inference from this harness: each
+case performs one warm-up plus one measured launch, while the NCU launch IDs
+were initially paired one-to-one with cases.  Moreover, the harness itself
+executes hundreds of ALU instructions.  That combination falsely suggested
+that PRMT/BMSK dynamically switched between ALU Heavy and Lite.
+
+The replacement
+[`probe_scalar_pipe_catalog.py`](../../tests/asm_construct/probe_scalar_pipe_catalog.py)
+uses a uniquely named one-warp kernel containing only six MOV32I initializers,
+128 target instructions, and EXIT.  All 65 scalar-math mnemonics reproduce
+exactly over four launches.  PRMT and BMSK each add 128 ALU-Heavy operations;
+neither adds ALU-Lite operations.  The complete corrected partition is in
+[`scalar_math_pipe_catalog.md`](scalar_math_pipe_catalog.md).  This is direct
+evidence for the official cross-cut hierarchy in which ALU Lite is a subpipe
+of the physical Shared FMA Heavy pipe rather than a synonym for ALU Heavy.
+
+Long-stream issue time separates opcode modes inside the same FMA Heavy leaf:
+
+| stream (N=1024) | no reuse | Ra+Rb+Rc reuse |
+|---|---:|---:|
+| IMAD.LO | 2.077 | 2.075 |
+| IMAD.HI | 4.074 | 4.073 |
+| IMAD.WIDE.U32 | 4.074 | 4.073 |
+
+The unchanged reuse curves rule out the extra 64-bit addend read as the cause
+of the HI/WIDE penalty.  They occupy a downstream portion of FMA Heavy for
+two service beats where IMAD.LO needs one.  The counters do not reveal
+whether this is multiplier reduction, high-half selection, result formatting,
+or return bandwidth, so those alternatives remain intentionally unresolved.
+
+An exploratory same-subcore cross-family pass also showed strong asymmetric
+slowdown among MOV, PRMT, and IMAD, while a different-subcore contender did
+not.  It is consistent with shared admission/physical-pipe resources, but the
+single-warp timing is sensitive to scheduler priority and contender lifetime;
+it is not used here to claim that ALU Lite and FMA Heavy cannot overlap.
 
 ## Remaining controls before a physical topology claim
 

@@ -87,7 +87,8 @@ Example used throughout the tests:
 |---|---|---|
 | Register | `R4`, `RZ` | `RZ` = 255, always means the zero register |
 | Register group | `{R2,R3}`, `{R16,R17,R18,R19}` | See §4 — **mandatory for 64/128-bit operands** |
-| Uniform register | `UR4`, `URZ` | 6-bit (0–63); `URZ` = 63 |
+| Uniform register | `UR4`, `URZ` | Architecture-dependent encoding; sm_120 exposes UR0–UR79 and encodes URZ as 255 |
+| Uniform-indexed GPR | `R[UR4]` | GPR number/group base comes from UR4; used by indexedRF MOV/HMMA |
 | Predicate | `P0`..`P6`, `PT` | guard = `@Px` |
 | Uniform predicate | `UP0`..`UP6`, `UPT` | used by some MMA/async forms |
 | Special register | `SR_TID.X`, `SR_CLOCKLO`, … | via `S2R` |

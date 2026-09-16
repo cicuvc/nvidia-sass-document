@@ -9,6 +9,7 @@ from . import arch
 class OperandKind(enum.Enum):
     REG = "REG"
     UREG = "UREG"
+    INDEXED_RF = "INDEXED_RF"
     PRED = "PRED"
     UPRED = "UPRED"
     IMM_U = "IMM_U"
@@ -102,6 +103,12 @@ class Operand:
         # the spec value (not the sm_90-era 6-bit truncation 63) is required.
         v = 255 if name.upper() == "URZ" else int(name[2:])
         return Operand(OperandKind.UREG, v, width=width)
+
+    @staticmethod
+    def indexed_rf(name: str) -> Operand:
+        """GPR group selected by a uniform register: ``R[URx]``."""
+        v = 255 if name.upper() == "URZ" else int(name[2:])
+        return Operand(OperandKind.INDEXED_RF, v)
 
     @staticmethod
     def reg_group(regs: list[int], uniform: bool = False) -> Operand:

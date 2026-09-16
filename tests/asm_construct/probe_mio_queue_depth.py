@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Estimate effective MIO queue credits from short-burst absorption.
 
-The XU mode emits active ``MUFU.RCP Rd,RZ`` instructions with unique dead
+The XU and conversion modes emit active instructions with unique dead
 destinations.  RZ removes late-RF collection demand.  The ending clock read
 does not wait for results, so T(N) measures how quickly the frontend/queue can
 accept N requests.  Before the queue fills the slope is the issue rate; after
-it fills the slope approaches the XU backend drain rate.  The knee/intercept
+it fills the slope approaches the backend drain rate.  The knee/intercept
 estimate usable queue credits rather than claiming a physical SRAM depth.
 """
 
@@ -33,9 +33,36 @@ ACTORS = {
 
 def source(n: int, mode: str, actors: tuple[int, ...], conflict: int,
            mix_shfl: int = 0) -> str:
-    if mode == "xu":
-        ops = [f"    MUFU.RCP R{40 + i}, RZ;[7:7:{{}}:1:1]"
-               for i in range(n)]
+    if mode in ("xu", "f2f", "f2i", "i2f", "f2f64", "f2f64dst",
+                "f2i64src", "f2i64dst", "i2f64src", "i2f64dst"):
+        if mode == "xu":
+            inst = "MUFU.RCP R{rd}, RZ"
+        elif mode == "f2f":
+            inst = "F2F.F16.F32 R{rd}, RZ"
+        elif mode == "f2i":
+            inst = "F2I.S32.F32.TRUNC R{rd}, RZ"
+        elif mode == "i2f":
+            inst = "I2F.F32.S32 R{rd}, RZ"
+        elif mode == "f2f64":
+            inst = "F2F.F32.F64 R{rd}, {{RZ,RZ}}"
+        elif mode == "f2f64dst":
+            inst = "F2F.F64.F32 {{R{rd},R{rd1}}}, RZ"
+        elif mode == "f2i64src":
+            inst = "F2I.S32.F64.TRUNC R{rd}, {{RZ,RZ}}"
+        elif mode == "f2i64dst":
+            inst = "F2I.S64.F32.TRUNC {{R{rd},R{rd1}}}, RZ"
+        elif mode == "i2f64src":
+            inst = "I2F.F32.S64 R{rd}, {{RZ,RZ}}"
+        else:
+            inst = "I2F.F64.S32 {{R{rd},R{rd1}}}, RZ"
+        ops = []
+        for i in range(n):
+            if mode in ("f2f64dst", "f2i64dst", "i2f64dst"):
+                rd = 40 + 2 * (i % 50)
+                text = inst.format(rd=rd, rd1=rd + 1)
+            else:
+                text = inst.format(rd=40 + i)
+            ops.append(f"    {text};[7:7:{{}}:1:1]")
     elif mode == "cbu":
         ops = [f"    BMOV.32 R{40 + i}, MACTIVE;[7:7:{{}}:1:1]"
                for i in range(n)]
@@ -128,7 +155,10 @@ def source(n: int, mode: str, actors: tuple[int, ...], conflict: int,
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--mode",
-                   choices=("xu", "cbu", "ldg", "lsu", "lsu128",
+                   choices=("xu", "f2f", "f2i", "i2f", "f2f64",
+                            "f2f64dst", "f2i64src", "f2i64dst",
+                            "i2f64src", "i2f64dst",
+                            "cbu", "ldg", "lsu", "lsu128",
                             "lsu_shfl_mix"),
                    default="xu")
     p.add_argument("--actors", choices=ACTORS, default="one")

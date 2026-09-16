@@ -11,8 +11,8 @@ physical block names that cannot be proved by counters alone.
 ```text
 subcore 0..3 scheduler / scoreboard
         |                         |
- local LG/LSU queue        XU issue/admission
- (~4 effective credits)           |
+ local LG/LSU queue        VQ_MUFU / XU issue-admission
+ (~4 effective credits)   (MUFU + 32-bit F2F/F2I/I2F)
         \                         /
   per-subcore MIO RF operand collection / packetization
               (~0.5 32-bit GPR operands/clock)
@@ -91,6 +91,92 @@ sets running fixed-pipe controls give:
 
 The four scalar subcores can therefore sustain about 1.98 IADD3s per clock
 unit while the LSU-class streams remain capped near 0.50 across the SM.
+
+### Legacy scalar conversions use the XU admission queue
+
+The un-suffixed scalar conversion instructions are MIO operations, unlike
+their packed `P`-suffix replacements:
+
+| instruction | static pipe / virtual queue | measured single-warp cadence |
+|---|---|---:|
+| `F2F.F16.F32` | `mio_pipe`, `VQ_MUFU` | about 8 clocks/instruction |
+| `F2I.S32.F32.TRUNC` | `mio_pipe`, `VQ_MUFU` | about 8 clocks/instruction |
+| `I2F.F32.S32` | `mio_pipe`, `VQ_MUFU` | about 8 clocks/instruction |
+| `MUFU.RCP` control | `mio_pipe`, `VQ_MUFU` | about 8 clocks/instruction |
+| `F2FP.F16.F32.PACK_AB` | fixed ALU-Heavy path | about 4 clocks here, including two-source collection |
+| `I2FP.F32.S32` | fixed ALU-Heavy path | about 2 clocks/instruction |
+
+Static `VQ_MUFU` is confirmed by two independent dynamic signatures.  First,
+the short RZ-source burst curves are identical point for point:
+
+```text
+N:                    0  1  2  3  4  5 ...
+MUFU/F2F/F2I/I2F T:   5  7  9 16 24 32 ...
+```
+
+All four accept the same approximately two effective XU credits; the third
+operation reaches the same knee and the remainder drain at exactly eight
+clocks per instruction.
+
+Second, the bidirectional long-contender matrix is symmetric.  For every one
+of F2F, F2I and I2F, either direction against MUFU gives:
+
+| timed victim / long contender | solo | same subcore active | same subcore `@P6` | different subcore |
+|---|---:|---:|---:|---:|
+| conversion / MUFU, or MUFU / conversion | 7.961 | 16.648 | 16.523 | 7.953 clocks/instruction |
+
+The predicated-off contender retains nearly the entire collision, locating
+it at queue/admission rather than conversion arithmetic or RF writeback.
+Moving it to another subcore removes the collision, as expected for the local
+XU queue.  In contrast, active or predicated-off F2FP/I2FP changes a MUFU
+victim by at most about 0.008 clocks/instruction.
+
+This is not generic MIO contention.  An F2I victim remains at 7.961
+clocks/instruction under active or predicated-off SHFL, LDS, LDG, and indexed
+LDC contenders in either placement.  Those instructions use the LSU or ADU
+admission paths rather than `VQ_MUFU`.
+
+The resulting distinction is architectural rather than merely mnemonic:
+
+```text
+F2F / F2I / I2F  -> MIO admission -> local VQ_MUFU/XU queue -> XU-class service
+F2FP / F2IP / I2FP -> early fixed-math RF collection -> ALU Heavy
+```
+
+The un-suffixed operations remain decoupled, variable-latency producers and
+use a write scoreboard.  The packed `P` forms are coupled fixed-math
+instructions and do not consume an XU admission credit.
+
+There is an important 64-bit-format exception to interpreting `VQ_MUFU` as
+one literal physical FIFO.  Every statically described F2F/F2I/I2F format,
+including FP64 and signed/unsigned 64-bit integer forms, carries that same
+virtual-queue tag.  A 64-bit source or destination nevertheless exposes a
+different dynamic resource:
+
+```text
+RZ-source burst       T(0..7) = 5,7,9,11,13,15,17,26
+64-bit-source drain   about 18 clocks/instruction
+64-bit destination    about 19 clocks/instruction
+```
+
+Thus this path absorbs about six requests before the seventh reaches its
+knee, rather than the approximately two credits of MUFU and the all-32-bit
+conversion forms.  Tested FP64-source, FP64-destination, int64-source, and
+int64-destination variants share this signature.  In particular,
+`F2I.S64.F32` has the same 19-clock destination cadence despite containing
+no FP64 arithmetic, so the distinction is format width, not specifically a
+double-precision floating-point execution unit.  They interfere strongly
+with one another even across subcores: a 64-element `F2F.F32.F64` victim
+rises from 14.67 to about 28.2 clocks/instruction with an
+active FP64-conversion stream on another subcore.  But it has no measurable
+interaction with MUFU or 32-bit F2F in either direction, even when placed on
+the same subcore.
+
+The narrow conclusion is therefore that **32-bit legacy conversions share
+the local MUFU/XU admission resource**, whereas a conversion with a 64-bit
+source or destination is sent to a distinct, SM-shared slow conversion
+resource.  `VQ_MUFU` is a logical MIO queue class broad enough to cover both,
+not proof that all tagged formats occupy the same physical admission FIFO.
 
 ### Arbitration granularity: fair subcore queues, not flat warps
 
@@ -596,6 +682,12 @@ admission/backpressure side of global traffic.
 
 ## CBU is MIO-throttled but is not just another LSU/XU queue
 
+> Follow-up: `cbu_topology.md` now separates true `VQ_CBU` from BMOV's
+> `VQ_UNORDERED`, identifies an approximately 10--12-credit per-subcore CBU
+> ingress, and resolves distinct 4/1/0.5/0.25-inst-per-clock CBU paths.  The
+> older BMOV-only results below remain valid but do not by themselves measure
+> a physical CBU queue.
+
 `BMOV.32 Rd, MACTIVE` provides a constant-latency CBU stream.  NCU classifies
 512 active instructions per warp as `pipe_cbu`; four subcores execute 2056
 CBU instructions including harness residue, produce very large MIO-throttle
@@ -724,6 +816,55 @@ can use a small fixed anti-dependency delay when the queue is empty, while a
 deep queue requires a real read scoreboard for instruction forms such as STG
 whose late source is scoreboard-covered.
 
+### A late collector can consume a fixed-pipe result before RF commit
+
+Late collection does not imply that the value must already reside in the RF
+array.  Three poison/fresh boundary probes put a fixed-pipeline producer
+immediately before a MIO consumer:
+
+| producer -> MIO consumer | latency-table gap | first reliable fresh gap |
+|---|---:|---:|
+| INT `MOV.64 {R10,R11}` -> LDG address | 6 | 1 |
+| FMA Lite `FFMA R10`; `FFMA R11` -> LDG address | 6 | 1 after the last producer |
+| FP16 `HADD2 R10` -> `MUFU.RCP R10` source | 6 | 2 |
+
+The LDG address detector is especially useful here.  The address-latch probe
+above shows that an empty LSU queue samples its address at the local dispatch
+handoff; an overwrite issued after LDG is already too late.  Thus the fresh
+gap-1 result cannot be explained by the request sitting for a long time in an
+empty downstream queue.  Independently, forcing a fixed producer through an
+explicit `wr`/`req` scoreboard measures approximately 5.4--5.8 clocks to
+architectural completion, much later than these consumer-visible boundaries.
+
+The supported model is therefore:
+
+```text
+INT / FMA / FP16 execution
+          |
+    bypass / result staging --------+
+          |                          |
+       RF commit                     +--> MIO late collector
+                                          (or an equivalent pending-result
+                                           interlock followed by forwarding)
+```
+
+The latency-table value is a conservative **producer-to-consumer availability
+contract**, not proof that the result has committed to RF by that clock.  For
+the tested fixed-pipe-to-MIO edges, normal scheduling at the table gap is safe
+even if the architectural write is still buffered, because the late collector
+can obtain the pending value or is held until that value is forwardable.
+
+This also removes the need for a result FIFO to promise RF commit within every
+consumer latency.  It still must guarantee eventual progress.  The narrowest
+plausible mechanism is finite completion credits allocated before fixed-pipe
+admission, bounded/age-aware arbitration at the parity write ports, and
+backpressure before the staging queues can overflow.  A sustained same-bank
+FFMA stream measurably delays a scoreboarded LDG return, so variable-latency
+MIO completion can absorb at least some of the arbitration variability.  The
+reverse experiment--whether an already queued MIO completion can delay a
+fixed result's architectural commit--has not yet been isolated, so strict
+fixed-over-MIO priority remains a likely but unproved refinement.
+
 ## Two return paths converge at the RF bank arbiters
 
 NCU distinguishes the return paths:
@@ -738,6 +879,104 @@ same-bank penalties (best-case up to 2 cycles, distribution medians up to
 overlap.  Hence LSU-class results use MIO2RF and XU has a distinct return path,
 but both converge on the same final parity-banked 1W RF commit arbiters already
 identified in `rf_writeback_conflict.md`.
+
+Two additional boundaries rule out treating that XU return as the ordinary
+INT/FP result path.  `test_mio_int_fma_forward.py` observes stale input through
+stall 7 for both `MUFU -> IADD3` and `MUFU -> FADD`; the first fresh result is
+at an approximately 8.4-clock gap.  Fixed-pipe producers reach the same
+consumers through their bypass network in roughly 2--3 clocks.  Conversely,
+a cross-warp extension of `probe_subcore_rf_writeback.py` finds the same
++1-clock even-bank penalty at `N=32`, phases -12/-8 (100 repeats), while a
+different-subcore contender does not.  Therefore the narrowest supported
+model is **separate XU completion/return staging, no fixed-pipe fast bypass,
+then convergence with INT/FP at the final RF-bank commit arbiter**.  The
+experiment cannot exclude a very small generic merge buffer immediately in
+front of that arbiter.
+
+The early visibility is not confined to XU.  `probe_mufu_self_forward.py`
+uses one identical producer/setup and changes only the consumer.  In isolated
+kernels, the first-fresh nominal gaps are **7 for both** `MUFU.RCP ->
+MUFU.RCP` and STG store data, versus 8 for the same producer into `IADD3` or
+`FADD`.  `probe_mufu_lsu_forward.py` reproduces the STG boundary independently:
+gaps 1--6 are stale and gaps 7--32 are fresh, with or without a younger MOV
+overwriting the source immediately after STG.  Thus an XU-private loopback
+alone is excluded; the early visibility reaches the LSU-side late collector.
+
+This is an opportunistic early path, not a hidden dependency scoreboard.
+`probe_mufu_lsu_collect_timing.py` times the STG read/source-release barrier:
+no prefix takes 29 clocks, while an independent MUFU and a data-producing
+MUFU both take 31.  The dependent case receives no additional wait for the
+MUFU result and stores poison at an underscheduled gap.  The path is therefore
+not a hidden dependency scoreboard.
+
+`probe_mufu_forward_under_rf_block.py` resolves the remaining RF-versus-bypass
+ambiguity.  Warp 0 produces even-bank R40 with MUFU and samples it through STG
+near the stale/fresh boundary.  One same-subcore contender warp emits 32
+parity-only FFMA writes; opposite-bank, predicated-off, and different-subcore
+streams are controls.  At gaps 7 and 9 the same-even stream delays MUFU's
+scoreboard completion by about 6--9 clocks relative to same-odd/off, while all
+STG observations remain fresh.  More decisively, at the scheduler-bimodal
+gap-5 edge over 300 repetitions at each of three phases:
+
+| contender | median completion | fresh observations (three phases pooled) |
+|---|---:|---:|
+| same subcore, even writes | 54--55 clocks | 885/900 |
+| same subcore, odd writes | 50--51 clocks | 891/900 |
+| same subcore, predicated-off even | 49--50 clocks | 885/900 |
+| different subcore, even writes | 28 clocks | 0/900 |
+
+The same-subcore scheduling shift explains why the first three cases usually
+cross the gap-5 boundary.  On top of that matched shift, same-bank writes add
+another 4--5 clocks to final completion but cause no systematic loss of fresh
+values relative to odd or predicated-off controls.  If STG obtained R40 only
+after final RF commit, this bank-specific delay would move the critical value
+boundary.  It does not.  The supported physical model is consequently a real
+**XU result-staging -> common MIO late-collector forwarding path**, before the
+final parity-banked RF commit arbiter.  It still has no dependency interlock.
+
+Both XU admission and an empty LSU dequeue reach this forwarded-result point
+at the same measured gap-7 boundary.  Back-to-back dependent MUFUs and STGs
+still read stale data, and scoreboarded chains still cost about 18 clocks per
+operation; normal code must use the scoreboard.
+
+### MIO2RF completion staging also forwards to the MIO collector
+
+The same mechanism is not limited to the independent XU return.
+`probe_mio2rf_mufu_forward.py` uses SHFL and LDS as two independently verified
+MIO2RF producers and compares poison/fresh boundaries with no producer
+scoreboard wait:
+
+| producer | -> MUFU | -> STG late collector | -> IADD3 |
+|---|---:|---:|---:|
+| SHFL | gap 12 | gap 12 | gap 14 |
+| LDS | gap 11 | gap 11 | gap 13 |
+
+For both producers the XU/LSU consumers sharing the MIO late collector see the
+new result two nominal clocks before the fixed INT collector.  LDS reproduces
+the geometry without SHFL's exchange/predicate behavior, ruling out a SHFL-
+specific feedback path.
+
+`probe_mio2rf_forward_under_rf_block.py` then claims a real scoreboard for an
+even-bank SHFL result and overlaps its final commit with a same-subcore FFMA
+write stream.  At phase -23 and consumer gap 13, 300-run medians are 75 clocks
+for same-even writes and 71 for same-odd or predicated-off controls.  All
+three cases produce the fresh dependent MUFU result in 300/300 runs.  The
+bank-specific four-clock final-commit delay is larger than the one-gap margin
+above SHFL's gap-12 boundary, yet it does not move that boundary.  Thus this
+is another genuine pre-commit edge:
+
+```text
+LSU/SHFL MIO2RF completion staging --+--> final parity RF commit
+                                     |
+                                     `--> common MIO late collector
+                                          (no dependency interlock)
+```
+
+The combined collector can therefore obtain pending results from at least
+three domains: fixed INT/FMA result staging, the independent XU return, and
+MIO2RF completion staging.  This resembles a tagged pending-result lookup or
+small completion bypass fabric around the MIO collector, not merely a raw RF
+read port.  None of these opportunistic edges replaces scoreboard scheduling.
 
 ## Status of the proposed model
 
