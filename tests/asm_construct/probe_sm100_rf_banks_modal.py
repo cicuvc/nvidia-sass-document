@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Distinguish 2-bank/2R from 4-bank B200 GPR collection on Modal.
+"""Distinguish parity-bank/1R from mod4/2R B200 GPR collection on Modal.
 
 The two-source FADD/HADD2 matrix first establishes whether two reads can be
 served from one candidate bank.  The decisive three-source comparison is:
 
-* parity 2-bank/2R: (mod4 0,2,0) has three even sources and takes two cycles;
-* mod4 4-bank/2R: (0,2,0) is a 2+1 distribution and remains one cycle.
+* parity 2-bank/1R: (mod4 0,2,0) has three even sources and takes three cycles;
+* mod4 4-bank/1R: (0,2,0) is a 2+1 distribution and takes two cycles.
 
 All math cases use RZ destinations, eliminating GPR writeback from the timed
-body.  Packed FFMA2 repeats the test with three 64-bit source pairs.  Multiple
-unroll lengths are fit as cycles=m*N+c, so clock-read and launch overhead stays
-in the intercept.
+body.  Explicit reuse-A/B/C cases remove known RF reads.  Packed FFMA2 repeats
+the test with three 64-bit source pairs.  Multiple unroll lengths are fit as
+cycles=m*N+c, so clock-read and launch overhead stays in the intercept.
 
 Run with the authenticated Modal environment::
 
@@ -37,7 +37,8 @@ CUDA_IMAGE = (
 app = modal.App("b200-rf-bank-probe", image=CUDA_IMAGE)
 
 
-def source(op: str, ra: int, rb: int, count: int, rc: int | None = None) -> str:
+def source(op: str, ra: int, rb: int, count: int, rc: int | None = None,
+           reuse_mask: int = 0) -> str:
     if op == "fadd":
         instruction = f"FADD RZ, R{ra}, R{rb}"
     elif op == "hadd2":
@@ -69,7 +70,9 @@ def source(op: str, ra: int, rb: int, count: int, rc: int | None = None) -> str:
         "    NOP;[7:7:{}:8:1]",
         "    NOP;[7:7:{}:8:1]",
     ]
-    timed_sched = "[7:7:{}:1:0]" if op == "nop" else "[7:7:{}:1:0:1]"
+    timed_sched = "[7:7:{}:1:0]"
+    if op != "nop" and reuse_mask:
+        timed_sched = f"[7:7:{{}}:1:0:{reuse_mask}]"
     lines += [f"    {instruction};{timed_sched}" for _ in range(count)]
     lines += [
         "    CS2R {R32,R33}, SR_CLOCKLO;[7:7:{}:5:0]",
@@ -201,7 +204,7 @@ def fit_slope(points: list[tuple[int, float]]) -> float:
 
 @app.local_entrypoint()
 def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
-         ffma2: bool = False) -> None:
+         ffma2: bool = False, reuse: bool = False) -> None:
     # Modal ships this script alone to /root for the remote function.  Keep
     # repository-relative imports local: run_batch only consumes cubin bytes.
     import sys
@@ -217,6 +220,54 @@ def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
         return
 
     lengths = (128, 256, 512)
+    if reuse:
+        cases = {
+            # label: (op, Ra, Rb, Rc, reuse mask)
+            "fadd_EE_none": ("fadd", 24, 26, None, 0),
+            "fadd_EE_A": ("fadd", 24, 26, None, 1),
+            # FADD's printed second source occupies the Rc slot, hence bit 2.
+            "fadd_EE_C": ("fadd", 24, 26, None, 4),
+            "fadd_EE_AC": ("fadd", 24, 26, None, 5),
+            "fadd_EO_none": ("fadd", 24, 27, None, 0),
+            "ffma_EEE_none": ("ffma", 24, 26, 28, 0),
+            "ffma_EEE_A": ("ffma", 24, 26, 28, 1),
+            "ffma_EEE_B": ("ffma", 24, 26, 28, 2),
+            "ffma_EEE_C": ("ffma", 24, 26, 28, 4),
+            "ffma_EEE_AB": ("ffma", 24, 26, 28, 3),
+            "ffma_EEE_ABC": ("ffma", 24, 26, 28, 7),
+            "ffma_EEO_none": ("ffma", 24, 26, 27, 0),
+            "ffma_EEO_A": ("ffma", 24, 26, 27, 1),
+            "ffma_EEO_C": ("ffma", 24, 26, 27, 4),
+            "ffma2_none": ("ffma2", 24, 28, 32, 0),
+            "ffma2_A": ("ffma2", 24, 28, 32, 1),
+            "ffma2_AB": ("ffma2", 24, 28, 32, 3),
+            "ffma2_ABC": ("ffma2", 24, 28, 32, 7),
+        }
+        items = []
+        for label, (op, ra, rb, rc, mask) in cases.items():
+            for n in lengths:
+                items.append((
+                    f"reuse:{label}:N{n}",
+                    assemble(source(op, ra, rb, n, rc, mask), arch="sm100",
+                             check_deps=False),
+                ))
+        for n in lengths:
+            items.append((
+                f"nop:00:N{n}",
+                assemble(source("nop", 24, 28, n), arch="sm100",
+                         check_deps=False),
+            ))
+        raw = run_batch.remote(items, reps)
+        print("B200 explicit reuse slopes (cycles/instruction)")
+        for label in cases:
+            points = [(n, float(min(raw[f"reuse:{label}:N{n}"])))
+                      for n in lengths]
+            print(f"  {label:18s} {fit_slope(points):7.3f}")
+        nop_points = [(n, float(min(raw[f"nop:00:N{n}"])))
+                      for n in lengths]
+        print(f"  {'NOP':18s} {fit_slope(nop_points):7.3f}")
+        return
+
     if ffma2:
         patterns = {
             "all_start0": (24, 28, 32),
