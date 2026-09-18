@@ -1,0 +1,129 @@
+# B200 hand-SASS UTCHMMA issue/commit baseline.
+#
+# Default: 32 plain M128N128K16 BF16->FP32 accumulating UTCHMMAs followed by
+# one UTCBAR.  The naked U-path sequence is the known-good baseline.
+#
+# Build:
+#   python3 -m assembler.sass_asm --arch sm100a --no-check-deps \
+#     -o /tmp/utchmma_issue_base.cubin \
+#     tests/asm_construct/utchmma_issue_base_sm100.sass
+# Run (each invocation gets a fresh Modal container/CUDA context):
+#   conda run -n blkw modal run tools/modal_tcgen05_alloc.py \
+#     --hand-cubin /tmp/utchmma_issue_base.cubin \
+#     --function-name _Z16utchmma_rmw_only --block-size 32 \
+#     --output-words 256 --repetitions 3
+#
+# Editing points:
+#   1. descriptor setup: UR20:21=A, UR22:23=B, UR10=D, UR14=E,
+#      UR15=idesc (UR16 is kept adjacent for assembler syntax);
+#   2. UTCHMMA BURST: duplicate/delete naked UTCHMMA instructions;
+#   3. PRE-COMMIT GAP and UTCBAR: insert experiments only at the marker.
+#
+# U-prefixed tcgen05 instructions are inherently one issue per warp.  The
+# ELECT/PLOP sequence emitted by ptxas is a PTX semantic compatibility layer,
+# not required by the hardware SASS path.
+#
+# Completion accounting rule: several warps may bind UTCBAR to the same shared
+# mbarrier.  Its init_count must match the total number of UTCBAR arrive-on
+# events expected before the next phase transition.  For example, four warps
+# issuing two UTCBARs each require count=8 (absent other arrivals).
+
+#fn utchmma_rmw_only(out<8>) {
+    #pragma MAXREG_COUNT(112)
+    #pragma SHARED(0x3000)
+    #pragma NUM_MBARRIERS(2)
+    #pragma AT_ENTRY_FRAGMENT_TMEM_CTA1(1)
+
+    LDC.64 {R2,R3}, #param(out);[0:7:{}:1:0]
+    S2R R4, SR_TID.X;[1:7:{}:2:0]
+    SHR R5, R4, 0x5;[7:7:{1}:5:1] # warp id
+    LOP3.LUT R6, R4, 0x1f, RZ, 0xc0, !PT;[7:7:{}:5:1] # lane id
+    IMAD.WIDE.U32 {R8,R9}, R5, 0x10, {R2,R3};[7:7:{0}:5:1]
+
+    S2UR UR5, SR_CgaCtaId;[2:7:{}:1:0]
+    UMOV UR4, 0x400;[7:7:{}:1:0]
+    ULEA UR5, UR5, UR4, 0x18;[7:7:{2}:9:1]
+    ISETP.NE.AND P0, PT, R5, RZ, PT;[7:7:{}:13:1]
+    @P0 BRA #label(setup_wait);[7:7:{}:5:0]
+    #!tmem_alloc_1cta(UR5, 512)
+    UMOV UR18, 0x600;[7:7:{}:1:0]
+    #!mbarrier_init(UR18, 2)
+    UMOV UR18, 0x608;[7:7:{}:1:0]
+    #!mbarrier_init(UR18, 1)
+
+    #def_label(setup_wait)
+    BAR.SYNC 0;[7:7:{}:5:1]
+    LDS R10, [UR5];[0:7:{}:1:0]
+    R2UR UR10, R10;[7:7:{0}:13:1]
+    # UTCHMMA D has no immediate-offset field: materialize each tile base.
+    UIADD3 UR11, UPT, UPT, UR10, 0x80, URZ;[7:7:{}:5:1]
+    UIADD3 UR12, UPT, UPT, UR10, 0x100, URZ;[7:7:{}:5:1]
+
+    # BF16 K-major, no swizzle.  A=[shared+0x800], B=[shared+0x1800].
+    UMOV UR20, 0x100080;[7:7:{}:1:0]
+    UMOV UR21, 0x4008;[7:7:{}:1:0]
+    UMOV UR22, 0x100180;[7:7:{}:1:0]
+    UMOV UR23, 0x4008;[7:7:{}:1:0]
+    UMOV UR14, 0x0;[7:7:{}:1:0]
+    # M128 N128 K16, D=FP32, A/B=BF16.
+    UMOV UR15, 0x8200490;[7:7:{}:1:0]
+    UMOV UR16, 0x0;[7:7:{}:1:0]
+    FENCE.VIEW.ASYNC.S;[7:7:{}:5:1]
+    BAR.SYNC 0;[7:7:{}:5:1]
+
+    # Warp 0 issues the warp-scalar tcgen05 sequence.  All lanes may execute
+    # the U instructions; hardware emits one operation for the warp.
+    ISETP.EQ.AND P1, PT, R5, RZ, PT;[7:7:{}:13:1] # P1 => is warp0
+    ISETP.NE.AND P3, PT, R6, RZ, PT;[7:7:{}:13:1] # P3 => not lane0
+    # @P1 BRA #label(mma_path);[7:7:{}:5:0]
+    # BRA #label(work_done);[7:7:{}:5:0]
+
+    #def_label(mma_path)
+    @!P1 BRA #label(mma_reconv);[7:7:{}:5:0]
+
+    CS2R {R16,R17}, SR_CLOCKLO;[7:7:{}:5:0]
+    UMOV UR18, 0x600;[7:7:{}:5:1]
+
+    # ------------------------- UTCHMMA BURST -------------------------
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR10], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR11], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR12], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR11], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR10], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR11], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR12], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR11], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+
+    UTCBAR.1CTA [UR18], URZ;[7:0:{}:12:1]
+
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR10], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR11], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR12], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR11], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR10], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR11], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR12], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], tmem[UR11], tmem[UR14], idesc[{UR15,UR16}], URZ, UPT;[7:0:{}:12:1]
+
+    UTCBAR.1CTA [UR18], URZ;[7:0:{}:12:1]
+
+
+    #!mbarrier_wait(UR18, 0)
+
+    CS2R {R18,R19}, SR_CLOCKLO;[7:7:{}:5:0]
+    #def_label(mma_reconv)
+    ISETP.EQ.AND P0, PT, R6, RZ, PT;[7:7:{}:13:1]
+    @P0 STG.E.64.STRONG.GPU [{R8,R9}], {R16,R17};[7:0:{}:8:0]
+    @P0 STG.E.64.STRONG.GPU [{R8,R9}+8], {R18,R19};[7:1:{0}:8:0]
+    BRA #label(work_done);[7:7:{1}:5:0]
+
+    #def_label(work_done)
+    BAR.SYNC 0;[7:7:{}:5:1]
+    ISETP.NE.AND P0, PT, R5, RZ, PT;[7:7:{}:13:1]
+    @P0 BRA #label(dealloc_done);[7:7:{}:5:0]
+    #!tmem_dealloc_1cta(UR5, 512)
+    #!tmem_relinquish_alloc_permit_1cta()
+    #def_label(dealloc_done)
+    BAR.SYNC 0;[7:7:{}:5:1]
+    EXIT;[7:7:{}:5:0]
+}

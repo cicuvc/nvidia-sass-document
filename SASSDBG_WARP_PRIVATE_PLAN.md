@@ -904,6 +904,54 @@ or fail closed; external text is never patched.
   `FunctionTemplate`, `CodeLoc`, `CallEdge`, SCC and ownership-policy unit
   tests.  Probe the exact `RET.REL` program base and each observed return-token
   materialization.
+
+Status (2026-09-06, RTX 5090 sm_120): `sassdbg/cubin.py` now exposes
+`native_symbols`/`capsule_symbols`, `NativeRelocation`/`CapsuleRelocation`
+(`native_relocations`/`capsule_relocations`), and native-only
+`text_reloc_offsets` (mercury is opt-in and never feeds native checks).  The
+retained `.nv.merc.rela.text.*` records live in the capsule's separate
+Mercury address space — one offset (0xcc) is not even a native 16-byte
+instruction boundary.  Relocations carry their `sh_info` target-section
+identity so text islands associate them without name concatenation; `SHT_REL`
+parses on its own path with the implicit addend recovered from the target
+word.  `sassdbg/modulecode.py` ships `ModuleTemplate`, `TextIsland`,
+`FunctionTemplate`, `CodeLoc`, `CallEdge` (target class + return ABI +
+placement/stepping policy), Tarjan `sccs`/`recursive_scc`, and
+`OwnershipPolicy` (just-my-code, include/exclude, root=eager).  Functions
+carry island-qualified `fid`s; resolution is source-island-first with
+fail-closed cross-island/out-of-module targets.  CALL/RET decode is
+per-opcode (GPR vs uniform `RegSpec`); a container kernel with no owned RET
+and conflicting multi-return protocols are `UNKNOWN`; return-token discovery
+proves both halves of the pair (reaching-def backward scan + zero high in
+caller or callee) or fails closed.  The native call graph is built from
+decoded finalized CALL targets; the `.nv.callgraph` section in the sampled
+CUDA 13.1 cubins is a fixed 32-byte placeholder (identical across a
+1-function and a 3-function cubin) and cannot be a cross-check.
+
+`tests/asm_construct/test_modulecode.py` (52 CPU-only tests) covers all M12a
+bullets including the call_test edges (k→leaf token R6=0xb0, k→fib token
+R20=0xf0, fib→fib token R20=0x310), REL_REG ABI, SCC recursion + isolated
+functions, ownership policy, the innermost-function lookup that keeps the
+wide kernel symbol from masking nested `$kernel$fn` sub-functions, and
+synthetic-ELF acceptance fixtures (relocations via `sh_info`, SHT_REL,
+multi-island/overlapping `sh_addr`, ABS/REL/GPR/UR CALL/RET variants,
+multi-return conflicts, token hazards, duplicate names, zero-size symbols,
+just-my-code).  The `sassdbg/GAP_M12a.md` review items are all closed.
+
+`sassdbg/probe_retrel.py` pins the return ABI empirically (3/3 repeat runs):
+- ptxas encodes every `RET.REL.NODEC Rxx` so `pc_link+0x10+sImm*4 == 0`;
+  at a runtime PC the term equals the image's placement delta (its program
+  base), so `return target = Rxx + base`.
+- The caller materializes the continuation *offset* in the return GPR pair
+  with an immediate MOV; the pair's high half must be zero (ptxas zeroes it
+  in the caller or callee before the matching RET — a stale high half lands
+  `token + garbage<<32` and faults 718).
+- A byte-identical caller/callee copy in devmem executes correctly at TWO
+  different heap bases (0xe both), proving the return is
+  program-base-relative; perturbing the token by +0x10 lands the return
+  exactly one instruction later (0x9), proving token and base add
+  independently.  The assembler's `RET.REL ..., 0x0` is *raw* sImm (not the
+  ptxas pre-resolved form) — M12b replay must re-encode the displacement.
 - **M12b — local call closure:** execute preserved-layout text islands with
   nested/recursive/divergent calls; support breakpoints in callees and
   placement-aware CALL/RET replay.  Prove every return remains private by

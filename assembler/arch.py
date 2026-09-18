@@ -55,10 +55,17 @@ ARCHES: dict[str, ArchConfig] = {
     # architecture 0x64 (100) for sm120's 0x78.
     "sm100": ArchConfig("sm100", "sm100.json", (0, 0x358), 0x380,
                          0x06006402, 0x41, 0x08),
+    # Architecture-specific Blackwell target.  Tensor-memory instructions
+    # (tcgen05 / UTC*) require the accelerated "a" contract bit in e_flags;
+    # ordinary sm_100 cubins deliberately omit it.
+    "sm100a": ArchConfig("sm100a", "sm100.json", (0, 0x358), 0x380,
+                          0x0600640a, 0x41, 0x08),
     # B300 / Blackwell Ultra compute capability 10.3.  It retains the
     # Blackwell constant/parameter ABI; e_flags carries architecture 0x67.
     "sm103": ArchConfig("sm103", "sm103.json", (0, 0x358), 0x380,
                          0x06006702, 0x41, 0x08),
+    "sm103a": ArchConfig("sm103a", "sm103.json", (0, 0x358), 0x380,
+                          0x0600670a, 0x41, 0x08),
     "sm120": ArchConfig("sm120", "sm120.json", (0, 0x358), 0x380,
                          0x06007802, 0x41, 0x08),
 }

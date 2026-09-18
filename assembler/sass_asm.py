@@ -6,6 +6,7 @@ Usage:
 """
 import argparse
 import json
+import re
 import struct
 import sys
 from pathlib import Path
@@ -111,6 +112,12 @@ def main() -> int:
                     help="Treat dependency warnings as errors (exit 1)")
     args = ap.parse_args()
 
+    # The matcher is architecture-specific.  Select it before parsing and
+    # matching (the old CLI switched only immediately before encoding).
+    from . import arch
+    if args.arch:
+        arch.set_arch(args.arch)
+
     path = Path(args.input)
     if not path.exists():
         print(f"error: {path} not found", file=sys.stderr)
@@ -128,8 +135,10 @@ def main() -> int:
     # Detect kernel declaration vs standalone instructions
     kernel: KernelDecl | None = None
     try:
-        if source.lstrip().startswith("#fn"):
+        if re.search(r"(?m)^\s*#fn\b", source):
             kernel = parse_kernel(source)
+            from .sass_builtins import expand_builtins
+            expand_builtins(kernel)
             insts = kernel.instructions
         else:
             insts = parse_sass(source)
@@ -137,12 +146,33 @@ def main() -> int:
         print(f"syntax error: {e}", file=sys.stderr)
         return 1
 
+    # Resolve PC-relative labels before matching: LABEL is parser IR, not an
+    # ISA operand kind.  Directives are zero-width in the final layout.
+    labels: dict[str, int] = {}
+    addrs: list[int] = []
+    pc = 0
+    for inst in insts:
+        if inst.mnemonic == "_label_":
+            labels.setdefault(inst.label, pc)
+        addrs.append(pc)
+        if not inst.mnemonic.startswith("_"):
+            pc += 16
+    for inst, ia in zip(insts, addrs):
+        for op in inst.operands:
+            if op.kind == OperandKind.LABEL:
+                if op.value not in labels:
+                    print(f"matching error: undefined label {op.value!r}",
+                          file=sys.stderr)
+                    return 1
+                op.kind = OperandKind.IMM_S
+                op.value = labels[op.value] - (ia + 16)
+
     # Match each instruction to a CLASS variant
     try:
         matcher = create_matcher()
         results = []
         for inst in insts:
-            if inst.mnemonic == "_label_":
+            if inst.mnemonic.startswith("_"):
                 results.append(None)
                 continue
             results.append(matcher.match(inst))
@@ -168,16 +198,13 @@ def main() -> int:
             s = inst.sched
             req = ",".join(str(r) for r in sorted(s.req_bits)) if s.req_bits else ""
             bracket = f"[{s.wr_sb}:{s.rd_sb}:{{{req}}}:{s.stall}:{s.yield_val}]"
-            cls = results[i].variant["class"] if results[i] else "(label)"
+            cls = results[i].variant["class"] if results[i] else "(directive)"
             print(f"  [{i:3d}] {line:55s};{bracket:25s} → {cls}")
             if args.verbose and results[i]:
                 for k, v in list(results[i].slot_map.items())[:8]:
                     print(f"         {k:20s} = {v}")
 
     # Encode — the ISA db and const-bank layout follow the selected arch.
-    from . import arch
-    if args.arch:
-        arch.set_arch(args.arch)
     with open(arch.db_path()) as f:
         db = json.load(f)
     encoder = SassEncoder(db)
@@ -192,17 +219,22 @@ def main() -> int:
             if inst.mnemonic == "_label_":
                 labels.setdefault(inst.label, pc)
             addrs.append(pc)
-            if inst.mnemonic != "_label_":
+            if not inst.mnemonic.startswith("_"):
                 pc += 16
-        from .operand import OperandKind
         for inst, ia in zip(insts, addrs):
-            if inst.mnemonic == "_label_" or inst is None:
+            if inst.mnemonic.startswith("_") or inst is None:
                 continue
             for op in inst.operands:
                 if op.kind == OperandKind.LABEL:
                     op.kind = OperandKind.IMM_S
                     op.value = labels[op.value] - (ia + 16)
-        diags = run_depcheck(db, insts, results, addrs,
+        dep_rows = [(inst, result, addr)
+                    for inst, result, addr in zip(insts, results, addrs)
+                    if inst.mnemonic != "_coop_group_"]
+        diags = run_depcheck(db,
+                             [row[0] for row in dep_rows],
+                             [row[1] for row in dep_rows],
+                             [row[2] for row in dep_rows],
                              kernel_name=kernel.name if kernel else args.kernel_name,
                              strict=args.strict_deps)
         if args.strict_deps and diags:
@@ -212,7 +244,7 @@ def main() -> int:
 
     encoded: list[tuple[int, int]] = []
     for i, inst in enumerate(insts):
-        if inst.mnemonic == "_label_" or results[i] is None:
+        if inst.mnemonic.startswith("_") or results[i] is None:
             encoded.append((0, 0))
             continue
         lo, hi = encoder.encode(results[i], inst.sched)
@@ -226,12 +258,27 @@ def main() -> int:
             print(f"         lo=0x{lo:016x}  hi=0x{hi:016x}")
 
     if args.dump_text:
-        raw = b"".join(struct.pack("<QQ", lo, hi) for lo, hi in encoded)
+        raw = b"".join(struct.pack("<QQ", lo, hi)
+                       for inst, (lo, hi) in zip(insts, encoded)
+                       if not inst.mnemonic.startswith("_"))
         Path(args.dump_text).write_bytes(raw)
-        print(f"\nWrote {len(encoded)} raw instructions ({len(raw)} bytes) to {args.dump_text}")
+        print(f"\nWrote {len(raw) // 16} raw instructions "
+              f"({len(raw)} bytes) to {args.dump_text}")
 
     if args.output:
         try:
+            if kernel:
+                # Keep the CLI on the canonical kernel path: it performs
+                # builtin expansion, final-layout EIATTR inference and emits
+                # the complete pragma/ABI metadata required by the driver.
+                from . import assemble_kernel
+                result = assemble_kernel(
+                    source, check_deps=not args.no_check_deps,
+                    strict_deps=args.strict_deps, arch=arch.current().name)
+                Path(args.output).write_bytes(result.code)
+                print(f"\nWrote {args.output}: {len(result.code)} bytes, "
+                      f"kernel={result.kernel_name}")
+                return 0
             cb = CubinBuilder()
             kn = kernel.name if kernel else args.kernel_name
             cb.set_code(encoded, kernel_name=kn)

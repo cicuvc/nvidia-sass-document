@@ -1,0 +1,17 @@
+# 512-column hardware smoke test for the V1 closed-set TMEM lifecycle.
+#fn builtin_alloc512_v1(out<8>) {
+    #pragma SHARED(4)
+    #pragma AT_ENTRY_FRAGMENT_TMEM_CTA1(1)
+    LDC R1, c[0x0][0x37c];[7:7:{}:8:0]
+    S2UR UR5, SR_CgaCtaId;[0:7:{}:1:0]
+    UMOV UR4, 0x400;[7:7:{}:1:0]
+    ULEA UR5, UR5, UR4, 0x18;[7:7:{0}:9:1]
+    #!tmem_alloc_1cta(UR5, 512)
+    LDS R0, [UR5];[1:7:{}:1:0]
+    LDCU.64 {UR6,UR7}, #spec_const(SLOT_DEFAULT_CDESC);[2:7:{}:1:0]
+    LDC.64 {R2,R3}, #param(out);[0:7:{}:2:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}], R0;[7:1:{0,1,2}:1:0]
+    #!tmem_dealloc_1cta(UR5, 512)
+    #!tmem_relinquish_alloc_permit_1cta()
+    EXIT;[7:7:{}:5:0]
+}

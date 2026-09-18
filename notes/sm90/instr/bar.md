@@ -24,6 +24,30 @@ a branch.
 source predicate `Pp` [89:87]. `.DEFER_BLOCKING` is the sm_90 default lowering of
 `__syncthreads()` (arrive, then defer the blocking wait so the scheduler overlaps it).
 
+### Warp-convergence precondition
+
+`BAR.SYNC` is CTA-wide, but each participating warp must reach it as **one reconverged
+execution group**, not as several outstanding groups. B200 hand-SASS testing found that
+if a warp first diverges and its groups reach `BAR.SYNC` without being merged, the launch
+can fail with CUDA error **719**. It is not sufficient that every group eventually visits
+the same static BAR PC: the warp must first be explicitly reconverged with the matching
+`BSYNC` or `WARPSYNC`. This is a convergence-state requirement, not a claim that a
+partial final warp must contain 32 live lanes.
+
+Safe lowering therefore has the form:
+
+```sass
+    # divergent owner/non-owner region
+    ...
+    BSYNC Bn              # when the region was opened by BSSY
+    # or WARPSYNC.ALL
+    BAR.SYNC.DEFER_BLOCKING 0x0
+```
+
+This matches nvcc output, which places a `BSYNC` or `WARPSYNC` between a divergent region
+and a CTA barrier. `WARPSYNC`/`BSYNC` repairs CBU execution-group state; `BAR.SYNC` then
+performs the separate CTA-level rendezvous on the MIO barrier resource.
+
 ## Operand forms — the "BAR_INDEXED" variants
 The opcode's low bits select whether the barrier index and count are immediate or register:
 | opcode | form | barrier idx | count |
@@ -88,3 +112,5 @@ defer[80]=1; `barname`[57:54]=1 → `0x1`; `Sc`[53:42]=0x100 → `0x100`.
   sampled ptxas; their exact rendering/use is unverified.
 - Exact micro-semantics of `.DEFER_BLOCKING` (how long the wait is deferred, interaction
   with the MIO scoreboard) is not spec-stated.
+- Whether every BAR mode (`ARV`/`RED`/`SCAN`) has the same strict full-warp convergence
+  precondition has not yet been tested; the 719 observation is for `BAR.SYNC`.

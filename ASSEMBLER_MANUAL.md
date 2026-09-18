@@ -62,6 +62,81 @@ CLI: `python -m assembler.sass_asm input.sass [-o out.cubin] [-n kernel] [--dump
   distinction matters for `USETMAXREG`/PTX `setmaxnreg`, whose CTA-pool
   accounting starts from that entry allocation.  Without the pragma, the
   assembler conservatively grows REGCOUNT from decoded GPR operands.
+- Layout-sensitive EIATTR lists are generated from the final instruction
+  stream. `EXIT_INSTR_OFFSETS` comes from every `EXIT`, and
+  `INT_WARP_WIDE_INSTR_OFFSETS` comes from every `VOTEU`/`REDUX`.  The legacy
+  `INT_WARP_WIDE_OFFSETS(...)` pragma is accepted only when it exactly matches
+  the inferred list, so edits cannot silently leave stale metadata.
+- **`#coop_group`** marks the next real instruction for
+  `COOP_GROUP_INSTR_OFFSETS`; it occupies no bytes and may appear before a
+  label.  `#coop_group(mask_regid)` additionally supplies the paired
+  `COOP_GROUP_MASK_REGIDS` value; the default is `0xffffffff` (no explicit
+  mask GPR).  Legacy numeric `COOP_GROUP_INSTR_OFFSETS(...)` and
+  `COOP_GROUP_MASK_REGIDS(...)` pragmas remain supported, with count and
+  annotation-consistency checks.
+- Closed-set assembler builtins use the `#!name(...)` spelling.  They are
+  implemented by the assembler; there is no user-defined macro language,
+  textual substitution, recursion, or runtime call.  The initial TMEM
+  allocation scope is:
+
+  ```sass
+  #!tmem_alloc_1cta(UR5, 32)
+  // use the TMEM base written to shared memory at [UR5]
+  #!tmem_dealloc_1cta(UR5, 32)
+  #!tmem_relinquish_alloc_permit_1cta()
+  ```
+
+  All three directives are warp-level collectives and must currently appear
+  exactly once in that order, with the same shared-address UR and column
+  count.  In a multi-warp CTA only the owner warp executes them; CTA
+  publication/quiescence barriers remain explicit user code.  Supported
+  allocation sizes are 32, 64, 128, 256, and 512 columns.  The builtin
+  silently selects the allocator lowering from the kernel's entry-fragment
+  ABI.  The default/explicit
+  `AT_ENTRY_FRAGMENT_TMEM_CTA1` contract uses V1 (`reserved+0x40` phase and
+  the combined occupied/head bitmap at `+0x50`); adding
+  `#pragma AT_ENTRY_FRAGMENT_TMEM_CTA1_V2(1)` selects V2 (separate occupied
+  range and allocation-head masks at partition `+0x14/+0x18`, phase at
+  `+0x1c`) without changing builtin source.
+  Hardware coverage currently includes 32-column V1/V2 and 512-column V1;
+  the intermediate widths and 512-column V2 have static lowering coverage but
+  still require independent silicon validation before use in fault-sensitive
+  experiments.
+  Selecting both is an error.  Expansion happens before label/EIATTR layout
+  and allocates scratch only from registers/predicates/scoreboards unused
+  anywhere else in the kernel.  Resources are reused between the three
+  non-overlapping builtins; insufficient scratch is a compile-time error.
+- The initial mbarrier builtins cover the common explicit-phase lifecycle:
+
+  ```sass
+  #!mbarrier_init(UR6, 1)
+  #!mbarrier_arrive(UR6)
+  #!mbarrier_wait(UR6, 0)
+  // the next automatically re-armed phase
+  #!mbarrier_arrive(UR6)
+  #!mbarrier_wait(UR6, 1)
+  ```
+
+  `UR6` holds the shared-memory address.  `mbarrier_init` accepts a 20-bit
+  immediate expected-arrival count, elects one lane in the active warp to
+  initialize the physical 64-bit state, and warp-synchronizes before return.
+  In a multi-warp CTA the caller must still restrict initialization to one
+  owner warp and provide CTA publication ordering.  `mbarrier_arrive` performs
+  one ordinary arrival per active lane and deliberately discards the returned
+  token.  `mbarrier_wait` takes a manually specified phase/parity immediate
+  (`0` or `1`), converts it to the `PHASECHK` bit-31 representation, and polls
+  until completion.  Its slow path follows the native suspend-hint pattern
+  (`TRYWAIT` → predicated `NANOSLEEP.SYNCS` → `PHASECHK`) so a waiting
+  execution group does not monopolize a divergent warp.  Syntactically
+  distinct init-address URs infer the minimum `NUM_MBARRIERS`; an explicit
+  smaller value is rejected.
+- **`BAR.SYNC` requires a reconverged warp.** If preceding control flow split a
+  warp into multiple execution groups, execute its matching `BSYNC` or an
+  appropriate `WARPSYNC` before the CTA barrier. Having every group eventually
+  execute the same static `BAR.SYNC` is not equivalent and has produced CUDA
+  error 719 on B200. The TMEM allocation builtins reconverge their internal
+  elected-owner branch before returning, but they cannot repair divergence in
+  the caller surrounding them.
 - **`#def_label(name)`** defines a label; **`#label(name)`** references one
   (used as the target of `BRA`, `BSSY`, `BSSY`-style branches).  A bare
   `name:` also defines a label.
@@ -90,6 +165,9 @@ Example used throughout the tests:
 - **Predicate guard**: `@P0`, `@!P3`, `@PT` before the mnemonic.
 - **Modifiers**: dot-separated, order-insensitive per matcher (`LDG.E.128`,
   `HMMA.16816.F32.BF16`, `QMMA.SF.16832.F32.E4M3.E5M2.E8`, …).
+  Modifiers that the ISA `FORMAT` prints beside an operand are written in the
+  same mnemonic modifier list in this dialect.  For example collector-A use is
+  `UTCHMMA.1CTA.A_REUSE.A_KEEP gdesc[…], …`, not a suffix on `gdesc[…]`.
 - **Operands** are comma-separated and match the instruction's `FORMAT`
   slots by type.
 

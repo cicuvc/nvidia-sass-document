@@ -86,8 +86,39 @@ Confirmed facts:
   (`__cluster_dims__`).
 - `.multicast::cluster [mbar], ctaMask` → `.MULTICAST` (bit[75]) with the 16-bit
   `ctaMask` in `URc` (UR10).
-- Like the allocator sequence, `UTCBAR` is issued under `ELECT` (single leader
-  lane), consistent with warp-collective tcgen05 semantics.
+- `UTCBAR`, like `UTCHMMA`/`UTCCP`/`UTCSHIFT`, is a U-path instruction and is
+  inherently issued once per warp.  A naked `UTCBAR [URa],URZ` is sufficient
+  in hand-written SASS.  ptxas's surrounding ELECT/PLOP/retry sequence lowers
+  the more general PTX active-thread-group contract; it is not a hardware
+  handshake required by UTCBAR itself.
+- When the mbarrier address is produced immediately beforehand by `UMOV`, use
+  at least `stall=5, yield=1` on that `UMOV` before `UTCBAR` consumes the UR.
+  A shorter `stall=1, yield=0` sequence caused otherwise-valid multi-warp
+  probes to stop completing.  This is a UDP producer-to-consumer scheduling
+  constraint, independent of tcgen05 completion latency.
+
+`UTCBAR` associates the calling warp's preceding tcgen05 stream with one
+mbarrier arrive-on event.  Multiple warps may target the same shared mbarrier;
+the rule is accounting, not ownership: the mbarrier `init_count` must match the
+total number of UTCBAR events (plus any other arrivals) expected before its
+next phase transition.  Thus four warps issuing two UTCBARs each contribute
+eight arrivals and require `init_count=8` when no other arrivals participate.
+Using a smaller count switches phase too early, so later commits no longer
+belong to the phase being waited on; using a larger count leaves the phase
+incomplete unless the remaining arrivals are supplied.
+
+## Dynamic B200 completion check (2026-09-17)
+
+Runtime `UTCCP` and `UTCSHIFT` probes use the same issuing warp for the async
+operation and `UTCBAR`.  Since U-path execution is warp-scalar, all active lanes
+executing one UTCBAR still contribute one arrive-on event, not 32.  An mbarrier
+initialized with expected count 1 is then successfully observed by
+`mbarrier.try_wait.parity ... 0`, matching the PTX example.
+
+Earlier opposite-parity observations must therefore be interpreted as multiple
+issuing warps or a mismatch between the number of UTCBAR events and the current
+phase's init count, not as per-lane arrivals or a different tcgen05 phase
+convention.
 
 ## Where UTCBAR fits (the tcgen05 sync taxonomy)
 | PTX | SASS | role |

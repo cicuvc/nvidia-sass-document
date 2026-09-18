@@ -59,6 +59,7 @@ class StringTable:
 # ---------------------------------------------------------------------------
 STB_LOCAL = 0
 STB_GLOBAL = 1
+STB_WEAK = 2
 STT_NOTYPE = 0
 STT_OBJECT = 1
 STT_FUNC = 2
@@ -166,6 +167,11 @@ def eiattr_nval(etype: int) -> bytes:
     return struct.pack("<BBH", 1, etype, 0)
 
 
+def eiattr_sval_list(etype: int, values: list[int]) -> bytes:
+    payload = struct.pack(f"<{'I' * len(values)}", *values)
+    return struct.pack("<BBH", 4, etype, len(payload)) + payload
+
+
 def eiattr_regcount(func_sym: int, count: int) -> bytes:
     return struct.pack("<BBHII", 4, 0x2f, 8, func_sym, count)
 
@@ -237,13 +243,27 @@ def _minimal_section(name: str) -> bytes:
     raise ElfError(f"section {name!r} not found in minimal.cubin")
 
 
-def note_nv_tkinfo() -> bytes:
-    """NOTE section for toolkit info (0xa4 bytes, directly from reference cubin)."""
-    return _minimal_section(".note.nv.tkinfo")
+def note_nv_tkinfo(target: str = "sm120") -> bytes:
+    """Toolkit NOTE, with its embedded ``-arch`` rewritten for *target*."""
+    raw = _minimal_section(".note.nv.tkinfo")
+    namesz, descsz, ntype = struct.unpack_from("<III", raw, 0)
+    name_padded = (namesz + 3) & ~3
+    desc_off = 12 + name_padded
+    name = raw[12:12 + namesz]
+    desc = raw[desc_off:desc_off + descsz]
+    arch_spelling = target.replace("sm", "sm_").encode()
+    desc = desc.replace(b"sm_120", arch_spelling)
+    return (struct.pack("<III", namesz, len(desc), ntype) +
+            name.ljust(name_padded, b"\0") +
+            desc.ljust((len(desc) + 3) & ~3, b"\0"))
 
 
-def note_nv_cuver() -> bytes:
-    return _minimal_section(".note.nv.cuver")
+def note_nv_cuver(target_sm: int = 120) -> bytes:
+    raw = bytearray(_minimal_section(".note.nv.cuver"))
+    namesz = struct.unpack_from("<I", raw, 0)[0]
+    desc_off = 12 + ((namesz + 3) & ~3)
+    struct.pack_into("<H", raw, desc_off + 2, target_sm)
+    return bytes(raw)
 
 
 def debug_frame() -> bytes:
@@ -440,6 +460,22 @@ class CubinBuilder:
     # ------------------------------------------------------------------
     def build(self) -> bytes:
         mn = self._mangle()
+        tcgen05_cta1 = bool(int(
+            self._pragma_attrs.get("TCGEN05_1CTA_USED", "0")))
+        tcgen05_entry_v1 = bool(int(self._pragma_attrs.get(
+            "AT_ENTRY_FRAGMENT_TMEM_CTA1", "0")))
+        tcgen05_entry_v2 = bool(int(self._pragma_attrs.get(
+            "AT_ENTRY_FRAGMENT_TMEM_CTA1_V2", "0")))
+        if tcgen05_entry_v1 and tcgen05_entry_v2:
+            raise ValueError(
+                "cannot select both AT_ENTRY_FRAGMENT_TMEM_CTA1 and "
+                "AT_ENTRY_FRAGMENT_TMEM_CTA1_V2")
+        if tcgen05_entry_v1 and not tcgen05_cta1:
+            raise ValueError("AT_ENTRY_FRAGMENT_TMEM_CTA1 requires "
+                             "TCGEN05_1CTA_USED")
+        if tcgen05_entry_v2 and not tcgen05_cta1:
+            raise ValueError("AT_ENTRY_FRAGMENT_TMEM_CTA1_V2 requires "
+                             "TCGEN05_1CTA_USED")
         shstr = StringTable()
         strtab = StringTable()
         symtab = SymbolTable()
@@ -481,11 +517,14 @@ class CubinBuilder:
         # cubins carry no note sections; these template bytes would be
         # rejected on Hopper with CUDA_ERROR_NO_BINARY_FOR_GPU).  sm100,
         # sm103 and sm120 share the Blackwell note/compat container ABI.
-        _is_blackwell = arch.current().name in ("sm100", "sm103", "sm120")
+        _is_blackwell = arch.current().name in (
+            "sm100", "sm100a", "sm103", "sm103a", "sm120")
         if _is_blackwell:
-            sec(".note.nv.tkinfo", SHT_NOTE, content=note_nv_tkinfo(),
+            sec(".note.nv.tkinfo", SHT_NOTE,
+                content=note_nv_tkinfo(arch.current().name),
                 flags=SHF_CUDA_LINK_ONCE)
-            sec(".note.nv.cuver", SHT_NOTE, content=note_nv_cuver(),
+            target_sm = int(arch.current().name[2:].rstrip("a"))
+            sec(".note.nv.cuver", SHT_NOTE, content=note_nv_cuver(target_sm),
                 flags=SHF_INFO_LINK | SHF_CUDA_RETAIN)
 
         # Build symbols early so the EIATTR sections below can reference the
@@ -504,11 +543,45 @@ class CubinBuilder:
         if self._shared_mem:
             sym_shared = symtab.add(strtab.add(f".nv.shared.{mn}"),
                                     STB_LOCAL, STT_SECTION, 0)
-        sym_rsm = symtab.add(strtab.add(".nv.reservedSmem.offset0"),
-                             STB_LOCAL, STT_OBJECT, 0,
-                             value=0x40, size=4, other=VIS_HIDDEN)
-        sym_rsma = symtab.add(strtab.add("__nv_reservedSMEM_offset_0_alias"),
-                              STB_GLOBAL, STT_NOTYPE, 0, value=0x40)
+        if tcgen05_cta1:
+            # Reserved-shared ABI consumed by the driver's TMEM entry/exit
+            # fragment machinery.  The unusual weak/undefined offset+cap
+            # symbols and STO_RESERVED_SHARED alias match ptxas exactly.
+            sym_rsm = symtab.add(strtab.add(".nv.reservedSmem.offset0"),
+                                 STB_WEAK, STT_OBJECT, 0,
+                                 value=0x40, size=4)
+            sym_rsm_sec = symtab.add(strtab.add(".nv.shared.reserved.0"),
+                                     STB_LOCAL, STT_SECTION, 0)
+            sym_rsma = symtab.add(
+                strtab.add("__nv_reservedSMEM_offset_0_alias"),
+                STB_WEAK, STT_NOTYPE, 0, value=0x40, other=0xa0)
+            if tcgen05_entry_v2:
+                # CUDA 13.x V2 replaced the three named V1 words with one
+                # opaque 32-byte partition.  The driver entry/exit fragments
+                # own its internal layout.
+                sym_tcgen05_partition = symtab.add(
+                    strtab.add("__nv_reservedSMEM_tcgen05_partition"),
+                    STB_WEAK, STT_OBJECT, 0, value=0x40, size=0x20)
+            else:
+                sym_alloc_phase = symtab.add(
+                    strtab.add("__nv_reservedSMEM_allocation_phase"),
+                    STB_WEAK, STT_OBJECT, 0, value=0x40, size=1)
+                sym_atexit_pc = symtab.add(
+                    strtab.add("__nv_reservedSMEM_devtool_atexit_pc"),
+                    STB_WEAK, STT_OBJECT, 0, value=0x48, size=8)
+                sym_alloc_mask = symtab.add(
+                    strtab.add("__nv_reservedSMEM_allocation_mask"),
+                    STB_WEAK, STT_OBJECT, 0, value=0x50, size=4)
+            sym_rsm_cap = symtab.add(strtab.add(".nv.reservedSmem.cap"),
+                                     STB_WEAK, STT_OBJECT, 0,
+                                     value=0x400, size=4)
+        else:
+            sym_rsm = symtab.add(strtab.add(".nv.reservedSmem.offset0"),
+                                 STB_LOCAL, STT_OBJECT, 0,
+                                 value=0x40, size=4, other=VIS_HIDDEN)
+            sym_rsma = symtab.add(
+                strtab.add("__nv_reservedSMEM_offset_0_alias"),
+                STB_GLOBAL, STT_NOTYPE, 0, value=0x40)
         sym_cg = symtab.add(strtab.add(".nv.callgraph"),
                             STB_LOCAL, STT_SECTION, 0)
         # st_other bit 4 = STO_ENTRY (cuobjdump -symbols prints 0x10 as
@@ -533,7 +606,9 @@ class CubinBuilder:
             # instruction-bit heuristics changes the CTA-pool accounting and
             # can reverse an INC/DEC direction.  Sources that omit the pragma
             # retain the conservative auto-growth behavior.
-            if "MAXREG_COUNT" not in self._pragma_attrs and computed > self._regcount:
+            if ("MAXREG_COUNT" not in self._pragma_attrs and
+                    "REGCOUNT" not in self._pragma_attrs and
+                    computed > self._regcount):
                 self._regcount = computed
             # Auto-compute EXIT offsets — all EXIT instructions
             if not self._exit_offsets:
@@ -555,10 +630,30 @@ class CubinBuilder:
             ((((hi >> 27) & 1) << 12) | (lo & 0xfff)) in (0x19c8, 0x13c8)
             for lo, hi in self._instructions
         )
-        buf = eiattr_sval(0x37, 0x80)  # CUDA_API_VERSION
+        # CUDA 13.1 is the first local toolkit observed to emit the V2
+        # contract and tags it API 0x83.  V1 retains the CUDA 12.8 value.
+        buf = eiattr_sval(0x37, 0x83 if tcgen05_entry_v2 else 0x80)
         for ordinal, offset, size in self._params:
             buf += eiattr_kparam(ordinal, offset, size)
+        # A tcgen05.alloc.cta_group::1 kernel needs entry-time allocator
+        # state prepared by the driver.  ptxas emits these three markers as
+        # a unit: TMEM_CTA1 in AT_ENTRY_FRAGMENTS, reserved shared-memory
+        # use, and TCGEN05_1CTA_USED.  Merely encoding UTCATOMSWS is not
+        # sufficient to create that state.
+        if tcgen05_cta1:
+            # Entry-fragment enum: 4=TMEM_CTA1, 6=TMEM_CTA1_V2.  Keep V1 as
+            # the compatibility default; V2 must be explicit in source so a
+            # probe never silently changes loader ABI with the CUDA version.
+            entry_fragment = 6 if tcgen05_entry_v2 else 4
+            buf += eiattr_sval(0x4f, entry_fragment)
+            buf += eiattr_nval(0x41)     # RESERVED_SMEM_USED
         buf += eiattr_hval(0x50, 0)    # SPARSE_MMA_MASK
+        if tcgen05_cta1:
+            buf += eiattr_nval(0x51)     # TCGEN05_1CTA_USED
+        if tcgen05_entry_v2:
+            # CUDA 13.1/13.4 both emit this V2 ABI/version marker.  Current
+            # cuobjdump names it "unknown Attribute".
+            buf += eiattr_hval(0x5f, 0x101)
         maxreg_count = int(self._pragma_attrs.get("MAXREG_COUNT", 0xff))
         buf += eiattr_hval(0x1b, maxreg_count)  # MAXREG_COUNT
         # Match ptxas: every kernel containing PTX setmaxnreg/USETMAXREG is
@@ -567,12 +662,40 @@ class CubinBuilder:
         # mechanism that enables the instruction.
         if has_reg_reconfig:
             buf += eiattr_nval(0x54)  # REG_RECONFIG
-        buf += eiattr_bval(0x4a, 0)    # VRC_CTA_INIT_COUNT
+        int_wide = self._pragma_attrs.get("INT_WARP_WIDE_OFFSETS")
+        if int_wide:
+            values = [int(v, 0) for v in int_wide.split(",")]
+            buf += eiattr_sval_list(0x31, values)
+        coop = self._pragma_attrs.get("COOP_GROUP_INSTR_OFFSETS")
+        if coop:
+            values = [int(v, 0) for v in coop.split(",")]
+            # One mask-register id accompanies each cooperative-group
+            # instruction offset.  -1 means no explicit mask GPR for that
+            # instruction.  The count is not universally five: nvcc's V1
+            # multi-warp allocator has four cooperative-group sites.
+            masks_s = self._pragma_attrs.get("COOP_GROUP_MASK_REGIDS")
+            masks = ([int(v, 0) for v in masks_s.split(",")]
+                     if masks_s else [0xffffffff] * len(values))
+            if len(masks) != len(values):
+                raise ValueError(
+                    "COOP_GROUP_MASK_REGIDS count must match "
+                    "COOP_GROUP_INSTR_OFFSETS count")
+            buf += eiattr_sval_list(0x29, masks)
+            buf += eiattr_sval_list(0x28, values)
+        # tcgen05's allocator permit is represented by one 0x80-sized VRC
+        # SM-pool allocation.  This exactly matches ptxas for CTA-group::1.
+        buf += eiattr_bval(0x4a, 0x80 if tcgen05_cta1 else 0)
         # EXIT_INSTR_OFFSETS — one or more 4-byte offsets
         if self._exit_offsets:
             exit_buf = struct.pack(f"<{'I' * len(self._exit_offsets)}",
                                    *self._exit_offsets)
             buf += struct.pack("<BBH", 4, 0x1c, len(exit_buf)) + exit_buf
+        # ptxas records a zero call/reconvergence-stack requirement for its
+        # tcgen05 allocator lowering even though its guardrail CALL/RET pairs
+        # are NOINC/NODEC.  It is semantically redundant but part of the V1
+        # per-kernel metadata contract we mirror.
+        if tcgen05_cta1:
+            buf += eiattr_sval(0x1e, 0)  # CRS_STACK_SIZE
         # NUM_BARRIERS — named barriers used by BAR.SYNC
         if self._instructions:
             num_bar = self._compute_num_barriers(self._instructions)
@@ -594,19 +717,35 @@ class CubinBuilder:
         param_base = arch.current().param_base
         buf += eiattr_hval(0x19, total_ps)  # CBANK_PARAM_SIZE
         buf += eiattr_param_cbank(sym_c0, param_base, total_ps)  # PARAM_CBANK
-        buf += eiattr_sval(0x36, 0)  # SW_WAR
+        buf += eiattr_sval(0x36, 8 if tcgen05_cta1 else 0)  # SW_WAR
         sec(f".nv.info.{mn}", SHT_CUDA_INFO, content=buf,
             flags=SHF_INFO_LINK)
 
         # 9: .nv.compat — Blackwell driver expectation; nvcc sm90 cubins carry
         # no compat section.
         if _is_blackwell:
-            compat = bytes([
-                0x02, 0x02, 0x01, 0x00,  # ISA_CLASS=1
-                0x02, 0x05, 0x05, 0x00,  # TCGEN05_MMA=5
-                0x02, 0x03, 0x00, 0x00,  # TENSORMAP_V1=0
-                0x02, 0x06, 0x01, 0x00,  # OPPORTUNISTIC_FINALIZATION=1
-            ])
+            if tcgen05_entry_v2:
+                # Exact CUDA 13.1 V2 compatibility contract:
+                # accelerator target=1, ISA class=2, tcgen05=5,
+                # ABI marker 0x101, tensormap=0, fastpath finalize={9,0}.
+                compat = bytes([
+                    0x02, 0x09, 0x01, 0x00,
+                    0x02, 0x02, 0x02, 0x00,
+                    0x02, 0x05, 0x05, 0x00,
+                    0x03, 0x07, 0x01, 0x01,
+                    0x02, 0x03, 0x00, 0x00,
+                    0x04, 0x0b, 0x08, 0x00,
+                    0x09, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                ])
+            else:
+                compat = bytes([
+                    0x02, 0x02, 0x03 if tcgen05_cta1 else 0x01, 0x00,
+                                             # ISA_CLASS=3 for V1 allocator
+                    0x02, 0x05, 0x05, 0x00,  # TCGEN05_MMA=5
+                    0x02, 0x03, 0x00, 0x00,  # TENSORMAP_V1=0
+                    0x02, 0x06, 0x01, 0x00,  # OPPORTUNISTIC_FINALIZATION=1
+                ])
             sec(".nv.compat", SHT_CUDA_COMPAT, content=compat)
 
         # 10: .nv.callgraph
@@ -625,7 +764,12 @@ class CubinBuilder:
             flags=SHF_ALLOC | SHF_EXEC, align=128)
 
         # 13: .nv.shared.reserved.0 (NOBITS)
-        sec(".nv.shared.reserved.0", SHT_NOBITS, content=b"\x00" * 0x40,
+        # tcgen05's software allocator uses the reserved words at 0x40 and
+        # 0x50; ptxas therefore grows this otherwise-0x40 section to 0x54.
+        reserved_smem_size = (0x60 if tcgen05_entry_v2 else
+                              (0x54 if tcgen05_cta1 else 0x40))
+        sec(".nv.shared.reserved.0", SHT_NOBITS,
+            content=b"\x00" * reserved_smem_size,
             flags=SHF_WRITE | SHF_ALLOC, align=1, nobits=True)
 
         # 13b: .nv.shared.<kernel> — static shared memory the kernel uses
@@ -674,8 +818,18 @@ class CubinBuilder:
                 shared_sec_idx = i
 
         symtab.entries[sym_text].st_shndx = text_sec_idx
-        symtab.entries[sym_rsm].st_shndx = shmem_sec_idx
-        symtab.entries[sym_rsma].st_shndx = shmem_sec_idx
+        if tcgen05_cta1:
+            symtab.entries[sym_rsm_sec].st_shndx = shmem_sec_idx
+            symtab.entries[sym_rsma].st_shndx = shmem_sec_idx
+            if tcgen05_entry_v2:
+                symtab.entries[sym_tcgen05_partition].st_shndx = shmem_sec_idx
+            else:
+                symtab.entries[sym_alloc_phase].st_shndx = shmem_sec_idx
+                symtab.entries[sym_atexit_pc].st_shndx = shmem_sec_idx
+                symtab.entries[sym_alloc_mask].st_shndx = shmem_sec_idx
+        else:
+            symtab.entries[sym_rsm].st_shndx = shmem_sec_idx
+            symtab.entries[sym_rsma].st_shndx = shmem_sec_idx
         symtab.entries[sym_cg].st_shndx = cg_sec_idx
         symtab.entries[sym_func].st_shndx = text_sec_idx
         symtab.entries[sym_c0].st_shndx = c0_sec_idx

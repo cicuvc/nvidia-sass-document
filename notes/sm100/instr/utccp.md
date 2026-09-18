@@ -22,9 +22,12 @@ path that feeds `UTC*MMA` operands into TMEM without going through registers.
   a 32-bit signed immediate offset).
 
 Async / decoupled: `INST_TYPE_DECOUPLED_RD_SCBD` + `src_rel_sb` active,
-`dst_wr_sb` pinned `*7`. Like STTM it releases only a **read** scoreboard (it has
-no register dest); TMEM-write completion is ordered out-of-band (the MMA that
-consumes it, or a `tcgen05.wait`/fence).
+`dst_wr_sb` pinned `*7`.  It has **warp-scalar U-path issue granularity**: one
+native instruction initiates one complete copy for the issuing warp, even when
+all active lanes execute it. Like STTM it releases only a **read** scoreboard
+(it has no register destination), but unlike STTM its operation completion is
+tracked by `tcgen05.commit`/`UTCBAR`, not `tcgen05.wait::{ld,st}`.  A dependent
+MMA is also an implicitly pipelined successor.
 
 ## Variant overview
 | Class | Kind | Opcode | cluster |
@@ -116,6 +119,193 @@ Confirmed facts:
 - Decompression: `.b8x16.b6x16_p32` → `.U6x16P32`, `.b8x16.b4x16_p64` →
   `.U4x16P64` (bits [81:80]).
 
+## Dynamic B200 validation (2026-09-17)
+
+`tests/tcgen05_cp_shift_runtime.cu` executes the full runtime chain:
+
+```
+generic shared stores
+  -> fence.proxy.async.shared::cta
+  -> tcgen05.cp.cta_group::1.128x256b
+  -> tcgen05.commit ... mbarrier::arrive::one
+  -> mbarrier.try_wait.parity 0
+  -> LDTM.x8 + tcgen05.wait::ld
+```
+
+One warp issues both `cp` and its tracking `commit`; the four warps then
+read all 128 TMEM lanes.  Shared word `i` contains `0xc0000000|i`.  With the
+no-swizzle descriptor `LBO=16 B, SBO=128 B`, lane `r` reads eight words starting
+at source word `4*r`, so the first words observed across lanes 0..127 are
+`src[0], src[4], ..., src[508]`.  This matches the descriptor's 16-byte row
+step exactly and proves that one warp-scalar `UTCCP` populates all four
+32-lane TMEM chunks.
+
+The producer-side `fence.proxy.async.shared::cta` is necessary because UTCCP's
+shared reads occur through the async proxy. The tracking commit belongs to the
+same warp's preceding tcgen05 stream. Executing one U-path UTCBAR with all lanes
+active still contributes one mbarrier arrival; only multiple UTCBAR issues (for
+example from multiple warps) require a correspondingly larger init count.
+
+### Interaction with the STTM write path
+
+A sustained B200 probe places independent UTCCP producers in warps 0--3 and a
+collective `STTM.x8` producer in warp 4.  Every UTCCP copies one 128x256-bit
+tile (4096 bytes total, 1024 bytes into each TMEM chunk).  STTM writes either
+the same columns 0--7 or disjoint columns 8--15 of chunk 0.  Both streams take
+their own completion wait: UTCCP uses per-producer `UTCBAR`+mbarrier chains;
+STTM uses `FENCE.VIEW.ASYNC.T`.
+
+The streams were duration-matched: each UTCCP producer issues 512 copies, and
+STTM issues 16384 x8 stores.  Steady-state clocks are:
+
+| workload | UTCCP cycles | STTM cycles |
+|---|---:|---:|
+| four UTCCP producers only | 131277 | -- |
+| STTM only | -- | 66580 |
+| mixed, overlapping columns | 131299 | 66605 |
+| mixed, disjoint columns | 131299 | 66605 |
+
+Thus STTM changes by only 25 cycles (0.038%), and UTCCP by 22 cycles.  The
+overlap/disjoint result is bit-for-bit identical.  This is not a weak workload:
+STTM sustains 251.99 B/cycle in chunk 0, while the four-producer UTCCP stream
+adds 63.90 B/cycle over the CTA, or 15.98 B/cycle to each of four chunks.  A
+single shared 256 B/cycle chunk write port would therefore see about 267.97
+B/cycle during overlap and should impose a readily visible delay; none occurs.
+
+The best current model is that UTCCP reaches TMEM through an ingress/write path
+separate from the ordinary 256 B/cycle STTM port (or, equivalently at this
+resolution, through independently buffered array ports able to accept both in
+parallel).  Concurrent writes to the same columns are accepted without an
+address-lock serialization; their final data value is naturally a race and was
+not used as the timing criterion.
+
+Raw SASS clarified the producer-side limit. An entire naked UTCCP burst can be
+issued directly on the warp-scalar U path; ELECT/PLOP is only the PTX
+compatibility envelope. Burst lengths 4/8/16/32 take
+641/1153/2177/4225 cycles, an exact steady slope of 128 cycles per copy, or 32
+B/cycle per producer.  Two and four independent producers raise aggregate
+throughput only to about 64 B/cycle, so the shared-memory/source side remains
+the UTCCP limiter.  This is consistent with 128 B/cycle shared-array service in
+active grant cycles plus visible inactive/arbitration cycles; it is not a TMEM
+256 B/cycle write-port limit.
+
+The raw probe also exposes an ordering hazard hidden by ordinary PTX lowering.
+One execution group can interleave 16 UTCCP and 128 STTM.x8 operations per
+batch.  At 32 batches, disjoint STTM columns (8--15) complete in 45249 cycles,
+but overlapping columns (0--7) do not complete when `FENCE.VIEW.ASYNC.T` is
+placed before the UTCCP `UTCBAR`/mbarrier completion sequence.  The overlapping
+case completes in exactly 45249 cycles when those two completion actions are
+reversed.  Smaller overlapping streams complete up through 16 batches (23393
+cycles), so this is a deep-outstanding completion-order cycle rather than an
+illegal instruction pairing.  The current interpretation is a same-execution-
+group, same-address ordering dependency: either use disjoint columns or commit
+and retire the UTCCP stream before waiting on the STTM fence.  This constraint
+is separate from the physical-port result above, which used independent warps
+and showed simultaneous backend progress.
+
+### Multicast as a TMEM-ingress amplifier
+
+The multicast modes allow source traffic and destination traffic to be varied
+independently:
+
+| PTX mode | shared bytes/op | total TMEM bytes/op | fanout |
+|---|---:|---:|---:|
+| `.128x256b` | 4096 | 4096 | 1x |
+| `.64x128b.warpx2::01_23` / `::02_13` | 1024 | 2048 | 2x |
+| `.32x128b.warpx4` | 512 | 2048 | 4x |
+
+The raw-SASS probe accepts these as `--cp-shape`.  For an equal 512-operation
+stream, the measured intervals are 33921 cycles for the base form, exactly
+10399 cycles for either warpx2 mapping, and 9376 cycles for warpx4.  The exact
+warpx2 equality confirms that `01_23` vs `02_13` changes the logical-warp
+pairing but not the aggregate service cost.
+
+For the proper equal-source-volume comparison, four producers collectively
+read 8 MiB from shared memory in every row below.  Multicast changes only the
+number of TMEM bytes generated from that source volume:
+
+| form | ops/producer | cycles | shared B/cycle | TMEM B/cycle, CTA-wide | TMEM B/cycle/chunk |
+|---|---:|---:|---:|---:|---:|
+| base | 512 | 131277 | 63.90 | 63.90 | 15.98 |
+| warpx2 | 2048 | 137367 | 61.07 | 122.13 | 30.53 |
+| warpx4 | 4096 | 274583 | 30.55 | 122.20 | 30.55 |
+
+Thus multicast successfully doubles the observable UTCCP TMEM pressure, but
+warpx4 cannot double it again: both warpx2 and warpx4 converge on about 122
+B/cycle CTA-wide, very close to a **128 B/cycle UTCCP ingress limit**, or 32
+B/cycle for each of the four TMEM chunks.  In warpx4, this destination limit
+feeds back and halves the attainable shared-source rate.  The limiter is
+therefore no longer the shared array once multicast amplification reaches it.
+
+#### Clean builtin-allocator rebaseline
+
+A later direct-SASS probe removed the legacy allocator/control envelope and
+gave every producer warp exactly one active issuing lane.  With no concurrent
+STTM, four `.warpx4` producer warps issuing 512 operations each take about
+17012 cycles; doubling to 1024 operations takes about 33388 cycles.  Since
+each operation writes 512 bytes into every chunk, the length-difference slope
+is **64.03 B/cycle/chunk** (about 256 B/cycle of logical destination traffic
+CTA-wide).  Serial SB0 reuse, no explicit instruction scoreboard, and
+three-scoreboard rotation all give the same interval.
+
+Eight producer warps do not raise this ceiling: 1024 operations per warp take
+about 66677 cycles, almost exactly twice the four-warp interval, for 62.9
+B/cycle/chunk directly observed.  Thus standalone UTCCP `.warpx4` reaches only
+about **64 B/cycle/chunk**, not the nominal 128 B/cycle/chunk suggested by its
+fanout and active-cycle source width.  Additional producer occupancy cannot
+fill the missing half.
+
+This newer control supersedes the older 30.5 B/cycle/chunk standalone peak
+estimate above.  It also means that the old mixed UTCCP+STTM result must be
+repeated with the clean harness before interpreting non-slowdown as proof of
+two physical TMEM array write ports: a shared array port with STTM priority
+could instead preserve STTM throughput while throttling UTCCP.  Probe:
+`tests/asm_construct/probe_sm100_utccp_warpx4_peak.py` (B200, 2026-09-18).
+
+That clean mixed repeat uses UTCCP producer warps 0--3 and two `STTM.x8`
+warps 4 and 8, which map to the same TMEM chunk.  Both streams contain their
+own completion closure and timer.  Standalone and mixed results are:
+
+| stream | standalone cycles | mixed cycles | payload rate in mixed |
+|---|---:|---:|---:|
+| UTCCP `.warpx4` (4x1024 ops) | 33415--33433 | 32925--32929 | 63.7 B/cycle/chunk |
+| STTM.x8 (2x4096 ops) | 33515 CTA span | 34124 CTA span | 245.8 B/cycle/chunk |
+
+Columns 0--7 (overlapping UTCCP) and columns 8--15 (disjoint) produce exactly
+the same mixed per-warp intervals.  Consequently the old result was not an
+STTM-priority artifact: UTCCP is not throttled and the two logical streams
+sustain about **309.5 B/cycle/chunk** together.
+
+This still does **not** require two complete SRAM write ports.  The narrower
+and safer model is two independently limited ingress paths (about 256
+B/cycle/chunk for STTM and 64 B/cycle/chunk for UTCCP) feeding a common banked
+array sink whose tested acceptance is at least 310 B/cycle/chunk, plausibly a
+rounder 512 B/cycle/chunk.  STTM's 256 B/cycle ceiling is therefore an ingress
+limit, not a demonstrated TMEM-array write limit.  Probe:
+`tests/asm_construct/probe_sm100_utccp_sttm_clean.py` (B200, 2026-09-18).
+
+An all-chunk repeat assigns STTM warps 4--11 as two producers per chunk.
+STTM-only reaches about 1001 B/cycle SM-wide; with the four UTCCP producers it
+retains about 981 B/cycle while UTCCP retains about 255 B/cycle SM-wide.  The
+combined logical rate is therefore about **1235 B/cycle per SM**, or 309
+B/cycle/chunk on average.  There is no additional approximately-1-KiB/cycle
+SM-wide merge bottleneck: the independently accepting paths extend at least
+through the four chunk-local array entrances.
+
+This stronger stream was repeated concurrently with a 251.99 B/cycle
+`STTM.x8` stream in chunk 0.  STTM took 67296 cycles versus 66580 alone, and
+overlapping versus disjoint columns were identical.  Three UTCCP producers on
+other schedulers retain their standalone intervals; only producer warp 0,
+which shares a scheduler with STTM warp 4, gains about 5.7k issue cycles.  That
+fixed scheduler penalty is the same for warpx2 and warpx4 and is not a backend
+bandwidth effect.  Most importantly, roughly 30.5 B/cycle/chunk of UTCCP
+traffic coexists with roughly 250 B/cycle/chunk of STTM traffic.  This is
+stronger evidence that the approximately 128 B/cycle multicast/copy ingress is
+physically separate from STTM's approximately 256 B/cycle register-store port.
+
+Probes: `tests/tcgen05_utccp_sttm_interaction.cu` and
+`tests/asm_construct/probe_tcgen05_utccp_sttm_raw.py`.
+
 ## Cross-references
 - `notes/sm100/instr/ldtm.md`, `sttm.md` — register↔TMEM moves; UTCCP is the
   shmem→TMEM staging path (no register round-trip).
@@ -129,13 +319,12 @@ Confirmed facts:
 ## Latency (sm100_latencies.txt)
 `UTCCP` = part of `OP_TMA_TC` (line 214, with the UTMA* and other UTC* ops);
 subtracted from `UDP_subset` and handled as a scoreboard-gated async op.
-Completion of the actual shmem→TMEM copy is tracked via the read scoreboard /
-downstream MMA, not a fixed latency-table entry.
+The read scoreboard protects source/descriptor lifetime; completion of the
+actual shared→TMEM copy is tracked through `UTCBAR` or an implicitly pipelined
+dependent MMA, not a fixed latency-table entry.
 
 ## Open questions
-- Exact bit-layout of the 64-bit `gdesc` matrix descriptor (`URb` pair) — shared
-  with UTC MMA; document once UTCHMMA is analyzed.
-- TMEM addressing units for `tmem[URa+off]` (same open question as LDTM/STTM).
+- Backend completion latency, issue throughput, and outstanding-copy capacity.
 - Runtime meaning of the `.ONE` alternate (encoding-identical here).
 - Whether `depth`/`cas` field names ([86]/[87]) carry any meaning beyond the
   fixed `.T`/`.S` role tags (they are pinned by the single-value `OnlyT`/`SONLY`

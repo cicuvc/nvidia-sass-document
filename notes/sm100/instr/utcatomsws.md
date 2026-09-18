@@ -126,6 +126,69 @@ done:
 This is why "what SASS does `tcgen05.alloc` map to" has no single answer — the
 atomic primitive is `UTCATOMSWS.FIND_AND_SET`, wrapped in a software retry loop.
 
+## Hand-assembled execution and cubin ABI (B200)
+
+`tests/asm_construct/tcgen05_alloc_sm100.sass` is a hand-written reproduction
+of the complete 1-CTA 32-column path: alloc, publish the TMEM address, dealloc,
+then `UVIRTCOUNT.DEALLOC.SMPOOL` relinquish.  Its native instruction bytes match
+the corresponding nvcc lowering through the allocator/guard code.  The cubin
+assembled by this repository executed successfully on a Modal B200 and returned
+the first allocation at TMEM column address `0x0`.
+
+The experiment exposed a loader-visible ABI beyond the instructions themselves:
+
+- the cubin must target **`sm_100a`**, not generic `sm_100`;
+- per-kernel info contains `AT_ENTRY_FRAGMENT_TMEM_CTA1`,
+  `RESERVED_SMEM_USED`, `TCGEN05_1CTA_USED`, and
+  `VRC_CTA_INIT_COUNT=0x80`;
+- `.nv.shared.reserved.0` is 0x54 bytes, and weak symbols name its allocator
+  fields: `allocation_phase` at 0x40, `devtool_atexit_pc` at 0x48, and
+  `allocation_mask` at 0x50;
+- `__nv_reservedSMEM_offset_0_alias` carries the special
+  `STO_RESERVED_SHARED` value, and `.nv.reservedSmem.cap` advertises 0x400;
+- nvcc also records the VOTEU/REDUX offsets as `INT_WARP_WIDE` and its
+  cooperative-group transition offsets.
+
+With identical SASS and the TCGEN05 EIATTR markers but without that reserved
+shared-memory symbol ABI, the kernel faults with CUDA error 719.  Adding those
+symbols makes the same hand-generated cubin run successfully.  This strongly
+indicates that the driver uses native ELF metadata/symbols to establish the
+TMEM allocator's entry/exit state.
+
+The `EXIT` instructions visible immediately around relinquish in this particular
+kernel are **not part of `tcgen05.relinquish_alloc_permit` semantics**.  The PTX
+operation was the last source-level operation, so ptxas tail-folded the control
+flow: after `ELECT`, non-leader lanes exit early, while the elected lane performs
+`UVIRTCOUNT.DEALLOC.SMPOOL`, updates reserved shared state, and then exits.  In a
+control experiment with a global store after relinquish, ptxas emitted no early
+exit: all lanes continued to the store, `UVIRTCOUNT.DEALLOC.SMPOOL` remained
+unconditional at warp-group scope, and only the reserved-state `STS.U8` was
+predicated by the elected-lane predicate.
+
+The retained Mercury capsule is **not required** for this process.  Removing
+every `.nv.capmerc.*` and `.nv.merc.*` section from the working nvcc cubin still
+produced a correct alloc/dealloc result.  `tools/strip_cubin_sections.py`
+performs that experiment while repairing section and symbol indices.
+
+### CBU `ATEXIT_PC` observation
+
+The entry fragment also installs a real, nonzero CBU at-exit PC.  In the
+hand-assembled B200 kernel it is directly readable with:
+
+```sass
+BMOV R10, ATEXIT_PC.LO
+BMOV R11, ATEXIT_PC.HI
+```
+
+Two samples in one launch—immediately before relinquish and after the elected
+lane had executed `UVIRTCOUNT.DEALLOC.SMPOOL` plus the reserved-state store—were
+identical.  One run returned `0x00002b6df75aa480` at both points (the absolute
+VA changes between module loads).  Thus relinquish does not clear the CBU
+`ATEXIT_PC`; it remains armed until the eventual `EXIT`, where the guard can
+inspect allocator state and decide whether cleanup/trapping is needed.  This
+hardware CBU value is distinct from merely loading the reserved shared-memory
+`devtool_atexit_pc` field.
+
 ## Latency (sm100_latencies.txt)
 `UTCATOMSWS` = `ATOMSWS_OP` (line 38), grouped into `OP_SWS` with
 `UTCLDSWS`/`UTCSTSWS` (line 216). Like the other TMEM ops it is **subtracted from

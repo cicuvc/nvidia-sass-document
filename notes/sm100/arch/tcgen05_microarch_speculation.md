@@ -23,10 +23,12 @@ From `wgmma.md` + `tensorcore_microarch_speculation.md`:
   circuit. This is a clean, cheap "4× wmma + broadcast" design.
 
 ## What the Blackwell SASS/ISA actually tells us (facts)
-1. **Single-thread issue.** `UTCHMMA` is issued by *one* thread (via `ELECT`
-   leader), `udp_pipe`, `$VQ_TC_1CTA`/`2CTA`. No warpgroup co-issue, no
-   per-subcore warp partition in the ISA. (PTX §Issue Granularity: "an issue from
-   a single thread … initiates the base operation.")
+1. **Warp-scalar U-path issue.** Native `UTCHMMA` executes once per issuing
+   warp on `udp_pipe`, `$VQ_TC_1CTA`/`2CTA`; it does not require an `ELECT`
+   leader in hand-written SASS.  ptxas uses ELECT/PLOP to implement PTX's
+   single-thread/active-thread-group contract, but that wrapper is not a native
+   hardware handshake. There is no warpgroup co-issue or per-subcore warp
+   partition in the ISA.
 2. **Accumulator + operands in explicit TMEM.** D is `tmem[URc]`; A may be
    `tmem[URa]` or a shared descriptor; B is always a shared descriptor. TMEM is a
    **128 lane × 512 column × 32-bit** 2-D array per CTA (PTX §TMEM).
@@ -44,6 +46,15 @@ From `wgmma.md` + `tensorcore_microarch_speculation.md`:
    `2x64dp128bit_lw02_lw13`, `4x32dp128bit` (see `utccp.md`): "dp" = datapath
    lane-group, and the multicast fan-out (`.warpx2`/`.warpx4`) is baked into the
    copy — data is broadcast into warp-pairs/quads as it lands in TMEM.
+7. **TMEM service is chunk-local and split into ordinary vs tensor paths.** Raw
+   B200 probes show LDTM and STTM share one bidirectional
+   ~256-B/cycle path per 32-row chunk: same-chunk read+write byte times add,
+   while different chunks overlap fully. UTCHMMA accumulator RMW runs in
+   parallel at about 512 B/cycle/chunk aggregate read+write and retains priority.
+   Only when the ordinary same-chunk duplex path is saturated does tensor
+   activity remove about two ordinary service slots per 64-cycle MMA wave
+   (~31/32 ordinary grant). Accumulate and overwrite have identical timing, so
+   the physical RMW/read suppression behavior remains unresolved.
 
 ## Inferred Blackwell hardware picture
 The Hopper design was **"4 per-subcore wmma units + broadcast B, accumulator
@@ -54,9 +65,9 @@ explicit Tensor Memory.**
 ### 1. From 4 subcore units → one SM-level engine
 - Hopper's M=64 = 4×16 is a *subcore* artifact (one warp per subcore). Blackwell's
   M is 64/128 (1CTA) and 128/256 (2CTA) and is **decoupled from the 4-subcore /
-  128-thread structure** — issue is single-thread. This strongly suggests the
-  MMA fabric is **no longer partitioned one-unit-per-subcore**; it is a shared
-  SM-level (or SM-pair-level) engine that a single thread kicks off.
+  128-thread structure** — issue is one warp-scalar U operation. This strongly
+  suggests the MMA fabric is **no longer partitioned one-unit-per-subcore**; it
+  is a shared SM-level (or SM-pair-level) engine kicked off by one warp.
 - The `.2CTA` M-doubling ⇒ the engine can be **paired across two CTAs of a
   cluster** to form a 2× taller array — consistent with a physically larger,
   poolable compute fabric rather than fixed 4×16 slices.
@@ -94,7 +105,11 @@ layer:
 sliding-window primitive that only makes sense if A is resident in a structured
 feed memory the engine indexes with a row offset — i.e. TMEM feeding a spatial
 array — rather than A arriving fresh from shmem each MMA. This is circumstantial
-support for the "A staged in the array's feed store" picture.
+support for the "A staged in the array's feed store" picture.  Dynamic testing
+of the standalone `tcgen05.shift` shows four parallel, independent 32-row
+shifts, exactly matching the four warp/subcore TMEM chunks; `.ashift` is expected
+to reuse that physical primitive, although the fused form has not yet received
+the same tagged-row readback test.
 
 ## Array geometry deduction (from external hardware clues)
 Three additional facts (external RE, not from our dumps, but internally
@@ -284,7 +299,9 @@ be **TMEM-resident** (opcode 0x19ea), and it is illegal with `.collector::a::use
   with **no re-staging** of the overlap.
 - "except the last row" = the newly-entering row is loaded separately; the rest
   are recycled. That it is TMEM-only and M=128/256-only fits a hardware
-  row-rotate of the array's A-feed store (needs the full M-plane resident).
+  row-rotate of the array's A-feed store.  The standalone primitive is measured
+  to rotate each 32-row subcore slice independently, retaining rows
+  31/63/95/127 rather than carrying data across slice boundaries.
 - Illegal with collector `use`/`fill` because `.ashift` **is** the reuse
   mechanism for A here — the two would be redundant/conflicting ways to say "A
   overlaps the previous MMA".
@@ -347,7 +364,7 @@ this with activation in B and the zero-column mask handling edges.
 |--------|-------------------------|------------------------------------------|
 | unit placement | 4 per-subcore 16×N units | 1 SM-level engine (poolable across 2 CTAs) |
 | M origin | 64 = 4 subcores × 16 rows | 64/128 (1CTA), 128/256 (2CTA); decoupled from subcores |
-| issue | warpgroup-collective (128 thr) | single thread + `ELECT` |
+| issue | warpgroup-collective (128 thr) | warp-scalar U-path operation |
 | datapath (guess) | widened dot-product / 4-way-FMA tree | **systolic array**, PE = 4-way-FMA (partial-sums → TMEM) |
 | per-subcore array | 16×N dot-product slice | **32(M)×16(N) = 512 PE systolic plane** |
 | B bandwidth trick | broadcast n8k16 to 4 subcores | `UTCCP` multicast into TMEM + collector reuse |
@@ -356,7 +373,7 @@ this with activation in B and the zero-column mask handling edges.
 | conv support | (none specific) | `.ashift` sliding window on TMEM-resident A |
 
 ## Confidence and what would confirm/refute
-- **Well-supported (from SASS):** single-thread issue, explicit TMEM operands/
+- **Well-supported (from SASS):** warp-scalar native issue, explicit TMEM operands/
   accumulator, M-doubling under `.2CTA`, explicit collectors, `UTCCP` multicast,
   `.ashift` only with A-in-TMEM. These are ISA facts, not guesses.
 - **Now strongly supported (geometry + ISA cross-check):** the **32×16 per-subcore

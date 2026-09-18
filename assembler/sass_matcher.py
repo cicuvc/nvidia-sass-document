@@ -43,7 +43,8 @@ SCHED_TYPES = {"REQ", "BITSET", "WR", "RD", "USCHED_INFO", "BATCH_T", "PM_PRED",
 SCHED_SLOT_NAMES = {"src_rel_sb", "dst_wr_sb", "req_bit_set", "req", "wr", "rd",
                     "pm_pred", "batch_t", "usched_info",
                     "reuse_src_a", "reuse_src_b", "reuse_src_c", "reuse_src_d"}
-COMPOSITE_TYPES = {"C", "CX", "DESC", "GMMA", "TMA", "RF"}
+COMPOSITE_TYPES = {"C", "CX", "DESC", "GMMA", "TMA", "UMMAA", "UMMAB",
+                   "UMMA", "RF", "TMEMB", "TMEMC", "TMEME"}
 
 
 class MatchError(Exception):
@@ -178,14 +179,24 @@ class SassMatcher:
                     f"a uniform predicate (@UPx); use @{_pname(False)}")
             return None
 
-        # Figure out which modifier slots were consumed by operand matching
-        # (width pins ONLY64/U32ONLY excluded: they bind from the operand
-        # width, but the written `.64` modifier must still be consumed by
-        # modifier matching below)
+        # Figure out which modifier slots were actually consumed by operand
+        # matching.  A FORMAT may place a modifier after an operand (for
+        # example UTCHMMA's ``gdesc[A] /REUSE_A /KEEP_A``), but our dialect
+        # deliberately keeps all written modifiers in the mnemonic's dotted
+        # modifier list.  Such a slot must therefore remain available to
+        # _match_modifiers unless operand matching really bound it.  Marking
+        # every modifier appearing in an operand group as consumed made
+        # A_REUSE/A_KEEP impossible to spell and silently forced their
+        # defaults.
+        #
+        # Width pins ONLY64/U32ONLY remain excluded: they are inferred from
+        # operand width, while an explicitly written `.64` is still consumed
+        # by modifier matching below.
         consumed_mods = set()
         for grp in op_groups:
             for s in grp:
-                if s["modifier"] and s["type"] not in ("ONLY64", "U32ONLY"):
+                if (s["modifier"] and s["name"] in slot_map
+                        and s["type"] not in ("ONLY64", "U32ONLY")):
                     consumed_mods.add(s["name"])
         # Operand byte-select suffix (.B0-.B3 on a UREG, UR2UP/P2UR) binds
         # the B3B0-typed modifier slot; mark it consumed so modifier
@@ -658,11 +669,32 @@ class SassMatcher:
 
         if first_type in ("C", "CX") and op.kind == OperandKind.CONST_BANK:
             return self._match_const_bank(group, op, slot_map)
-        if first_type in ("DESC", "GMMA", "TMA") and op.kind in (
+        if first_type in ("DESC", "GMMA", "TMA", "UMMAA", "UMMAB", "UMMA") and op.kind in (
                 OperandKind.MEM_DESC, OperandKind.UREG):
             return self._match_mem_desc(group, op, slot_map)
         if first_type == "RF" and op.kind == OperandKind.INDEXED_RF:
             return self._match_indexed_rf(group, op, slot_map)
+        if first_type in ("TMEMB", "TMEMC", "TMEME") and \
+                op.kind == OperandKind.MEM_ADDR:
+            # Some TMEM composites (LDTM/STTM) include an immediate offset
+            # slot, while UTCHMMA's D/E operands encode only a base UREG.
+            # Never silently accept and discard a textual +imm: that can make
+            # supposedly disjoint accumulator tiles alias in the machine code.
+            has_offset_slot = any(
+                s["type"] in ("SImm", "UImm") for s in group)
+            if op.offset and not has_offset_slot:
+                return False
+            for s in group:
+                if s["type"] in ("TMEMB", "TMEMC", "TMEME"):
+                    slot_map[s["name"]] = 1
+                elif s["type"] == "UniformRegister":
+                    slot_map[s["name"]] = op.value
+                elif s["type"] in ("SImm", "UImm"):
+                    slot_map[s["name"]] = op.offset
+                elif s["modifier"] and s.get("default") is not None:
+                    slot_map[s["name"]] = self._parse_default(
+                        s["default"], s["type"])
+            return True
         if op.kind == OperandKind.MEM_ADDR:
             # a plain [Ra+off] operand must not match a desc[...]-composite
             # group (e.g. STL's memdesc variant pins memdesc=1 even though
@@ -794,7 +826,7 @@ class SassMatcher:
                 return False
         for s in group:
             st = s["type"]
-            if st in ("DESC", "GMMA", "TMA"):
+            if st in ("DESC", "GMMA", "TMA", "UMMAA", "UMMAB", "UMMA"):
                 slot_map[s["name"]] = 1
             elif st == "UniformRegister":
                 slot_map[s["name"]] = op.value  # UR from desc[UR] / gdesc[UR]

@@ -22,6 +22,8 @@ TOKENS = [
     ("PARAM_DIRECTIVE", r"#param\b"),
     ("SPEC_CONST_DIRECTIVE", r"#spec_const\b"),
     ("PRAGMA_DIRECTIVE", r"#pragma\b"),
+    ("COOP_GROUP_DIRECTIVE", r"#coop_group\b"),
+    ("BUILTIN_DIRECTIVE", r"#![A-Za-z_][A-Za-z0-9_]*"),
     ("COMMENT", r"#[^\n]*|//[^\n]*"),
     ("SEMICOLON", r";"),
     ("COMMA", r","),
@@ -132,6 +134,10 @@ class Parser:
                 continue
             if t.type == "DEF_LABEL_DIRECTIVE":
                 insts.append(self._parse_def_label())
+            elif t.type == "COOP_GROUP_DIRECTIVE":
+                insts.append(self._parse_coop_group())
+            elif t.type == "BUILTIN_DIRECTIVE":
+                insts.append(self._parse_builtin())
             elif t.type == "IDENT" and self._is_label():
                 insts.append(self._parse_label_only())
             else:
@@ -147,6 +153,66 @@ class Parser:
         name_t = self.expect("IDENT")
         self.expect("RPAREN")
         return ParsedInstruction(mnemonic="_label_", label=name_t.text, operands=[])
+
+    def _parse_coop_group(self) -> ParsedInstruction:
+        """Mark the next real instruction as an EIATTR cooperative-group site.
+
+        The directive occupies no instruction bytes.  Its optional argument is
+        the corresponding COOP_GROUP_MASK_REGIDS value; ptxas commonly uses
+        0xffffffff (no explicit mask register), which is the default.
+        """
+        tok = self.pop()  # #coop_group
+        mask = 0xffffffff
+        if self.peek() and self.peek().type == "LPAREN":
+            self.pop()
+            mask = int(self.expect("NUMBER", "HEX").text, 0)
+            self.expect("RPAREN")
+        if not 0 <= mask <= 0xffffffff:
+            raise SyntaxError("#coop_group mask must fit in u32")
+        return ParsedInstruction(mnemonic="_coop_group_", label=str(mask),
+                                 operands=[], line=tok.line)
+
+    def _parse_builtin(self) -> ParsedInstruction:
+        """Parse a built-in assembler directive into a zero-width IR node.
+
+        Built-ins are deliberately closed: unlike a preprocessor macro there
+        is no user-defined body, recursion, or textual substitution.
+        """
+        tok = self.pop()
+        name = tok.text[2:]
+        self.expect("LPAREN")
+        if name in ("tmem_alloc_1cta", "tmem_dealloc_1cta"):
+            dst = self.expect("UREG")
+            self.expect("COMMA")
+            columns = self.expect("NUMBER", "HEX")
+            self.expect("RPAREN")
+            return ParsedInstruction(
+                mnemonic=f"_builtin_{name}_",
+                operands=[Operand.ureg(dst.text),
+                          Operand.imm_u(int(columns.text, 0))],
+                line=tok.line)
+        if name in ("mbarrier_init", "mbarrier_wait"):
+            addr = self.expect("UREG")
+            self.expect("COMMA")
+            value = self.expect("NUMBER", "HEX")
+            self.expect("RPAREN")
+            return ParsedInstruction(
+                mnemonic=f"_builtin_{name}_",
+                operands=[Operand.ureg(addr.text),
+                          Operand.imm_u(int(value.text, 0))],
+                line=tok.line)
+        if name == "mbarrier_arrive":
+            addr = self.expect("UREG")
+            self.expect("RPAREN")
+            return ParsedInstruction(
+                mnemonic="_builtin_mbarrier_arrive_",
+                operands=[Operand.ureg(addr.text)], line=tok.line)
+        if name == "tmem_relinquish_alloc_permit_1cta":
+            self.expect("RPAREN")
+            return ParsedInstruction(
+                mnemonic="_builtin_tmem_relinquish_alloc_permit_1cta_",
+                operands=[], line=tok.line)
+        raise SyntaxError(f"unknown assembler builtin #!{name}")
 
     def _is_label(self) -> bool:
         # label is IDENT followed by ':'
@@ -377,6 +443,38 @@ class Parser:
         # memory descriptor: desc[URx.64] / gdesc[URx] (GMMA/HGMMA/QMMA)
         if t.type == "IDENT" and t.text in ("desc", "gdesc"):
             return self._parse_mem_desc(gdesc=(t.text == "gdesc"))
+
+        # Tensor-memory address: tmem[URx+imm].  Unlike an ordinary memory
+        # operand the base is always a uniform register; the matcher binds
+        # this to the TMEMB/TMEMC composite in LDTM/STTM.
+        if t.type == "IDENT" and t.text == "tmem":
+            self.pop()
+            self.expect("LBRACKET")
+            base = self.expect("UREG")
+            off = 0
+            if self.peek() and self.peek().type in ("PLUS", "MINUS"):
+                sign = 1 if self.pop().type == "PLUS" else -1
+                imm = self.expect("HEX", "NUMBER")
+                off = sign * int(imm.text, 0)
+            self.expect("RBRACKET")
+            return Operand.mem_addr(Operand.ureg(base.text), off)
+
+        # Tensor instruction descriptor wrapper: idesc[URx].  The lifter may
+        # print an explicit two-UREG group because the fused tmemE/idesc source
+        # is described as 64-bit; only the base register is encoded here.
+        if t.type == "IDENT" and t.text == "idesc":
+            self.pop()
+            self.expect("LBRACKET")
+            if self.peek() and self.peek().type == "LBRACE":
+                self.pop()
+                ur = self.expect("UREG")
+                self.expect("COMMA")
+                self.expect("UREG")
+                self.expect("RBRACE")
+            else:
+                ur = self.expect("UREG")
+            self.expect("RBRACKET")
+            return Operand.ureg(ur.text, width=32)
 
         # const bank: c[bank][offset]
         if t.type == "IDENT" and t.text == "c":
@@ -762,6 +860,12 @@ class Parser:
                 continue
             if t.type == "PRAGMA_DIRECTIVE":
                 self._parse_pragma(decl)
+                continue
+            if t.type == "COOP_GROUP_DIRECTIVE":
+                decl.instructions.append(self._parse_coop_group())
+                continue
+            if t.type == "BUILTIN_DIRECTIVE":
+                decl.instructions.append(self._parse_builtin())
                 continue
             if t.type == "DEF_LABEL_DIRECTIVE":
                 decl.instructions.append(self._parse_def_label())

@@ -30,7 +30,7 @@ When two classes share the same `opType`+opcode (e.g. UTCHMMA vs UTCQMMA on
 PTX CLASS was selected — the element types live in `idesc`, not the opcode.
 
 ## Semantics (UTCOMMA, `opType=1`)
-Same `D=A*B+D` in TMEM, single-thread issued, asynchronous. Block-scale: the
+Same `D=A*B+D` in TMEM, warp-scalar U-path issued, asynchronous. Block-scale: the
 scale matrices `[scale-A-tmem]` / `[scale-B-tmem]` are addressed via the `TMEMI`
 operand (`URi`[55:48]), with scale-factor data IDs in `idesc` selecting between
 A-scale and B-scale blocks. The `SCALE_VECTOR_SZ` modifier carries the

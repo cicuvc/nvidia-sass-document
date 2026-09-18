@@ -47,6 +47,42 @@ processor-specific). With `-lineinfo`, more clones appear:
 The retained capsule enables **opportunistic (re)finalization** to a different SM by a
 downstream tool, without re-running the front end.
 
+## B200 runtime ablation: retained capmerc is not consulted on the native path
+
+The ptxas-generated `mma_n128_reuse_accumulate` kernel provides a strong
+tcgen05 case: its retained `.nv.capmerc.text.*` packet stream contains the
+UTCHMMA sites, while native SASS issues 512 accumulating UTCHMMAs followed by
+one UTCBAR.  Three cubins were run in separate B200 contexts:
+
+| cubin | capsule change | three measured intervals |
+|---|---|---|
+| control | none | 36923, 36923, 36923 cycles |
+| no-capmerc | remove every `.nv.capmerc.*` section/header link | 36923, 36923, 36923 |
+| zeroed no-capmerc | additionally zero every removed capmerc payload byte | 36923, 36923, 36923 |
+
+All variants loaded, completed, and produced identical timing.  Removing the
+sections also clears the native `.text.<kernel>` `sh_info` link to the matching
+capmerc section; the stronger variant proves the unchanged result is not due
+to stale packet bytes remaining at their old file offsets.
+
+Therefore, for an exact-target finalized sm_100 cubin on this B200 driver, the
+retained capmerc stream does **not** supply runtime per-UTCHMMA scheduling
+information.  A kernel-name-dependent performance change that correlates with
+capmerc growth is more likely established while ptxas/FNLZR creates the native
+SASS (control words, layout, native EIATTR, resources), or by a separate
+name-based heuristic.  This experiment does not exclude use of capmerc during
+opportunistic re-finalization for a different target.
+
+Reproducer:
+
+```bash
+python3 tools/strip_cubin_sections.py --zero-payload in.cubin out.cubin \
+  '.nv.capmerc.*'
+```
+
+The option removes section references and physically clears the corresponding
+file payloads.
+
 ## Mercury metadata in `.nv.info`
 - `EIATTR_MERCURY_ISA_VERSION` = **1.1** (`EIFMT_HVAL`).
 - `.nv.compat`: `EICOMPAT_ATTR_MERCURY_ISA_MAJOR_MINOR_VERSION` = **1.1**.

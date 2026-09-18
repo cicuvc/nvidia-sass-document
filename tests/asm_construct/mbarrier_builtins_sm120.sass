@@ -1,0 +1,16 @@
+# Closed-set mbarrier builtin smoke test.  A single thread initializes a
+# count-1 barrier, arrives, and waits explicitly for phase 0.
+#fn mbarrier_builtins(out<8>) {
+    #pragma SHARED(0x408)
+    UMOV UR6, 0x400;[7:7:{}:1:0]
+    #!mbarrier_init(UR6, 1)
+    #!mbarrier_arrive(UR6)
+    #!mbarrier_wait(UR6, 0)
+    #!mbarrier_arrive(UR6)
+    #!mbarrier_wait(UR6, 1)
+    LDCU.64 {UR4,UR5}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{}:1:0]
+    LDC.64 {R2,R3}, #param(out);[1:7:{}:2:0]
+    MOV32I R0, 1;[7:7:{}:5:1]
+    STG.E desc[{UR4,UR5}][{R2,R3}], R0;[7:0:{0,1}:1:0]
+    EXIT;[7:7:{}:5:0]
+}
