@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Observe the warp arbitration quantum of the B200 UTCHMMA backend.
 
-Warp 0 and warp 1 each issue an equal stream of M128N8K16 accumulate
-UTCHMMAs to private TMEM destinations.  Warp 2 repeatedly samples one column
-from each destination.  With BF16-one inputs every retirement increments the
-visible FP32 value by 16, exposing the cross-warp instruction order without
-putting a UTCBAR between individual operations.
+Two configurable producer warps each issue an equal stream of M128N8K16
+accumulate UTCHMMAs to private TMEM destinations.  A third warp repeatedly
+samples one column from each destination.  With BF16-one inputs every
+retirement increments the visible FP32 value by 16, exposing the cross-warp
+instruction order without putting a UTCBAR between individual operations.
 """
 
 from __future__ import annotations
@@ -21,10 +21,22 @@ from assembler import assemble_kernel  # noqa: E402
 IDESC_N8 = ((1 << 4) | (1 << 7) | (1 << 10) | (1 << 17) | (8 << 24))
 
 
-def source(name: str, count: int, delays: tuple[int, int]) -> str:
+def source(name: str, count: int, delays: tuple[int, int],
+           producer_warps: tuple[int, int] = (0, 1),
+           observer_warp: int = 2,
+           trace_issue_times: bool = False) -> str:
     if count < 1 or len(delays) != 2 or min(delays) < 0:
         raise ValueError("count must be positive and delays must be two non-negative counts")
+    if len(producer_warps) != 2 or len(set(producer_warps)) != 2:
+        raise ValueError("producer_warps must contain two distinct warp ids")
+    if min(producer_warps) < 0 or observer_warp < 0:
+        raise ValueError("warp ids must be non-negative")
+    if observer_warp in producer_warps:
+        raise ValueError("observer warp must differ from both producers")
+    if trace_issue_times and count > 8:
+        raise ValueError("issue timestamp tracing supports at most 8 operations")
     rounds = max(128, count * 24)
+    sample_bytes = rounds * 8
     lines = [
         f"#fn {name}(out<8>) {{",
         "    #pragma MAXREG_COUNT(96)",
@@ -71,7 +83,8 @@ def source(name: str, count: int, delays: tuple[int, int]) -> str:
     for reg in range(32, 48):
         lines.append(f"    MOV R{reg}, RZ;[7:7:{{}}:5:1]")
     lines += [
-        "    ISETP.EQ.AND P2, PT, R5, 0x2, PT;[7:7:{}:13:1]",
+        f"    ISETP.EQ.AND P2, PT, R5, {observer_warp:#x}, PT;"
+        "[7:7:{}:13:1]",
         "    @!P2 BRA #label(zero_done);[7:7:{}:5:0]",
         "    STTM.x16 tmem[UR10], {R32,R33,R34,R35,R36,R37,R38,R39,R40,R41,R42,R43,R44,R45,R46,R47};[7:7:{}:1:0]",
         "    STTM.x16 tmem[UR10+0x80], {R32,R33,R34,R35,R36,R37,R38,R39,R40,R41,R42,R43,R44,R45,R46,R47};[7:7:{}:1:0]",
@@ -79,11 +92,14 @@ def source(name: str, count: int, delays: tuple[int, int]) -> str:
         "    #def_label(zero_done)",
         "    WARPSYNC.ALL;[7:7:{}:5:0]",
         "    BAR.SYNC 0;[7:7:{}:5:1]",
-        "    ISETP.EQ.AND P1, PT, R5, RZ, PT;[7:7:{}:13:1]",
+        f"    ISETP.EQ.AND P1, PT, R5, {producer_warps[0]:#x}, PT;"
+        "[7:7:{}:13:1]",
         "    @P1 BRA #label(producer0);[7:7:{}:5:0]",
-        "    ISETP.EQ.AND P2, PT, R5, 0x1, PT;[7:7:{}:13:1]",
+        f"    ISETP.EQ.AND P2, PT, R5, {producer_warps[1]:#x}, PT;"
+        "[7:7:{}:13:1]",
         "    @P2 BRA #label(producer1);[7:7:{}:5:0]",
-        "    ISETP.EQ.AND P2, PT, R5, 0x2, PT;[7:7:{}:13:1]",
+        f"    ISETP.EQ.AND P2, PT, R5, {observer_warp:#x}, PT;"
+        "[7:7:{}:13:1]",
         "    @P2 BRA #label(observer);[7:7:{}:5:0]",
         "    BRA #label(work_done);[7:7:{}:5:0]",
     ]
@@ -91,8 +107,14 @@ def source(name: str, count: int, delays: tuple[int, int]) -> str:
         dreg = 10 + producer
         lines.append(f"    #def_label(producer{producer})")
         lines += ["    NOP;[7:7:{}:8:1]"] * delays[producer]
-        lines.append("    CS2R {R16,R17}, SR_CLOCKLO;[7:7:{}:5:0]")
-        for _ in range(count):
+        if not trace_issue_times:
+            lines.append("    CS2R {R16,R17}, SR_CLOCKLO;[7:7:{}:5:0]")
+        for index in range(count):
+            if trace_issue_times:
+                reg = 32 + index * 2
+                lines.append(
+                    f"    CS2R {{R{reg},R{reg + 1}}}, SR_CLOCKLO;"
+                    "[7:7:{}:5:0]")
             lines.append(
                 "    UTCHMMA.1CTA gdesc[{UR20,UR21}], gdesc[{UR22,UR23}], "
                 f"tmem[UR{dreg}], tmem[UR14], idesc[{{UR15,UR16}}], "
@@ -101,8 +123,17 @@ def source(name: str, count: int, delays: tuple[int, int]) -> str:
             "    UMOV UR18, 0x600;[7:7:{}:5:1]",
             "    UTCBAR.1CTA [UR18], URZ;[7:0:{}:12:1]",
             "    #!mbarrier_wait(UR18, 0)",
-            "    BRA #label(work_done);[7:7:{}:5:0]",
         ]
+        if trace_issue_times:
+            lines.append(
+                "    ISETP.EQ.AND P0, PT, R6, RZ, PT;[7:7:{}:13:1]")
+            for index in range(count):
+                reg = 32 + index * 2
+                offset = sample_bytes + (producer * count + index) * 8
+                lines.append(
+                    f"    @P0 STG.E.64.STRONG.GPU [{{R2,R3}}+{offset:#x}], "
+                    f"{{R{reg},R{reg + 1}}};[7:7:{{}}:8:0]")
+        lines.append("    BRA #label(work_done);[7:7:{}:5:0]")
     lines += [
         "    #def_label(observer)",
         "    ISETP.EQ.AND P0, PT, R6, RZ, PT;[7:7:{}:13:1]",
@@ -135,12 +166,20 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--count", type=int, default=8)
     ap.add_argument("--delays", default="0,0")
+    ap.add_argument("--producer-warps", default="0,1")
+    ap.add_argument("--observer-warp", type=int, default=2)
+    ap.add_argument("--trace-issue-times", action="store_true")
     ap.add_argument("--output", type=Path, required=True)
     ap.add_argument("--source-output", type=Path)
     ns = ap.parse_args()
     delays = tuple(int(x, 0) for x in ns.delays.split(","))
-    name = f"utchmma_quantum_c{ns.count}_d{delays[0]}_{delays[1]}"
-    src = source(name, ns.count, delays)
+    producer_warps = tuple(int(x, 0) for x in ns.producer_warps.split(","))
+    name = (f"utchmma_quantum_c{ns.count}_d{delays[0]}_{delays[1]}"
+            f"_w{producer_warps[0]}_{producer_warps[1]}"
+            f"_o{ns.observer_warp}"
+            f"_t{int(ns.trace_issue_times)}")
+    src = source(name, ns.count, delays, producer_warps, ns.observer_warp,
+                 ns.trace_issue_times)
     result = assemble_kernel(src, arch="sm100a", check_deps=False)
     ns.output.write_bytes(result.code)
     if ns.source_output:

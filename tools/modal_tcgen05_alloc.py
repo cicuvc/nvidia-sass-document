@@ -453,7 +453,7 @@ def run_remote(cubin_data: bytes, function_name: str, block_size: int = 32,
                 f"<{min(len(raw) // 4, max(256, output_words))}I",
                 bytes(raw), 0)
             requested_word_samples.append([
-                hex(x) for x in launch_words[:min(256, output_words)]
+                hex(x) for x in launch_words[:output_words]
             ])
             for warp in range(min(block_size // 32,
                                   len(launch_words) // 4)):
@@ -608,14 +608,19 @@ def main(hand_cubin: str = "", hand_source: str = "",
         result.pop("handler_hex", None)
         if compact_results:
             compact_samples = {}
+            compact_tail_samples = {}
             first_418_by_mod3 = {}
             transitions_by_mod2 = {}
             for name, samples in result["multi_requested_word_samples"].items():
                 compact_samples[name] = [sample[:min(output_words, 32)]
                                          for sample in samples]
+                compact_tail_samples[name] = [sample[-min(output_words, 64):]
+                                              for sample in samples]
                 launch_summaries = []
                 for sample in samples:
-                    words = [int(value, 16) for value in sample[:output_words]]
+                    # The first 256 words are the observer stream in the
+                    # current TMEM probes; later words may carry timestamps.
+                    words = [int(value, 16) for value in sample[:min(output_words, 256)]]
                     launch_summaries.append([
                         next((index // 3 for index in range(residue, len(words), 3)
                               if words[index] == 0x41800000), None)
@@ -624,7 +629,7 @@ def main(hand_cubin: str = "", hand_source: str = "",
                 first_418_by_mod3[name] = launch_summaries
                 transition_launches = []
                 for sample in samples:
-                    words = [int(value, 16) for value in sample[:output_words]]
+                    words = [int(value, 16) for value in sample[:min(output_words, 256)]]
                     per_residue = []
                     for residue in range(2):
                         transitions = []
@@ -639,6 +644,7 @@ def main(hand_cubin: str = "", hand_source: str = "",
                 transitions_by_mod2[name] = transition_launches
             print({
                 "multi_requested_word_samples": compact_samples,
+                "multi_requested_word_tails": compact_tail_samples,
                 "first_418_round_by_mod3": first_418_by_mod3,
                 "transitions_by_mod2": transitions_by_mod2,
                 "multi_timer_deltas_u64": result["multi_timer_deltas_u64"],

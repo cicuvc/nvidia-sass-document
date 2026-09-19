@@ -488,7 +488,8 @@ warp 0 的 N256 先执行。因此第一次选择不是“固定等待低 warp i
 ready 的候选中选择较早到达的队头。对当前两 warp 构造，行为等价于
 oldest-ready。
 
-但整个后端并不是一个把所有已发 UTCHMMA 按时间排到底的全局 FIFO。新的
+仅凭退休交替，最初看起来整个后端不像一个把所有已发 UTCHMMA 按时间排到底的
+全局 FIFO。新的
 `probe_sm100_utchmma_warp_quantum.py` 让 warp 0/1 各连续裸发 8 条 M128N8
 accumulate，分别写两个私有 D；observer 同时读取两个 D。每条退休使可见值增加
 16，因此 `16,32,...,128` 的转换顺序直接给出指令调度顺序，不需要在每条 MMA
@@ -507,12 +508,35 @@ accumulate，分别写两个私有 D；observer 同时读取两个 D。每条退
 `A1,B3,A2,B4,...` 的逐条交替。起始领先量随两个 warp 真正进入 ready 集合的
 时刻变化，稳定态 quantum 则是 **一条完整 UTCHMMA**。
 
-当前最小调度模型因此是：每个 warp/入口保有自己的有序 stream；backend 空闲
-且只有一个 stream ready 时立即取其队头，多个 stream 同时非空后在**指令边界**
-做近似 round-robin/公平仲裁。它不是全局 FIFO，也没有在一条 N256 的内部 wave
-之间抢占。这里尚未区分仲裁实体是每 warp、每 subcore admission queue，还是
-SM-wide tensor dispatcher 上代表各 subcore 的队头；需要把两个 producer 固定
-到同一 subcore 并加入第三、第四个 producer 才能继续定位层级。
+随后把 producer 改为可选 warp id，并在每条 UTCHMMA **之前**保存 CS2R：
+
+- 跨 subcore 的 warp 0/1 中，领先 stream 的 8 个时间戳通常全部保持
+  **17-cycle** 间隔；另一个 stream 也可连续保持 6--8 条，接近尾部才出现
+  39/51/78-cycle backpressure。
+- 同 subcore 的 warp 0/4 中，两条 stream 很快共同出现 24/39/48/78/117/156-cycle
+  间隔膨胀；即使某个 warp 在源码控制流上更早到达后续 UTCHMMA，也不能像跨
+  subcore 那样连续通过入口。
+- 把同 subcore 对换成 warp 1/5、令 warp 0 只负责 allocator 后，仍得到
+  20/39/53/78/117-cycle 的同类膨胀，排除了 warp 0 身份或 allocator 工作造成
+  的特殊相位。
+
+这里必须区分“UTCHMMA 前的 CS2R 已执行”和“UTCHMMA 已 admission”。指令本身
+可以停在入口，因此第 `i+1` 个 CS2R 才是第 `i` 条 UTCHMMA 已成功发射的上界。
+按这个上界重建后，同 subcore 与跨 subcore 的退休顺序都和实际 admission 的
+合并顺序一致；此前看似 backend 对同一 warp 的旧指令进行 round-robin 重排，
+实际是这些指令尚未进入 TC queue，而是在各自 warp scheduler 状态中等待入口
+credit。
+
+因此当前最小模型修正为：**TC admission 容量按 subcore 共享，而不是每 warp
+各有一条可独立灌满的 queue**。同一 subcore 的多个 warp 在上游 scheduler 中
+各自保留阻塞指令，竞争该 subcore 的 queue/credit；不同 subcore 可以并行地以
+最低 17-cycle 间隔填入各自队列。更下游存在 SM-wide tensor dispatcher，从
+四个 subcore 队头取指；一旦选中一条 UTCHMMA，它在完整指令边界之前不可抢占。
+
+实验能定位的是容量与 backpressure 的归属。物理实现仍可能是一个真正的
+per-subcore FIFO，也可能是带 warp tag/小型 per-warp 分区、但共用一组 per-subcore
+credits 的结构；二者对当前实验等价。可以明确排除的是“每 warp 拥有彼此独立、
+可同时填满的 TC admission queue”。
 
 探针 bring-up 还暴露出一个独立协议点：`UTCBAR -> mbarrier_wait -> CTA barrier ->`
 下一段 UTCHMMA 的构造会不完成；而中途 UTCBAR 不等待、用正确 init count 在尾部
