@@ -81,7 +81,7 @@ when you need what `req` can't express: counted/partial drains (`≤N`, async
 multi-buffering), draining a *set* of scoreboards with no natural consumer, or a
 dynamic (uniform-register) threshold.
 
-**10. Checker implication (AUTO_DEP_ANALYSIS §5a.4).** For the assembler's
+**10. Checker implication (assembler depcheck, `assembler/sass_depcheck.py`).** For the assembler's
 dependency checker, `req` / `DEPBAR.LE SBn, 0x0` are *exact kills* of all
 outstanding claims on SBn, but `DEPBAR.LE SBn, m (m>0)` grants **no per-claim
 coverage** — the ≤m surviving claims have unknown identity (completion is not

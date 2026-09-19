@@ -1,160 +1,142 @@
 # sass-dec
 
-Reverse-engineering the **NVIDIA Hopper (sm_90)** and **Blackwell (sm_100)** SASS
-instruction sets from `nvdisasm`-dumped ISA description files. The goal is to
-reconstruct how SASS instructions decode — encoding bit layout, functional-unit
-grouping, scoreboard/latency behavior — and to write per-instruction reference
-docs for every compute instruction, including microarchitecture-level analysis of
-the pipeline, memory model, tensor cores, and control flow.
+Reverse-engineering the NVIDIA **SASS** instruction set and GPU microarchitecture
+across nine architectures — Volta (**sm_70**), Turing (**sm_75**), Ampere
+(**sm_80**), Ada (**sm_89**), Hopper (**sm_90**), Blackwell
+(**sm_100 / sm_103 / sm_120**), and Rubin (**sm_107**) — starting from
+`nvdisasm`-dumped ISA description files.
 
-There is no build system: this is a *reading and interpreting* project on top of
-raw ISA dumps, supported by Python extractors, per-instruction decoders, CUDA
-test kernels, and research notes spanning instruction semantics and
-microarchitectural speculation.
+The project has four layers:
+
+1. **Decode** the ISA: parse the dumps into queryable DBs, reconstruct encoding
+   bit layouts, functional-unit grouping, and scoreboard/latency behavior, and
+   write per-instruction reference docs for every compute instruction.
+2. **Measure** the microarchitecture: hand-built SASS kernels + `CS2R` clock
+   windows (and NCU where available) to pin down pipeline structure, register-file
+   organization, scheduler/yield behavior, and memory topology per chip.
+3. **Build** on top of it: a full SASS → cubin assembler with a CTypes GPU
+   runner (`assembler/`), and a runtime SASS debugger (`sassdbg/`) with
+   breakpoints, single-stepping, reverse execution, and per-warp private code.
+4. **Simulate**: `semu/`, a C++20 behavioral simulator that executes sm_120
+   cubins on the CPU.
+5. **Drive the GPU directly**: `launchprobe/` reverse-engineers the CUDA kernel
+   launch protocol (driver/libcuda ↔ GPU command traffic) to the point of
+   launching a cubin from a fully userspace-constructed command segment.
+
+There is no build system for the research itself: this is a *reading,
+interpreting, and measuring* project on top of raw ISA dumps.
 
 ## Layout
 
 | Path | What it is |
 | --- | --- |
-| `sm_90_instructions.txt` | Hopper full instruction/encoding spec (~159k lines). Grep-first; never read whole. |
-| `sm_90_latencies.txt` | Hopper pipe grouping + scoreboard/latency tables (~441 lines). |
-| `sm100_instructions.txt` | Blackwell full instruction/encoding spec. |
-| `sm100_latencies.txt` | Blackwell pipe grouping + scoreboard/latency tables. |
-| `sm_103_instructions.txt`, `sm_103_latencies.txt` | Blackwell Ultra / B300 instruction and latency dumps. |
-| `sm_70_instructions.txt`, `sm_75_instructions.txt`, `sm_80_instructions.txt` | Older-arch dumps for cross-arch comparison and Volta assembly probes. |
-| `tools/` | stdlib-only extractors + query CLIs + per-instruction decoders (sm_90 and sm100) + bit-accurate MMA model (`hmma_model.py`). |
-| `assembler/` | Hand-written SASS → cubin toolchain (sm_120) + CTypes GPU runner + scoreboard dependency checker. See `ASSEMBLER_MANUAL.md`. |
-| `ASSEMBLER_MANUAL.md` | Full assembler syntax, features, and usage notes. |
-| `notes/sm90/instr/` | Per-instruction reference docs for sm_90 (168 instructions). |
-| `notes/sm90/arch/` | Cross-cutting microarchitecture notes for sm_90 (26 topics). |
-| `notes/sm100/instr/` | Per-instruction reference docs for sm100 (20 instructions). |
-| `notes/sm100/arch/` | Cross-cutting microarchitecture notes for sm100 (4 topics). |
-| `notes/sm100/OVERVIEW.md` | Summary of sm_90 → sm100 encoding/capability changes. |
-| `tests/` | CUDA (`.cu`) kernels that force specific SASS encodings and probe microarch behavior (177 files), plus `tests/asm_construct/` assembler round-trip + GPU tests (87 `.py` files). |
-| `TODO.md` | Master checklist of sm_90 instructions to document (197/207 done). |
-| `ref_memo.txt` | Curated sm_70..sm_90 opcode roster (source of the checklist). |
-| `sm70.json`, `sm90.json`, `sm100.json`, `sm103.json` | Generated queryable DBs (gitignored/regenerable). |
+| `sm_*_instructions.txt`, `sm_*_latencies.txt` | Raw nvdisasm ISA/encoding specs + pipe/latency dumps for sm_70/75/80/89/90, Blackwell sm100/103/120, and Rubin sm_107. Grep-first; never read whole. |
+| `tools/` | stdlib-only parsers → queryable JSON DBs, query CLIs, 113 per-instruction decoders, bit-accurate tensor-core model (`hmma_model.py`), test runner. |
+| `assembler/` | Hand-written SASS → cubin toolchain (sm70/80/89/90/100/103/120) + `CudaModule` GPU runner + scoreboard dependency checker. See `ASSEMBLER_MANUAL.md`. |
+| `sassdbg/` | Runtime SASS debugger: instruction tracing, cuobjdump→dialect lifting, breakpoints via device-side patching, multi-warp/multi-CTA stepping, reverse execution, CLI, on-demand command injection, per-warp private heap code. |
+| `semu/` | C++20 sm_120 SASS behavioral simulator (cubin loader + CPU interpreter). See `semu/AGENTS.md`. |
+| `launchprobe/` | CUDA kernel-launch protocol RE: intercepts driver↔GPU traffic (`libnvtrace.so`) and hand-builds QMD/command segments to launch cubins entirely from userspace. See `launchprobe/CONTEXT.md` + `NOTES.md`. |
+| `notes/sm90/` | Hopper: 171 per-instruction docs (`instr/`) + 34 cross-cutting arch notes (`arch/`). |
+| `notes/sm100/`, `notes/sm103/` | Blackwell datacenter: instruction notes, tcgen05/wgmma successor analysis, RF bank probe, `sm100/OVERVIEW.md` change summary. |
+| `notes/sm120/` | GB202 (RTX 5090) microarchitecture campaign: pipeline topology, per-pipe latencies, RF banks/writeback, scheduler yield cost, L2 slices, icache, LSU/MIO/XU topology. |
+| `notes/sm89/`, `notes/sm80/`, `notes/sm70/` | Ada/Ampere scalar-math pipeline characterization + register banks; Volta register banks. |
+| `notes/ARCH_DIFF.md`, `notes/CUBIN_STRUCTURE.md`, `notes/DEVICE_PRINT.md` | Cross-arch encoding diffs, cubin ELF format spec, device printf notes. |
+| `tests/` | 218 CUDA (`.cu`) kernels that force specific SASS encodings + 286 assembler round-trip / GPU probes (`tests/asm_construct/`). |
+| `ASSEMBLER_MANUAL.md` | Full assembler syntax, scheduling brackets, and usage. |
 
 ## Tooling
 
-The specs are parsed into queryable JSON DBs — prefer them over ad-hoc `grep`.
+The specs are parsed into queryable JSON DBs (gitignored, regenerable) — prefer
+them over ad-hoc `grep`.
 
 ```bash
-# Parse both .txt files -> sm90.json (has a built-in validation gate)
-python3 tools/parse_sm90.py
+# Parse a dump pair -> JSON DB (each parser has a built-in validation gate)
+python3 tools/parse_sm90.py                                    # sm90.json
+python3 tools/parse_sm100.py                                   # sm100.json
+python3 tools/parse_sm100.py --instructions sm_103_instructions.txt \
+  --latencies sm_103_latencies.txt -o sm103.json
+python3 tools/parse_sm75_80.py                                 # sm70/75/80/89 -> sm*.json
 
-# Volta has no latency dump here; encoding extraction is still complete.
-python3 tools/parse_sm90.py --instructions sm_70_instructions.txt \
-  --latencies '' -o sm70.json
-
-# Ampere encoding DB (also no latency dump in this checkout).
-python3 tools/parse_sm90.py --instructions sm_80_instructions.txt \
-  --latencies '' -o sm80.json
-
-# Query the DB (sm90)
+# Query (same subcommands for query_sm90.py / query_sm100.py)
 python3 tools/query_sm90.py mnem <NAME>       # variants, opcodes, format, pipe
 python3 tools/query_sm90.py class <name> -v   # full CLASS block
 python3 tools/query_sm90.py layout <class>    # 128-bit field map
 python3 tools/query_sm90.py opcode <hex|0b|int>
 python3 tools/query_sm90.py enum <Name>       # modifier value map
-python3 tools/query_sm90.py table <Name>      # decode table
 python3 tools/query_sm90.py pipe <MNEMONIC>   # functional-unit membership
-python3 tools/query_sm90.py stats
-
-# Same interface for sm100
-python3 tools/parse_sm100.py
-python3 tools/query_sm100.py mnem <NAME>
-python3 tools/query_sm100.py pipe <MNEMONIC>
-# ... same subcommands as query_sm90.py
-
-# Generate sm103.json from the Blackwell Ultra dumps
-python3 tools/parse_sm100.py --instructions sm_103_instructions.txt \
-  --latencies sm_103_latencies.txt -o sm103.json
 ```
 
-`tools/decode_<mnem>.py` are minimal per-instruction decoders: they extract
-fields from a 128-bit encoding (lo64 + hi64) and reconstruct the SASS assembly,
-validated against real cuobjdump vectors.  `tools/hmma_model.py` is a
-bit-accurate FDA (Fused-Dot-Add) reference model of the tensor-core
-fp16/bf16/fp8 HMMA/QMMA path.
+`tools/decode_<mnem>.py` are minimal per-instruction decoders: extract fields
+from a 128-bit encoding (lo64 + hi64) and reconstruct the SASS assembly,
+validated against real cuobjdump vectors.
 
-### Assembler (`assembler/`) and running tests
+### Assembler and GPU tests
 
 SASS-by-hand kernels are assembled to cubin and run on a GPU without nvcc:
 
 ```python
 from assembler import assemble, CudaModule
-mod = CudaModule(assemble("#fn k(out<8>) { ... }"))  # <size> = param byte width
+mod = CudaModule(assemble("#fn k(out<8>) { ... }", arch="sm120"))
 d = mod.devmem_alloc(2048 * 4)
 mod.launch("k", grid=(1,), block=(32,), args=[d])
 mod.synchronize()
 out = mod.device_read(d, 128)
 ```
 
-- `assemble(source)` / `assemble_kernel(source)` (→ `AssembleResult`) /
-  `assemble_flat(source)` (→ list of `(lo64, hi64)`).
-- `CudaModule(cubin)`: `launch`, `devmem_alloc/free`, `device_read/write`,
-  `device_name`.  Scoreboard dependency checking is on by default
-  (`check_deps` / `strict_deps`).
+- `assemble(source, arch=...)` / `assemble_kernel` / `assemble_flat`;
+  scoreboard dependency checking on by default.
 - Full syntax + gotchas: **`ASSEMBLER_MANUAL.md`** (explicit register groups,
-  scheduling brackets, `#fn`/`#param`/`#spec_const`, MMA result-wait rules).
-
-Run the assembler/GPU test suite:
+  scheduling brackets `[wr:rd:{req}:stall:yield:batch_t]`, `#fn`/`#param`,
+  cross-barrier waits must go in `{req}`, MMA result-wait rules).
 
 ```bash
-python3 tools/run_tests.py [-j N]      # parallel processes; timing/descriptor tests serial
+python3 tools/run_tests.py [-j N]   # parallel; timing-sensitive tests serial
 ```
 
-## Key facts about the ISA (sm_90 and sm100)
+### sassdbg (runtime debugger)
 
-- Each SASS instruction is **128 bits / 16 bytes** = hi64 `[127:64]` + lo64 `[63:0]`.
-  (The file header says `WORD_SIZE 64` — ignore it; trust the 128-bit width.)
+```bash
+python3 -m sassdbg.cli --cubin x.cubin [--func F] [--grid G] [--block B]
+```
+
+Lift any cubin kernel to the assembler dialect, patch in breakpoints
+(CALL/JMP-based, per-warp private code images — zero register reservation),
+single-step divergent groups through BSSY/BSYNC/WARPSYNC/BAR, dump/set
+registers of parked warps, and replay execution backwards from a warp-level
+write-set trace (`sassdbg/wtrace.py` + `sassdbg/reverse.py`).
+
+## Key facts about the ISA
+
+- Each SASS instruction is **128 bits / 16 bytes** = hi64 `[127:64]` + lo64
+  `[63:0]` (the file header's `WORD_SIZE 64` is a lie; Volta/Turing dumps are
+  64-bit pairs of the same layout).
 - Opcode is a **13-bit** field: `{bit[91], bits[11:0]}`.
 - Registers: 8-bit GPR (`0xFF` = `RZ`), 6-bit uniform (`UR0`–`UR63`).
 - Predicates: 3-bit (`PT` = 7) plus a 1-bit negate flag.
 - Field names encode bit position: `BITS_<width>_<hi>_<lo>_<name>` (MSB:LSB).
-- The **control/scheduling word** (`FUNIT uC` bit map) is identical between sm_90
-  and sm100 — 565 named control fields at the same bit positions.
-- sm100 adds `ttu_pipe` (ray-tracing/tree-traversal), drops `OPTIONAL_GSB`
-  (warpgroup scoreboard), and collapses `uldc_*` classes into `LDCU`.
+- The **control/scheduling word** (`FUNIT uC` bit map) is stable across
+  sm_90 → sm_120 — same control fields at the same bit positions.
+- The scheduling bracket's `yield` bit is a warp-switch hint and the switch
+  itself costs one dead issue cycle (verified on GA100, AD102, GB202);
+  `yield` + reuse-cache bits is an illegal combination.
 
 ## Status
 
-### sm_90 (Hopper)
-| Metric | Count |
-| --- | ---: |
-| Instructions in scope (compute) | 207 |
-| Instructions documented | 197 |
-| Remaining | 5 (F2FP, RTT, QSPC, UCGABAR_GET, UCGABAR_SET) |
-| Special (pending resolution) | 1 (LDCU — likely LDC variant) |
-| Per-instruction notes | 168 (some consolidated: e.g. HADD2/HADD2_F32, DADD/DADD_F64) |
-| Cross-cutting arch notes | 26 |
-| Decoder scripts | 109 |
-| Test kernels | 177 (`.cu`) + 87 assembler/GPU tests (`tests/asm_construct/test_*.py`) |
+| Arch | Coverage |
+| --- | --- |
+| sm_90 (Hopper) | 197/207 compute instructions documented; 171 instr + 34 arch notes; 113 decoders validated on cuobjdump vectors |
+| sm100/sm_103 (Blackwell DC) | 21 instr + 10 arch notes; sm_90→sm100 change analysis (`OVERVIEW.md`); B300 assembler target + RF probe |
+| sm_120 (GB202) | Microarchitecture campaign: pipe topology/latency map, RF banks, scheduler/yield, memory hierarchy; 3 instr + 2 arch notes + 20 topic notes |
+| sm_80 / sm_89 | Scalar-math pipeline structure measured end-to-end (per-pipe rates, conflict matrices, scheduler quirks, FP64 placement) |
+| sm_70 / sm_75 | Encoding DBs + register-bank notes; Volta assembly probes |
+| sassdbg | Milestones M1–M11 complete (trace, lift, breakpoints, multi-warp, stepper, reverse, CLI, command injection, warp-private code) |
+| semu | sm_120 behavioral simulator, in progress (`semu/GAP.md`) |
 
-### sm100 (Blackwell)
-| Metric | Count |
-| --- | ---: |
-| Mnemonics in spec | 261 (vs. 238 on sm_90) |
-| New mnemonics | 34 added, 11 removed |
-| Per-instruction notes | 20 |
-| Cross-cutting arch notes | 4 |
-| Overview/change-analysis | 1 (`notes/sm100/OVERVIEW.md`) |
+Major microarchitecture topics in `notes/`: control codes and scoreboards,
+memory model (incl. L2 NUMA on H800), tensor cores (HMMA pipeline, wgmma,
+tcgen05, bit-accurate FDA model), TMA/mbarrier pipeline, CBU convergence state,
+shared-memory bank conflicts, cubin/ELF structure, per-chip pipeline topology
+and register-file organization, and scheduler/yield semantics.
 
-### Major microarchitecture topics (notes/sm*/arch/)
-
-**sm_90:** control codes and scoreboards, memory model (including L2 NUMA on H800)
-, tensor-core microarch speculation (HMMA pipeline, wgmma), CUDA memory order,
-TMA/mbarrier pipeline, CBU convergence-barrier state, LSU/MIO structure, 
-LDC addressing modes/preset layouts, asynchronous proxy, DIV workaround, 
-shared memory and l1 bank conflicts (vectorized & cp.async), encoding classification,
-usched latency, cubin/ELF structure.
-
-**sm100:** tcgen05  (tensor-core operand representation), tcgen05 microarch 
-speculation (how `UTC*` instructions replace wgmma), work-stealing support 
-and minor changes (eg. `redux`, `ffma2`, `st.bulk` ...)
-
-Progress is tracked in `TODO.md`.
-
-See `AGENTS.md` for the full spec-layout guide and the per-instruction
+See `AGENTS.md` for the spec-layout guide and the per-instruction
 documentation recipe.

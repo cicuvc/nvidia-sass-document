@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## What this repo is
-Reverse-engineering repo built around two nvdisasm-dumped ISA description files for the **Hopper (sm_90)** SASS instruction set. There is no build/test/lint — do not look for a package manager, CI, or entrypoints. The work is *reading and interpreting* these files to reconstruct how to decode SASS instructions (encoding, functional-unit grouping, latencies) and writing per-instruction reference docs. Tooling (`tools/`) + research notes (`notes/`) + a doc checklist (`TODO.md`) sit on top of the raw dumps.
+Reverse-engineering repo built around two nvdisasm-dumped ISA description files for the **Hopper (sm_90)** SASS instruction set. There is no build/test/lint — do not look for a package manager, CI, or entrypoints. The work is *reading and interpreting* these files to reconstruct how to decode SASS instructions (encoding, functional-unit grouping, latencies) and writing per-instruction reference docs. Tooling (`tools/`) + research notes (`notes/`) sit on top of the raw dumps.
 
 - `sm_90_instructions.txt` (~159k lines) — full instruction/encoding spec.
 - `sm_90_latencies.txt` (~441 lines) — pipe grouping, scoreboard/latency tables.
@@ -20,7 +20,7 @@ The repo now also ships a **working SASS assembler + GPU runner** (`assembler/`,
 see `ASSEMBLER_MANUAL.md`) and a bit-accurate tensor-core fp16/bf16/fp8
 reference model (`tools/hmma_model.py`).  Tests build kernels as SASS text,
 assemble to cubin, and run them (HMMA/QMMA tensor-core, LDG/STG, cp.async,
-memory model probes).  Doc-writing continues against `TODO.md`.
+memory model probes).
 
 ## Tooling (`tools/`)
 A stdlib-only extractor turns the spec into a queryable JSON DB — prefer it over ad-hoc `grep`/manual parsing for structured lookups.
@@ -824,10 +824,9 @@ Assembler fixes made for M2 (all covered by the corpus round-trip +
 
 ## Documentation workflow (current effort)
 Goal: write a per-instruction reference doc for every **compute** SASS instruction. Split across sessions.
-- `TODO.md` — the master checklist (**197/207 instructions** done), grouped into 10 categories: **Integer/Vector**, **FP32**, **FP16**, **FP64**, **Convert**, **Uniform**, **Memory**, **Tensor**, **Control Flow**, **Misc**. Derived from `ref_memo.txt` (the curated sm_70..sm_90 opcode roster). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded (see its "Excluded" section). `-> MNEM` tags map ref_memo names to the canonical sm_90 mnemonic (shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated). `LDCU` is unresolved (likely an LDC variant).
+- Scope: every **compute** SASS instruction (197/207 done). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded. Shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated.
 - `notes/sm90/instr/*.md` — per-instruction reference docs (164). `notes/sm90/arch/*.md` — cross-cutting topic notes (14: `scoreboards`, `memory_model`, `cbu_state`, `iswz`, `hmma_pipeline`, `div`, `fp64_control`, `tma_mbarrier`, `tensorcore_microarch_speculation`, `wgmma`, `control_codes`, `usched_latency`, `ldc_admode`, `tcgen05_vs_wgmma`, `encoding_classification`). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions.
-- Tick the box in `TODO.md` when done.
-- `sm90.json` is gitignored/regenerable; `ref_memo.txt` uses a ROT13 column that is not the mnemonic (mnemonic is the 3rd column).
+- `sm90.json` is gitignored/regenerable.
 
 ### Phase 2 — Refinement workflow
 With the first doc pass complete, focus shifts to **note quality and consistency**:
@@ -931,11 +930,6 @@ Structure (follow existing notes for consistency):
 ## Verified encodings (table with Lo64/Hi64 → Disassembly)
 ### PTX→SASS mapping
 ## Open questions
-```
-
-**Step 8 — Tick TODO**
-```markdown
-- [x] **MNEMONIC** (idx N) — description
 ```
 
 Key conventions for notes:
