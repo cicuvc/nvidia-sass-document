@@ -454,6 +454,23 @@ read-modify-write，而不是在 admission 时整体 snapshot accumulator**。+3
 writeback。当前 N8 实验的被修改 chunk 整体同值，尚未解析一个 chunk 内更细的
 RMW microtile 顺序；那需要对不同列/行 slice 分别写入 tag 再扫相位。
 
+随后把 nominal phase 53--63 的缺失奇数档全部补齐，并对每档重复 6--8 次。
+以 `FENCE.VIEW.ASYNC.T` 后的 mutation-done 时钟（相对 admission upper bound）
+分组，两个翻转点逐周期分离且没有重叠：
+
+| mutation visible phase | result |
+|---:|---:|
+| <=39 | 80.0 |
+| 40--45 | 17.0 |
+| >=46 | 64.0 |
+
+所以 D-read 发生在 phase 39/40 的边界，MMA writeback 发生在 45/46 的边界；
+相同 STTM+fence 观察延迟在两次翻转中抵消，中心间隔为 **6 SM cycles**。若只按
+离散时间戳给严格区间，则是 5--7 cycles。这个 B200 N8 BF16 accumulate 的
+read-to-write 窗口约为此前 Hopper HGMMA register-mutation 实验中约 12-cycle
+窗口的一半。该数字描述本 microtile 的可见 RMW pipeline 距离，不代表整条
+132-cycle UTCHMMA 的首读到末写跨度。
+
 探针：`tests/asm_construct/probe_sm100_utchmma_d_mutation.py`；Modal runner 的
 `--d-mutation-results` 输出实际 admission/mutation 相位以及四个 warp 的值计数。
 
