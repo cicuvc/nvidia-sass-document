@@ -36,11 +36,37 @@ instructions share `$VQ_SW_STATE`, and the allocator uses `UTCATOMSWS` for its
 hardware reservation.  It proves only that the stable live-allocation bitmap
 is not observable through this `UTCLDSWS` form at the sampled boundaries.
 
+## Reserved-shared side-effect sweep
+
+`tests/asm_construct/utcldsws_reserved_dump_sm100.sass` snapshots every dword
+of the V2 reserved-shared range `[0x00, 0x60)` immediately before and after a
+scoreboard-completed `UTCLDSWS`.  Three repeated B200 launches were identical
+in each of two states:
+
+- no live allocation: the only nonzero words were `+0x00=0x001fffc0` and
+  `+0x04=0x7ffff800`, the saved previous `ATEXIT_PC`;
+- live 32-column allocation at `taddr=0`: the same two words plus
+  `+0x54=1` and `+0x58=1`, i.e. partition `+0x14` occupied and partition
+  `+0x18` allocation-head.
+
+There were no changed bytes in the whole 0x60-byte range, `UTCLDSWS` returned
+zero in every run, and the live case subsequently deallocated and relinquished
+normally.  Thus `UTCLDSWS` has no visible write side effect on the complete V2
+reserved-shared ABI, including when allocator state is nonzero.  Any state it
+reads or affects must be outside that shared-memory region or too transient to
+survive until its scoreboard completion.
+
 ## Reproduction
 
 ```console
 /home/cicuvc/miniconda3/envs/blkw/bin/modal run \
   tests/asm_construct/probe_utcldsws_modal.py
+
+/home/cicuvc/miniconda3/envs/blkw/bin/modal run \
+  tests/asm_construct/probe_utcldsws_reserved_modal.py
+
+/home/cicuvc/miniconda3/envs/blkw/bin/modal run \
+  tests/asm_construct/probe_utcldsws_reserved_modal.py --active-allocation
 ```
 
 The current Modal B200 accepted the V1 entry-fragment allocator.  A control
