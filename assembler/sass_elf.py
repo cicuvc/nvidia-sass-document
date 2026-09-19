@@ -266,6 +266,17 @@ def note_nv_cuver(target_sm: int = 120) -> bytes:
     return bytes(raw)
 
 
+def note_nv_cuinfo(target_sm: int, api_version: int = 0x83) -> bytes:
+    """CUDA 13.1 Blackwell-Ultra CUDA-information NOTE.
+
+    sm103 first appeared after the older ``.note.nv.cuver`` version-1
+    contract.  CUDA 13.1 emits version 2 plus the CUDA API tag instead.
+    """
+    name = b"NVIDIA Corp\0"
+    desc = struct.pack("<HHI", 2, target_sm, api_version)
+    return (struct.pack("<III", len(name), len(desc), 1000) + name + desc)
+
+
 def debug_frame() -> bytes:
     """.debug_frame template (CIE+FDE) from the reference nvcc cubin.
 
@@ -524,8 +535,14 @@ class CubinBuilder:
                 content=note_nv_tkinfo(arch.current().name),
                 flags=SHF_CUDA_LINK_ONCE)
             target_sm = int(arch.current().name[2:].rstrip("a"))
-            sec(".note.nv.cuver", SHT_NOTE, content=note_nv_cuver(target_sm),
-                flags=SHF_INFO_LINK | SHF_CUDA_RETAIN)
+            if arch.current().name in ("sm103", "sm103a"):
+                sec(".note.nv.cuinfo", SHT_NOTE,
+                    content=note_nv_cuinfo(target_sm),
+                    flags=SHF_INFO_LINK | SHF_CUDA_RETAIN)
+            else:
+                sec(".note.nv.cuver", SHT_NOTE,
+                    content=note_nv_cuver(target_sm),
+                    flags=SHF_INFO_LINK | SHF_CUDA_RETAIN)
 
         # Build symbols early so the EIATTR sections below can reference the
         # correct function / constant0 symbol indices (symbols are fixed-order:
@@ -725,19 +742,32 @@ class CubinBuilder:
         # no compat section.
         if _is_blackwell:
             if tcgen05_entry_v2:
-                # Exact CUDA 13.1 V2 compatibility contract:
-                # accelerator target=1, ISA class=2, tcgen05=5,
-                # ABI marker 0x101, tensormap=0, fastpath finalize={9,0}.
-                compat = bytes([
-                    0x02, 0x09, 0x01, 0x00,
-                    0x02, 0x02, 0x02, 0x00,
-                    0x02, 0x05, 0x05, 0x00,
-                    0x03, 0x07, 0x01, 0x01,
-                    0x02, 0x03, 0x00, 0x00,
-                    0x04, 0x0b, 0x08, 0x00,
-                    0x09, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00,
-                ])
+                if arch.current().name in ("sm103", "sm103a"):
+                    # CUDA 13.1 sm103a omits the sm100 TCGEN05_MMA compat
+                    # record and disables opportunistic fastpath finalize.
+                    compat = bytes([
+                        0x02, 0x09, 0x01, 0x00,
+                        0x02, 0x02, 0x02, 0x00,
+                        0x03, 0x07, 0x01, 0x01,
+                        0x02, 0x03, 0x00, 0x00,
+                        0x04, 0x0b, 0x08, 0x00,
+                        0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00,
+                    ])
+                else:
+                    # Exact CUDA 13.1 sm100 V2 compatibility contract:
+                    # accelerator target=1, ISA class=2, tcgen05=5,
+                    # ABI marker 0x101, tensormap=0, fastpath={9,0}.
+                    compat = bytes([
+                        0x02, 0x09, 0x01, 0x00,
+                        0x02, 0x02, 0x02, 0x00,
+                        0x02, 0x05, 0x05, 0x00,
+                        0x03, 0x07, 0x01, 0x01,
+                        0x02, 0x03, 0x00, 0x00,
+                        0x04, 0x0b, 0x08, 0x00,
+                        0x09, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00,
+                    ])
             else:
                 compat = bytes([
                     0x02, 0x02, 0x03 if tcgen05_cta1 else 0x01, 0x00,
@@ -855,7 +885,7 @@ class CubinBuilder:
                 s.info_idx = text_sec_idx
             if s.name == ".nv.callgraph":
                 s.link_idx = symtab_idx
-            if s.name == ".note.nv.cuver":
+            if s.name in (".note.nv.cuver", ".note.nv.cuinfo"):
                 for j, sj in enumerate(secs):
                     if sj.name == ".note.nv.tkinfo":
                         s.link_idx = j

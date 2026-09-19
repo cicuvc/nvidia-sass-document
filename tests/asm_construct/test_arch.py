@@ -71,6 +71,8 @@ check("sm100 ELF e_flags", struct.unpack_from("<I", r100.code, 48)[0],
       0x06006402)
 check("sm100 carries Blackwell compat section", b".nv.compat" in r100.code,
       True)
+check("sm100 uses legacy CUDA version note", b".note.nv.cuver" in r100.code,
+      True)
 check("arch restored after sm100 kwarg", arch.current().name, before)
 
 r103 = assemble_kernel(SRC, arch="sm103")
@@ -81,6 +83,10 @@ check("sm103 ELF e_flags", struct.unpack_from("<I", r103.code, 48)[0],
       0x06006702)
 check("sm103 carries Blackwell compat section", b".nv.compat" in r103.code,
       True)
+check("sm103 uses CUDA-info v2 note", b".note.nv.cuinfo" in r103.code,
+      True)
+check("sm103 omits legacy CUDA version note",
+      b".note.nv.cuver" in r103.code, False)
 check("arch restored after sm103 kwarg", arch.current().name, before)
 
 # --- unknown arch rejected -------------------------------------------------

@@ -7,6 +7,7 @@ dependency checking and encoding use the ordinary assembler pipeline.
 
 from __future__ import annotations
 
+from . import arch
 from .operand import OperandKind
 from .sass_parser import parse_sass
 
@@ -242,6 +243,17 @@ ISETP.NE.AND P{pred}, PT, R{r_mask}, R{r_tmp}, PT;[7:7:{{}}:13:1]
         final_waits = f"{sb_base},{sb_mask},{sb_reduce}"
         mask_offset = 0x50
     else:
+        # The sm103 V2 entry ABI's +0x14 occupied-range word does not match
+        # the sm100 software guard below (real B300: the check traps even for
+        # a successful 32-column allocation).  The independently maintained
+        # +0x18 allocation-head guard remains valid, as does the hardware
+        # UTCATOMSWS release and both bitmap clears.  Keep the instruction
+        # slot stable so source/PC mappings do not vary by architecture.
+        occupied_guard = (
+            "NOP;[7:7:{}:5:0]"
+            if arch.current().name in ("sm103", "sm103a")
+            else f"@P{pred} BPT.TRAP 0x1;[7:7:{{}}:5:0]"
+        )
         form_mask = (f"""
 IMAD.MOV.U32 R{r_bit}, RZ, RZ, 0xffff;[7:7:{{}}:5:1]
 IMAD.MOV.U32 R{r_tmp}, RZ, RZ, 0x1;[7:7:{{}}:5:1]
@@ -255,7 +267,7 @@ SHF.L.U32 R{r_tmp}, R{r_tmp}, R{r_base}, RZ;[7:7:{{}}:4:1]
 LDS R{r_mask}, [UR{ur_part}+0x14];[{sb_mask}:7:{{}}:1:0]
 LOP3.LUT R{r_mask}, R{r_mask}, R{r_bit}, RZ, 0xc0, !PT;[7:7:{{{sb_mask}}}:4:1]
 ISETP.NE.AND P{pred}, PT, R{r_mask}, R{r_bit}, PT;[7:7:{{}}:13:1]
-@P{pred} BPT.TRAP 0x1;[7:7:{{}}:5:0]
+{occupied_guard}
 LDS R{r_mask}, [UR{ur_part}+0x18];[{sb_mask}:7:{{}}:2:0]
 LOP3.LUT R{r_mask}, R{r_mask}, R{r_tmp}, RZ, 0xc0, !PT;[7:7:{{{sb_mask}}}:4:1]
 ISETP.NE.AND P{pred}, PT, R{r_mask}, R{r_tmp}, PT;[7:7:{{}}:13:1]

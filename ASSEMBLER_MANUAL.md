@@ -98,7 +98,11 @@ CLI: `python -m assembler.sass_asm input.sass [-o out.cubin] [-n kernel] [--dump
   `#pragma AT_ENTRY_FRAGMENT_TMEM_CTA1_V2(1)` selects V2 (separate occupied
   range and allocation-head masks at partition `+0x14/+0x18`, phase at
   `+0x1c`) without changing builtin source.
-  Hardware coverage currently includes 32-column V1/V2 and 512-column V1;
+  On sm103 the B300 hardware accepts the actual V2 deallocation protocol but
+  its `+0x14` occupied-range state does not satisfy the older sm100 software
+  guardrail; the assembler therefore omits that one diagnostic trap while
+  retaining the independent `+0x18` allocation-head check.  Hardware coverage
+  currently includes 32-column V1/V2 (including sm103 V2) and 512-column V1;
   the intermediate widths and 512-column V2 have static lowering coverage but
   still require independent silicon validation before use in fault-sensitive
   experiments.

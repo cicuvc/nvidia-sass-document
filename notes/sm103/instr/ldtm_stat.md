@@ -84,6 +84,33 @@ The ordinary LDTM scoreboard/control encoding is otherwise retained:
 `src_rel_sb=7`, variable-latency `dst_wr_sb`, request mask `[121:116]`, and
 the same split TMEM address immediate.
 
+## Direct-SASS hardware validation
+
+The repository assembler's native cubin was executed on a real B300.  No PTX
+or ptxas-generated executable participates in this test.  Lane 0 observed:
+
+| form | loaded vector | `redVal` |
+|---|---|---|
+| `.u32.max` | `9, 2, 15, 4` | `15` |
+| `.s32.min` | `-5, 7, -20, 3` | `-20` |
+| `.f32.max.abs.NaN` | `1, -4, payload-NaN 0x7fc12345, 2` | canonical NaN `0x7fffffff` |
+| `.f32.min.abs` | `4, -2, .5, -8` | `.5` |
+| split `.16x32bx2.u32.min` | `9, 2, 15, 4` | `2` |
+
+Thus the ordinary load destination preserves the original bits (including a
+NaN payload), while the fused F32 `.NaN` reduction canonicalizes its NaN
+result.  The split half-warp pair also produces one coherent vector and scalar
+result when both instructions name the same destinations.
+
+The B200 negative control uses a valid sm100a cubin from the same assembler,
+then replaces only its six ordinary-LDTM placeholder instruction words with
+the corresponding sm103 `0x15ee` words.  The module loads and launches, but
+synchronization returns CUDA error 715 and the GPU reports `Illegal Instruction
+Encoding`.  This rules out mere rejection of an sm103 ELF on B200: opcode
+`0x15ee` itself is unsupported there.
+
 Reproduction corpus: `tests/tcgen05_ld_red.cu`; exact assembler vectors:
-`tests/asm_construct/test_tcgen05_ldred_sm103.py`; decoder:
+`tests/asm_construct/test_tcgen05_ldred_sm103.py`; direct-SASS hardware probe:
+`tests/asm_construct/tcgen05_ldred_semantics_sm103.sass` and
+`tests/asm_construct/probe_tcgen05_ldred_modal.py`; decoder:
 `tools/decode_ldtm.py`.

@@ -1,0 +1,101 @@
+# Hand-SASS semantic probe for sm103 LDTM.STAT / PTX tcgen05.ld.red.
+# Each five-word record is {four loaded values, fused reduction}.  All lanes
+# execute the probe; lane 0 writes the five case records to global memory.
+#fn ldred_semantics(out<8>) {
+    #pragma SHARED(4)
+    #pragma AT_ENTRY_FRAGMENT_TMEM_CTA1_V2(1)
+    #pragma MAXREG_COUNT(96)
+    LDC R1, c[0x0][0x37c];[7:7:{}:8:0]
+    S2UR UR5, SR_CgaCtaId;[0:7:{}:1:0]
+    UMOV UR4, 0x400;[7:7:{}:1:0]
+    ULEA UR5, UR5, UR4, 0x18;[7:7:{0}:9:1]
+    #!tmem_alloc_1cta(UR5, 32)
+    LDS R10, [UR5];[0:7:{}:1:0]
+    R2UR UR10, R10;[7:7:{0}:13:1]
+
+    // U32 MAX: max(9,2,15,4) = 15.
+    MOV32I R32, 0x00000009;[7:7:{}:5:1]
+    MOV32I R33, 0x00000002;[7:7:{}:5:1]
+    MOV32I R34, 0x0000000f;[7:7:{}:5:1]
+    MOV32I R35, 0x00000004;[7:7:{}:5:1]
+    STTM.x4 tmem[UR10], {R32,R33,R34,R35};[7:7:{}:1:0]
+    FENCE.VIEW.ASYNC.T;[0:7:{}:2:0]
+    LDTM.STAT.x4.MAX R40, {R36,R37,R38,R39}, tmem[UR10];[1:7:{0}:1:0]
+
+    // S32 MIN: min(-5,7,-20,3) = -20.
+    MOV32I R44, 0xfffffffb;[7:7:{}:5:1]
+    MOV32I R45, 0x00000007;[7:7:{}:5:1]
+    MOV32I R46, 0xffffffec;[7:7:{}:5:1]
+    MOV32I R47, 0x00000003;[7:7:{}:5:1]
+    STTM.x4 tmem[UR10], {R44,R45,R46,R47};[7:7:{1}:1:0]
+    FENCE.VIEW.ASYNC.T;[0:7:{}:2:0]
+    LDTM.STAT.x4.MIN.S32 R52, {R48,R49,R50,R51}, tmem[UR10];[1:7:{0}:1:0]
+
+    // F32 MAXABS.NAN: one NaN input must make redVal canonical NaN.  The
+    // loaded vector itself must retain the original, including its NaN bits.
+    MOV32I R56, 0x3f800000;[7:7:{}:5:1]
+    MOV32I R57, 0xc0800000;[7:7:{}:5:1]
+    MOV32I R58, 0x7fc12345;[7:7:{}:5:1]
+    MOV32I R59, 0x40000000;[7:7:{}:5:1]
+    STTM.x4 tmem[UR10], {R56,R57,R58,R59};[7:7:{1}:1:0]
+    FENCE.VIEW.ASYNC.T;[0:7:{}:2:0]
+    LDTM.STAT.x4.MAXABS.F32.NAN R64, {R60,R61,R62,R63}, tmem[UR10];[1:7:{0}:1:0]
+
+    // F32 MINABS without NaN: min(abs(4),abs(-2),abs(.5),abs(-8)) = .5.
+    MOV32I R68, 0x40800000;[7:7:{}:5:1]
+    MOV32I R69, 0xc0000000;[7:7:{}:5:1]
+    MOV32I R70, 0x3f000000;[7:7:{}:5:1]
+    MOV32I R71, 0xc1000000;[7:7:{}:5:1]
+    STTM.x4 tmem[UR10], {R68,R69,R70,R71};[7:7:{1}:1:0]
+    FENCE.VIEW.ASYNC.T;[0:7:{}:2:0]
+    LDTM.STAT.x4.MINABS.F32 R76, {R72,R73,R74,R75}, tmem[UR10];[1:7:{0}:1:0]
+
+    // Split shape: the two SASS instructions update disjoint thread halves
+    // while naming the same vector and reduction destinations.
+    MOV32I R80, 0x00000009;[7:7:{}:5:1]
+    MOV32I R81, 0x00000002;[7:7:{}:5:1]
+    MOV32I R82, 0x0000000f;[7:7:{}:5:1]
+    MOV32I R83, 0x00000004;[7:7:{}:5:1]
+    STTM.16dp32bit_t0_t15.x4 tmem[UR10], {R80,R81,R82,R83};[7:7:{1}:1:0]
+    STTM.16dp32bit_t16_t31.x4 tmem[UR10+0x10], {R80,R81,R82,R83};[7:7:{}:1:0]
+    FENCE.VIEW.ASYNC.T;[0:7:{}:2:0]
+    LDTM.STAT.16dp32bit_t0_t15.x4.MIN R88, {R84,R85,R86,R87}, tmem[UR10];[7:7:{0}:1:0]
+    LDTM.STAT.16dp32bit_t16_t31.x4.MIN R88, {R84,R85,R86,R87}, tmem[UR10+0x10];[1:7:{}:1:0]
+
+    // Let lane 0 report all five cases.  Keeping the parameter address
+    // unchanged avoids making global-address arithmetic part of this probe.
+    S2R R11, SR_TID.X;[2:7:{}:1:0]
+    ISETP.EQ.U32.AND P1, PT, R11, RZ, PT;[7:7:{2}:13:1]
+    LDC.64 {R2,R3}, #param(out);[2:7:{}:1:0]
+    LDCU.64 {UR6,UR7}, #spec_const(SLOT_DEFAULT_CDESC);[2:7:{}:1:0]
+
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x00], R36;[7:7:{1,2}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x04], R37;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x08], R38;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x0c], R39;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x10], R40;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x14], R48;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x18], R49;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x1c], R50;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x20], R51;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x24], R52;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x28], R60;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x2c], R61;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x30], R62;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x34], R63;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x38], R64;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x3c], R72;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x40], R73;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x44], R74;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x48], R75;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x4c], R76;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x50], R84;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x54], R85;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x58], R86;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x5c], R87;[7:7:{}:8:0]
+    @P1 STG.E desc[{UR6,UR7}][{R2,R3}+0x60], R88;[7:7:{}:8:0]
+
+    #!tmem_dealloc_1cta(UR5, 32)
+    #!tmem_relinquish_alloc_permit_1cta()
+    EXIT;[7:7:{}:5:0]
+}

@@ -7,7 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from assembler import assemble_flat  # noqa: E402
+from assembler import assemble_flat, assemble_kernel  # noqa: E402
 
 
 # Vectors captured from tests/tcgen05_ld_red.cu, compiled with CUDA 13.1 for
@@ -37,5 +37,17 @@ for source, want_lo, want_hi in CASES:
     assert got == [(want_lo, want_hi)], (
         source, [(hex(lo), hex(hi)) for lo, hi in got],
         (hex(want_lo), hex(want_hi)))
+
+# The real-hardware semantics kernel must remain a wholly assembler-native
+# sm103a cubin containing the expected four full-warp STAT operations and the
+# two halves of the split operation.
+semantic_source = Path(__file__).with_name(
+    "tcgen05_ldred_semantics_sm103.sass").read_text()
+semantic = assemble_kernel(
+    semantic_source, arch="sm103a", check_deps=False)
+semantic_opcodes = [(((hi >> 27) & 1) << 12) | (lo & 0xfff)
+                    for lo, hi in semantic.encoded]
+assert semantic_opcodes.count(0x15ee) == 6
+assert semantic.params == [(0, 0x380, 8)]
 
 print("tcgen05.ld.red / LDTM.STAT sm103 encodings: PASS")
