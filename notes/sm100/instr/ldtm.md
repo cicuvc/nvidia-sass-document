@@ -186,6 +186,58 @@ A second hand probe stores `{0x12340000+lane, 0x56780000+lane}` with
 immediate is in **TMEM-column units** (not bytes), and `.32x32b.x2` spans two
 consecutive columns.
 
+#### Cross-layout tagged-data tomography (2026-09-19)
+
+A bidirectional tagged probe now writes a unique `(source_thread, source_reg)`
+value through one layout and reads it through another.  This establishes that
+the apparent checkerboard in the 16-datapath forms is an exact bit permutation
+between thread/register coordinates and the canonical `.32x32b` `(row,column)`
+view.  It is not necessary to invoke a bank hash to explain the permutation.
+
+Let output thread `t = 4q + p`, and let `j` be the destination-register index
+of the 16-datapath LDTM.  The complete mappings are:
+
+```text
+.16x64b.x2:   row = q + 8*(p & 1)
+              col = ((p >> 1) & 1) + 2*j            j=0..1
+
+.16x128b.x4:  row = q + 8*(j & 1)
+              col = p + 4*(j >> 1)                  j=0..7
+
+.16x256b.x1:  row = q + 8*(j >> 1)
+              col = 2*p + (j & 1)                   j=0..3
+```
+
+The reverse STTM→canonical experiments produce the exact inverse maps.  All
+three shapes access canonical TMEM rows **0--15 only**; rows 16--31 are left
+untouched.  Their canonical column footprints are respectively 4, 16, and 8
+columns—not 2, 8, and 4 as a naïve `32 lanes * register count` byte count would
+suggest, because the physical layout has only 16 datapaths.
+
+The split forms have an even simpler meaning:
+
+```text
+t0_t15:    active register lanes t=0..15   -> row=t,    col=j
+t16_t31:   active register lanes t=16..31  -> row=t-16, col=j
+```
+
+Both forms address the **same TMEM rows 0--15** at the supplied TMEM column.
+They select which half of the warp carries register data; `t16_t31` is not an
+access to TMEM rows 16--31.  nvcc's second half uses
+`tmem[base + immHalfSplitOffset]`, so the two thread halves normally land in
+different column regions.  Issuing both at the same address makes the second
+store overwrite the first, exactly as the mapping predicts.
+
+In bit terms, the visible checkerboard is a routing network: canonical row bit
+3 comes from thread bit 0 (`16x64b`), register bit 0 (`16x128b`), or register
+bit 1 (`16x256b`), while low column bits are supplied by the complementary
+thread/register bits.  This is strong evidence for a structured 16-datapath
+transpose, but it remains logically distinct from the number or selector of
+physical SRAM banks.
+
+Probe: `tests/asm_construct/probe_sm100_tmem_layout_tomography.py`; the Modal
+runner's `--tomography-regs` mode decodes tags as `source_thread:source_reg`.
+
 The hand assembler accepts `tmem[URx+imm]` directly; exact nvcc-vector
 round trips live in `tests/asm_construct/test_tcgen05_ldst_sm100.py`.
 
@@ -433,6 +485,28 @@ The narrower x1/x2/x4 streams hit an independent admission/completion floor,
 so their absolute rates should not be used to infer the number of physical
 TMEM SRAM banks; they nevertheless preserve the same parity boundary effect
 once a request spans more than one sector.
+
+A later equal-byte layout matrix supplies the missing conflict evidence from
+the 16-datapath forms.  `LDTM.16dp256bit.x1` and
+`LDTM.16dp128bit.x4` both settle at about eight cycles/op even though the
+former moves only half as many bytes.  The symmetric STTM experiment removes
+LDTM scoreboard depth as a confounder and shows that x256's same-parity
+per-phase column set has an exact two-way bank penalty.  Thus the visible bank
+selector contains column bit 0; whether row-half XORs that bit remains open.
+See "Intra-instruction bank conflict from 16-datapath layouts" in `sttm.md`.
+
+A corrected exhaustive modifier sweep also executes all **90** LDTM
+layout/NUM/bit-80 combinations (45 layouts with and without `PACK16BIT`).  For
+1536 serial scoreboard-waited loads, `PACK16BIT(layout,xN)` lands on the same
+wide-form service step as `nopack(layout,x2N)`: it doubles the TMEM columns
+consumed while retaining the encoded destination-register span.  The full
+ladder is `32dp32bit`/split-half, `16dp64bit`, `16dp128bit`, `16dp256bit` =
+approximately `NUM/2`, `NUM`, `2*NUM`, `8*NUM` service cycles without PACK,
+and twice those values with PACK.  The persistent jump from `2*NUM` to
+`8*NUM` is the same-parity-column penalty seen by STTM.  Absolute small-N
+totals include the LDTM admission/completion floor and should not be read as
+pure SRAM cycles.  Probe:
+`tests/asm_construct/probe_sm100_tmem_modifier_sweep.py`.
 
 #### Destination RF-bank discrimination
 

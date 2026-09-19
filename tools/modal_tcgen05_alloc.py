@@ -538,7 +538,12 @@ def main(hand_cubin: str = "", hand_source: str = "",
          gmem_gap_nops: int = 0, block_size: int = 32,
          output_words: int = 0, repetitions: int = 1,
          run_nvcc_function: str = "", cluster_x: int = 0,
-         compact_results: bool = False) -> None:
+         compact_results: bool = False,
+         rhs_mutation_results: bool = False,
+         bank_mask_results: bool = False,
+         bank_collision_results: bool = False,
+         tomography_regs: int = 0,
+         modifier_sweep_results: bool = False) -> None:
     if compile_source:
         source = Path(compile_source).read_text()
         cubin, sass, elf = compile_remote.remote(source)
@@ -606,7 +611,163 @@ def main(hand_cubin: str = "", hand_source: str = "",
                                    output_words, repetitions, cluster_x)
         print(f"hand cubin: {hand_cubin} ({len(data)} bytes)")
         result.pop("handler_hex", None)
-        if compact_results:
+        if modifier_sweep_results:
+            layouts = (
+                ("32dp32bit", 7),
+                ("16dp64bit", 7),
+                ("16dp128bit", 6),
+                ("16dp256bit", 5),
+                ("16dp32bit_t0_t15", 7),
+                ("16dp32bit_t16_t31", 7),
+            )
+
+            def u64(words, index):
+                return words[index] | words[index + 1] << 32
+
+            summaries = {}
+            for name, samples in result["multi_requested_word_samples"].items():
+                selected = tuple(
+                    item for item in layouts if name.endswith("_" + item[0]))
+                if not selected:
+                    selected = layouts
+                labels = [
+                    f"{layout}.x{1 << log2_num}"
+                    for layout, max_log2 in selected
+                    for log2_num in range(max_log2 + 1)
+                ]
+                required_words = 4 * len(labels)
+                if output_words < required_words:
+                    raise ValueError(
+                        "modifier-sweep-results requires --output-words >= "
+                        f"{required_words} for {name}")
+                launches = []
+                for sample in samples:
+                    words = [int(value, 16) for value in sample]
+                    launches.append({
+                        label: (u64(words, 4 * i + 2) -
+                                u64(words, 4 * i)) & ((1 << 64) - 1)
+                        for i, label in enumerate(labels)
+                    })
+                summaries[name] = launches
+            print({"tmem_modifier_sweep": summaries})
+        elif tomography_regs:
+            if output_words < 512:
+                raise ValueError("tomography-regs requires --output-words >= 512")
+            if not 1 <= tomography_regs <= 16:
+                raise ValueError("tomography-regs must be in 1..16")
+            summaries = {}
+            for name, samples in result["multi_requested_word_samples"].items():
+                launches = []
+                for sample in samples:
+                    words = [int(value, 16) for value in sample[:512]]
+                    mapping = []
+                    for lane in range(32):
+                        values = []
+                        for reg in range(tomography_regs):
+                            value = words[lane * 16 + reg]
+                            if value == 0xfeed0000:
+                                values.append("sentinel")
+                            elif value >> 31:
+                                values.append(f"{(value >> 16) & 0x7fff}:{value & 0xffff}")
+                            else:
+                                values.append(hex(value))
+                        mapping.append((lane, values))
+                    launches.append(mapping)
+                summaries[name] = launches
+            print({"tmem_tomography": summaries})
+        elif bank_mask_results:
+            if output_words < 1024:
+                raise ValueError("bank-mask-results requires "
+                                 "--output-words >= 1024")
+            summaries = {}
+            for name, samples in result["multi_requested_word_samples"].items():
+                launches = []
+                for sample in samples:
+                    words = [int(value, 16) for value in sample[:1024]]
+                    row_values = []
+                    for row in range(128):
+                        values = sorted(set(words[row * 8:(row + 1) * 8]))
+                        row_values.append("/".join(hex(value) for value in values))
+                    runs = []
+                    start = 0
+                    for row in range(1, 128):
+                        if row_values[row] != row_values[start]:
+                            runs.append((start, row - 1, row_values[start]))
+                            start = row
+                    runs.append((start, 127, row_values[start]))
+                    launches.append(runs)
+                summaries[name] = launches
+            print({"bank_mask": summaries})
+        elif bank_collision_results:
+            if output_words < 8:
+                raise ValueError("bank-collision-results requires "
+                                 "--output-words >= 8")
+
+            def u64(words, index):
+                return words[index] | words[index + 1] << 32
+
+            def delta(a, b):
+                value = (a - b) & ((1 << 64) - 1)
+                return value - (1 << 64) if value & (1 << 63) else value
+
+            summaries = {}
+            for name, samples in result["multi_requested_word_samples"].items():
+                launches = []
+                for sample in samples:
+                    words = [int(value, 16) for value in sample]
+                    mma_start, mma_done = u64(words, 0), u64(words, 2)
+                    st_start, st_done = u64(words, 4), u64(words, 6)
+                    launches.append({
+                        "sttm_minus_mma": delta(st_start, mma_start),
+                        "mma_cycles": delta(mma_done, mma_start),
+                        "sttm_cycles": delta(st_done, st_start),
+                    })
+                summaries[name] = launches
+            print({"bank_collision": summaries})
+        elif rhs_mutation_results:
+            if output_words < 272:
+                raise ValueError("rhs-mutation-results requires "
+                                 "--output-words >= 272")
+
+            def u64(words, index):
+                return words[index] | words[index + 1] << 32
+
+            def delta(a, b):
+                value = (a - b) & ((1 << 64) - 1)
+                return value - (1 << 64) if value & (1 << 63) else value
+
+            summaries = {}
+            for name, samples in result["multi_requested_word_samples"].items():
+                launches = []
+                for sample in samples:
+                    words = [int(value, 16) for value in sample]
+                    runs = []
+                    start = 0
+                    for index in range(1, 256):
+                        if words[index] != words[start]:
+                            runs.append((start, index - 1, hex(words[start])))
+                            start = index
+                    runs.append((start, 255, hex(words[start])))
+                    issue = u64(words, 256)
+                    done = u64(words, 258)
+                    mod1_start = u64(words, 264)
+                    mod1_done = u64(words, 266)
+                    mod2_start = u64(words, 268)
+                    mod2_done = u64(words, 270)
+                    dead64 = 0xDEADBEEFDEADBEEF
+                    launches.append({
+                        "mutation_minus_issue": [
+                            delta(value, issue) for value in
+                            (mod1_start, mod2_start) if value != dead64],
+                        "mutation_done_minus_issue": [
+                            delta(value, issue) for value in
+                            (mod1_done, mod2_done) if value != dead64],
+                        "mma_done_minus_issue": delta(done, issue),
+                        "column_runs": runs,
+                    })
+                summaries[name] = launches
+            print({"rhs_mutation": summaries})
+        elif compact_results:
             compact_samples = {}
             compact_tail_samples = {}
             first_418_by_mod3 = {}

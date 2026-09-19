@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Probe when one M128N256 UTCHMMA consumes each RHS shared-memory stripe.
 
-Warp 0 issues one overwrite BF16/BF16->FP32 UTCHMMA.  Warps 1 and 2 replace
+Warp 0 issues one overwrite BF16/BF16->FP32 UTCHMMA.  Modifier warps replace
 one 1-KiB stripe of the 8-KiB RHS tile (BF16 1.0 -> 2.0) at a separately
-scheduled clock target.  The kernel exports lane 0's 256 FP32 accumulator
-values plus the actual issue/store timestamps, allowing runs to be grouped by
-the measured mutation-minus-MMA time rather than nominal delay alone.
+scheduled clock target.  ``--single-modifier`` uses one warp and two adjacent
+STS.128 instructions; the legacy mode uses warps 1 and 2 for one half each.
+The kernel exports lane 0's 256 FP32 accumulator values plus the actual
+issue/store timestamps, allowing runs to be grouped by measured
+mutation-minus-MMA time rather than nominal delay alone.
 """
 
 from __future__ import annotations
@@ -38,10 +40,11 @@ def _clock_wait(label: str, delay: int) -> list[str]:
 
 
 def source(name: str, stripe: int, producer_delay: int,
-           modifier_delay: int) -> str:
+           modifier_delay: int, modifier_nops: int = 0,
+           single_modifier: bool = False) -> str:
     if not 0 <= stripe < 8:
         raise ValueError("stripe must be in 0..7")
-    if min(producer_delay, modifier_delay) < 0:
+    if min(producer_delay, modifier_delay, modifier_nops) < 0:
         raise ValueError("delays must be non-negative")
 
     b_stripe = 0x1800 + stripe * 0x400
@@ -98,15 +101,17 @@ def source(name: str, stripe: int, producer_delay: int,
         # Warp 0 publishes a comfortably future clock target.
         "    ISETP.EQ.AND P0, PT, R5, RZ, PT;[7:7:{}:13:1]",
         "    ISETP.EQ.AND P1, PT, R6, RZ, P0;[7:7:{}:13:1]",
-        "    @P1 CS2R {R30,R31}, SR_CLOCKLO;[3:7:{}:5:1]",
-        "    @P1 IADD3 R30, R30, 0x800, RZ;[7:7:{3}:5:1]",
+        "    @P1 CS2R {R30,R31}, SR_CLOCKLO;[0:7:{}:5:1]",
+        "    @P1 IADD3 R30, R30, 0x800, RZ;[7:7:{0}:5:1]",
         "    @P1 STS [RZ+0x700], R30;[7:7:{}:1:0]",
         "    WARPSYNC.ALL;[7:7:{}:5:0]",
         "    BAR.SYNC 0;[7:7:{}:5:1]",
         "    LDS R30, [RZ+0x700];[0:7:{}:1:0]",
         "    ISETP.EQ.AND P0, PT, R5, RZ, PT;[7:7:{0}:13:1]",
         "    @P0 BRA #label(producer);[7:7:{}:5:0]",
-        "    ISETP.LE.U32.AND P1, PT, R5, 0x2, PT;[7:7:{}:13:1]",
+        (("    ISETP.EQ.AND P1, PT, R5, 0x1, PT;[7:7:{}:13:1]")
+         if single_modifier else
+         "    ISETP.LE.U32.AND P1, PT, R5, 0x2, PT;[7:7:{}:13:1]"),
         "    @P1 BRA #label(modifier);[7:7:{}:5:0]",
         "    BRA #label(work_done);[7:7:{}:5:0]",
         "    #def_label(producer)",
@@ -125,39 +130,54 @@ def source(name: str, stripe: int, producer_delay: int,
         "[7:0:{}:1:0]",
         "    @P1 STG.E.64.STRONG.GPU [{R2,R3}+0x408], {R36,R37};"
         "[7:1:{0}:1:0]",
+        "    NOP;[7:7:{0,1}:1:0]",
     ]
     # Export lane 0's 256 accumulator columns in 16-column chunks.
     for column in range(0, 256, 16):
         lines += [
             f"    LDTM.x16 {_group(40, 16)}, tmem[UR10+{column:#x}];"
-            "[5:7:{}:1:0]",
+            "[2:7:{}:1:0]",
         ]
         for quarter in range(4):
-            req = "{5}" if quarter == 0 else "{}"
+            req = "{2}" if quarter == 0 else "{}"
             lines += [
                 f"    @P1 STG.E.128.STRONG.GPU [{{R2,R3}}+"
                 f"{column * 4 + quarter * 16:#x}], "
                 f"{_group(40 + quarter * 4, 4)};"
-                f"[7:{quarter}:{req}:1:0]"
+                f"[7:0:{req}:1:0]",
+                "    NOP;[7:7:{0}:1:0]",
             ]
-        lines += ["    NOP;[7:7:{0,1,2,3}:1:0]"]
     lines += [
         "    BRA #label(work_done);[7:7:{}:5:0]",
         "    #def_label(modifier)",
     ]
     lines += _clock_wait("modifier_wait", modifier_delay)
+    lines += ["    NOP;[7:7:{}:8:1]"] * modifier_nops
     lines += [
         "    CS2R {R34,R35}, SR_CLOCKLO;[7:7:{}:5:1]",
         f"    STS.128 [R28+{b_stripe:#x}], {{R24,R25,R26,R27}};"
         "[7:7:{}:1:0]",
+    ]
+    if single_modifier:
+        lines += [
+            f"    STS.128 [R28+{b_stripe + 0x200:#x}], "
+            "{R24,R25,R26,R27};[7:7:{}:1:0]",
+        ]
+    lines += [
         "    FENCE.VIEW.ASYNC.S;[7:7:{}:5:1]",
         "    CS2R {R36,R37}, SR_CLOCKLO;[7:7:{}:5:1]",
+        # Recreate the per-warp lane-zero predicate: P1 was only initialized
+        # on producer warp 0 above.  Keep a consecutive address pair for the
+        # assembler even though this small allocation cannot carry in practice.
+        "    ISETP.EQ.AND P1, PT, R6, RZ, PT;[7:7:{}:13:1]",
         "    SHL R38, R5, 0x4;[7:7:{}:5:1]",
         "    IADD3 R38, R38, 0x410, RZ;[7:7:{}:5:1]",
-        "    IADD3 R39, R2, R38, RZ;[7:7:{}:5:1]",
-        "    @P1 STG.E.64.STRONG.GPU [{R39,R3}], {R34,R35};[7:0:{}:1:0]",
-        "    @P1 STG.E.64.STRONG.GPU [{R39,R3}+0x8], {R36,R37};"
+        "    IADD3 R38, R2, R38, RZ;[7:7:{}:5:1]",
+        "    MOV R39, R3;[7:7:{}:5:1]",
+        "    @P1 STG.E.64.STRONG.GPU [{R38,R39}], {R34,R35};[7:0:{}:1:0]",
+        "    @P1 STG.E.64.STRONG.GPU [{R38,R39}+0x8], {R36,R37};"
         "[7:1:{0}:1:0]",
+        "    NOP;[7:7:{0,1}:1:0]",
         "    #def_label(work_done)",
         "    WARPSYNC.ALL;[7:7:{}:5:0]",
         "    BAR.SYNC 0;[7:7:{}:5:1]",
@@ -179,12 +199,18 @@ def main() -> None:
     ap.add_argument("--stripe", type=int, default=0)
     ap.add_argument("--producer-delay", type=int, default=0x100)
     ap.add_argument("--modifier-delay", type=int, default=0)
+    ap.add_argument("--modifier-nops", type=int, default=0,
+                    help="stall-8 NOPs immediately before the RHS stores")
+    ap.add_argument("--single-modifier", action="store_true",
+                    help="warp 1 writes the full stripe with two STS.128s")
     ap.add_argument("--output", type=Path, required=True)
     ap.add_argument("--source-output", type=Path)
     ns = ap.parse_args()
     name = (f"utchmma_rhs_s{ns.stripe}_p{ns.producer_delay}_"
-            f"m{ns.modifier_delay}")
-    src = source(name, ns.stripe, ns.producer_delay, ns.modifier_delay)
+            f"m{ns.modifier_delay}_q{ns.modifier_nops}"
+            f"{'_w1' if ns.single_modifier else ''}")
+    src = source(name, ns.stripe, ns.producer_delay, ns.modifier_delay,
+                 ns.modifier_nops, ns.single_modifier)
     result = assemble_kernel(src, arch="sm100a", check_deps=False)
     ns.output.write_bytes(result.code)
     if ns.source_output:

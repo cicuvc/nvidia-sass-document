@@ -410,9 +410,15 @@ half-columns.  With base fixed at column zero, scanning
 
 There are 16384 logical PTX pairs across the two producer warps.  The fast and
 slow cases therefore take about 2.14 and 3.01 cycles/pair respectively.  The
-natural decomposition is one service cycle for the aligned lower half plus
-one cycle for an even-aligned upper half, or two cycles when the upper half
-starts at an odd column and straddles two 128-byte bank words.
+natural decomposition is one service cycle for the aligned `t0_t15` source
+half plus one cycle for an even-aligned `t16_t31` source half, or two cycles
+when the latter starts at an odd column and straddles two 128-byte bank words.
+
+Tagged cross-layout tomography later clarified that these names select the
+**register-carrying thread half**, not an upper/lower half of the TMEM rows.
+Both forms map to canonical TMEM rows 0--15; the second SASS instruction lands
+elsewhere only because nvcc adds `immHalfSplitOffset` to its TMEM column.  See
+the exact bit-permutation formulas in `ldtm.md`.
 
 This strongly supports a 64-byte half-column and 128-byte bank-word packing,
 but it does not reveal the proposed higher-bit/XOR bank hash.  The two PTX
@@ -443,6 +449,100 @@ limit therefore hides any benefit from selecting two different banks.  A
 decisive bank-hash probe needs a second ingress that bypasses this admission
 point, such as UTCCP or tensor-core writeback, contending with one half-STTM
 stream while the destination column mapping is varied.
+
+That tensor-writeback follow-up was performed with UTCHMMA's four-word
+disable-output-lane mask, which can select the lower or upper 16 rows of every
+chunk exactly.  After correcting the split-layout interpretation, the victim
+was fixed to `t0_t15` while the tensor row mask and column-pair parity were
+varied independently.  Phase-resolved bursts, including a same-address
+half-LDTM RAW readback after the victim, showed no column-parity inversion for
+either tensor row half.  The tensor and ordinary paths therefore remain too
+independent for this collision method to reveal the final SRAM hash; see
+`utchmma.md` and `probe_sm100_utchmma_bank_hash.py`.
+
+#### Intra-instruction bank conflict from 16-datapath layouts (2026-09-19)
+
+A stronger probe avoids the two-warp admission ambiguity entirely.  It times
+6144 stores in a short 96-instruction loop and compares layouts that move the
+same number of bytes but present different row/column sets in each internal
+register phase.  The trailing `FENCE.VIEW.ASYNC.T` measures completion without
+an LDTM scoreboard-depth limit.  Every launch reproduced the same totals:
+
+| layout | logical bytes/op | cycles | inferred service cycles/op |
+|---|---:|---:|---:|
+| `STTM.x2` | 256 | 8135 | 1 |
+| `STTM.x4` | 512 | 14279 | 2 |
+| `STTM.x8` | 1024 | 26567 | 4 |
+| `STTM.16dp32bit_t0_t15.x2` | 128 | 8135 | 1 |
+| `STTM.16dp64bit.x2` | 256 | 13383 | about 2 |
+| `STTM.16dp128bit.x4` | 1024 | 49116 | 8 |
+| `STTM.16dp256bit.x1` | 512 | 49115 | **8** |
+
+The ordinary sequence is exact: x4 costs 6144 cycles more than x2, and x8
+costs another 12288, establishing one service cycle per aligned two-column
+sector.  The 16-datapath x128 form also has the expected eight sectors.  The
+x256 form is the discriminating case: it accesses only canonical rows 0--15
+and columns 0--7, so byte/sector counting predicts four cycles, but it takes
+the same eight cycles as x128.
+
+Tagged-layout formulas identify why.  During one register phase, x128 presents
+four consecutive columns, whereas x256 presents four columns of one parity:
+`{0,2,4,6}` or `{1,3,5,7}`.  The exact 2x penalty is direct evidence of an
+intra-instruction two-way bank conflict and establishes that the externally
+visible selector contains `column & 1`.  A bank-word model alone cannot explain
+it.  These measurements do not yet distinguish `bank=column_parity` from a
+checkerboard `bank=column_parity XOR row_half`, because every discriminating
+x256 phase holds its row half fixed.
+
+An attempted direct discriminator selected correlated `thread_id mod 4`
+classes in x64, but these are uniform-datapath instructions and the encoding
+accepts only `@UPx`, not a per-lane `@Px`.  Divergent execution would split the
+classes into separate execution groups and would no longer test a simultaneous
+intra-phase conflict, so this route cannot establish the row-half XOR.
+
+The corresponding LDTM matrix has the same ordering, including identical
+eight-cycle x128/x256 limits, but its absolute rates are partly constrained by
+the three rotating completion scoreboards.  STTM is therefore the cleaner
+evidence.  Probe:
+`tests/asm_construct/probe_sm100_tmem_layout_bank_timing.py`.
+
+#### Complete layout/NUM/EXPAND sweep (2026-09-19)
+
+`probe_sm100_tmem_modifier_sweep.py` extends the equal-byte comparison to every
+encoded layout/NUM pair: 45 pairs with bit 80 clear and the same 45 pairs with
+`EXPAND16BIT` set.  It issues 1536 copies of each instruction and closes each
+case with `FENCE.VIEW.ASYNC.T`.  The batched timer initially had a real WAR
+bug: its two result STGs claimed source-read barriers 0 and 1, but the next
+case waited only for barrier 1 before overwriting the start-clock registers.
+Waiting for both `{0,1}` removes the characteristic bogus `-8`/`-40` deltas;
+isolated cases and the corrected batch then agree exactly.
+
+All 45 non-expanded combinations execute.  Of the 45 expanded encodings, 43
+execute; `16dp32bit_t16_t31.x64.EXPAND16BIT` and `.x128.EXPAND16BIT` repeatedly
+terminate the kernel with CUDA 719, including when each is the sole measured
+case.  The corresponding `t0_t15` forms and the `t16_t31` x1--x32 forms work.
+This is recorded as a dynamic invalid/fault boundary, not assigned a latency;
+the reason for the asymmetric upper-half limit is not yet known.
+
+After subtracting the common loop/control floor, the executable cases collapse
+onto the following service-cycle ladder (the x1/x2 end is admission-dominated,
+so the table describes the stable wide-form slope):
+
+| layout | no expand | `EXPAND16BIT` |
+|---|---:|---:|
+| `32dp32bit` | about `NUM/2` | about `NUM` |
+| `16dp32bit_t0_t15`, `t16_t31` | about `NUM/2` | about `NUM` |
+| `16dp64bit` | about `NUM` | about `2*NUM` |
+| `16dp128bit` | about `2*NUM` | about `4*NUM` |
+| `16dp256bit` | about `8*NUM` | about `16*NUM` |
+
+Thus EXPAND consistently advances one 2x service step.  More importantly,
+`16dp256bit` retains its extra factor of two at every tested NUM in both bit-80
+states: compared with its byte-equivalent sector count, each internal register
+slice still presents only even or only odd columns to one bank.  This is a
+family-wide countercheck of the `bank = column & 1` model, rather than evidence
+from the single `.x1` point alone.  No measured modifier requires a row XOR to
+explain its timing.
 
 Probe: `tests/tcgen05_ldst_bandwidth.cu` (B200, 2026-09-17).
 

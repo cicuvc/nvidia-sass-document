@@ -436,6 +436,102 @@ LDS 压力改变了 producer/observer 的相对调度相位：同一 x1 三读�
 能增加 UTCHMMA 自身 operand wave 数的合法 descriptor/layout，而不是增加低优先级
 shared client。
 
+#### 运行中改写 RHS：n 方向遍历次序（2026-09-19）
+
+为避免连续 LDTM 的请求顺序伪装成写回方向，另一个探针不在 UTCHMMA 运行中
+读取 TMEM，而是改写它尚在消费的 shared-memory RHS：warp 0 发一条 overwrite
+M128N256 BF16 MMA；warp 1 在可调的绝对时钟相位用两条相邻 `STS.128` 把一个
+1-KiB B stripe 从 BF16 1.0 改为 2.0。UTCBAR 完成后才一次性导出 D。输出
+16.0/24.0/32.0 分别表示对应 D 元素消费了全旧、一半新、一半旧、全新的 RHS。
+每次 launch 同时记录 UTCHMMA issue、两条 STS 和 completion 的实际 `clock64`，
+分析按实测的 `mutation_start - mma_issue`，不按源码中的名义 delay 分组。
+
+双 modifier warp 的初版先确认了 shared 地址映射：连续的 stripe 0--3 依次影响
+TMEM 中连续的 n 区间，约为列 4--67、68--131、132--195、196--255；stripe
+4 只在尾部 244--255 留下 half 效果，stripe 5--7 完全无影响。当前 exporter 的
+列 0--3 反复得到 0/launch residue，故不拿它们判断方向。随后改成单 warp 连续
+写完整 stripe，消除了两个 warp 相差十几 cycle 的调度歧义。代表性的稳定结果
+如下（`new`=32.0，`half`=24.0，省略全旧区域）：
+
+| 实测 mutation 相位 | stripe 0 | stripe 1 | stripe 2 | stripe 3 |
+|---:|---|---|---|---|
+| +5 cycles | 4--51 new；52--67 half | new/half | new/half | new/half |
+| +21 cycles | 4--67 half | 68--115 new；116--131 half | new/half | new/half |
+| +37 cycles | old | 68--131 half | 132--179 new；180--195 half | new/half |
+| +53 cycles | old | old | 132--195 half | 196--243 new；244--255 half |
+| +67 cycles | old | old | old | 196--211 new；212--255 half |
+| +85 cycles 左右 | old | old | old | old |
+
+这个随时间向高列平移的对角前沿直接证明：在当前 K-major、无 swizzle 的
+M128N256 构造中，UTCHMMA **按递增 n 消费 B**。四个约 64-column 的 shared
+stripe 的消费相位依次约错开 16 cycles；stripe 内又能分辨出 16-column 边界。
+它也与 N256 的两个连续 N128 物理 wave 相容；本探针记录的
+issue→UTCBAR/mbarrier-wait 区间稳定为 256 cycles（包含提交和等待路径开销）。
+
+严格地说，RHS mutation 直接标记的是 operand fetch/consume 顺序，而不是 TMEM
+端口提交瞬间；最终 D 的列顺序再结合上一节已由并发 LDTM 证明的“单条指令中途
+写回可见”，强烈支持 TMEM 也按低 n 到高 n 推进，但若要把 fetch、compute、
+TMEM retire 三段各自的固定延迟拆开，仍需把本探针与同相位 LDTM snapshot 合并。
+探针为 `tests/asm_construct/probe_sm100_utchmma_rhs_mutation.py`；Modal runner 的
+`--rhs-mutation-results` 会直接输出每次 launch 的实测相位和压缩后的列区间。
+
+#### disable-output-lane 语义与 bank-hash 碰撞尝试（2026-09-19）
+
+新的 M128N8 overwrite 探针先把 D 清零，再分别设置四个连续 mask UR，并导出
+完整的 128×8 FP32 结果。全开得到 128 行 `0x41800000`（16.0），全关得到
+128 行 0。单独开放一个 32-bit mask word 的结果精确为：
+
+| 开放的 mask word | 被 UTCHMMA 更新的 TMEM rows |
+|---|---|
+| UR28 | 0--31 |
+| UR29 | 32--63 |
+| UR30 | 64--95 |
+| UR31 | 96--127 |
+
+mask bit 的语义也被直接确认：**1=禁止该 row 写回，0=允许**。因此把四个 word
+都设为 `0xffff0000` 会只更新每个 32-row chunk 的 rows 0--15；全部设为
+`0x0000ffff` 则只更新 rows 16--31。重复 launch 的边界逐行一致，没有观察到
+mask word 或 bit 的额外 swizzle。
+
+随后用这个能力尝试区分候选 checkerboard
+`bank = row_half XOR ((column >> 1) & 1)`。固定 UTCHMMA 只写每个 chunk 的
+下 16 行，另一个 warp 在逻辑地址不重叠的 column 8/10 上发
+`STTM.16dp32bit_t0_t15.x2`，扫描实际相位。单条 victim 后再做同地址、同
+layout 的 LDTM RAW readback，强制计时终点越过普通 TMEM 可见性；还测试了
+16 条 half-STTM burst。稳态结果为：
+
+- 单 victim + RAW readback：column 8/10 均为 **10 cycles**；
+- 16-victim burst：从 `sttm_start-mma_issue = +5` 扫到 `+101` cycles，固定
+  tensor 下半 mask 时 column 8/10 始终相同；
+- 固定 `t0_t15` victim、改用 tensor 上半 mask 复测，同样没有 column 8/10
+  的互补或反转；名义 phase 继续推到 MMA 完成以后也没有出现 parity 差异；
+- 同期 M128N8 UTCHMMA 的 issue→commit/wait 区间固定为 **133 cycles**。
+
+Tagged tomography 同时纠正了早期探针的命名假设：SASS 的
+`t0_t15/t16_t31` 选择寄存器数据来自哪个线程半区，两者在相同 TMEM 地址上都
+访问 canonical rows 0--15，并不分别代表 TMEM row lower/upper half。因此最终
+矩阵固定使用 `t0_t15`，只通过 UTCHMMA mask 翻转真正的 TMEM row half。
+
+因此在覆盖绝大部分 MMA 活动窗口的当前时间分辨率上，没有观察到候选 XOR 所
+要求的互补峰。这个负结果不能否定物理 checkerboard：此前饱和实验已经表明
+tensor D 写回和普通 LDTM/STTM 拥有近乎独立的逻辑 service path；这里进一步
+说明，即便用 lane mask 把 tensor 写回缩到一个 row half，普通路径的完成延迟
+仍没有暴露最终 SRAM-bank 仲裁。后续不应继续简单增加 STTM 数量，而应寻找能
+从 tensor/UTCCP 入口产生窄、可选 half-column 请求的第二客户端，或改做逻辑
+布局的 tagged-data tomography。
+
+探针为 `tests/asm_construct/probe_sm100_utchmma_bank_hash.py`；Modal runner 的
+`--bank-mask-results` 和 `--bank-collision-results` 分别压缩完整 row mask 输出
+和实测碰撞时序。
+
+后续 16-datapath STTM/LDTM 单指令吞吐矩阵终于给出了独立于上述跨入口碰撞的
+bank 证据：`16dp256bit.x1` 每个内部 phase 访问四个同奇偶列并产生精确 2x
+penalty，而连续四列的 `16dp128bit.x4` 能使用两路服务能力。因此可见 bank
+selector 至少包含 column bit 0；但该实验的每个判别 phase 固定一个 row half，
+仍不能判断最终形式是 `column_parity` 还是
+`column_parity XOR row_half`。详见 `sttm.md` 的
+“Intra-instruction bank conflict from 16-datapath layouts”。
+
 #### 多 warp 间的后端调度粒度（2026-09-18）
 
 为了区分“多条 UTCHMMA 以内部 wave 粒度交错”和“选中一条指令后连续执行其

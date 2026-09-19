@@ -205,10 +205,10 @@ is: **raw admission accepts a burst at one instruction per cycle, while the
 sustained same-tile service rate is about one shift per 12 SM cycles in a
 fixed clock state.**
 
-Independent tiles can overlap.  `tests/tcgen05_shift_parallel.cu` allocates
-128 columns and lets the lane-0 thread of one, two, or four warps shift separate
-32-column tiles.  Each issuer commits to and waits on its own mbarrier.  The
-maximum per-issuer intervals are:
+Multiple issuer envelopes can overlap.  `tests/tcgen05_shift_parallel.cu`
+allocates 128 columns and lets the lane-0 thread of one, two, or four warps
+shift separate 32-column tiles.  Each issuer commits to and waits on its own
+mbarrier.  The maximum per-issuer intervals are:
 
 | shifts/issuer | 1 issuer | 2 issuers | 4 issuers |
 |---:|---:|---:|---:|
@@ -216,12 +216,12 @@ maximum per-issuer intervals are:
 | 8 | 460 | 498 | 508 |
 | 32 | 1516 | 1602 | 1747 |
 
-At batch 32, aggregate operation throughput rises from **0.0211** to
-**0.0399** to **0.0733 shifts/cycle** for one, two, and four issuers.  Four
-independent tiles thus reach 3.47x the finite-batch aggregate throughput of one
-issuer (about 3.4x after removing the single-stream 108-cycle intercept), not a
-single global 1/44 shift/cycle bottleneck.  The four individual batch-32
-intervals are 1747, 1731, 1735, and 1743 cycles, showing balanced service.
+At batch 32, the naïve aggregate operation count divided by interval rises from
+**0.0211** to **0.0399** to **0.0733 shifts/cycle** for one, two, and four
+issuers.  The four individual batch-32 intervals are 1747, 1731, 1735, and
+1743 cycles.  This rules out a single global *front-end* cadence of one request
+per 44 cycles, but the later bare probe below shows that it does not establish
+independent per-tile backend service.
 
 These figures are intentionally reported in shifts/cycle, not bytes/cycle:
 the standalone operation updates four independently segmented row ranges, and
@@ -229,6 +229,21 @@ the physical implementation may rotate/rename rows rather than read and write
 the full logical matrix through a conventional datapath.  Calling the logical
 matrix footprint “physical TMEM traffic” would overstate what this probe has
 established.
+
+A later naked-SASS pair probe removes the 44-cycle ptxas wrapper and changes
+the interpretation of the apparent multi-tile scaling above.  One warp issuing
+64 bare shifts takes exactly **851 cycles** in steady state.  Two warps issuing
+64 shifts each take **1595** and **1614 cycles**, with a common span of 1619;
+the added work is almost exactly `64 * 12 = 768` cycles.  More importantly,
+the result is identical when the second warp targets the same 32-column tile
+or tiles starting at columns 32, 64, 128, 256, and 480.  Thus the earlier
+3.4x finite-batch operation count came from overlapping the per-warp ptxas
+issue envelopes and filling one backend, **not** from four tile-indexed shift
+engines.  At saturation, bare UTCSHIFT service is effectively global and
+serial at about 12 cycles/shift; tile address bits do not expose a collision
+class.  UTCSHIFT is therefore not a useful high-column bank-hash oracle.
+
+Pair probe: `tests/asm_construct/probe_sm100_utcshift_tile_hash.py`.
 
 Schedule patcher: `tools/patch_tcgen05_shift_schedule.py`.
 Bare semantic check: `tests/tcgen05_shift_bare_correctness.cu`.
