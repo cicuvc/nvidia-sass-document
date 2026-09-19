@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""LDTM decoder — PTX tcgen05.ld (tensor-memory load), sm100.
+"""LDTM decoder — PTX tcgen05.ld / tcgen05.ld.red, sm100/sm103.
 
 Reconstructs the cuobjdump spelling from the 128-bit encoding and validates
-against real sm_100a vectors (tests/ldtm_test.cu). Opcode 0x19ee.
+against real sm_100a and sm_103a vectors.  Plain LDTM uses opcode 0x19ee;
+sm103's fused load-and-row-reduction LDTM.STAT uses opcode 0x15ee.
 """
 
 from typing import Optional
@@ -12,6 +13,8 @@ LAYOUT = {
     4: "16dp32bit_t0_t15", 5: "16dp32bit_t16_t31", 6: "INVALID6", 7: "INVALID7",
 }
 NUM = {0: "x1", 1: "x2", 2: "x4", 3: "x8", 4: "x16", 5: "x32", 6: "x64", 7: "x128"}
+ROWOP = {0: "MAX", 1: "MAXABS", 2: "MIN", 3: "MINABS"}
+FMT = {0: "U32", 1: "S32", 2: "F32", 3: "INVALID3"}
 
 
 def extract(lo64: int, hi64: int, bits: list[int]) -> int:
@@ -31,12 +34,14 @@ def s32(val: int) -> int:
 
 
 def decode_ldtm(lo64: int, hi64: int) -> Optional[str]:
-    if get_opcode(lo64, hi64) != 0x19ee:
+    opcode = get_opcode(lo64, hi64)
+    if opcode not in (0x19ee, 0x15ee):
         return None
 
     pg = extract(lo64, hi64, [14, 13, 12])
     pg_not = extract(lo64, hi64, [15])
     rd = extract(lo64, hi64, [23, 22, 21, 20, 19, 18, 17, 16])
+    rd2 = extract(lo64, hi64, [31, 30, 29, 28, 27, 26, 25, 24])
     urb = extract(lo64, hi64, [39, 38, 37, 36, 35, 34, 33, 32])
     # layout = {bit87, bit82, bit81}; num = [85:83]; pack = bit80
     layout = extract(lo64, hi64, [87, 82, 81])
@@ -50,19 +55,33 @@ def decode_ldtm(lo64: int, hi64: int) -> Optional[str]:
     if pg != 7:
         parts.append(f"@{'!' if pg_not else ''}UP{pg}")
 
-    mnem = "LDTM"
+    is_stat = opcode == 0x15ee
+    mnem = "LDTM.STAT" if is_stat else "LDTM"
     if layout != 2:  # 32dp32bit is the default, elided by cuobjdump
         mnem += f".{LAYOUT[layout]}"
     if num != 0:  # x1 default elided
         mnem += f".{NUM[num]}"
-    if pack:
+    if pack and not is_stat:
         mnem += ".PACK16BIT"
+    if is_stat:
+        rowop = extract(lo64, hi64, [67, 66])
+        fmt = extract(lo64, hi64, [65, 64])
+        nan = extract(lo64, hi64, [68])
+        mnem += f".{ROWOP[rowop]}"
+        if fmt != 0:  # U32 is the default and cuobjdump elides it.
+            mnem += f".{FMT[fmt]}"
+        if nan:
+            mnem += ".NAN"
     parts.append(mnem)
 
     rd_s = f"R{rd}" if rd != 0xff else "RZ"
+    rd2_s = f"R{rd2}" if rd2 != 0xff else "RZ"
     base = f"UR{urb}" if urb != 0x3f else "URZ"
     addr = f"tmem[{base}]" if off == 0 else f"tmem[{base}+{off:#x}]"
-    parts.append(f"{rd_s}, {addr}")
+    if is_stat:
+        parts.append(f"{rd2_s}, {rd_s}, {addr}")
+    else:
+        parts.append(f"{rd_s}, {addr}")
     return " ".join(parts)
 
 
@@ -77,6 +96,12 @@ if __name__ == "__main__":
         (0x00000006001279ee, 0x000f2200080d0000, "LDTM.x2.PACK16BIT R18, tmem[UR6]"),
         (0x00000006001079ee, 0x000fe20008880000, "LDTM.16dp32bit_t0_t15.x2 R16, tmem[UR6]"),
         (0x00001006001079ee, 0x000f6200088a0000, "LDTM.16dp32bit_t16_t31.x2 R16, tmem[UR6+0x10]"),
+        # tests/tcgen05_ld_red.cu (nvcc 13.1 -arch=sm_103a).
+        (0x00000004070475ee, 0x001e2200080c0000, "LDTM.STAT.x2.MAX R7, R4, tmem[UR4]"),
+        (0x00000004090475ee, 0x001e220008140009, "LDTM.STAT.x4.MIN.S32 R9, R4, tmem[UR4]"),
+        (0x00000004070475ee, 0x001e2200080c0016, "LDTM.STAT.x2.MAXABS.F32.NAN R7, R4, tmem[UR4]"),
+        (0x00000004090475ee, 0x001fe20008900008, "LDTM.STAT.16dp32bit_t0_t15.x4.MIN R9, R4, tmem[UR4]"),
+        (0x00001004090475ee, 0x000e220008920008, "LDTM.STAT.16dp32bit_t16_t31.x4.MIN R9, R4, tmem[UR4+0x10]"),
     ]
 
     all_ok = True

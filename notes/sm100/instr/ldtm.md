@@ -37,9 +37,9 @@ scoreboard it sets when the TMEM data lands. This is the same category used by
 | `ldtm_` | CLASS | 0x19ee | full `layout`×`num` matrix, optional `.pack::16b` |
 | `ldt_` | ALT of `ldsm__sImmOffset` | 0x19ee | `layout` pinned `32dp32bit`; `size`∈{32,64,128} |
 
-There is **no** `.red` (load-with-reduction) SASS variant in this dump — PTX
-`tcgen05.ld.red` (min/max) must lower to `LDTM` + a separate reduction, or is
-gated to `sm_101a`/`sm_103f` (see PTX target notes).
+There is **no** `.red` (load-with-reduction) SASS variant in the sm100 dump.
+On sm103 it is a new fused opcode, `LDTM.STAT` (`0x15ee`), rather than an
+ordinary `LDTM` plus ALU reduction; see `notes/sm103/instr/ldtm_stat.md`.
 
 ## Modifiers (LDTM)
 | Slot | Enum | Bits | Meaning |
