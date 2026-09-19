@@ -1,0 +1,54 @@
+# Compare the implicit UTCLDSWS value with the proven B200 V1 allocator ABI.
+# Output words:
+#   0..2  SWS, packed allocator mask, phase before allocation
+#   3..6  SWS, taddr, packed allocator mask, phase after allocation
+#   7..9  SWS, packed allocator mask, phase after deallocation
+# The packed mask is occupied[15:0] | allocation_heads[31:16].
+#fn utcldsws_state(out<8>) {
+    #pragma SHARED(4)
+    #pragma AT_ENTRY_FRAGMENT_TMEM_CTA1(1)
+    #pragma MAXREG_COUNT(48)
+    LDC R1, c[0x0][0x37c];[7:7:{}:8:0]
+    S2UR UR5, SR_CgaCtaId;[0:7:{}:1:0]
+    UMOV UR4, 0x400;[7:7:{}:1:0]
+    ULEA UR5, UR5, UR4, 0x18;[7:7:{0}:9:1]
+    S2UR UR8, SR_CgaCtaId;[0:7:{}:1:0]
+    UMOV UR9, 0x40;[7:7:{}:1:0]
+    ULEA UR8, UR8, UR9, 0x18;[7:7:{0}:9:1]
+
+    UTCLDSWS UR20;[0:7:{}:1:0]
+    IMAD.U32 R8, RZ, RZ, UR20;[7:7:{0}:4:1]
+    LDS R9, [UR8+0x10];[0:7:{}:1:0]
+    LDS.U8 R10, [UR8];[0:7:{}:1:0]
+
+    #!tmem_alloc_1cta(UR5, 32)
+
+    UTCLDSWS UR21;[0:7:{}:1:0]
+    IMAD.U32 R11, RZ, RZ, UR21;[7:7:{0}:4:1]
+    LDS R12, [UR5];[0:7:{}:1:0]
+    LDS R13, [UR8+0x10];[0:7:{}:1:0]
+    LDS.U8 R14, [UR8];[0:7:{}:1:0]
+
+    #!tmem_dealloc_1cta(UR5, 32)
+
+    UTCLDSWS UR22;[0:7:{}:1:0]
+    IMAD.U32 R15, RZ, RZ, UR22;[7:7:{0}:4:1]
+    LDS R16, [UR8+0x10];[0:7:{}:1:0]
+    LDS.U8 R17, [UR8];[0:7:{}:1:0]
+
+    LDC.64 {R2,R3}, #param(out);[1:7:{}:1:0]
+    LDCU.64 {UR6,UR7}, #spec_const(SLOT_DEFAULT_CDESC);[2:7:{}:1:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x00], R8;[7:7:{0,1,2}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x04], R9;[7:7:{}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x08], R10;[7:7:{}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x0c], R11;[7:7:{}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x10], R12;[7:7:{}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x14], R13;[7:7:{}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x18], R14;[7:7:{}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x1c], R15;[7:7:{}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x20], R16;[7:7:{}:8:0]
+    STG.E desc[{UR6,UR7}][{R2,R3}+0x24], R17;[7:7:{}:8:0]
+
+    #!tmem_relinquish_alloc_permit_1cta()
+    EXIT;[7:7:{}:5:0]
+}
