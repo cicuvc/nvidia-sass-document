@@ -23,6 +23,13 @@
 当前 hand-SASS 选择 13.1 是因为仓库 V2 ELF contract 也是已动态验证的 13.1
 `CUDA_API_VERSION=0x83` 组合，而不是把两个 toolkit 版本的 contract 混合。
 
+assembler builtin 的 V2 dealloc 保留 phase 与 allocation-head 两个软件
+guard，但把 `+0x14` occupied-range guard 槽固定生成为 NOP。这个 guard 在紧邻的
+alloc/dealloc lifecycle 中会在 B200 和 B300 上假阳性；B200 现场 dump 同时确认
+此时 `+0x14=1`、`+0x18=1`，实际记录没有损坏。移除该非必要 guard 后，硬件
+`UTCATOMSWS.AND`、两份 `ATOMS.AND` 清理和 relinquish 均保持不变。builtin 已在
+B200 上对 32/64/128/256/512 列全部验证通过。
+
 ## 为什么 V1 user SASS 不能复用
 
 V1 entry fragment 与 allocator helper 使用：

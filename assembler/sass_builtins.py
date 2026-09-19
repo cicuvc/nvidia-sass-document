@@ -7,7 +7,6 @@ dependency checking and encoding use the ordinary assembler pipeline.
 
 from __future__ import annotations
 
-from . import arch
 from .operand import OperandKind
 from .sass_parser import parse_sass
 
@@ -243,17 +242,14 @@ ISETP.NE.AND P{pred}, PT, R{r_mask}, R{r_tmp}, PT;[7:7:{{}}:13:1]
         final_waits = f"{sb_base},{sb_mask},{sb_reduce}"
         mask_offset = 0x50
     else:
-        # The sm103 V2 entry ABI's +0x14 occupied-range word does not match
-        # the sm100 software guard below (real B300: the check traps even for
-        # a successful 32-column allocation).  The independently maintained
-        # +0x18 allocation-head guard remains valid, as does the hardware
-        # UTCATOMSWS release and both bitmap clears.  Keep the instruction
-        # slot stable so source/PC mappings do not vary by architecture.
-        occupied_guard = (
-            "NOP;[7:7:{}:5:0]"
-            if arch.current().name in ("sm103", "sm103a")
-            else f"@P{pred} BPT.TRAP 0x1;[7:7:{{}}:5:0]"
-        )
+        # Do not enforce the +0x14 occupied-range software guard in V2.  It
+        # can report a false mismatch in a short alloc/dealloc lifecycle on
+        # both B200 and B300 even though +0x14 contains the expected mask and
+        # the hardware UTCATOMSWS release succeeds.  The independently kept
+        # +0x18 allocation-head guard remains useful, and both bitmap clears
+        # remain unchanged.  Keep a NOP in the slot so instruction offsets
+        # and entry-fragment metadata stay stable.
+        occupied_guard = "NOP;[7:7:{}:5:0]"
         form_mask = (f"""
 IMAD.MOV.U32 R{r_bit}, RZ, RZ, 0xffff;[7:7:{{}}:5:1]
 IMAD.MOV.U32 R{r_tmp}, RZ, RZ, 0x1;[7:7:{{}}:5:1]

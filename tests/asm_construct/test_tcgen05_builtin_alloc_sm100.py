@@ -43,18 +43,18 @@ assert struct.pack("<BBH3I", 4, 0x31, 12,
                    0x370, 0x3c0, 0x3e0) in cubin
 assert struct.pack("<BBHI", 4, 0x1c, 4, 0x4f0) in cubin
 
-# B300's sm103 V2 occupied-range word is not compatible with the sm100
-# software guardrail.  The lowering retains the phase and head guards, but
-# replaces only the occupied-range BPT slot with a NOP; instruction offsets
-# and the actual UTCATOMSWS/ATOMS deallocation protocol remain unchanged.
+# The V2 occupied-range guard is a false positive in short lifecycles on both
+# B200 and B300.  Both lowerings retain phase and head guards, but replace only
+# the occupied-range BPT slot with a NOP; instruction offsets and the actual
+# UTCATOMSWS/ATOMS deallocation protocol remain unchanged.
 sm103 = assemble_kernel(SOURCE, arch="sm103a", check_deps=False)
 sm100_opcodes = [(((hi >> 27) & 1) << 12) | (lo & 0xfff)
                  for lo, hi in result.encoded]
 sm103_opcodes = [(((hi >> 27) & 1) << 12) | (lo & 0xfff)
                  for lo, hi in sm103.encoded]
-assert sm100_opcodes.count(0x95c) == 3  # BPT: phase + occupied + head
+assert sm100_opcodes.count(0x95c) == 2  # BPT: phase + head
 assert sm103_opcodes.count(0x95c) == 2  # BPT: phase + head
-assert sm103_opcodes.count(0x918) == sm100_opcodes.count(0x918) + 1
+assert sm103_opcodes.count(0x918) == sm100_opcodes.count(0x918)
 assert bytes.fromhex(
     "02090100020202000307010102030000"
     "040b08000000000000000000") in sm103.code
