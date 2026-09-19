@@ -543,7 +543,8 @@ def main(hand_cubin: str = "", hand_source: str = "",
          bank_mask_results: bool = False,
          bank_collision_results: bool = False,
          tomography_regs: int = 0,
-         modifier_sweep_results: bool = False) -> None:
+         modifier_sweep_results: bool = False,
+         d_mutation_results: bool = False) -> None:
     if compile_source:
         source = Path(compile_source).read_text()
         cubin, sass, elf = compile_remote.remote(source)
@@ -611,7 +612,54 @@ def main(hand_cubin: str = "", hand_source: str = "",
                                    output_words, repetitions, cluster_x)
         print(f"hand cubin: {hand_cubin} ({len(data)} bytes)")
         result.pop("handler_hex", None)
-        if modifier_sweep_results:
+        if d_mutation_results:
+            if output_words < 1034:
+                raise ValueError("d-mutation-results requires "
+                                 "--output-words >= 1034")
+
+            def u64(words, index):
+                return words[index] | words[index + 1] << 32
+
+            names = {
+                0x3f800000: "initial_1",
+                0x41800000: "product_16",
+                0x41880000: "original_plus_product_17",
+                0x42800000: "mutation_64",
+                0x42a00000: "mutation_plus_product_80",
+            }
+            summaries = {}
+            for name, samples in result["multi_requested_word_samples"].items():
+                launches = []
+                for sample in samples:
+                    words = [int(value, 16) for value in sample]
+                    counts = {}
+                    per_warp = []
+                    for begin, end in ((0, 1024),):
+                        for value in words[begin:end]:
+                            key = names.get(value, hex(value))
+                            counts[key] = counts.get(key, 0) + 1
+                    for warp in range(4):
+                        warp_counts = {}
+                        for value in words[warp * 256:(warp + 1) * 256]:
+                            key = names.get(value, hex(value))
+                            warp_counts[key] = warp_counts.get(key, 0) + 1
+                        per_warp.append(warp_counts)
+                    issue = u64(words, 1024)
+                    admitted = u64(words, 1026)
+                    done = u64(words, 1028)
+                    mut_start, mut_done = u64(words, 1030), u64(words, 1032)
+                    launches.append({
+                        "mutation_minus_issue": mut_start - issue,
+                        "mutation_minus_admission_upper": mut_start - admitted,
+                        "mutation_done_minus_issue": mut_done - issue,
+                        "admission_upper_minus_issue": admitted - issue,
+                        "mma_cycles": done - issue,
+                        "counts": counts,
+                        "per_warp": per_warp,
+                    })
+                summaries[name] = launches
+            print({"utchmma_d_mutation": summaries})
+        elif modifier_sweep_results:
             layouts = (
                 ("32dp32bit", 7),
                 ("16dp64bit", 7),

@@ -416,6 +416,47 @@ predicated UIADD3 构造不同的 TMEM 地址，再分别读 `(0,1),(2,3),(4,5)`
 同时 outstanding。x1 bring-up 中一次 716 最终查明是 12-B 样本区之后的
 64-bit timer 被错误放在未对齐的 `out+0xc`，并非 LDTM.x1 的硬件限制。
 
+### 运行中改写 D：直接证明 late accumulator RMW（2026-09-19）
+
+上述 LDTM observer 只证明结果渐进退休，单独看仍兼容“UTCHMMA 开始时预取旧
+D、稍后分块写回”。新的三值实验直接让另一个 warp 在**单条 accumulate
+UTCHMMA 执行途中**用 `STTM.x8` 覆写其 32-row chunk：初始 D=1.0，BF16
+ones 的 K16 乘积为 16.0，中途写入 D=64.0。因此最终值具有唯一解释：
+
+| result | interpretation |
+|---:|---|
+| 17.0 | MMA 使用旧 D；STTM 位于 D-read 后、MMA writeback 前 |
+| 64.0 | STTM 位于 MMA writeback 后并成为最终写入者 |
+| **80.0** | MMA 读取途中写入的 64，再加 16；直接证明 late D read/RMW |
+
+为避免把入口等待误当成指令已执行，producer 记录两个时钟：UTCHMMA 前的
+pre-issue，以及 UTCHMMA 后第一条 `CS2R`。后者只有在 UTCHMMA 已通过
+admission 后才能执行，所以是 admission 时刻的上界；它在所有 launch 中均为
+pre-issue+17 cycles。modifier 同时记录 STTM 前和 `FENCE.VIEW.ASYNC.T` 后的
+实际时钟，分析完全不使用源码 NOP 数作为相位。
+
+按 `mutation_start - admission_upper` 对密集边界扫描分组，结果为：
+
+| measured phase | modified chunk 的 256 个值 |
+|---:|---:|
+| +21, +25, +27, +29, +31 | **全部 80.0** |
+| +32, +33, +35, +37 | **全部 17.0** |
+| +39 及以后 | **全部 64.0** |
+
+未修改的 control chunk 始终为 17.0；单条 MMA 的 completion 窗口为 132
+cycles，mutation STTM 到 fence completion 为 8 cycles。最关键的 +21…+31
+样本中，modifier 的 start 已明确晚于“UTCHMMA 后第一条指令”，最终却得到
+`64+16=80`；发射时整体捕获 accumulator 的模型无法产生这个值。
+
+因此可以把结论收紧为：**UTCHMMA 对 D 执行分阶段的 late
+read-modify-write，而不是在 admission 时整体 snapshot accumulator**。+33…+37
+的 lost-update 窗口与 +39 后的 late-STTM 窗口还直接分离了内部 D-read 和
+writeback。当前 N8 实验的被修改 chunk 整体同值，尚未解析一个 chunk 内更细的
+RMW microtile 顺序；那需要对不同列/行 slice 分别写入 tag 再扫相位。
+
+探针：`tests/asm_construct/probe_sm100_utchmma_d_mutation.py`；Modal runner 的
+`--d-mutation-results` 输出实际 admission/mutation 相位以及四个 warp 的值计数。
+
 为尝试扩大单条指令的观察窗口，又加入 warp 2--5 的四路饱和 `LDS.128`
 contender。四个 warp 覆盖四个 subcore，每轮各发三条独立 LDS.128（SB0--SB2）
 再显式等待；12 轮远长于单条 MMA 的活动区间。control 与 contention 均使用
