@@ -10,6 +10,7 @@ rather than the newer scoreboard-sensitive sm90/sm120 harness.
 from __future__ import annotations
 
 import argparse
+import os
 import statistics
 import struct
 import sys
@@ -21,8 +22,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from assembler import CudaModule, assemble  # noqa: E402
 from probe_subcore_compute_conflict import OPS, Op, body  # noqa: E402
 
+# On sm_89 a yield=1 bracket costs a solo warp one issue slot per
+# instruction (FFMA 2.0 -> 1.0 cyc/inst only without it).  Rebuild the op
+# table with the no-yield/reuse bracket so the pipe rate is exposed.
+if os.environ.get("PROBE_ARCH", "sm80") == "sm89":
+    import dataclasses
+    OPS = {k: dataclasses.replace(v, sched="[7:7:{}:1:0:7]")
+           for k, v in OPS.items()}
+
 
 PLACEMENTS = {"solo": None, "same": 4, "different": 1}
+PLACEMENTS.update({f"w{w}": w for w in range(1, 8)})
 
 
 def source(a: Op, b: Op, count: int, contender_warp: int | None,
@@ -31,6 +41,8 @@ def source(a: Op, b: Op, count: int, contender_warp: int | None,
         "#fn sm80_conf(out<8>) {",
         "    #pragma MAXREG_COUNT(96)",
         "    S2R R0, SR_TID.X;[7:7:{}:6:0]",
+        "    NOP;[7:7:{}:1:1]",
+        "    NOP;[7:7:{}:1:1]",
         "    MOV R6, 0x10;[7:7:{}:6:0]",
         "    IMAD.WIDE.U32 {R2,R3}, R0, R6, c[0x0][0x160];[7:7:{}:6:0]",
         "    SHR R5, R0, 0x5;[7:7:{}:6:0]",
@@ -81,7 +93,18 @@ def source(a: Op, b: Op, count: int, contender_warp: int | None,
     ]
     if contender_warp is not None:
         lines += ["#def_label(contender)"]
+        if os.environ.get("PROBE_TS"):
+            lines += [
+                "    CS2R {R30,R31}, SR_CLOCKLO;[7:7:{}:6:0]",
+                "    NOP;[7:7:{}:1:1]",
+            ]
         lines += tested_body(b, count * factor)
+        if os.environ.get("PROBE_TS"):
+            lines += [
+                "    CS2R {R32,R33}, SR_CLOCKLO;[7:7:{}:6:0]",
+                "    STG.E.64.STRONG.GPU [{R2,R3}], {R30,R31};[0:1:{}:8:0]",
+                "    STG.E.64.STRONG.GPU [{R2,R3}+0x8], {R32,R33};[0:1:{}:8:0]",
+            ]
         lines += ["    EXIT;[7:7:{}:5:0]"]
     lines += ["}"]
     return "\n".join(lines)
@@ -127,7 +150,7 @@ def main() -> int:
                     source(OPS[a_name], OPS[b_name], count,
                            PLACEMENTS[placement], ns.factor,
                            ns.force_reuse),
-                    arch="sm80", check_deps=False)
+                    arch=os.environ.get("PROBE_ARCH", "sm80"), check_deps=False)
                 mod = CudaModule(cubin)
                 out = mod.devmem_alloc(256 * 16)
                 try:

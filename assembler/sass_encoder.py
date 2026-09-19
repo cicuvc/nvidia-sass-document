@@ -374,7 +374,8 @@ class SassEncoder:
             # index even though the assembly syntax and disassembler expose
             # a byte address.  Newer ISA dumps use byte offsets here.
             if self.db.get("meta", {}).get("source") in {
-                    "sm_70_instructions.txt", "sm_80_instructions.txt"}:
+                    "sm_70_instructions.txt", "sm_80_instructions.txt",
+                    "sm_89_instructions.txt"}:
                 offset //= 4
             return offset & 0xFFFF
 

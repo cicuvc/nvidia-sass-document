@@ -112,6 +112,8 @@ def main():
     n = 0
     n += build("sm_75_instructions.txt", "sm75.json")
     n += build("sm_80_instructions.txt", "sm80.json")
+    if (REPO / "sm_89_instructions.txt").exists():
+        n += build("sm_89_instructions.txt", "sm89.json")
     if n:
         sys.exit(f"{n} structural errors")
 

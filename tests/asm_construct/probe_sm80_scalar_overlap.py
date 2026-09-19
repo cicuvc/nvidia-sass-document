@@ -9,6 +9,7 @@ scoreboard/control assumptions that are not valid for an Ampere cubin.
 from __future__ import annotations
 
 import argparse
+import os
 import statistics
 import struct
 import sys
@@ -144,7 +145,7 @@ def main() -> int:
     for case in cases:
         points: list[tuple[int, float]] = []
         for count in counts:
-            cubin = assemble(source(case, count), arch="sm80",
+            cubin = assemble(source(case, count), arch=os.environ.get("PROBE_ARCH", "sm80"),
                              check_deps=False)
             mod = CudaModule(cubin)
             out = mod.devmem_alloc(ns.grid * 16)

@@ -48,6 +48,11 @@ ARCHES: dict[str, ArchConfig] = {
     # descriptor from c[0][0x118] into UR4/UR5 in ordinary memory kernels.
     "sm80": ArchConfig("sm80", "sm80.json", (0, 0x118), 0x160,
                        0x00500550, 0x33, 0x07),
+    # Captured from a CUDA 12.8 RTX 4090 (Ada, sm_89) cubin: same
+    # constant/parameter ABI as sm80 (desc c[0][0x118], params at 0x160);
+    # e_flags carries architecture 0x59 in both nibble pairs.
+    "sm89": ArchConfig("sm89", "sm89.json", (0, 0x118), 0x160,
+                       0x00590559, 0x33, 0x07),
     "sm90": ArchConfig("sm90", "sm90.json", (0, 0x208), 0x210,
                         0x005a055a, 0x33, 0x07),
     # B200 nvcc -arch=sm_100a cubin: Blackwell uses the same constant/param
