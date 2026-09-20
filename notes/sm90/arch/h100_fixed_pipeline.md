@@ -24,7 +24,7 @@ min-over-reps CS2R window.  `reuse` = `[7:7:{}:1:0:7]`, `yield` =
 | IMAD.WIDE / IMAD.HI | 4.01 | 4.01 | 64-bit product path = 2 passes |
 | **FFMA / FADD / FMUL** (fmalighter) | **1.01** | 2.01 | **32 FP32** |
 | HFMA2 / HADD2 (fp16_pipe) | 2.01 | 2.01 | 16 packed |
-| DADD | 2.01 | 2.01 | 16 FP64 (= 64/SM, the 1:2 ratio) |
+| DADD | 2.01 | 2.01 | 16 FP64 **per SMSP, private** (= 64/SM, the 1:2 ratio) |
 | DFMA | 2.01 | **3.01** | 16 FP64, yield NOT hidden (see below) |
 | MUFU.RCP | 8.00 | 8.00 | 4 XU |
 
@@ -210,7 +210,11 @@ and identical bypass boundaries (no lite fast path — rejects the GB202
 ALU-Lite leaf); FFMA at 1.0 while IMAD×FFMA aggregate ~1.2 (FFMA keeps F
 plus most of C; IMAD gets C scraps); DADD×FFMA behaves like INT×FFMA, so
 the 16 FP64 lanes live on C as well (consistent with the 1:2 FP64:FP32
-throughput ratio).  4-warp same-subcore runs
+throughput ratio).  The FP64 block is **per-SMSP private**
+(`probe_sm90_fp64_scope.py`: four DADD/DFMA warps on four different
+subcores each sustain the full 0.498 inst/clk with zero interference; four
+on one subcore timeshare) — like GA100, unlike the SM-shared FP64 of
+AD102/GB202.  4-warp same-subcore runs
 (`probe_sm90_conflict4.py`) show the scheduler rotating fixed time quanta
 between warps rather than demand-filling, which is why 2-warp same-pipe
 pairs look winner-take-all in window averages.
@@ -228,7 +232,7 @@ result stage on C or a separate small array.
 | IMAD | 2.0 (on FP32 pipe) | 2.0 (own 16-lane) | 2.0 (fmalighter mul path) | FMAHeavy |
 | IMAD.WIDE | 4.0 | 4.0 | 4.0 | 4.0 |
 | packed FP16 | 2.0 | 2.0 | 2.0 | 2.0 |
-| FP64 DADD/DFMA | 4.0 (8 lanes/SMSP) | 16/19 (2 lanes/SM!) | **2.0 (16 lanes/SMSP)** | SM-shared |
+| FP64 DADD/DFMA | 4.0 (8/SMSP private) | 16/19 (2 lanes/SM shared) | **2.0 (16/SMSP private)** | SM-shared |
 | MUFU | 8.0 | 8.0 | 8.0 | 8.0 |
 | yield switch cost | +1 (NOP-verified) | +1 | **+1** (DFMA anomaly +1 on top of 2.0) | +1 |
 | INT × IMAD same-subcore | disjoint (0.5+0.5) | disjoint (A + C-mul) | **shared one server (0.25+0.25)** | — |
