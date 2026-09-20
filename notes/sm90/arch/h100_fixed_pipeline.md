@@ -75,6 +75,18 @@ predicated-off and active bursts:
 can never accumulate; a queue would serve no purpose.  Effectively "no
 admission queue" is true for fmalighter alone.
 
+**Attempted workaround (failed, informatively):** squeezing FFMA's service
+rate by occupying the 16 dual-mode C lanes with a heavy co-resident INT
+stream does not work.  With `--fast` brackets and a 64-op blocker on the
+sibling warp of the same subcore, the FFMA burst stays at +1 cyc/op full
+rate under every blocker tried: IADD3 (the INT stream loses C arbitration
+and starves — FFMA has strict priority on C, matching the ~0.9 vs ~0.33
+conflict-probe split), and IMAD.HI/IMAD.WIDE blockers which run at their
+own full 4 cyc/op concurrently with full-rate FFMA.  The latter also shows
+IMAD.WIDE's 4 cyc/op is **not** C-array occupancy (otherwise concurrent
+FFMA would halve); the bottleneck must be the 64-bit writeback or a narrow
+dedicated mul path, consistent with the 1-cycle IMAD.WIDE-lo→fma bypass.
+
 Depth estimate: with same2 the combined arrival is 1/cyc against a 0.5/cyc
 service, so the backlog grows 0.5 req/cyc and the knee N≈D.  same4 (arrival
 port-capped at 1/cyc) knees at N≈6-8, consistent within noise.  Post-knee

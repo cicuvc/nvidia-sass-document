@@ -63,7 +63,8 @@ ACTORS = {
 
 def source(n: int, mode: str, actors: tuple[int, ...], active: bool,
            fast: bool, prefix_hi: int, prefix_packed: int,
-           prefix_active: bool, blocker_hi: int) -> str:
+           prefix_active: bool, blocker_hi: int,
+           blocker_op: str = "hi") -> str:
     op = OPS[mode]
     if active:
         op = op.removeprefix("@P6 ")
@@ -120,10 +121,12 @@ def source(n: int, mode: str, actors: tuple[int, ...], active: bool,
             "    NOP;[7:7:{}:8:1]",
             "    CS2R {R20,R21}, SR_CLOCKLO;[7:7:{}:6:0]",
         ]
-        lines += [
-            "    IMAD.HI RZ, PT, R24, R27, {R28,R29};" + sched
-            for _ in range(blocker_hi)
-        ]
+        bop = {"hi": "IMAD.HI RZ, PT, R24, R27, {R28,R29}",
+               "wide": "IMAD.WIDE.U32 {R28,R29}, R24, R27, RZ",
+               "alu": "IADD3 RZ, R24, R27, R28",
+               "mufu": "MUFU.RCP R30, R24",
+               "nop": "NOP"}[blocker_op]
+        lines += [f"    {bop};{sched}" for _ in range(blocker_hi)]
         lines += [
             "    CS2R {R22,R23}, SR_CLOCKLO;[7:7:{}:6:0]",
             "    BRA #label(store);[7:7:{}:6:0]",
@@ -194,6 +197,8 @@ def main() -> int:
                     help="prepend this many HFMA2 operations")
     ap.add_argument("--prefix-active", action="store_true",
                     help="execute prefixes even when burst targets are @P6")
+    ap.add_argument("--blocker-op", choices=("hi", "wide", "alu", "mufu",
+                                             "nop"), default="hi")
     ap.add_argument("--blocker-hi", type=int, default=0,
                     help="on warp 0, execute IMAD.HI while warp 4 runs burst")
     ns = ap.parse_args()
@@ -218,7 +223,7 @@ def main() -> int:
     for n in counts:
         mod = CudaModule(assemble(
             source(n, ns.mode, actors, ns.active, ns.fast, ns.prefix_hi,
-                   ns.prefix_packed, ns.prefix_active, ns.blocker_hi),
+                   ns.prefix_packed, ns.prefix_active, ns.blocker_hi, ns.blocker_op),
             arch=ARCH, check_deps=False))
         nthreads = (max(actors) + 1) * 32
         out_size = nthreads * 16
