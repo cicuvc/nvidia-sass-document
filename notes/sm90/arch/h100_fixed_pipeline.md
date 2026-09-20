@@ -46,6 +46,25 @@ Two Hopper-specific details:
   does.  DADD (same pipe) DOES hide it — so this is specific to DFMA's
   admission, not the FP64 datapath.
 
+## Admission depth: no burst/credit window
+
+`probe_sm80_admission_depth.py` (ported to sm90; `@P6` predicated-off bursts
+between CS2R reads, clean `[1:0:7]` brackets), T(N) per admitted op:
+
+| family (op) | predicated-off slope | active slope |
+|---|---:|---:|
+| int (IADD3) | +2 cyc/op | — |
+| fmalighter (FFMA) | +1 cyc/op | — |
+| packed FP16 (HFMA2) | +2 cyc/op | — |
+| FP64 (DADD) | +2 cyc/op | +2 cyc/op |
+
+All linear **from N=1**: no admission credit/burst window on any scalar
+family — the first instruction already pays the pipe rate.  Like GA100 and
+AD102; unlike GB202's 7-credit redirectable FP64 window.  Note the
+predicated-off slopes equal the active pipe rates (FFMA admits at +1/op =
+its 1.0 datapath rate; IADD3 at +2 = its 2.0 floor), i.e. admission tracks
+the target pipe exactly.
+
 ## Corrections to the H20-era numbers
 
 `h20_compute_conflicts.md` measured everything with `SCHED=[7:7:{}:1:1]`

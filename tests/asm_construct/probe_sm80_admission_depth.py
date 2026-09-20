@@ -26,6 +26,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import CudaModule, assemble  # noqa: E402
 
+# Raw const-bank param address per arch: sm70/75/80/89 are dword-indexed
+# (0x160 dwords = 0x580 bytes), sm90+ are byte-indexed (param base 0x210).
+ARCH = os.environ.get("PROBE_ARCH") or os.environ.get("ASSEMBLER_ARCH", "sm80")
+DIALECT_PARAM = ARCH.startswith("sm9") or ARCH.startswith("sm1")
+
 
 OPS = {
     "nop": "NOP",
@@ -72,7 +77,13 @@ def source(n: int, mode: str, actors: tuple[int, ...], active: bool,
         # the probe-verified tid-based address first, derive the warp id
         # only after enough padding.
         "    MOV R6, 0x10;[7:7:{}:6:0]",
-        "    IMAD.WIDE.U32 {R2,R3}, R0, R6, c[0x0][0x160];[7:7:{}:6:0]",
+            # sm90: inline c[] IMAD.WIDE addend is unverified; use the
+        # dialect LDC path (param base handled by the assembler).  The LDC
+        # needs stall>=2 for its SB claim to be visible (archutil rule).
+        ("    LDC.64 {R2,R3}, #param(out);[1:7:{}:2:0]" if DIALECT_PARAM else
+         "    NOP;[7:7:{}:6:0]"),
+        ("    IMAD.WIDE.U32 {R2,R3}, R0, R6, {R2,R3};[7:7:{1,4}:6:0]" if DIALECT_PARAM else
+         "    IMAD.WIDE.U32 {R2,R3}, R0, R6, c[0x0][0x160];[7:7:{}:6:0]"),
         "    NOP;[7:7:{}:6:0]",
         "    NOP;[7:7:{}:6:0]",
         "    NOP;[7:7:{}:6:0]",
@@ -191,7 +202,7 @@ def main() -> int:
         mod = CudaModule(assemble(
             source(n, ns.mode, actors, ns.active, ns.fast, ns.prefix_hi,
                    ns.prefix_packed, ns.prefix_active, ns.blocker_hi),
-            arch=os.environ.get("PROBE_ARCH", "sm80"), check_deps=False))
+            arch=ARCH, check_deps=False))
         nthreads = (max(actors) + 1) * 32
         out_size = nthreads * 16
         out = mod.devmem_alloc(out_size)
