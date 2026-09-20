@@ -168,7 +168,8 @@ BARRIER_PLACEMENTS = {
 
 
 def barrier_source(n: int, mode: str, placement: str, active: bool,
-                   producer_delay: int = 0) -> tuple[str, int]:
+                   producer_delay: int = 0,
+                   producer_delay_stall: int = 8) -> tuple[str, int]:
     """Time producer progress with a CBU barrier and clean-subcore observer.
 
     Unlike an ending CS2R in the producer, BAR.SYNC does not need int_pipe.
@@ -206,7 +207,8 @@ def barrier_source(n: int, mode: str, placement: str, active: bool,
         "    BRA #label(done);[7:7:{}:5:1]",
         "#def_label(producer)",
     ]
-    lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
+    lines += [f"    NOP;[7:7:{{}}:{producer_delay_stall}:1]"
+              for _ in range(producer_delay)]
     lines += [f"    {ops[i % len(ops)]};"
               f"{BARRIER_SCHED.get(op_names[i % len(ops)], '[7:7:{}:1:0:7]')}"
               for i in range(n)]
@@ -324,7 +326,8 @@ def main(modes: str = "aluheavy,fmaheavy,fmalite,packed,alulite",
          phase_prefixes: str = "0,3,5,8,12",
          phase_suffixes: str = "0-16",
          phase_gaps: str = "0,2,4,8",
-         phase_gap_kind: str = "nop") -> None:
+         phase_gap_kind: str = "nop",
+         producer_delay_stall: int = 8) -> None:
     import sys
 
     sys.path.insert(0, str(ROOT))
@@ -362,7 +365,8 @@ def main(modes: str = "aluheavy,fmaheavy,fmalite,packed,alulite",
             or phase_gap_kind not in {
                 "nop", "nanosleep", "syncbar", "ldswait"
             }
-            or repetitions <= 0 or not 0 <= producer_delay <= 32):
+            or repetitions <= 0 or not 0 <= producer_delay <= 32
+            or not 1 <= producer_delay_stall <= 31):
         raise ValueError("invalid mode, placement, count, or repetition")
 
     cases = []
@@ -409,7 +413,8 @@ def main(modes: str = "aluheavy,fmaheavy,fmalite,packed,alulite",
             for n in ns:
                 if barrier_method:
                     src, block_size = barrier_source(
-                        n, mode, placement, active, producer_delay)
+                        n, mode, placement, active, producer_delay,
+                        producer_delay_stall)
                     function_name = "fixedbarrier"
                     output_size = 16
                     actors = (0,)
@@ -432,7 +437,8 @@ def main(modes: str = "aluheavy,fmaheavy,fmalite,packed,alulite",
                   f"prefix_hi={prefix_hi} prefix_packed={prefix_packed} "
                   f"prefix_active={prefix_active} "
                   f"barrier_method={barrier_method} "
-                  f"producer_delay={producer_delay}")
+                  f"producer_delay={producer_delay} "
+                  f"producer_delay_stall={producer_delay_stall}")
             print("N median min max delta")
             previous = None
             for n in ns:

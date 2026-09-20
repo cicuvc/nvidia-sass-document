@@ -22,6 +22,49 @@ the older static ISA pipe names.  Representatives used here are:
 | FMA Lite | FFMA, FADD, FMUL |
 | coupled FMA Heavy + FMA Lite / FP16 | HFMA2, HADD2, HMUL2 |
 
+## 2026-09-21 dense-issue correction (authoritative)
+
+`SR_CLOCKLO` is an SM-domain elapsed-cycle counter, not a per-warp issue
+counter.  Warps 0/4 use the established same-subcore/scheduler mapping, whose
+aggregate issue ceiling is one warp instruction/cycle.  The original
+producer-critical-path control used four `NOP` instructions with stall 8.
+Those NOPs leave scheduler holes: increasing `N` adds one target instruction
+to each producer, and the pair can initially occupy pre-existing holes while
+extending the final barrier span by only one clock.  That `+1 clock/N` is not
+two instructions enqueued in one physical cycle.
+
+A corrected control uses 32 producer NOPs at stall 1, keeping the scheduler
+issue slots dense and making the producer path critical.  The medians are:
+
+| N per producer | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 11 | 12 | 13+ |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| ALU-Heavy + FMA-Heavy 1:1 | 80 | 82 | 84 | 86 | 88 | 90 | 91 | 101 | 103 | +2/N |
+| FMA Lite | 80 | 82 | 84 | 86 | 88 | 90 | 91 | 101 | 103 | +2/N |
+| ALU Heavy homogeneous | 80 | 82 | 84 | 86 | 89 | 90 | 91 | 101 | 105 | +4/N |
+
+Thus the scheduler supplies at most one aggregate instruction/cycle:
+
+- Cross-domain ALU/FMA and FMA-Lite service keep pace with issue, so this
+  experiment cannot fill or size an upstream/common queue.  The former
+  “common-5” and “FMA-Lite depth 5” interpretations are withdrawn.
+- A homogeneous 0.5/cycle domain still changes from the +2-clock scheduler
+  slope to the +4-clock service slope at about `N=12`, retaining evidence for
+  about twelve effective outstanding/reservation credits per slow domain.
+- The decomposition `12 = common 5 + downstream 7` is not established.
+
+The RF placement control was repeated with the dense prefix.  `2E+1O`
+no-reuse streams retain the N≈12 change to +4 clocks/count.  `3E` no-reuse
+streams enter their final +6 clocks/count at N≈11 after an intermediate RF-
+limited region.  This still requires reservation state before/during operand
+collection and rules out a purely post-RF queue, but no longer assigns exactly
+seven of the approximately twelve credits to that location.
+
+The remaining sections preserve the raw historical experiments.  Any
+interpretation in them that depends on a literal five-credit common queue, a
+five-credit FMA-Lite queue, or `5+7` physical decomposition is superseded by
+this correction.  Long-run service-rate and same-domain/cross-domain
+compatibility results remain useful.
+
 ## Measurement correction for INT
 
 On sm_100, `CS2R` itself is statically assigned to `int_pipe`.  A naive
@@ -401,12 +444,14 @@ suffix differences), so it is not a valid in-kernel timing gap here.
 | ALU Heavy | **about 12/subcore** | IADD3/LOP3/SHF agree |
 | ALU Lite | **about 12/subcore** | IADD/MOV/ISETP agree |
 | FMA Heavy | **about 12/subcore** | IMAD/IMUL/FSWZADD agree |
-| FMA Lite | **5/subcore** | FFMA/FADD/FMUL agree |
+| FMA Lite | **not exposed by this probe** | issue and service both ≈1/cycle |
 | coupled FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
 
-The mixed-family and ordered-service tests refine these homogeneous capacities:
-the first five credits are shared across fixed math, while approximately seven
-additional credits are visible only when traffic builds in one service domain.
-They may be one tagged shared pool or separate per-domain state, but cannot be
-one global-mode pool requiring drain-before-retag.  Packed FP16 reserves both
-FMA leaves for execution and behaves as part of the Heavy service domain.
+The dense-issue correction removes the claimed common-5/downstream-7
+decomposition.  What remains is approximately twelve effective credits when a
+single 0.5/cycle service domain is driven by the one-instruction/cycle
+scheduler.  Cross-domain ALU/FMA reaches the scheduler ceiling and therefore
+does not reveal its storage capacity.  RF-conflict controls place at least part
+of the slow-domain reservation lifetime before/during operand collection.
+Packed FP16 reserves both FMA leaves for execution and behaves as part of the
+Heavy service domain.
