@@ -58,8 +58,19 @@ BARRIER_OPS = {
     "lop3": "@P6 LOP3.LUT RZ, RZ, RZ, RZ, 0x96",
     "shf": "@P6 SHF.R.U32.HI RZ, RZ, RZ, RZ",
     "alulite": "@P6 IADD RZ, PT, RZ, RZ",
+    "iadd32i": "@P6 IADD32I RZ, PT, RZ, 0x1",
     "mov": "@P6 MOV RZ, RZ",
+    "mov32i": "@P6 MOV32I RZ, 0x12345678",
+    "mov64iur": "@P6 MOV64IUR {RZ,RZ}, 0x12345678",
+    "imnmx": "@P6 IMNMX.U32 RZ, RZ, RZ, PT",
+    "vimnmx": "@P6 VIMNMX.U32 RZ, RZ, RZ, PT",
+    "viadd": "@P6 VIADD.U32 RZ, RZ, RZ",
+    "fmnmx": "@P6 FMNMX RZ, RZ, RZ, PT",
+    "fsel": "@P6 FSEL RZ, RZ, RZ, PT",
+    "fset": "@P6 FSET.BF.LT.AND RZ, RZ, RZ, PT",
+    "fsetp": "@P6 FSETP.LT.AND P1, P2, RZ, RZ, PT",
     "isetp": "@P6 ISETP.NE.AND P1, PT, RZ, RZ, PT",
+    "sel": "@P6 SEL RZ, RZ, RZ, PT",
     "fmaheavy": "@P6 IMAD RZ, RZ, RZ, RZ",
     "imul": "@P6 IMUL.U32 RZ, RZ, RZ",
     "fswzadd": "@P6 FSWZADD.NDV RZ, RZ, RZ, PPPPPPPP",
@@ -82,6 +93,18 @@ BARRIER_MIX = {
     "mix_fmah_fmal": ("fmaheavy", "fmalite"),
     "mix_fmah_fp16": ("fmaheavy", "packed"),
     "mix_fmal_fp16": ("fmalite", "packed"),
+    "mix_aluh_isetp": ("aluheavy", "isetp"),
+    "mix_isetp_fmah": ("isetp", "fmaheavy"),
+    "mix_isetp_fmal": ("isetp", "fmalite"),
+    "mix_isetp_fp16": ("isetp", "packed"),
+    "mix_mov_fmah": ("mov", "fmaheavy"),
+    "mix_sel_fmah": ("sel", "fmaheavy"),
+    "mix_iadd32i_fmah": ("iadd32i", "fmaheavy"),
+}
+
+BARRIER_SCHED = {
+    "mov32i": "[7:7:{}:1:0]",
+    "mov64iur": "[7:7:{}:1:0]",
 }
 
 BARRIER_PLACEMENTS = {
@@ -122,7 +145,8 @@ def barrier_source(n: int, mode: str, placement: str, active: bool,
         "#def_label(producer)",
     ]
     lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
-    lines += [f"    {ops[i % len(ops)]};[7:7:{{}}:1:0:7]"
+    lines += [f"    {ops[i % len(ops)]};"
+              f"{BARRIER_SCHED.get(op_names[i % len(ops)], '[7:7:{}:1:0:7]')}"
               for i in range(n)]
     lines += [
         "    BRA #label(join);[7:7:{}:5:1]",
@@ -246,7 +270,8 @@ def parse_counts(text: str) -> list[int]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--mode", choices=tuple(OPS) + tuple(BARRIER_MIX),
+    ap.add_argument("--mode", choices=tuple(dict.fromkeys(
+                        (*OPS, *BARRIER_OPS, *BARRIER_MIX))),
                     default="aluheavy")
     ap.add_argument("--actors", choices=ACTORS, default="one")
     ap.add_argument("--counts", default="0-32")
@@ -267,15 +292,17 @@ def main() -> int:
                     help="time producer progress from a clean-subcore observer")
     ap.add_argument("--producer-delay", type=int, default=0,
                     help="stall-8 NOPs before a barrier-method producer burst")
+    ap.add_argument("--grid", type=int, default=1,
+                    help="number of CTAs (use many CTAs to amplify NCU counters)")
     ns = ap.parse_args()
     counts = parse_counts(ns.counts)
     if (not counts or min(counts) < 0 or max(counts) > 100 or
-            ns.reps <= 0 or not 0 <= ns.prefix_hi <= 32 or
+            ns.reps <= 0 or ns.grid <= 0 or not 0 <= ns.prefix_hi <= 32 or
             not 0 <= ns.prefix_packed <= 32 or
             not 0 <= ns.blocker_hi <= 100 or
             not 0 <= ns.producer_delay <= 32):
         ap.error("counts must be in 0..100, prefix in 0..32, blocker in "
-                 "0..100, producer-delay in 0..32, reps positive")
+                 "0..100, producer-delay in 0..32, reps/grid positive")
     if ns.barrier_method:
         if ((ns.mode not in BARRIER_OPS and ns.mode not in BARRIER_MIX)
                 or ns.actors not in BARRIER_PLACEMENTS):
@@ -283,6 +310,8 @@ def main() -> int:
                      "one/same2/diff2 placements")
         if ns.prefix_hi or ns.prefix_packed or ns.blocker_hi:
             ap.error("barrier method does not support prefix/blocker options")
+    elif ns.mode not in OPS:
+        ap.error("the selected mode is available only with --barrier-method")
     actors = ACTORS[ns.actors]
     report_actors = (0,) if ns.barrier_method else actors
 
@@ -318,7 +347,7 @@ def main() -> int:
         actor_vals = [[] for _ in report_actors]
         try:
             for _ in range(ns.reps + 1):
-                mod.launch(function_name, grid=(1,), block=(block_size,),
+                mod.launch(function_name, grid=(ns.grid,), block=(block_size,),
                            args=[out])
                 mod.synchronize()
                 raw = mod.device_read(out, out_size)

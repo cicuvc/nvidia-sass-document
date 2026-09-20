@@ -664,56 +664,42 @@ a raw count of RF write cycles.
 
 ## Queue and credit levels
 
-### 2026-09-15 short-burst depth probe
+### Corrected scalar short-burst depth probe (2026-09-21)
 
 [`probe_scalar_admission_depth.py`](../../tests/asm_construct/probe_scalar_admission_depth.py)
 and
 [`probe_tensor_admission_depth.py`](../../tests/asm_construct/probe_tensor_admission_depth.py)
-put an unconsumed short instruction burst between two `CS2R SR_CLOCKLO`
-reads.  Scalar targets write `RZ`, use `yield=0`, and reuse every ordinary
-source; the principal controls are guarded by architecturally-false `P6`.
-The ending clock read has no dependency on a target result.  Consequently, a
-FIFO of depth Q in front of a slower backend would appear as Q one-clock
-increments before the curve changes to the backend drain slope.
+originally put a scalar burst between two same-warp `CS2R` reads.  That
+construction measured service cadence, not depth: one warp supplies each
+tested leaf no faster than it drains.  The resulting “one active credit”
+conclusion is superseded.
 
-No such fast prefix exists for the scalar Heavy or packed paths:
+The corrected construction uses two producer warps on one subcore and a
+counted-barrier observer on a clean subcore.  The two producers expose
+approximately **12 outstanding credits** for ALU Heavy, FMA Heavy, and
+coupled packed FP16, and exactly **5** for FMA Lite.  ALU Lite itself splits:
+register IADD/MOV/SEL expose only about three credits alone, while all eleven
+other measured ALU-Lite forms expose five.  Active and architecturally-false
+targets agree; different-subcore producers have no knee.
 
-| Burst | `T(0)` | `T(1)` | `T(2)` | Later increment | Effective active credits |
-|---|---:|---:|---:|---:|---:|
-| `@P6 IADD3` / ALU Heavy | 5 | 6 | 8 | 2 | 1 |
-| `@P6 IMAD.LO` / FMA Heavy | 5 | 6 | 8 | 2 | 1 |
-| `@P6 HFMA2` / coupled packed FP | 5 | 6 | 8 | 2 | 1 |
-| reusable active `IADD` / ALU Lite | 5 | 6 | 7 | 1 | not fillable at 1-op/clock input |
-| reusable active `FFMA` / FMA Lite | 5 | 6 | 7 | 1 | 1, with blocking control below |
+All ten alternating leaf pairs were also tested with register IADD as the
+ALU-Lite representative.  GB202 differs from B200 in the three ALU-Lite
+cross-pairs: IADD + FMA Heavy and IADD + FP16 retain the deep
+approximately-12 window, while IADD + FMA Lite has a distinct mixed-service
+curve.  MOV and SEL reproduce IADD, but IADD32I/ISETP-class forms retain a
+shallow approximately-five-credit curve when mixed with FMA Heavy.  NCU
+confirms that both classes count on the same ALU-Lite leaf, yet only the
+IADD/MOV/SEL class produces strong `math_pipe_throttle`.  Cross-domain Heavy
+pairs expose a common approximately-five-credit window without meaningful
+throttle, separating upstream admission pressure from leaf execution
+pressure.  The complete pair matrix, exact curves, B200 comparison, and NCU
+counts are in
+[`fixed_admission_depth.md`](fixed_admission_depth.md).
 
-Here “one active credit” includes the operation currently being serviced: it
-means **zero additional waiting operations** are visible behind it.  The
-first operation can be admitted one clock after the starting clock read, but
-the second Heavy/packed operation cannot be accepted until the two-clock
-service boundary.
-
-Two backend-blocking controls remove the ambiguity for fast scalar leaves:
-
-- One active packed `HFMA2` followed by a predicated-off `FFMA` measures 6
-  clocks for the prefix alone and 8 with the `FFMA`, rather than 7.  Thus an
-  FMA-Lite request cannot sit in a waiting entry while packed FP owns that
-  leaf.
-- One active `IMAD.HI` followed by a predicated-off instruction measures 6
-  clocks for the prefix and 9 for ALU Lite, ALU Heavy, or FMA Lite, and 10
-  for another FMA-Heavy request.  A non-math `CS2R` can nevertheless issue
-  immediately after the prefix.  This exposes a common scalar-math
-  entrance/collector credit, held for the four-beat HI operation, rather than
-  a general scheduler blockage.  No decoded math operation is observably
-  buffered in front of that busy entrance.
-
-The ALU-Lite leaf itself cannot be made slower than the one-op/clock supply
-rate using a clean instruction from the same leaf: `IADD`, `MOV`, and the
-two-register `MOV64IUR` control all sustain one per clock.  Its literal
-leaf-private storage depth therefore remains unidentifiable.  What is
-observable to the scheduler is still bounded by the one-credit common
-entrance when that entrance is busy; claiming a deeper ALU-Lite FIFO would
-require a downstream blocker that does not also consume RF/writeback or the
-common collector.
+The earlier HFMA2/FFMA and IMAD.HI blocking results remain valid evidence for
+cross-family entrance blocking, but they do not bound the total waiting
+capacity: a blocker placed before the following instruction can prevent that
+instruction from reaching deeper staging at all.
 
 Tensor bursts show the same absence of a hidden waiting FIFO, at much larger
 service intervals:
@@ -768,22 +754,21 @@ head/reserved slot is plausible, but the experiment only proves seven usable
 credits; it must not silently round the observed value up to eight.
 
 These are **SASS-visible credit depths**, not proof of the number of SRAM or
-flop entries.  A one-bit busy token, a non-pipelined collector latch, and a
-one-entry FIFO with its head in service are indistinguishable.  The strong
-result is that there is no extra decoded-op backlog between the scheduler and
-the tested non-FP64 scalar/tensor services; FP64's redirectable path is the
-measured exception with a multi-entry admission window.
+flop entries.  Tensor still exposes only the active/common steering credits
+described above, whereas the corrected scalar experiment exposes substantial
+5- and 12-operation backlog windows.  FP64 remains distinct: its redirectable
+path has seven usable local credits plus a one-per-SM service backend.
 
 The compute-side structures should not all be called one queue:
 
 | Level | Scope | What is established |
 |---|---|---|
-| common scalar-math entrance/collector credit | per subcore | 1 active operation; no extra waiting operation visible |
-| simple-INT admission | per subcore | 1 active credit, approximately 0.5-inst/clock service |
-| IMAD admission | per subcore | 1 active credit; LO approximately 0.5-inst/clock, HI/WIDE approximately 0.25 |
-| packed-FP admission | per subcore | 1 coupled active credit, approximately 0.5-inst/clock plus packed-FP/fmalighter steering interaction |
-| FP32 FMA-Lite admission | per subcore | 1 active leaf credit under packed-FP blockage; otherwise accepts 1 inst/clock |
-| ALU-Lite leaf admission | per subcore | literal private depth unidentifiable at its 1-inst/clock service rate; common entrance is one credit |
+| cross-domain fixed-math admission window | per subcore | about 5 effective outstanding credits; little/no NCU math-pipe throttle |
+| ALU Heavy admission | per subcore | about 12 effective outstanding credits; service about 0.5 inst/clock |
+| ALU-Lite IADD/MOV/SEL class | per subcore | about 3 alone; IADD mixed with ALU Heavy/FMA Heavy/FP16 exposes about 12 total; MOV/SEL confirm the FMA-Heavy case |
+| other tested ALU-Lite forms | per subcore | 5-credit homogeneous and shallow mixed curves; little/no math throttle despite the same NCU leaf label |
+| packed-FP coupled admission | per subcore | about 12 effective outstanding credits with either FMA leaf; approximately 0.5-inst/clock service |
+| FP32 FMA-Lite homogeneous admission | per subcore | 5 effective outstanding credits; otherwise accepts about 1 inst/clock |
 | tensor common admission/credits | per subcore | 1 visible steering credit, held about 16--18 clocks in tested forms |
 | tensor HMMA/QMMA leaf credit | per subcore | 1 active operation, 32 clocks on RTX 5090 |
 | tensor IMMA leaf credit | per subcore | 1 active operation, 16 clocks on RTX 5090 |

@@ -20,6 +20,7 @@ RTX 5090, and the repo's SASS assembler (`assembler/`, arch=sm120) unless stated
 | `arch/local_memory_backing_va.md` | Silicon-derived local-address → backing-VA transform; warp/SM/CTA layout, SETLMEMBASE switching, and ptxas spill-frame EIATTR metadata |
 | `arch/shared_memory_allocator.md` | Shared allocator: 100 KiB/SM pool, 128-byte quantum, 1 KiB static reserved prefix, USETSHMSZ accounting, and fragmentation probes |
 | `subcore_compute_conflict.md` | GB202 per-subcore scalar/tensor execution conflicts, forwarding-based ALU topology, and raw NCU math/MIO throttle evidence |
+| `fixed_admission_depth.md` | Corrected two-producer fixed scalar admission depths, complete mixed-leaf matrix, B200 comparison, and NCU leaf/throttle cross-check |
 | `rf_writeback_conflict.md` | Even/odd 2R1W register-file writeback arbitration and same-subcore collision probes |
 | `mio_lsu_xu_topology.md` | MIO/LSU/XU queue locality, LDG address-latch boundary, SM-wide LSU scaling, SHFL placement, throttle/OOO-completion behavior, and RF return paths |
 | `adu_topology.md` | GB202 ADU placement after late MIO operand collection; BRX target replay, LDC/BAR classification, predication, and shared-vs-local scaling |
