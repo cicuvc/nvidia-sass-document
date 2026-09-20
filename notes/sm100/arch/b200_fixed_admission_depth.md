@@ -182,17 +182,18 @@ The other pairings separate admission from execution:
   and N≈12 boundary as packed FP16.  After a saturated HFMA2 prefix, however,
   only the first following FFMA costs +4; subsequent FFMAs return to +2 each.
   Packed FP16 therefore consumes the Lite execution side, while scalar FFMA
-  can accumulate in distinct ready/reservation state once it crosses the
-  initial shared boundary.
+  resumes scheduler-rate progress once it crosses the initial shared boundary.
+  This does not by itself say whether later FFMAs queue or execute in available
+  Lite service slots.
 
 An asymmetric HFMA2 background also prevents even one same-scheduler scalar
 FFMA from passing until the background ends.  The smallest current model is
 therefore a packed-FP16 instruction whose dispatch/service locks both FMA
-backends.  Whether it consumes entries in both scalar admission queues, lives
-in the static `fp16_pipe` queue with a two-backend mask, or is represented by
+backends.  Whether it consumes state in both scalar admission paths, lives in
+the static `fp16_pipe` queue with a two-backend mask, or is represented by
 linked tokens is not determined by timing.
 
-### Scalar FMA Lite admission is independent of FMA Heavy
+### Scalar FMA Lite bypasses Heavy state; its own queue is unproven
 
 A dense ordered test fills FMA Heavy and then appends scalar FFMA.  Once the
 Heavy prefix reaches its N≈11--12 boundary, another Heavy suffix is
@@ -202,16 +203,22 @@ identical to the independent ALU-Heavy control.  Reversing the order also
 preserves FMA Heavy's complete filling window: an FFMA prefix does not consume
 Heavy credits.
 
-Thus scalar FMA Lite has an operationally independent admission/ready-credit
-domain; it does not share one exhaustible FIFO with scalar FMA Heavy.  A physical
-implementation may still use one tagged or statically partitioned entry array,
-but it must have independent availability accounting and selection.  Packed
-FP16/FP32x2 operations can interlock both execution sides without implying
-shared scalar Heavy/Lite admission credits.  Scalar FFMA
-alone cannot expose the Lite depth because its 1-inst/cycle service matches
-the scheduler ceiling.  Packed FP32x2 supplies a 0.5-inst/cycle drain, but its
-Heavy interlock means the N≈12 boundary is not a unique measurement of scalar-
-Lite capacity.
+This proves that scalar FFMA does not consume the exhaustible FMA-Heavy credits
+and can make progress through a Heavy backlog.  It does **not** prove that
+scalar FMA Lite owns an admission queue.  Three organizations remain open:
+
+```text
+direct Lite dispatch with no waiting queue
+a shallow RF/dispatch skid or operand-collector state
+a deeper Lite queue whose 1/cycle service prevents this probe from filling it
+```
+
+The RF-conflict result weakly favors the first two: same-bank FFMA becomes RF-
+limited almost immediately instead of buffering a long prefix ahead of operand
+collection.  Packed FP16/FP32x2 cannot settle the question because they
+interlock Heavy as well as Lite.  Therefore only an independent scalar-Lite
+path and its approximately 1-inst/cycle service are established; the existence
+and depth of a Lite-only admission queue are unknown.
 
 ### B200 has one unified ALU backend, not observable Heavy/Lite leaves
 
@@ -635,7 +642,7 @@ suffix differences), so it is not a valid in-kernel timing gap here.
 |---|---:|---|
 | unified ALU | **about 12/subcore** | both former Heavy/Lite opcode groups |
 | FMA Heavy | **about 12/subcore** | IMAD/IMUL/FSWZADD agree |
-| scalar FMA Lite | **unknown** | 1/cycle service matches scheduler ceiling |
+| scalar FMA Lite | **queue existence/depth unknown** | service ≈1/cycle |
 | packed FMA window | **about 12/subcore effective** | queue attribution pending NCU |
 | packed FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
 
