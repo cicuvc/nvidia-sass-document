@@ -200,6 +200,29 @@ alone cannot expose the Lite depth because its 1-inst/cycle service matches
 the scheduler ceiling; packed FP32x2 supplies the required 0.5-inst/cycle
 drain while staying on `fmalighter_pipe`.
 
+### ALU Heavy and ALU Lite share one admission domain
+
+The dense ordered test is symmetric and exact.  Once either an ALU-Heavy or
+ALU-Lite prefix reaches N=11--12, a suffix from the other leaf is immediately
+service-limited:
+
+```text
+ALU Heavy -> ALU Lite:  0,4,8,12,... clocks
+ALU Lite  -> ALU Heavy: 0,4,8,12,... clocks
+```
+
+These curves are identical to a same-leaf suffix.  In contrast, either ALU
+prefix followed by FMA Heavy retains the fresh scheduler-rate window
+`0,2,4,6,...`.  Independent twelve-entry Heavy and Lite queues would allow the
+opposite ALU leaf to admit at the scheduler rate while the prefix drains; the
+observed immediate +4 slope rules that organization out.
+
+ALU Heavy and Lite therefore share one approximately twelve-credit admission/
+reservation domain and one effective 0.5-inst/cycle service path.  Timing
+cannot distinguish a literal unified FIFO from separately banked physical
+storage governed by one shared credit counter, head, and selection policy; the
+logical availability domain is unambiguously shared.
+
 ## Measurement correction for INT
 
 On sm_100, `CS2R` itself is statically assigned to `int_pipe`.  A naive
