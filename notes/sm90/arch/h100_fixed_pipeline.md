@@ -46,56 +46,49 @@ Two Hopper-specific details:
   does.  DADD (same pipe) DOES hide it — so this is specific to DFMA's
   admission, not the FP64 datapath.
 
-## Admission depth: scalar pipes have none; XU/MUFU and HGMMA do
+## Admission depth: single-warp bursts underfill; multi-warp exposes real queues
 
 `probe_sm80_admission_depth.py` (ported to sm90; `@P6` predicated-off bursts
-between CS2R reads, clean `[1:0:7]` brackets), T(N) per admitted op:
+between CS2R reads, clean `[1:0:7]` brackets), T(N) per admitted op.
 
-| family (op) | predicated-off slope | active slope | burst window |
-|---|---:|---:|:---:|
-| int (IADD3) | +2 cyc/op | — | none |
-| fmalighter (FFMA) | +1 cyc/op | — | none |
-| packed FP16 (HFMA2) | +2 cyc/op | — | none |
-| FP64 (DADD) | +2 cyc/op | +2 cyc/op | none |
+**Caveat (found after the first pass):** a single warp issues at most one
+op per 1-2 cycles, which never exceeds the per-subcore service rate of the
+fixed pipes (0.5-1.0 inst/cyc), so their queues never fill and the curve
+stays linear.  The single-warp column therefore shows the *pipe rate*, not
+the absence of a queue.  Multi-warp actors (`same2` = 2 warps on one
+subcore, combined arrival 1/cyc) fill them and expose knees, identical for
+predicated-off and active bursts:
+
+| family (op) | single-warp slope | same2 knee / steady | queue depth |
+|---|---:|---|---:|
+| INT (IADD3) | +2 cyc/op | N≈10, then +4 | **~10** |
+| packed FP16 (HFMA2) | +2 cyc/op | N≈11-12, then +4 | **~11** |
+| FP64 (DADD) | +2 cyc/op | N≈11-12, then +4 | **~11** |
+| fmalighter (FFMA) | +1 cyc/op | none (same4 wobbles at N≥12) | unfillable¹ |
 | CBU (`@P6 BRA` / `BSSY+BSYNC` pairs) | +2 cyc/op | — | none |
-| LSU (STS [RZ]) | +2 cyc/op | +2 cyc/op | none visible single-warp¹ |
-| SHFL (`.BFLY RZ,RZ`) | +2 cyc/op | +2 cyc/op | none |
-| XU (MUFU.RCP) | 2 fast, then +8 cyc/op | same | **~2-3 entries** |
-| HGMMA (see wgmma.md) | 7 fast, then pipe rate | same | **~7 entries** |
+| SHFL (`.BFLY RZ,RZ`) | +2 cyc/op | — | none |
+| XU (MUFU.RCP) | 2 fast, then +8 | knee N=3 single-warp | **~2-3** |
+| LSU (STS) | +2 cyc/op | same2 N≈16-17, same4 N≈8 | **~8/subcore** |
+| HGMMA (see wgmma.md) | 7 fast, then pipe rate | — | **~7 (SM-shared)** |
 
-¹ **LSU needs multiple warps to expose its queue.**  One warp issues STS at
-+2 cyc/op while the per-subcore LSU service is ~0.5 inst/cyc, so a lone
-warp can never outrun the drain and the curve stays linear (true on both
-GH100 and GB202).  With 2 warps on the same subcore (`--actors same2`,
-arrival 1/cyc) GH100 shows the knee at N≈16-17; with 4 warps
-(`same4`, arrival 2/cyc) at N≈8.  That is roughly twice the queue
-absorption of GB202 (~4 usable credits per subcore, knee at N≈10 with 2
-warps), i.e. GH100's local LSU admission backlog is on the order of
-**8 requests per subcore**.  A second structural difference: GB202 has an
-SM-wide ~0.5 inst/cyc shared LSU backend, so even warps on *different*
-subcores hit the knee (diff2 at N≈10, diff4 at N≈7 with +8 cyc/op steady);
-on GH100 `diff2` stays flat at +2 cyc/op through N=24 and `diff4` only
-wobbles near N≈20 — per-subcore service ≈ 0.5 inst/cyc with at most a
-marginal SM-shared stage.
+¹ FFMA service is 1 inst/cyc = the subcore issue rate itself, so its queue
+can never accumulate; a queue would serve no purpose.  Effectively "no
+admission queue" is true for fmalighter alone.
 
-The fixed scalar pipes, CBU, LSU and SHFL are all linear **from N=1**: no
-admission credit/burst window — the first instruction already pays the pipe
-rate.  Like GA100 and AD102; unlike GB202's 7-credit redirectable FP64
-window.  The predicated-off slopes equal the active pipe rates (FFMA admits
-at +1/op = its 1.0 datapath rate; IADD3 at +2 = its 2.0 floor), i.e.
-admission tracks the target pipe exactly.
+Depth estimate: with same2 the combined arrival is 1/cyc against a 0.5/cyc
+service, so the backlog grows 0.5 req/cyc and the knee N≈D.  same4 (arrival
+port-capped at 1/cyc) knees at N≈6-8, consistent within noise.  Post-knee
+steady slopes match the service rates (2 warps at +4 cyc/op = 0.5/cyc).
 
-Only the MIO-side units show queueing:
+The predicated-off single-warp slopes equal the active pipe rates (FFMA
++1/op = its 1.0 datapath rate; IADD3 +2 = its 2.0 floor) — squashed
+instructions still occupy the pipe fully; only writeback/memory is
+suppressed (MUFU shows the same: squashed MUFUs flow through XU at 8 cyc/op).
 
-- **XU/MUFU**: the first 2 bursts admit at +2 cyc/op, N=3 pays +9, then the
-  8 cyc/op MUFU rate — a ~2-3-entry admission queue.  Identical curve for
-  predicated-off and active bursts: a squashed MUFU still flows through the
-  XU pipe at full occupancy (only writeback is suppressed).
-- **LSU** predicated-off vs active STS both run +2 cyc/op: predicate-off
-  suppresses the store itself, so the LSU pipe never becomes the bottleneck
-  for a lone warp either way — no window visible in both forms.
-- **HGMMA**: ~7-entry TC command FIFO (measured in wgmma.md), the only
-  deep admission buffer on the chip.
+GB202 contrast: same structure everywhere except (a) GB202's FP64 has the
+7-credit *redirectable* SM-shared window (this file's sm120 counterpart
+note), and (b) GB202's LSU is shallower (~4/subcore) with a hard SM-wide
+0.5/cyc shared backend that GH100 lacks (GH100 `diff2` stays flat to N=24).
 
 ## Corrections to the H20-era numbers
 
