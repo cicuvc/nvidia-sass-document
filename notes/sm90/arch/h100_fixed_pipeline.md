@@ -58,10 +58,25 @@ between CS2R reads, clean `[1:0:7]` brackets), T(N) per admitted op:
 | packed FP16 (HFMA2) | +2 cyc/op | — | none |
 | FP64 (DADD) | +2 cyc/op | +2 cyc/op | none |
 | CBU (`@P6 BRA` / `BSSY+BSYNC` pairs) | +2 cyc/op | — | none |
-| LSU (STS [RZ]) | +2 cyc/op | +2 cyc/op | none |
+| LSU (STS [RZ]) | +2 cyc/op | +2 cyc/op | none visible single-warp¹ |
 | SHFL (`.BFLY RZ,RZ`) | +2 cyc/op | +2 cyc/op | none |
 | XU (MUFU.RCP) | 2 fast, then +8 cyc/op | same | **~2-3 entries** |
 | HGMMA (see wgmma.md) | 7 fast, then pipe rate | same | **~7 entries** |
+
+¹ **LSU needs multiple warps to expose its queue.**  One warp issues STS at
++2 cyc/op while the per-subcore LSU service is ~0.5 inst/cyc, so a lone
+warp can never outrun the drain and the curve stays linear (true on both
+GH100 and GB202).  With 2 warps on the same subcore (`--actors same2`,
+arrival 1/cyc) GH100 shows the knee at N≈16-17; with 4 warps
+(`same4`, arrival 2/cyc) at N≈8.  That is roughly twice the queue
+absorption of GB202 (~4 usable credits per subcore, knee at N≈10 with 2
+warps), i.e. GH100's local LSU admission backlog is on the order of
+**8 requests per subcore**.  A second structural difference: GB202 has an
+SM-wide ~0.5 inst/cyc shared LSU backend, so even warps on *different*
+subcores hit the knee (diff2 at N≈10, diff4 at N≈7 with +8 cyc/op steady);
+on GH100 `diff2` stays flat at +2 cyc/op through N=24 and `diff4` only
+wobbles near N≈20 — per-subcore service ≈ 0.5 inst/cyc with at most a
+marginal SM-shared stage.
 
 The fixed scalar pipes, CBU, LSU and SHFL are all linear **from N=1**: no
 admission credit/burst window — the first instruction already pays the pipe

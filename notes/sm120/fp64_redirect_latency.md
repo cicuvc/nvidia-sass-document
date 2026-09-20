@@ -56,17 +56,21 @@ an event-driven scoreboard model.
 ## Cross-check: LSU and XU admission on GB202 (same burst method)
 
 `probe_sm80_admission_depth.py --mode lsu|xu` with `ASSEMBLER_ARCH=sm120`
-(predicated-off `@P6` bursts between CS2R reads, single warp):
+(predicated-off `@P6` bursts between CS2R reads):
 
-- **LSU (`STS [RZ], R24`)**: +2 cyc/op linear from N=1, identical for
-  predicated-off and active bursts -- no admission window, matching the
-  GH100 result.
 - **XU (`MUFU.RCP R30, R24`)**: first 2 bursts at +2 cyc/op, N=3 pays the
-  knee (+7..9), then +8 cyc/op steady -- a ~2-3-entry admission queue,
-  again identical for predicated-off and active forms and matching GH100.
+  knee (+7..9), then +8 cyc/op steady -- confirms this note's ~2-credit XU
+  queue with an independent probe; identical for predicated-off and active
+  forms, and identical on GH100.
+- **LSU (`STS [RZ], R24`)**: a single warp sees +2 cyc/op linear from N=1
+  on both architectures -- it cannot outrun the ~0.5 inst/cyc per-subcore
+  service, so the queue never fills.  Multi-warp actors expose it: on
+  GB202 `same2` knees at N≈10, `diff2` at N≈10 and `diff4` at N≈7-8
+  (steady +8 cyc/op = the SM-shared 0.5 inst/cyc backend), reproducing the
+  ~4 credits/subcore measured in `mio_lsu_xu_topology.md`.  GH100 by
+  contrast knees much later (`same2` N≈16-17, `same4` N≈8) and keeps
+  `diff2` flat through N=24: deeper local queues (~8/subcore) and no hard
+  SM-wide 0.5/cyc LSU cap.
 
-So on both GH100 and GB202 only MIO-side units queue admissions (XU ~2-3,
-plus this file's 7-credit FP64 redirect window on GB202 and HGMMA's 7-entry
-TC FIFO on GH100); LSU, CBU, SHFL and the fixed scalar pipes admit at pipe
-rate from the first instruction.  The cross-architecture agreement validates
-the burst-curve methodology used for the H100 measurements.
+The cross-architecture agreement on the XU knee and on the single-warp LSU
+floor validates the burst-curve methodology used for the H100 measurements.
