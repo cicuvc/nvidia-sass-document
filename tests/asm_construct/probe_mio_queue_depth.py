@@ -33,10 +33,15 @@ ACTORS = {
 
 def source(n: int, mode: str, actors: tuple[int, ...], conflict: int,
            mix_shfl: int = 0) -> str:
-    if mode in ("xu", "f2f", "f2i", "i2f", "f2f64", "f2f64dst",
+    if mode in ("xu", "fp64", "dfma", "f2f", "f2i", "i2f", "f2f64", "f2f64dst",
                 "f2i64src", "f2i64dst", "i2f64src", "i2f64dst"):
         if mode == "xu":
             inst = "MUFU.RCP R{rd}, RZ"
+        elif mode == "fp64":
+            inst = "DADD {{R{rd},R{rd1}}}, {{RZ,RZ}}, {{RZ,RZ}}"
+        elif mode == "dfma":
+            inst = ("DFMA {{R{rd},R{rd1}}}, {{RZ,RZ}}, {{RZ,RZ}}, "
+                    "{{RZ,RZ}}")
         elif mode == "f2f":
             inst = "F2F.F16.F32 R{rd}, RZ"
         elif mode == "f2i":
@@ -57,7 +62,7 @@ def source(n: int, mode: str, actors: tuple[int, ...], conflict: int,
             inst = "I2F.F64.S32 {{R{rd},R{rd1}}}, RZ"
         ops = []
         for i in range(n):
-            if mode in ("f2f64dst", "f2i64dst", "i2f64dst"):
+            if mode in ("fp64", "dfma", "f2f64dst", "f2i64dst", "i2f64dst"):
                 rd = 40 + 2 * (i % 50)
                 text = inst.format(rd=rd, rd1=rd + 1)
             else:
@@ -155,7 +160,7 @@ def source(n: int, mode: str, actors: tuple[int, ...], conflict: int,
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--mode",
-                   choices=("xu", "f2f", "f2i", "i2f", "f2f64",
+                   choices=("xu", "fp64", "dfma", "f2f", "f2i", "i2f", "f2f64",
                             "f2f64dst", "f2i64src", "f2i64dst",
                             "i2f64src", "i2f64dst",
                             "cbu", "ldg", "lsu", "lsu128",

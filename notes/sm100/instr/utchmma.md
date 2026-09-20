@@ -692,6 +692,28 @@ per-subcore FIFO，也可能是带 warp tag/小型 per-warp 分区、但共用�
 credits 的结构；二者对当前实验等价。可以明确排除的是“每 warp 拥有彼此独立、
 可同时填满的 TC admission queue”。
 
+#### admission 容量的短 burst 定量（2026-09-20）
+
+`probe_sm100_utchmma_admission_modal.py` 把每条 UTCHMMA 的静态 stall 从 12
+缩到 1，并保留每条指令前的 CS2R。于是第 `i+1` 个时间戳减第 `i` 个时间戳
+给出第 i 条 UTCHMMA admission 加随后 CS2R 的上界；无阻塞基线为 7 cycles。
+把第二个 producer 延后 32 条 stall-8 NOP 后，领先 producer 的中位间隔为：
+
+| placement | M128N8 | M128N128 |
+|---|---|---|
+| warp 0/1，跨 subcore | `7,7,7,7,7,7,15` | `7,7,7,7,7,7,15` |
+| warp 0/4，同 subcore | `7,7,7,7,8,8,13` | `7,7,7,7,8,8,13` |
+
+前六条按入口基线通过，第七次尝试开始 backpressure；五次重复一致。去掉 observer、
+改用 overwrite (`!UPT`) 后边界不变，因此不是 LDTM 观察流量或 accumulator RAW
+造成。N8 与 N128 的容量边界相同而后端执行时间明显不同，说明 credit 以完整
+UTCHMMA 指令计数，而不是以 N-wave 计数。
+
+因此现有数据把上述定性模型进一步收紧为：**约 6 个可用 UTCHMMA admission
+credits/subcore，由该 subcore 的 warps 共享**。这里的 6 仍是 backpressure 所见
+的有效容量，不足以区分六槽 FIFO 与等价的分布式 credit 实现。完整 MIO 对照和
+原始边界见 `../arch/b200_mio_admission_depth.md`。
+
 探针 bring-up 还暴露出一个独立协议点：`UTCBAR -> mbarrier_wait -> CTA barrier ->`
 下一段 UTCHMMA 的构造会不完成；而中途 UTCBAR 不等待、用正确 init count 在尾部
 统一等待可以正常运行。中间态实验因此严格使用一个 epoch 和尾部唯一 UTCBAR；
