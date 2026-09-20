@@ -129,6 +129,8 @@ BARRIER_OPS = {
     "hmul2": "@P6 HMUL2 RZ, RZ, RZ",
     "rf_aluheavy": "@P6 IADD3 RZ, R24, R26, R28",
     "rf_fmaheavy": "@P6 IMAD RZ, R24, R26, R28",
+    "rf2_aluheavy": "@P6 IADD3 RZ, R24, R25, R26",
+    "rf2_fmaheavy": "@P6 IMAD RZ, R24, R25, R26",
 }
 
 BARRIER_MIX = {
@@ -154,6 +156,8 @@ BARRIER_MIX = {
 BARRIER_SCHED = {
     "rf_aluheavy": "[7:7:{}:1:0]",
     "rf_fmaheavy": "[7:7:{}:1:0]",
+    "rf2_aluheavy": "[7:7:{}:1:0]",
+    "rf2_fmaheavy": "[7:7:{}:1:0]",
 }
 
 BARRIER_PLACEMENTS = {

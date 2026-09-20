@@ -200,6 +200,33 @@ reproduce the curves, but such tokens are operationally the same admission
 credits/reservation occupancy modeled here; timing alone cannot require the
 credits to be literal FIFO rows.
 
+### The extra credits are allocated before RF collection completes
+
+The RF-bank result supplies a placement test.  For the same active IADD3 and
+IMAD opcodes, destination RZ, and explicitly no reuse, only source parity is
+changed:
+
+| source rows | RF collection floor | final two-producer increment | knee |
+|---|---:|---:|---:|
+| 2 even + 1 odd | 2 cycles/instruction | +4 clocks/count | about `N=12--13` |
+| 3 even | 3 cycles/instruction | +6 clocks/count | about `N=12--13` |
+
+ALU-Heavy and FMA-Heavy curves match point-for-point in each row.  In the
+three-even case the RF collector supplies at most about 1/3 instruction/cycle,
+slower than the leaf executor's approximately 1/2 instruction/cycle.  A queue
+allocated only *after* RF read completion therefore could not accumulate: its
+input would be slower than its drain, and only the shallow common window would
+remain visible.  Instead the same deep boundary survives while only the final
+slope changes from +4 to +6.
+
+Consequently the extra approximately seven credits are acquired before all
+source rows have been read and remain occupied during operand collection.  The
+data do not distinguish a dedicated pre-RF instruction/reservation FIFO from
+seven operand-collector slots holding register IDs and progressively latched
+operands.  They rule out interpreting all seven as a pure post-RF operand-data
+queue; some later pipeline/result staging may still be covered by the lifetime
+of the same credits.
+
 The minimum *effective-domain* model consistent with the pair matrix is:
 
 ```text
