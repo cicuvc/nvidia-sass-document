@@ -52,3 +52,21 @@ determine the actual cycle.  The previously measured approximately
 18--19-clock service cadence and seven usable admission credits describe
 throughput/backpressure, while this probe shows why completion timing needs
 an event-driven scoreboard model.
+
+## Cross-check: LSU and XU admission on GB202 (same burst method)
+
+`probe_sm80_admission_depth.py --mode lsu|xu` with `ASSEMBLER_ARCH=sm120`
+(predicated-off `@P6` bursts between CS2R reads, single warp):
+
+- **LSU (`STS [RZ], R24`)**: +2 cyc/op linear from N=1, identical for
+  predicated-off and active bursts -- no admission window, matching the
+  GH100 result.
+- **XU (`MUFU.RCP R30, R24`)**: first 2 bursts at +2 cyc/op, N=3 pays the
+  knee (+7..9), then +8 cyc/op steady -- a ~2-3-entry admission queue,
+  again identical for predicated-off and active forms and matching GH100.
+
+So on both GH100 and GB202 only MIO-side units queue admissions (XU ~2-3,
+plus this file's 7-credit FP64 redirect window on GB202 and HGMMA's 7-entry
+TC FIFO on GH100); LSU, CBU, SHFL and the fixed scalar pipes admit at pipe
+rate from the first instruction.  The cross-architecture agreement validates
+the burst-curve methodology used for the H100 measurements.
