@@ -20,7 +20,7 @@ the older static ISA pipe names.  Representatives used here are:
 | ALU Lite | IADD, MOV, ISETP |
 | FMA Heavy | IMAD.LO, IMUL, FSWZADD.NDV |
 | FMA Lite | FFMA, FADD, FMUL |
-| coupled FMA Heavy + FMA Lite / FP16 | HFMA2, HADD2, HMUL2 |
+| packed FP16 using FMA Heavy + FMA Lite | HFMA2, HADD2, HMUL2 |
 
 ## 2026-09-21 dense-issue correction (authoritative)
 
@@ -92,16 +92,18 @@ from the scheduler slope to about +4 clocks/N at N≈12.  However, ordered
 phases show that this boundary follows the slow packed requests: a packed
 prefix of 12 or 16 delays the first following FFMA, after which additional
 FFMAs again cost about +2 clocks/N.  Conversely an FFMA prefix does not move
-the packed suffix's eventual +4-clock slope.  This exposes approximately 12
-effective reservations in the coupled FMA domain, but cannot assign a
-standalone capacity to FMA Lite.
+the packed suffix's eventual +4-clock slope.  This experiment alone exposes
+approximately 12 effective reservations in the multi-leaf FMA path, but
+cannot assign a standalone capacity to FMA Lite.  The packed-FP32x2 experiment
+below supplies that missing discriminator.
 
 ### Packed FP32x2 supplies the missing issue pressure
 
 `FFMA2`, `FADD2`, and `FMUL2` each encode two FP32 lanes in one scheduler
-instruction and are classified as `INST_TYPE_COUPLED_MATH` on
-`fmalighter_pipe`.  Repeating the dense two-producer experiment while enabling
-operand reuse gives:
+instruction and run on `fmalighter_pipe`.  Their `INST_TYPE_COUPLED_MATH`
+classification means fixed-latency math as opposed to decoupled, variable-
+latency MIO; the name by itself does **not** imply use of multiple math leaves.
+Repeating the dense two-producer experiment while enabling operand reuse gives:
 
 | instruction | low-N increment | sustained high-N increment | knee |
 |---|---:|---:|---:|
@@ -114,8 +116,8 @@ One N again adds two instructions, one to each same-scheduler warp.  The x2
 forms can therefore enter at the scheduler's aggregate 1 inst/cycle but drain
 at approximately 0.5 inst/cycle.  During the issue of 2N instructions the
 backlog grows by approximately N entries, so the N≈12 knee directly exposes
-about **12 coupled-math outstanding reservations per subcore**.  FADD2/FMUL2
-are the cleanest representatives; FFMA2's three packed sources add a visible
+about **12 FMA-Lite outstanding reservations per subcore**.  FADD2/FMUL2 are
+the cleanest representatives; FFMA2's three packed sources add a visible
 operand-collection cost before the final pipe-limited region.
 
 With only one producer warp, all three x2 forms remain at approximately +2
@@ -126,17 +128,26 @@ create backlog.
 
 Predicated-off x2 instructions show the same N≈12 knee and +4 final slope,
 whereas predicated-off scalar FFMA remains at +2.  The immediate cause is thus
-the coupled dispatch/reservation rule, applied before predicate cancellation,
-not the execution of twice as many floating-point arithmetic operations.
+fixed-pipeline admission/dispatch applied before predicate cancellation, not
+the execution of twice as many floating-point arithmetic operations.
 
 Ordered marker tests locate the coupling but do not identify a single physical
 FIFO.  After a saturated FADD2 prefix, the first scalar FFMA marker costs four
 clocks rather than two, then further FFMAs return to +2 each.  FMA-Heavy IMAD
 markers remain at +4 each, while ALU-Heavy IADD3 markers remain at +2 and are
-unaffected.  Thus the approximately 12-entry structure belongs to the FMA
-coupled-dispatch domain and interacts with scalar FMA Lite, but these data do
-not establish that ordinary FFMA owns the same twelve-entry queue or reveal a
-standalone FFMA-only capacity.
+unaffected.
+
+An asymmetric test establishes that the x2 structure is the scalar-Lite
+admission/dispatch domain rather than a separate queue.  Warp 0 continuously
+issues 256 or 512 all-reuse FFMA2/FADD2 instructions while same-scheduler
+warps 4 and 8 issue scalar FFMA; a clean-subcore observer waits only for the
+FFMA warps.  Even one target FFMA waits approximately the complete background
+duration (about 470 clocks for 256 and 990 clocks for 512).  Active and
+predicated-off x2 backgrounds behave identically.  An FMA-Heavy background,
+in contrast, does not delay the first FFMA at all.  Continuous x2 traffic
+therefore fills and continually refills the same FMA-Lite availability domain
+used by scalar FFMA.  The N≈12 burst knee measures that domain's effective
+capacity even though scalar FFMA alone cannot overdrive it.
 
 ### Packed FP16 belongs to the Heavy reservation domain and uses Lite execution
 
@@ -161,11 +172,12 @@ The other pairings separate admission from execution:
   can accumulate in distinct ready/reservation state once it crosses the
   initial shared boundary.
 
-The smallest current model is consequently a packed-FP16 entry allocated in
-the approximately twelve-credit FMA-Heavy reservation domain with an
-execution resource mask requiring both Heavy and Lite sides.  This is a
-logical resource model; it does not require two physically separate FIFOs or
-two literal arithmetic units.
+An asymmetric HFMA2 background also prevents even one same-scheduler scalar
+FFMA from passing until the background ends.  The smallest current model is
+therefore a packed-FP16 instruction requiring availability on both the
+approximately twelve-credit FMA-Heavy and FMA-Lite admission/dispatch sides.
+This is a logical resource mask inferred from mutual blocking; it does not
+require two physically separate FIFOs or two literal arithmetic units.
 
 ### Scalar FMA Lite admission is independent of FMA Heavy
 
@@ -178,14 +190,15 @@ preserves FMA Heavy's complete filling window: an FFMA prefix does not consume
 Heavy credits.
 
 Thus scalar FMA Lite has an operationally independent admission/ready-credit
-domain; it does not share one exhaustible FIFO with FMA Heavy.  A physical
+domain of approximately twelve effective entries; it does not share one
+exhaustible FIFO with FMA Heavy.  A physical
 implementation may still use one tagged or statically partitioned entry array,
-but it must have independent availability accounting and selection.  Coupled
-FP16/FP32x2 operations can interact with both sides through their execution
-resource mask without implying shared scalar Heavy/Lite admission credits.
-The capacity of the scalar-Lite state remains unknown because its normal
-1-inst/cycle service matches the scheduler ceiling, while RF conflicts
-throttle it before that state can be filled.
+but it must have independent availability accounting and selection.  Packed
+FP16/FP32x2 operations can require both sides through their resource mask
+without implying shared scalar Heavy/Lite admission credits.  Scalar FFMA
+alone cannot expose the Lite depth because its 1-inst/cycle service matches
+the scheduler ceiling; packed FP32x2 supplies the required 0.5-inst/cycle
+drain while staying on `fmalighter_pipe`.
 
 ## Measurement correction for INT
 
@@ -212,7 +225,7 @@ The one-producer barrier spans are exact at their medians:
 | ALU Heavy: IADD3, LOP3, SHF | 41 | 42 | 44 | +2/instruction |
 | ALU Lite: IADD, MOV, ISETP | 41 | 42 | 44 | +2/instruction |
 | FMA Heavy: IMAD.LO, IMUL, FSWZADD | 41 | 42 | 44 | +2/instruction |
-| coupled FP16: HFMA2, HADD2, HMUL2 | 41 | 42 | 44 | +2/instruction |
+| packed FP16: HFMA2, HADD2, HMUL2 | 41 | 42 | 44 | +2/instruction |
 | FMA Lite: FFMA, FADD, FMUL | 41 | 42 | 43 | +1/instruction |
 
 These are service rates, not queue depths.  One warp supplies the first four
@@ -228,7 +241,7 @@ Warps 0 and 4 share a subcore and issue identical N-instruction bursts.  Warp
 1, on another subcore, timestamps their counted-barrier release.  The two
 producers can initially admit about one instruction/cycle in aggregate, twice
 the 0.5-instruction/cycle service rate.  Every tested ALU Heavy, ALU Lite, FMA
-Heavy, and coupled-FP16 representative gives the same median curve:
+Heavy, and packed-FP16 representative gives the same median curve:
 
 | N per producer | 0 | 1 | 2 | 3 | 4 | 8 | 12 | 13 | 14 | 15 |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -291,13 +304,13 @@ even-length burst contains equal numbers from the two leaves.
 All ten unordered leaf pairs give the following effective-depth matrix.  The
 diagonal is the homogeneous result for reference:
 
-| | ALU Heavy | ALU Lite | FMA Heavy | FMA Lite | coupled FP16 |
+| | ALU Heavy | ALU Lite | FMA Heavy | FMA Lite | packed FP16 |
 |---|---:|---:|---:|---:|---:|
 | **ALU Heavy** | ~12 | **~12** | **5** | **5** | **5** |
 | **ALU Lite** | | ~12 | **5** | **5** | **5** |
 | **FMA Heavy** | | | ~12 | **5** | **~12** |
 | **FMA Lite** | | | | 5 | **~12*** |
-| **coupled FP16** | | | | | ~12 |
+| **packed FP16** | | | | | ~12 |
 
 `*` FMA Lite + FP16 has a clear deep boundary but extra phase structure near
 it.  The three deep off-diagonal pairs have approximately +4 clocks/N after
@@ -399,8 +412,8 @@ common cross-domain fixed-math window: ~5 total outstanding
 
 same-domain modes which expose a deeper ~12-total window:
     ALU mode           = ALU Heavy + ALU Lite
-    FMA-Heavy mode     = FMA Heavy + coupled FP16
-    coupled-FMA mode   = coupled FP16 + FMA Lite
+    FMA-Heavy mode     = FMA Heavy + packed FP16
+    multi-leaf FMA mode = packed FP16 + FMA Lite
 
 FMA-Lite-only mode: 5 total
 ```
@@ -566,8 +579,8 @@ suffix differences), so it is not a valid in-kernel timing gap here.
 | ALU Heavy | **about 12/subcore** | IADD3/LOP3/SHF agree |
 | ALU Lite | **about 12/subcore** | IADD/MOV/ISETP agree |
 | FMA Heavy | **about 12/subcore** | IMAD/IMUL/FSWZADD agree |
-| FMA Lite | **not exposed by this probe** | issue and service both ≈1/cycle |
-| coupled FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
+| FMA Lite | **about 12/subcore** | exposed by all-reuse FADD2/FMUL2/FFMA2 |
+| packed FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
 
 The dense-issue correction removes the claimed common-5/downstream-7
 decomposition.  What remains is approximately twelve effective credits when a

@@ -8,7 +8,8 @@ packed FP32x2 operation on 64-bit register pairs. Each operand (Ra/Rb) carries
 an `ISWZA_fadd2` swizzle: `F32x2`(packed pair), `F32x2.LO_HI`(swapped), or
 `F32`(scalar broadcast). Per-element negate/absolute on each operand via
 `Ra@negate`/`Ra@absolute`, `Rb@negate`/`Rb@absolute`. `INST_TYPE_COUPLED_MATH`
-— occupies two coupled issue slots.
+denotes the fixed-latency math class, in contrast to decoupled variable-latency
+MIO; it does not imply two scheduler issue slots.
 
 ## Semantics
 `FMUL2 Rd, Ra, Rb` where per-operand width/order is `ISWZA_fadd2`:

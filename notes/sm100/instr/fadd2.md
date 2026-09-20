@@ -7,8 +7,9 @@ New on sm100 (Blackwell). `FADD2 Rd, Ra, Rc` computes `Rd = Ra + Rc` as a
 packed FP32x2 operation on 64-bit register pairs. Each operand (Ra/Rc) carries
 an `ISWZA_fadd2` swizzle: `F32x2`(packed pair), `F32x2.LO_HI`(swapped), or
 `F32`(scalar broadcast). Per-element negate/absolute via `Ra@negate`, `Ra@absolute`,
-`Rc@negate`, `Rc@absolute`. Same `INST_TYPE_COUPLED_MATH` as FFMA2 — occupies two
-coupled issue slots.
+`Rc@negate`, `Rc@absolute`.  It has the same `INST_TYPE_COUPLED_MATH` as
+FFMA2: the fixed-latency math class, as opposed to decoupled variable-latency
+MIO.  This name does not imply two scheduler issue slots.
 
 ## Semantics
 `FADD2 Rd, Ra, Rc` where each operand's interpretation is governed by `ISWZA_fadd2`:

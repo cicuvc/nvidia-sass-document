@@ -43,8 +43,9 @@ control). `FMUL2 Rd, Ra, Rb` computes `Rd = Ra * Rb` (no Rc).
 | `ffma2_rb_x__RRI` / etc. | 0x449 | Rd, Ra, Rb, imm | immediate in C-slot |
 
 `FADD2` has 3 (RRR/RRU/RIR), `FMUL2` has 3 (RRR/RRU/RIR). All 11 variants share
-`fmalighter_pipe` and `INST_TYPE_COUPLED_MATH` (paired instructions occupy two
-issue slots).
+`fmalighter_pipe` and `INST_TYPE_COUPLED_MATH`.  Here *coupled* denotes the
+fixed-latency math issue class, in contrast to decoupled variable-latency MIO;
+it does not mean that the instruction occupies two scheduler issue slots.
 
 ## Modifiers
 | Slot | Enum | Bits | Meaning |
@@ -84,9 +85,8 @@ computes the fma as a packed pair.
   the standard sm_90 layout unchanged.
 - `notes/sm90/instr/*` — the f32/x32 scalar predecessors; FFMA2 is the packed
   sm100 successor.
-- `notes/sm100/instr/utchmma.md` — unrelated but shares the `INST_TYPE_COUPLED_MATH`
-  type (FFMA2 is the lighter fmalighter_pipe counterpart to the MMA's coupled
-  math dispatch).
+- `notes/sm100/instr/utchmma.md` — unrelated but also uses the fixed-latency
+  `INST_TYPE_COUPLED_MATH` classification.
 
 ## Open questions
 - `ISWZA_fadd2` F32x2=0 / F32x2.HI_LO=0 both map to 0 — how does the disassembler
@@ -95,6 +95,7 @@ computes the fma as a packed pair.
 - Per-element negate/abs on each 32-bit lane — confirmed via spec bits [72:75],
   but not yet tested with a kernel that forces a per-lane negate on a packed
   source.
-- The exact microarch benefit of FP32x2 on `fmalighter_pipe`: each 64-bit FMA
-  occupies two coupled issue slots, suggesting the pipe's FMA unit is 32-bit wide
-  but can pair two FFMA2s as one coupled dispatch.
+- The exact internal execution arrangement of FP32x2 on `fmalighter_pipe`.
+  Admission probes show approximately 0.5 instruction/cycle service and about
+  12 effective FMA-Lite reservations, but do not determine the number or width
+  of physical arithmetic units.

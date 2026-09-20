@@ -326,6 +326,125 @@ def phased_source(n_first: int, first_mode: str, n_second: int,
     return "\n".join(lines), (max(*producers, observer) + 1) * 32
 
 
+def asymmetric_source(n: int, background_mode: str, background_count: int,
+                      target_warps: int, background_active: bool) -> tuple[str, int]:
+    """Run a long warp-0 background while warp 4/8/... issue scalar FFMA.
+
+    The clean-subcore observer at warp 1 waits only for the target warps, so a
+    full background queue cannot itself determine the measured end point.
+    """
+    targets = tuple(4 * (i + 1) for i in range(target_warps))
+    observer = 1
+    if background_mode == "nop":
+        background = "NOP"
+        background_sched = "[7:7:{}:1:0]"
+    else:
+        background = BARRIER_OPS[background_mode]
+        if background_active:
+            background = background.removeprefix("@P6 ")
+        background_sched = BARRIER_SCHED.get(
+            background_mode, "[7:7:{}:1:0:7]")
+    target = BARRIER_OPS["fmalite"].removeprefix("@P6 ")
+    target_sched = "[7:7:{}:1:0:7]"
+    lines = [
+        "#fn asymfmalite(out<8>) {",
+        "    #pragma MAXREG_COUNT(64)",
+        "    LDC.64 {R2,R3}, #param(out);[0:7:{}:1:0]",
+        "    S2R R4, SR_TID.X;[1:7:{}:5:1]",
+        "    SHR R5, R4, 0x5;[7:7:{1}:5:1]",
+        "    ISETP.F P6, RZ, RZ;[7:7:{}:13:1]",
+        "    BAR.SYNC 0;[7:7:{}:5:1]",
+        "    ISETP.EQ.AND P0, PT, R5, RZ, PT;[7:7:{}:13:1]",
+        "    @P0 BRA #label(background);[7:7:{}:5:1]",
+    ]
+    for warp in targets:
+        lines += [
+            f"    ISETP.EQ.AND P0, PT, R5, 0x{warp:x}, PT;"
+            "[7:7:{}:13:1]",
+            "    @P0 BRA #label(target);[7:7:{}:5:1]",
+        ]
+    lines += [
+        f"    ISETP.EQ.AND P0, PT, R5, 0x{observer:x}, PT;"
+        "[7:7:{}:13:1]",
+        "    @P0 BRA #label(observer);[7:7:{}:5:1]",
+        "    BRA #label(done);[7:7:{}:5:1]",
+        "#def_label(background)",
+    ]
+    lines += [f"    {background};{background_sched}"
+              for _ in range(background_count)]
+    lines += [
+        "    BRA #label(done);[7:7:{}:5:1]",
+        "#def_label(target)",
+    ]
+    lines += [f"    {target};{target_sched}" for _ in range(n)]
+    lines += [
+        "    BRA #label(target_join);[7:7:{}:5:1]",
+        "#def_label(observer)",
+        "    CS2R {R20,R21}, SR_CLOCKLO;[7:7:{}:5:0]",
+        "#def_label(target_join)",
+        f"    BAR.SYNC 1, 0x{(target_warps + 1) * 32:x};"
+        "[7:7:{}:5:1]",
+        f"    ISETP.EQ.AND P0, PT, R5, 0x{observer:x}, PT;"
+        "[7:7:{}:13:1]",
+        "    @!P0 BRA #label(done);[7:7:{}:5:1]",
+        "    CS2R {R22,R23}, SR_CLOCKLO;[7:7:{}:5:0]",
+        "    STG.E.64.STRONG.GPU [{R2,R3}], {R20,R21};[7:0:{0}:8:0]",
+        "    STG.E.64.STRONG.GPU [{R2,R3}+0x8], {R22,R23};[7:0:{}:8:0]",
+        "#def_label(done)",
+        "    EXIT;[7:7:{}:5:0]",
+        "}",
+    ]
+    return "\n".join(lines), (max(*targets, observer) + 1) * 32
+
+
+@app.local_entrypoint()
+def asymmetric(background_modes: str = "nop,ffma2",
+               counts: str = "0-48", background_count: int = 256,
+               target_warps: int = 2, repetitions: int = 11,
+               background_active: bool = True) -> None:
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    from assembler import assemble
+
+    modes = parse_csv(background_modes)
+    ns = parse_counts(counts)
+    if (any(mode not in {
+                "nop", "ffma2", "fadd2", "fmul2", "fmaheavy",
+                "aluheavy", "packed",
+            }
+            for mode in modes)
+            or not ns or min(ns) < 0 or max(ns) > 100
+            or not 1 <= target_warps <= 3
+            or not 1 <= background_count <= 1024
+            or repetitions <= 0):
+        raise ValueError("invalid asymmetric-probe parameter")
+    cases = []
+    for mode in modes:
+        for n in ns:
+            src, block_size = asymmetric_source(
+                n, mode, background_count, target_warps,
+                background_active)
+            cubin = assemble(src, arch="sm100a", check_deps=True)
+            label = f"{mode}:N={n}"
+            cases.append((label, cubin, "asymfmalite", block_size,
+                          16, (0,)))
+    result_map = dict(run_cases.remote(cases, repetitions))
+    for mode in modes:
+        print(f"background={mode} background_count={background_count} "
+              f"background_active={background_active} "
+              f"target_warps={target_warps}")
+        print("N median min max delta")
+        previous = None
+        for n in ns:
+            values = result_map[f"{mode}:N={n}"]
+            med = statistics.median(values)
+            delta = "-" if previous is None else f"{med - previous:g}"
+            print(f"{n:2d} {med:6g} {min(values):3d} "
+                  f"{max(values):3d} {delta}")
+            previous = med
+
+
 @app.local_entrypoint()
 def main(modes: str = "aluheavy,fmaheavy,fmalite,packed,alulite",
          placements: str = "one", counts: str = "0-16",
