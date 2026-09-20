@@ -255,7 +255,9 @@ def phased_source(n_first: int, first_mode: str, n_second: int,
         "#def_label(producer)",
     ]
     lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
-    lines += [f"    {first};[7:7:{{}}:1:0:7]" for _ in range(n_first)]
+    first_sched = BARRIER_SCHED.get(first_mode, "[7:7:{}:1:0:7]")
+    second_sched = BARRIER_SCHED.get(second_mode, "[7:7:{}:1:0:7]")
+    lines += [f"    {first};{first_sched}" for _ in range(n_first)]
     if gap_kind == "nop":
         lines += ["    NOP;[7:7:{}:1:0]" for _ in range(gap)]
     elif gap_kind == "nanosleep":
@@ -273,7 +275,7 @@ def phased_source(n_first: int, first_mode: str, n_second: int,
             ]
     else:
         raise ValueError(f"invalid phase gap kind: {gap_kind}")
-    lines += [f"    {second};[7:7:{{}}:1:0:7]" for _ in range(n_second)]
+    lines += [f"    {second};{second_sched}" for _ in range(n_second)]
     lines += [
         "    BRA #label(join);[7:7:{}:5:1]",
         "#def_label(observer)",

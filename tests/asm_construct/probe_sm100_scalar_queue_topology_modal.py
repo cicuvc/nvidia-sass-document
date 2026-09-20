@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT))
 
 from probe_sm100_scalar_admission_modal import (  # noqa: E402
     BARRIER_OPS,
+    BARRIER_SCHED,
     app,
     parse_counts,
     parse_csv,
@@ -39,7 +40,8 @@ def flag_source(segments: list[tuple[str, int]], active: bool = False,
         op = BARRIER_OPS[mode]
         if active:
             op = op.removeprefix("@P6 ")
-        ops += [f"    {op};[7:7:{{}}:1:0:7]" for _ in range(count)]
+        sched = BARRIER_SCHED.get(mode, "[7:7:{}:1:0:7]")
+        ops += [f"    {op};{sched}" for _ in range(count)]
 
     lines = [
         "#fn queuetopology(out<8>) {",
