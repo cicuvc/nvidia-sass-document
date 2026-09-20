@@ -118,9 +118,11 @@ One N again adds two instructions, one to each same-scheduler warp.  The x2
 forms can therefore enter at the scheduler's aggregate 1 inst/cycle but drain
 at approximately 0.5 inst/cycle.  During the issue of 2N instructions the
 backlog grows by approximately N entries, so the N≈12 knee directly exposes
-about **12 FMA-Lite outstanding reservations per subcore**.  FADD2/FMUL2 are
-the cleanest representatives; FFMA2's three packed sources add a visible
-operand-collection cost before the final pipe-limited region.
+about **12 effective dual-FMA reservations per subcore**.  It does not by
+itself give the standalone scalar-Lite depth because packed FP32x2 also claims
+the Heavy side.  FADD2/FMUL2 are the cleanest representatives; FFMA2's three
+packed sources add a visible operand-collection cost before the final pipe-
+limited region.
 
 With only one producer warp, all three x2 forms remain at approximately +2
 clocks/instruction through N=40 and never fill the queue.  A single warp's
@@ -139,19 +141,25 @@ clocks rather than two, then further FFMAs return to +2 each.  FMA-Heavy IMAD
 markers remain at +4 each, while ALU-Heavy IADD3 markers remain at +2 and are
 unaffected.
 
-An asymmetric test establishes that the x2 structure is the scalar-Lite
-admission/dispatch domain rather than a separate queue.  Warp 0 continuously
-issues 256 or 512 all-reuse FFMA2/FADD2 instructions while same-scheduler
-warps 4 and 8 issue scalar FFMA; a clean-subcore observer waits only for the
-FFMA warps.  Even one target FFMA waits approximately the complete background
-duration (about 470 clocks for 256 and 990 clocks for 512).  Active and
-predicated-off x2 backgrounds behave identically.  An FMA-Heavy background,
-in contrast, does not delay the first FFMA at all.  Continuous x2 traffic
-therefore fills and continually refills the same FMA-Lite availability domain
-used by scalar FFMA.  The N≈12 burst knee measures that domain's effective
-capacity even though scalar FFMA alone cannot overdrive it.
+An asymmetric test establishes that x2 admission reserves or gates the Lite
+side, but not that its twelve-entry boundary belongs to Lite alone.  Warp 0
+continuously issues 256 or 512 all-reuse FFMA2/FADD2 instructions while same-
+scheduler warps 4 and 8 issue scalar FFMA; a clean-subcore observer waits only
+for the FFMA warps.  Even one target FFMA waits approximately the complete
+background duration (about 470 clocks for 256 and 990 clocks for 512).  Active
+and predicated-off x2 backgrounds behave identically.  An FMA-Heavy background,
+in contrast, does not delay the first FFMA at all.
 
-### Packed FP16 belongs to the Heavy reservation domain and uses Lite execution
+Reciprocal dense phases locate the other half.  `FADD2 -> HFMA2`,
+`FMA-Heavy -> HFMA2`, `HFMA2 -> FADD2`, and `HFMA2 -> FMA-Heavy` are point-for-
+point identical; once a prefix reaches N=11, every suffix starts immediately
+at `0,4,8,12,...`.  Packed FP32x2 and packed FP16 therefore both require Heavy
+and Lite availability at admission.  The best operational model is one logical
+instruction which atomically claims one credit/resource token on each side.
+Timing cannot distinguish one metadata entry with a `Heavy|Lite` mask from two
+linked physical queue tokens.
+
+### Packed FP16 atomically claims Heavy and Lite resources
 
 Dense-issue retesting places `HFMA2`/`HADD2`/`HMUL2` more precisely.  A pure
 HFMA2 stream has the same N≈12 knee and +4-clock final increment as the other
@@ -192,15 +200,15 @@ preserves FMA Heavy's complete filling window: an FFMA prefix does not consume
 Heavy credits.
 
 Thus scalar FMA Lite has an operationally independent admission/ready-credit
-domain of approximately twelve effective entries; it does not share one
-exhaustible FIFO with FMA Heavy.  A physical
+domain; it does not share one exhaustible FIFO with scalar FMA Heavy.  A physical
 implementation may still use one tagged or statically partitioned entry array,
 but it must have independent availability accounting and selection.  Packed
 FP16/FP32x2 operations can require both sides through their resource mask
 without implying shared scalar Heavy/Lite admission credits.  Scalar FFMA
 alone cannot expose the Lite depth because its 1-inst/cycle service matches
-the scheduler ceiling; packed FP32x2 supplies the required 0.5-inst/cycle
-drain while staying on `fmalighter_pipe`.
+the scheduler ceiling.  Packed FP32x2 supplies a 0.5-inst/cycle drain but also
+claims Heavy, so its N≈12 boundary is the minimum/effective capacity of the
+dual-resource path rather than a unique measurement of scalar-Lite capacity.
 
 ### B200 has one unified ALU backend, not observable Heavy/Lite leaves
 
@@ -624,7 +632,8 @@ suffix differences), so it is not a valid in-kernel timing gap here.
 |---|---:|---|
 | unified ALU | **about 12/subcore** | both former Heavy/Lite opcode groups |
 | FMA Heavy | **about 12/subcore** | IMAD/IMUL/FSWZADD agree |
-| FMA Lite | **about 12/subcore** | exposed by all-reuse FADD2/FMUL2/FFMA2 |
+| scalar FMA Lite | **unknown** | 1/cycle service matches scheduler ceiling |
+| dual-FMA packed path | **about 12/subcore effective** | FP32x2 and packed FP16 |
 | packed FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
 
 The dense-issue correction removes the claimed common-5/downstream-7
@@ -633,5 +642,6 @@ single 0.5/cycle service domain is driven by the one-instruction/cycle
 scheduler.  Cross-domain ALU/FMA reaches the scheduler ceiling and therefore
 does not reveal its storage capacity.  RF-conflict controls place at least part
 of the slow-domain reservation lifetime before/during operand collection.
-Packed FP16 reserves both FMA leaves for execution and behaves as part of the
-Heavy service domain.
+Packed FP16 claims both FMA availability domains at admission and uses both
+execution sides; its effective depth and service are limited by the shared
+dual-resource path.

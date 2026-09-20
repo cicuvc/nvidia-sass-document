@@ -97,5 +97,7 @@ computes the fma as a packed pair.
   source.
 - The exact internal execution arrangement of FP32x2 on `fmalighter_pipe`.
   Admission probes show approximately 0.5 instruction/cycle service and about
-  12 effective FMA-Lite reservations, but do not determine the number or width
-  of physical arithmetic units.
+  12 effective dual-FMA reservations.  Reciprocal blocking against FMA Heavy
+  and scalar FMA Lite shows that packed FP32x2 claims both sides; the probe does
+  not determine the standalone Lite depth or the number/width of physical
+  arithmetic units.
