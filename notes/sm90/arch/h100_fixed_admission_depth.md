@@ -104,3 +104,34 @@ No tested fixed-pipeline admission parameter distinguishes the Modal H100
 from B200.  Capacity equality alone does not prove that the three heavy
 families share one physical queue; only that each exposes the same effective
 depth under homogeneous traffic.
+
+## Mixed-family bursts: the heavy families share one queue; HFMA2.MMA executes on the FP64 path
+
+The capacity equality above leaves open whether INT/FP16/FP64 share one
+physical queue.  Interleaved two-family bursts answer it
+(`probe_sm80_admission_depth.py --mode mix_* --actors same2`, the older
+same-subcore CS2R construction, so absolute knee positions are on its
+scale; the *sharing* inference is structural and method-independent):
+
+| mixed burst (alternating) | knee at cumulative N | steady slope |
+|---|---:|---:|
+| IADD3 + HFMA2 | ~11 | +3 cyc/op |
+| IADD3 + DADD | ~11 | +3 |
+| HFMA2 + DADD | ~11 | +3 |
+| HFMA2.MMA + HFMA2 | ~11 | +3 |
+| HFMA2.MMA + DADD | ~11 | **+4** |
+
+Separate per-family queues would postpone the knee to ~2x (each queue
+fills at half the combined arrival rate); every mix knees at the same
+cumulative ~11 as the homogeneous bursts, so **the heavy fixed-pipe
+families share one admission queue per subcore**.  The +3 (0.67 inst/cyc)
+steady slope of the cross-family mixes sits between one shared 0.5/cyc
+service (+4) and two fully independent 0.5/cyc services (+2): the two
+pipes overlap partially once past admission.
+
+The exception proves the execution resource of HFMA2.MMA: mixed with DADD
+it degrades to exactly +4 = a single 0.5/cyc service, while mixed with
+HFMA2 it keeps the +3 cross-path overlap.  **HFMA2.MMA is serviced by the
+FP64 pipe** (matching its DADD-like 4-cycle result bypass), so its
+admission queue is the shared fixed-pipe queue, but its service resource
+is FP64, not the FP16/C path used by plain HFMA2.

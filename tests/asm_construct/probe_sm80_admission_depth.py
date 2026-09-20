@@ -49,6 +49,20 @@ OPS = {
     # CBU forms need per-instance labels; emitted specially below.
     "cbu_bra": "",
     "cbu_bssy": "",
+    # Interleaved pairs for queue-sharing discrimination (emitted below).
+    "mix_int_packed": "",
+    "mix_int_fp64": "",
+    "mix_packed_fp64": "",
+    "mix_mma_packed": "",
+    "mix_mma_fp64": "",
+}
+
+MIX = {
+    "mix_int_packed": ("aluheavy", "packed"),
+    "mix_int_fp64": ("aluheavy", "fp64"),
+    "mix_packed_fp64": ("packed", "fp64"),
+    "mix_mma_packed": ("packed_mma", "packed"),
+    "mix_mma_fp64": ("packed_mma", "fp64"),
 }
 
 ACTORS = {
@@ -158,6 +172,12 @@ def source(n: int, mode: str, actors: tuple[int, ...], active: bool,
             lines.append(f"    @P6 BSSY B0, #label(cbs{i});{sched}")
             lines.append(f"    @P6 BSYNC B0;{sched}")
             lines.append(f"#def_label(cbs{i})")
+    elif mode in MIX:
+        a, b = (OPS[k] for k in MIX[mode])
+        if active:
+            a, b = a.removeprefix("@P6 "), b.removeprefix("@P6 ")
+        for i in range(n):
+            lines.append(f"    {a if i % 2 == 0 else b};{sched}")
     else:
         lines += [f"    {op};{sched}" for _ in range(n)]
     lines += [
