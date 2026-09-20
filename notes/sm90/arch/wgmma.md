@@ -803,6 +803,20 @@ This directly confirms the Round-3 inference of a "~5--7-entry TC command
 FIFO": depth **7** (8th admission already delayed), fed by the warp front
 end at ≥1 cyc/op, drained at the shape-dependent pipe rate.
 
+Unlike the LSU queues (which a single warp cannot outrun, hiding the knee),
+the HGMMA window is immune to the arrival-rate artifact: the front end
+(≥1 cyc/op) vastly outruns the drain (≥13 cyc/op), so the FIFO demonstrably
+fills.  Three independent readings agree on depth ~7:
+
+1. **Stall sweep**: the knee sits at 6-8 cumulative admissions for bracket
+   stalls 1, 2 and 4 alike (an arrival artifact would scale with stall).
+2. **In-flight backlog**: steady drain-minus-issue ≈ 100 cyc at n16
+   ≈ 7.7 MMAs at the 13 cyc/op rate.
+3. **Two warpgroups** (`--warpgroups 2`): the window splits ~3.5/3.5
+   (each side admits 3 fast, knee at N=4) and the post-knee slope doubles
+   to exactly +26 cyc/op (2x13) -- one SM-shared FIFO of ~7 entries served
+   by one TC command path, shared across warpgroups.
+
 ## Round 4 — the ptxas wgmma-DCE trap; sustained throughput is plain MAC-bound (H20, 2026-08; nvcc variant chains)
 
 **ptxas dead-code-eliminates `wgmma.mma_async` when the kernel never

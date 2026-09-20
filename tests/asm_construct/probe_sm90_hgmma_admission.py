@@ -25,12 +25,13 @@ from probe_hgmma_mio_interaction import hgmma_body  # noqa: E402
 
 
 def source(n: int, shape: int, operand: str, pred: bool,
-           stall: int = 4) -> str:
+           stall: int = 4, warpgroups: int = 1) -> str:
     lines = [
         "#fn hgburst(out<8>) {",
         "    #pragma MAXREG_COUNT(128)",
         "    #pragma SHARED(16384)",
         "    LDC.64 {R2,R3}, #param(out);[0:7:{}:1:0]",
+        "    S2R R44, SR_CTAID.X;[2:7:{}:5:1]",
         "    S2R R4, SR_TID.X;[2:7:{}:5:1]",
         "    IMAD.WIDE.U32 {R6,R7}, R4, 0x20, {R2,R3};[7:7:{0,2}:5:1]",
         "    LOP3.LUT R42, R4, 0x1f, RZ, 0xc0;[7:7:{2}:5:1]",
@@ -73,16 +74,18 @@ def source(n: int, shape: int, operand: str, pred: bool,
 
 
 def measure(n: int, shape: int, operand: str, pred: bool,
-            reps: int, stall: int = 4) -> tuple[float, float]:
-    cubin = assemble(source(n, shape, operand, pred, stall), arch="sm90",
+            reps: int, stall: int = 4, warpgroups: int = 1) -> tuple[float, float]:
+    cubin = assemble(source(n, shape, operand, pred, stall, warpgroups),
+                     arch="sm90",
                      check_deps=True)
     mod = CudaModule(cubin)
-    out = mod.devmem_alloc(128 * 32)
+    out = mod.devmem_alloc(128 * 32 * warpgroups)
     issue: list[int] = []
     drain: list[int] = []
     try:
         for rep in range(reps + 1):
-            mod.launch("hgburst", grid=(1,), block=(128,), args=[out])
+            mod.launch("hgburst", grid=(1,), block=(128 * warpgroups,),
+                       args=[out])
             mod.synchronize()
             if rep:
                 t0, t1, t2 = struct.unpack("<QQQ", mod.device_read(out, 24))
@@ -108,10 +111,11 @@ def main() -> int:
     p.add_argument("--counts", default="0-24")
     p.add_argument("--reps", type=int, default=7)
     p.add_argument("--stall", type=int, default=4)
+    p.add_argument("--warpgroups", type=int, choices=(1, 2), default=1)
     ns = p.parse_args()
     for n in parse_counts(ns.counts):
         issue, drain = measure(n, ns.shape, ns.operand, ns.pred, ns.reps,
-                           ns.stall)
+                           ns.stall, ns.warpgroups)
         print(f"N={n:3d} issue={issue:9.1f} drain={drain:9.1f} "
               f"{'pred' if ns.pred else 'active'}")
     return 0
