@@ -175,6 +175,50 @@ bypass:  same-domain 2 cyc,  INT<->fmalighter cross-domain 3 (fine)/4 (safe),
          IMAD.WIDE lo -> fmalighter 1 (fastest path on the chip)
 ```
 
+### No lite/heavy split on GH100 — the dual-mode F+C model
+
+The GB202 vocabulary (ALU-Heavy vs ALU-Lite-inside-Shared-FMA-Heavy vs
+FMA-Lite) does **not** map to GH100, and neither does the GA100 map
+(separate INT array + FP32 array that also multiplies).  Same-subcore
+windowed conflict runs (`probe_sm90_conflict_windows.py`, equal-length
+streams, clean `[1:0:7]` brackets, max-overlap rep):
+
+| pair (same subcore) | result | reading |
+|---|---|---|
+| IADD3 × IMAD (full overlap) | 0.250 + 0.250 = 0.50 | **share one 16-lane server** |
+| IADD3 × LOP3 | timeshare, agg ~0.5 | one int server, no sub-split |
+| FFMA × FFMA | share, cap ~1.0 | 32-lane FP32 |
+| FFMA × IADD3 / IMAD / DADD | FFMA keeps 0.86–0.99, other gets ~0.33 (position-independent) | partial sharing, arbitration favors FP32 |
+| FFMA × HFMA2 | agg ~0.8 | fp16 partially shares the FP32 resource |
+| MUFU × FFMA / IADD3 | 0.83+0.11 / 0.49+0.125 | XU fully disjoint |
+
+Best-fit structure per SMSP (same shape as AD102's F+C, not GA100's separate
+arrays):
+
+```text
+F: 16 FP32-only lanes
+C: 16 dual-mode lanes  (FP32 | INT add/logic | INT mul | FP16 | FP64)
+   - FFMA/FADD/FMUL need F+C           -> 1.0 cyc/inst
+   - all 2.0-cyc ops time-share C      -> 0.5/clk aggregate
+   - FFMA vs C-op arbitration: FFMA wins (keeps ~0.9, C-op squeezed ~0.33)
+```
+
+Evidence chain: IADD3×IMAD at full overlap split 0.25/0.25 (rejects
+GA100-style "IMAD on the FP32 array" — that would aggregate 1.0 — and
+rejects AD102's separate A adder); all int_pipe ops have identical 2.0 rates
+and identical bypass boundaries (no lite fast path — rejects the GB202
+ALU-Lite leaf); FFMA at 1.0 while IMAD×FFMA aggregate ~1.2 (FFMA keeps F
+plus most of C; IMAD gets C scraps); DADD×FFMA behaves like INT×FFMA, so
+the 16 FP64 lanes live on C as well (consistent with the 1:2 FP64:FP32
+throughput ratio).  4-warp same-subcore runs
+(`probe_sm90_conflict4.py`) show the scheduler rotating fixed time quanta
+between warps rather than demand-filling, which is why 2-warp same-pipe
+pairs look winner-take-all in window averages.
+
+What remains unproven: whether "C" is one physical multimode array or two
+8-lane halves, and whether fp16's extra bypass cycle means a separate
+result stage on C or a separate small array.
+
 ## Cross-arch comparison (per SMSP, clean solo rates)
 
 | resource | GA100 sm_80 | AD102 sm_89 | GH100 sm_90 | GB202 sm_120 |
@@ -187,6 +231,8 @@ bypass:  same-domain 2 cyc,  INT<->fmalighter cross-domain 3 (fine)/4 (safe),
 | FP64 DADD/DFMA | 4.0 (8 lanes/SMSP) | 16/19 (2 lanes/SM!) | **2.0 (16 lanes/SMSP)** | SM-shared |
 | MUFU | 8.0 | 8.0 | 8.0 | 8.0 |
 | yield switch cost | +1 (NOP-verified) | +1 | **+1** (DFMA anomaly +1 on top of 2.0) | +1 |
+| INT × IMAD same-subcore | disjoint (0.5+0.5) | disjoint (A + C-mul) | **shared one server (0.25+0.25)** | — |
+| scalar structure | separate INT + FP32-with-mul | F + C(dual) + A | **F + C(dual-mode, no A)** | ALUH/ALUL-in-FMAH + FMAL |
 | same-domain bypass | — | — | 2 | 2 |
 | INT↔FP cross-domain | — | — | 3/4 | none (unified 2; some 3/4 paths) |
 
