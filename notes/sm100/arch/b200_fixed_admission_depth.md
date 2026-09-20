@@ -155,6 +155,36 @@ through N=16 and show no boundary: ALU-Heavy + ALU-Lite, FMA-Heavy + FP16,
 and FMA-Lite + FP16 are +2 clocks/N, while ALU-Heavy + FMA-Heavy is +1.
 The five- and twelve-credit resources are consequently subcore-local.
 
+### Ratio sweep: shallow mixed behavior is occupancy, not a fixed mode throttle
+
+A fixed “both ALU and FMA are present” throttle could imitate the 1:1
+five-credit curve without a literal full queue.  To distinguish it, the same
+two producers issue periodic ALU-Heavy:FMA-Heavy patterns at ratios 1:1, 2:1,
+3:1, and 7:1, plus all reversed ratios.  With active RZ operands:
+
+| ratio | approximate onset of repeating service-limited pattern |
+|---|---:|
+| 1:1 | `N=6` |
+| 2:1 / 1:2 | `N≈18--20` |
+| 3:1 / 1:3 | `N≈18--19` |
+| 7:1 / 1:7 | `N≈14--15` |
+| homogeneous | `N=13` |
+
+The long-run increment pattern also follows the majority domain: 1:1 is a
+constant +2 clocks/count, 2:1 repeats approximately `+4,+2,+2`, and increasingly
+biased streams contain increasingly many +4 increments.  This is the expected
+occupancy behavior.  At 1:1, the one-instruction/cycle downstream switch feeds
+each 0.5/cycle backend at exactly its drain rate, so only the shallow common
+window accumulates.  With a slight imbalance, the majority-domain state fills
+only at the small excess of arrival rate over 0.5/cycle, moving the knee much
+farther out.  At extreme imbalance it approaches the homogeneous deep curve.
+
+Thus a fixed five-token throttle triggered merely by mixed instruction classes
+is ruled out.  A completion-refilled, per-domain token mechanism could still
+reproduce the curves, but such tokens are operationally the same admission
+credits/reservation occupancy modeled here; timing alone cannot require the
+credits to be literal FIFO rows.
+
 The minimum *effective-domain* model consistent with the pair matrix is:
 
 ```text

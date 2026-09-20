@@ -143,6 +143,12 @@ BARRIER_MIX = {
     "mix_fmah_fp16": ("fmaheavy", "packed"),
     "mix_fmal_fp16": ("fmalite", "packed"),
     "mix_rf_aluh_fmah": ("rf_aluheavy", "rf_fmaheavy"),
+    "mix_2aluh_1fmah": ("aluheavy", "aluheavy", "fmaheavy"),
+    "mix_3aluh_1fmah": ("aluheavy", "aluheavy", "aluheavy", "fmaheavy"),
+    "mix_7aluh_1fmah": (("aluheavy",) * 7 + ("fmaheavy",)),
+    "mix_1aluh_2fmah": ("aluheavy", "fmaheavy", "fmaheavy"),
+    "mix_1aluh_3fmah": ("aluheavy",) + ("fmaheavy",) * 3,
+    "mix_1aluh_7fmah": ("aluheavy",) + ("fmaheavy",) * 7,
 }
 
 BARRIER_SCHED = {
