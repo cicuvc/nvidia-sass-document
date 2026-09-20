@@ -190,6 +190,92 @@ the common cross-domain window comes from pairs whose two homogeneous depths
 are both twelve.  The full pair matrix nevertheless rules out both five
 independent fixed-ownership queues and a single shared twelve-entry queue.
 
+## Ordered two-phase bursts locate the extra credits
+
+The alternating-pair test still admits a possible flat interpretation: a
+single queue might change its effective depth according to the current mode.
+The phased probe is stronger.  Each of the two same-subcore producer warps
+issues `A^NA`, immediately followed by `B^NB`; the clean-subcore observer and
+counted ending barrier are unchanged.  For each `NA`, the reported suffix
+curve is `T(NA,NB)-T(NA,0)`, so the cost of the A prefix is removed.
+
+With `NA=12` and no gap, representative suffix curves are:
+
+| ordered pair | suffix increments for `NB=0..12` | interpretation |
+|---|---|---|
+| ALU Heavy → FMA Heavy | `0,2,4,...,24` | FMA Heavy retains its complete filling window |
+| ALU Heavy → ALU Lite | `0,4,8,...,48` | ALU suffix is service-limited immediately |
+| FMA Heavy → FP16 | `0,4,8,...,48` | FP16 sees the already occupied Heavy domain |
+| FMA Lite → FMA Heavy | still has a filling region | Lite prefix does not occupy Heavy's deep state |
+
+The first row is the decisive counterexample to a flat 12-entry FIFO.  At the
+point where 24 ALU-Heavy operations from the two producers have filled the
+ALU path to its approximately 12-outstanding boundary, the following
+FMA-Heavy stream can still accumulate approximately twelve of its own
+outstanding operations before its +4 clocks/`NB` drain slope begins.  Reversing
+the order gives the same result.  In contrast, replacing the suffix with ALU
+Lite removes the filling region completely.  The symmetric FMA-Heavy/FP16
+case behaves like the same-domain ALU pair.
+
+Removing the false predicate from all three representative phased pairs
+(ALU-Heavy→FMA-Heavy, ALU-Heavy→ALU-Lite, and FMA-Heavy→FP16) reproduces the
+same curves clock for clock through `NB=14`.  The separation is therefore not
+an artifact of nullified operations skipping execution or writeback.
+
+This establishes a physical-placement constraint stronger than the mixed
+matrix alone:
+
+```text
+shared fixed-math ingress/backpressure state:  ~5 effective credits
+                         |
+                  domain selection
+                    /           \
+          ALU downstream       FMA-Heavy downstream
+          ALUH + ALUL          FMAH + packed FP16
+          extra ~7 state       extra ~7 state
+
+FMA-Lite: no independently visible extra window
+packed FP16: also reserves the Lite execution side
+```
+
+The “extra ~7” should still be read as distributed valid/reservation state,
+not necessarily as a seven-word SRAM FIFO.  A cheap implementation is a small
+common issue skid/metadata queue (four waiting entries plus the dispatch head
+gives the observed five), followed by per-domain valid bits in operand,
+pipeline, or result staging.  If the deeper structure is an eight-slot ring,
+one unavailable/reserved slot plus the common five naturally appears as the
+approximately twelve effective total, but the measurements do not distinguish
+that implementation from seven separately distributed stage reservations.
+
+### Recovery controls
+
+Plain NOP gaps are not a clean clock delay: changing the gap changes warp
+scheduler phase.  Nevertheless, same-gap controls preserve the ordered-pair
+distinction.  A producer-local `LDS` followed by an explicit scoreboard wait
+was therefore added as a second delay mechanism.  For a twelve-operation
+prefix:
+
+- ALU→ALU and FMA-Heavy→FP16 remain suffix-service-limited after one to three
+  load/wait gaps, while shorter five- and eight-operation prefixes recover
+  earlier.
+- Cross-domain ALU↔FMA-Heavy and FMA-Lite→FMA-Heavy are already close to their
+  empty-prefix controls after two load/wait gaps.
+- At four load/wait gaps all tested pairs approach the corresponding empty-
+  prefix suffix curve.
+
+This is evidence that the effect is finite downstream state which releases
+with progress, not a permanent mode bit.  The exact recovery time is not yet
+a pipeline latency: LDS traffic and the two-warp scheduling phase alter the
+elapsed baseline, and the ending barrier observes admission rather than an
+individual entry's retirement.
+
+Two attempted controls are deliberately not used quantitatively.  An
+all-participant intermediate `BAR.SYNC` orders/drains the prefix and makes all
+suffix pairs alike; it is useful evidence that the barrier does not pass the
+outstanding fixed work, but destroys the state being measured.  `NANOSLEEP`
+causes large, duration-dependent `CS2R` jitter (including negative median
+suffix differences), so it is not a valid in-kernel timing gap here.
+
 ## Resulting model
 
 | path | effective outstanding capacity | qualification |
@@ -200,9 +286,10 @@ independent fixed-ownership queues and a single shared twelve-entry queue.
 | FMA Lite | **5/subcore** | FFMA/FADD/FMUL agree |
 | coupled FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
 
-The mixed-family test refines these homogeneous capacities: the first five
-credits are shared across fixed math, while the remaining depth belongs to
-the ALU and FMA-Heavy/coupled domains.  Packed FP16 reserves both FMA leaves
-for execution but exposes the deeper Heavy-side admission capacity.  Every
-fixed path is substantially deeper than a single active operation once two
+The mixed-family and ordered-phase tests refine these homogeneous capacities:
+the first five credits are shared across fixed math, while the remaining
+approximately seven are downstream of domain selection and belong to the ALU
+and FMA-Heavy/coupled domains.  Packed FP16 reserves both FMA leaves for
+execution but exposes the deeper Heavy-side admission capacity.  Every fixed
+path is substantially deeper than a single active operation once two
 same-subcore warp schedulers feed it fast enough.
