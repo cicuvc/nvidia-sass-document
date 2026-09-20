@@ -65,6 +65,37 @@ five-credit FMA-Lite queue, or `5+7` physical decomposition is superseded by
 this correction.  Long-run service-rate and same-domain/cross-domain
 compatibility results remain useful.
 
+### Attempt to expose FMA Lite by making it RF-bound
+
+FFMA was repeated with explicit no-reuse scheduling and either three
+same-parity sources (`R24,R26,R28`) or a 2-even+1-odd split
+(`R24,R25,R26`).  The same two-producer dense control gives:
+
+| FFMA operands | steady increment per N | first sustained RF-limited region |
+|---|---:|---:|
+| ordinary/RZ | about +2 clocks | none through N=32 |
+| 2-even + 1-odd, no reuse | about +4 clocks | approximately N=2 |
+| 3-even, no reuse | about +6 clocks | approximately N=2 |
+
+Here one N adds one instruction to each of the two same-scheduler producer
+warps.  The +4/+6 slopes are therefore the expected 2-/3-cycle RF collection
+floors.  Unlike ALU-Heavy and FMA-Heavy, RF-bound FFMA does **not** retain a
+scheduler-rate prefix out to N≈12.  RF pressure consequently cannot fill and
+measure a deep FMA-Lite queue: it throttles FFMA before such storage becomes
+occupied.  The data are consistent with only a very shallow FFMA RF-collection
+front end, or with FMA-Lite admission occurring after operand collection; they
+do not distinguish those implementations.
+
+A second attempt used packed FP16 as a downstream resource competitor without
+making FFMA's own RF reads slow.  An alternating `FFMA/HFMA2` stream changes
+from the scheduler slope to about +4 clocks/N at N≈12.  However, ordered
+phases show that this boundary follows the slow packed requests: a packed
+prefix of 12 or 16 delays the first following FFMA, after which additional
+FFMAs again cost about +2 clocks/N.  Conversely an FFMA prefix does not move
+the packed suffix's eventual +4-clock slope.  This exposes approximately 12
+effective reservations in the coupled FMA domain, but cannot assign a
+standalone capacity to FMA Lite.
+
 ## Measurement correction for INT
 
 On sm_100, `CS2R` itself is statically assigned to `int_pipe`.  A naive

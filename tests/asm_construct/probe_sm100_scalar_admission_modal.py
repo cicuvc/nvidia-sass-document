@@ -129,8 +129,10 @@ BARRIER_OPS = {
     "hmul2": "@P6 HMUL2 RZ, RZ, RZ",
     "rf_aluheavy": "@P6 IADD3 RZ, R24, R26, R28",
     "rf_fmaheavy": "@P6 IMAD RZ, R24, R26, R28",
+    "rf_fmalite": "@P6 FFMA RZ, R24, R26, R28",
     "rf2_aluheavy": "@P6 IADD3 RZ, R24, R25, R26",
     "rf2_fmaheavy": "@P6 IMAD RZ, R24, R25, R26",
+    "rf2_fmalite": "@P6 FFMA RZ, R24, R25, R26",
 }
 
 BARRIER_MIX = {
@@ -156,8 +158,10 @@ BARRIER_MIX = {
 BARRIER_SCHED = {
     "rf_aluheavy": "[7:7:{}:1:0]",
     "rf_fmaheavy": "[7:7:{}:1:0]",
+    "rf_fmalite": "[7:7:{}:1:0]",
     "rf2_aluheavy": "[7:7:{}:1:0]",
     "rf2_fmaheavy": "[7:7:{}:1:0]",
+    "rf2_fmalite": "[7:7:{}:1:0]",
 }
 
 BARRIER_PLACEMENTS = {
@@ -235,7 +239,8 @@ def barrier_source(n: int, mode: str, placement: str, active: bool,
 def phased_source(n_first: int, first_mode: str, n_second: int,
                   second_mode: str, gap: int, gap_kind: str,
                   placement: str, active: bool,
-                  producer_delay: int = 0) -> tuple[str, int]:
+                  producer_delay: int = 0,
+                  producer_delay_stall: int = 8) -> tuple[str, int]:
     """Issue A**n_first, an optional phase boundary, then B**n_second."""
     producers, observer = BARRIER_PLACEMENTS[placement]
     first = BARRIER_OPS[first_mode]
@@ -266,7 +271,8 @@ def phased_source(n_first: int, first_mode: str, n_second: int,
         "    BRA #label(done);[7:7:{}:5:1]",
         "#def_label(producer)",
     ]
-    lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
+    lines += [f"    NOP;[7:7:{{}}:{producer_delay_stall}:1]"
+              for _ in range(producer_delay)]
     first_sched = BARRIER_SCHED.get(first_mode, "[7:7:{}:1:0:7]")
     second_sched = BARRIER_SCHED.get(second_mode, "[7:7:{}:1:0:7]")
     lines += [f"    {first};{first_sched}" for _ in range(n_first)]
@@ -379,7 +385,7 @@ def main(modes: str = "aluheavy,fmaheavy,fmalite,packed,alulite",
                             src, block_size = phased_source(
                                 n_first, first_mode, n_second, second_mode,
                                 gap, phase_gap_kind, placement, active,
-                                producer_delay)
+                                producer_delay, producer_delay_stall)
                             cubin = assemble(
                                 src, arch="sm100a", check_deps=True)
                             label = (f"phase:{first_mode}:{second_mode}:"
