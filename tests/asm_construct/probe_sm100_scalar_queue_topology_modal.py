@@ -31,7 +31,8 @@ from probe_sm100_scalar_admission_modal import (  # noqa: E402
 def flag_source(segments: list[tuple[str, int]], active: bool = False,
                 producer_delay: int = 12, observer_delay: int = 0,
                 marker_warp: int = 0,
-                use_sentinel: bool = True) -> tuple[str, int]:
+                use_sentinel: bool = True,
+                sentinel_mode: str = "fmalite") -> tuple[str, int]:
     """Return a two-producer burst with a non-draining shared flag marker."""
     ops = []
     for mode, count in segments:
@@ -66,8 +67,17 @@ def flag_source(segments: list[tuple[str, int]], active: bool = False,
     ]
     lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
     lines += ops
+    sentinel_ops = {
+        "fmalite": "FFMA R30, RZ, RZ, R31",
+        "fmaheavy": "IMAD R30, RZ, RZ, R31",
+        "alulite": "IADD R30, PT, RZ, R31",
+        "aluheavy": "IADD3 R30, RZ, RZ, R31",
+    }
+    if sentinel_mode not in sentinel_ops:
+        raise ValueError(f"invalid sentinel mode: {sentinel_mode}")
+    sentinel = sentinel_ops[sentinel_mode]
     marker0 = ([
-        "    FFMA R30, RZ, RZ, R31;[7:7:{}:13:1]",
+        f"    {sentinel};[7:7:{{}}:13:1]",
         "    STS [RZ], R30;[7:7:{}:1:0]",
     ] if use_sentinel else ["    STS [RZ], R10;[7:7:{}:1:0]"])
     lines += marker0
@@ -79,7 +89,7 @@ def flag_source(segments: list[tuple[str, int]], active: bool = False,
     lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
     lines += ops
     marker1 = ([
-        "    FFMA R30, RZ, RZ, R31;[7:7:{}:13:1]",
+        f"    {sentinel};[7:7:{{}}:13:1]",
         "    STS [RZ+0x4], R30;[7:7:{}:1:0]",
     ] if use_sentinel else ["    STS [RZ+0x4], R10;[7:7:{}:1:0]"])
     lines += marker1
@@ -106,13 +116,120 @@ def flag_source(segments: list[tuple[str, int]], active: bool = False,
     return "\n".join(lines), 160
 
 
+def concurrent_source(prefix_count: int, marker_delay: int,
+                      marker_mode: str) -> tuple[str, int]:
+    """ALU fillers on warps 0/4; a visible marker on warps 8/12."""
+    marker_ops = {
+        "fmaheavy": "IMAD R30, RZ, RZ, R31",
+        "alulite": "IADD R30, PT, RZ, R31",
+    }
+    marker = marker_ops[marker_mode]
+    lines = [
+        "#fn concurrenttopology(out<8>) {",
+        "    #pragma MAXREG_COUNT(64)",
+        "    #pragma SHARED(8)",
+        "    LDC.64 {R2,R3}, #param(out);[0:7:{}:1:0]",
+        "    S2R R4, SR_TID.X;[1:7:{}:5:1]",
+        "    SHR R5, R4, 0x5;[7:7:{1}:5:1]",
+        "    MOV32I R31, 0x3f800000;[7:7:{}:5:1]",
+        "    STS [RZ], RZ;[7:7:{}:5:1]",
+        "    STS [RZ+0x4], RZ;[7:7:{}:5:1]",
+        "    MEMBAR.ALL.CTA;[7:7:{}:5:1]",
+        "    BAR.SYNC 0;[7:7:{}:5:1]",
+    ]
+    for warp, label in ((0, "filler"), (4, "filler"),
+                        (8, "marker0"), (12, "marker1"),
+                        (1, "observer")):
+        lines += [
+            f"    ISETP.EQ.AND P0, PT, R5, 0x{warp:x}, PT;"
+            "[7:7:{}:13:1]",
+            f"    @P0 BRA #label({label});[7:7:{{}}:5:1]",
+        ]
+    lines += [
+        "    BRA #label(done);[7:7:{}:5:1]",
+        "#def_label(filler)",
+        "    BAR.SYNC 2, 0xa0;[7:7:{}:5:1]",
+    ]
+    lines += ["    IADD3 RZ, RZ, RZ, RZ;[7:7:{}:1:0:7]"
+              for _ in range(prefix_count)]
+    lines += [
+        "    BRA #label(done);[7:7:{}:5:1]",
+        "#def_label(marker0)",
+        "    BAR.SYNC 2, 0xa0;[7:7:{}:5:1]",
+    ]
+    lines += ["    NOP;[7:7:{}:8:1]" for _ in range(marker_delay)]
+    lines += [
+        f"    {marker};[7:7:{{}}:13:1]",
+        "    STS [RZ], R30;[7:7:{}:1:0]",
+        "    BRA #label(done);[7:7:{}:5:1]",
+        "#def_label(marker1)",
+        "    BAR.SYNC 2, 0xa0;[7:7:{}:5:1]",
+    ]
+    lines += ["    NOP;[7:7:{}:8:1]" for _ in range(marker_delay)]
+    lines += [
+        f"    {marker};[7:7:{{}}:13:1]",
+        "    STS [RZ+0x4], R30;[7:7:{}:1:0]",
+        "    BRA #label(done);[7:7:{}:5:1]",
+        "#def_label(observer)",
+        "    CS2R {R20,R21}, SR_CLOCKLO;[7:7:{}:5:0]",
+        "    BAR.SYNC 2, 0xa0;[7:7:{}:5:1]",
+        "#def_label(cpoll)",
+        "    LDS R11, [RZ];[2:7:{}:1:0]",
+        "    ISETP.NE.AND P1, PT, R11, RZ, PT;[7:7:{2}:13:1]",
+        "    @!P1 BRA #label(cpoll);[7:7:{}:5:1]",
+        "    CS2R {R22,R23}, SR_CLOCKLO;[7:7:{}:5:0]",
+        "    STG.E.64.STRONG.GPU [{R2,R3}], {R20,R21};[7:0:{0}:8:0]",
+        "    STG.E.64.STRONG.GPU [{R2,R3}+0x8], {R22,R23};[7:0:{}:8:0]",
+        "#def_label(done)",
+        "    EXIT;[7:7:{}:5:0]",
+        "}",
+    ]
+    return "\n".join(lines), 416
+
+
+@app.local_entrypoint()
+def concurrent(prefix_counts: str = "0-20", marker_delays: str = "0-12",
+               marker_modes: str = "fmaheavy,alulite",
+               repetitions: int = 7) -> None:
+    from assembler import assemble
+
+    counts = parse_counts(prefix_counts)
+    delays = parse_counts(marker_delays)
+    modes = parse_csv(marker_modes)
+    if (not counts or not delays or not modes or min(counts + delays) < 0
+            or max(counts) > 100 or max(delays) > 64
+            or any(mode not in {"fmaheavy", "alulite"} for mode in modes)):
+        raise ValueError("invalid concurrent-probe arguments")
+    cases = []
+    for mode in modes:
+        for count in counts:
+            for delay in delays:
+                src, block = concurrent_source(count, delay, mode)
+                cubin = assemble(src, arch="sm100a", check_deps=True)
+                label = f"{mode}:A={count}:D={delay}"
+                cases.append((label, cubin, "concurrenttopology",
+                              block, 16, (0,)))
+    result_map = dict(run_cases.remote(cases, repetitions))
+    for mode in modes:
+        print(f"marker={mode}")
+        print(f"A={','.join(map(str, counts))}")
+        for delay in delays:
+            values = [statistics.median(
+                result_map[f"{mode}:A={count}:D={delay}"])
+                      for count in counts]
+            base = values[0]
+            print(f"delay={delay:2d} base={base:g} "
+                  f"dA={','.join(f'{v - base:g}' for v in values)}")
+
+
 @app.local_entrypoint()
 def topology(pairs: str = "aluheavy:fmaheavy",
              a_counts: str = "0,5,8,12,16",
              b_counts: str = "0-16", c_counts: str = "0",
              observer_delays: str = "0", repetitions: int = 7,
              active: bool = False, producer_delay: int = 12,
-             marker_warp: int = 0, use_sentinel: bool = True) -> None:
+             marker_warp: int = 0, use_sentinel: bool = True,
+             sentinel_mode: str = "fmalite") -> None:
     from assembler import assemble
 
     selected_pairs = []
@@ -141,7 +258,7 @@ def topology(pairs: str = "aluheavy:fmaheavy",
                         segments = [(first, a), (second, b), (first, c)]
                         src, block = flag_source(
                             segments, active, producer_delay, delay,
-                            marker_warp, use_sentinel)
+                            marker_warp, use_sentinel, sentinel_mode)
                         cubin = assemble(src, arch="sm100a", check_deps=True)
                         label = (f"{first}:{second}:A={a}:B={b}:C={c}:"
                                  f"D={delay}")

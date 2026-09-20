@@ -247,25 +247,35 @@ twelve effective total.
 
 ### A drain-before-retag pool is ruled out
 
-`probe_sm100_scalar_queue_topology_modal.py` adds an ordered-service probe.  A
-common start barrier ensures that a clean-subcore observer timestamps before
-the producer burst.  A real-register FMA-Lite sentinel follows the burst and
-the shared-memory completion flag data-depends on that sentinel.  Sweeping the
-observer polling phase removes most of the LDS-loop quantization.  With twelve
-ALU-Heavy instructions per producer already ahead of the suffix, active and
-false-predicated versions give the same phase-envelope medians:
+`probe_sm100_scalar_queue_topology_modal.py` first confirmed that ordered
+cross-domain service overlaps: with twelve ALU-Heavy instructions per producer
+ahead of the suffix, active and false-predicated versions give the same
+polling-phase-envelope medians:
 
 | suffix count per producer | 0 | 4 | 8 | 12 | 16 |
 |---:|---:|---:|---:|---:|---:|
 | ALU-Heavy → FMA-Heavy increment | 0 | 11 | 18 | 26 | 30 |
 | ALU-Heavy → ALU-Lite increment | 0 | 18 | 35 | 50 | 66 |
 
-The cross-domain suffix therefore progresses at approximately one aggregate
-warp instruction/cycle, while the same-domain suffix remains at approximately
-0.5/cycle.  FMA-Heavy service overlaps the outstanding ALU work.  This rules
-out a single untagged seven-slot pool whose global ALU/FMA mode cannot change
-until the pool has drained: that design would make the FMA suffix wait for the
-ALU service and retain the approximately four-clock-per-suffix-count slope.
+Because a tail marker can still hide drain-before-retag time in the prefix,
+the decisive version separates the warps.  Warps 0/4 issue the ALU-Heavy
+filling burst.  Warps 8/12, on the same subcore but with no program-order
+dependency on that burst, issue one real-result ALU-Lite or FMA-Heavy marker
+after a swept delay; a dependent STS makes marker completion visible to the
+clean-subcore observer.  Across all thirteen marker delays, the FMA marker is
+independent of ALU prefix length apart from the periodic ±3-clock polling
+phase.  The otherwise identical ALU marker is strongly delayed.  At marker
+delay 2, for example:
+
+| ALU prefix count per filler | 0 | 4 | 6 | 12 | 13 | 17 | 20 |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| FMA-Heavy marker delta | 0 | -3 | 0 | -3 | 0 | 0 | -3 |
+| ALU-Lite marker delta | 0 | -3 | 24 | 42 | 48 | 72 | 87 |
+
+Thus an FMA operation completes while the same ALU occupancy blocks an ALU
+operation for tens of clocks.  A single untagged seven-slot pool whose global
+ALU/FMA mode cannot change until drain is directly ruled out; this result does
+not rely on subtracting a prefix-only draining barrier.
 
 It does not distinguish a single **per-entry-tagged** seven-slot pool from two
 physical seven-slot queues behind a one-entry/cycle switch.  In the ordinary
