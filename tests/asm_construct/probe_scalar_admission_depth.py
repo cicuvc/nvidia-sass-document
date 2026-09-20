@@ -71,6 +71,19 @@ BARRIER_OPS = {
     "hmul2": "@P6 HMUL2 RZ, RZ, RZ",
 }
 
+BARRIER_MIX = {
+    "mix_aluh_alul": ("aluheavy", "alulite"),
+    "mix_aluh_fmah": ("aluheavy", "fmaheavy"),
+    "mix_aluh_fmal": ("aluheavy", "fmalite"),
+    "mix_aluh_fp16": ("aluheavy", "packed"),
+    "mix_alul_fmah": ("alulite", "fmaheavy"),
+    "mix_alul_fmal": ("alulite", "fmalite"),
+    "mix_alul_fp16": ("alulite", "packed"),
+    "mix_fmah_fmal": ("fmaheavy", "fmalite"),
+    "mix_fmah_fp16": ("fmaheavy", "packed"),
+    "mix_fmal_fp16": ("fmalite", "packed"),
+}
+
 BARRIER_PLACEMENTS = {
     "one": ((0,), 1),
     "same2": ((0, 4), 1),
@@ -82,9 +95,10 @@ def barrier_source(n: int, mode: str, placement: str, active: bool,
                    producer_delay: int = 0) -> tuple[str, int]:
     """Time producer progress using a clean-subcore barrier observer."""
     producers, observer = BARRIER_PLACEMENTS[placement]
-    op = BARRIER_OPS[mode]
+    op_names = BARRIER_MIX.get(mode, (mode,))
+    ops = tuple(BARRIER_OPS[name] for name in op_names)
     if active:
-        op = op.removeprefix("@P6 ")
+        ops = tuple(op.removeprefix("@P6 ") for op in ops)
     lines = [
         "#fn fixedbarrier(out<8>) {",
         "    #pragma MAXREG_COUNT(64)",
@@ -108,7 +122,8 @@ def barrier_source(n: int, mode: str, placement: str, active: bool,
         "#def_label(producer)",
     ]
     lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
-    lines += [f"    {op};[7:7:{{}}:1:0:7]" for _ in range(n)]
+    lines += [f"    {ops[i % len(ops)]};[7:7:{{}}:1:0:7]"
+              for i in range(n)]
     lines += [
         "    BRA #label(join);[7:7:{}:5:1]",
         "#def_label(observer)",
@@ -231,7 +246,8 @@ def parse_counts(text: str) -> list[int]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--mode", choices=OPS, default="aluheavy")
+    ap.add_argument("--mode", choices=tuple(OPS) + tuple(BARRIER_MIX),
+                    default="aluheavy")
     ap.add_argument("--actors", choices=ACTORS, default="one")
     ap.add_argument("--counts", default="0-32")
     ap.add_argument("--reps", type=int, default=11)
@@ -261,7 +277,8 @@ def main() -> int:
         ap.error("counts must be in 0..100, prefix in 0..32, blocker in "
                  "0..100, producer-delay in 0..32, reps positive")
     if ns.barrier_method:
-        if ns.mode not in BARRIER_OPS or ns.actors not in BARRIER_PLACEMENTS:
+        if ((ns.mode not in BARRIER_OPS and ns.mode not in BARRIER_MIX)
+                or ns.actors not in BARRIER_PLACEMENTS):
             ap.error("barrier method supports fixed scalar modes and "
                      "one/same2/diff2 placements")
         if ns.prefix_hi or ns.prefix_packed or ns.blocker_hi:

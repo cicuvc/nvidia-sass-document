@@ -115,6 +115,81 @@ following FMA-Lite operation cannot reach its five-credit leaf queue early.
 Two synchronized FMA-Lite producers bypass that ambiguity and fill the
 leaf-local credits directly.
 
+## Mixed-leaf substitution
+
+Homogeneous depths do not distinguish one shared queue from several queues
+with coincidentally equal capacities.  To make that distinction, both
+same-subcore producers were changed to issue an alternating pair of leaf
+representatives.  `N` remains the number of instructions per producer, so an
+even-length burst contains equal numbers from the two leaves.
+
+All ten unordered leaf pairs give the following effective-depth matrix.  The
+diagonal is the homogeneous result for reference:
+
+| | ALU Heavy | ALU Lite | FMA Heavy | FMA Lite | coupled FP16 |
+|---|---:|---:|---:|---:|---:|
+| **ALU Heavy** | ~12 | **~12** | **5** | **5** | **5** |
+| **ALU Lite** | | ~12 | **5** | **5** | **5** |
+| **FMA Heavy** | | | ~12 | **5** | **~12** |
+| **FMA Lite** | | | | 5 | **~12*** |
+| **coupled FP16** | | | | | ~12 |
+
+`*` FMA Lite + FP16 has a clear deep boundary but extra phase structure near
+it.  The three deep off-diagonal pairs have approximately +4 clocks/N after
+the boundary; every other pair has the exact five-credit curve and +2
+clocks/N.
+
+The exact five-credit curve is `47,48,49,50,51,52,54,56,...` for
+`N=0,1,...`: through N=5 the two producers admit two operations while one
+drains in one clock, then the pair becomes service-limited.  It occurs for
+all ALU/FMA cross-pairs, and also for FMA Heavy + FMA Lite.  ALU Heavy + ALU
+Lite and FMA Heavy + FP16 instead reproduce the homogeneous deep curve
+`47,48,50,52,56,...,72,76,80,...`, including its N=12 boundary.  FMA Lite +
+FP16 also retains the deep boundary, though N=14--17 has extra
+scheduler/execution-phase structure (`76,82,86,90,91` from N=13).
+
+Architecturally-false targets reproduce these boundaries exactly, excluding
+result data and register writeback as their cause.  With the two producers
+placed on different subcores, all four representative mixes are linear
+through N=16 and show no boundary: ALU-Heavy + ALU-Lite, FMA-Heavy + FP16,
+and FMA-Lite + FP16 are +2 clocks/N, while ALU-Heavy + FMA-Heavy is +1.
+The five- and twelve-credit resources are consequently subcore-local.
+
+The minimum *effective-domain* model consistent with the pair matrix is:
+
+```text
+common cross-domain fixed-math window: ~5 total outstanding
+
+same-domain modes which expose a deeper ~12-total window:
+    ALU mode           = ALU Heavy + ALU Lite
+    FMA-Heavy mode     = FMA Heavy + coupled FP16
+    coupled-FMA mode   = coupled FP16 + FMA Lite
+
+FMA-Lite-only mode: 5 total
+```
+
+Thus the five leaf subpipes do share admission state, but **not one flat
+12-entry queue**.  Cross-domain Heavy pairs directly prove a common
+approximately five-credit admission/backpressure window: if their
+homogeneous 12-credit queues were independent, putting only half of the mixed
+stream in each would postpone rather than advance the knee.  ALU Heavy and
+ALU Lite share the same deeper ALU domain.  FMA Heavy and FMA Lite cannot use
+a common deeper window: their alternating stream stops at five.  Packed FP16
+is genuinely coupled and makes ownership non-transitive: it exposes a deep
+window with either FMA Heavy or FMA Lite even though those two together do
+not.  This is incompatible with assigning each mnemonic to one fixed leaf
+FIFO.
+
+This is an effective admission/backpressure model, not yet proof of literal
+FIFO placement.  In particular, subtraction alone cannot locate the seven
+credits between the 5- and 12-credit boundaries in a physical downstream
+FIFO; they could be distributed among dispatch staging and leaf-local state.
+Also, a pair containing FMA Lite would naturally knee at five even if its
+standalone five-credit pool were independent, so the strongest evidence for
+the common cross-domain window comes from pairs whose two homogeneous depths
+are both twelve.  The full pair matrix nevertheless rules out both five
+independent fixed-ownership queues and a single shared twelve-entry queue.
+
 ## Resulting model
 
 | path | effective outstanding capacity | qualification |
@@ -125,11 +200,9 @@ leaf-local credits directly.
 | FMA Lite | **5/subcore** | FFMA/FADD/FMUL agree |
 | coupled FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
 
-The identical 12-credit capacities do not prove that ALU Heavy, ALU Lite, FMA
-Heavy, and coupled FP16 share one physical FIFO; a mixed-family substitution
-test is required for that claim.  In particular, packed FP16 occupies both
-FMA leaves dynamically, but its homogeneous 12-credit curve does not reveal
-whether it owns a separate admission FIFO or reserves credits from one or both
-leaf pools.  The measurements do prove that every fixed path is substantially
-deeper than a single active operation once two same-subcore warp schedulers
-feed it fast enough.
+The mixed-family test refines these homogeneous capacities: the first five
+credits are shared across fixed math, while the remaining depth belongs to
+the ALU and FMA-Heavy/coupled domains.  Packed FP16 reserves both FMA leaves
+for execution but exposes the deeper Heavy-side admission capacity.  Every
+fixed path is substantially deeper than a single active operation once two
+same-subcore warp schedulers feed it fast enough.
