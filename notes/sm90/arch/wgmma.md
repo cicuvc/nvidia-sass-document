@@ -742,6 +742,43 @@ XU FIFO.  Direct counter attribution could not be repeated on either the H20
 or H800 host because Nsight Compute reports `ERR_NVGPUCTRPERM`; the conclusions
 above use mutually timed issue/completion spans and predication controls.
 
+#### RS A-operand RF collection rides the MIO late collector (H100, 2026-09)
+
+Which collector gathers the RS A fragment's four GPRs per warp?  Two
+candidate paths: the banked fixed-pipeline collector (ALU/FMA operand
+staging) or the MIO late GPR collector (SHFL/LDS-address/MUFU-source
+collection).  Three overlay measurements on the H100 decide it
+(`probe_hgmma_mio_interaction.py`, RZ-destination contenders so no writeback
+arbitration is involved):
+
+1. **No fixed-collector sensitivity.**  `ffma_ro` (3-source rotating FFMA,
+   RZ dest, no reuse -- maximal banked-collector read pressure) slows the
+   HGMMA issue rate by the *same absolute amount* in RS and SS form
+   (n16: +15.9 vs +15.7 cyc/op), and the deltas are unchanged with
+   `accum=overwrite` (accumulator reads removed, only writeback remains).
+   If the A fragment rode the banked collector, RS would carry four extra
+   GPR reads per warp per MMA and degrade measurably more than SS.  It does
+   not.
+2. **Positive late-collector contention, RS-only.**  Compare a
+   destination-discarding SHFL reading a GPR source (`SHFL.BFLY PT,RZ,R40`)
+   against one reading RZ.  With **RS** HGMMA the GPR-reading SHFL pays
+   +0.27..0.31 cyc/instruction extra = **+2.2..2.5 cyc per HGMMA** (xNc/Nh),
+   constant across n8/n16/n64; with **SS** the same differential is zero
+   (6.605 vs 6.627 at n16).  4 A-fragment GPRs x ~0.55 cyc/operand (the known
+   late-collector per-operand price from the SHFL RII/RRI/RRR ladder)
+   = ~2.2 cyc -- exact quantitative match.
+3. **The cost lands on the generic-MIO contender, never on HGMMA.**  RS
+   Hissue/op stays 12.016 under every MIO contender tried (shfl_zd,
+   shfl_zz, mufu, nop); only the SHFL slows.  Consistent with the Round-3
+   finding that HGMMA admission/collection has priority over queued generic
+   MIO work: the A-fragment collection wins the late collector and the
+   co-resident SHFL's source read waits.
+
+So: **RS A-operand GPR collection goes through the MIO late GPR collector,
+not the fixed-pipeline banked collector** -- it is priced like ~4 late
+GPR reads per warp per MMA and contends with SHFL/LDS-address/MUFU source
+collection, while being invisible to banked-collector pressure.
+
 ## Round 4 — the ptxas wgmma-DCE trap; sustained throughput is plain MAC-bound (H20, 2026-08; nvcc variant chains)
 
 **ptxas dead-code-eliminates `wgmma.mma_async` when the kernel never
