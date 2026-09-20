@@ -162,7 +162,7 @@ five-credit curve without a literal full queue.  To distinguish it, the same
 two producers issue periodic ALU-Heavy:FMA-Heavy patterns at ratios 1:1, 2:1,
 3:1, and 7:1, plus all reversed ratios.  With active RZ operands:
 
-| ratio | approximate onset of repeating service-limited pattern |
+| ratio | approximate onset of final majority-domain-limited pattern |
 |---|---:|
 | 1:1 | `N=6` |
 | 2:1 / 1:2 | `N≈18--20` |
@@ -170,7 +170,15 @@ two producers issue periodic ALU-Heavy:FMA-Heavy patterns at ratios 1:1, 2:1,
 | 7:1 / 1:7 | `N≈14--15` |
 | homogeneous | `N=13` |
 
-The long-run increment pattern also follows the majority domain: 1:1 is a
+These are not all measurements of one queue's depth.  The 1:1 `N=6` boundary
+is the shallow common window becoming the limiter; at exactly 1:1 no
+downstream domain accumulates.  The later boundaries in imbalanced streams are
+a second transition: after the common window is active, the majority domain's
+additional state slowly accumulates until it too becomes full.  Thus the
+horizontal burst length at that second transition is a fill *time*, not a slot
+count.
+
+The long-run increment pattern follows the majority domain: 1:1 is a
 constant +2 clocks/count, 2:1 repeats approximately `+4,+2,+2`, and increasingly
 biased streams contain increasingly many +4 increments.  This is the expected
 occupancy behavior.  At 1:1, the one-instruction/cycle downstream switch feeds
@@ -178,6 +186,13 @@ each 0.5/cycle backend at exactly its drain rate, so only the shallow common
 window accumulates.  With a slight imbalance, the majority-domain state fills
 only at the small excess of arrival rate over 0.5/cycle, moving the knee much
 farther out.  At extreme imbalance it approaches the homogeneous deep curve.
+
+More explicitly, if the majority fraction is `p`, its state grows after the
+common switch at approximately `p - 0.5` entries/cycle.  Filling `K≈7` extra
+credits therefore takes roughly `K/(p-0.5)` dispatch cycles.  This diverges as
+`p→0.5`, while at exactly `p=0.5` that second knee does not exist at all and the
+only visible knee is common-5.  This change of limiting resource explains the
+apparently non-monotonic `5 → 20 → 18 → 14 → 13` sequence.
 
 Thus a fixed five-token throttle triggered merely by mixed instruction classes
 is ruled out.  A completion-refilled, per-domain token mechanism could still
