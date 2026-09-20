@@ -25,11 +25,15 @@ from assembler import CudaModule, assemble  # noqa: E402
 OPS = {
     "nop": "NOP",
     "aluheavy": "@P6 IADD3 RZ, R24, R27, R28",
+    "lop3": "@P6 LOP3.LUT RZ, R24, R27, R28, 0x96",
+    "shf": "@P6 SHF.R.U32.HI RZ, R24, R27, R28",
     "alulite": "@P6 IADD RZ, PT, R24, R27",
     "alulite64": "@P6 MOV64IUR {RZ,RZ}, 0x12345678",
     "fmaheavy": "@P6 IMAD RZ, R24, R27, R28",
     "fmaheavy_hi": "@P6 IMAD.HI RZ, PT, R24, R27, {R28,R29}",
     "fmalite": "@P6 FFMA RZ, R24, R27, R28",
+    "fadd": "@P6 FADD RZ, R24, R27",
+    "fmul": "@P6 FMUL RZ, R24, R27",
     "packed": "@P6 HFMA2 RZ, R24, R27, R28",
     "fp64": "@P6 DADD {RZ,RZ}, {R24,R25}, {R26,R27}",
 }
