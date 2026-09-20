@@ -167,6 +167,26 @@ execution resource mask requiring both Heavy and Lite sides.  This is a
 logical resource model; it does not require two physically separate FIFOs or
 two literal arithmetic units.
 
+### Scalar FMA Lite admission is independent of FMA Heavy
+
+A dense ordered test fills FMA Heavy and then appends scalar FFMA.  Once the
+Heavy prefix reaches its N≈11--12 boundary, another Heavy suffix is
+service-limited immediately (`0,4,8,...` clocks for suffix counts 0,1,2,...).
+The FFMA suffix instead remains exactly `0,2,4,...` from its first instruction,
+identical to the independent ALU-Heavy control.  Reversing the order also
+preserves FMA Heavy's complete filling window: an FFMA prefix does not consume
+Heavy credits.
+
+Thus scalar FMA Lite has an operationally independent admission/ready-credit
+domain; it does not share one exhaustible FIFO with FMA Heavy.  A physical
+implementation may still use one tagged or statically partitioned entry array,
+but it must have independent availability accounting and selection.  Coupled
+FP16/FP32x2 operations can interact with both sides through their execution
+resource mask without implying shared scalar Heavy/Lite admission credits.
+The capacity of the scalar-Lite state remains unknown because its normal
+1-inst/cycle service matches the scheduler ceiling, while RF conflicts
+throttle it before that state can be filled.
+
 ## Measurement correction for INT
 
 On sm_100, `CS2R` itself is statically assigned to `int_pipe`.  A naive
