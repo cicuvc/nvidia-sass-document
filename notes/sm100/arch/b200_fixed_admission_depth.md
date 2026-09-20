@@ -138,6 +138,35 @@ coupled-dispatch domain and interacts with scalar FMA Lite, but these data do
 not establish that ordinary FFMA owns the same twelve-entry queue or reveal a
 standalone FFMA-only capacity.
 
+### Packed FP16 belongs to the Heavy reservation domain and uses Lite execution
+
+Dense-issue retesting places `HFMA2`/`HADD2`/`HMUL2` more precisely.  A pure
+HFMA2 stream has the same N≈12 knee and +4-clock final increment as the other
+0.5-inst/cycle domains.  Alternating FMA-Heavy/HFMA2 is point-for-point
+identical to pure HFMA2.  Ordered phases are symmetric: after either a
+saturated HFMA2 or FMA-Heavy prefix, every suffix instruction of the other
+class immediately costs +4 clocks/N.  Thus packed FP16 and FMA Heavy share the
+same effective reservation/service domain rather than owning independent
+queues of coincidentally equal depth.
+
+The other pairings separate admission from execution:
+
+- Alternating ALU-Heavy/HFMA2 remains at the scheduler-limited +2 clocks/N
+  through N=32, and a saturated HFMA2 prefix does not delay ALU-Heavy markers.
+  The ALU reservation/execution domain is independent.
+- Alternating scalar FFMA/HFMA2 eventually has the same +4-clock drain slope
+  and N≈12 boundary as packed FP16.  After a saturated HFMA2 prefix, however,
+  only the first following FFMA costs +4; subsequent FFMAs return to +2 each.
+  Packed FP16 therefore consumes the Lite execution side, while scalar FFMA
+  can accumulate in distinct ready/reservation state once it crosses the
+  initial shared boundary.
+
+The smallest current model is consequently a packed-FP16 entry allocated in
+the approximately twelve-credit FMA-Heavy reservation domain with an
+execution resource mask requiring both Heavy and Lite sides.  This is a
+logical resource model; it does not require two physically separate FIFOs or
+two literal arithmetic units.
+
 ## Measurement correction for INT
 
 On sm_100, `CS2R` itself is statically assigned to `int_pipe`.  A naive
