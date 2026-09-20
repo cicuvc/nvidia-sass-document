@@ -46,61 +46,43 @@ Two Hopper-specific details:
   does.  DADD (same pipe) DOES hide it — so this is specific to DFMA's
   admission, not the FP64 datapath.
 
-## Admission depth: single-warp bursts underfill; multi-warp exposes real queues
+## Admission depth: corrected counted-barrier measurement
 
-`probe_sm80_admission_depth.py` (ported to sm90; `@P6` predicated-off bursts
-between CS2R reads, clean `[1:0:7]` brackets), T(N) per admitted op.
+The earlier `CS2R; burst; CS2R` same-warp measurement is invalid for INT
+depth because `CS2R` itself occupies `int_pipe`; it observes service drain,
+not merely warp progress past admission.  The corrected construction uses two
+same-subcore producers and a different-subcore observer.  Producers mark
+post-burst progress with counted `BAR.SYNC` on `mio_pipe`; only the observer
+timestamps barrier release.
 
-**Caveat (found after the first pass):** a single warp issues at most one
-op per 1-2 cycles, which never exceeds the per-subcore service rate of the
-fixed pipes (0.5-1.0 inst/cyc), so their queues never fill and the curve
-stays linear.  The single-warp column therefore shows the *pipe rate*, not
-the absence of a queue.  Multi-warp actors (`same2` = 2 warps on one
-subcore, combined arrival 1/cyc) fill them and expose knees, identical for
-predicated-off and active bursts:
+The resulting effective outstanding capacities are:
 
-| family (op) | single-warp slope | same2 knee / steady | queue depth |
-|---|---:|---|---:|
-| INT (IADD3) | +2 cyc/op | N≈10, then +4 | **~10** |
-| packed FP16 (HFMA2) | +2 cyc/op | N≈11-12, then +4 | **~11** |
-| FP64 (DADD) | +2 cyc/op | N≈11-12, then +4 | **~11** |
-| fmalighter (FFMA) | +1 cyc/op | none (same4 wobbles at N≥12) | unfillable¹ |
-| CBU (`@P6 BRA` / `BSSY+BSYNC` pairs) | +2 cyc/op | — | none |
-| SHFL (`.BFLY RZ,RZ`) | +2 cyc/op | — | none |
-| XU (MUFU.RCP) | 2 fast, then +8 | knee N=3 single-warp | **~2-3** |
-| LSU (STS) | +2 cyc/op | same2 N≈16-17, same4 N≈8 | **~8/subcore** |
-| HGMMA (see wgmma.md) | 7 fast, then pipe rate | — | **~7 (SM-shared)** |
+| family | credits/subcore | post-knee service |
+|---|---:|---:|
+| INT: IADD3/LOP3/SHF | **about 12** | 0.5 instruction/cycle |
+| integer IMAD.LO | **about 12** | 0.5 instruction/cycle |
+| packed FP16 HFMA2 | **about 12** | 0.5 instruction/cycle |
+| FP32 FFMA/FADD/FMUL | **5** | 1 instruction/cycle |
 
-¹ FFMA service is 1 inst/cyc = the subcore issue rate itself, so its queue
-can never accumulate; a queue would serve no purpose.  Effectively "no
-admission queue" is true for fmalighter alone.
+For the first three families, N=12 per producer is the last filling-region
+point and N=13 begins the exact +4-clock/N slope for two new instructions.
+For FP32, N=5 is the last +1-clock/N point (two admissions while one drains)
+and N=6 begins the exact +2-clock/N service slope.  Different-subcore pairs
+never hit either knee in the tested range.
 
-**Attempted workaround (failed, informatively):** squeezing FFMA's service
-rate by occupying the 16 dual-mode C lanes with a heavy co-resident INT
-stream does not work.  With `--fast` brackets and a 64-op blocker on the
-sibling warp of the same subcore, the FFMA burst stays at +1 cyc/op full
-rate under every blocker tried: IADD3 (the INT stream loses C arbitration
-and starves — FFMA has strict priority on C, matching the ~0.9 vs ~0.33
-conflict-probe split), and IMAD.HI/IMAD.WIDE blockers which run at their
-own full 4 cyc/op concurrently with full-rate FFMA.  The latter also shows
-IMAD.WIDE's 4 cyc/op is **not** C-array occupancy (otherwise concurrent
-FFMA would halve); the bottleneck must be the 64-bit writeback or a narrow
-dedicated mul path, consistent with the 1-cycle IMAD.WIDE-lo→fma bypass.
+This supersedes the old approximately 10/11-entry estimates and the claim
+that FP32 was unfillable.  The synchronized counted-barrier construction can
+briefly feed FP32 at two instructions/cycle from two warp schedulers, exposing
+its five-credit pool.  Full curves and the H100/B200 comparison are in
+[`h100_fixed_admission_depth.md`](h100_fixed_admission_depth.md).
 
-Depth estimate: with same2 the combined arrival is 1/cyc against a 0.5/cyc
-service, so the backlog grows 0.5 req/cyc and the knee N≈D.  same4 (arrival
-port-capped at 1/cyc) knees at N≈6-8, consistent within noise.  Post-knee
-steady slopes match the service rates (2 warps at +4 cyc/op = 0.5/cyc).
+FP64 remains a separate case: it uses the fixed per-SMSP backend on GH100 and
+was not rerun in this corrected INT/FP32 experiment.  The prior approximately
+11-entry DADD estimate should not be silently promoted to the corrected
+12-credit result without its own counted-barrier sweep.
 
-The predicated-off single-warp slopes equal the active pipe rates (FFMA
-+1/op = its 1.0 datapath rate; IADD3 +2 = its 2.0 floor) — squashed
-instructions still occupy the pipe fully; only writeback/memory is
-suppressed (MUFU shows the same: squashed MUFUs flow through XU at 8 cyc/op).
-
-GB202 contrast: same structure everywhere except (a) GB202's FP64 has the
-7-credit *redirectable* SM-shared window (this file's sm120 counterpart
-note), and (b) GB202's LSU is shallower (~4/subcore) with a hard SM-wide
-0.5/cyc shared backend that GH100 lacks (GH100 `diff2` stays flat to N=24).
+The predicate-off single-warp slopes still show that squashed instructions
+reserve pipe service; only the depth inference has changed.
 
 ## Corrections to the H20-era numbers
 

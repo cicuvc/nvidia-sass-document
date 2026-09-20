@@ -47,6 +47,74 @@ ACTORS = {
     "diff4": (0, 1, 2, 3),
 }
 
+BARRIER_OPS = {
+    "aluheavy": "@P6 IADD3 RZ, RZ, RZ, RZ",
+    "lop3": "@P6 LOP3.LUT RZ, RZ, RZ, RZ, 0x96",
+    "shf": "@P6 SHF.R.U32.HI RZ, RZ, RZ, RZ",
+    "fmaheavy": "@P6 IMAD RZ, RZ, RZ, RZ",
+    "fmalite": "@P6 FFMA RZ, RZ, RZ, RZ",
+    "fadd": "@P6 FADD RZ, RZ, RZ",
+    "fmul": "@P6 FMUL RZ, RZ, RZ",
+    "packed": "@P6 HFMA2 RZ, RZ, RZ, RZ",
+}
+
+BARRIER_PLACEMENTS = {
+    "one": ((0,), 1),
+    "same2": ((0, 4), 1),
+    "diff2": ((0, 1), 2),
+}
+
+
+def barrier_source(n: int, mode: str, placement: str, active: bool,
+                   producer_delay: int = 0) -> tuple[str, int]:
+    """Time producer progress using a clean-subcore barrier observer."""
+    producers, observer = BARRIER_PLACEMENTS[placement]
+    op = BARRIER_OPS[mode]
+    if active:
+        op = op.removeprefix("@P6 ")
+    lines = [
+        "#fn fixedbarrier(out<8>) {",
+        "    #pragma MAXREG_COUNT(64)",
+        "    LDC.64 {R2,R3}, #param(out);[0:7:{}:1:0]",
+        "    S2R R4, SR_TID.X;[1:7:{}:5:1]",
+        "    SHR R5, R4, 0x5;[7:7:{1}:5:1]",
+        "    ISETP.F P6, RZ, RZ;[7:7:{}:13:1]",
+        "    BAR.SYNC 0;[7:7:{}:5:1]",
+    ]
+    for warp in producers:
+        lines += [
+            f"    ISETP.EQ.AND P0, PT, R5, 0x{warp:x}, PT;"
+            "[7:7:{}:13:1]",
+            "    @P0 BRA #label(producer);[7:7:{}:5:1]",
+        ]
+    lines += [
+        f"    ISETP.EQ.AND P0, PT, R5, 0x{observer:x}, PT;"
+        "[7:7:{}:13:1]",
+        "    @P0 BRA #label(observer);[7:7:{}:5:1]",
+        "    BRA #label(done);[7:7:{}:5:1]",
+        "#def_label(producer)",
+    ]
+    lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
+    lines += [f"    {op};[7:7:{{}}:1:0:7]" for _ in range(n)]
+    lines += [
+        "    BRA #label(join);[7:7:{}:5:1]",
+        "#def_label(observer)",
+        "    CS2R {R20,R21}, SR_CLOCKLO;[7:7:{}:5:0]",
+        "#def_label(join)",
+        f"    BAR.SYNC 1, 0x{(len(producers) + 1) * 32:x};"
+        "[7:7:{}:5:1]",
+        f"    ISETP.EQ.AND P0, PT, R5, 0x{observer:x}, PT;"
+        "[7:7:{}:13:1]",
+        "    @!P0 BRA #label(done);[7:7:{}:5:1]",
+        "    CS2R {R22,R23}, SR_CLOCKLO;[7:7:{}:5:0]",
+        "    STG.E.64.STRONG.GPU [{R2,R3}], {R20,R21};[7:0:{0}:8:0]",
+        "    STG.E.64.STRONG.GPU [{R2,R3}+0x8], {R22,R23};[7:0:{}:8:0]",
+        "#def_label(done)",
+        "    EXIT;[7:7:{}:5:0]",
+        "}",
+    ]
+    return "\n".join(lines), (max(*producers, observer) + 1) * 32
+
 
 def source(n: int, mode: str, actors: tuple[int, ...], active: bool,
            fast: bool, prefix_hi: int, prefix_packed: int,
@@ -166,42 +234,66 @@ def main() -> int:
                     help="execute prefixes even when burst targets are @P6")
     ap.add_argument("--blocker-hi", type=int, default=0,
                     help="on warp 0, execute IMAD.HI while warp 4 runs burst")
+    ap.add_argument("--barrier-method", action="store_true",
+                    help="time producer progress from a clean-subcore observer")
+    ap.add_argument("--producer-delay", type=int, default=0,
+                    help="stall-8 NOPs before a barrier-method producer burst")
     ns = ap.parse_args()
     counts = parse_counts(ns.counts)
     if (not counts or min(counts) < 0 or max(counts) > 100 or
             ns.reps <= 0 or not 0 <= ns.prefix_hi <= 32 or
             not 0 <= ns.prefix_packed <= 32 or
-            not 0 <= ns.blocker_hi <= 100):
+            not 0 <= ns.blocker_hi <= 100 or
+            not 0 <= ns.producer_delay <= 32):
         ap.error("counts must be in 0..100, prefix in 0..32, blocker in "
-                 "0..100, reps positive")
+                 "0..100, producer-delay in 0..32, reps positive")
+    if ns.barrier_method:
+        if ns.mode not in BARRIER_OPS or ns.actors not in BARRIER_PLACEMENTS:
+            ap.error("barrier method supports fixed scalar modes and "
+                     "one/same2/diff2 placements")
+        if ns.prefix_hi or ns.prefix_packed or ns.blocker_hi:
+            ap.error("barrier method does not support prefix/blocker options")
     actors = ACTORS[ns.actors]
+    report_actors = (0,) if ns.barrier_method else actors
 
     print(f"mode={ns.mode} actors={ns.actors} active={ns.active} "
           f"fast={ns.fast} prefix_hi={ns.prefix_hi} "
           f"prefix_packed={ns.prefix_packed} "
           f"prefix_active={ns.prefix_active} "
-          f"blocker_hi={ns.blocker_hi}")
-    actor_cols = "" if len(actors) == 1 else " " + " ".join(
-        f"w{w}_median" for w in actors)
+          f"blocker_hi={ns.blocker_hi} "
+          f"barrier_method={ns.barrier_method} "
+          f"producer_delay={ns.producer_delay}")
+    actor_cols = "" if len(report_actors) == 1 else " " + " ".join(
+        f"w{w}_median" for w in report_actors)
     print("N span_median min max delta" + actor_cols)
     previous = None
     for n in counts:
-        mod = CudaModule(assemble(
-            source(n, ns.mode, actors, ns.active, ns.fast, ns.prefix_hi,
-                   ns.prefix_packed, ns.prefix_active, ns.blocker_hi),
-            check_deps=True))
-        out_size = (max(actors) + 1) * 16
+        if ns.barrier_method:
+            src, block_size = barrier_source(
+                n, ns.mode, ns.actors, ns.active, ns.producer_delay)
+            function_name = "fixedbarrier"
+            out_size = 16
+            result_actors = (0,)
+        else:
+            src = source(n, ns.mode, actors, ns.active, ns.fast,
+                         ns.prefix_hi, ns.prefix_packed, ns.prefix_active,
+                         ns.blocker_hi)
+            block_size = (max(actors) + 1) * 32
+            function_name = "scalarburst"
+            out_size = (max(actors) + 1) * 16
+            result_actors = actors
+        mod = CudaModule(assemble(src, check_deps=True))
         out = mod.devmem_alloc(out_size)
         vals = []
-        actor_vals = [[] for _ in actors]
+        actor_vals = [[] for _ in report_actors]
         try:
             for _ in range(ns.reps + 1):
-                mod.launch("scalarburst", grid=(1,),
-                           block=((max(actors) + 1) * 32,), args=[out])
+                mod.launch(function_name, grid=(1,), block=(block_size,),
+                           args=[out])
                 mod.synchronize()
                 raw = mod.device_read(out, out_size)
                 times = [struct.unpack_from("<QQ", raw, w * 16)
-                         for w in actors]
+                         for w in result_actors]
                 vals.append(max(t1 for _, t1 in times) -
                             min(t0 for t0, _ in times))
                 for dst, (t0, t1) in zip(actor_vals, times):
@@ -211,7 +303,7 @@ def main() -> int:
         kept = vals[1:]
         med = statistics.median(kept)
         delta = "-" if previous is None else f"{med - previous:g}"
-        actor_text = "" if len(actors) == 1 else " " + " ".join(
+        actor_text = "" if len(report_actors) == 1 else " " + " ".join(
             f"{statistics.median(v[1:]):9g}" for v in actor_vals)
         print(f"{n:2d} {med:6g} {min(kept):3d} {max(kept):3d} {delta}" +
               actor_text)
