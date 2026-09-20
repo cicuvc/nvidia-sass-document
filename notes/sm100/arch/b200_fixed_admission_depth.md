@@ -88,6 +88,25 @@ occupied.  The data are consistent with only a very shallow FFMA RF-collection
 front end, or with FMA-Lite admission occurring after operand collection; they
 do not distinguish those implementations.
 
+This throttle is per instruction, not an occupancy watermark.  After removing
+RZ/immediate/uniform operands and source rows which actually hit an enabled
+reuse slot, the measured collector rule is:
+
+```text
+bank = register_id & 1
+read_cycles = max(number_of_even_rows, number_of_odd_rows)
+scalar_FFMA_collection_floor = max(1, read_cycles)
+```
+
+Each visible bank supplies one warp-wide 32-bit row per cycle.  Thus 2E+1O
+requires two collection cycles and 3E requires three.  Reusing either even
+source in 2E+1O leaves E+O and restores one cycle; reusing the odd source
+leaves 2E and remains at two.  A reuse bit helps only while the corresponding
+source register ID still matches the cached row; changing the ID produces a
+new RF request.  The absence of a long scheduler-rate prefix means collector
+busy/backpressure reaches scalar FFMA issue before any observable deep pre-RF
+buffer fills.
+
 A second attempt used packed FP16 as a downstream resource competitor without
 making FFMA's own RF reads slow.  An alternating `FFMA/HFMA2` stream changes
 from the scheduler slope to about +4 clocks/N at N≈12.  However, ordered
