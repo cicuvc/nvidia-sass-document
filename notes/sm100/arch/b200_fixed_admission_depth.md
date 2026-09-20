@@ -190,7 +190,7 @@ the common cross-domain window comes from pairs whose two homogeneous depths
 are both twelve.  The full pair matrix nevertheless rules out both five
 independent fixed-ownership queues and a single shared twelve-entry queue.
 
-## Ordered two-phase bursts locate the extra credits
+## Ordered two-phase bursts and their ambiguity
 
 The alternating-pair test still admits a possible flat interpretation: a
 single queue might change its effective depth according to the current mode.
@@ -208,31 +208,29 @@ With `NA=12` and no gap, representative suffix curves are:
 | FMA Heavy → FP16 | `0,4,8,...,48` | FP16 sees the already occupied Heavy domain |
 | FMA Lite → FMA Heavy | still has a filling region | Lite prefix does not occupy Heavy's deep state |
 
-The first row is the decisive counterexample to a flat 12-entry FIFO.  At the
-point where 24 ALU-Heavy operations from the two producers have filled the
-ALU path to its approximately 12-outstanding boundary, the following
-FMA-Heavy stream can still accumulate approximately twelve of its own
-outstanding operations before its +4 clocks/`NB` drain slope begins.  Reversing
-the order gives the same result.  In contrast, replacing the suffix with ALU
-Lite removes the filling region completely.  The symmetric FMA-Heavy/FP16
-case behaves like the same-domain ALU pair.
+The first row proves that a cross-domain suffix behaves differently from a
+same-domain suffix.  It does **not**, by itself, prove two simultaneously
+occupied seven-entry queues: the ending `BAR.SYNC` may absorb the time needed
+to drain and retag one shared downstream pool into the `T(NA,0)` baseline.
+Reversing the order gives the same result.  Replacing the suffix with ALU Lite
+removes the filling region completely, and the symmetric FMA-Heavy/FP16 case
+behaves like the same-domain ALU pair.
 
 Removing the false predicate from all three representative phased pairs
 (ALU-Heavy→FMA-Heavy, ALU-Heavy→ALU-Lite, and FMA-Heavy→FP16) reproduces the
 same curves clock for clock through `NB=14`.  The separation is therefore not
 an artifact of nullified operations skipping execution or writeback.
 
-This establishes a physical-placement constraint stronger than the mixed
-matrix alone:
+Consequently these data establish domain-sensitive downstream state, but leave
+two storage organizations open:
 
 ```text
 shared fixed-math ingress/backpressure state:  ~5 effective credits
                          |
                   domain selection
-                    /           \
-          ALU downstream       FMA-Heavy downstream
-          ALUH + ALUL          FMAH + packed FP16
-          extra ~7 state       extra ~7 state
+                         |
+       either one tagged/domain-sensitive ~7 pool
+       or separate ALU and FMA-Heavy reservation state
 
 FMA-Lite: no independently visible extra window
 packed FP16: also reserves the Lite execution side
@@ -241,11 +239,49 @@ packed FP16: also reserves the Lite execution side
 The “extra ~7” should still be read as distributed valid/reservation state,
 not necessarily as a seven-word SRAM FIFO.  A cheap implementation is a small
 common issue skid/metadata queue (four waiting entries plus the dispatch head
-gives the observed five), followed by per-domain valid bits in operand,
-pipeline, or result staging.  If the deeper structure is an eight-slot ring,
-one unavailable/reserved slot plus the common five naturally appears as the
-approximately twelve effective total, but the measurements do not distinguish
-that implementation from seven separately distributed stage reservations.
+gives the observed five), followed by a tagged seven-slot reservation array.
+Separate per-domain valid bits in operand, pipeline, or result staging remain
+possible.  If the deeper structure is an eight-slot ring, one unavailable or
+reserved slot plus the common five naturally appears as the approximately
+twelve effective total.
+
+### A drain-before-retag pool is ruled out
+
+`probe_sm100_scalar_queue_topology_modal.py` adds an ordered-service probe.  A
+common start barrier ensures that a clean-subcore observer timestamps before
+the producer burst.  A real-register FMA-Lite sentinel follows the burst and
+the shared-memory completion flag data-depends on that sentinel.  Sweeping the
+observer polling phase removes most of the LDS-loop quantization.  With twelve
+ALU-Heavy instructions per producer already ahead of the suffix, active and
+false-predicated versions give the same phase-envelope medians:
+
+| suffix count per producer | 0 | 4 | 8 | 12 | 16 |
+|---:|---:|---:|---:|---:|---:|
+| ALU-Heavy → FMA-Heavy increment | 0 | 11 | 18 | 26 | 30 |
+| ALU-Heavy → ALU-Lite increment | 0 | 18 | 35 | 50 | 66 |
+
+The cross-domain suffix therefore progresses at approximately one aggregate
+warp instruction/cycle, while the same-domain suffix remains at approximately
+0.5/cycle.  FMA-Heavy service overlaps the outstanding ALU work.  This rules
+out a single untagged seven-slot pool whose global ALU/FMA mode cannot change
+until the pool has drained: that design would make the FMA suffix wait for the
+ALU service and retain the approximately four-clock-per-suffix-count slope.
+
+It does not distinguish a single **per-entry-tagged** seven-slot pool from two
+physical seven-slot queues behind a one-entry/cycle switch.  In the ordinary
+cross-domain stream, the switch supplies each 0.5/cycle backend at exactly its
+service rate, so neither organization can accumulate more downstream backlog.
+There is also no measurable throughput cost from switching every instruction:
+the alternating ALU/FMA stream reaches the full 1/cycle aggregate rate.  Any
+remaining “sticky” behavior must therefore concern reservation ownership or
+selection policy, not a mandatory bubble on each switch.
+
+An attempted discriminator made both streams RF-bound using three same-parity,
+no-reuse sources.  Homogeneous ALU and FMA streams settle at +6 clocks/count;
+the alternating stream also settles at +6 and exposes only the shallow knee.
+This control is inconclusive for queue storage because both instruction types
+then serialize on the same two-bank RF collector before domain-local execution;
+it does not create two independent slow drains.
 
 ### Recovery controls
 
@@ -286,10 +322,9 @@ suffix differences), so it is not a valid in-kernel timing gap here.
 | FMA Lite | **5/subcore** | FFMA/FADD/FMUL agree |
 | coupled FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
 
-The mixed-family and ordered-phase tests refine these homogeneous capacities:
-the first five credits are shared across fixed math, while the remaining
-approximately seven are downstream of domain selection and belong to the ALU
-and FMA-Heavy/coupled domains.  Packed FP16 reserves both FMA leaves for
-execution but exposes the deeper Heavy-side admission capacity.  Every fixed
-path is substantially deeper than a single active operation once two
-same-subcore warp schedulers feed it fast enough.
+The mixed-family and ordered-service tests refine these homogeneous capacities:
+the first five credits are shared across fixed math, while approximately seven
+additional credits are visible only when traffic builds in one service domain.
+They may be one tagged shared pool or separate per-domain state, but cannot be
+one global-mode pool requiring drain-before-retag.  Packed FP16 reserves both
+FMA leaves for execution and behaves as part of the Heavy service domain.

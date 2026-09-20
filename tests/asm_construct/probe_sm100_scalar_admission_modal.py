@@ -127,6 +127,8 @@ BARRIER_OPS = {
     "packed": "@P6 HFMA2 RZ, RZ, RZ, RZ",
     "hadd2": "@P6 HADD2 RZ, RZ, RZ",
     "hmul2": "@P6 HMUL2 RZ, RZ, RZ",
+    "rf_aluheavy": "@P6 IADD3 RZ, R24, R26, R28",
+    "rf_fmaheavy": "@P6 IMAD RZ, R24, R26, R28",
 }
 
 BARRIER_MIX = {
@@ -140,6 +142,12 @@ BARRIER_MIX = {
     "mix_fmah_fmal": ("fmaheavy", "fmalite"),
     "mix_fmah_fp16": ("fmaheavy", "packed"),
     "mix_fmal_fp16": ("fmalite", "packed"),
+    "mix_rf_aluh_fmah": ("rf_aluheavy", "rf_fmaheavy"),
+}
+
+BARRIER_SCHED = {
+    "rf_aluheavy": "[7:7:{}:1:0]",
+    "rf_fmaheavy": "[7:7:{}:1:0]",
 }
 
 BARRIER_PLACEMENTS = {
@@ -189,7 +197,8 @@ def barrier_source(n: int, mode: str, placement: str, active: bool,
         "#def_label(producer)",
     ]
     lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
-    lines += [f"    {ops[i % len(ops)]};[7:7:{{}}:1:0:7]"
+    lines += [f"    {ops[i % len(ops)]};"
+              f"{BARRIER_SCHED.get(op_names[i % len(ops)], '[7:7:{}:1:0:7]')}"
               for i in range(n)]
     lines += [
         "    BRA #label(join);[7:7:{}:5:1]",
