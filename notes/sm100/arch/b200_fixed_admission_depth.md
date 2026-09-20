@@ -96,6 +96,48 @@ the packed suffix's eventual +4-clock slope.  This exposes approximately 12
 effective reservations in the coupled FMA domain, but cannot assign a
 standalone capacity to FMA Lite.
 
+### Packed FP32x2 supplies the missing issue pressure
+
+`FFMA2`, `FADD2`, and `FMUL2` each encode two FP32 lanes in one scheduler
+instruction and are classified as `INST_TYPE_COUPLED_MATH` on
+`fmalighter_pipe`.  Repeating the dense two-producer experiment while enabling
+operand reuse gives:
+
+| instruction | low-N increment | sustained high-N increment | knee |
+|---|---:|---:|---:|
+| scalar FFMA | about +2 clocks/N | about +2 | none through N=32 |
+| FADD2 | about +2 | +4 | N=12 |
+| FMUL2 | about +2 | +4 | N=12 |
+| FFMA2 | about +3 | +4 | N≈11 |
+
+One N again adds two instructions, one to each same-scheduler warp.  The x2
+forms can therefore enter at the scheduler's aggregate 1 inst/cycle but drain
+at approximately 0.5 inst/cycle.  During the issue of 2N instructions the
+backlog grows by approximately N entries, so the N≈12 knee directly exposes
+about **12 coupled-math outstanding reservations per subcore**.  FADD2/FMUL2
+are the cleanest representatives; FFMA2's three packed sources add a visible
+operand-collection cost before the final pipe-limited region.
+
+With only one producer warp, all three x2 forms remain at approximately +2
+clocks/instruction through N=40 and never fill the queue.  A single warp's
+back-to-back issue cadence is already about 0.5 instruction/cycle; two eligible
+same-scheduler warps are required to reach the 1/cycle aggregate input and
+create backlog.
+
+Predicated-off x2 instructions show the same N≈12 knee and +4 final slope,
+whereas predicated-off scalar FFMA remains at +2.  The immediate cause is thus
+the coupled dispatch/reservation rule, applied before predicate cancellation,
+not the execution of twice as many floating-point arithmetic operations.
+
+Ordered marker tests locate the coupling but do not identify a single physical
+FIFO.  After a saturated FADD2 prefix, the first scalar FFMA marker costs four
+clocks rather than two, then further FFMAs return to +2 each.  FMA-Heavy IMAD
+markers remain at +4 each, while ALU-Heavy IADD3 markers remain at +2 and are
+unaffected.  Thus the approximately 12-entry structure belongs to the FMA
+coupled-dispatch domain and interacts with scalar FMA Lite, but these data do
+not establish that ordinary FFMA owns the same twelve-entry queue or reveal a
+standalone FFMA-only capacity.
+
 ## Measurement correction for INT
 
 On sm_100, `CS2R` itself is statically assigned to `int_pipe`.  A naive

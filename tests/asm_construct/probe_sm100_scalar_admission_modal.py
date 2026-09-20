@@ -124,6 +124,10 @@ BARRIER_OPS = {
     "fmalite": "@P6 FFMA RZ, RZ, RZ, RZ",
     "fadd": "@P6 FADD RZ, RZ, RZ",
     "fmul": "@P6 FMUL RZ, RZ, RZ",
+    "ffma2": ("@P6 FFMA2.F32x2.F32x2.F32x2 RZ, "
+              "{R24,R25}, {R26,R27}, {R28,R29}"),
+    "fadd2": "@P6 FADD2.F32x2.F32x2 RZ, {R24,R25}, {R26,R27}",
+    "fmul2": "@P6 FMUL2.F32x2.F32x2 RZ, {R24,R25}, {R26,R27}",
     "packed": "@P6 HFMA2 RZ, RZ, RZ, RZ",
     "hadd2": "@P6 HADD2 RZ, RZ, RZ",
     "hmul2": "@P6 HMUL2 RZ, RZ, RZ",
@@ -144,6 +148,7 @@ BARRIER_MIX = {
     "mix_alul_fmal": ("alulite", "fmalite"),
     "mix_alul_fp16": ("alulite", "packed"),
     "mix_fmah_fmal": ("fmaheavy", "fmalite"),
+    "mix_fmal_ffma2": ("fmalite", "ffma2"),
     "mix_fmah_fp16": ("fmaheavy", "packed"),
     "mix_fmal_fp16": ("fmalite", "packed"),
     "mix_rf_aluh_fmah": ("rf_aluheavy", "rf_fmaheavy"),
