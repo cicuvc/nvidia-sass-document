@@ -28,13 +28,19 @@ OPS = {
     "lop3": "@P6 LOP3.LUT RZ, R24, R27, R28, 0x96",
     "shf": "@P6 SHF.R.U32.HI RZ, R24, R27, R28",
     "alulite": "@P6 IADD RZ, PT, R24, R27",
+    "mov": "@P6 MOV RZ, R24",
+    "isetp": "@P6 ISETP.NE.AND P1, PT, R24, R27, PT",
     "alulite64": "@P6 MOV64IUR {RZ,RZ}, 0x12345678",
     "fmaheavy": "@P6 IMAD RZ, R24, R27, R28",
+    "imul": "@P6 IMUL.U32 RZ, R24, R27",
+    "fswzadd": "@P6 FSWZADD.NDV RZ, R24, R27, PPPPPPPP",
     "fmaheavy_hi": "@P6 IMAD.HI RZ, PT, R24, R27, {R28,R29}",
     "fmalite": "@P6 FFMA RZ, R24, R27, R28",
     "fadd": "@P6 FADD RZ, R24, R27",
     "fmul": "@P6 FMUL RZ, R24, R27",
     "packed": "@P6 HFMA2 RZ, R24, R27, R28",
+    "hadd2": "@P6 HADD2 RZ, R24, R27",
+    "hmul2": "@P6 HMUL2 RZ, R24, R27",
     "fp64": "@P6 DADD {RZ,RZ}, {R24,R25}, {R26,R27}",
 }
 
@@ -51,11 +57,18 @@ BARRIER_OPS = {
     "aluheavy": "@P6 IADD3 RZ, RZ, RZ, RZ",
     "lop3": "@P6 LOP3.LUT RZ, RZ, RZ, RZ, 0x96",
     "shf": "@P6 SHF.R.U32.HI RZ, RZ, RZ, RZ",
+    "alulite": "@P6 IADD RZ, PT, RZ, RZ",
+    "mov": "@P6 MOV RZ, RZ",
+    "isetp": "@P6 ISETP.NE.AND P1, PT, RZ, RZ, PT",
     "fmaheavy": "@P6 IMAD RZ, RZ, RZ, RZ",
+    "imul": "@P6 IMUL.U32 RZ, RZ, RZ",
+    "fswzadd": "@P6 FSWZADD.NDV RZ, RZ, RZ, PPPPPPPP",
     "fmalite": "@P6 FFMA RZ, RZ, RZ, RZ",
     "fadd": "@P6 FADD RZ, RZ, RZ",
     "fmul": "@P6 FMUL RZ, RZ, RZ",
     "packed": "@P6 HFMA2 RZ, RZ, RZ, RZ",
+    "hadd2": "@P6 HADD2 RZ, RZ, RZ",
+    "hmul2": "@P6 HMUL2 RZ, RZ, RZ",
 }
 
 BARRIER_PLACEMENTS = {

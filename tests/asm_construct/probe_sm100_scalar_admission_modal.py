@@ -115,11 +115,18 @@ BARRIER_OPS = {
     "aluheavy": "@P6 IADD3 RZ, RZ, RZ, RZ",
     "lop3": "@P6 LOP3.LUT RZ, RZ, RZ, RZ, 0x96",
     "shf": "@P6 SHF.R.U32.HI RZ, RZ, RZ, RZ",
+    "alulite": "@P6 IADD RZ, PT, RZ, RZ",
+    "mov": "@P6 MOV RZ, RZ",
+    "isetp": "@P6 ISETP.NE.AND P1, PT, RZ, RZ, PT",
     "fmaheavy": "@P6 IMAD RZ, RZ, RZ, RZ",
+    "imul": "@P6 IMUL.U32 RZ, RZ, RZ",
+    "fswzadd": "@P6 FSWZADD.NDV RZ, RZ, RZ, PPPPPPPP",
     "fmalite": "@P6 FFMA RZ, RZ, RZ, RZ",
     "fadd": "@P6 FADD RZ, RZ, RZ",
     "fmul": "@P6 FMUL RZ, RZ, RZ",
     "packed": "@P6 HFMA2 RZ, RZ, RZ, RZ",
+    "hadd2": "@P6 HADD2 RZ, RZ, RZ",
+    "hmul2": "@P6 HMUL2 RZ, RZ, RZ",
 }
 
 BARRIER_PLACEMENTS = {
