@@ -1,4 +1,4 @@
-# B200 fixed leaf-pipeline admission windows
+# B200 fixed-pipeline admission windows
 
 Silicon: B200 (sm_100), Modal, 2026-09-20--21.  Probes:
 
@@ -11,8 +11,10 @@ same curves.  No target result is consumed.  As elsewhere, “credit” below is
 an effective scheduler-visible admission credit and does not require a literal
 FIFO cell.
 
-Results are grouped by the counter-derived Blackwell leaf hierarchy, not by
-the older static ISA pipe names.  Representatives used here are:
+The Heavy/Lite labels below were initially borrowed from the GB202 Blackwell
+counter hierarchy to group opcodes.  They must not be assumed to name B200
+physical leaves: the GB100 NCU catalog and the B200 timing results below show
+one unified ALU pipe.  Representatives used here are:
 
 | leaf | measured representatives |
 |---|---|
@@ -200,7 +202,7 @@ alone cannot expose the Lite depth because its 1-inst/cycle service matches
 the scheduler ceiling; packed FP32x2 supplies the required 0.5-inst/cycle
 drain while staying on `fmalighter_pipe`.
 
-### ALU Heavy and ALU Lite share one admission domain
+### B200 has one unified ALU backend, not observable Heavy/Lite leaves
 
 The dense ordered test is symmetric and exact.  Once either an ALU-Heavy or
 ALU-Lite prefix reaches N=11--12, a suffix from the other leaf is immediately
@@ -217,11 +219,32 @@ prefix followed by FMA Heavy retains the fresh scheduler-rate window
 opposite ALU leaf to admit at the scheduler rate while the prefix drains; the
 observed immediate +4 slope rules that organization out.
 
-ALU Heavy and Lite therefore share one approximately twelve-credit admission/
-reservation domain and one effective 0.5-inst/cycle service path.  Timing
-cannot distinguish a literal unified FIFO from separately banked physical
-storage governed by one shared credit counter, head, and selection policy; the
-logical availability domain is unambiguously shared.
+The homogeneous ALU-Heavy, homogeneous ALU-Lite, and alternating Heavy/Lite
+dense curves are moreover point-for-point identical through N=32.  All change
+at N≈12 to the same aggregate 0.5-inst/cycle service slope.  Either ALU group
+alternated with FMA Heavy instead sustains the scheduler's aggregate
+1-inst/cycle ceiling.  There is no measured concurrent Heavy+Lite service.
+
+The metric catalogs independently support the simpler interpretation.  With
+Nsight Compute 2026.3 queried by chip, GB100 exposes only:
+
+```text
+smsp__inst_executed_pipe_alu
+smsp__pipe_alu_cycles_active
+```
+
+GB202 additionally exposes `pipe_aluheavy` and
+`fmaheavy_subpipe_alulite` instruction and active-cycle counters.  The static
+sm100 latency description likewise places both opcode groups in one
+`int_pipe` set.
+
+B200 should therefore be modeled as one approximately twelve-credit ALU
+admission/reservation domain feeding one effective 0.5-inst/cycle ALU backend.
+“ALU Heavy” and “ALU Lite” remain useful opcode-set labels for comparison with
+GB202, but there is no evidence that they correspond to distinct B200 physical
+backends.  Timing alone could not rule out redundant internal units hidden
+behind a single shared half-rate dispatcher, but such units would have no
+observable independent throughput or availability.
 
 ## Measurement correction for INT
 
@@ -599,8 +622,7 @@ suffix differences), so it is not a valid in-kernel timing gap here.
 
 | path | effective outstanding capacity | qualification |
 |---|---:|---|
-| ALU Heavy | **about 12/subcore** | IADD3/LOP3/SHF agree |
-| ALU Lite | **about 12/subcore** | IADD/MOV/ISETP agree |
+| unified ALU | **about 12/subcore** | both former Heavy/Lite opcode groups |
 | FMA Heavy | **about 12/subcore** | IMAD/IMUL/FSWZADD agree |
 | FMA Lite | **about 12/subcore** | exposed by all-reuse FADD2/FMUL2/FFMA2 |
 | packed FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
