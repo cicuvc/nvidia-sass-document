@@ -1,5 +1,14 @@
 # H20 scalar ALU/FMA structural conflicts
 
+> **2026-09-20 correction:** this note measured everything with
+> `SCHED=[7:7:{}:1:1]` (yield=1 per instruction).  After the yield switch-cost
+> discovery (`notes/sm120/yield_dispatch_cost.md`), the solo "~2 clocks" numbers
+> here must be re-read: on H100 the clean FFMA/FADD/FMUL solo rate is **1.0
+> cyc/inst** (32 FP32 lanes/SMSP), and yield halves it to 2.0.  The conflict
+> *pairing* conclusions below are relative and stand; absolute slopes carry
+> per-instruction switch noise.  Clean H100 rates + full latency matrices:
+> [`h100_fixed_pipeline.md`](h100_fixed_pipeline.md).
+
 Silicon: NVIDIA H20 (sm_90), 2026-09-14.  NCU is installed but performance
 counters are disabled (`ERR_NVGPUCTRPERM`), so this note uses hand-built SASS,
 `SR_CLOCKLO`, active versus `@P6` contenders, and same/different-subcore

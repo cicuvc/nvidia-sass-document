@@ -116,6 +116,11 @@ def main() -> int:
     ap.add_argument("--isolated", action="store_true")
     ap.add_argument("--gaps", default=None)
     ns = ap.parse_args()
+    from archutil import arch
+    if arch() == "sm90":
+        # FHADD/FHFMA are sm_120-only scalar half-precision forms.
+        for k in ("FHADD", "FHFMA", "FHADD.BF16", "FHFMA.BF16"):
+            PRODUCERS.pop(k, None)
     if ns.gaps:
         base.GAPS = [int(x) for x in ns.gaps.split(",")]
     gaps = list(base.GAPS)

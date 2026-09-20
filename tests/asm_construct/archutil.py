@@ -174,6 +174,18 @@ def adapt_source(src: str, *, verbose: bool = False) -> str:
                 head, _, bracket = line.partition(";")
 
             # --- ELECT slot order ------------------------------------------
+            # --- plain LDC.64/128: scoreboard claim visibility floor -------
+            # On H100 an LDC.64 carrying stall=1 faults its req-waiting
+            # consumer: the SB claim is not yet visible to an instruction
+            # issuing 1 cycle later (probe_sm90_ldc_req.py).  stall>=2 on the
+            # LDC itself makes the claim land in time; the consumer's req is
+            # still required.
+            if re.match(r"^\s*(?:@\S+\s+)?LDC\.(?:64|128)\b", head):
+                mm = _BRACKET_RE.match(bracket)
+                if mm and int(mm.group("stall")) < 2:
+                    stall2 = bracket[:mm.start("stall")] + "2" + bracket[mm.end("stall"):]
+                    line = head + sep + stall2
+
             # --- MOV.64 split ----------------------------------------------
             mmov = _MOV64_RE.match(line)
             if mmov:

@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from assembler import CudaModule, assemble  # noqa: E402
 from assembler.runner import reset_context  # noqa: E402
+from archutil import adapt_source  # noqa: E402
 
 
 POISON = 0x40000000                 # 2.0f
@@ -189,7 +190,7 @@ def pred_source(prod_name: str, consumer: str, coarse: bool) -> str:
 
 def run_source(source: str, fn: str, reps: int) -> list[tuple[int, ...]]:
     reset_context()
-    mod = CudaModule(assemble(source, check_deps=False))
+    mod = CudaModule(assemble(adapt_source(source), check_deps=False))
     out = mod.devmem_alloc(4096)
     values = []
     try:
