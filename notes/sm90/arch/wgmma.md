@@ -779,6 +779,30 @@ not the fixed-pipeline banked collector** -- it is priced like ~4 late
 GPR reads per warp per MMA and contends with SHFL/LDS-address/MUFU source
 collection, while being invisible to banked-collector pressure.
 
+#### HGMMA admission queue: ~7-entry TC command FIFO, directly measured (H100, 2026-09)
+
+`probe_sm90_hgmma_admission.py` (single warpgroup, burst of N HGMMAs between
+CS2R reads, per-thread issue/drain spans) shows a clean burst window --
+unlike every scalar pipe on GH100, which admits linearly from N=1:
+
+- **stall=4 brackets**: first 7 HGMMAs admit at +4 cyc/op, N=8 pays +8,
+  then the steady pipe rate (RS n8/n16: +13; SS n16: +20; RS n64: +32).
+- The fast-segment rate is bracket-limited, not hardware: **stall=2 admits
+  6 at +2 cyc/op, stall=1 admits 4 at +1 cyc/op** before the fill catches
+  up.  The front end can push commands into the FIFO at ≥1 cyc/op; the
+  knee always lands at 6-8 entries.
+- **Predicated-off (@P6) HGMMAs show the identical curve** (7-entry window,
+  then +13 cyc/op) -- a squashed HGMMA still occupies a FIFO entry and
+  drains at the command rate.  The 12-13 cyc/op RS narrow-shape floor is
+  therefore a TC-command-path cost paid at admission/drain, not execution
+  backpressure.
+- Constant drain-minus-issue backlog ≈ 100 cyc at n16 ≈ 7-8 MMAs in
+  flight, matching the window depth.
+
+This directly confirms the Round-3 inference of a "~5--7-entry TC command
+FIFO": depth **7** (8th admission already delayed), fed by the warp front
+end at ≥1 cyc/op, drained at the shape-dependent pipe rate.
+
 ## Round 4 — the ptxas wgmma-DCE trap; sustained throughput is plain MAC-bound (H20, 2026-08; nvcc variant chains)
 
 **ptxas dead-code-eliminates `wgmma.mma_async` when the kernel never
