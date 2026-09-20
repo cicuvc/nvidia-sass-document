@@ -42,6 +42,13 @@ OPS = {
     "packed": "@P6 HFMA2 RZ, R24, R27, R28",
     "packed_mma": "@P6 HFMA2.MMA RZ, R24, R27, R28",
     "fp64": "@P6 DADD {RZ,RZ}, {R24,R25}, {R26,R27}",
+    # MIO-side families (sm90 dialects; harmless on sm80 too).
+    "lsu": "@P6 STS [RZ], R24",
+    "xu": "@P6 MUFU.RCP R30, R24",
+    "shfl": "@P6 SHFL.BFLY PT, RZ, RZ, 0x1, 0x1f",
+    # CBU forms need per-instance labels; emitted specially below.
+    "cbu_bra": "",
+    "cbu_bssy": "",
 }
 
 ACTORS = {
@@ -139,7 +146,17 @@ def source(n: int, mode: str, actors: tuple[int, ...], active: bool,
     if active or prefix_active:
         packed_op = packed_op.removeprefix("@P6 ")
     lines += [f"    {packed_op};{sched}" for _ in range(prefix_packed)]
-    lines += [f"    {op};{sched}" for _ in range(n)]
+    if mode == "cbu_bra":
+        for i in range(n):
+            lines.append(f"    @P6 BRA #label(cbb{i});{sched}")
+            lines.append(f"#def_label(cbb{i})")
+    elif mode == "cbu_bssy":
+        for i in range(n):
+            lines.append(f"    @P6 BSSY B0, #label(cbs{i});{sched}")
+            lines.append(f"    @P6 BSYNC B0;{sched}")
+            lines.append(f"#def_label(cbs{i})")
+    else:
+        lines += [f"    {op};{sched}" for _ in range(n)]
     lines += [
         "    CS2R {R22,R23}, SR_CLOCKLO;[7:7:{}:6:0]",
         "#def_label(store)",

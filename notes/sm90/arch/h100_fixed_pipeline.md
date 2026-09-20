@@ -46,24 +46,41 @@ Two Hopper-specific details:
   does.  DADD (same pipe) DOES hide it — so this is specific to DFMA's
   admission, not the FP64 datapath.
 
-## Admission depth: no burst/credit window
+## Admission depth: scalar pipes have none; XU/MUFU and HGMMA do
 
 `probe_sm80_admission_depth.py` (ported to sm90; `@P6` predicated-off bursts
 between CS2R reads, clean `[1:0:7]` brackets), T(N) per admitted op:
 
-| family (op) | predicated-off slope | active slope |
-|---|---:|---:|
-| int (IADD3) | +2 cyc/op | — |
-| fmalighter (FFMA) | +1 cyc/op | — |
-| packed FP16 (HFMA2) | +2 cyc/op | — |
-| FP64 (DADD) | +2 cyc/op | +2 cyc/op |
+| family (op) | predicated-off slope | active slope | burst window |
+|---|---:|---:|:---:|
+| int (IADD3) | +2 cyc/op | — | none |
+| fmalighter (FFMA) | +1 cyc/op | — | none |
+| packed FP16 (HFMA2) | +2 cyc/op | — | none |
+| FP64 (DADD) | +2 cyc/op | +2 cyc/op | none |
+| CBU (`@P6 BRA` / `BSSY+BSYNC` pairs) | +2 cyc/op | — | none |
+| LSU (STS [RZ]) | +2 cyc/op | +2 cyc/op | none |
+| SHFL (`.BFLY RZ,RZ`) | +2 cyc/op | +2 cyc/op | none |
+| XU (MUFU.RCP) | 2 fast, then +8 cyc/op | same | **~2-3 entries** |
+| HGMMA (see wgmma.md) | 7 fast, then pipe rate | same | **~7 entries** |
 
-All linear **from N=1**: no admission credit/burst window on any scalar
-family — the first instruction already pays the pipe rate.  Like GA100 and
-AD102; unlike GB202's 7-credit redirectable FP64 window.  Note the
-predicated-off slopes equal the active pipe rates (FFMA admits at +1/op =
-its 1.0 datapath rate; IADD3 at +2 = its 2.0 floor), i.e. admission tracks
-the target pipe exactly.
+The fixed scalar pipes, CBU, LSU and SHFL are all linear **from N=1**: no
+admission credit/burst window — the first instruction already pays the pipe
+rate.  Like GA100 and AD102; unlike GB202's 7-credit redirectable FP64
+window.  The predicated-off slopes equal the active pipe rates (FFMA admits
+at +1/op = its 1.0 datapath rate; IADD3 at +2 = its 2.0 floor), i.e.
+admission tracks the target pipe exactly.
+
+Only the MIO-side units show queueing:
+
+- **XU/MUFU**: the first 2 bursts admit at +2 cyc/op, N=3 pays +9, then the
+  8 cyc/op MUFU rate — a ~2-3-entry admission queue.  Identical curve for
+  predicated-off and active bursts: a squashed MUFU still flows through the
+  XU pipe at full occupancy (only writeback is suppressed).
+- **LSU** predicated-off vs active STS both run +2 cyc/op: predicate-off
+  suppresses the store itself, so the LSU pipe never becomes the bottleneck
+  for a lone warp either way — no window visible in both forms.
+- **HGMMA**: ~7-entry TC command FIFO (measured in wgmma.md), the only
+  deep admission buffer on the chip.
 
 ## Corrections to the H20-era numbers
 
