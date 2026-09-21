@@ -150,6 +150,41 @@ back-to-back issue cadence is already about 0.5 instruction/cycle; two eligible
 same-scheduler warps are required to reach the 1/cycle aggregate input and
 create backlog.
 
+This single-warp limit is not a generic front-end limit, and it is not an
+accidental `yield=1` bubble.  A solo-warp scheduling-control scan uses the
+no-reuse, one-cycle-RF form
+`FFMA2.F32.F32 RZ, R24, R25, 0f3f800000` and 256-instruction CS2R windows:
+
+| stream | `stall=1,yield=0` | `stall=2,yield=0` | `stall=1,yield=1` |
+|---|---:|---:|---:|
+| NOP | 1.00 cyc/inst | 2.00 | 2.00 |
+| scalar FFMA | 1.00 | 2.00 | 2.00 |
+| FFMA2 | **2.00** | 2.00 | 2.00 |
+
+(`~0.08` cyc/inst fixed window overhead is omitted.)  For all three streams,
+larger stalls follow the encoded value and `DRAIN` costs roughly 33--35
+cycles/instruction.  Reuse masks 0 through 7 do not change these rates.  Thus
+the hardware clamps solo FFMA2's minimum same-domain issue interval to two
+cycles even when the control word requests one; scalar FFMA and NOP demonstrate
+that the same warp front end can issue every cycle.  `yield=1` indeed inserts
+the familiar otherwise-wasted second cycle for NOP/FFMA, but does not add a
+third cycle to an FFMA2 stream whose two-cycle floor already dominates.
+
+Alternating-stream controls locate the unused issue slot:
+
+| one-warp repeating stream, all `stall=1,yield=0` | aggregate rate |
+|---|---:|
+| `FFMA2, NOP` | 1.0 inst/cycle |
+| `FFMA2, IADD3` | 1.0 inst/cycle |
+| `FFMA2, FFMA` | **0.5 inst/cycle** |
+
+The cycle after FFMA2 is therefore available to the warp and to an independent
+ALU domain, but not to scalar FMA.  This is a two-cycle FMA-domain interlock or
+admission exclusion rather than a whole-warp issue cooldown.  Two same-subcore
+warps can alternate packed requests at the scheduler's aggregate 1/cycle rate,
+which is why they can overdrive the 0.5/cycle service and expose the roughly
+12-entry packed outstanding window while one warp cannot.
+
 Predicated-off x2 instructions show the same N≈12 knee and +4 final slope,
 whereas predicated-off scalar FFMA remains at +2.  The immediate cause is thus
 fixed-pipeline admission/dispatch applied before predicate cancellation, not

@@ -112,6 +112,7 @@ def parse_counts(text: str) -> list[int]:
 
 
 BARRIER_OPS = {
+    "nop": "@P6 NOP",
     "aluheavy": "@P6 IADD3 RZ, RZ, RZ, RZ",
     "lop3": "@P6 LOP3.LUT RZ, RZ, RZ, RZ, 0x96",
     "shf": "@P6 SHF.R.U32.HI RZ, RZ, RZ, RZ",
@@ -157,6 +158,8 @@ BARRIER_MIX = {
     "mix_fmal_ffma2": ("fmalite", "ffma2"),
     "mix_ffma2_sameids": ("ffma2", "fmalite_ffma2ids"),
     "mix_ffma2_2rimm_fmal": ("ffma2_2rimm", "fmalite"),
+    "mix_ffma2_2rimm_nop": ("ffma2_2rimm", "nop"),
+    "mix_ffma2_2rimm_aluh": ("ffma2_2rimm", "aluheavy"),
     "mix_ffma2_2rimm_2fmal": (
         "ffma2_2rimm", "fmalite", "fmalite"),
     "mix_ffma2_2rimm_3fmal": (
@@ -183,6 +186,7 @@ BARRIER_MIX = {
 }
 
 BARRIER_SCHED = {
+    "nop": "[7:7:{}:1:0]",
     "rf_aluheavy": "[7:7:{}:1:0]",
     "rf_fmaheavy": "[7:7:{}:1:0]",
     "rf_fmalite": "[7:7:{}:1:0]",
@@ -419,6 +423,92 @@ def asymmetric_source(n: int, background_mode: str, background_count: int,
         "}",
     ]
     return "\n".join(lines), (max(*targets, observer) + 1) * 32
+
+
+def control_source(op_name: str, count: int, stall: int, yield_value: int,
+                   reuse_mask: int) -> str:
+    """Time one solo warp while varying the encoded scheduling controls."""
+    op = ("NOP" if op_name == "nop"
+          else BARRIER_OPS[op_name].removeprefix("@P6 "))
+    tail = f":{reuse_mask}" if reuse_mask else ""
+    bracket = f"[7:7:{{}}:{stall}:{yield_value}{tail}]"
+    lines = [
+        "#fn controlscan(out<8>) {",
+        "    #pragma MAXREG_COUNT(64)",
+        "    LDC.64 {R2,R3}, #param(out);[0:7:{}:1:0]",
+        "    MOV32I R24, 0x3f800000;[7:7:{0}:5:1]",
+        "    MOV32I R25, 0x40000000;[7:7:{}:5:1]",
+        "    CS2R {R16,R17}, SR_CLOCKLO;[7:7:{}:5:0]",
+        "    NOP;[7:7:{}:8:1]",
+        "    NOP;[7:7:{}:8:1]",
+    ]
+    lines += [f"    {op};{bracket}" for _ in range(count)]
+    lines += [
+        "    CS2R {R18,R19}, SR_CLOCKLO;[7:7:{}:5:0]",
+        "    STG.E.64.STRONG.GPU [{R2,R3}], {R16,R17};[7:0:{0}:8:0]",
+        "    STG.E.64.STRONG.GPU [{R2,R3}+0x8], {R18,R19};[7:0:{}:8:0]",
+        "    EXIT;[7:7:{}:5:0]",
+        "}",
+    ]
+    return "\n".join(lines)
+
+
+@app.local_entrypoint()
+def controls(ops: str = "nop,fmalite,ffma2_2rimm", count: int = 256,
+             repetitions: int = 9) -> None:
+    """Scan stall/yield/reuse controls for solo-warp issue throughput."""
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    from assembler import assemble
+
+    selected_ops = parse_csv(ops)
+    if (any(op not in {"nop", "fmalite", "ffma2_2rimm"}
+            for op in selected_ops)
+            or count < 32 or count > 2048 or repetitions <= 0):
+        raise ValueError("invalid control-scan parameter")
+
+    controls_to_try = (
+        [(stall, 0, reuse) for stall in range(1, 12)
+         for reuse in range(8)]
+        + [(stall, 1, 0) for stall in range(1, 16)]
+        + [(0, 1, 0)]
+    )
+    cases = []
+    rejected = []
+    for op in selected_ops:
+        for stall, yield_value, reuse in controls_to_try:
+            # NOP has no reuse operands; non-zero high bits would be batch_t,
+            # a different semantic knob, so keep its baseline at zero here.
+            if op == "nop" and reuse:
+                continue
+            label = f"{op}:s{stall}:y{yield_value}:r{reuse}"
+            try:
+                cubin = assemble(
+                    control_source(op, count, stall, yield_value, reuse),
+                    arch="sm100a", check_deps=True)
+            except Exception as exc:
+                rejected.append((label, str(exc).splitlines()[0]))
+                continue
+            cases.append((label, cubin, "controlscan", 32, 16, (0,)))
+
+    result_map = dict(run_cases.remote(cases, repetitions))
+    for op in selected_ops:
+        print(f"op={op} count={count}")
+        print("stall yield reuse median cyc/inst min max")
+        for stall, yield_value, reuse in controls_to_try:
+            label = f"{op}:s{stall}:y{yield_value}:r{reuse}"
+            if label not in result_map:
+                continue
+            values = result_map[label]
+            med = statistics.median(values)
+            print(f"{stall:5d} {yield_value:5d} {reuse:5d} "
+                  f"{med:6g} {med / count:8.4f} "
+                  f"{min(values):4d} {max(values):4d}")
+    if rejected:
+        print("rejected encodings:")
+        for label, reason in rejected:
+            print(f"  {label}: {reason}")
 
 
 @app.local_entrypoint()
