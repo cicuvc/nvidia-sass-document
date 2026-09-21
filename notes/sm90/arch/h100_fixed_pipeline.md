@@ -254,6 +254,32 @@ the split exists only on GB202: `pipe_aluheavy` +
 no separate fp64 pipe counter, so FP64 presumably accounts under
 `pipe_fma`.
 
+Cross-check with pure per-warp streams
+(`probe_sm90_alu_fmaheavy_isolation.py`, 512-op streams, warps 0+4 same
+subcore, yield=0): IADD3 x IMAD runs **2.010 + 2.008 cyc/op -- both at
+full solo rate, zero mutual interference** (aggregate 0.996/cyc), as do
+IADD3 x HFMA2 and IADD3 x DADD.  IMAD x HFMA2 degrades to 4.01 + 2.26
+(shared, packed favored), IMAD x IMAD to 2.01 + 3.96 (shared
+winner-take-most), IMAD x FFMA to 3.01 + 1.01 (FFMA monopolizes the FP32
+datapath, IMAD squeezed to ~1/3).  Two further observations:
+
+- **The GH100 SMSP issue bandwidth is 2 inst/cyc, not B200's 1/cyc**:
+  FFMA x NOP and NOP x NOP both aggregate 1.98/cyc.  Queue-depth
+  accounting is unaffected because per-warp clamp rates (2 cyc for
+  0.5/cyc ops, 1 cyc for Lite/NOP) bound each warp's arrival.
+- Open: IMAD drops to 3.0 cyc/op whenever its same-subcore sibling
+  issues at 1/cyc (NOP or FFMA), recovers to 2.0 with an IADD3 sibling
+  or on a different subcore -- an issue-phase arbitration effect.
+
+- **ALU service is 1.0/cyc, not 0.5**: IADD3 x IADD3 same-subcore holds
+  2.010 + 2.010 = 1.0/cyc combined, so the solo 2.0 is only the per-warp
+  front-end clamp (like HFMA2's), and the +4 post-knee slopes in the
+  yield=1 admission runs were yield-switch overhead, not service.  The
+  FMA-Heavy/packed/FP64 sums land at 0.56-0.75/cyc (mix +3.56..4,
+  IMAD x IMAD = 2.0+4.0, IMAD x HFMA2 = 4.0+2.26) -- clearly shared and
+  clearly below 1.0, but their exact per-domain service rates and the
+  asymmetric winner splits need a dedicated sweep.
+
 Single-warp alternating streams cannot make this distinction: every
 0.5/cyc op on GH100 is front-end-clamped to a 2-cycle issue interval whose
 second slot accepts any other op (IADD3+NOP, IMAD+NOP, DADD+NOP,
