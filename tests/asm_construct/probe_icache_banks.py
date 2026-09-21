@@ -15,7 +15,7 @@ from assembler import CudaModule, assemble  # noqa: E402
 from tests.asm_construct.probe_icache_hash import install_chain  # noqa: E402
 
 
-def launcher(iterations: int, actors: int) -> str:
+def launcher(iterations: int, warp_ids: tuple[int, ...]) -> str:
     lines = [
         "#fn icbanks(out<8>, c0<8>, c1<8>, c2<8>, c3<8>) {",
         "    #pragma MAXREG_COUNT(32)",
@@ -31,12 +31,12 @@ def launcher(iterations: int, actors: int) -> str:
         f"    MOV32I R10, 0x{iterations:x};[7:7:{{}}:5:1]",
         "    CS2R {R20,R21}, SR_CLOCKLO;[7:7:{}:5:0]",
     ]
-    for warp, reg in enumerate((12, 14, 16, 18)[:actors]):
+    for actor, (warp, reg) in enumerate(zip(warp_ids, (12, 14, 16, 18))):
         lines += [
             f"    ISETP.EQ.AND P0, PT, R5, 0x{warp:x}, PT;"
             "[7:7:{}:13:1]",
             f"    @P0 CALL.ABS.NOINC {{R{reg},R{reg + 1}}};"
-            f"[7:7:{{{warp + 1}}}:8:1]",
+            f"[7:7:{{{actor + 1}}}:8:1]",
         ]
     lines += [
         "    CS2R {R22,R23}, SR_CLOCKLO;[7:7:{}:5:0]",
@@ -55,14 +55,14 @@ def parse_sets(raw: str) -> list[int]:
     vals = [int(x, 0) for x in raw.split(",") if x.strip()]
     if not 1 <= len(vals) <= 4 or min(vals) < 0 or max(vals) >= 32:
         raise ValueError("sets must contain one to four indices in 0..31")
-    if len(set(vals)) != len(vals):
-        raise ValueError("sets must be distinct to avoid capacity overflow")
     return vals
 
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--sets", required=True)
+    p.add_argument("--warps",
+                   help="comma-separated warp ids (default 0..actors-1)")
     p.add_argument("--lines", type=int, default=13)
     p.add_argument("--iterations", type=int, default=2048)
     p.add_argument("--reps", type=int, default=5)
@@ -73,8 +73,13 @@ def main() -> int:
     ns = p.parse_args()
     try:
         sets = parse_sets(ns.sets)
+        warp_ids = (tuple(int(x, 0) for x in ns.warps.split(","))
+                    if ns.warps else tuple(range(len(sets))))
     except ValueError as exc:
         p.error(str(exc))
+    if (len(warp_ids) != len(sets) or len(set(warp_ids)) != len(warp_ids)
+            or min(warp_ids) < 0 or max(warp_ids) > 7):
+        p.error("warps must give one distinct id in 0..7 per set")
     region_stride = ns.region_stride_kib << 10
     if (not 13 <= ns.lines <= 16 or ns.iterations <= 1 or ns.reps <= 0
             or not 0 <= ns.body_nops <= 7
@@ -83,11 +88,13 @@ def main() -> int:
                 "region stride must be >=52 KiB and 128-byte aligned")
 
     actors = len(sets)
-    mod = CudaModule(assemble(launcher(ns.iterations, actors),
+    mod = CudaModule(assemble(launcher(ns.iterations, warp_ids),
                               check_deps=True))
     allocation = mod.devmem_alloc(region_stride * actors + (2 << 20))
     arena = (allocation + 0x1fffff) & -0x200000
-    out = mod.devmem_alloc(128 * 16)
+    block_threads = (max(warp_ids) + 1) * 32
+    out_size = block_threads * 16
+    out = mod.devmem_alloc(out_size)
     code = []
     try:
         for warp, set_index in enumerate(sets):
@@ -97,22 +104,23 @@ def main() -> int:
         per_warp = [[] for _ in range(actors)]
         spans = []
         for rep in range(ns.reps + 1):
-            mod.launch("icbanks", grid=(1,), block=(actors * 32,),
+            mod.launch("icbanks", grid=(1,), block=(block_threads,),
                        args=[out, *(code + [code[0]] * (4 - actors))])
             mod.synchronize()
             if rep:
-                raw = mod.device_read(out, 128 * 16)
+                raw = mod.device_read(out, out_size)
                 starts, ends = [], []
-                for warp in range(actors):
+                for actor, warp in enumerate(warp_ids):
                     t0, t1 = struct.unpack_from("<QQ", raw, warp * 32 * 16)
-                    per_warp[warp].append((t1 - t0) & ((1 << 64) - 1))
+                    per_warp[actor].append((t1 - t0) & ((1 << 64) - 1))
                     starts.append(t0)
                     ends.append(t1)
                 spans.append(max(ends) - min(starts))
         visits = ns.iterations + (ns.lines - 1) * (ns.iterations - 1)
         med = [statistics.median(x) / visits for x in per_warp]
         aggregate = actors * visits / statistics.median(spans)
-        print(f"sets={','.join(map(str, sets))} lines={ns.lines} "
+        print(f"sets={','.join(map(str, sets))} "
+              f"warps={','.join(map(str, warp_ids))} lines={ns.lines} "
               f"cycles/visit={[round(x, 6) for x in med]} "
               f"aggregate_visits/cycle={aggregate:.6f}")
     finally:

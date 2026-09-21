@@ -141,6 +141,13 @@ M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
   has a counter-visible ~12-entry target/trace structure, but it is not an
   IVALL-resistant loop buffer.  H100 counter-visible capacity remains unknown
   because Modal has no NCU.
+- **H100 ICC timing topology** (`notes/sm90/arch/h100_icache_loop_replay.md`):
+  nominal 128 KiB shared per SM, 128B lines, with a conflict-free sequential
+  boundary through 127 KiB.  Best shared-cache model is 64 sets x 16 ways.
+  Address-controlled JMP rings additionally expose a 32 KiB-equivalent
+  target/fetch level (2-KiB equal-index period, 16-way-like, 128B granularity)
+  replicated/partitioned across independent subcore streams; same-subcore
+  scheduler contention prevents deciding per-subcore versus per-warp ownership.
 - **M3v2: slot-less breakpoints via CALL.ABS + RPCMOV**
   (superseded by M3v3 below; probes: `sassdbg/probe_callheap2.py` =
   user's, `probe_callheap3.py`):
