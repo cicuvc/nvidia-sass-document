@@ -130,12 +130,15 @@ M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
   Hardened prologue = `IVALL; NOP×32 (stall 8); IVALL; BRA` → 30/30
   reliable.  Resume paths are safe unhardened when no fill of the
   restored line can be in flight (parked warp nowhere near the line).
-- **Tight loops defeat IVALL**: a loop spanning a couple of 128B lines
-  replays from a loop/fetch buffer that CCTL.I/D.IVALL does NOT flush —
-  a mid-run patch of an actively-executed tight loop is NEVER seen.
-  A fat loop (~2KB body) refetches per iteration and the same IVALL
-  makes the patch visible within one iteration.  => breakpoints must be
-  armed before the loop is entered.
+- **RETRACTED — "tight loops defeat IVALL"**: the original 4096-iteration
+  `probe_patch.py` target often finished before the asynchronous patcher was
+  admitted, falsely producing zero transitions.  With 262144 iterations,
+  every valid GB202 and B200 sample sees the replacement under per-iteration
+  `CCTL.I.IVALL`.  The stronger frozen-warp M11a probe agrees: no IVALL keeps
+  the old word (29/30 in the 2026-09-21 rerun; one uncontrolled fresh fetch),
+  while one IVALL with zero NOPs gives the new word 30/30.  GB202 still has a
+  counter-visible ~12-entry target/trace structure, but it is not an
+  IVALL-resistant loop buffer.
 - **M3v2: slot-less breakpoints via CALL.ABS + RPCMOV**
   (superseded by M3v3 below; probes: `sassdbg/probe_callheap2.py` =
   user's, `probe_callheap3.py`):

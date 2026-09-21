@@ -445,6 +445,10 @@ def run_child(name: str, handoff: str, ivall_count: int, ivall_nops: int,
               patch_delay_ms: float = 0.0, freeze_ms: float = 2.0,
               staggered: bool = False, iters: int = 1) -> None:
     case = CASES[name]
+    # P2 is the explicit no-invalidate control.  Its Case.ivall metadata was
+    # historically descriptive only, so a global --ivall-count accidentally
+    # gave P2 the same invalidate sequence as P3.
+    effective_ivall_count = 0 if case.ivall == "none" else ivall_count
     total = warps * ctas
     assert total * CMBUF_STRIDE <= HEAP_SIZE - CMDBUF_OFF, "cmdbuf overflow"
     assert total >= 1
@@ -466,7 +470,7 @@ def run_child(name: str, handoff: str, ivall_count: int, ivall_nops: int,
 
     handoff_inst = "YIELD" if handoff == "yield" else "NANOSLEEP 0x100"
     old_src, site_idx, labels = _old_program(
-        case, warps, handoff_inst, settle, ivall_count, ivall_nops,
+        case, warps, handoff_inst, settle, effective_ivall_count, ivall_nops,
         cmdbuf_base & 0xFFFFFFFF if case.cmd else None,
         cmdbuf_base >> 32 if case.cmd else None)
     old_enc = assemble_flat(old_src)
@@ -705,6 +709,15 @@ def run_child(name: str, handoff: str, ivall_count: int, ivall_nops: int,
             good = all(k == "old" for k in kinds)
             emit(it, "PASS" if good else "VISIBILITY",
                  f"deltas={deltas} kinds={kinds}")
+        elif case.ivall == "none":
+            # P2 is the incoherent negative control: retaining the old word
+            # is success; observing the patch without invalidation is an
+            # uncontrolled fresh fetch and remains a visibility anomaly.
+            fresh = sum(1 for k in kinds if k != "stale")
+            verdict = "stale" if fresh == 0 else (
+                "new" if fresh == len(kinds) else "mixed")
+            emit(it, "PASS" if fresh == 0 else "VISIBILITY",
+                 f"deltas={deltas} verdict={verdict}")
         else:
             stale = sum(1 for k in kinds if k != "new")
             verdict = "new" if stale == 0 else (

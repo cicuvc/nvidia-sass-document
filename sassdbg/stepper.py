@@ -26,8 +26,7 @@ CFG rules (dialect source parsed with assembler.sass_parser):
 Known limits:
   * self-referential steps (next_pcs contains the parked index itself,
     i.e. a 1-instruction loop) arm AFTER resume — a best-effort race,
-    since resume() restores the site word; tight loops are replay-
-    buffered anyway (probe exp4).  Prefer breaking at the loop top.
+    since resume() restores the site word.  Prefer breaking at the loop top.
   * divergence: a breakpoint parks the GROUP that hits it; other groups
     keep running.  Stepping is group-agnostic (the hit sequence may
     interleave groups).  Keep stepped regions warp-uniform for now.

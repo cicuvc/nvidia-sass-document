@@ -121,7 +121,7 @@ probe_icache_hash.py executes heap-resident SASS placed at exact,
 JMP to the next selected line; the gaps contain no executed NOPs. This
 separates address mapping from total contiguous code size.
 
-There is a small loop/target buffer downstream of ICC. With the JMP in slot
+There is a small target/trace buffer downstream of ICC. With the JMP in slot
 0 of every non-control line, rings of up to 12 arbitrary 4-KiB-spaced target
 lines generate only fixed launch traffic (119 ICC request cycles at 12
 targets and 2048 traversals). Thirteen targets abruptly produce 38982 ICC
@@ -132,6 +132,28 @@ targets; ten targets spill into ICC. Thus the structure is best described as
 a **roughly 12-entry control-flow target/trace buffer**, whose usable depth
 depends on branch placement and fall-through fetch timing, rather than as a
 fixed byte-capacity cache.
+
+The critical NCU boundaries were reproduced on 2026-09-21 with driver
+590.48.01 and NCU 2026.3:
+
+| JMP placement | targets | `sm__icc_requests.sum` |
+|---|---:|---:|
+| slot 0 | 12 | 119 |
+| slot 0 | 13 | 38982 |
+| slot 7 (`body_nops=7`) | 9 | 121 |
+| slot 7 (`body_nops=7`) | 10 | 26706 |
+
+This counter-visible structure must not be conflated with an
+IVALL-resistant loop buffer.  A 2026-09-21 rerun corrected a timing bug in the
+old self-modification probe: its 4096-iteration tight target could finish
+before the asynchronous patcher was admitted.  With 262144 iterations, all
+nine trials in which the patcher completed before target exit observed the
+new instruction under per-iteration `CCTL.I.IVALL`; the only zero-transition
+trial acked after the target had already finished.  The stronger M11a
+frozen-warp experiment independently found 30/30 new instructions after one
+IVALL with zero padding.  Its no-IVALL control was stale in 29/30 trials (one
+uncontrolled fresh fetch), demonstrating lack of coherence rather than
+persistent replay across IVALL.
 
 Associativity must be inferred with rings larger than this buffer. Once that
 confound is removed, the conflict knees are:
@@ -274,8 +296,9 @@ service-bandwidth/latency effect, not a demonstrated GCC capacity boundary.
   depth changes from 12 to 9 when the JMP moves to the last instruction slot;
 - GCC capacity, line size, and whether GCC is per-SM, per-TPC, or shared at
   a wider scope;
-- whether the target/trace buffer measured here is exactly the structure
-  responsible for sassdbg's tight-loop replay across `CCTL.I.IVALL`.
+- the literal relationship between the counter-visible target/trace entries
+  and the ordinary ICC/fetch pipeline.  They are flushed or bypassed by
+  `CCTL.I.IVALL`; the old claim of persistent tight-loop replay was retracted.
 
 ## Reproduction
 

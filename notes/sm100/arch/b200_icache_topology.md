@@ -6,9 +6,8 @@ the following B200 model:
 
 > The SM-local ICC is **32 KiB, 128-byte line, 16 sets x 16 ways**, shared by
 > all four subcores.  Its low-address set period is 2 KiB, consistent with a
-> direct `VA[10:7]` index.  Unlike GB202, a tight loop does not remain hidden
-> from a per-iteration `CCTL.I.IVALL`; no IVALL-resistant loop replay was
-> observed on B200.
+> direct `VA[10:7]` index.  A tight loop does not remain hidden from a
+> per-iteration `CCTL.I.IVALL`; no IVALL-resistant loop replay was observed.
 
 The last statement is intentionally narrower than "there is no loop/target
 buffer."  Timing alone cannot see the roughly 12-target structure found on
@@ -124,10 +123,10 @@ Results:
   ack by about 106--122 iterations.  A sixth trial was invalid because the
   patcher did not ack until iteration 262144, after the target had finished.
 
-Consequently B200 does **not** reproduce GB202's observed behavior in which a
-tight loop continues replaying stale instructions across target-side IVALL.
-This disproves an *IVALL-resistant* loop/fetch buffer for this construction.
-It does not rule out a small target/trace buffer that IVALL does flush.  Rings
+Consequently B200 has no *IVALL-resistant* loop/fetch buffer under this
+construction.  A GB202 rerun subsequently found the same result: its old
+contrary conclusion came from a target that finished before the patcher ran.
+This does not rule out a small target/trace buffer that IVALL does flush. Rings
 of 4--16 targets all cost roughly 30.3--30.85 cycles/visit, and timing has no
 counterpart to GB202's counter-only 12-to-13-target request jump.  An NCU-capable
 B200 is needed to determine whether such a buffer exists and its entry count.
@@ -149,4 +148,3 @@ Modal CLI):
 /home/cicuvc/miniconda3/envs/blkw/bin/modal run tools/modal_b200_probe.py \
   --script sassdbg/probe_patch.py --args 'exp1 exp2 exp4'
 ```
-

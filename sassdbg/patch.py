@@ -557,8 +557,8 @@ class SharedDebugger:
     The kernel is launched with its normal args plus dbgctrl (the arena
     base, appended automatically); it parks at the entry gate until
     release().  Arm breakpoints before release (reliable) — mid-run
-    arming works only for code that refetches (loop/fetch-buffer replay
-    defeats IVALL in tight loops).
+    arming still requires an invalidate/ack boundary before the target can
+    safely execute the patched site.
 
     Multi-warp / multi-CTA: launch with block=(32*N,), grid=(G,);
     f = CTAID*(ctawarps*32) + TID indexes frames/hit slots globally.
