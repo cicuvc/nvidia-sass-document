@@ -1,172 +1,156 @@
-# H100 fixed INT/FP admission windows
+# H100 fixed-pipeline admission and service
 
-Silicon: Modal H100 (sm_90), 2026-09-20.  The cubins are assembled directly
-with the repository assembler; ptxas is not used.  Probe:
-`tests/asm_construct/probe_scalar_admission_depth.py`, launched through
-`tools/modal_h100_probe.py` with `ASSEMBLER_ARCH=sm90`.
+Silicon: Modal H100 (sm_90), 2026-09-20--21. Cubins are assembled directly
+with the repository assembler; ptxas and NCU are not used. Primary probes:
 
-The construction and interpretation are identical to the B200 experiment in
-`../../sm100/arch/b200_fixed_admission_depth.md`.  Targets use `RZ` sources and
-destinations, `yield=0`, and source reuse.  Representative direct bursts are
-active; the downstream-blocker targets use architecturally-false P6 so result
-writeback cannot create the observed backpressure.
+- `tests/asm_construct/probe_scalar_admission_depth.py`
+- `tests/asm_construct/probe_sm90_rates.py`
+- `tests/asm_construct/probe_sm90_packed_clamp.py`
 
-## Corrected INT admission marker
+This is the corrected interpretation after applying the dense counted-barrier
+method developed for B200. Git history contains two withdrawn models: the
+four-stall-8-NOP construction falsely made FP32 look like a five-credit pipe,
+and summing two partially non-overlapping per-warp windows falsely implied a
+two-instruction/cycle SMSP issue rate. Neither result is used below.
 
-`CS2R` is itself assigned to `int_pipe` on sm_90.  Therefore
-`CS2R; INT*N; CS2R` measures service completion rather than admission: the
-ending timestamp cannot pass the INT stream.
+“Window” and “credits” mean scheduler-visible outstanding/reservation state.
+Timing does not require a literal FIFO with that many SRAM rows.
 
-The corrected `--barrier-method` places the producer on warp 0 and a timing
-observer on a different subcore.  The producer's post-burst marker is a
-counted `BAR.SYNC` on `mio_pipe`; only the observer executes the ending
-`CS2R`.  Four stall-8 NOPs make the producer path critical even for N=0.
-Thus the barrier release bounds when the producer has advanced past its final
-admitted operation without requiring that operation to retire from int_pipe.
+## Current model
 
-## One producer underfills the queues
+| effective domain | representatives | service/SMSP | visible window |
+|---|---|---:|---:|
+| ALU | IADD3/LOP3/SHF and other `int_pipe` ops | about 0.5 inst/cycle | about 12 |
+| FMA | IMAD/IMUL/IDP + ordinary HFMA2/HADD2 | about 0.5 combined | about 12 shared |
+| FP64 | DADD/DFMA + HFMA2.MMA | about 0.5 combined | about 12 shared |
+| scalar FP32 Lite | FFMA/FADD/FMUL | 1.0 | no independently visible deep window |
 
-Nine-repeat medians are exact and match B200:
+The three slow domains have separate admission state. Equal depths do not
+mean one common queue. Scalar FP32 keeps pace with the one-instruction/cycle
+SMSP issue ceiling, so this timing method cannot overdrive it and does not
+determine whether a tiny skid/collector exists.
 
-| family / representatives | T(0) | T(1) | T(2) | later increment |
-|---|---:|---:|---:|---:|
-| `int_pipe`: IADD3, LOP3, SHF | 41 | 42 | 44 | +2/instruction |
-| integer on `fmalighter_pipe`: IMAD.LO | 41 | 42 | 44 | +2/instruction |
-| `fp16_pipe`: HFMA2 | 41 | 42 | 44 | +2/instruction |
-| FP32 `fmalighter_pipe`: FFMA, FADD, FMUL | 41 | 42 | 43 | +1/instruction |
+```text
+                 ~12                 ~12                  ~12
+issue <= 1  -> [ ALU ]        || [ IMAD + HFMA2 ]  || [ FP64 + HFMA2.MMA ]
+                  0.5/cyc              0.5/cyc               0.5/cyc
 
-These curves measure service, not capacity.  A single warp supplies INT,
-IMAD, and HFMA2 at only 0.5 instruction/cycle, equal to service; it supplies
-FP32 at one instruction/cycle, also equal to service.  No one-producer stream
-can accumulate backlog.  A second same-subcore producer is required.
+scalar FFMA/FADD/FMUL: 1/cyc, no deep window seen
+ordinary HFMA2 blocks the scalar-Lite state
+```
 
-## Same-subcore two-producer depth
+## Corrected counted-barrier construction
 
-Warps 0 and 4 issue identical N-instruction bursts while warp 1 on another
-subcore timestamps their counted-barrier release.  IADD3, IMAD.LO, and HFMA2
-produce the same nine-repeat median curve:
+`CS2R` is assigned to `int_pipe`, so `CS2R; burst; CS2R` cannot measure ALU
+admission. Two producer warps (0 and 4, same SMSP) execute dense stall-1,
+yield-0 bursts. Warp 1, on another SMSP, timestamps a counted `BAR.SYNC`
+reached by both producers. The final timestamp observes producer progress
+past the burst without waiting on the target pipe itself.
 
-| N per producer | 0 | 1 | 2 | 3 | 4 | 8 | 12 | 13 | 14 | 15 |
+The current source has **no stall-8 producer prefix**. Such a prefix leaves
+issue holes which new instructions initially occupy and manufactured the old
+five-credit FP32 knee. RZ-source operations also use no unnecessary reuse
+`batch_t` field; on H100 that control field changes multi-warp scheduling and
+must not be treated as neutral.
+
+Predicated-off and active RZ-destination runs agree. Squashed operations
+therefore consume the same admission/service reservation relevant here; the
+knee is not result-writeback pressure.
+
+Representative two-producer curves are identical for IADD3, IMAD, HFMA2,
+DADD, and HFMA2.MMA (minor phase teeth at N=6--8 omitted):
+
+| N per producer | 0 | 5 | 8 | 10 | 11 | 12 | 13 | 14 | 16 | 20 |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| common clocks | 47 | 48 | 50 | 52 | 56 | 64 | 72 | 76 | 80 | 84 |
+| observer span | 28 | 28 | 30--31 | 34--35 | 37 | 40--41 | 44--45 | 48--49 | 56--57 | 72--73 |
 
-From N=13 onward the span increases by exactly four clocks for the two added
-instructions, the 0.5-instruction/cycle service slope.  Before that boundary,
-the two warp schedulers admit near one instruction/cycle in aggregate.  At
-N=12, 24 operations have entered in about 25 incremental clocks while about
-12 have drained.  This gives approximately **12 outstanding credits/subcore**
-including the operation in service, or roughly eleven waiting entries.
+From N=13 onward each increment adds two producer instructions and four
+clocks: the domain drains at 0.5 instruction/cycle. During filling the two
+warps supply close to one instruction/cycle while half that rate drains. The
+transition corresponds to approximately **12 outstanding reservations per
+SMSP**, including work in service.
 
-FP32 gives a shallower exact boundary:
+Scalar FFMA instead stays hidden under the fixed observer path through about
+N=10 and then advances by +2 clocks/N, exactly its one-instruction/cycle
+service for the two newly added instructions. That is an observer crossover,
+not a queue knee. The old “five FP32 credits” conclusion is withdrawn.
 
-| N per producer | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 and later |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| common clocks | 47 | 48 | 49 | 50 | 51 | 52 | 54 | +2/N |
+## Admission topology from saturated ordered phases
 
-Through N=5, each extra N admits two operations in one clock while one drains,
-leaving five outstanding operations.  N=6 is the first service-limited point.
-FFMA/FADD/FMUL therefore have **5 effective outstanding credits/subcore**,
-including the operation in service, or about four waiting entries.
+Homogeneous equal-depth curves alone cannot say whether families share a
+queue. The stronger test first issues 24 operations per producer from domain
+A (well beyond its window), then varies a B suffix. Each B increment adds two
+instructions. A suffix in an independent domain advances at +2 clocks/B; a
+suffix blocked by the saturated domain advances at +4 clocks/B.
 
-Different-subcore controls remain at +2/N for the heavy families and +1/N
-for FP32 through the tested range, confirming independent per-subcore pools.
+| saturated prefix -> suffix | clocks per B | inference |
+|---|---:|---|
+| ALU -> ALU | +4 | same ALU reservation/service domain |
+| ALU -> IMAD | **+2** | ALU and FMA admission are independent |
+| IMAD -> ALU | **+2** | reciprocal control |
+| IMAD -> IMAD | +4 | same FMA domain |
+| IMAD -> HFMA2 | **+4** | IMAD and ordinary packed FP16 share FMA admission |
+| IMAD -> DADD | **+2** | FMA and FP64 admission are independent |
+| DADD -> HFMA2.MMA | **+4** | MMA form shares the FP64 domain |
+| DADD -> ordinary HFMA2 | **+2** | ordinary packed FP16 is not on FP64 |
 
-## FP32 blocking controls
+Thus H100 does **not** have one common 12-entry heavy queue. It exposes at
+least three independently progressing approximately-12-credit domains: ALU,
+FMA (including ordinary packed FP16), and FP64 (including HFMA2.MMA).
 
-Four active `IMAD.HI` operations hold the scalar FMA entrance.  Prefix-only
-is 18 clocks, and appending FP32 targets gives:
+## Backend composition from one-warp alternating streams
 
-| appended target count | 0 | 1 | 2 | 3 | 4 |
-|---:|---:|---:|---:|---:|---:|
-| FFMA | 18 | 21 | 22 | 23 | 24 |
-| FADD | 18 | 21 | 22 | 23 | 24 |
-| FMUL | 18 | 21 | 22 | 23 | 24 |
+One warp avoids the large and phase-dependent warp-switch effects seen when
+two yield-0 streams live at different PCs. In a 2048-instruction alternating
+stream, independent 0.5/cycle leaves fill each other's unused issue slots;
+shared leaves remain at two clocks/instruction. Long unrolled independent
+streams measure about 1.10 rather than exactly 1.00 clocks/instruction because
+of front-end/fetch overhead, while shared pairs measure 2.004.
 
-The first target costs three clocks; later targets resume the +1 cadence.  An
-active HFMA2 blocker gives prefix-only 6 clocks, then `8,9,10,11` for one
-through four FFMA targets.
+| alternating pair | clocks/instruction | relation |
+|---|---:|---|
+| IADD3 + IMAD | ~1.10 | independent |
+| IADD3 + DADD | ~1.10 | independent |
+| IMAD + DADD | ~1.10 | independent |
+| ordinary HFMA2 + DADD | ~1.10 | independent |
+| HFMA2.MMA + ordinary HFMA2 | ~1.10 | independent |
+| **IMAD + ordinary HFMA2** | **2.004** | shared FMA backend |
+| **HFMA2.MMA + DADD** | **2.004** | shared FP64 backend |
+| IADD3/IMAD + scalar FFMA | ~1.10 | Lite fills the other slot |
+| ordinary HFMA2 + scalar FFMA | ~2.00 | packed state blocks Lite |
 
-This is an upstream entrance effect, not evidence against the five-credit
-FP32 leaf queue.  A cross-family blocker prevents the following FP32 from
-reaching that queue early, whereas two synchronized FP32 producers directly
-fill it.
+The mixed counted-barrier curves give the same map: independent pairs settle
+at one aggregate instruction/cycle, while IMAD+HFMA2 and
+HFMA2.MMA+DADD settle at 0.5.
 
-## H100 versus B200
+## Clean solo throughput
 
-| path | H100 | B200 |
-|---|---:|---:|
-| INT: IADD3/LOP3/SHF | about **12/subcore** | about **12/subcore** |
-| integer IMAD.LO | about **12/subcore** | about **12/subcore** |
-| packed FP16 HFMA2 | about **12/subcore** | about **12/subcore** |
-| FP32 FFMA/FADD/FMUL | **5/subcore** | **5/subcore** |
+`probe_sm90_rates.py` uses a 1024-instruction one-warp window:
 
-No tested fixed-pipeline admission parameter distinguishes the Modal H100
-from B200.  Capacity equality alone does not prove that the three heavy
-families share one physical queue; only that each exposes the same effective
-depth under homogeneous traffic.
+| family | clocks/instruction |
+|---|---:|
+| NOP | 1.008 |
+| ordinary ALU | 2.008 |
+| IMAD/IMUL/IDP.4A | 2.007 |
+| IMAD.WIDE/HI | 4.005 |
+| FFMA/FADD/FMUL with reuse | 1.008 |
+| HFMA2/HADD2 | 2.007 |
+| DADD/DFMA | 2.007 |
+| MUFU | 7.998 |
 
-## Mixed-family bursts: the heavy families share one queue; HFMA2.MMA executes on the FP64 path
+FFMA without a useful reuse pattern is RF-bound at about two clocks per
+instruction. This is operand collection, not Lite execution throughput.
+`yield=1` changes NOP and scalar FP32 from one to two clocks/instruction;
+the switch cost hides under the two-cycle floor of most slow domains. DFMA
+is the exception and changes from about two to three.
 
-The capacity equality above leaves open whether INT/FP16/FP64 share one
-physical queue.  Interleaved two-family bursts answer it
-(`probe_sm80_admission_depth.py --mode mix_* --actors same2`, the older
-same-subcore CS2R construction, so absolute knee positions are on its
-scale; the *sharing* inference is structural and method-independent):
+## Limits
 
-| mixed burst (alternating) | knee at cumulative N | steady slope |
-|---|---:|---:|
-| IADD3 + HFMA2 | ~11 | +3 cyc/op |
-| IADD3 + DADD | ~11 | +3 |
-| HFMA2 + DADD | ~11 | +3 |
-| HFMA2.MMA + HFMA2 | ~11 | +3 |
-| HFMA2.MMA + DADD | ~11 | **+4** |
-
-Separate per-family queues would postpone the knee to ~2x (each queue
-fills at half the combined arrival rate); every mix knees at the same
-cumulative ~11 as the homogeneous bursts, so **the heavy fixed-pipe
-families share one admission queue per subcore**.  The +3 (0.67 inst/cyc)
-steady slope of the cross-family mixes sits between one shared 0.5/cyc
-service (+4) and two fully independent 0.5/cyc services (+2): the two
-pipes overlap partially once past admission.
-
-The exception proves the execution resource of HFMA2.MMA: mixed with DADD
-it degrades to exactly +4 = a single 0.5/cyc service, while mixed with
-HFMA2 it keeps the +3 cross-path overlap.  **HFMA2.MMA is serviced by the
-FP64 pipe** (matching its DADD-like 4-cycle result bypass), so its
-admission queue is the shared fixed-pipe queue, but its service resource
-is FP64, not the FP16/C path used by plain HFMA2.
-
-## B200 packed-state phenomenology reproduces on H100
-
-`probe_sm90_packed_clamp.py` (single warp, CS2R window, `[7:7:{}:1:0]`,
-RF-clean E+O+immediate operands) ports the sm_100 packed-FMA experiments
-from `../../sm100/arch/b200_fixed_admission_depth.md` to HFMA2.  H100
-matches B200 point for point:
-
-| one-warp repeating stream | H100 | B200 |
-|---|---:|---:|
-| HFMA2 alone (stall=1, yield=0) | 2.0 | 2.0 (FFMA2) |
-| HFMA2 + NOP alternating | **1.0** | 1.0 |
-| HFMA2 + IADD3 alternating | **1.0** | 1.0 |
-| HFMA2 + FFMA alternating | **2.0** | 0.5/cyc (blocked) |
-| scalar FFMA alone | 1.0 | 1.0 |
-
-The 2-cycle packed interval is therefore a **front-end issue clamp**, not
-backend occupancy: the second slot accepts INT and NOP work but not scalar
-FMA.  Combined with the same2 experiments (two warps fill the ~12-entry
-packed window, one warp cannot), this is the same PACKED_LOCK/LITE picture
-as B200.
-
-Ordered handoff phases also match:
-
-| direction (32-op prefix) | H100 suffix increments (B=1,2,3,4,...) | B200 |
-|---|---|---|
-| HFMA2 -> FFMA | +2,+3,+4,+5,... | 0,2,3,4,5 extra |
-| FFMA -> HFMA2 | +2,+4,+6,+8,... | 0,2,4,6 extra |
-
-The first scalar FFMA after packed work pays one extra handoff clock;
-scalar->packed pays nothing beyond the normal 2-cycle service.
-
-H100 differences to keep in mind: packed FP16 has no FFMA2 sibling format
-(no format-switch test applies), and HFMA2.MMA — not plain HFMA2 — is the
-variant serviced by the FP64 pipe (see the mixed-family section above).
+- Approximately 12 is an effective outstanding count, not proof of a literal
+  twelve-row FIFO.
+- Timing distinguishes three slow reservation domains but cannot tell whether
+  each combines a FIFO, collector, and in-service token or distributed credits.
+- Lite has no measurable deep queue here. “Near-direct dispatch” is preferred
+  over asserting exactly zero entries.
+- The packed/Lite relation is operational. Timing alone cannot distinguish a
+  shared physical array from an interlock between leaves.

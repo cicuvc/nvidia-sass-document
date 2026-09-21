@@ -78,8 +78,10 @@ BARRIER_OPS = {
     "fadd": "@P6 FADD RZ, RZ, RZ",
     "fmul": "@P6 FMUL RZ, RZ, RZ",
     "packed": "@P6 HFMA2 RZ, RZ, RZ, RZ",
+    "packed_mma": "@P6 HFMA2.MMA RZ, RZ, RZ, RZ",
     "hadd2": "@P6 HADD2 RZ, RZ, RZ",
     "hmul2": "@P6 HMUL2 RZ, RZ, RZ",
+    "fp64": "@P6 DADD {RZ,RZ}, {RZ,RZ}, {RZ,RZ}",
 }
 
 BARRIER_MIX = {
@@ -93,6 +95,11 @@ BARRIER_MIX = {
     "mix_fmah_fmal": ("fmaheavy", "fmalite"),
     "mix_fmah_fp16": ("fmaheavy", "packed"),
     "mix_fmal_fp16": ("fmalite", "packed"),
+    "mix_aluh_fp64": ("aluheavy", "fp64"),
+    "mix_fmah_fp64": ("fmaheavy", "fp64"),
+    "mix_fp16_fp64": ("packed", "fp64"),
+    "mix_mma_fp16": ("packed_mma", "packed"),
+    "mix_mma_fp64": ("packed_mma", "fp64"),
     "mix_aluh_isetp": ("aluheavy", "isetp"),
     "mix_isetp_fmah": ("isetp", "fmaheavy"),
     "mix_isetp_fmal": ("isetp", "fmalite"),
@@ -107,6 +114,8 @@ BARRIER_SCHED = {
     "mov64iur": "[7:7:{}:1:0]",
 }
 
+BARRIER_DEFAULT_SCHED = "[7:7:{}:1:0]"
+
 BARRIER_PLACEMENTS = {
     "one": ((0,), 1),
     "same2": ((0, 4), 1),
@@ -115,13 +124,17 @@ BARRIER_PLACEMENTS = {
 
 
 def barrier_source(n: int, mode: str, placement: str, active: bool,
-                   producer_delay: int = 0) -> tuple[str, int]:
+                   producer_delay: int = 0, prefix_mode: str = "",
+                   prefix_count: int = 0) -> tuple[str, int]:
     """Time producer progress using a clean-subcore barrier observer."""
     producers, observer = BARRIER_PLACEMENTS[placement]
     op_names = BARRIER_MIX.get(mode, (mode,))
     ops = tuple(BARRIER_OPS[name] for name in op_names)
+    prefix_op = BARRIER_OPS.get(prefix_mode)
     if active:
         ops = tuple(op.removeprefix("@P6 ") for op in ops)
+        if prefix_op:
+            prefix_op = prefix_op.removeprefix("@P6 ")
     lines = [
         "#fn fixedbarrier(out<8>) {",
         "    #pragma MAXREG_COUNT(64)",
@@ -145,8 +158,12 @@ def barrier_source(n: int, mode: str, placement: str, active: bool,
         "#def_label(producer)",
     ]
     lines += ["    NOP;[7:7:{}:8:1]" for _ in range(producer_delay)]
+    if prefix_op:
+        lines += [f"    {prefix_op};"
+                  f"{BARRIER_SCHED.get(prefix_mode, BARRIER_DEFAULT_SCHED)}"
+                  for _ in range(prefix_count)]
     lines += [f"    {ops[i % len(ops)]};"
-              f"{BARRIER_SCHED.get(op_names[i % len(ops)], '[7:7:{}:1:0:7]')}"
+              f"{BARRIER_SCHED.get(op_names[i % len(ops)], BARRIER_DEFAULT_SCHED)}"
               for i in range(n)]
     lines += [
         "    BRA #label(join);[7:7:{}:5:1]",
@@ -292,15 +309,27 @@ def main() -> int:
                     help="time producer progress from a clean-subcore observer")
     ap.add_argument("--producer-delay", type=int, default=0,
                     help="stall-8 NOPs before a barrier-method producer burst")
+    ap.add_argument("--barrier-prefix", default="",
+                    help="barrier-method prefix as MODE:COUNT")
     ap.add_argument("--grid", type=int, default=1,
                     help="number of CTAs (use many CTAs to amplify NCU counters)")
     ns = ap.parse_args()
+    prefix_mode = ""
+    prefix_count = 0
+    if ns.barrier_prefix:
+        try:
+            prefix_mode, prefix_count_text = ns.barrier_prefix.split(":", 1)
+            prefix_count = int(prefix_count_text)
+        except ValueError:
+            ap.error("--barrier-prefix must be MODE:COUNT")
+        if prefix_mode not in BARRIER_OPS or prefix_count < 0:
+            ap.error("invalid --barrier-prefix mode/count")
     counts = parse_counts(ns.counts)
     if (not counts or min(counts) < 0 or max(counts) > 100 or
             ns.reps <= 0 or ns.grid <= 0 or not 0 <= ns.prefix_hi <= 32 or
             not 0 <= ns.prefix_packed <= 32 or
             not 0 <= ns.blocker_hi <= 100 or
-            not 0 <= ns.producer_delay <= 32):
+            not 0 <= ns.producer_delay <= 32 or prefix_count > 100):
         ap.error("counts must be in 0..100, prefix in 0..32, blocker in "
                  "0..100, producer-delay in 0..32, reps/grid positive")
     if ns.barrier_method:
@@ -321,7 +350,8 @@ def main() -> int:
           f"prefix_active={ns.prefix_active} "
           f"blocker_hi={ns.blocker_hi} "
           f"barrier_method={ns.barrier_method} "
-          f"producer_delay={ns.producer_delay}")
+          f"producer_delay={ns.producer_delay} "
+          f"barrier_prefix={ns.barrier_prefix or '-'}")
     actor_cols = "" if len(report_actors) == 1 else " " + " ".join(
         f"w{w}_median" for w in report_actors)
     print("N span_median min max delta" + actor_cols)
@@ -329,7 +359,8 @@ def main() -> int:
     for n in counts:
         if ns.barrier_method:
             src, block_size = barrier_source(
-                n, ns.mode, ns.actors, ns.active, ns.producer_delay)
+                n, ns.mode, ns.actors, ns.active, ns.producer_delay,
+                prefix_mode, prefix_count)
             function_name = "fixedbarrier"
             out_size = 16
             result_actors = (0,)

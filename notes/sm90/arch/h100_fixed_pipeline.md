@@ -55,31 +55,28 @@ same-subcore producers and a different-subcore observer.  Producers mark
 post-burst progress with counted `BAR.SYNC` on `mio_pipe`; only the observer
 timestamps barrier release.
 
-The resulting effective outstanding capacities are:
+The final dense-prefix rerun gives:
 
 | family | credits/subcore | post-knee service |
 |---|---:|---:|
-| INT: IADD3/LOP3/SHF | **about 12** | 0.5 instruction/cycle |
-| integer IMAD.LO | **about 12** | 0.5 instruction/cycle |
-| packed FP16 HFMA2 | **about 12** | 0.5 instruction/cycle |
-| FP32 FFMA/FADD/FMUL | **5** | 1 instruction/cycle |
+| ALU: IADD3/LOP3/SHF | **about 12** | 0.5 instruction/cycle |
+| FMA: IMAD.LO + ordinary HFMA2 | **about 12 shared** | 0.5 combined |
+| FP64: DADD + HFMA2.MMA | **about 12 shared** | 0.5 combined |
+| FP32 FFMA/FADD/FMUL | **not fillable by this frontend** | 1 instruction/cycle |
 
-For the first three families, N=12 per producer is the last filling-region
+For the three slow domains, N=12 per producer is the last filling-region
 point and N=13 begins the exact +4-clock/N slope for two new instructions.
-For FP32, N=5 is the last +1-clock/N point (two admissions while one drains)
-and N=6 begins the exact +2-clock/N service slope.  Different-subcore pairs
-never hit either knee in the tested range.
-
-This supersedes the old approximately 10/11-entry estimates and the claim
-that FP32 was unfillable.  The synchronized counted-barrier construction can
-briefly feed FP32 at two instructions/cycle from two warp schedulers, exposing
-its five-credit pool.  Full curves and the H100/B200 comparison are in
+FP32 instead reaches the +2-clock/N one-instruction/cycle service slope when
+the producer path overtakes the fixed observer path; there is no FP32 knee.
+The earlier five-credit result came from four stall-8 NOPs before the burst:
+new instructions initially occupied those holes.  It is withdrawn, as is the
+claim that the H100 SMSP can issue two warp instructions per cycle. Full
+curves and ordered saturated-prefix sharing tests are in
 [`h100_fixed_admission_depth.md`](h100_fixed_admission_depth.md).
 
-FP64 remains a separate case: it uses the fixed per-SMSP backend on GH100 and
-was not rerun in this corrected INT/FP32 experiment.  The prior approximately
-11-entry DADD estimate should not be silently promoted to the corrected
-12-credit result without its own counted-barrier sweep.
+Saturated ordered phases establish separate ALU, FMA, and FP64 reservation
+domains. IMAD and ordinary HFMA2 share the FMA window; DADD and HFMA2.MMA
+share the FP64 window. Scalar Lite has no independently visible deep queue.
 
 The predicate-off single-warp slopes still show that squashed instructions
 reserve pipe service; only the depth inference has changed.
@@ -213,28 +210,30 @@ bypass:  same-domain 2 cyc,  INT<->fmalighter cross-domain 3 (fine)/4 (safe),
          IMAD.WIDE lo -> fmalighter 1 (fastest path on the chip)
 ```
 
-### Execution-service domains on GH100 — corrected (same2 `--fast` mixes)
+### Execution-service domains on GH100 — final corrected map
 
-The earlier two-warp `probe_sm90_conflict_windows.py` readings (e.g.
-"IADD3 × IMAD = 0.25 + 0.25") conflated datapath sharing with the
-scheduler's fixed time-slice rotation between warps and are superseded.
-The clean discriminator is the same-subcore two-producer mix slope with
-`yield=0` brackets (`probe_sm80_admission_depth.py --mode mix_* --actors
-same2 --fast`, post-knee steady slope per op; +2 = two independent 0.5/cyc
-services, +4 = one shared 0.5/cyc service):
+The clean discriminator is a one-warp alternating stream. Two independent
+0.5/cycle leaves fill each other's unused issue slots and approach one
+instruction/cycle aggregate; two opcodes on one shared 0.5/cycle backend stay
+at two clocks/instruction. The 2048-instruction unrolled independent streams
+measure about 1.10 clocks/instruction because of fetch overhead, versus 2.004
+for the shared pairs.
 
-| mix | slope | domains |
+| alternating pair | clocks/instruction | domains |
 |---|---:|---|
-| IADD3 + IMAD | **+2** | ALU independent of FMA Heavy |
-| IADD3 + DADD | +2 | ALU independent of FP64 |
-| IADD3 + HFMA2 | +2 | ALU independent of packed FP16 |
-| IMAD + DADD | **+2** | FMA Heavy independent of FP64 |
-| HFMA2 + DADD | +2 | packed FP16 independent of FP64 |
-| HFMA2.MMA + HFMA2 | +2 | FP64-path MMA independent of packed FP16 |
-| IMAD + HFMA2 | **+4** | **FMA Heavy and packed FP16 SHARE one 0.5/cyc service** |
-| HFMA2.MMA + DADD | **+4** | **HFMA2.MMA and DADD SHARE the FP64 service** |
+| IADD3 + IMAD | ~1.10 | ALU independent of FMA |
+| IADD3 + DADD | ~1.10 | ALU independent of FP64 |
+| IMAD + DADD | ~1.10 | FMA independent of FP64 |
+| HFMA2 + DADD | ~1.10 | packed FP16 independent of FP64 |
+| HFMA2.MMA + HFMA2 | ~1.10 | FP64-path MMA independent of packed FP16 |
+| **IMAD + HFMA2** | **2.004** | **shared 0.5/cycle FMA backend** |
+| **HFMA2.MMA + DADD** | **2.004** | **shared 0.5/cycle FP64 backend** |
 
-Same-subcore, yield=0 two-producer structure per SMSP:
+The dense counted-barrier mixed streams and saturated ordered phases give the
+same map and additionally show that the corresponding admission windows are
+separate for ALU/FMA/FP64, but shared within each bold pair.
+
+Same-subcore, yield=0 structure per SMSP:
 
 ```text
 ALU domain      IADD3/LOP3/SHF/...        0.5 inst/cyc
@@ -254,39 +253,17 @@ the split exists only on GB202: `pipe_aluheavy` +
 no separate fp64 pipe counter, so FP64 presumably accounts under
 `pipe_fma`.
 
-Cross-check with pure per-warp streams
-(`probe_sm90_alu_fmaheavy_isolation.py`, 512-op streams, warps 0+4 same
-subcore, yield=0): IADD3 x IMAD runs **2.010 + 2.008 cyc/op -- both at
-full solo rate, zero mutual interference** (aggregate 0.996/cyc), as do
-IADD3 x HFMA2 and IADD3 x DADD.  IMAD x HFMA2 degrades to 4.01 + 2.26
-(shared, packed favored), IMAD x IMAD to 2.01 + 3.96 (shared
-winner-take-most), IMAD x FFMA to 3.01 + 1.01 (FFMA monopolizes the FP32
-datapath, IMAD squeezed to ~1/3).  Two further observations:
+The earlier `probe_sm90_alu_fmaheavy_isolation.py` conclusion that H100 can
+issue two instructions/cycle is invalid. Its two yield-0 streams reside at
+different PCs and their timed windows are largely sequential: each per-warp
+span can be near 2N while the global `max(end)-min(start)` wall span is near
+4N. Summing reciprocal per-warp spans therefore double-counted time. NOP and
+scalar FFMA establish a one-instruction/cycle frontend ceiling.
 
-- **The GH100 SMSP issue bandwidth is 2 inst/cyc, not B200's 1/cyc**:
-  FFMA x NOP and NOP x NOP both aggregate 1.98/cyc.  Queue-depth
-  accounting is unaffected because per-warp clamp rates (2 cyc for
-  0.5/cyc ops, 1 cyc for Lite/NOP) bound each warp's arrival.
-- Open: IMAD drops to 3.0 cyc/op whenever its same-subcore sibling
-  issues at 1/cyc (NOP or FFMA), recovers to 2.0 with an IADD3 sibling
-  or on a different subcore -- an issue-phase arbitration effect.
-
-- **ALU service is 1.0/cyc, not 0.5**: IADD3 x IADD3 same-subcore holds
-  2.010 + 2.010 = 1.0/cyc combined, so the solo 2.0 is only the per-warp
-  front-end clamp (like HFMA2's), and the +4 post-knee slopes in the
-  yield=1 admission runs were yield-switch overhead, not service.  The
-  FMA-Heavy/packed/FP64 sums land at 0.56-0.75/cyc (mix +3.56..4,
-  IMAD x IMAD = 2.0+4.0, IMAD x HFMA2 = 4.0+2.26) -- clearly shared and
-  clearly below 1.0, but their exact per-domain service rates and the
-  asymmetric winner splits need a dedicated sweep.
-
-Single-warp alternating streams cannot make this distinction: every
-0.5/cyc op on GH100 is front-end-clamped to a 2-cycle issue interval whose
-second slot accepts any other op (IADD3+NOP, IMAD+NOP, DADD+NOP,
-HFMA2+NOP all run at aggregate 1.0/op), so an alternating single warp
-always lands on 0.5/cyc per type regardless of backend sharing.  The only
-discriminative single-warp cases involve 1/cyc Lite: HFMA2+FFMA = 2.0
-(packed blocks Lite) vs IADD3/IMAD+FFMA = 1.0 (Lite bypasses).
+Scalar Lite fills the unused slot beside IADD3 or IMAD (~1.10 clocks/op in
+the long alternating stream), but ordinary HFMA2 + FFMA stays at about two
+clocks/op. This is the packed-state/Lite interlock described in the admission
+note, not evidence for a deep Lite queue.
 
 ## Cross-arch comparison (per SMSP, clean solo rates)
 

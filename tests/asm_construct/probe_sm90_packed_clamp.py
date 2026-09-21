@@ -33,6 +33,7 @@ SCALAR = "FFMA RZ, R24, R25, 0f3f800000"
 INTOP = "IADD3 RZ, R24, R25, RZ"
 IMADOP = "IMAD RZ, R24, R25, RZ"
 DADDOP = "DADD {RZ,RZ}, {RZ,RZ}, {RZ,RZ}"
+MMAOP = "HFMA2.MMA RZ, R24, R25, 0f3f803f80"
 
 
 def stream(mode: str, n: int) -> list[str]:
@@ -58,6 +59,10 @@ def stream(mode: str, n: int) -> list[str]:
         ops = [IMADOP if i % 2 == 0 else PACKED for i in range(n)]
     elif mode == "alt_packed_dadd":
         ops = [PACKED if i % 2 == 0 else DADDOP for i in range(n)]
+    elif mode == "alt_mma_dadd":
+        ops = [MMAOP if i % 2 == 0 else DADDOP for i in range(n)]
+    elif mode == "alt_mma_packed":
+        ops = [MMAOP if i % 2 == 0 else PACKED for i in range(n)]
     elif mode == "alt_int_nop":
         ops = [INTOP if i % 2 == 0 else "NOP" for i in range(n)]
     elif mode == "alt_imad_nop":
@@ -120,7 +125,8 @@ def measure(mode: str, n: int, reps: int) -> float:
 MODES = ("pure_packed", "pure_ffma", "pure_int", "alt_packed_int",
          "alt_packed_ffma", "alt_packed_nop", "handoff_p2s", "handoff_s2p",
          "alt_int_imad", "alt_int_dadd", "alt_imad_dadd", "alt_imad_packed",
-         "alt_packed_dadd", "alt_int_ffma", "alt_imad_ffma",
+         "alt_packed_dadd", "alt_mma_dadd", "alt_mma_packed",
+         "alt_int_ffma", "alt_imad_ffma",
          "alt_int_nop", "alt_imad_nop", "alt_dadd_nop")
 
 
