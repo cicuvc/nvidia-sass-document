@@ -168,7 +168,48 @@ scheduler warps 4 and 8 issue scalar FFMA; a clean-subcore observer waits only
 for the FFMA warps.  Even one target FFMA waits approximately the complete
 background duration (about 470 clocks for 256 and 990 clocks for 512).  Active
 and predicated-off x2 backgrounds behave identically.  An FMA-Heavy background,
-in contrast, does not delay the first FFMA at all.
+in contrast, does not delay the first FFMA at all.  These exact all-reuse
+background durations are not suitable for fine-grained overlap accounting:
+switching between resident warps unconditionally invalidates the reuse cache.
+The no-reuse control below removes that ambiguity.
+
+A dense substitution test rules out a tempting finer-grained interpretation
+of that blocking.  If FFMA2 occupied a 0.5/cycle Heavy leaf for two cycles but
+the 1/cycle Lite leaf for only one, alternating `FFMA2, FFMA` could fill the
+second Lite slot and sustain one scheduler instruction per cycle.  It does
+not.  The decisive FFMA2 form is
+`FFMA2.F32.F32 RZ, R24, R25, 0f3f800000`: its two GPR sources reside in
+opposite RF banks, so collection takes one cycle without any reuse bit.  The
+scalar FFMA uses only RZ.  With active arithmetic, the steady one-warp results
+are:
+
+| repeating FFMA2:FFMA ratio | clocks/instruction |
+|---:|---:|
+| 1:1 | 2.000 |
+| 1:2 | 1.667 |
+| 1:3 | 1.500 |
+| 2:1 | 2.000 |
+| 3:1 | 2.000 |
+
+The values equal the non-overlapped weighted service cost (two clocks per
+FFMA2 and one per scalar FFMA), plus approximately one clock per repeating
+opcode block.  The original all-reuse packed form and a same-base-register-ID
+control give identical curves, but the two-register/immediate form is stronger:
+neither its result nor the extra block clock depends on reuse-cache survival.
+The extra clock may be an opcode/backend-mode transition cost and is not
+assigned to a queue.
+
+The independent-warp form removes even that transition ambiguity.  Warp 0
+issues 96 of the no-reuse two-register/immediate FFMA2 form above, while a
+same-scheduler warp issues scalar FFMA.  Switching warps still invalidates the
+reuse cache, but neither stream uses it.  The first target FFMA completes only
+at about clock 189, near the end of the approximately 192-clock FFMA2 stream;
+larger target blocks subsequently add one clock per scalar FFMA.  Thus scalar
+Lite work cannot consume a nominally free second Lite cycle while FFMA2 service
+is active.  Timing is consistent with FFMA2 locking/gating the combined FMA
+backend for its full two-cycle service interval, or with an equivalent shared
+dispatch serialization.  It is not consistent with independently schedulable
+`Heavy[2 cycles] + Lite[1 cycle]` occupancy.
 
 Reciprocal dense phases locate the other half.  `FADD2 -> HFMA2`,
 `FMA-Heavy -> HFMA2`, `HFMA2 -> FADD2`, and `HFMA2 -> FMA-Heavy` are point-for-

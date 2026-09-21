@@ -122,10 +122,16 @@ BARRIER_OPS = {
     "imul": "@P6 IMUL.U32 RZ, RZ, RZ",
     "fswzadd": "@P6 FSWZADD.NDV RZ, RZ, RZ, PPPPPPPP",
     "fmalite": "@P6 FFMA RZ, RZ, RZ, RZ",
+    # Match the base register IDs of ffma2's three 64-bit source groups so
+    # alternating the opcodes does not invalidate their reuse-cache entries.
+    "fmalite_ffma2ids": "@P6 FFMA RZ, R24, R26, R28",
     "fadd": "@P6 FADD RZ, RZ, RZ",
     "fmul": "@P6 FMUL RZ, RZ, RZ",
     "ffma2": ("@P6 FFMA2.F32x2.F32x2.F32x2 RZ, "
               "{R24,R25}, {R26,R27}, {R28,R29}"),
+    # Two opposite-bank 32-bit GPR reads plus an immediate: RF collection is
+    # one cycle without relying on a reuse-cache entry.
+    "ffma2_2rimm": "@P6 FFMA2.F32.F32 RZ, R24, R25, 0f3f800000",
     "fadd2": "@P6 FADD2.F32x2.F32x2 RZ, {R24,R25}, {R26,R27}",
     "fmul2": "@P6 FMUL2.F32x2.F32x2 RZ, {R24,R25}, {R26,R27}",
     "packed": "@P6 HFMA2 RZ, RZ, RZ, RZ",
@@ -149,6 +155,22 @@ BARRIER_MIX = {
     "mix_alul_fp16": ("alulite", "packed"),
     "mix_fmah_fmal": ("fmaheavy", "fmalite"),
     "mix_fmal_ffma2": ("fmalite", "ffma2"),
+    "mix_ffma2_sameids": ("ffma2", "fmalite_ffma2ids"),
+    "mix_ffma2_2rimm_fmal": ("ffma2_2rimm", "fmalite"),
+    "mix_ffma2_2rimm_2fmal": (
+        "ffma2_2rimm", "fmalite", "fmalite"),
+    "mix_ffma2_2rimm_3fmal": (
+        "ffma2_2rimm", "fmalite", "fmalite", "fmalite"),
+    "mix_ffma2_2fmal_sameids": (
+        "ffma2", "fmalite_ffma2ids", "fmalite_ffma2ids"),
+    "mix_ffma2_3fmal_sameids": (
+        "ffma2", "fmalite_ffma2ids", "fmalite_ffma2ids",
+        "fmalite_ffma2ids"),
+    "mix_ffma2_1fmal": ("ffma2", "fmalite"),
+    "mix_ffma2_2fmal": ("ffma2", "fmalite", "fmalite"),
+    "mix_ffma2_3fmal": ("ffma2", "fmalite", "fmalite", "fmalite"),
+    "mix_2ffma2_1fmal": ("ffma2", "ffma2", "fmalite"),
+    "mix_3ffma2_1fmal": ("ffma2", "ffma2", "ffma2", "fmalite"),
     "mix_fmah_fp16": ("fmaheavy", "packed"),
     "mix_fmal_fp16": ("fmalite", "packed"),
     "mix_rf_aluh_fmah": ("rf_aluheavy", "rf_fmaheavy"),
@@ -167,6 +189,8 @@ BARRIER_SCHED = {
     "rf2_aluheavy": "[7:7:{}:1:0]",
     "rf2_fmaheavy": "[7:7:{}:1:0]",
     "rf2_fmalite": "[7:7:{}:1:0]",
+    "fmalite_ffma2ids": "[7:7:{}:1:0:7]",
+    "ffma2_2rimm": "[7:7:{}:1:0]",
 }
 
 BARRIER_PLACEMENTS = {
@@ -411,7 +435,7 @@ def asymmetric(background_modes: str = "nop,ffma2",
     ns = parse_counts(counts)
     if (any(mode not in {
                 "nop", "ffma2", "fadd2", "fmul2", "fmaheavy",
-                "aluheavy", "packed",
+                "aluheavy", "packed", "ffma2_2rimm",
             }
             for mode in modes)
             or not ns or min(ns) < 0 or max(ns) > 100
