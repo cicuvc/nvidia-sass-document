@@ -133,12 +133,14 @@ M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
 - **RETRACTED — "tight loops defeat IVALL"**: the original 4096-iteration
   `probe_patch.py` target often finished before the asynchronous patcher was
   admitted, falsely producing zero transitions.  With 262144 iterations,
-  every valid GB202 and B200 sample sees the replacement under per-iteration
-  `CCTL.I.IVALL`.  The stronger frozen-warp M11a probe agrees: no IVALL keeps
-  the old word (29/30 in the 2026-09-21 rerun; one uncontrolled fresh fetch),
-  while one IVALL with zero NOPs gives the new word 30/30.  GB202 still has a
-  counter-visible ~12-entry target/trace structure, but it is not an
-  IVALL-resistant loop buffer.
+  every valid GB202, B200, and H100 sample sees the replacement under
+  per-iteration `CCTL.I.IVALL`.  The stronger frozen-warp M11a probe agrees:
+  on GB202 no IVALL kept the old word in 29/30 reruns (one uncontrolled fresh
+  fetch), while one IVALL with zero NOPs gave the new word 30/30; Modal H100
+  gave 29/29 valid stale controls and 30/30 fresh IVALL samples.  GB202 still
+  has a counter-visible ~12-entry target/trace structure, but it is not an
+  IVALL-resistant loop buffer.  H100 counter-visible capacity remains unknown
+  because Modal has no NCU.
 - **M3v2: slot-less breakpoints via CALL.ABS + RPCMOV**
   (superseded by M3v3 below; probes: `sassdbg/probe_callheap2.py` =
   user's, `probe_callheap3.py`):

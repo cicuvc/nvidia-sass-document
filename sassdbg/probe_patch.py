@@ -21,8 +21,8 @@ is non-coherent).  Probe findings baked into the design below:
   exp1  patch while parked at the gate; post-gate IVALL -> patch visible
   exp2  mid-run patch, no target-side IVALL -> stale (negative control)
   exp3  mid-run patch, patcher-side IVALL -> SM-local, no effect
-  exp4  mid-run patch, TIGHT loop + per-iteration target IVALL.  Both GB202
-        and B200 observe the patch when the patcher is admitted before target
+  exp4  mid-run patch, TIGHT loop + per-iteration target IVALL.  GB202, B200,
+        and H100 observe the patch when the patcher is admitted before target
         completion.  The old 4K-iteration version could finish too early and
         produced a false loop-replay conclusion.
   exp6  same patch, FAT loop (body padded to ~2KB): the loop refetches
@@ -432,8 +432,9 @@ def exp3() -> bool:
 def exp4() -> bool:
     """Mid-run patch, TIGHT loop, target-side per-iteration CCTL.I.IVALL.
 
-    Both GB202 and B200 see the patch once the patcher runs.  The patcher ack
-    must occur before target completion; otherwise the trial is inconclusive.
+    GB202, B200, and H100 see the patch once the patcher runs.  The patcher
+    ack must occur before target completion; otherwise the trial is
+    inconclusive.
     """
     # Keep the target alive well past the asynchronous patcher launch.  A
     # 4K-iteration version can finish before the patcher actually executes,
