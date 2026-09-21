@@ -46,6 +46,9 @@ def source(op: str, ra: int, rb: int, count: int, rc: int | None = None,
     elif op == "ffma":
         assert rc is not None
         instruction = f"FFMA RZ, R{ra}, R{rb}, R{rc}"
+    elif op == "hfma2":
+        assert rc is not None
+        instruction = f"HFMA2 RZ, R{ra}, R{rb}, R{rc}"
     elif op == "ffma2":
         assert rc is not None
         instruction = (
@@ -256,6 +259,13 @@ def main(reps: int = 5, smoke: bool = False, ffma: bool = False,
             "ffma_EEO_none": ("ffma", 24, 26, 27, 0),
             "ffma_EEO_A": ("ffma", 24, 26, 27, 1),
             "ffma_EEO_C": ("ffma", 24, 26, 27, 4),
+            "hfma2_EEE_none": ("hfma2", 24, 26, 28, 0),
+            "hfma2_EEE_A": ("hfma2", 24, 26, 28, 1),
+            "hfma2_EEE_AB": ("hfma2", 24, 26, 28, 3),
+            "hfma2_EEE_ABC": ("hfma2", 24, 26, 28, 7),
+            "hfma2_EEO_none": ("hfma2", 24, 26, 27, 0),
+            "hfma2_EEO_A": ("hfma2", 24, 26, 27, 1),
+            "hfma2_EEO_C": ("hfma2", 24, 26, 27, 4),
             "ffma2_none": ("ffma2", 24, 28, 32, 0),
             "ffma2_A": ("ffma2", 24, 28, 32, 1),
             "ffma2_AB": ("ffma2", 24, 28, 32, 3),

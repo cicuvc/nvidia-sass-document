@@ -77,6 +77,27 @@ FFMA 2E+1O:    no reuse 2, reuse one E 1, reuse O 2
 第二行尤其重要：reuse odd 后剩余 2E，仍需两周期；reuse even 后剩余 E+O，
 降为一周期。效果完全由剩余源的奇偶计数决定。
 
+## HFMA2
+
+HFMA2 每个 packed-FP16 source 仍只读取一条 32-bit GPR row，但指令自身有
+固定的约 2-cycle service floor。显式 no-reuse/reuse sweep 为：
+
+```text
+HFMA2 3E:       no reuse 3, reuse one 2, reuse two/all 2
+HFMA2 2E+1O:    no reuse 2, reuse any tested source 2
+```
+
+因此其 collector-visible floor 是：
+
+```text
+HFMA2 cycles/instruction = max(2, even_rows, odd_rows)
+```
+
+普通 2E+1O 即使完全不 reuse，也被固有 2-cycle pipe floor 遮住；只有三个
+未复用 source 全落在同一奇偶 bank 时才真正 RF-bound，从 0.5
+instruction/cycle 降到约 1/3。任意命中一个 source reuse 即把 3E/3O 降回
+两行请求和正常 0.5 instruction/cycle。
+
 ## FFMA2 / `fma.f32x2`
 
 `FFMA2.F32x2.F32x2.F32x2` 一次读取三个偶数对齐的 64-bit register pair；

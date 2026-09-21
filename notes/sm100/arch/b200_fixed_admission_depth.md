@@ -192,6 +192,12 @@ class immediately costs +4 clocks/N.  Thus packed FP16 and FMA Heavy share the
 same effective reservation/service domain rather than owning independent
 queues of coincidentally equal depth.
 
+HFMA2's normal 0.5-inst/cycle service can hide up to two RF rows per bank.
+Direct source-parity/reuse sweeps give 2 cycles/instruction for 2E+1O with or
+without reuse, but 3 cycles for three same-parity uncached sources.  Reusing
+any one of the three same-parity sources restores the normal 2-cycle floor.
+Thus HFMA2 is additionally RF-bound only for a 3E/3O uncached source set.
+
 The other pairings separate admission from execution:
 
 - Alternating ALU-Heavy/HFMA2 remains at the scheduler-limited +2 clocks/N
