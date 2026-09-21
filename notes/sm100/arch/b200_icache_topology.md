@@ -4,10 +4,12 @@ Silicon: Modal B200 (sm_100a), 2026-09-21.  All kernels were emitted by the
 repository assembler; no ptxas or NCU was used.  The timing evidence supports
 the following B200 model:
 
-> The SM-local ICC is **32 KiB, 128-byte line, 16 sets x 16 ways**, shared by
-> all four subcores.  Its low-address set period is 2 KiB, consistent with a
-> direct `VA[10:7]` index.  A tight loop does not remain hidden from a
-> per-iteration `CCTL.I.IVALL`; no IVALL-resistant loop replay was observed.
+> The main SM-local ICC is **32 KiB with 128-byte fetch lines**, shared by all
+> four subcores.  In front of it, address-controlled branch rings expose a
+> separate **32 KiB-equivalent target/fetch level** with a 2-KiB equal-index
+> period and 16-way-like boundary.  This smaller level is replicated or
+> partitioned across subcores/independent fetch streams.  A tight loop does not
+> remain hidden from per-iteration `CCTL.I.IVALL`.
 
 The last statement is intentionally narrower than "there is no loop/target
 buffer."  Timing alone cannot see the roughly 12-target structure found on
@@ -53,10 +55,12 @@ addresses.  With 128-byte address units, the relevant knees are:
 | 4 KiB | 16 | 30.839 | 16 targets fit |
 | 4 KiB | 17 | 33.889 | 17th conflicts |
 
-This gives 16 ways and a 2 KiB equal-set period.  Combined with the independent
-line-size test below, the geometry is 16 sets x 16 ways x 128 B = 32 KiB.
-The observed low-bit mapping is consistent with set index `VA[10:7]`; higher
-virtual-address hash inputs were not scanned.
+For one branch stream this gives 16 ways and a 2 KiB equal-index period.
+Combined with the independent line-size test below, its address footprint is
+16 sets x 16 ways x 128 B = 32 KiB.  The observed low-bit mapping is consistent
+with index `VA[10:7]`; higher virtual-address hash inputs were not scanned.
+The multi-stream results below show that this cannot be treated as one global
+16-way set shared by the whole SM.
 
 ## Independent 128-byte line-size test
 
@@ -100,8 +104,34 @@ capacity boundary:
 | four subcores, 4 warps | 6 KiB | 24 KiB | 2.110 |
 | four subcores, 4 warps | 10 KiB | 40 KiB | 3.10--3.14 |
 
-The cache is therefore one SM-wide 32 KiB structure, not four private 32 KiB
-subcore caches.
+The main capacity-bearing ICC is therefore one SM-wide 32 KiB structure, not
+four private 32 KiB caches.  This does not include the smaller replicated or
+partitioned branch-target/fetch state exposed below.
+
+## Per-subcore/stream target-fetch structure
+
+`probe_icache_banks.py` installs different 16-line rings at virtual addresses
+whose low bits all select index zero.  If the 16-way structure above were one
+global SM set, two or four rings would immediately overfill it.  Instead:
+
+| streams | warp placement | cycles/visit per stream | aggregate visits/cycle |
+|---:|---|---:|---:|
+| 1 | warp 0 | 30.827 | 0.03244 |
+| 2 | warps 0,1, different subcores | 30.831 / 30.831 | 0.06487 |
+| 4 | warps 0--3, one per subcore | 30.870--30.877 | 0.12953 |
+
+All rings use different tags but the same low-address index.  Throughput scales
+almost exactly 1x/2x/4x, proving that the indexed structure is replicated or
+partitioned across independent subcore fetch streams rather than globally
+sharing 16 ways.
+
+Warps 0 and 4 on the same subcore cost 42.9 cycles/visit for equal indices;
+using indices 0 and 1 costs 49.0/51.7 rather than improving.  Thus their
+difference is dominated by same-scheduler issue and relative-index fetch-port
+effects, not a clean capacity oracle.  The measurements cannot yet distinguish
+a literal per-subcore 32 KiB L0 I-cache from finer per-warp target/trace state.
+The safe statement is that B200 has the same **per-subcore/stream 32
+KiB-equivalent target/fetch level** observed on H100.
 
 ## Tight-loop self-modification result
 
@@ -147,4 +177,8 @@ Modal CLI):
 
 /home/cicuvc/miniconda3/envs/blkw/bin/modal run tools/modal_b200_probe.py \
   --script sassdbg/probe_patch.py --args 'exp1 exp2 exp4'
+
+/home/cicuvc/miniconda3/envs/blkw/bin/modal run tools/modal_b200_probe.py \
+  --gpu B200 --script tests/asm_construct/probe_icache_banks.py \
+  --args '--sets 0,0,0,0 --warps 0,1,2,3 --lines 16 --reps 5'
 ```

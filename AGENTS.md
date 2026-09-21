@@ -148,6 +148,11 @@ M3 probe findings (`sassdbg/probe_patch.py`, all experiments pass):
   target/fetch level (2-KiB equal-index period, 16-way-like, 128B granularity)
   replicated/partitioned across independent subcore streams; same-subcore
   scheduler contention prevents deciding per-subcore versus per-warp ownership.
+- **B200 has the same partitioned frontend level**: one 16-line same-index
+  ring costs 30.827 cycles/visit; two different-subcore rings cost 30.831 each
+  at 2x aggregate throughput; four cost 30.870--30.877 each at 4x.  Thus its
+  2-KiB-period, 16-way-like, 128B-granularity structure is also per-subcore/
+  stream, in front of the separately established shared 32 KiB main ICC.
 - **M3v2: slot-less breakpoints via CALL.ABS + RPCMOV**
   (superseded by M3v3 below; probes: `sassdbg/probe_callheap2.py` =
   user's, `probe_callheap3.py`):
