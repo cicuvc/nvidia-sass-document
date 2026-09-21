@@ -135,3 +135,38 @@ HFMA2 it keeps the +3 cross-path overlap.  **HFMA2.MMA is serviced by the
 FP64 pipe** (matching its DADD-like 4-cycle result bypass), so its
 admission queue is the shared fixed-pipe queue, but its service resource
 is FP64, not the FP16/C path used by plain HFMA2.
+
+## B200 packed-state phenomenology reproduces on H100
+
+`probe_sm90_packed_clamp.py` (single warp, CS2R window, `[7:7:{}:1:0]`,
+RF-clean E+O+immediate operands) ports the sm_100 packed-FMA experiments
+from `../../sm100/arch/b200_fixed_admission_depth.md` to HFMA2.  H100
+matches B200 point for point:
+
+| one-warp repeating stream | H100 | B200 |
+|---|---:|---:|
+| HFMA2 alone (stall=1, yield=0) | 2.0 | 2.0 (FFMA2) |
+| HFMA2 + NOP alternating | **1.0** | 1.0 |
+| HFMA2 + IADD3 alternating | **1.0** | 1.0 |
+| HFMA2 + FFMA alternating | **2.0** | 0.5/cyc (blocked) |
+| scalar FFMA alone | 1.0 | 1.0 |
+
+The 2-cycle packed interval is therefore a **front-end issue clamp**, not
+backend occupancy: the second slot accepts INT and NOP work but not scalar
+FMA.  Combined with the same2 experiments (two warps fill the ~12-entry
+packed window, one warp cannot), this is the same PACKED_LOCK/LITE picture
+as B200.
+
+Ordered handoff phases also match:
+
+| direction (32-op prefix) | H100 suffix increments (B=1,2,3,4,...) | B200 |
+|---|---|---|
+| HFMA2 -> FFMA | +2,+3,+4,+5,... | 0,2,3,4,5 extra |
+| FFMA -> HFMA2 | +2,+4,+6,+8,... | 0,2,4,6 extra |
+
+The first scalar FFMA after packed work pays one extra handoff clock;
+scalar->packed pays nothing beyond the normal 2-cycle service.
+
+H100 differences to keep in mind: packed FP16 has no FFMA2 sibling format
+(no format-switch test applies), and HFMA2.MMA — not plain HFMA2 — is the
+variant serviced by the FP64 pipe (see the mixed-family section above).
