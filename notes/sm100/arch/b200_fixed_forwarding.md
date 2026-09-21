@@ -16,24 +16,27 @@ value by itself.
 
 ## High-level result
 
-The forwarding results are consistent with three subcore-local fixed-pipeline
-domains, a packed Heavy+Lite mode, and an FP64 service shared at SM scope:
+The forwarding results are consistent with three established subcore-local
+fixed-pipeline domains and a packed Heavy+Lite mode. Dedicated cross-subcore
+probes now favor four local FP64 slices, although physical placement is not
+proved:
 
 ```text
 per subcore:  ALU  |  FMA Heavy  |  FMA Lite
                            \         /
                             PACKED_LOCK (HFMA2 and FP32x2)
 
-per SM:                         shared FP64 service
-                                      |
-                         result return/bypass ingress
+likely:       4 x 0.5 inst/cycle FP64 slices, one per subcore
+alternative: a sufficiently buffered/multiported central implementation
+                               |
+                  result return/bypass ingress
 ```
 
 The latency probes contain only one producing warp and establish result-path
-visibility, not replication of the execution array. In particular, the
-uniform FP64 boundary says that an SM-shared FP64 result can enter the
-subcore-facing bypass network; it is no evidence for one FP64 unit per
-subcore.
+visibility, not replication of the execution array. The additional
+cross-subcore probes below provide the locality evidence; the uniform FP64
+boundary by itself only locates result return into the subcore-facing bypass
+network.
 
 Backend identity alone is also insufficient to predict every forwarding
 boundary. B200 has opcode-specific fast and late result stages. Many results
@@ -151,19 +154,41 @@ when an ALU consumer reads that path too early.
 
 ## FP64 and CLMAD
 
-FP64 execution is modeled as an **SM-shared service**, not a fourth replicated
-per-subcore backend. Lo and hi halves are identical, and every tested ALU
-Heavy/Lite, FMA Heavy/Lite, FP16, and FP64 consumer sees the same result-return
-boundary:
+Lo and hi halves are identical, and every tested ALU Heavy/Lite, FMA
+Heavy/Lite, FP16, and FP64 consumer sees the same result-return boundary:
 
 | producer | fine | coarse |
 |---|---:|---:|
 | DADD/DMUL/DFMA | 4 | 7 |
 | CLMAD.LO | 5 | 9 |
 
-These match H100 despite the different execution topology. The measurement
-locates the return/bypass path after execution and cannot identify where the
-shared array sits or how requests from the four subcores are arbitrated.
+These match H100 despite the throughput differences. This measurement alone
+locates only the return/bypass path after execution.
+
+`probe_mio_queue_depth.py` and
+`probe_sm100_fp64_cross_subcore.py` provide three locality checks:
+
+1. Short sustained streams are exactly `5+2N` clocks for one warp and
+   `6+2N` for two or four different-subcore warps over `N=0..40`. The one
+   clock difference already exists at `N=0`; DADD adds exactly two clocks in
+   every placement, with no knee or growing cross-subcore penalty.
+2. After a counted rendezvous, the local `CS2R; DADD/DFMA; CS2R` interval is
+   identical to NOP and predicated-off-DADD controls. For the contiguous
+   one/two/three/four-subcore placements it is exactly three clocks in every
+   one of 101 repetitions. In the three-subcore case all three starting
+   timestamps are equal, so this is a genuinely simultaneous admission test.
+3. A synchronized unsafe RAW probe reproduces the solo DADD boundary: gaps
+   1--3 read poison and gap 4 reads the completed value. Every warp in
+   `diff3`, `diff4`, `(0,2)`, and `(0,3)` has the same boundary in every
+   repetition; no contender pushes any completion to gap 5.
+
+This rejects the simple model of a two-warp-instruction/cycle SM-wide service
+that serializes simultaneous subcore requests visibly at admission or
+completion. Together with the aggregate rate of four instructions per two
+clocks, the best working model is **one 0.5 instruction/clock FP64 slice per
+subcore**. It is still not a physical-layout proof: a centralized service
+with enough input buffering and completion bandwidth could deliberately
+produce the same externally visible behavior.
 
 ## Predicate forwarding
 
