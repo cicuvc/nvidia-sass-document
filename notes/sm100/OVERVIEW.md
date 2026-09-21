@@ -119,6 +119,13 @@ python3 tools/query_sm100.py pipe TTUGO
 ```
 
 ## Progress
+- **B200 ICC** — timing identifies one SM-wide **32 KiB, 128-byte-line,
+  16-set x 16-way** instruction cache (`arch/b200_icache_topology.md`).  The
+  conflict-free sequential boundary is about 31.25 KiB.  Runtime patching of a
+  128-byte tight loop becomes visible under per-iteration `CCTL.I.IVALL`, so
+  B200 does not show GB202's IVALL-resistant tight-loop replay behavior; an
+  NCU-capable B200 is still needed to test for a smaller flushable target/trace
+  buffer.
 - **`LDTM`** (`tcgen05.ld`) — documented + decoder validated against real
   `sm_100a` cuobjdump vectors (`notes/sm100/instr/ldtm.md`,
   `tools/decode_ldtm.py`, `tests/ldtm_test.cu`). All 8 shape/num/pack variants

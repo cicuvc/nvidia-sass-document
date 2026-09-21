@@ -21,10 +21,9 @@ is non-coherent).  Probe findings baked into the design below:
   exp1  patch while parked at the gate; post-gate IVALL -> patch visible
   exp2  mid-run patch, no target-side IVALL -> stale (negative control)
   exp3  mid-run patch, patcher-side IVALL -> SM-local, no effect
-  exp4  mid-run patch, TIGHT loop + per-iteration target IVALL -> STILL
-        stale: tight loops replay from a loop/fetch buffer that
-        CCTL.I.IVALL (I, D, or both) does not flush.  A mid-run patch of
-        an actively-executed tight loop is never seen.  (limitation)
+  exp4  mid-run patch, TIGHT loop + per-iteration target IVALL.  GB202 stays
+        stale because its loop/fetch replay is not flushed; B200 observes the
+        patch when the patcher is admitted before target completion.
   exp6  same patch, FAT loop (body padded to ~2KB): the loop refetches
         its lines every iteration and the per-iteration IVALL makes the
         patch visible within an iteration.
@@ -56,14 +55,31 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
 
-from assembler import assemble, assemble_flat, CudaModule            # noqa: E402
-from sassdbg.patch import PATCHER_SRC, _bra_word                     # noqa: E402
+from assembler import (assemble, assemble_flat, assemble_kernel,
+                       CudaModule)                                   # noqa: E402
+from sassdbg.patch import PATCHER_SRC                                # noqa: E402
 
 # ---------------------------------------------------------------------------
 # kernels
 # ---------------------------------------------------------------------------
 _BRK = "[7:7:{}:1:0]"
 _BRK_LD = "[0:7:{}:1:0]"
+
+
+def _bra_word(delta_insts: int) -> tuple[int, int]:
+    """Encode a BRA whose target is ``delta_insts`` instruction words away."""
+    pad = "NOP;" + _BRK + "\n"
+    if delta_insts > 0:
+        src = ("#fn x() {\nBRA #label(p);" + _BRK + "\n"
+               + pad * (delta_insts - 1)
+               + "#def_label(p)\nNOP;" + _BRK + "\n}\n")
+        return assemble_kernel(src, check_deps=False).encoded[0]
+    if delta_insts < 0:
+        src = ("#fn x() {\n#def_label(p)\n"
+               + pad * (-delta_insts - 1)
+               + "BRA #label(p);" + _BRK + "\n}\n")
+        return assemble_kernel(src, check_deps=False).encoded[-1]
+    raise ValueError("zero-length branch")
 
 # cmd buffer layout (device memory; host polls via cuMemcpy):
 #   +0x00  u64 target code VA
@@ -416,26 +432,34 @@ def exp3() -> bool:
 def exp4() -> bool:
     """Mid-run patch, TIGHT loop, target-side per-iteration CCTL.I.IVALL.
 
-    FINDING (limitation): the tight loop replays from a loop/fetch buffer
-    that IVALL does not flush — the patch is never seen.  (Also verified:
-    CCTL.D.IVALL and I+D together do not help.)  exp6 shows the fat-loop
-    counterpart does pick the patch up.  A mid-run patch of an
-    actively-executed tight loop is therefore unreliable; breakpoints
-    must be armed before the loop is entered (gate/trampoline, exp5).
+    This distinguishes GB202's IVALL-resistant loop/fetch replay from B200,
+    where IVALL makes the running-loop patch visible.  The patcher ack must
+    occur before target completion; otherwise the trial is inconclusive.
     """
-    rig = Rig(1 << 12, target_cctl=True)
+    # Keep the target alive well past the asynchronous patcher launch.  A
+    # 4K-iteration version can finish before the patcher actually executes,
+    # producing a false "loop replay" result on fast targets.
+    rig = Rig(1 << 18, target_cctl=True)
     rig.launch_target()
     base = rig.wait_base()
     rig.release()
     while rig.progress() < rig.n // 2:
         time.sleep(0.001)
     rig.patch(base + PAYLOAD_OFFSET, rig.word_b, cctl=False)
+    patched_at = rig.progress()
     rig.wait_done()
     tr = _transitions(rig.out())
-    ok = len(tr) == 0
+    valid = (len(tr) == 0
+             or (len(tr) == 1 and tr[0][2] == VAL_B))
+    result = ("IVALL-resistant replay" if not tr else
+              "IVALL reaches the tight loop")
+    if patched_at >= rig.n and not tr:
+        result = "INCONCLUSIVE (patcher acked after target completion)"
     print(f"exp4 tight-loop per-iter IVALL: transitions = {len(tr)}"
-          f" (smid {rig.smid()}) -> {'OK (loop-replay limitation confirmed)' if ok else 'UNEXPECTED — tight loop saw the patch'}")
-    return ok
+          f"{'' if not tr else f' first at iter {tr[0][0]}'}"
+          f" (patch ack at {patched_at}, smid {rig.smid()}) -> "
+          f"{result}")
+    return valid
 
 
 def exp6() -> bool:

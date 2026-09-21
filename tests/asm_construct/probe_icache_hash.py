@@ -50,7 +50,14 @@ def launcher_source(iterations: int) -> str:
 
 def install_offsets(mod: CudaModule, base: int,
                     offsets: list[int], body_nops: int = 0) -> list[int]:
-    addrs = [base + offset * LINE for offset in offsets]
+    return install_byte_offsets(mod, base, [offset * LINE for offset in offsets],
+                                body_nops)
+
+
+def install_byte_offsets(mod: CudaModule, base: int,
+                         offsets: list[int], body_nops: int = 0) -> list[int]:
+    """Install a ring at exact byte offsets (all must be instruction-aligned)."""
+    addrs = [base + offset for offset in offsets]
     count = len(addrs)
     first = _words(f"""    IADD3 R10, R10, -0x1, RZ;[7:7:{{}}:5:1]
     ISETP.NE.AND P0, PT, R10, RZ, PT;[7:7:{{}}:13:1]
@@ -98,6 +105,8 @@ def main() -> int:
     p.add_argument("--counts", default="4,8,12,16,20")
     p.add_argument("--offset-lines",
                    help="one explicit comma-separated line-address set")
+    p.add_argument("--offset-bytes",
+                   help="one explicit comma-separated byte-offset set")
     p.add_argument("--iterations", type=int, default=1024)
     p.add_argument("--reps", type=int, default=3)
     p.add_argument("--body-nops", type=int, default=0,
@@ -106,19 +115,30 @@ def main() -> int:
     try:
         strides = parse_ints(ns.stride_lines)
         counts = parse_ints(ns.counts)
+        if ns.offset_lines is not None and ns.offset_bytes is not None:
+            p.error("--offset-lines and --offset-bytes are mutually exclusive")
         offsets = (parse_ints(ns.offset_lines, allow_zero=True)
                    if ns.offset_lines is not None else None)
+        byte_offsets = (parse_ints(ns.offset_bytes, allow_zero=True)
+                        if ns.offset_bytes is not None else None)
     except ValueError as exc:
         p.error(str(exc))
     if (ns.iterations <= 1 or ns.reps <= 0 or min(counts) < 2
             or not 0 <= ns.body_nops <= 7):
         p.error("iterations must exceed one, reps positive, counts >= 2")
 
-    if offsets is not None:
-        if len(offsets) < 2 or len(set(offsets)) != len(offsets):
-            p.error("offset-lines needs at least two distinct offsets")
-        cases = [(0, len(offsets))]
-        max_span = (max(offsets) + 1) * LINE
+    explicit = byte_offsets if byte_offsets is not None else offsets
+    if explicit is not None:
+        if len(explicit) < 2 or len(set(explicit)) != len(explicit):
+            p.error("explicit offsets need at least two distinct values")
+        if byte_offsets is not None and any(x % 16 for x in byte_offsets):
+            p.error("byte offsets must be 16-byte instruction aligned")
+        cases = [(0, len(explicit))]
+        if byte_offsets is not None:
+            cases = [(0, len(byte_offsets))]
+            max_span = max(byte_offsets) + LINE
+        else:
+            max_span = (max(offsets) + 1) * LINE
     else:
         cases = [(stride, count) for stride in strides for count in counts]
         max_span = max((count - 1) * stride * LINE + LINE
@@ -133,9 +153,12 @@ def main() -> int:
     try:
         for case_index, (stride, count) in enumerate(cases):
             base = arena + case_index * slot
-            if offsets is None:
+            if explicit is None:
                 install_chain(mod, base, count, stride, ns.body_nops)
                 entry = base
+            elif byte_offsets is not None:
+                entry = install_byte_offsets(mod, base, byte_offsets,
+                                             ns.body_nops)[0]
             else:
                 entry = install_offsets(mod, base, offsets,
                                         ns.body_nops)[0]
