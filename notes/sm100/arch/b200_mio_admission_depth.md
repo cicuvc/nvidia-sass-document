@@ -22,8 +22,9 @@ Warp placement uses the established `warp_id % 4` subcore mapping.
 | local LSU | about **8 requests/subcore** | four-subcore LDS and coalesced LDG knees agree |
 | post-MIOC LSU | about **28--30 requests/SM** | long-conflict LDS and scattered LDG decomposition agree |
 | XU | about **2 requests/subcore** | third one-warp MUFU admission blocks |
+| SHFL | about **8 backlog credits/subcore**, ~1 request/SM/clock drain | four- and eight-warp knees agree |
 | CBU | 12/warp alone, 8/warp with four subcores, 3/warp with eight warps | no placement-independent scalar depth |
-| FP64 (`DADD`, `DFMA`) | no separable fast-admission window | service already matches the +2-cycle frontend cadence |
+| FP64 (`DADD`, `DFMA`) | no separable fast-admission window; isolated from SHFL | service already matches the +2-cycle frontend cadence |
 | UTCHMMA | about **6 usable instructions/subcore** | shared by same-subcore warps; independent of N8 versus N128 |
 
 ## LSU
@@ -73,6 +74,38 @@ for service.  Two same-subcore warps accept one request each before the common
 span changes to +16/N.  The effective pool is therefore **about two XU
 requests per subcore**, shared rather than replicated per warp.
 
+## SHFL
+
+Active dead-result SHFL has no one-warp knee through N=60 because its
+half-instruction/clock arrival rate is below the shared service rate. Four
+different-subcore streams expose the queue: N=16 remains at the +2-clock
+frontend slope, N=17 is transitional, and N>=18 adds four clocks per round of
+four requests. Eight warps remain fast through N=5, transition at N=6, and
+then add approximately eight clocks per round. Both curves imply an aggregate
+drain near **one SHFL warp-instruction per SM per clock** and roughly **eight
+usable backlog credits per subcore** under balanced traffic.
+
+`probe_sm100_fp64_shfl_queue.py` then uses warps 1/2/3 to saturate this path
+while timing warp 0. For a 64-instruction victim and a 256-instruction
+background:
+
+| timed victim | NOP background | predicated-off SHFL background | active SHFL background |
+|---|---:|---:|---:|
+| NOP | 135 | 135 | 135 |
+| SHFL | 135 | 230--232 | 230 |
+| DADD | 135 | 135 | 135 |
+
+The result is invariant over background-start delays of 0, 2, 4, and 8
+stall-8 NOPs and 21 repetitions per cell. Predicated-off SHFL therefore still
+reserves the cross-subcore SHFL admission/dispatch domain, providing a strong
+positive control. In the reverse direction, active and predicated-off DADD
+backgrounds both leave a SHFL victim at exactly 135 clocks.
+
+Thus **FP64 does not consume SHFL's SM-wide MIO admission/service domain**.
+This rejects an SM-shared-FP64 model specifically implemented through that
+queue, but does not logically exclude a centralized FP64 unit with its own
+independent ingress and backend.
+
 ## CBU
 
 Active `BMOV.32 Rd,MACTIVE` reproduces the placement-dependent behavior seen
@@ -104,7 +137,8 @@ four instructions through N=16.  There is no slope transition from which to
 extract a queue capacity: admission and service already keep pace from the
 first instruction.  The defensible result is therefore **zero measurable
 extra burst window / no separable effective admission depth**, not “the
-physical queue has zero entries.”
+physical queue has zero entries.” The saturated-SHFL experiment above also
+shows that any FP64 ingress is distinct from the shared SHFL MIO domain.
 
 ## UTCHMMA
 

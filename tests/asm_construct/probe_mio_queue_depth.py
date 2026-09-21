@@ -33,10 +33,12 @@ ACTORS = {
 
 def source(n: int, mode: str, actors: tuple[int, ...], conflict: int,
            mix_shfl: int = 0) -> str:
-    if mode in ("xu", "fp64", "dfma", "f2f", "f2i", "i2f", "f2f64", "f2f64dst",
+    if mode in ("xu", "shfl", "fp64", "dfma", "f2f", "f2i", "i2f", "f2f64", "f2f64dst",
                 "f2i64src", "f2i64dst", "i2f64src", "i2f64dst"):
         if mode == "xu":
             inst = "MUFU.RCP R{rd}, RZ"
+        elif mode == "shfl":
+            inst = "SHFL.BFLY PT, R{rd}, RZ, 0x1, 0x1f"
         elif mode == "fp64":
             inst = "DADD {{R{rd},R{rd1}}}, {{RZ,RZ}}, {{RZ,RZ}}"
         elif mode == "dfma":
@@ -160,7 +162,7 @@ def source(n: int, mode: str, actors: tuple[int, ...], conflict: int,
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--mode",
-                   choices=("xu", "fp64", "dfma", "f2f", "f2i", "i2f", "f2f64",
+                   choices=("xu", "shfl", "fp64", "dfma", "f2f", "f2i", "i2f", "f2f64",
                             "f2f64dst", "f2i64src", "f2i64dst",
                             "i2f64src", "i2f64dst",
                             "cbu", "ldg", "lsu", "lsu128",

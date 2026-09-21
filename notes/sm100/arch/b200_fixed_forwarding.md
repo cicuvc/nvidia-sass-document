@@ -181,6 +181,12 @@ locates only the return/bypass path after execution.
    1--3 read poison and gap 4 reads the completed value. Every warp in
    `diff3`, `diff4`, `(0,2)`, and `(0,3)` has the same boundary in every
    repetition; no contender pushes any completion to gap 5.
+4. Three other subcores can saturate the SM-wide SHFL admission/service path:
+   a 64-SHFL victim grows from 135 to 230 clocks, including with
+   predicated-off SHFL backgrounds. The same backgrounds leave a 64-DADD
+   victim at exactly 135 clocks, while active or predicated-off DADD
+   backgrounds leave the SHFL victim at 135. FP64 therefore does not use the
+   SHFL MIO queue.
 
 This rejects the simple model of a two-warp-instruction/cycle SM-wide service
 that serializes simultaneous subcore requests visibly at admission or
