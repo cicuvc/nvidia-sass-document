@@ -199,6 +199,25 @@ consistent with its packed admission/service resource already being occupied.
 Thus switching is opportunistic on instruction eligibility, not dictated by
 the yield bit alone.
 
+The scalar/packed transition itself is directional.  A no-reuse, one-warp
+ordered-phase scan gives the following extra time after a 32-instruction
+prefix:
+
+| prefix -> suffix | suffix counts B=0,1,2,3,4,... |
+|---|---|
+| scalar `FFMA -> FFMA2` | `0,2,4,6,8,...` clocks |
+| `FFMA2 ->` scalar FFMA | `0,2,3,4,5,...` clocks |
+
+Scalar FFMA therefore does not add a transition penalty before packed FFMA2:
+the first packed instruction immediately pays only its normal two-cycle cost.
+In the reverse direction, the first scalar FFMA costs two cycles and subsequent
+ones return to their normal one-cycle cadence, exposing a one-cycle
+packed-to-scalar boundary penalty.  Reversing the starting order of an infinite
+alternating stream does not remove that boundary: `FFMA,FFMA2,FFMA,FFMA2,...`
+still contains `FFMA2 -> FFMA` between adjacent pairs.  The two finite-stream
+orderings are consequently point-for-point identical through N=32 and both
+sustain only 0.5 aggregate instruction/cycle after the timing floor.
+
 Predicated-off x2 instructions show the same N≈12 knee and +4 final slope,
 whereas predicated-off scalar FFMA remains at +2.  The immediate cause is thus
 fixed-pipeline admission/dispatch applied before predicate cancellation, not

@@ -158,6 +158,7 @@ BARRIER_MIX = {
     "mix_fmal_ffma2": ("fmalite", "ffma2"),
     "mix_ffma2_sameids": ("ffma2", "fmalite_ffma2ids"),
     "mix_ffma2_2rimm_fmal": ("ffma2_2rimm", "fmalite"),
+    "mix_fmal_ffma2_2rimm": ("fmalite", "ffma2_2rimm"),
     "mix_ffma2_2rimm_nop": ("ffma2_2rimm", "nop"),
     "mix_ffma2_2rimm_aluh": ("ffma2_2rimm", "aluheavy"),
     "mix_ffma2_2rimm_2fmal": (
