@@ -55,6 +55,9 @@ OPS = {
     "mix_packed_fp64": "",
     "mix_mma_packed": "",
     "mix_mma_fp64": "",
+    "mix_int_fmaheavy": "",
+    "mix_fmaheavy_packed": "",
+    "mix_fmaheavy_fp64": "",
 }
 
 MIX = {
@@ -63,6 +66,9 @@ MIX = {
     "mix_packed_fp64": ("packed", "fp64"),
     "mix_mma_packed": ("packed_mma", "packed"),
     "mix_mma_fp64": ("packed_mma", "fp64"),
+    "mix_int_fmaheavy": ("aluheavy", "fmaheavy"),
+    "mix_fmaheavy_packed": ("fmaheavy", "packed"),
+    "mix_fmaheavy_fp64": ("fmaheavy", "fp64"),
 }
 
 ACTORS = {

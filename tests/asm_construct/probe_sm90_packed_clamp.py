@@ -31,6 +31,8 @@ SCHED = "[7:7:{}:1:0]"
 PACKED = "HFMA2 RZ, R24, R25, 0f3f803f80"
 SCALAR = "FFMA RZ, R24, R25, 0f3f800000"
 INTOP = "IADD3 RZ, R24, R25, RZ"
+IMADOP = "IMAD RZ, R24, R25, RZ"
+DADDOP = "DADD {RZ,RZ}, {RZ,RZ}, {RZ,RZ}"
 
 
 def stream(mode: str, n: int) -> list[str]:
@@ -46,6 +48,26 @@ def stream(mode: str, n: int) -> list[str]:
         ops = [PACKED if i % 2 == 0 else SCALAR for i in range(n)]
     elif mode == "alt_packed_nop":
         ops = [PACKED if i % 2 == 0 else "NOP" for i in range(n)]
+    elif mode == "alt_int_imad":
+        ops = [INTOP if i % 2 == 0 else IMADOP for i in range(n)]
+    elif mode == "alt_int_dadd":
+        ops = [INTOP if i % 2 == 0 else DADDOP for i in range(n)]
+    elif mode == "alt_imad_dadd":
+        ops = [IMADOP if i % 2 == 0 else DADDOP for i in range(n)]
+    elif mode == "alt_imad_packed":
+        ops = [IMADOP if i % 2 == 0 else PACKED for i in range(n)]
+    elif mode == "alt_packed_dadd":
+        ops = [PACKED if i % 2 == 0 else DADDOP for i in range(n)]
+    elif mode == "alt_int_nop":
+        ops = [INTOP if i % 2 == 0 else "NOP" for i in range(n)]
+    elif mode == "alt_imad_nop":
+        ops = [IMADOP if i % 2 == 0 else "NOP" for i in range(n)]
+    elif mode == "alt_dadd_nop":
+        ops = [DADDOP if i % 2 == 0 else "NOP" for i in range(n)]
+    elif mode == "alt_int_ffma":
+        ops = [INTOP if i % 2 == 0 else SCALAR for i in range(n)]
+    elif mode == "alt_imad_ffma":
+        ops = [IMADOP if i % 2 == 0 else SCALAR for i in range(n)]
     elif mode == "handoff_p2s":
         ops = [PACKED] * 32 + [SCALAR] * n
     elif mode == "handoff_s2p":
@@ -96,7 +118,10 @@ def measure(mode: str, n: int, reps: int) -> float:
 
 
 MODES = ("pure_packed", "pure_ffma", "pure_int", "alt_packed_int",
-         "alt_packed_ffma", "alt_packed_nop", "handoff_p2s", "handoff_s2p")
+         "alt_packed_ffma", "alt_packed_nop", "handoff_p2s", "handoff_s2p",
+         "alt_int_imad", "alt_int_dadd", "alt_imad_dadd", "alt_imad_packed",
+         "alt_packed_dadd", "alt_int_ffma", "alt_imad_ffma",
+         "alt_int_nop", "alt_imad_nop", "alt_dadd_nop")
 
 
 def main() -> int:

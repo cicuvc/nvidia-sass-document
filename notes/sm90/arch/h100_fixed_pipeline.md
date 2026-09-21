@@ -213,53 +213,54 @@ bypass:  same-domain 2 cyc,  INT<->fmalighter cross-domain 3 (fine)/4 (safe),
          IMAD.WIDE lo -> fmalighter 1 (fastest path on the chip)
 ```
 
-### No lite/heavy split on GH100 — the dual-mode F+C model
+### Execution-service domains on GH100 — corrected (same2 `--fast` mixes)
 
-The GB202 vocabulary (ALU-Heavy vs ALU-Lite-inside-Shared-FMA-Heavy vs
-FMA-Lite) does **not** map to GH100, and neither does the GA100 map
-(separate INT array + FP32 array that also multiplies).  Same-subcore
-windowed conflict runs (`probe_sm90_conflict_windows.py`, equal-length
-streams, clean `[1:0:7]` brackets, max-overlap rep):
+The earlier two-warp `probe_sm90_conflict_windows.py` readings (e.g.
+"IADD3 × IMAD = 0.25 + 0.25") conflated datapath sharing with the
+scheduler's fixed time-slice rotation between warps and are superseded.
+The clean discriminator is the same-subcore two-producer mix slope with
+`yield=0` brackets (`probe_sm80_admission_depth.py --mode mix_* --actors
+same2 --fast`, post-knee steady slope per op; +2 = two independent 0.5/cyc
+services, +4 = one shared 0.5/cyc service):
 
-| pair (same subcore) | result | reading |
-|---|---|---|
-| IADD3 × IMAD (full overlap) | 0.250 + 0.250 = 0.50 | **share one 16-lane server** |
-| IADD3 × LOP3 | timeshare, agg ~0.5 | one int server, no sub-split |
-| FFMA × FFMA | share, cap ~1.0 | 32-lane FP32 |
-| FFMA × IADD3 / IMAD / DADD | FFMA keeps 0.86–0.99, other gets ~0.33 (position-independent) | partial sharing, arbitration favors FP32 |
-| FFMA × HFMA2 | agg ~0.8 | fp16 partially shares the FP32 resource |
-| MUFU × FFMA / IADD3 | 0.83+0.11 / 0.49+0.125 | XU fully disjoint |
+| mix | slope | domains |
+|---|---:|---|
+| IADD3 + IMAD | **+2** | ALU independent of FMA Heavy |
+| IADD3 + DADD | +2 | ALU independent of FP64 |
+| IADD3 + HFMA2 | +2 | ALU independent of packed FP16 |
+| IMAD + DADD | **+2** | FMA Heavy independent of FP64 |
+| HFMA2 + DADD | +2 | packed FP16 independent of FP64 |
+| HFMA2.MMA + HFMA2 | +2 | FP64-path MMA independent of packed FP16 |
+| IMAD + HFMA2 | **+4** | **FMA Heavy and packed FP16 SHARE one 0.5/cyc service** |
+| HFMA2.MMA + DADD | **+4** | **HFMA2.MMA and DADD SHARE the FP64 service** |
 
-Best-fit structure per SMSP (same shape as AD102's F+C, not GA100's separate
-arrays):
+Same-subcore, yield=0 two-producer structure per SMSP:
 
 ```text
-F: 16 FP32-only lanes
-C: 16 dual-mode lanes  (FP32 | INT add/logic | INT mul | FP16 | FP64)
-   - FFMA/FADD/FMUL need F+C           -> 1.0 cyc/inst
-   - all 2.0-cyc ops time-share C      -> 0.5/clk aggregate
-   - FFMA vs C-op arbitration: FFMA wins (keeps ~0.9, C-op squeezed ~0.33)
+ALU domain      IADD3/LOP3/SHF/...        0.5 inst/cyc
+FMA domain      IMAD (Heavy) + HFMA2       0.5 inst/cyc shared
+FP64 domain     DADD/DFMA + HFMA2.MMA      0.5 inst/cyc shared (per-SMSP private)
+FMA Lite        FFMA/FADD/FMUL             1.0 inst/cyc, bypasses ALU/Heavy
+                                           (blocked only by packed state)
+XU (MUFU)       8 cyc, fully disjoint
 ```
 
-Evidence chain: IADD3×IMAD at full overlap split 0.25/0.25 (rejects
-GA100-style "IMAD on the FP32 array" — that would aggregate 1.0 — and
-rejects AD102's separate A adder); all int_pipe ops have identical 2.0 rates
-and identical bypass boundaries (no lite fast path — rejects the GB202
-ALU-Lite leaf); FFMA at 1.0 while IMAD×FFMA aggregate ~1.2 (FFMA keeps F
-plus most of C; IMAD gets C scraps); DADD×FFMA behaves like INT×FFMA, so
-the 16 FP64 lanes live on C as well (consistent with the 1:2 FP64:FP32
-throughput ratio).  The FP64 block is **per-SMSP private**
-(`probe_sm90_fp64_scope.py`: four DADD/DFMA warps on four different
-subcores each sustain the full 0.498 inst/clk with zero interference; four
-on one subcore timeshare) — like GA100, unlike the SM-shared FP64 of
-AD102/GB202.  4-warp same-subcore runs
-(`probe_sm90_conflict4.py`) show the scheduler rotating fixed time quanta
-between warps rather than demand-filling, which is why 2-warp same-pipe
-pairs look winner-take-all in window averages.
+This is close to the B200 domain map (unified ALU ‖ FMA ‖ Lite) plus a
+private FP64 domain; the Hopper-specific twist is that packed FP16 shares
+the FMA-Heavy service and HFMA2.MMA shares the FP64 service.  The GH100
+NCU catalog agrees: it exposes one `smsp__pipe_alu` (no heavy/lite split —
+the split exists only on GB202: `pipe_aluheavy` +
+`fmaheavy_subpipe_alulite`), plus `pipe_fmaheavy`/`pipe_fmalite`; there is
+no separate fp64 pipe counter, so FP64 presumably accounts under
+`pipe_fma`.
 
-What remains unproven: whether "C" is one physical multimode array or two
-8-lane halves, and whether fp16's extra bypass cycle means a separate
-result stage on C or a separate small array.
+Single-warp alternating streams cannot make this distinction: every
+0.5/cyc op on GH100 is front-end-clamped to a 2-cycle issue interval whose
+second slot accepts any other op (IADD3+NOP, IMAD+NOP, DADD+NOP,
+HFMA2+NOP all run at aggregate 1.0/op), so an alternating single warp
+always lands on 0.5/cyc per type regardless of backend sharing.  The only
+discriminative single-warp cases involve 1/cyc Lite: HFMA2+FFMA = 2.0
+(packed blocks Lite) vs IADD3/IMAD+FFMA = 1.0 (Lite bypasses).
 
 ## Cross-arch comparison (per SMSP, clean solo rates)
 
@@ -273,8 +274,8 @@ result stage on C or a separate small array.
 | FP64 DADD/DFMA | 4.0 (8/SMSP private) | 16/19 (2 lanes/SM shared) | **2.0 (16/SMSP private)** | SM-shared |
 | MUFU | 8.0 | 8.0 | 8.0 | 8.0 |
 | yield switch cost | +1 (NOP-verified) | +1 | **+1** (DFMA anomaly +1 on top of 2.0) | +1 |
-| INT × IMAD same-subcore | disjoint (0.5+0.5) | disjoint (A + C-mul) | **shared one server (0.25+0.25)** | — |
-| scalar structure | separate INT + FP32-with-mul | F + C(dual) + A | **F + C(dual-mode, no A)** | ALUH/ALUL-in-FMAH + FMAL |
+| INT × IMAD same-subcore | disjoint (0.5+0.5) | disjoint (A + C-mul) | **disjoint (same2 mix +2)** | — |
+| scalar structure | separate INT + FP32-with-mul | F + C(dual) + A | **ALU ‖ FMA(Heavy+HFMA2) ‖ Lite ‖ FP64(private)** | ALUH/ALUL-in-FMAH + FMAL |
 | same-domain bypass | — | — | 2 | 2 |
 | INT↔FP cross-domain | — | — | 3/4 | none (unified 2; some 3/4 paths) |
 
