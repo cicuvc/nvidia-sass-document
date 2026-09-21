@@ -199,17 +199,36 @@ neither its result nor the extra block clock depends on reuse-cache survival.
 The extra clock may be an opcode/backend-mode transition cost and is not
 assigned to a queue.
 
-The independent-warp form removes even that transition ambiguity.  Warp 0
-issues 96 of the no-reuse two-register/immediate FFMA2 form above, while a
-same-scheduler warp issues scalar FFMA.  Switching warps still invalidates the
-reuse cache, but neither stream uses it.  The first target FFMA completes only
-at about clock 189, near the end of the approximately 192-clock FFMA2 stream;
-larger target blocks subsequently add one clock per scalar FFMA.  Thus scalar
-Lite work cannot consume a nominally free second Lite cycle while FFMA2 service
-is active.  Timing is consistent with FFMA2 locking/gating the combined FMA
-backend for its full two-cycle service interval, or with an equivalent shared
-dispatch serialization.  It is not consistent with independently schedulable
-`Heavy[2 cycles] + Lite[1 cycle]` occupancy.
+An attempted independent-warp blocker does **not** remove scheduler ambiguity.
+Warp 0 issues 96 background operations with `yield=0` while a same-scheduler
+warp issues scalar FFMA.  The first target is delayed to about clock 189 by the
+no-reuse FFMA2 background, but it is also delayed to about clock 106 by a
+96-NOP background.  The background warp is monopolizing scheduler issue; the
+difference mostly measures the background stream's own one- versus two-cycle
+progress.  This experiment therefore cannot show whether FFMA entered a Lite
+queue, and must not be used as evidence that FFMA2 locks Lite for both cycles.
+The single-warp ratios prove mixed-stream serialization, but an opcode/backend
+mode-transition throttle remains observationally equivalent to a combined
+backend lock.
+
+A same-warp phased test asks the admission-depth question directly without
+warp-switch or reuse dependence.  Two same-subcore producer warps each issue
+an `A`-instruction prefix of the no-reuse two-register/immediate FFMA2 form,
+then `B` scalar FFMAs; a clean-subcore observer times when both producers reach
+a CBU barrier.  Once `A >= 12`, the suffix increments are identical for
+`A=12,16,24,32`:
+
+| B per producer | 0 | 1 | 2 | 3 | 4 | ... | 32 |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| extra clocks | 0 | 4 | 6 | 8 | 10 | ... | 66 |
+
+There is no initial flat window in which scalar FFMAs disappear into a free
+Lite admission queue behind the packed backlog.  FFMA2 therefore does block
+FFMA, but at or upstream of the point where such a Lite queue would accept it.
+It is consequently **not a usable downstream-only blocker for measuring a
+hidden Lite queue**.  The result remains compatible with either no meaningful
+Lite waiting queue or a Lite queue that exists behind a shared dispatch gate
+and is unreachable while packed service is blocked.
 
 Reciprocal dense phases locate the other half.  `FADD2 -> HFMA2`,
 `FMA-Heavy -> HFMA2`, `HFMA2 -> FADD2`, and `HFMA2 -> FMA-Heavy` are point-for-
