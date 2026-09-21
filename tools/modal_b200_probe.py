@@ -30,6 +30,7 @@ IMAGE = (
     .add_local_dir(REPO / "assembler", "/repo/assembler")
     .add_local_file(REPO / "sm90.json", "/repo/sm90.json")
     .add_local_file(REPO / "sm100.json", "/repo/sm100.json")
+    .add_local_file(REPO / "sm103.json", "/repo/sm103.json")
     .add_local_dir(REPO / "sassdbg", "/repo/sassdbg")
     .add_local_dir(REPO / "tests" / "asm_construct",
                    "/repo/tests/asm_construct")
@@ -79,11 +80,17 @@ def run_h100(script_name: str, args: str = "", timeout_s: int = 1100) -> str:
     return _run_probe(script_name, args, timeout_s, "sm90")
 
 
+@app.function(gpu="B300", timeout=1200)
+def run_b300(script_name: str, args: str = "", timeout_s: int = 1100) -> str:
+    return _run_probe(script_name, args, timeout_s, "sm103a")
+
+
 @app.local_entrypoint()
 def main(script: str, args: str = "", gpu: str = "B200") -> None:
-    runners = {"B200": run_b200, "H100": run_h100}
+    runners = {"B200": run_b200, "H100": run_h100, "B300": run_b300}
     try:
         runner = runners[gpu.upper()]
     except KeyError as exc:
-        raise ValueError(f"unsupported GPU {gpu!r}; choose B200 or H100") from exc
+        raise ValueError(
+            f"unsupported GPU {gpu!r}; choose B200, B300 or H100") from exc
     print(runner.remote(script, args))

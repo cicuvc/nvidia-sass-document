@@ -45,6 +45,11 @@ OPS = {
     # MIO-side families (sm90 dialects; harmless on sm80 too).
     "lsu": "@P6 STS [RZ], R24",
     "xu": "@P6 MUFU.RCP R30, R24",
+    "xu_ex2": "@P6 MUFU.EX2 R30, R24",
+    "xu_tanh": "@P6 MUFU.TANH R30, R24",
+    "xu_rsq": "@P6 MUFU.RSQ R30, R24",
+    "xu_lg2": "@P6 MUFU.LG2 R30, R24",
+    "xu_sin": "@P6 MUFU.SIN R30, R24",
     "shfl": "@P6 SHFL.BFLY PT, RZ, RZ, 0x1, 0x1f",
     # CBU forms need per-instance labels; emitted specially below.
     "cbu_bra": "",
