@@ -185,6 +185,20 @@ warps can alternate packed requests at the scheduler's aggregate 1/cycle rate,
 which is why they can overdrive the 0.5/cycle service and expose the roughly
 12-entry packed outstanding window while one warp cannot.
 
+`yield=0` does not make the scheduler burn the blocked slot.  In a two-warp
+same-subcore test, warp 0 repeats 96 `FFMA2,FFMA` instructions with transN
+controls while a clean-subcore observer waits only for warp 4.  With a
+96-NOP background, warp 4's first NOP reaches the observer around clock 106:
+the ready transN background monopolizes issue.  With the mixed-FMA background,
+warp 4's first NOP reaches it around clock 28, and a scalar-FFMA target behaves
+similarly (the first eight targets fit under the same approximately 28-clock
+floor).  The blocked FFMA successor makes warp 0 temporarily ineligible, so
+the scheduler overrides the keep-current-warp hint and selects another ready
+warp.  A packed-FFMA2 target, however, remains blocked until about clock 189,
+consistent with its packed admission/service resource already being occupied.
+Thus switching is opportunistic on instruction eligibility, not dictated by
+the yield bit alone.
+
 Predicated-off x2 instructions show the same N≈12 knee and +4 final slope,
 whereas predicated-off scalar FFMA remains at +2.  The immediate cause is thus
 fixed-pipeline admission/dispatch applied before predicate cancellation, not

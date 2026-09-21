@@ -355,25 +355,27 @@ def phased_source(n_first: int, first_mode: str, n_second: int,
 
 
 def asymmetric_source(n: int, background_mode: str, background_count: int,
-                      target_warps: int, background_active: bool) -> tuple[str, int]:
-    """Run a long warp-0 background while warp 4/8/... issue scalar FFMA.
+                      target_warps: int, background_active: bool,
+                      target_mode: str = "fmalite") -> tuple[str, int]:
+    """Run a long warp-0 background while warp 4/8/... issue a target op.
 
     The clean-subcore observer at warp 1 waits only for the target warps, so a
     full background queue cannot itself determine the measured end point.
     """
     targets = tuple(4 * (i + 1) for i in range(target_warps))
     observer = 1
-    if background_mode == "nop":
-        background = "NOP"
-        background_sched = "[7:7:{}:1:0]"
-    else:
-        background = BARRIER_OPS[background_mode]
+    background_names = BARRIER_MIX.get(background_mode, (background_mode,))
+    backgrounds = []
+    for name in background_names:
+        background = BARRIER_OPS[name]
         if background_active:
             background = background.removeprefix("@P6 ")
-        background_sched = BARRIER_SCHED.get(
-            background_mode, "[7:7:{}:1:0:7]")
-    target = BARRIER_OPS["fmalite"].removeprefix("@P6 ")
-    target_sched = "[7:7:{}:1:0:7]"
+        backgrounds.append((
+            background,
+            BARRIER_SCHED.get(name, "[7:7:{}:1:0:7]"),
+        ))
+    target = BARRIER_OPS[target_mode].removeprefix("@P6 ")
+    target_sched = BARRIER_SCHED.get(target_mode, "[7:7:{}:1:0:7]")
     lines = [
         "#fn asymfmalite(out<8>) {",
         "    #pragma MAXREG_COUNT(64)",
@@ -398,8 +400,9 @@ def asymmetric_source(n: int, background_mode: str, background_count: int,
         "    BRA #label(done);[7:7:{}:5:1]",
         "#def_label(background)",
     ]
-    lines += [f"    {background};{background_sched}"
-              for _ in range(background_count)]
+    lines += [f"    {backgrounds[i % len(backgrounds)][0]};"
+              f"{backgrounds[i % len(backgrounds)][1]}"
+              for i in range(background_count)]
     lines += [
         "    BRA #label(done);[7:7:{}:5:1]",
         "#def_label(target)",
@@ -515,7 +518,8 @@ def controls(ops: str = "nop,fmalite,ffma2_2rimm", count: int = 256,
 def asymmetric(background_modes: str = "nop,ffma2",
                counts: str = "0-48", background_count: int = 256,
                target_warps: int = 2, repetitions: int = 11,
-               background_active: bool = True) -> None:
+               background_active: bool = True,
+               target_mode: str = "fmalite") -> None:
     import sys
 
     sys.path.insert(0, str(ROOT))
@@ -523,11 +527,9 @@ def asymmetric(background_modes: str = "nop,ffma2",
 
     modes = parse_csv(background_modes)
     ns = parse_counts(counts)
-    if (any(mode not in {
-                "nop", "ffma2", "fadd2", "fmul2", "fmaheavy",
-                "aluheavy", "packed", "ffma2_2rimm",
-            }
+    if (any(mode not in {**BARRIER_OPS, **BARRIER_MIX}
             for mode in modes)
+            or target_mode not in BARRIER_OPS
             or not ns or min(ns) < 0 or max(ns) > 100
             or not 1 <= target_warps <= 3
             or not 1 <= background_count <= 1024
@@ -538,7 +540,7 @@ def asymmetric(background_modes: str = "nop,ffma2",
         for n in ns:
             src, block_size = asymmetric_source(
                 n, mode, background_count, target_warps,
-                background_active)
+                background_active, target_mode)
             cubin = assemble(src, arch="sm100a", check_deps=True)
             label = f"{mode}:N={n}"
             cases.append((label, cubin, "asymfmalite", block_size,
@@ -547,7 +549,7 @@ def asymmetric(background_modes: str = "nop,ffma2",
     for mode in modes:
         print(f"background={mode} background_count={background_count} "
               f"background_active={background_active} "
-              f"target_warps={target_warps}")
+              f"target_warps={target_warps} target_mode={target_mode}")
         print("N median min max delta")
         previous = None
         for n in ns:
