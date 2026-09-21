@@ -115,7 +115,9 @@ every 2+1 permutation  3.000
 需求只有 2，应该降到两周期；实测保持三周期，再次确认冲突域只看奇偶。
 
 reuse-A 消除一个 64-bit pair 后由 3.000 降到 2.000。继续 reuse 两个或三个
-pair 仍是 2.000，说明 FFMA2 还有独立的约 0.5-inst/cycle pipe/admission floor；
+pair 仍是 2.000，说明 FFMA2 还有约 0.5-inst/cycle 的 packed service/admission
+floor；后续 fixed-pipeline 探针表明这个 floor 与 HFMA2 timing-equivalent，并
+通过 Heavy+Lite 联锁和 scalar FFMA 交互，不能解释成独立的 FMA-Lite pipe；
 这不影响 no-reuse 与 reuse-one 对 RF 第三个 row cost 的判别。
 
 ## 建模建议

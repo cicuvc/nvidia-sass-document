@@ -97,9 +97,12 @@ computes the fma as a packed pair.
   source.
 - The exact internal execution arrangement of FP32x2 on `fmalighter_pipe`.
   Admission probes show approximately 0.5 instruction/cycle service and about
-  12 effective packed-instruction reservations.  Reciprocal blocking against
-  FMA Heavy and scalar FMA Lite shows a two-backend dispatch/service interlock,
-  but does not prove that FFMA2 enters the Heavy admission queue.  GB100 NCU
-  pipe counters are needed to distinguish a Lite request with a backend mask
-  from linked Heavy/Lite tokens.  The probe also does not determine the
-  standalone Lite depth or the number/width of physical arithmetic units.
+  12 effective packed-instruction reservations.  FFMA2 and HFMA2 are timing-
+  equivalent in pure, alternating, and reciprocal ordered-phase tests, with no
+  cross-format transition cost.  The current working model is a persistent
+  Heavy+Lite `PACKED_LOCK` state: switching back to scalar FFMA exposes one
+  handoff clock which no measurable Lite-only queue absorbs.  This remains an
+  effective model, not proof that FFMA2 enters the Heavy admission queue or
+  that scalar Lite has literally zero skid entries.  GB100 NCU pipe counters
+  are needed to distinguish a masked packed request from linked Heavy/Lite
+  tokens and to establish first-level attribution.

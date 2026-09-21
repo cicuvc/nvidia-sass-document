@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Distinguish shared-exclusive from per-domain B200 scalar queues.
+"""Historical B200 shared-versus-per-domain queue-topology probe.
 
 Unlike the counted-BAR probe, completion is marked by producer STS flags.
 The clean-subcore observer timestamps when both stores become visible.  This
 is intended to observe issue/admission progress without draining the fixed
 pipelines at the measurement boundary.
+
+The original common-5/downstream-7 interpretation was superseded by the dense
+stall-1 correction.  Keep this probe for its cross-domain completion-overlap
+controls, but use notes/sm100/arch/b200_fixed_admission_depth.md for the current
+model; its burst knees must not be read as the withdrawn physical split.
 """
 
 from __future__ import annotations

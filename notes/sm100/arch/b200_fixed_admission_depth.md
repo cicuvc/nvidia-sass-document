@@ -1,832 +1,367 @@
-# B200 fixed-pipeline admission windows
+# B200 fixed-pipeline admission and service
 
-Silicon: B200 (sm_100), Modal, 2026-09-20--21.  Probes:
+Silicon: B200 (sm_100), Modal, 2026-09-20--21.  Primary probes:
 
 - `tests/asm_construct/probe_scalar_admission_depth.py`
 - `tests/asm_construct/probe_sm100_scalar_admission_modal.py`
+- `tests/asm_construct/probe_sm100_rf_banks_modal.py`
+- `tests/asm_construct/probe_sm100_scalar_queue_topology_modal.py`
 
-The target burst uses an architecturally-false predicate, `RZ` destination,
-`yield=0`, and operand reuse.  Active representative controls produce the
-same curves.  No target result is consumed.  As elsewhere, “credit” below is
-an effective scheduler-visible admission credit and does not require a literal
-FIFO cell.
+This note is the authoritative interpretation after correcting the original
+sparse-prefix timing method.  Git history preserves the withdrawn
+`common-5 + downstream-7` model and the raw exploratory interpretations; they
+are intentionally not repeated here.
 
-The Heavy/Lite labels below were initially borrowed from the GB202 Blackwell
-counter hierarchy to group opcodes.  They must not be assumed to name B200
-physical leaves: the GB100 NCU catalog and the B200 timing results below show
-one unified ALU pipe.  Representatives used here are:
+“Credit”, “window”, and “queue” below normally mean scheduler-visible
+outstanding/reservation state.  Timing does not require a literal FIFO row.
+Likewise, Heavy/Lite names group opcodes and describe observed resource
+interactions; they do not by themselves prove physical execution leaves.
 
-| leaf | measured representatives |
-|---|---|
-| ALU Heavy | IADD3, LOP3, SHF |
-| ALU Lite | IADD, MOV, ISETP |
-| FMA Heavy | IMAD.LO, IMUL, FSWZADD.NDV |
-| FMA Lite | FFMA, FADD, FMUL |
-| packed FP16 using FMA Heavy + FMA Lite | HFMA2, HADD2, HMUL2 |
+## Current model
 
-## 2026-09-21 dense-issue correction (authoritative)
+| domain | service per subcore | effective outstanding window | status |
+|---|---:|---:|---|
+| unified ALU | about 0.5 warp inst/cycle | about 12 | established by timing |
+| FMA Heavy | about 0.5 | about 12 | established by timing |
+| packed FMA (`FFMA2`/`HFMA2` families) | about 0.5 | about 12 | effective shared/coupled domain |
+| scalar FMA Lite (`FFMA/FADD/FMUL`) | about 1.0 | no independently visible deep window | queue depth unproven |
 
-`SR_CLOCKLO` is an SM-domain elapsed-cycle counter, not a per-warp issue
-counter.  Warps 0/4 use the established same-subcore/scheduler mapping, whose
-aggregate issue ceiling is one warp instruction/cycle.  The original
-producer-critical-path control used four `NOP` instructions with stall 8.
-Those NOPs leave scheduler holes: increasing `N` adds one target instruction
-to each producer, and the pair can initially occupy pre-existing holes while
-extending the final barrier span by only one clock.  That `+1 clock/N` is not
-two instructions enqueued in one physical cycle.
+The scheduler has an aggregate ceiling of one warp instruction/cycle per
+subcore.  ALU and FMA Heavy can progress concurrently at 0.5 each.  Scalar FMA
+Lite keeps pace with the scheduler and therefore cannot normally be
+overdriven.  Packed FMA requires both FMA sides operationally and serializes
+with scalar Lite.
 
-A corrected control uses 32 producer NOPs at stall 1, keeping the scheduler
-issue slots dense and making the producer path critical.  The medians are:
-
-| N per producer | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 11 | 12 | 13+ |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ALU-Heavy + FMA-Heavy 1:1 | 80 | 82 | 84 | 86 | 88 | 90 | 91 | 101 | 103 | +2/N |
-| FMA Lite | 80 | 82 | 84 | 86 | 88 | 90 | 91 | 101 | 103 | +2/N |
-| ALU Heavy homogeneous | 80 | 82 | 84 | 86 | 89 | 90 | 91 | 101 | 105 | +4/N |
-
-Thus the scheduler supplies at most one aggregate instruction/cycle:
-
-- Cross-domain ALU/FMA and FMA-Lite service keep pace with issue, so this
-  experiment cannot fill or size an upstream/common queue.  The former
-  “common-5” and “FMA-Lite depth 5” interpretations are withdrawn.
-- A homogeneous 0.5/cycle domain still changes from the +2-clock scheduler
-  slope to the +4-clock service slope at about `N=12`, retaining evidence for
-  about twelve effective outstanding/reservation credits per slow domain.
-- The decomposition `12 = common 5 + downstream 7` is not established.
-
-The RF placement control was repeated with the dense prefix.  `2E+1O`
-no-reuse streams retain the N≈12 change to +4 clocks/count.  `3E` no-reuse
-streams enter their final +6 clocks/count at N≈11 after an intermediate RF-
-limited region.  This still requires reservation state before/during operand
-collection and rules out a purely post-RF queue, but no longer assigns exactly
-seven of the approximately twelve credits to that location.
-
-The remaining sections preserve the raw historical experiments.  Any
-interpretation in them that depends on a literal five-credit common queue, a
-five-credit FMA-Lite queue, or `5+7` physical decomposition is superseded by
-this correction.  Long-run service-rate and same-domain/cross-domain
-compatibility results remain useful.
-
-### Attempt to expose FMA Lite by making it RF-bound
-
-FFMA was repeated with explicit no-reuse scheduling and either three
-same-parity sources (`R24,R26,R28`) or a 2-even+1-odd split
-(`R24,R25,R26`).  The same two-producer dense control gives:
-
-| FFMA operands | steady increment per N | first sustained RF-limited region |
-|---|---:|---:|
-| ordinary/RZ | about +2 clocks | none through N=32 |
-| 2-even + 1-odd, no reuse | about +4 clocks | approximately N=2 |
-| 3-even, no reuse | about +6 clocks | approximately N=2 |
-
-Here one N adds one instruction to each of the two same-scheduler producer
-warps.  The +4/+6 slopes are therefore the expected 2-/3-cycle RF collection
-floors.  Unlike ALU-Heavy and FMA-Heavy, RF-bound FFMA does **not** retain a
-scheduler-rate prefix out to N≈12.  RF pressure consequently cannot fill and
-measure a deep FMA-Lite queue: it throttles FFMA before such storage becomes
-occupied.  The data are consistent with only a very shallow FFMA RF-collection
-front end, or with FMA-Lite admission occurring after operand collection; they
-do not distinguish those implementations.
-
-This throttle is per instruction, not an occupancy watermark.  After removing
-RZ/immediate/uniform operands and source rows which actually hit an enabled
-reuse slot, the measured collector rule is:
+The preferred working model for the FMA side is:
 
 ```text
-bank = register_id & 1
-read_cycles = max(number_of_even_rows, number_of_odd_rows)
-scalar_FFMA_collection_floor = max(1, read_cycles)
+                       approximately 12 packed/Heavy reservations
+                                      |
+scalar LITE state                     |       PACKED_LOCK state
+FFMA/FADD/FMUL, II=1   <---- handoff ---->   FFMA2/HFMA2, II=2
+near-direct dispatch                           Heavy + Lite synchronized
+no visible deep Lite queue
 ```
 
-Each visible bank supplies one warp-wide 32-bit row per cycle.  Thus 2E+1O
-requires two collection cycles and 3E requires three.  Reusing either even
-source in 2E+1O leaves E+O and restores one cycle; reusing the odd source
-leaves 2E and remains at two.  A reuse bit helps only while the corresponding
-source register ID still matches the cached row; changing the ID produces a
-new RF request.  The absence of a long scheduler-rate prefix means collector
-busy/backpressure reaches scalar FFMA issue before any observable deep pre-RF
-buffer fills.
+More precisely:
 
-A second attempt used packed FP16 as a downstream resource competitor without
-making FFMA's own RF reads slow.  An alternating `FFMA/HFMA2` stream changes
-from the scheduler slope to about +4 clocks/N at N≈12.  However, ordered
-phases show that this boundary follows the slow packed requests: a packed
-prefix of 12 or 16 delays the first following FFMA, after which additional
-FFMAs again cost about +2 clocks/N.  Conversely an FFMA prefix does not move
-the packed suffix's eventual +4-clock slope.  This experiment alone exposes
-approximately 12 effective reservations in the multi-leaf FMA path, but
-cannot assign a standalone capacity to FMA Lite.  The packed-FP32x2 experiment
-below supplies that missing discriminator.
+- `LITE`: scalar FMA has a one-cycle initiation interval.
+- `PACKED_LOCK`: packed FP32x2 and packed FP16 have a two-cycle service
+  interval and are timing-equivalent.
+- `LITE -> PACKED_LOCK`: any setup cost is hidden by the packed operation's
+  normal two-cycle service; no extra boundary clock is visible.
+- `PACKED_LOCK -> LITE`: the first scalar instruction exposes one additional
+  handoff/unlock clock, after which scalar issue returns to one/cycle.
+- The scalar request does not disappear into a measurable independent Lite
+  waiting queue during that handoff.  Backpressure reaches warp eligibility
+  and the scheduler may choose another eligible warp despite `yield=0`.
 
-### Packed FP32x2 supplies the missing issue pressure
+This state machine is the **main inference**, not a transistor-level result.
+Timing cannot yet distinguish zero Lite queue entries from a one- or two-entry
+skid/collector which cannot accept across the packed handoff.  It also cannot
+distinguish one physical packed queue from linked Heavy/Lite reservations or
+separate queues serialized by a common backend interlock.  NCU pipe counters
+on a usable GB100 system are the next discriminator.
 
-`FFMA2`, `FADD2`, and `FMUL2` each encode two FP32 lanes in one scheduler
-instruction and run on `fmalighter_pipe`.  Their `INST_TYPE_COUPLED_MATH`
-classification means fixed-latency math as opposed to decoupled, variable-
-latency MIO; the name by itself does **not** imply use of multiple math leaves.
-Repeating the dense two-producer experiment while enabling operand reuse gives:
+## The dense-issue correction
 
-| instruction | low-N increment | sustained high-N increment | knee |
-|---|---:|---:|---:|
-| scalar FFMA | about +2 clocks/N | about +2 | none through N=32 |
-| FADD2 | about +2 | +4 | N=12 |
-| FMUL2 | about +2 | +4 | N=12 |
-| FFMA2 | about +3 | +4 | N≈11 |
+`SR_CLOCKLO` is an SM-domain elapsed-cycle counter, not a per-warp issue
+counter.  Warps 0 and 4 map to the same subcore, whose scheduler can issue at
+most one instruction/cycle in aggregate.
 
-One N again adds two instructions, one to each same-scheduler warp.  The x2
-forms can therefore enter at the scheduler's aggregate 1 inst/cycle but drain
-at approximately 0.5 inst/cycle.  During the issue of 2N instructions the
-backlog grows by approximately N entries, so the N≈12 knee directly exposes
-an effective **approximately 12-entry packed-FP32x2 outstanding window per
-subcore**.  Static classification places these instructions on
-`fmalighter_pipe`, but timing alone cannot decide whether this window is the
-ordinary Lite queue or additional masked reservation state.  FADD2/FMUL2 are
-the cleanest representatives; FFMA2's three packed sources add a visible
-operand-collection cost before the final pipe-limited region.
+The original probe placed four stall-8 NOPs before each producer burst.  New
+instructions initially occupied those holes, producing a misleading
+`+1 clock/N` curve when N added two instructions.  It did **not** mean that two
+instructions entered in one physical cycle.  The corrected probe uses a dense
+stall-1 producer prefix:
 
-With only one producer warp, all three x2 forms remain at approximately +2
-clocks/instruction through N=40 and never fill the queue.  A single warp's
-back-to-back issue cadence is already about 0.5 instruction/cycle; two eligible
-same-scheduler warps are required to reach the 1/cycle aggregate input and
-create backlog.
+| N per same-subcore producer | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 11 | 12 | 13+ |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| ALU + FMA-Heavy, alternating | 80 | 82 | 84 | 86 | 88 | 90 | 91 | 101 | 103 | +2/N |
+| scalar FMA Lite | 80 | 82 | 84 | 86 | 88 | 90 | 91 | 101 | 103 | +2/N |
+| homogeneous ALU | 80 | 82 | 84 | 86 | 89 | 90 | 91 | 101 | 105 | +4/N |
 
-This single-warp limit is not a generic front-end limit, and it is not an
-accidental `yield=1` bubble.  A solo-warp scheduling-control scan uses the
-no-reuse, one-cycle-RF form
-`FFMA2.F32.F32 RZ, R24, R25, 0f3f800000` and 256-instruction CS2R windows:
+One N adds two instructions.  Cross-domain ALU/FMA and scalar Lite therefore
+run at the scheduler's one-instruction/cycle aggregate ceiling.  Homogeneous
+ALU eventually drains at 0.5/cycle and exposes its approximately twelve-entry
+window.
+
+Consequences:
+
+- The old “five common credits” result was a sparse-prefix occupancy artifact.
+- The old “FMA Lite has five credits/four waiting entries” result is withdrawn.
+- The old `12 = common 5 + downstream 7` physical decomposition is withdrawn.
+- Mixed-ratio knees derived from that decomposition do not measure queue sizes.
+- Approximately twelve effective reservations for genuinely overdriven
+  0.5/cycle domains remain supported.
+
+## Front-end controls and the packed two-cycle floor
+
+A solo-warp scan uses 256-instruction CS2R windows.  The RF-clean packed form
+
+```text
+FFMA2.F32.F32 RZ, R24, R25, 0f3f800000
+```
+
+has two opposite-parity GPR sources plus an immediate, so it needs one RF
+collection cycle without reuse.  Measured rates, excluding about 0.08
+cycle/instruction of fixed timing overhead, are:
 
 | stream | `stall=1,yield=0` | `stall=2,yield=0` | `stall=1,yield=1` |
 |---|---:|---:|---:|
-| NOP | 1.00 cyc/inst | 2.00 | 2.00 |
+| NOP | 1.00 | 2.00 | 2.00 |
 | scalar FFMA | 1.00 | 2.00 | 2.00 |
 | FFMA2 | **2.00** | 2.00 | 2.00 |
 
-(`~0.08` cyc/inst fixed window overhead is omitted.)  For all three streams,
-larger stalls follow the encoded value and `DRAIN` costs roughly 33--35
-cycles/instruction.  Reuse masks 0 through 7 do not change these rates.  Thus
-the hardware clamps solo FFMA2's minimum same-domain issue interval to two
-cycles even when the control word requests one; scalar FFMA and NOP demonstrate
-that the same warp front end can issue every cycle.  `yield=1` indeed inserts
-the familiar otherwise-wasted second cycle for NOP/FFMA, but does not add a
-third cycle to an FFMA2 stream whose two-cycle floor already dominates.
+For larger encoded stalls, all three follow the requested interval.  `DRAIN`
+costs roughly 33--35 cycles/instruction.  Reuse masks 0 through 7 do not alter
+these rates.
 
-Alternating-stream controls locate the unused issue slot:
+Thus the single-warp 0.5/cycle FFMA2 result is not a generic front-end limit
+and not a `yield=1` artifact.  Hardware clamps same-warp packed-FMA issue to a
+two-cycle minimum even when the control word requests one.  `yield=1` wastes
+the otherwise usable second cycle for NOP/scalar FFMA but adds nothing beyond
+FFMA2's existing floor.
 
-| one-warp repeating stream, all `stall=1,yield=0` | aggregate rate |
+The unused slot is domain-specific:
+
+| one-warp repeating stream, `stall=1,yield=0` | aggregate rate |
 |---|---:|
 | `FFMA2, NOP` | 1.0 inst/cycle |
 | `FFMA2, IADD3` | 1.0 inst/cycle |
 | `FFMA2, FFMA` | **0.5 inst/cycle** |
 
-The cycle after FFMA2 is therefore available to the warp and to an independent
-ALU domain, but not to scalar FMA.  This is a two-cycle FMA-domain interlock or
-admission exclusion rather than a whole-warp issue cooldown.  Two same-subcore
-warps can alternate packed requests at the scheduler's aggregate 1/cycle rate,
-which is why they can overdrive the 0.5/cycle service and expose the roughly
-12-entry packed outstanding window while one warp cannot.
+The warp can issue an independent instruction after FFMA2, but scalar FMA is
+blocked by the packed FMA state.  Two same-subcore warps can alternate packed
+requests at one/cycle during the filling region, overdrive the 0.5/cycle
+service, and expose the packed outstanding window.  One warp cannot.
 
-`yield=0` does not make the scheduler burn the blocked slot.  In a two-warp
-same-subcore test, warp 0 repeats 96 `FFMA2,FFMA` instructions with transN
-controls while a clean-subcore observer waits only for warp 4.  With a
-96-NOP background, warp 4's first NOP reaches the observer around clock 106:
-the ready transN background monopolizes issue.  With the mixed-FMA background,
-warp 4's first NOP reaches it around clock 28, and a scalar-FFMA target behaves
-similarly (the first eight targets fit under the same approximately 28-clock
-floor).  The blocked FFMA successor makes warp 0 temporarily ineligible, so
-the scheduler overrides the keep-current-warp hint and selects another ready
-warp.  A packed-FFMA2 target, however, remains blocked until about clock 189,
-consistent with its packed admission/service resource already being occupied.
-Thus switching is opportunistic on instruction eligibility, not dictated by
-the yield bit alone.
+`yield=0` is only a keep-current-warp preference while that warp is eligible.
+In a two-warp test, a 96-NOP transN background delays another transN warp's
+first NOP to about clock 106.  Replacing the background with 96 alternating
+`FFMA2,FFMA` instructions lets the target NOP reach the observer at about
+clock 28; scalar FFMA targets also make early progress.  The blocked successor
+makes the current warp ineligible, so the scheduler selects another eligible
+warp instead of wasting the slot.  A packed target remains blocked when the
+packed reservation/service resource is already occupied.
 
-The scalar/packed transition itself is directional.  A no-reuse, one-warp
-ordered-phase scan gives the following extra time after a 32-instruction
-prefix:
+## Approximately twelve credits in slow domains
 
-| prefix -> suffix | suffix counts B=0,1,2,3,4,... |
-|---|---|
-| scalar `FFMA -> FFMA2` | `0,2,4,6,8,...` clocks |
-| `FFMA2 ->` scalar FFMA | `0,2,3,4,5,...` clocks |
+With two same-subcore producer warps, the scheduler initially supplies packed,
+ALU, or FMA-Heavy requests at approximately one/cycle while each homogeneous
+domain drains at approximately 0.5/cycle.  The corrected dense curves change
+to the final four-clock increment per N at about N=12.  Since N adds one
+instruction to each producer, this corresponds to roughly twelve effective
+outstanding/reservation entries per subcore, including work in service.
 
-Scalar FFMA therefore does not add a transition penalty before packed FFMA2:
-the first packed instruction immediately pays only its normal two-cycle cost.
-In the reverse direction, the first scalar FFMA costs two cycles and subsequent
-ones return to their normal one-cycle cadence, exposing a one-cycle
-packed-to-scalar boundary penalty.  Reversing the starting order of an infinite
-alternating stream does not remove that boundary: `FFMA,FFMA2,FFMA,FFMA2,...`
-still contains `FFMA2 -> FFMA` between adjacent pairs.  The two finite-stream
-orderings are consequently point-for-point identical through N=32 and both
-sustain only 0.5 aggregate instruction/cycle after the timing floor.
+This result applies to:
 
-Predicated-off x2 instructions show the same N≈12 knee and +4 final slope,
-whereas predicated-off scalar FFMA remains at +2.  The immediate cause is thus
-fixed-pipeline admission/dispatch applied before predicate cancellation, not
-the execution of twice as many floating-point arithmetic operations.
+- unified ALU (`IADD3/LOP3/SHF` and `IADD/MOV/ISETP` groups);
+- FMA Heavy (`IMAD/IMUL/FSWZADD` representatives);
+- packed FP32x2 (`FFMA2/FADD2/FMUL2`);
+- packed FP16 (`HFMA2/HADD2/HMUL2`).
 
-Ordered marker tests locate the coupling but do not identify a single physical
-FIFO.  After a saturated FADD2 prefix, the first scalar FFMA marker costs four
-clocks rather than two, then further FFMAs return to +2 each.  FMA-Heavy IMAD
-markers remain at +4 each, while ALU-Heavy IADD3 markers remain at +2 and are
-unaffected.
+Predicated-off packed instructions retain the same knee and final slope.
+Admission/reservation therefore occurs before predicate cancellation; the
+result is not caused by arithmetic result writeback.
 
-An asymmetric test establishes that x2 admission reserves or gates the Lite
-side, but not that its twelve-entry boundary belongs to Lite alone.  Warp 0
-continuously issues 256 or 512 all-reuse FFMA2/FADD2 instructions while same-
-scheduler warps 4 and 8 issue scalar FFMA; a clean-subcore observer waits only
-for the FFMA warps.  Even one target FFMA waits approximately the complete
-background duration (about 470 clocks for 256 and 990 clocks for 512).  Active
-and predicated-off x2 backgrounds behave identically.  An FMA-Heavy background,
-in contrast, does not delay the first FFMA at all.  These exact all-reuse
-background durations are not suitable for fine-grained overlap accounting:
-switching between resident warps unconditionally invalidates the reuse cache.
-The no-reuse control below removes that ambiguity.
+These equal effective depths do not prove four identical physical FIFOs.
+The cross-family and ordered-phase results below determine which domains can
+progress independently.
 
-A dense substitution test rules out a tempting finer-grained interpretation
-of that blocking.  If FFMA2 occupied a 0.5/cycle Heavy leaf for two cycles but
-the 1/cycle Lite leaf for only one, alternating `FFMA2, FFMA` could fill the
-second Lite slot and sustain one scheduler instruction per cycle.  It does
-not.  The decisive FFMA2 form is
-`FFMA2.F32.F32 RZ, R24, R25, 0f3f800000`: its two GPR sources reside in
-opposite RF banks, so collection takes one cycle without any reuse bit.  The
-scalar FFMA uses only RZ.  With active arithmetic, the steady one-warp results
-are:
+## B200 has one unified ALU backend
 
-| repeating FFMA2:FFMA ratio | clocks/instruction |
-|---:|---:|
-| 1:1 | 2.000 |
-| 1:2 | 1.667 |
-| 1:3 | 1.500 |
-| 2:1 | 2.000 |
-| 3:1 | 2.000 |
-
-The values equal the non-overlapped weighted service cost (two clocks per
-FFMA2 and one per scalar FFMA), plus approximately one clock per repeating
-opcode block.  The original all-reuse packed form and a same-base-register-ID
-control give identical curves, but the two-register/immediate form is stronger:
-neither its result nor the extra block clock depends on reuse-cache survival.
-The extra clock may be an opcode/backend-mode transition cost and is not
-assigned to a queue.
-
-An attempted independent-warp blocker does **not** remove scheduler ambiguity.
-Warp 0 issues 96 background operations with `yield=0` while a same-scheduler
-warp issues scalar FFMA.  The first target is delayed to about clock 189 by the
-no-reuse FFMA2 background, but it is also delayed to about clock 106 by a
-96-NOP background.  The background warp is monopolizing scheduler issue; the
-difference mostly measures the background stream's own one- versus two-cycle
-progress.  This experiment therefore cannot show whether FFMA entered a Lite
-queue, and must not be used as evidence that FFMA2 locks Lite for both cycles.
-The single-warp ratios prove mixed-stream serialization, but an opcode/backend
-mode-transition throttle remains observationally equivalent to a combined
-backend lock.
-
-A same-warp phased test asks the admission-depth question directly without
-warp-switch or reuse dependence.  Two same-subcore producer warps each issue
-an `A`-instruction prefix of the no-reuse two-register/immediate FFMA2 form,
-then `B` scalar FFMAs; a clean-subcore observer times when both producers reach
-a CBU barrier.  Once `A >= 12`, the suffix increments are identical for
-`A=12,16,24,32`:
-
-| B per producer | 0 | 1 | 2 | 3 | 4 | ... | 32 |
-|---:|---:|---:|---:|---:|---:|---:|---:|
-| extra clocks | 0 | 4 | 6 | 8 | 10 | ... | 66 |
-
-There is no initial flat window in which scalar FFMAs disappear into a free
-Lite admission queue behind the packed backlog.  FFMA2 therefore does block
-FFMA, but at or upstream of the point where such a Lite queue would accept it.
-It is consequently **not a usable downstream-only blocker for measuring a
-hidden Lite queue**.  The result remains compatible with either no meaningful
-Lite waiting queue or a Lite queue that exists behind a shared dispatch gate
-and is unreachable while packed service is blocked.
-
-Reciprocal dense phases locate the other half.  `FADD2 -> HFMA2`,
-`FMA-Heavy -> HFMA2`, `HFMA2 -> FADD2`, and `HFMA2 -> FMA-Heavy` are point-for-
-point identical; once a prefix reaches N=11, every suffix starts immediately
-at `0,4,8,12,...`.  Packed FP32x2 and packed FP16 therefore cannot dispatch
-independently of either FMA backend.  This proves a Heavy+Lite execution/
-dispatch interlock, but does **not** prove that the instruction is inserted
-into both admission queues.  Plausible implementations include one
-`fmalighter_pipe` request with a `Heavy|Lite` backend mask, one separate packed
-request with that mask, or two linked physical queue tokens.  Pipe counters on
-real GB100 hardware are needed to distinguish the first-level attribution.
-
-### Packed FP16 interlocks Heavy and Lite service
-
-Dense-issue retesting places `HFMA2`/`HADD2`/`HMUL2` more precisely.  A pure
-HFMA2 stream has the same N≈12 knee and +4-clock final increment as the other
-0.5-inst/cycle domains.  Alternating FMA-Heavy/HFMA2 is point-for-point
-identical to pure HFMA2.  Ordered phases are symmetric: after either a
-saturated HFMA2 or FMA-Heavy prefix, every suffix instruction of the other
-class immediately costs +4 clocks/N.  Thus packed FP16 and FMA Heavy share the
-same effective reservation/service domain rather than owning independent
-queues of coincidentally equal depth.
-
-HFMA2's normal 0.5-inst/cycle service can hide up to two RF rows per bank.
-Direct source-parity/reuse sweeps give 2 cycles/instruction for 2E+1O with or
-without reuse, but 3 cycles for three same-parity uncached sources.  Reusing
-any one of the three same-parity sources restores the normal 2-cycle floor.
-Thus HFMA2 is additionally RF-bound only for a 3E/3O uncached source set.
-
-The other pairings separate admission from execution:
-
-- Alternating ALU-Heavy/HFMA2 remains at the scheduler-limited +2 clocks/N
-  through N=32, and a saturated HFMA2 prefix does not delay ALU-Heavy markers.
-  The ALU reservation/execution domain is independent.
-- Alternating scalar FFMA/HFMA2 eventually has the same +4-clock drain slope
-  and N≈12 boundary as packed FP16.  After a saturated HFMA2 prefix, however,
-  only the first following FFMA costs +4; subsequent FFMAs return to +2 each.
-  Packed FP16 therefore consumes the Lite execution side, while scalar FFMA
-  resumes scheduler-rate progress once it crosses the initial shared boundary.
-  This does not by itself say whether later FFMAs queue or execute in available
-  Lite service slots.
-
-An asymmetric HFMA2 background also prevents even one same-scheduler scalar
-FFMA from passing until the background ends.  The smallest current model is
-therefore a packed-FP16 instruction whose dispatch/service locks both FMA
-backends.  Whether it consumes state in both scalar admission paths, lives in
-the static `fp16_pipe` queue with a two-backend mask, or is represented by
-linked tokens is not determined by timing.
-
-### FFMA2 and HFMA2 are timing-equivalent packed requests
-
-A direct comparison uses the no-reuse, one-cycle-RF FFMA2 form and an
-RZ-source HFMA2.  Pure FFMA2, pure HFMA2, and both alternating orders are
-point-for-point identical for both one producer and two same-subcore
-producers.  All sustain 0.5 instruction/cycle; the two-producer curves expose
-the same N≈12 boundary and the same final drain slope.
-
-Ordered phases also show no cross-format transition penalty.  Once either
-prefix reaches 12 instructions per producer, the suffix increments are:
-
-| direction | one producer, B=0,1,2,... | two producers, B=0,1,2,... |
-|---|---|---|
-| FFMA2 -> HFMA2 | `0,2,4,...` | `0,4,8,...` |
-| HFMA2 -> FFMA2 | `0,2,4,...` | `0,4,8,...` |
-
-This differs from either packed form transitioning to scalar FFMA: there is no
-extra first-suffix clock in either packed-to-packed direction.  Operationally,
-FFMA2 and HFMA2 occupy the same 0.5/cycle packed admission/service domain.
-Static attribution still names `fmalighter_pipe` for FFMA2 and `fp16_pipe` for
-HFMA2, so timing alone cannot decide between a physically shared FIFO/backend
-and distinct queues serialized by a common combined-backend interlock.
-
-### Scalar FMA Lite bypasses Heavy state; its own queue is unproven
-
-A dense ordered test fills FMA Heavy and then appends scalar FFMA.  Once the
-Heavy prefix reaches its N≈11--12 boundary, another Heavy suffix is
-service-limited immediately (`0,4,8,...` clocks for suffix counts 0,1,2,...).
-The FFMA suffix instead remains exactly `0,2,4,...` from its first instruction,
-identical to the independent ALU-Heavy control.  Reversing the order also
-preserves FMA Heavy's complete filling window: an FFMA prefix does not consume
-Heavy credits.
-
-This proves that scalar FFMA does not consume the exhaustible FMA-Heavy credits
-and can make progress through a Heavy backlog.  It does **not** prove that
-scalar FMA Lite owns an admission queue.  Three organizations remain open:
-
-```text
-direct Lite dispatch with no waiting queue
-a shallow RF/dispatch skid or operand-collector state
-a deeper Lite queue whose 1/cycle service prevents this probe from filling it
-```
-
-The RF-conflict result weakly favors the first two: same-bank FFMA becomes RF-
-limited almost immediately instead of buffering a long prefix ahead of operand
-collection.  Packed FP16/FP32x2 cannot settle the question because they
-interlock Heavy as well as Lite.  Therefore only an independent scalar-Lite
-path and its approximately 1-inst/cycle service are established; the existence
-and depth of a Lite-only admission queue are unknown.
-
-### B200 has one unified ALU backend, not observable Heavy/Lite leaves
-
-The dense ordered test is symmetric and exact.  Once either an ALU-Heavy or
-ALU-Lite prefix reaches N=11--12, a suffix from the other leaf is immediately
-service-limited:
+Dense pure ALU-Heavy, pure ALU-Lite, and alternating Heavy/Lite curves are
+point-for-point identical.  Once either opcode group fills the approximately
+twelve-entry state, a suffix from the other group is service-limited
+immediately:
 
 ```text
 ALU Heavy -> ALU Lite:  0,4,8,12,... clocks
 ALU Lite  -> ALU Heavy: 0,4,8,12,... clocks
 ```
 
-These curves are identical to a same-leaf suffix.  In contrast, either ALU
-prefix followed by FMA Heavy retains the fresh scheduler-rate window
-`0,2,4,6,...`.  Independent twelve-entry Heavy and Lite queues would allow the
-opposite ALU leaf to admit at the scheduler rate while the prefix drains; the
-observed immediate +4 slope rules that organization out.
+Either ALU group alternated with FMA Heavy instead reaches the scheduler's
+aggregate one-instruction/cycle ceiling.  Thus “ALU Heavy” and “ALU Lite” are
+only useful opcode-set names on B200; there is one observable 0.5/cycle ALU
+backend/reservation domain.
 
-The homogeneous ALU-Heavy, homogeneous ALU-Lite, and alternating Heavy/Lite
-dense curves are moreover point-for-point identical through N=32.  All change
-at N≈12 to the same aggregate 0.5-inst/cycle service slope.  Either ALU group
-alternated with FMA Heavy instead sustains the scheduler's aggregate
-1-inst/cycle ceiling.  There is no measured concurrent Heavy+Lite service.
-
-The metric catalogs independently support the simpler interpretation.  With
-Nsight Compute 2026.3 queried by chip, GB100 exposes only:
+The GB100 Nsight Compute metric catalog agrees with this interpretation.  It
+exposes only:
 
 ```text
 smsp__inst_executed_pipe_alu
 smsp__pipe_alu_cycles_active
 ```
 
-GB202 additionally exposes `pipe_aluheavy` and
-`fmaheavy_subpipe_alulite` instruction and active-cycle counters.  The static
-sm100 latency description likewise places both opcode groups in one
-`int_pipe` set.
+GB202 additionally exposes separate `pipe_aluheavy` and
+`fmaheavy_subpipe_alulite` counters.  Timing cannot rule out redundant B200
+units hidden behind one dispatcher, but they would have no independently
+observable throughput.
 
-B200 should therefore be modeled as one approximately twelve-credit ALU
-admission/reservation domain feeding one effective 0.5-inst/cycle ALU backend.
-“ALU Heavy” and “ALU Lite” remain useful opcode-set labels for comparison with
-GB202, but there is no evidence that they correspond to distinct B200 physical
-backends.  Timing alone could not rule out redundant internal units hidden
-behind a single shared half-rate dispatcher, but such units would have no
-observable independent throughput or availability.
+## FMA Heavy, scalar Lite, and packed coupling
 
-## Measurement correction for INT
-
-On sm_100, `CS2R` itself is statically assigned to `int_pipe`.  A naive
-`CS2R; IADD3*N; CS2R` sequence therefore times retirement/service of the
-entire INT burst: the ending timestamp cannot pass the same pipe.  Its
-`5+2N` curve is valid INT throughput evidence but not queue-depth evidence.
-
-The corrected construction puts the producer on warp 0 and the observer on
-a different subcore.  After a common start barrier, the producer issues its
-burst and reaches a counted `BAR.SYNC`; the observer timestamps the barrier
-release.  `BAR` is on `mio_pipe`, and the observer's ending `CS2R` uses a clean
-subcore, so producer progress after the last admitted INT no longer waits for
-the producer's INT service queue to drain.  Four stall-8 producer NOPs make
-the producer, rather than observer control flow, the critical path.  The same
-method is also an independent control for FP.
-
-## Why one producer underfills the queues
-
-The one-producer barrier spans are exact at their medians:
-
-| family / representatives | T(0) | T(1) | T(2) | later increment |
-|---|---:|---:|---:|---:|
-| ALU Heavy: IADD3, LOP3, SHF | 41 | 42 | 44 | +2/instruction |
-| ALU Lite: IADD, MOV, ISETP | 41 | 42 | 44 | +2/instruction |
-| FMA Heavy: IMAD.LO, IMUL, FSWZADD | 41 | 42 | 44 | +2/instruction |
-| packed FP16: HFMA2, HADD2, HMUL2 | 41 | 42 | 44 | +2/instruction |
-| FMA Lite: FFMA, FADD, FMUL | 41 | 42 | 43 | +1/instruction |
-
-These are service rates, not queue depths.  One warp supplies the first four
-rows at only about one instruction per two clocks, equal to their service
-rate.  It supplies FMA Lite at one per clock, again equal to service.  A
-single producer can therefore never accumulate backlog.  The earlier
-interpretation of these curves as one active credit and zero waiting entries
-was wrong.
-
-## Same-subcore two-producer depth
-
-Warps 0 and 4 share a subcore and issue identical N-instruction bursts.  Warp
-1, on another subcore, timestamps their counted-barrier release.  The two
-producers can initially admit about one instruction/cycle in aggregate, twice
-the 0.5-instruction/cycle service rate.  Every tested ALU Heavy, ALU Lite, FMA
-Heavy, and packed-FP16 representative gives the same median curve:
-
-| N per producer | 0 | 1 | 2 | 3 | 4 | 8 | 12 | 13 | 14 | 15 |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| common clocks | 47 | 48 | 50 | 52 | 56 | 64 | 72 | 76 | 80 | 84 |
-
-There are scheduler-phase steps of 1--4 clocks in the filling region, but
-from N=13 onward every added N costs exactly four clocks: two new operations
-drain at 0.5 instruction/cycle.  At N=12, 24 operations have been admitted in
-about 25 incremental clocks while about 12 have drained.  The knee therefore
-corresponds to approximately **12 outstanding credits/subcore**, including
-the operation in service, or roughly eleven waiting operations.
-
-FMA Lite has a distinct and exact shallower curve:
-
-| N per producer | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 and later |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| common clocks | 47 | 48 | 49 | 50 | 51 | 52 | 54 | +2/N |
-
-Each increment through N=5 admits two FMA-Lite operations in one clock while
-one operation drains, accumulating five outstanding operations.  At N=6 the
-curve becomes service-limited.  Thus FFMA/FADD/FMUL expose **5 effective
-outstanding credits/subcore**, including service, or about four waiting
-operations.
-
-Different-subcore producer pairs preserve the one-producer slopes (+2/N for
-the four 0.5/cycle families and +1/N for FMA Lite), confirming that these
-capacities and service limits are subcore-local rather than SM-wide.
-
-## Blocking controls for the one-cycle FMA-Lite leaf
-
-An active four-beat `IMAD.HI` prefix makes the common scalar-math entrance
-temporarily unavailable.  Four prefixes alone take 18 clocks.  Appending a
-predicated-off target gives:
-
-| appended target count | 0 | 1 | 2 | 3 | 4 |
-|---:|---:|---:|---:|---:|---:|
-| FFMA | 18 | 21 | 22 | 23 | 24 |
-| FADD | 18 | 21 | 22 | 23 | 24 |
-| FMUL | 18 | 21 | 22 | 23 | 24 |
-
-The first FMA-Lite target pays three clocks before the entrance becomes
-available; once admitted, the FMA-Lite leaf resumes its +1-clock cadence.  One
-active HFMA2 prefix gives prefix-only 6 clocks, then 8 for one FFMA and +1
-thereafter.
-
-The two-producer result shows why this must not be read as “no FMA-Lite queue.”
-The cross-family blocker holds a shared upstream scalar-math entrance, so the
-following FMA-Lite operation cannot reach its five-credit leaf queue early.
-Two synchronized FMA-Lite producers bypass that ambiguity and fill the
-leaf-local credits directly.
-
-## Mixed-leaf substitution
-
-Homogeneous depths do not distinguish one shared queue from several queues
-with coincidentally equal capacities.  To make that distinction, both
-same-subcore producers were changed to issue an alternating pair of leaf
-representatives.  `N` remains the number of instructions per producer, so an
-even-length burst contains equal numbers from the two leaves.
-
-All ten unordered leaf pairs give the following effective-depth matrix.  The
-diagonal is the homogeneous result for reference:
-
-| | ALU Heavy | ALU Lite | FMA Heavy | FMA Lite | packed FP16 |
-|---|---:|---:|---:|---:|---:|
-| **ALU Heavy** | ~12 | **~12** | **5** | **5** | **5** |
-| **ALU Lite** | | ~12 | **5** | **5** | **5** |
-| **FMA Heavy** | | | ~12 | **5** | **~12** |
-| **FMA Lite** | | | | 5 | **~12*** |
-| **packed FP16** | | | | | ~12 |
-
-`*` FMA Lite + FP16 has a clear deep boundary but extra phase structure near
-it.  The three deep off-diagonal pairs have approximately +4 clocks/N after
-the boundary; every other pair has the exact five-credit curve and +2
-clocks/N.
-
-The exact five-credit curve is `47,48,49,50,51,52,54,56,...` for
-`N=0,1,...`: through N=5 the two producers admit two operations while one
-drains in one clock, then the pair becomes service-limited.  It occurs for
-all ALU/FMA cross-pairs, and also for FMA Heavy + FMA Lite.  ALU Heavy + ALU
-Lite and FMA Heavy + FP16 instead reproduce the homogeneous deep curve
-`47,48,50,52,56,...,72,76,80,...`, including its N=12 boundary.  FMA Lite +
-FP16 also retains the deep boundary, though N=14--17 has extra
-scheduler/execution-phase structure (`76,82,86,90,91` from N=13).
-
-Architecturally-false targets reproduce these boundaries exactly, excluding
-result data and register writeback as their cause.  With the two producers
-placed on different subcores, all four representative mixes are linear
-through N=16 and show no boundary: ALU-Heavy + ALU-Lite, FMA-Heavy + FP16,
-and FMA-Lite + FP16 are +2 clocks/N, while ALU-Heavy + FMA-Heavy is +1.
-The five- and twelve-credit resources are consequently subcore-local.
-
-### Ratio sweep: shallow mixed behavior is occupancy, not a fixed mode throttle
-
-A fixed “both ALU and FMA are present” throttle could imitate the 1:1
-five-credit curve without a literal full queue.  To distinguish it, the same
-two producers issue periodic ALU-Heavy:FMA-Heavy patterns at ratios 1:1, 2:1,
-3:1, and 7:1, plus all reversed ratios.  With active RZ operands:
-
-| ratio | approximate onset of final majority-domain-limited pattern |
-|---|---:|
-| 1:1 | `N=6` |
-| 2:1 / 1:2 | `N≈18--20` |
-| 3:1 / 1:3 | `N≈18--19` |
-| 7:1 / 1:7 | `N≈14--15` |
-| homogeneous | `N=13` |
-
-These are not all measurements of one queue's depth.  The 1:1 `N=6` boundary
-is the shallow common window becoming the limiter; at exactly 1:1 no
-downstream domain accumulates.  The later boundaries in imbalanced streams are
-a second transition: after the common window is active, the majority domain's
-additional state slowly accumulates until it too becomes full.  Thus the
-horizontal burst length at that second transition is a fill *time*, not a slot
-count.
-
-The long-run increment pattern follows the majority domain: 1:1 is a
-constant +2 clocks/count, 2:1 repeats approximately `+4,+2,+2`, and increasingly
-biased streams contain increasingly many +4 increments.  This is the expected
-occupancy behavior.  At 1:1, the one-instruction/cycle downstream switch feeds
-each 0.5/cycle backend at exactly its drain rate, so only the shallow common
-window accumulates.  With a slight imbalance, the majority-domain state fills
-only at the small excess of arrival rate over 0.5/cycle, moving the knee much
-farther out.  At extreme imbalance it approaches the homogeneous deep curve.
-
-More explicitly, if the majority fraction is `p`, its state grows after the
-common switch at approximately `p - 0.5` entries/cycle.  Filling `K≈7` extra
-credits therefore takes roughly `K/(p-0.5)` dispatch cycles.  This diverges as
-`p→0.5`, while at exactly `p=0.5` that second knee does not exist at all and the
-only visible knee is common-5.  This change of limiting resource explains the
-apparently non-monotonic `5 → 20 → 18 → 14 → 13` sequence.
-
-Thus a fixed five-token throttle triggered merely by mixed instruction classes
-is ruled out.  A completion-refilled, per-domain token mechanism could still
-reproduce the curves, but such tokens are operationally the same admission
-credits/reservation occupancy modeled here; timing alone cannot require the
-credits to be literal FIFO rows.
-
-### The extra credits are allocated before RF collection completes
-
-The RF-bank result supplies a placement test.  For the same active IADD3 and
-IMAD opcodes, destination RZ, and explicitly no reuse, only source parity is
-changed:
-
-| source rows | RF collection floor | final two-producer increment | knee |
-|---|---:|---:|---:|
-| 2 even + 1 odd | 2 cycles/instruction | +4 clocks/count | about `N=12--13` |
-| 3 even | 3 cycles/instruction | +6 clocks/count | about `N=12--13` |
-
-ALU-Heavy and FMA-Heavy curves match point-for-point in each row.  In the
-three-even case the RF collector supplies at most about 1/3 instruction/cycle,
-slower than the leaf executor's approximately 1/2 instruction/cycle.  A queue
-allocated only *after* RF read completion therefore could not accumulate: its
-input would be slower than its drain, and only the shallow common window would
-remain visible.  Instead the same deep boundary survives while only the final
-slope changes from +4 to +6.
-
-Consequently the extra approximately seven credits are acquired before all
-source rows have been read and remain occupied during operand collection.  The
-data do not distinguish a dedicated pre-RF instruction/reservation FIFO from
-seven operand-collector slots holding register IDs and progressively latched
-operands.  They rule out interpreting all seven as a pure post-RF operand-data
-queue; some later pipeline/result staging may still be covered by the lifetime
-of the same credits.
-
-The minimum *effective-domain* model consistent with the pair matrix is:
+FMA Heavy has 0.5/cycle service and approximately twelve effective credits.
+Scalar FFMA has 1/cycle service and bypasses occupied Heavy state:
 
 ```text
-common cross-domain fixed-math window: ~5 total outstanding
-
-same-domain modes which expose a deeper ~12-total window:
-    ALU mode           = ALU Heavy + ALU Lite
-    FMA-Heavy mode     = FMA Heavy + packed FP16
-    multi-leaf FMA mode = packed FP16 + FMA Lite
-
-FMA-Lite-only mode: 5 total
+saturated FMA-Heavy prefix -> FMA-Heavy suffix: 0,4,8,... clocks
+saturated FMA-Heavy prefix -> scalar FFMA suffix: 0,2,4,... clocks
 ```
 
-Thus the five leaf subpipes do share admission state, but **not one flat
-12-entry queue**.  Cross-domain Heavy pairs directly prove a common
-approximately five-credit admission/backpressure window: if their
-homogeneous 12-credit queues were independent, putting only half of the mixed
-stream in each would postpone rather than advance the knee.  ALU Heavy and
-ALU Lite share the same deeper ALU domain.  FMA Heavy and FMA Lite cannot use
-a common deeper window: their alternating stream stops at five.  Packed FP16
-is genuinely coupled and makes ownership non-transitive: it exposes a deep
-window with either FMA Heavy or FMA Lite even though those two together do
-not.  This is incompatible with assigning each mnemonic to one fixed leaf
-FIFO.
+Here each suffix count adds one instruction to each of two producers.  An FFMA
+prefix likewise does not consume the Heavy filling window.  Scalar Lite and
+ordinary Heavy therefore have independent execution progress in the absence
+of packed instructions.
 
-This is an effective admission/backpressure model, not yet proof of literal
-FIFO placement.  In particular, subtraction alone cannot locate the seven
-credits between the 5- and 12-credit boundaries in a physical downstream
-FIFO; they could be distributed among dispatch staging and leaf-local state.
-Also, a pair containing FMA Lite would naturally knee at five even if its
-standalone five-credit pool were independent, so the strongest evidence for
-the common cross-domain window comes from pairs whose two homogeneous depths
-are both twelve.  The full pair matrix nevertheless rules out both five
-independent fixed-ownership queues and a single shared twelve-entry queue.
+Packed instructions couple the two sides.  Reciprocal dense phases
+(`FADD2 <-> HFMA2`, `FMA-Heavy <-> HFMA2`) are point-for-point identical after
+saturation, and a packed prefix prevents scalar Lite from using a nominal
+second FMA slot in the same warp.  Plausible physical encodings include one
+packed token with a `Heavy|Lite` backend mask, linked Heavy/Lite tokens, or a
+separate packed queue feeding a synchronized backend.
 
-## Ordered two-phase bursts and their ambiguity
+### FFMA2 and HFMA2 are one effective packed state
 
-The alternating-pair test still admits a possible flat interpretation: a
-single queue might change its effective depth according to the current mode.
-The phased probe is stronger.  Each of the two same-subcore producer warps
-issues `A^NA`, immediately followed by `B^NB`; the clean-subcore observer and
-counted ending barrier are unchanged.  For each `NA`, the reported suffix
-curve is `T(NA,NB)-T(NA,0)`, so the cost of the A prefix is removed.
+The RF-clean FFMA2 form above and RZ-source HFMA2 give point-for-point
+identical pure and alternating curves for one producer and two same-subcore
+producers.  Both sustain 0.5/cycle, expose the same N≈12 boundary, and have the
+same final drain slope.
 
-With `NA=12` and no gap, representative suffix curves are:
+Ordered phases have no format-switch penalty:
 
-| ordered pair | suffix increments for `NB=0..12` | interpretation |
+| direction | one producer, B=0,1,2,... | two producers, B=0,1,2,... |
 |---|---|---|
-| ALU Heavy → FMA Heavy | `0,2,4,...,24` | FMA Heavy retains its complete filling window |
-| ALU Heavy → ALU Lite | `0,4,8,...,48` | ALU suffix is service-limited immediately |
-| FMA Heavy → FP16 | `0,4,8,...,48` | FP16 sees the already occupied Heavy domain |
-| FMA Lite → FMA Heavy | still has a filling region | Lite prefix does not occupy Heavy's deep state |
+| FFMA2 -> HFMA2 | `0,2,4,...` | `0,4,8,...` |
+| HFMA2 -> FFMA2 | `0,2,4,...` | `0,4,8,...` |
 
-The first row proves that a cross-domain suffix behaves differently from a
-same-domain suffix.  It does **not**, by itself, prove two simultaneously
-occupied seven-entry queues: the ending `BAR.SYNC` may absorb the time needed
-to drain and retag one shared downstream pool into the `T(NA,0)` baseline.
-Reversing the order gives the same result.  Replacing the suffix with ALU Lite
-removes the filling region completely, and the symmetric FMA-Heavy/FP16 case
-behaves like the same-domain ALU pair.
+The static names differ (`fmalighter_pipe` versus `fp16_pipe`), but timing sees
+one persistent `PACKED_LOCK` state.  This does not prove one physical FIFO.
 
-Removing the false predicate from all three representative phased pairs
-(ALU-Heavy→FMA-Heavy, ALU-Heavy→ALU-Lite, and FMA-Heavy→FP16) reproduces the
-same curves clock for clock through `NB=14`.  The separation is therefore not
-an artifact of nullified operations skipping execution or writeback.
+### Packed/scalar transition direction
 
-Consequently these data establish domain-sensitive downstream state, but leave
-two storage organizations open:
+With a no-reuse packed operation and RZ-source scalar FFMA, a one-warp ordered
+phase after a 32-instruction prefix gives:
+
+| prefix -> suffix | extra clocks for B=0,1,2,3,4,... |
+|---|---|
+| scalar `FFMA -> FFMA2` | `0,2,4,6,8,...` |
+| `FFMA2 ->` scalar FFMA | `0,2,3,4,5,...` |
+
+The first packed instruction after scalar work pays only its normal two-cycle
+service.  The first scalar instruction after packed work costs two cycles;
+later scalar instructions return to one/cycle.  A repeating block with one
+packed instruction and k scalar instructions costs approximately `k+3`
+cycles, rather than the `k+2` non-transition service sum.
+
+An equivalent externally visible schedule is:
 
 ```text
-shared fixed-math ingress/backpressure state:  ~5 effective credits
-                         |
-                  domain selection
-                         |
-       either one tagged/domain-sensitive ~7 pool
-       or separate ALU and FMA-Heavy reservation state
-
-FMA-Lite: no independently visible extra window
-packed FP16: also reserves the Lite execution side
+packed service                    2 cycles
+PACKED_LOCK -> LITE handoff       1 cycle
+scalar service                    1 cycle
 ```
 
-The “extra ~7” should still be read as distributed valid/reservation state,
-not necessarily as a seven-word SRAM FIFO.  A cheap implementation is a small
-common issue skid/metadata queue (four waiting entries plus the dispatch head
-gives the observed five), followed by a tagged seven-slot reservation array.
-Separate per-domain valid bits in operand, pipeline, or result staging remain
-possible.  If the deeper structure is an eight-slot ring, one unavailable or
-reserved slot plus the common five naturally appears as the approximately
-twelve effective total.
+The timing does not locate the handoff physically.  It could be backend-mode
+state, dispatch eligibility, or an operand-collector ownership transition.
+The important observation is that the handoff clock is not hidden inside the
+packed instruction's two-cycle service when a scalar consumer follows.
 
-### A drain-before-retag pool is ruled out
+The same directionality holds for packed FP16: after HFMA2, the first scalar
+FFMA costs two cycles and subsequent FFMAs cost one each.  Both operations use
+RZ sources in that control, excluding RF/reuse effects.
 
-`probe_sm100_scalar_queue_topology_modal.py` first confirmed that ordered
-cross-domain service overlaps: with twelve ALU-Heavy instructions per producer
-ahead of the suffix, active and false-predicated versions give the same
-polling-phase-envelope medians:
+### Why packed FMA does not expose a Lite queue
 
-| suffix count per producer | 0 | 4 | 8 | 12 | 16 |
-|---:|---:|---:|---:|---:|---:|
-| ALU-Heavy → FMA-Heavy increment | 0 | 11 | 18 | 26 | 30 |
-| ALU-Heavy → ALU-Lite increment | 0 | 18 | 35 | 50 | 66 |
+Two same-subcore producers each issue an A-instruction prefix of RF-clean
+FFMA2 and then B scalar FFMAs.  Once `A >= 12`, all tested prefix lengths give:
 
-Because a tail marker can still hide drain-before-retag time in the prefix,
-the decisive version separates the warps.  Warps 0/4 issue the ALU-Heavy
-filling burst.  Warps 8/12, on the same subcore but with no program-order
-dependency on that burst, issue one real-result ALU-Lite or FMA-Heavy marker
-after a swept delay; a dependent STS makes marker completion visible to the
-clean-subcore observer.  Across all thirteen marker delays, the FMA marker is
-independent of ALU prefix length apart from the periodic ±3-clock polling
-phase.  The otherwise identical ALU marker is strongly delayed.  At marker
-delay 2, for example:
-
-| ALU prefix count per filler | 0 | 4 | 6 | 12 | 13 | 17 | 20 |
+| B per producer | 0 | 1 | 2 | 3 | 4 | ... | 32 |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| FMA-Heavy marker delta | 0 | -3 | 0 | -3 | 0 | 0 | -3 |
-| ALU-Lite marker delta | 0 | -3 | 24 | 42 | 48 | 72 | 87 |
+| extra clocks | 0 | 4 | 6 | 8 | 10 | ... | 66 |
 
-Thus an FMA operation completes while the same ALU occupancy blocks an ALU
-operation for tens of clocks.  A single untagged seven-slot pool whose global
-ALU/FMA mode cannot change until drain is directly ruled out; this result does
-not rely on subtracting a prefix-only draining barrier.
+There is no initial flat interval in which scalar requests disappear into an
+independent Lite queue behind the packed backlog.  Packed work blocks at or
+upstream of the point where such a queue would accept.  Therefore packed FMA
+is not a downstream-only blocker suitable for measuring a hidden Lite queue.
 
-It does not distinguish a single **per-entry-tagged** seven-slot pool from two
-physical seven-slot queues behind a one-entry/cycle switch.  In the ordinary
-cross-domain stream, the switch supplies each 0.5/cycle backend at exactly its
-service rate, so neither organization can accumulate more downstream backlog.
-There is also no measurable throughput cost from switching every instruction:
-the alternating ALU/FMA stream reaches the full 1/cycle aggregate rate.  Any
-remaining “sticky” behavior must therefore concern reservation ownership or
-selection policy, not a mandatory bubble on each switch.
+This favors near-direct Lite dispatch, but does not prove zero physical slots:
+a Lite queue behind the shared packed/scalar gate would be unreachable in this
+experiment.
 
-An attempted discriminator made both streams RF-bound using three same-parity,
-no-reuse sources.  Homogeneous ALU and FMA streams settle at +6 clocks/count;
-the alternating stream also settles at +6 and exposes only the shallow knee.
-This control is inconclusive for queue storage because both instruction types
-then serialize on the same two-bank RF collector before domain-local execution;
-it does not create two independent slow drains.
+## Register collection and reservation placement
 
-### Recovery controls
+B200 GPR collection follows the parity-bank model:
 
-Plain NOP gaps are not a clean clock delay: changing the gap changes warp
-scheduler phase.  Nevertheless, same-gap controls preserve the ordered-pair
-distinction.  A producer-local `LDS` followed by an explicit scoreboard wait
-was therefore added as a second delay mechanism.  For a twelve-operation
-prefix:
+```text
+bank = register_id & 1
+read_cycles = max(even_rows, odd_rows)
+```
 
-- ALU→ALU and FMA-Heavy→FP16 remain suffix-service-limited after one to three
-  load/wait gaps, while shorter five- and eight-operation prefixes recover
-  earlier.
-- Cross-domain ALU↔FMA-Heavy and FMA-Lite→FMA-Heavy are already close to their
-  empty-prefix controls after two load/wait gaps.
-- At four load/wait gaps all tested pairs approach the corresponding empty-
-  prefix suffix curve.
+Each bank supplies one warp-wide 32-bit row per cycle.  RZ, immediate,
+uniform, and valid reuse-hit operands do not request a row.  Changing a source
+register ID invalidates that operand's reuse hit, and switching warps
+unconditionally invalidates the reuse cache.
 
-This is evidence that the effect is finite downstream state which releases
-with progress, not a permanent mode bit.  The exact recovery time is not yet
-a pipeline latency: LDS traffic and the two-warp scheduling phase alter the
-elapsed baseline, and the ending barrier observes admission rather than an
-individual entry's retirement.
+For scalar FFMA:
 
-Two attempted controls are deliberately not used quantitatively.  An
-all-participant intermediate `BAR.SYNC` orders/drains the prefix and makes all
-suffix pairs alike; it is useful evidence that the barrier does not pass the
-outstanding fixed work, but destroys the state being measured.  `NANOSLEEP`
-causes large, duration-dependent `CS2R` jitter (including negative median
-suffix differences), so it is not a valid in-kernel timing gap here.
+- E+O collection takes one cycle;
+- 2E+1O takes two cycles;
+- 3E takes three cycles;
+- the execution floor is one cycle.
 
-## Resulting model
+RF-bound scalar FFMA throttles almost immediately rather than exposing a deep
+pre-RF Lite queue.  This is additional evidence for direct or very shallow
+Lite dispatch.
 
-| path | effective outstanding capacity | qualification |
-|---|---:|---|
-| unified ALU | **about 12/subcore** | both former Heavy/Lite opcode groups |
-| FMA Heavy | **about 12/subcore** | IMAD/IMUL/FSWZADD agree |
-| scalar FMA Lite | **queue existence/depth unknown** | service ≈1/cycle |
-| packed FMA window | **about 12/subcore effective** | queue attribution pending NCU |
-| packed FP16 | **about 12/subcore** | HFMA2/HADD2/HMUL2 agree |
+For HFMA2, the backend floor is already two cycles.  Up to two RF rows per bank
+are hidden by that floor; three same-parity uncached sources increase the rate
+to three cycles/instruction.  Reusing any one of those sources restores the
+two-cycle floor.
 
-The dense-issue correction removes the claimed common-5/downstream-7
-decomposition.  What remains is approximately twelve effective credits when a
-single 0.5/cycle service domain is driven by the one-instruction/cycle
-scheduler.  Cross-domain ALU/FMA reaches the scheduler ceiling and therefore
-does not reveal its storage capacity.  RF-conflict controls place at least part
-of the slow-domain reservation lifetime before/during operand collection.
-Packed FP16 interlocks both FMA execution sides; timing does not establish
-whether it occupies either or both scalar admission queues.
+For ALU and FMA Heavy, dense two-producer parity sweeps retain the N≈12
+boundary even when RF collection becomes the slower 2- or 3-cycle stage.  The
+effective reservations are therefore allocated before all source rows have
+been collected and remain occupied during collection.  They may be queue
+entries, operand-collector slots, or distributed valid state; they are not a
+pure post-RF operand-data FIFO.
+
+## What is established and what awaits NCU
+
+Established by timing:
+
+- one aggregate scheduler issue slot/cycle/subcore;
+- one observable B200 ALU domain at 0.5/cycle with about twelve credits;
+- FMA Heavy at 0.5/cycle with about twelve credits;
+- scalar FMA Lite at 1/cycle, independently progressing past ordinary Heavy;
+- packed FFMA2/HFMA2 at 0.5/cycle with one effective approximately twelve-
+  credit state and a Heavy+Lite execution/dispatch interlock;
+- no FFMA2/HFMA2 format-switch penalty;
+- a visible packed-to-scalar handoff clock and no measurable Lite waiting
+  window which absorbs it;
+- opportunistic warp switching overrides `yield=0` when the current
+  instruction is structurally ineligible.
+
+Still open:
+
+- whether scalar Lite has zero queue entries or a tiny/inaccessible skid;
+- whether the packed window is a literal FIFO, distributed reservation state,
+  or linked tokens in multiple structures;
+- whether FFMA2 increments GB100 Heavy, Lite, or both hardware counters;
+- the exact physical location of `PACKED_LOCK -> LITE` handoff state.
+
+The GB100 NCU catalog contains separate FMA metrics:
+
+```text
+smsp__inst_executed_pipe_fma
+smsp__inst_executed_pipe_fma_type_fp16
+smsp__inst_executed_pipe_fmaheavy
+smsp__inst_executed_pipe_fmalite
+smsp__pipe_fma_cycles_active
+smsp__pipe_fmaheavy_cycles_active
+smsp__pipe_fmalite_cycles_active
+```
+
+Modal does not permit usable NCU collection.  A B200 system with working NCU
+is required to resolve first-level attribution; until then `PACKED_LOCK` is an
+effective timing model rather than a claimed physical block diagram.
