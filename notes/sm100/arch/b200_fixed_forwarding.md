@@ -16,16 +16,26 @@ value by itself.
 
 ## High-level result
 
-The common case is consistent with four persistent backend leaves plus a
-packed Heavy+Lite mode:
+The forwarding results are consistent with three subcore-local fixed-pipeline
+domains, a packed Heavy+Lite mode, and an FP64 service shared at SM scope:
 
 ```text
-ALU  |  FMA Heavy  |  FMA Lite  |  FP64
-             \       /
-              PACKED_LOCK (HFMA2 and FP32x2)
+per subcore:  ALU  |  FMA Heavy  |  FMA Lite
+                           \         /
+                            PACKED_LOCK (HFMA2 and FP32x2)
+
+per SM:                         shared FP64 service
+                                      |
+                         result return/bypass ingress
 ```
 
-However, backend identity alone is insufficient to predict every forwarding
+The latency probes contain only one producing warp and establish result-path
+visibility, not replication of the execution array. In particular, the
+uniform FP64 boundary says that an SM-shared FP64 result can enter the
+subcore-facing bypass network; it is no evidence for one FP64 unit per
+subcore.
+
+Backend identity alone is also insufficient to predict every forwarding
 boundary. B200 has opcode-specific fast and late result stages. Many results
 reach FMA Heavy/Lite, FP16, or ALU Heavy in two cycles, while ALU Lite is often
 one crossbar hop later. At deliberately unsafe gaps, a late-result producer
@@ -141,15 +151,19 @@ when an ALU consumer reads that path too early.
 
 ## FP64 and CLMAD
 
-Lo and hi halves are identical, and every tested ALU Heavy/Lite, FMA
-Heavy/Lite, FP16, and FP64 consumer sees the same boundary:
+FP64 execution is modeled as an **SM-shared service**, not a fourth replicated
+per-subcore backend. Lo and hi halves are identical, and every tested ALU
+Heavy/Lite, FMA Heavy/Lite, FP16, and FP64 consumer sees the same result-return
+boundary:
 
 | producer | fine | coarse |
 |---|---:|---:|
 | DADD/DMUL/DFMA | 4 | 7 |
 | CLMAD.LO | 5 | 9 |
 
-These match H100 despite the different FP64 throughput/topology.
+These match H100 despite the different execution topology. The measurement
+locates the return/bypass path after execution and cannot identify where the
+shared array sits or how requests from the four subcores are arbitrated.
 
 ## Predicate forwarding
 
