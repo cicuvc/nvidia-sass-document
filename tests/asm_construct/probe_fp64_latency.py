@@ -11,7 +11,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import probe_alulite_latency as base  # noqa: E402
-from probe_fmalite_latency import CONSUMERS  # noqa: E402
+from probe_fmalite_latency import CONSUMERS as BASE_CONSUMERS  # noqa: E402
+
+
+CONSUMERS = dict(BASE_CONSUMERS)
+CONSUMERS["fp64"] = "DADD {R50,R51}, {R40,R41}, {RZ,RZ}"
 
 
 @dataclass(frozen=True)
@@ -50,6 +54,12 @@ def source(prod_name: str, half: str, consumer: str, coarse: bool) -> str:
     prod = PRODUCERS[prod_name]
     src = "R40" if half == "lo" else "R41"
     lines = base.prologue("dlat")
+    consumer_inst = CONSUMERS[consumer]
+    detector_src = "R50"
+    if consumer == "fp64":
+        detector_src = "R50" if half == "lo" else "R51"
+    else:
+        consumer_inst = consumer_inst.replace("R40", src)
     for i, gap in enumerate(base.GAPS):
         lines.append("    MOV32I R60, 0x1;[7:7:{}:8:1]")
         for inst in prod.setup:
@@ -62,9 +72,9 @@ def source(prod_name: str, half: str, consumer: str, coarse: bool) -> str:
         ]
         lines += base.filler(gap, coarse)
         lines += [
-            f"    {CONSUMERS[consumer].replace('R40', src)};[3:7:{{}}:8:1]",
-            "    IADD3 R51, R50, RZ, RZ;[7:7:{3}:8:1]",
-            f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{4*i:x}], R51;[0:7:{{}}:1:0]",
+            f"    {consumer_inst};[3:7:{{}}:8:1]",
+            f"    IADD3 R52, {detector_src}, RZ, RZ;[7:7:{{3}}:8:1]",
+            f"    STG.E desc[{{UR4,UR5}}][{{R6,R7}}+0x{4*i:x}], R52;[0:7:{{}}:1:0]",
         ]
     lines += ["    EXIT;[7:7:{0}:5:0]", "}"]
     return "\n".join(lines)

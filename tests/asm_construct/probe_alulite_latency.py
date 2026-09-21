@@ -73,6 +73,7 @@ GPR_CONSUMERS = {
     "alulite": "MOV R50, R40",
     "aluheavy": "IADD3 R50, R40, RZ, RZ",
     "fmalite": "FADD R50, R40, RZ",
+    "fp16": "HADD2 R50, R40, RZ",
 }
 
 

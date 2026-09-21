@@ -11,7 +11,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import probe_alulite_latency as base  # noqa: E402
-from probe_fmalite_latency import CONSUMERS  # noqa: E402
+from probe_fmalite_latency import CONSUMERS as BASE_CONSUMERS  # noqa: E402
+
+
+CONSUMERS = dict(BASE_CONSUMERS)
+# Adding packed zero preserves both FP16/BF16 bit lanes used by these probes.
+CONSUMERS["fp16"] = "HADD2 R50, R40, RZ"
 
 
 @dataclass(frozen=True)

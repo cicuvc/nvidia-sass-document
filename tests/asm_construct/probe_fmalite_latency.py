@@ -66,6 +66,8 @@ CONSUMERS = {
     # Integer multiply by one preserves all result bits while selecting the
     # FMA-Heavy leaf of the Shared FMA Heavy physical macro.
     "fmaheavy": "IMAD R50, R40, R60, RZ",
+    # Packed add-zero preserves the two 16-bit lanes of the probe markers.
+    "fp16": "HADD2 R50, R40, RZ",
 }
 
 

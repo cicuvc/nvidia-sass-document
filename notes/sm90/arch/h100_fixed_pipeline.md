@@ -111,6 +111,7 @@ Uniform across every tested producer:
 | int (MOV) | bit-copy | **2** | 2 |
 | int (IADD3) | add-zero | **2** | 2 |
 | fmalighter (FADD) | fp add-zero | **3** | 4 |
+| fp16 (HADD2) | packed add-zero | **3** | 4 |
 
 ### fmalighter producers (FADD/FFMA/FMUL/FSWZADD/IDP.2A/IDP.4A/IMAD/IMUL, +32I forms)
 
@@ -121,6 +122,7 @@ Uniform:
 | int (MOV / IADD3) | **3** | 4 |
 | fmalighter (FADD) | **2** | 2 |
 | fmalighter (IMAD ×1) | **2** | 2 |
+| fp16 (HADD2) | **3** | 4 |
 
 So GH100 has a **2-cycle same-domain bypass and a 3-cycle (fine) / 4-cycle
 (coarse-safe) cross-domain hop** between the INT domain and the
@@ -132,24 +134,30 @@ leaves of Shared FMA Heavy with different boundaries).
 
 ### fp16_pipe (HADD2/HMUL2/HFMA2 + 32I forms)
 
-| producer | any consumer (int/fma) fine |
-|---|---:|
-| HADD2/HMUL2/HFMA2 (+32I) | **3** |
-| HFMA2.MMA | **4** |
-| HADD2.F32 (FP32 dest) → int | 3 |
-| HADD2.F32 → fmalighter | **2** |
+| producer → consumer | fine | coarse |
+|---|---:|---:|
+| HADD2/HMUL2/HFMA2 (+32I) → fp16 | **2** | 2 |
+| HADD2/HMUL2/HFMA2 (+32I) → int/fma | **3** | 4 |
+| HFMA2.MMA → fp16/int/fma | **4** | 7 |
+| HADD2.F32 (FP32 dest) → int | 3 | 4 |
+| HADD2.F32 → fmalighter | **2** | 2 |
+| HADD2.F32 → fp16 | 3 | 4 |
 
-Packed-FP results broadcast at 3 cycles to all domains (one cycle slower
-than the fmalighter same-domain path); `HFMA2.MMA` pays one extra cycle;
-`HADD2.F32`'s FP32-formatted dest lands in the fmalighter domain at 2.
+Ordinary packed FP has a dedicated 2-cycle same-fp16 bypass, but reaches
+ALU/FMA consumers at fine gap 3/coarse 4. Conversely, IMAD and FFMA reach an
+HADD2 consumer at 3/4 even though IMAD and ordinary HFMA2 share admission and
+execution service. Admission-domain sharing therefore does not imply a shared
+result-bypass domain. `HFMA2.MMA` is uniform at fine 4/coarse 7.
+`HADD2.F32`'s FP32-formatted destination lands in fmalighter at 2.
 
 ### fma64lite (DADD/DMUL/DFMA/CLMAD)
 
-Uniform 64-bit results, lo and hi halves identical:
+Lo and hi halves are identical, as are all tested int/fma consumers:
 
-| consumer | fine | coarse |
+| producer | fine | coarse |
 |---|---:|---:|
-| all (int/fma) | **4** | 7 |
+| DADD/DMUL/DFMA → int/fma/fp64 | **4** | 7 |
+| CLMAD.LO → int/fma/fp64 | **5** | 9 |
 
 No lo/hi split on the FP64 pipe (contrast IMAD.WIDE below).
 
@@ -173,6 +181,7 @@ path to fmalighter and the 3-cycle cross-domain path to int.
 |---|---:|---:|
 | ISETP/FSETP/IADD.PU → SEL selector | 2 | 2 |
 | ISETP/FSETP/IADD.PU → P2R | 2 | 2 |
+| R2P-produced predicate → selector / P2R | 3 | 4 |
 | IMAD.WIDE/HI Pu → selector / P2R | 3 | 4 |
 | any predicate → @P guard | **7** | 12 |
 | any predicate → @P BRA | **7** | 12 |
@@ -205,8 +214,9 @@ warp scheduler (1 inst/clk/SMSP; warp switch costs 1 dead cycle)
     +-- fma64lite       16 lanes   2.0 cyc/inst   DADD/DFMA/DMUL
     +-- XU (mio)         4 lanes   8.0 cyc/inst   MUFU
 
-bypass:  same-domain 2 cyc,  INT<->fmalighter cross-domain 3 (fine)/4 (safe),
-         fp16 -> all 3 (MMA 4),  fp64 -> all 4 (safe 7),
+bypass:  ALU/FMA same-domain 2 cyc, cross-domain 3 (fine)/4 (safe),
+         ordinary fp16 -> fp16 2, -> ALU/FMA 3/4; MMA 4/7,
+         FP64 DADD/DMUL/DFMA -> ALU/FMA/FP64 4/7; CLMAD.LO 5/9,
          IMAD.WIDE lo -> fmalighter 1 (fastest path on the chip)
 ```
 
