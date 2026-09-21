@@ -346,6 +346,29 @@ backends.  Whether it consumes state in both scalar admission paths, lives in
 the static `fp16_pipe` queue with a two-backend mask, or is represented by
 linked tokens is not determined by timing.
 
+### FFMA2 and HFMA2 are timing-equivalent packed requests
+
+A direct comparison uses the no-reuse, one-cycle-RF FFMA2 form and an
+RZ-source HFMA2.  Pure FFMA2, pure HFMA2, and both alternating orders are
+point-for-point identical for both one producer and two same-subcore
+producers.  All sustain 0.5 instruction/cycle; the two-producer curves expose
+the same N≈12 boundary and the same final drain slope.
+
+Ordered phases also show no cross-format transition penalty.  Once either
+prefix reaches 12 instructions per producer, the suffix increments are:
+
+| direction | one producer, B=0,1,2,... | two producers, B=0,1,2,... |
+|---|---|---|
+| FFMA2 -> HFMA2 | `0,2,4,...` | `0,4,8,...` |
+| HFMA2 -> FFMA2 | `0,2,4,...` | `0,4,8,...` |
+
+This differs from either packed form transitioning to scalar FFMA: there is no
+extra first-suffix clock in either packed-to-packed direction.  Operationally,
+FFMA2 and HFMA2 occupy the same 0.5/cycle packed admission/service domain.
+Static attribution still names `fmalighter_pipe` for FFMA2 and `fp16_pipe` for
+HFMA2, so timing alone cannot decide between a physically shared FIFO/backend
+and distinct queues serialized by a common combined-backend interlock.
+
 ### Scalar FMA Lite bypasses Heavy state; its own queue is unproven
 
 A dense ordered test fills FMA Heavy and then appends scalar FFMA.  Once the
