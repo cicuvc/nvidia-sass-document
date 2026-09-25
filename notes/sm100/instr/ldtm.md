@@ -604,6 +604,16 @@ allocator opcode.
 `.sync.aligned` are implicit (warp-collective is intrinsic to the op); the
 uniform predicate `@UPg` provides conditional execution.
 
+## 未分配 / 越界访问（B200/B300 实测）
+
+`LDTM` **不需要先执行 `tcgen05.alloc`**：在没有分配的情况下读 column 0
+也能返回（读回 0），不报错。硬件对 TMEM 只做**物理范围**检查——地址列
+`column ∈ [0,512)` 允许，`column >= 512` 报 `CUDA error 700`（实测
+`column=512` 及 `0xffff`）。所谓 `unallocated_columns_access` 之类的检查是
+ptxas 生成的**软件 guardrail**（依赖 reserved-shared 分配位图），对没有 alloc
+的裸访问即使 `-g` 也不插入。因此“越界访问是否 fault”不能用来判断实际分配
+范围；详见 `notes/sm100/arch/tcgen05_alloc_exclusive.md`。
+
 ## Open questions
 - How does PTX `tcgen05.ld.red` (min/max reduction) lower? No `.red` SASS variant
   in this dump — split into `LDTM` + reduction, or arch-gated (PTX notes restrict

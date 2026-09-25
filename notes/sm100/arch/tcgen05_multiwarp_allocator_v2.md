@@ -93,3 +93,10 @@ warp 汇聚，B200 实测会报 CUDA 719。当前基线与 nvcc lowering 都在 
 - hand SASS：`tests/asm_construct/tcgen05_alloc_multiwarp_v2_sm100.sass`
 - 静态测试：`python3 tests/asm_construct/test_tcgen05_alloc_multiwarp_v2_sm100.py`
 - 真机：`tools/modal_tcgen05_alloc.py --hand-source ... --block-size N`
+
+## 相关：`.exclusive` 变体（PTX 9.4）
+
+CUDA 13.4 新增 `tcgen05.alloc/.dealloc.exclusive`（`nCols` 只需 32 的倍数、
+分配连续 run，去掉 `.ALIGN`、phase 写 2）。其 CUDA 13.4 ptxas lowering 存在
+缺陷：忽略 `nCols`，恒按 512 列请求/掩码。细节与 B200/B300 实测见
+`tcgen05_alloc_exclusive.md`。

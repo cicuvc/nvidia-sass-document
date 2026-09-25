@@ -198,6 +198,12 @@ scoreboard-gated async op. Its uniform-predicate output latency (`UPu`) is `1`
 is tracked via the read+write scoreboards, not a fixed table entry.
 
 ## Cross-references
+- `notes/sm100/arch/tcgen05_alloc_exclusive.md` — PTX ISA 9.4 新增的
+  `tcgen05.alloc.exclusive` / `dealloc.exclusive` 变体：`nCols` 只需是 32 的
+  倍数（不再要求 2 的幂），lowering 去掉 `.ALIGN` 并把 phase 写成 2。该文同时
+  记录 **CUDA 13.4 ptxas 的后端 bug**：`.exclusive` 忽略 `nCols`，恒用
+  `__tcgen05_tmem_max_col_size`(=512) 作为请求/掩码，故一次 96 列 exclusive
+  分配实际占用整块 TMEM（已由 B200/B300 实测确认）。
 - `notes/sm100/instr/ldtm.md`, `sttm.md` — TMEM load/store; consume the addresses
   this allocator produces.
 - `$VQ_SW_STATE` vs `$VQ_TMEM` — separate virtual queues: the *allocator state*

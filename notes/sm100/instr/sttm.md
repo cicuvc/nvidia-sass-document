@@ -566,3 +566,13 @@ at least two issue cycles of separation: back-to-back issue (`stall=1`) can
 miss the newly created claim, while either `stall=2` or one intervening NOP
 lets the waiter observe it and then block until actual LDC completion.  This is
 a scoreboard-claim visibility/admission constraint, not an STTM restriction.
+
+## 未分配 / 越界访问（B200/B300 实测）
+
+`STTM` **不需要先执行 `tcgen05.alloc`**：完全不做分配、直接向 column 0 /
+300 / 511 写都成功（B200 与 B300 均验证）；`column >= 512` 报
+`CUDA error 700`。`LDTM` 同理（无分配读 column 0 返回 0）。即硬件对 TMEM 只做
+**物理范围**检查（共 512 列），不检查“是否已分配”；`unallocated_columns_access`
+是 ptxas 的软件 guardrail（依赖 reserved-shared 位图），对没有 alloc 的裸
+STTM 即使 `-g` 也不插入。详见
+`notes/sm100/arch/tcgen05_alloc_exclusive.md`。
