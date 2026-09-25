@@ -148,13 +148,16 @@ def main() -> None:
     if ns.row_alt is not None and ns.row_alt not in range(0, 128, 16):
         ap.error("row-alt must be 16-row aligned and in 0..127")
     if ns.run_matrix:
+        # Narrow half-column x1 accepts an odd starting column, giving a true
+        # column-parity flip.  Wide x256 requires an aligned 8-column tile.
+        alternate_column = 1 if ns.layout in ("half0_x1", "half16_x1") else 8
         cases = (
             ("r0c0", 0, None, 0, None),
             ("r16c0", 16, None, 0, None),
             ("same_row_same_col", 0, 0, 0, 0),
             ("flip_row_same_col", 0, 16, 0, 0),
-            ("same_row_next_tile", 0, 0, 0, 8),
-            ("flip_row_next_tile", 0, 16, 0, 8),
+            ("same_row_flip_col", 0, 0, 0, alternate_column),
+            ("flip_row_flip_col", 0, 16, 0, alternate_column),
         )
         for label, row, row_alt, column, column_alt in cases:
             case_name = f"tmem_bank_matrix_{ns.op}_{ns.layout}_{label}"

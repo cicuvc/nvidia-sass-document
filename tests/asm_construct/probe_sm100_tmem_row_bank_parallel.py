@@ -17,10 +17,12 @@ def _group(lo: int, count: int) -> str:
     return "{" + ",".join(f"R{i}" for i in range(lo, lo + count)) + "}"
 
 
-def source(name: str, split_row: bool, count: int, unroll: int) -> str:
+def source(name: str, split_row: bool, split_column: bool, count: int,
+           unroll: int, layout: str = "x256") -> str:
     if count % unroll:
         raise ValueError("count must be divisible by unroll")
-    row_stride = 0x100000 if split_row else 0
+    address_stride = ((0x100000 if split_row else 0) +
+                      (1 if split_column else 0))
     lines = [
         f"#fn {name}(out<8>) {{",
         "    #pragma MAXREG_COUNT(80)",
@@ -40,7 +42,7 @@ def source(name: str, split_row: bool, count: int, unroll: int) -> str:
         "    BAR.SYNC 0;[7:7:{}:5:1]",
         "    LDS R10, [UR5];[0:7:{}:1:0]",
         "    SHR R6, R5, 0x2;[7:7:{}:5:1]",
-        f"    IMAD R11, R6, {row_stride:#x}, R10;[7:7:{{0}}:5:1]",
+        f"    IMAD R11, R6, {address_stride:#x}, R10;[7:7:{{0}}:5:1]",
         "    R2UR UR10, R11;[7:7:{}:13:1]",
     ]
     for reg in range(40, 44):
@@ -54,11 +56,12 @@ def source(name: str, split_row: bool, count: int, unroll: int) -> str:
         f"    MOV32I R30, {count // unroll};[7:7:{{}}:5:1]",
         "    #def_label(loop)",
     ]
-    for _ in range(unroll):
-        lines += [
-            "    STTM.16dp256bit tmem[UR10], {R40,R41,R42,R43};"
-            "[7:7:{}:1:0]"
-        ]
+    instruction = (
+        "    STTM.16dp256bit tmem[UR10], {R40,R41,R42,R43};"
+        "[7:7:{}:1:0]" if layout == "x256" else
+        "    STTM.16dp32bit_t0_t15 tmem[UR10], R40;[7:7:{}:1:0]"
+    )
+    lines += [instruction] * unroll
     lines += [
         "    IADD3 R30, R30, -0x1, RZ;[7:7:{}:5:1]",
         "    ISETP.NE.AND P1, PT, R30, RZ, PT;[7:7:{}:13:1]",
@@ -82,11 +85,15 @@ def source(name: str, split_row: bool, count: int, unroll: int) -> str:
     return "\n".join(lines)
 
 
-def run(count: int, unroll: int, reps: int) -> None:
-    for split in (False, True):
-        label = "split_row_0_16" if split else "same_row_0_0"
-        name = f"tmem_row_bank_{'split' if split else 'same'}"
-        result = assemble_kernel(source(name, split, count, unroll),
+def run(count: int, unroll: int, reps: int, layout: str) -> None:
+    cases = ((False, False), (False, True),
+             (True, False), (True, True))
+    for split_row, split_column in cases:
+        label = (f"{'split' if split_row else 'same'}_row_"
+                 f"{'split' if split_column else 'same'}_col")
+        name = f"tmem_row_bank_{layout}_{label}"
+        result = assemble_kernel(source(name, split_row, split_column,
+                                        count, unroll, layout),
                                  arch="sm100a", check_deps=False)
         mod = CudaModule(result.code)
         out = mod.devmem_alloc(80)
@@ -114,8 +121,9 @@ def main() -> None:
     ap.add_argument("--count", type=int, default=6144)
     ap.add_argument("--unroll", type=int, default=96)
     ap.add_argument("--reps", type=int, default=3)
+    ap.add_argument("--layout", choices=("x256", "half_x1"), default="x256")
     ns = ap.parse_args()
-    run(ns.count, ns.unroll, ns.reps)
+    run(ns.count, ns.unroll, ns.reps, ns.layout)
 
 
 if __name__ == "__main__":

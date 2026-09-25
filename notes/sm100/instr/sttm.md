@@ -531,6 +531,30 @@ bank identity.  Probes:
 `tests/asm_construct/probe_sm100_tmem_layout_bank_timing.py` and
 `tests/asm_construct/probe_sm100_tmem_row_bank_parallel.py`.
 
+The obvious concern is that x256's eight internal service phases average away
+a row-dependent signal.  Two finer follow-ups tested that explicitly:
+
+1. A pure `16dp32bit_t0_t15.x1` stream (one 64-byte half-column request per
+   instruction) scanned the full row/column four-way matrix.  For 24576
+   instructions, every single-warp STTM case settled at **32519 cycles** and
+   every LDTM case at **95238 cycles**.  With same-subcore warps 0 and 4 each
+   issuing 24576 stores, all four combinations again had the identical CTA
+   span **57355 cycles** in five repeats.
+2. A narrow x1 request was placed immediately after each x256 request as a
+   phase probe.  The x256 row was 0/16 and the narrow column was 0/1.  After
+   equalizing the row-0/row-16 code layout (a one-instruction PC shift created
+   a real frontend-alignment artifact once the loop became issue-bound), all
+   four combinations were exact: **27647** cycles at gap 0, **27651** at gap 4,
+   and **30343** at gap 7.
+
+Thus the absence of a row effect is not peculiar to measuring only whole x256
+throughput.  Nevertheless the fine-grained result is still admission-limited:
+a subcore scheduler supplies at most one such instruction per cycle, which one
+bank can already absorb.  It therefore strengthens the statement that the
+minimal `column & 1` model has no observed counterexample, but still does not
+identify the absolute physical bank label.  Mixed-width probe:
+`tests/asm_construct/probe_sm100_tmem_row_bank_phase.py`.
+
 An attempted direct discriminator selected correlated `thread_id mod 4`
 classes in x64, but these are uniform-datapath instructions and the encoding
 accepts only `@UPx`, not a per-lane `@Px`.  Divergent execution would split the

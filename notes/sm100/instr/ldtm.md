@@ -533,6 +533,11 @@ cycle-identical for the two row halves.  This supplies no counterexample to
 `bank = column & 1`; however, the two-warp stream is serialized at the common
 LDTM/STTM backend, so it cannot exclude a physically symmetric row-half XOR.
 Exact numbers and the scope of that negative result are recorded in `sttm.md`.
+Pure 64-byte half-column x1 streams and a narrow request inserted behind every
+x256 request were also tested; neither row-half nor column-parity alternation
+changed completion time.  Those narrower tests remove x256 phase averaging as
+the immediate explanation, but remain bounded by the common instruction
+admission rate.
 
 A corrected exhaustive modifier sweep also executes all **90** LDTM
 layout/NUM/bit-80 combinations (45 layouts with and without `PACK16BIT`).  For
