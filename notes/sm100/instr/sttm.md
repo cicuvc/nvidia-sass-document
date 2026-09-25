@@ -151,6 +151,18 @@ subsequent `.x1` loads at offsets 0 and 1 recover them independently.  This
 establishes that STTM `Sc_offset` uses TMEM-column units and that `.x2` writes
 two consecutive columns.
 
+### Address row field
+
+A full-address probe now adds `(row << 16)` to the allocated column base.  STTM
+alone and LDTM alone have the same alignment checks: `32dp32bit` requires a
+multiple of 32, while every tested `16dp*` layout requires a multiple of 16;
+other rows raise CUDA 716.  More importantly, accepted high row bits alias:
+the 32-datapath form treats rows 0/32/64/96 identically, and 16-datapath forms
+distinguish only bit 4 (0/32/64/96 versus 16/48/80/112).  Tagged two-address
+stores followed by two loads establish the aliasing directly.  Full method and
+matrix: `notes/sm100/instr/ldtm.md`, “Address row field”; probe:
+`tests/asm_construct/probe_sm100_tmem_row_address.py`.
+
 ### MIO/LSU interaction probe
 
 Static classification places STTM in the special UDP-side `LDTM_STTM_OP`
@@ -493,6 +505,31 @@ visible selector contains `column & 1`.  A bank-word model alone cannot explain
 it.  These measurements do not yet distinguish `bank=column_parity` from a
 checkerboard `bank=column_parity XOR row_half`, because every discriminating
 x256 phase holds its row half fixed.
+
+The newly established address-row selector permits the missing direct
+row-half translation: adding `0x100000` moves the same x256 mapping from rows
+0--15 to rows 16--31 without changing its columns.  A 6144-instruction matrix
+compared row 0, row 16, alternating row 0/16, and alternating aligned
+8-column tiles.  Every STTM case took **49115 cycles** (and the corresponding
+LDTM cases all took **50118 cycles**) in three exact repeats.  Thus row bit 4
+does not change the isolated x256 conflict penalty.
+
+A stronger same-subcore test let warp 0 and warp 4 each issue 6144 x256
+stores.  Both writing row 0 and splitting them between rows 0/16 produced the
+same result in five repeats: CTA span **98269 cycles**, with per-warp durations
+98265 and 92900 cycles.  This is almost exactly twice the single-stream span:
+separate LDTM/STTM instructions are serialized at the shared chunk backend,
+even when their row halves differ.  Consequently the experiment finds no
+counterexample to the minimal visible selector `bank = column & 1`.
+
+There is an important logical limit: because the two requests do not receive
+simultaneous bank service, these timings also cannot rule out an internal
+`column_parity XOR row_half` implementation that merely swaps the names of two
+symmetric banks.  The narrow conclusion is that no measured LDTM/STTM service
+or conflict class requires that XOR; it is not a proof of absolute physical
+bank identity.  Probes:
+`tests/asm_construct/probe_sm100_tmem_layout_bank_timing.py` and
+`tests/asm_construct/probe_sm100_tmem_row_bank_parallel.py`.
 
 An attempted direct discriminator selected correlated `thread_id mod 4`
 classes in x64, but these are uniform-datapath instructions and the encoding

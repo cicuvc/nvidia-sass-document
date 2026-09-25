@@ -208,11 +208,13 @@ of the 16-datapath LDTM.  The complete mappings are:
               col = 2*p + (j & 1)                   j=0..3
 ```
 
-The reverse STTM→canonical experiments produce the exact inverse maps.  All
-three shapes access canonical TMEM rows **0--15 only**; rows 16--31 are left
-untouched.  Their canonical column footprints are respectively 4, 16, and 8
-columns—not 2, 8, and 4 as a naïve `32 lanes * register count` byte count would
-suggest, because the physical layout has only 16 datapaths.
+The reverse STTM→canonical experiments produce the exact inverse maps.  At a
+TMEM address whose row field is zero, all three shapes access canonical TMEM
+rows **0--15 only**; rows 16--31 are left untouched.  Setting address row bit
+4 moves the same mapping to rows 16--31 (see the row-address probe below).
+Their canonical column footprints are respectively 4, 16, and 8 columns—not
+2, 8, and 4 as a naïve `32 lanes * register count` byte count would suggest,
+because the physical layout has only 16 datapaths.
 
 The split forms have an even simpler meaning:
 
@@ -237,6 +239,36 @@ physical SRAM banks.
 
 Probe: `tests/asm_construct/probe_sm100_tmem_layout_tomography.py`; the Modal
 runner's `--tomography-regs` mode decodes tags as `source_thread:source_reg`.
+
+#### Address row field: alignment and effective bits (2026-09-25)
+
+`tests/asm_construct/probe_sm100_tmem_row_address.py` constructs the complete
+operand as `allocated_column_base + (row << 16)`, then runs same-layout tagged
+STTM/LDTM round trips.  Each faulting row is launched in a fresh process because
+CUDA error 716 poisons the context.  A second isolation test writes distinct
+tags to row 0 and another accepted row before loading both, so acceptance cannot
+be mistaken for the row bits actually participating in the lookup.
+
+On B200 the observed rule is:
+
+| layout | accepted row alignment | effective row selector |
+|---|---:|---|
+| `32dp32bit` | `row % 32 == 0` | none: 0, 32, 64, 96 alias |
+| all `16dp*` layouts | `row % 16 == 0` | bit 4 only: 0/32/64/96 alias; 16/48/80/112 alias |
+
+The 16-datapath result was checked for `16dp64bit.x2`, `16dp128bit.x1`,
+`16dp256bit.x1`, and both `16dp32bit_t*_t*.x2` forms.  Accepted addresses return
+the exact tags.  Every sampled non-aligned value (including 1, 15, 17, 31, 33,
+47, 49, 63, 65, 79, 81, 95, 97, 111, 113, and 127) raises
+`CUDA_ERROR_MISALIGNED_ADDRESS` rather than rounding.  Store-only and load-only
+probes independently reproduce the same rules: this is not a fault peculiar to
+one side of the round trip.
+
+Thus bits 6:5 of the nominal 7-bit row subfield are accepted syntactically but
+do not select different storage for LDTM/STTM.  For 16-datapath layouts, row bit
+4 selects the lower or upper 16 rows of the canonical 32-row view.  The
+`t0_t15`/`t16_t31` modifier still independently chooses which register lanes
+carry those rows; it is not the row-16 selector.
 
 The hand assembler accepts `tmem[URx+imm]` directly; exact nvcc-vector
 round trips live in `tests/asm_construct/test_tcgen05_ldst_sm100.py`.
@@ -494,6 +526,13 @@ LDTM scoreboard depth as a confounder and shows that x256's same-parity
 per-phase column set has an exact two-way bank penalty.  Thus the visible bank
 selector contains column bit 0; whether row-half XORs that bit remains open.
 See "Intra-instruction bank conflict from 16-datapath layouts" in `sttm.md`.
+
+The follow-up row-address matrix moves the identical x256 access between rows
+0--15 and 16--31.  Isolated, alternating, and same-subcore two-warp streams are
+cycle-identical for the two row halves.  This supplies no counterexample to
+`bank = column & 1`; however, the two-warp stream is serialized at the common
+LDTM/STTM backend, so it cannot exclude a physically symmetric row-half XOR.
+Exact numbers and the scope of that negative result are recorded in `sttm.md`.
 
 A corrected exhaustive modifier sweep also executes all **90** LDTM
 layout/NUM/bit-80 combinations (45 layouts with and without `PACK16BIT`).  For
