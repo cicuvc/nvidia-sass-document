@@ -176,6 +176,7 @@ RE_UNCHECKED = re.compile(r"^\s*[-*]\s+\[ \]")
 NON_NOTE_FILES = {
     "AUDIT_BASELINE.md",
     "notes_status_overrides.json",
+    "sm120/measurements_index.md",
 }
 LEDGER_FILES = {
     "sm120/silver-status.md",
@@ -519,7 +520,11 @@ def audit_file(path: str) -> dict:
     unchecked = len(RE_UNCHECKED.findall(text))
     status = parse_status_block(text)
     proposal = propose_evidence(text, relpath)
-    tier, tier_reasons = proposal["tier"], [proposal["basis"]] if proposal["basis"] else []
+    # An explicit `Evidence:` field is a human/generator decision and outranks the
+    # heuristic; the heuristic is only recorded as the second opinion.
+    tier = status.get("Evidence") or proposal["tier"]
+    tier_reasons = [f"status block says {tier}"] if status.get("Evidence") \
+        else ([proposal["basis"]] if proposal["basis"] else [])
     # A heading counts as dated when it carries a date, or when the migrator placed a
     # provenance note directly underneath it.
     redacted = [h for ln, h in verified

@@ -7,20 +7,20 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 
 | metric | value |
 |---|---:|
-| notes | 285 |
-| words | 351974 |
-| with_status_block | 283 |
+| notes | 389 |
+| words | 510266 |
+| with_status_block | 387 |
 | legacy_banners | 0 |
 | verified_headings | 42 |
 | undated_verified_headings | 19 |
-| open_question_sections | 168 |
+| open_question_sections | 272 |
 | retract_markers | 32 |
 | strikethrough_spans | 19 |
-| hedge_words | 160 |
+| hedge_words | 159 |
 | unchecked_boxes | 0 |
-| by_kind | arch=85, instr=197, top=3 |
-| by_arch | general=3, sm100=38, sm103=3, sm120=30, sm70=1, sm80=2, sm89=1, sm90=207 |
-| inferred_evidence | mixed=16, sm100-silicon=36, sm103-silicon=1, sm120-silicon=210, sm70-silicon=1, sm80-silicon=2, sm90-silicon=17, spec=2 |
+| by_kind | arch=85, instr=301, top=3 |
+| by_arch | general=3, sm100=38, sm103=3, sm120=134, sm70=1, sm80=2, sm89=1, sm90=207 |
+| inferred_evidence | mixed=3, sm100+sm103-silicon=2, sm100-silicon=35, sm103-silicon=2, sm120-silicon=205, sm70-silicon=1, sm80-silicon=2, sm89-silicon=1, sm90+sm120-silicon=9, sm90-silicon=21, spec=108 |
 
 ## Issue counts
 
@@ -37,20 +37,20 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | note | kind | words | ev | status | ev-block | retr | strike | undated | hedge | open | issues |
 |---|---|---:|---|---|---:|---:|---:|---:|---:|---:|---|
 | `ARCH_DIFF.md` | top | 1498 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
-| `CUBIN_STRUCTURE.md` | top | 2598 | spec | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
+| `CUBIN_STRUCTURE.md` | top | 2598 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `DEVICE_PRINT.md` | top | 1753 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
-| `sm100/OVERVIEW.md` | arch | 1566 | mixed | active | spec | 0 | 0 | 0 | 0 | 2 | - |
+| `sm100/OVERVIEW.md` | arch | 1566 | spec | active | spec | 0 | 0 | 0 | 0 | 2 | - |
 | `sm100/arch/b200_fixed_admission_depth.md` | arch | 2363 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm100/arch/b200_fixed_forwarding.md` | arch | 1659 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 1 | 0 | - |
 | `sm100/arch/b200_icache_topology.md` | arch | 1299 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm100/arch/b200_lsu_exchange_topology.md` | arch | 707 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm100/arch/b200_mio_admission_depth.md` | arch | 1433 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 0 | - |
-| `sm100/arch/control_codes.md` | arch | 854 | sm100-silicon | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm100/arch/control_codes.md` | arch | 854 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
 | `sm100/arch/mercury_capmerc.md` | arch | 768 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 1 | 0 | - |
 | `sm100/arch/tcgen05_descriptors.md` | arch | 1464 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm100/arch/tcgen05_microarch_speculation.md` | arch | 3795 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 3 | 0 | - |
 | `sm100/arch/tcgen05_multiwarp_allocator_v1.md` | arch | 628 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 0 | - |
-| `sm100/arch/tcgen05_multiwarp_allocator_v2.md` | arch | 490 | mixed | active | sm100+sm103-silicon | 0 | 0 | 0 | 0 | 0 | - |
+| `sm100/arch/tcgen05_multiwarp_allocator_v2.md` | arch | 490 | sm100+sm103-silicon | active | sm100+sm103-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm100/arch/tcgen05_tooling_checkpoint.md` | arch | 1006 | sm100-silicon | historical | sm100-silicon | 1 | 0 | 0 | 0 | 0 | - |
 | `sm100/arch/tmem_atexit_handler.md` | arch | 744 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm100/arch/tmem_entry_fragment.md` | arch | 929 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 0 | - |
@@ -77,9 +77,9 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm100/instr/utcqmma.md` | instr | 1110 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm100/instr/utcshift.md` | instr | 1920 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 3 | 1 | - |
 | `sm100/rf_bank_probe.md` | arch | 574 | sm100-silicon | active | sm100-silicon | 0 | 0 | 0 | 0 | 0 | - |
-| `sm103/b300_mufu_ex2_throughput.md` | arch | 295 | mixed | active | sm103-silicon | 0 | 0 | 0 | 0 | 0 | - |
+| `sm103/b300_mufu_ex2_throughput.md` | arch | 295 | sm103-silicon | active | sm103-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm103/instr/ldtm_stat.md` | instr | 693 | sm103-silicon | active | sm103-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
-| `sm103/rf_bank_probe.md` | arch | 399 | mixed | active | sm100+sm103-silicon | 0 | 0 | 0 | 0 | 0 | - |
+| `sm103/rf_bank_probe.md` | arch | 399 | sm100+sm103-silicon | active | sm100+sm103-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm120/adu_topology.md` | arch | 1224 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm120/aluheavy_latency.md` | arch | 894 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm120/alulite_latency.md` | arch | 1069 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
@@ -97,12 +97,116 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm120/fp64_redirect_latency.md` | arch | 566 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm120/gb202_compute_pipelines.md` | arch | 6932 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 3 | 0 | - |
 | `sm120/icache_topology.md` | arch | 2352 | sm120-silicon | active | sm120-silicon | 3 | 0 | 0 | 0 | 0 | - |
-| `sm120/index.md` | arch | 876 | mixed | historical | mixed | 0 | 0 | 0 | 2 | 0 | - |
+| `sm120/index.md` | arch | 1054 | mixed | historical | mixed | 0 | 0 | 0 | 2 | 0 | - |
 | `sm120/indexed_rf_topology.md` | arch | 472 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
+| `sm120/instr/acqshminit.md` | instr | 451 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/atoms.md` | instr | 4190 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/bmov.md` | instr | 978 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/bmsk.md` | instr | 751 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/break.md` | instr | 525 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/brev.md` | instr | 619 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/bssy.md` | instr | 596 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/bsync.md` | instr | 525 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/call.md` | instr | 1060 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/cctl.md` | instr | 3301 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/clmad.md` | instr | 982 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/cs2ur.md` | instr | 533 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/dadd.md` | instr | 922 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/dfma.md` | instr | 1330 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/dmul.md` | instr | 922 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/dsetp.md` | instr | 1097 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/f2f.md` | instr | 2085 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/f2fp.md` | instr | 11236 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/f2i.md` | instr | 3837 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/f2ip.md` | instr | 1353 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fadd.md` | instr | 845 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fchk.md` | instr | 667 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ffma.md` | instr | 1194 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fhadd.md` | instr | 736 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fhfma.md` | instr | 940 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/flo.md` | instr | 666 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fmnmx.md` | instr | 1137 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fmul.md` | instr | 893 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/frnd.md` | instr | 2026 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fsel.md` | instr | 833 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fset.md` | instr | 1164 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/fsetp.md` | instr | 1048 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
 | `sm120/instr/getlmembase.md` | instr | 540 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
-| `sm120/instr/ldcu.md` | instr | 1777 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
+| `sm120/instr/hadd2.md` | instr | 2441 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/hfma2.md` | instr | 8885 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/hmnmx2.md` | instr | 2929 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/hmul2.md` | instr | 1748 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/hset2.md` | instr | 2552 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/hsetp2.md` | instr | 2400 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/i2f.md` | instr | 2022 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/i2fp.md` | instr | 877 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/i2i.md` | instr | 652 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/i2ip.md` | instr | 3335 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/iabs.md` | instr | 634 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/iadd3.md` | instr | 1370 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/idp.md` | instr | 973 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/imad.md` | instr | 6787 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/imnmx.md` | instr | 1889 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/isetp.md` | instr | 2788 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/jmp.md` | instr | 885 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ldcu.md` | instr | 3075 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ldg.md` | instr | 5349 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/lea.md` | instr | 2796 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/lop3.md` | instr | 1791 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/mov.md` | instr | 1197 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/mov64iur.md` | instr | 579 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/mufu.md` | instr | 1140 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/mxqmma.md` | instr | 763 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/nanosleep.md` | instr | 653 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/nanotrap.md` | instr | 603 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/omma.md` | instr | 1176 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/p2r.md` | instr | 802 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/plop3.md` | instr | 1643 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/popc.md` | instr | 630 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/prmt.md` | instr | 1101 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/qmma.md` | instr | 3390 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/r2p.md` | instr | 695 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/reds.md` | instr | 1323 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/rpcmov.md` | instr | 701 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/sel.md` | instr | 1185 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
 | `sm120/instr/setlmembase.md` | instr | 853 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 0 | `no-open-questions-section` |
-| `sm120/l2_slice_probe.md` | arch | 702 | mixed | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
+| `sm120/instr/sgxt.md` | instr | 763 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/shf.md` | instr | 1071 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/stg.md` | instr | 3905 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/syncs.md` | instr | 1686 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ublkcp.md` | instr | 2058 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ublkred.md` | instr | 2246 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uf2f.md` | instr | 785 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uf2i.md` | instr | 1152 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uf2ip.md` | instr | 921 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufadd.md` | instr | 658 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uffma.md` | instr | 830 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufhadd.md` | instr | 617 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufhfma.md` | instr | 682 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufmnmx.md` | instr | 817 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufmul.md` | instr | 694 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufrnd.md` | instr | 1113 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufsel.md` | instr | 647 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufset.md` | instr | 832 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ufsetp.md` | instr | 774 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ugetnextworkid.md` | instr | 760 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ui2f.md` | instr | 722 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ui2fp.md` | instr | 713 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ui2i.md` | instr | 538 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/ui2ip.md` | instr | 1304 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uiabs.md` | instr | 523 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uimad.md` | instr | 1896 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uimnmx.md` | instr | 1215 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/umemsets.md` | instr | 600 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/umov.md` | instr | 719 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/usel.md` | instr | 856 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/utmacctl.md` | instr | 715 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uviadd.md` | instr | 675 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uvimnmx.md` | instr | 730 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/uvirtcount.md` | instr | 639 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/viadd.md` | instr | 888 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/instr/vimnmx.md` | instr | 946 | spec | active | spec | 0 | 0 | 0 | 0 | 1 | - |
+| `sm120/l2_slice_probe.md` | arch | 702 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm120/mio_lsu_xu_topology.md` | arch | 8215 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 0 | - |
 | `sm120/rf_writeback_conflict.md` | arch | 2703 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm120/scalar_math_pipe_catalog.md` | arch | 893 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
@@ -113,7 +217,7 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm70/register_banks.md` | arch | 576 | sm70-silicon | active | sm70-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm80/register_banks.md` | arch | 516 | sm80-silicon | active | sm80-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm80/scalar_math_pipelines.md` | arch | 3390 | sm80-silicon | active | sm80-silicon | 0 | 0 | 0 | 1 | 0 | - |
-| `sm89/scalar_math_pipelines.md` | arch | 2237 | mixed | active | sm89-silicon | 0 | 0 | 0 | 0 | 1 | - |
+| `sm89/scalar_math_pipelines.md` | arch | 2237 | sm89-silicon | active | sm89-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/arch/assembler_sm90_port.md` | arch | 943 | sm90-silicon | active | sm90-silicon | 3 | 0 | 1 | 0 | 1 | `undated-verified-heading(1)` |
 | `sm90/arch/async_proxy.md` | arch | 753 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/arch/cache_descriptor.md` | arch | 1426 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 3 | 1 | - |
@@ -131,15 +235,15 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/arch/hmma_fda_model.md` | arch | 1239 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/arch/hmma_pipeline.md` | arch | 718 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/arch/iswz.md` | arch | 517 | sm90-silicon | active | sm90-silicon | 0 | 0 | 0 | 0 | 0 | - |
-| `sm90/arch/l2_numa_h800.md` | arch | 1098 | mixed | active | sm90-silicon | 0 | 0 | 0 | 0 | 0 | - |
+| `sm90/arch/l2_numa_h800.md` | arch | 1098 | sm90-silicon | active | sm90-silicon | 0 | 0 | 0 | 0 | 0 | - |
 | `sm90/arch/ldc_admode.md` | arch | 683 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 2 | 1 | - |
 | `sm90/arch/lsu_mio_structure.md` | arch | 2125 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 2 | 1 | - |
 | `sm90/arch/memory_model.md` | arch | 1196 | sm90-silicon | active | sm90-silicon | 0 | 0 | 0 | 1 | 0 | - |
 | `sm90/arch/memory_order_cta.md` | arch | 3454 | sm120-silicon | active | sm120-silicon | 1 | 0 | 0 | 2 | 1 | - |
-| `sm90/arch/pipe_forward_survey.md` | arch | 1520 | mixed | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
+| `sm90/arch/pipe_forward_survey.md` | arch | 1520 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/arch/pipe_forwarding.md` | arch | 2799 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
-| `sm90/arch/ptx_memory_model_to_sass.md` | arch | 1887 | mixed | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
-| `sm90/arch/register_bandwidth.md` | arch | 3406 | mixed | active | sm90-silicon | 0 | 0 | 0 | 2 | 1 | - |
+| `sm90/arch/ptx_memory_model_to_sass.md` | arch | 1887 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 0 | - |
+| `sm90/arch/register_bandwidth.md` | arch | 3406 | sm90-silicon | active | sm90-silicon | 0 | 0 | 0 | 2 | 1 | - |
 | `sm90/arch/scoreboards.md` | arch | 1361 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/arch/shared_bank_conflicts.md` | arch | 5933 | sm120-silicon | active | sm120-silicon | 4 | 1 | 0 | 0 | 1 | - |
 | `sm90/arch/sm90_resilver_audit.md` | arch | 3189 | sm120-silicon | - | - | 0 | 0 | 0 | 1 | 0 | `ledger-needs-regeneration` |
@@ -152,7 +256,7 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/arch/wgmma.md` | arch | 9810 | sm90-silicon | active | sm90-silicon | 10 | 9 | 0 | 2 | 1 | - |
 | `sm90/instr/acqbulk.md` | instr | 376 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/arrives.md` | instr | 585 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
-| `sm90/instr/atom.md` | instr | 601 | sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
+| `sm90/instr/atom.md` | instr | 601 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
 | `sm90/instr/atomg.md` | instr | 717 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
 | `sm90/instr/atoms.md` | instr | 585 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/instr/b2r.md` | instr | 530 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
@@ -162,14 +266,14 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/instr/bmov.md` | instr | 721 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/instr/bmsk.md` | instr | 455 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
 | `sm90/instr/bpt.md` | instr | 302 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
-| `sm90/instr/bra.md` | instr | 921 | mixed | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
+| `sm90/instr/bra.md` | instr | 921 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/break.md` | instr | 908 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/instr/brev.md` | instr | 318 | sm120-silicon | active | sm120-silicon | 0 | 0 | 1 | 0 | 0 | `undated-verified-heading(1)`, `no-open-questions-section` |
 | `sm90/instr/brx.md` | instr | 671 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/brxu.md` | instr | 481 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/bssy.md` | instr | 1303 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/instr/bsync.md` | instr | 944 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
-| `sm90/instr/call.md` | instr | 1144 | mixed | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
+| `sm90/instr/call.md` | instr | 1144 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/cctl.md` | instr | 1151 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 2 | 2 | - |
 | `sm90/instr/cctll.md` | instr | 743 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/cgaerrbar.md` | instr | 294 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
@@ -202,7 +306,7 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/instr/fsetp.md` | instr | 837 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/instr/fswzadd.md` | instr | 1067 | sm120-silicon | active | sm120-silicon | 2 | 0 | 0 | 4 | 1 | - |
 | `sm90/instr/gather.md` | instr | 961 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
-| `sm90/instr/getlmembase.md` | instr | 641 | mixed | active | sm90-silicon | 0 | 0 | 0 | 0 | 1 | - |
+| `sm90/instr/getlmembase.md` | instr | 641 | sm90-silicon | active | sm90-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/hadd2.md` | instr | 1268 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 2 | 1 | - |
 | `sm90/instr/hfma2.md` | instr | 1746 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 3 | 1 | - |
 | `sm90/instr/hgmma.md` | instr | 2769 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
@@ -224,7 +328,7 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/instr/imma.md` | instr | 1400 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/imnmx.md` | instr | 986 | sm120-silicon | active | sm120-silicon | 0 | 0 | 1 | 1 | 1 | `undated-verified-heading(1)` |
 | `sm90/instr/isetp.md` | instr | 556 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
-| `sm90/instr/jmp.md` | instr | 1458 | mixed | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
+| `sm90/instr/jmp.md` | instr | 1458 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/jmx.md` | instr | 559 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/jmxu.md` | instr | 482 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/kill.md` | instr | 241 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
@@ -248,7 +352,7 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/instr/nop.md` | instr | 176 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 0 | `no-open-questions-section` |
 | `sm90/instr/p2r.md` | instr | 1055 | sm120-silicon | active | sm120-silicon | 0 | 1 | 0 | 0 | 1 | - |
 | `sm90/instr/plop3.md` | instr | 704 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
-| `sm90/instr/pmtrig.md` | instr | 1231 | sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
+| `sm90/instr/pmtrig.md` | instr | 1231 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/popc.md` | instr | 243 | sm120-silicon | active | sm120-silicon | 0 | 0 | 1 | 0 | 0 | `undated-verified-heading(1)`, `no-open-questions-section` |
 | `sm90/instr/preexit.md` | instr | 387 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/prmt.md` | instr | 965 | sm120-silicon | active | sm120-silicon | 0 | 0 | 1 | 0 | 0 | `undated-verified-heading(1)`, `no-open-questions-section` |
@@ -267,7 +371,7 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/instr/scatter.md` | instr | 1007 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 2 | 1 | - |
 | `sm90/instr/sel.md` | instr | 330 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
 | `sm90/instr/setctaid.md` | instr | 670 | sm120-silicon | active | sm120-silicon | 0 | 2 | 0 | 0 | 1 | - |
-| `sm90/instr/setlmembase.md` | instr | 506 | mixed | active | sm90-silicon | 0 | 0 | 0 | 1 | 1 | - |
+| `sm90/instr/setlmembase.md` | instr | 506 | sm90-silicon | active | sm90-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/instr/setmaxreg.md` | instr | 1515 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/sgxt.md` | instr | 718 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/instr/shf.md` | instr | 1905 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
@@ -287,7 +391,7 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/instr/ucgabar_arv.md` | instr | 566 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 1 | - |
 | `sm90/instr/ucgabar_get.md` | instr | 286 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/ucgabar_set.md` | instr | 262 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
-| `sm90/instr/uclea.md` | instr | 401 | sm120-silicon | active | mixed | 0 | 1 | 0 | 1 | 1 | - |
+| `sm90/instr/uclea.md` | instr | 401 | mixed | active | mixed | 0 | 1 | 0 | 1 | 1 | - |
 | `sm90/instr/uf2fp.md` | instr | 543 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
 | `sm90/instr/uflo.md` | instr | 421 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/uiadd3.md` | instr | 1345 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 1 | 0 | `no-open-questions-section` |
@@ -298,7 +402,7 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/instr/ulepc.md` | instr | 577 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/ulop3.md` | instr | 1152 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/umov.md` | instr | 314 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
-| `sm90/instr/up2ur.md` | instr | 854 | sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 2 | 1 | - |
+| `sm90/instr/up2ur.md` | instr | 854 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 2 | 1 | - |
 | `sm90/instr/uplop3.md` | instr | 991 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 2 | 1 | - |
 | `sm90/instr/upopc.md` | instr | 96 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
 | `sm90/instr/uprmt.md` | instr | 481 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
@@ -318,6 +422,6 @@ This is the frozen pre-cleanup snapshot: every later phase diffs against it.
 | `sm90/instr/viaddmnmx.md` | instr | 468 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
 | `sm90/instr/vimnmx.md` | instr | 521 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 0 | `no-open-questions-section` |
 | `sm90/instr/vote.md` | instr | 905 | sm120-silicon | active | sm120-silicon | 0 | 0 | 1 | 0 | 1 | `undated-verified-heading(1)` |
-| `sm90/instr/voteu.md` | instr | 762 | sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
+| `sm90/instr/voteu.md` | instr | 762 | sm90+sm120-silicon | active | sm90+sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
 | `sm90/instr/warpsync.md` | instr | 1511 | sm120-silicon | active | sm120-silicon | 0 | 0 | 0 | 0 | 1 | - |
-| `sm90/instr/yield.md` | instr | 1001 | sm120-silicon | active | mixed | 0 | 0 | 0 | 0 | 1 | - |
+| `sm90/instr/yield.md` | instr | 1001 | mixed | active | mixed | 0 | 0 | 0 | 0 | 1 | - |

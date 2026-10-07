@@ -578,6 +578,15 @@ def load_overrides() -> dict:
 LEDGER_FILES = ("sm90/arch/sm90_resilver_audit.md", "sm120/silver-status.md")
 
 
+#: Notes owned by a generator: touching them here would make the generator's `--check`
+#: fail (and the generator already writes the status block and zones).
+GENERATED_FILES_PREFIXES = ("sm120/instr/",)
+
+
+def is_generated(relpath: str) -> bool:
+    return relpath.startswith(GENERATED_FILES_PREFIXES)
+
+
 def migrate(apply: bool, do_status: bool, do_sections: bool, do_ledger: bool,
             limit: int = 0, show: int = 0) -> int:
     overrides = load_overrides()
@@ -587,8 +596,8 @@ def migrate(apply: bool, do_status: bool, do_sections: bool, do_ledger: bool,
     pending: list[tuple[str, str]] = []
     for rec in records:
         path = os.path.join(NOTES_DIR, rec["path"])
-        if rec["path"] in LEDGER_FILES:
-            continue  # handled by the ledger step below
+        if rec["path"] in LEDGER_FILES or is_generated(rec["path"]):
+            continue  # handled by the ledger step / the sm120 note generator
         original = na.read(path)
         migrated = na.STATUS_MARKER in original and HEADING_CONCLUSION in original
         text = original

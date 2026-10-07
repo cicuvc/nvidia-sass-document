@@ -55,15 +55,32 @@ RTX 5090, and the repo's SASS assembler (`assembler/`, arch=sm120) unless stated
 | `instr/setlmembase.md` | Silicon proof that SETLMEMBASE redirects subsequent LDL/STL backing accesses |
 | `notes/sm120/l2_slice_probe.md` | Attempts to count L2 slices on GB202; single-L2-backend evidence |
 
+## Per-instruction sm_120 reference (`instr/`)
+
+`instr/` now holds one note per **compute** mnemonic whose sm_120 form differs from the
+sm_90 dump, plus every Blackwell-only compute mnemonic: **105 notes**, generated from
+`sm120_instructions.txt` by `tools/sm120_notes_gen.py` (re-run it after a parser change;
+`--check` fails when the tree is stale). Each note carries the CLASS list, FORMAT-derived
+operand shapes, the 128-bit ENCODING map, PROPERTIES, legal-encoding conditions, pipe
+membership, how many committed fixture cubins use the mnemonic, and where its sm_120
+measurements live.
+
+Machine registry of every measurement and the note that holds it:
+[`measurements_index.md`](measurements_index.md) (`tools/sm120_measurements_index.py`).
+The numbers are **not** copied into the instruction notes — an index plus a pointer keeps
+one authoritative copy.
+
 ## Blackwell-only instructions referenced from these notes
 
 | Mnemonic | Where documented | sm_90 relationship |
 |---|---|---|
-| QMMA / QMMA.SF | `notes/sm90/arch/hmma_fda_model.md` §QMMA.SF, `tests/asm_construct/test_qmma*.py`, srcFmt enum (E4M3/E3M4/E2M3/E5M2/E3M2/E2M1) | none — Hopper uses QGMMA/WGMMA |
-| OMMA / OMMA.SF (MXFP4 e2m1 m16n8k64) | same model note, `test_omma.py` | none |
+| QMMA / QMMA.SF / MXQMMA / OMMA | `instr/qmma.md`, `instr/mxqmma.md`, `instr/omma.md` (encodings) + `notes/sm90/arch/hmma_fda_model.md` §QMMA.SF, `tests/asm_construct/test_qmma*.py` (semantics, srcFmt enum E4M3/E3M4/E2M3/E5M2/E3M2/E2M1) | none — Hopper uses QGMMA/WGMMA |
+| Uniform FP/convert/compare stack: `UFADD UFFMA UFMUL UFMNMX UFSEL UFSET UFSETP UFRND UF2F UF2I UF2IP UFHADD UFHFMA UI2F UI2I UI2IP UI2FP UIABS UIMNMX UVIADD UVIMNMX CS2UR` | `instr/<mnem>.md` | absent from the sm_90 dump — the sm_90 uniform ALU has no FP half |
+| `UGETNEXTWORKID` | `instr/ugetnextworkid.md` | absent from the sm_90 dump |
+| `UMEMSETS`, `UVIRTCOUNT` | `instr/umemsets.md`, `instr/uvirtcount.md` | absent from the sm_90 dump |
 | Tensor-map helper contract (`cuTensorMap*` → 128-byte descriptor) | `notes/sm90/arch/cutensormap.md`, `tests/asm_construct/test_tmap_helper.py` | TMA descriptors exist on sm90 via UTMALDG/UTMASTG, but the helper bit-patterns recorded were probed on sm_120 |
-| F2FP extra destination formats `.E2M1` / MXFP4 PACK_AB_MERGE_C nibble packing | `notes/sm90/instr/f2fp.md` "runs on sm120 hardware" rows | absent from the sm_90 spec dump — do not list them as sm_90 variants |
-| CCTL.LDCU.IV.DEEP + UTMACCTL.IV pairing | `notes/sm90/instr/cctl.md` (empirically RTX 5090) | cctl/utmacctl exist on sm_90; this specific IV.DEEP pairing observed only on Blackwell |
+| F2FP extra destination formats `.E2M1` / MXFP4 PACK_AB_MERGE_C nibble packing | `instr/f2fp.md` + `notes/sm90/instr/f2fp.md` "runs on sm120 hardware" rows | absent from the sm_90 spec dump — do not list them as sm_90 variants |
+| CCTL.LDCU.IV.DEEP + UTMACCTL.IV pairing | `instr/cctl.md`, `instr/utmacctl.md` + `notes/sm90/instr/cctl.md` (empirically RTX 5090) | cctl/utmacctl exist on sm_90; this specific IV.DEEP pairing observed only on Blackwell |
 
 ## Silicon-only-on-Blackwell claims awaiting a real sm_90 verdict
 

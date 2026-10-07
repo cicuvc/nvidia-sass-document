@@ -10,7 +10,7 @@ Both are grep-first: never `Read` them whole. Use `grep -n` to locate a section,
 
 ### Current state
 - **197/207** compute instructions documented (notes + decoder + test kernel). Only `F2FP` and `RTT` remain unchecked.
-- **285 notes** (`notes/`, 350k words) — `notes/sm90/instr/` 171 per-instruction docs, `notes/sm90/arch/` 37 cross-cutting notes, plus the sm100/sm103/sm120 archives and 3 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
+- **389 notes** (`notes/`, 513k words) — `notes/sm90/instr/` 171 per-instruction docs, `notes/sm90/arch/` 37 cross-cutting notes, `notes/sm120/instr/` 105 generated sm_120 instruction docs, plus the sm100/sm103 archives and 3 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
 - **109 decoders** (`tools/decode_*.py`) — one per documented instruction, each validated against real cuobjdump vectors.
 - **177 CUDA kernels** (`tests/*.cu`) + **87 assembler/round-trip tests** (`tests/asm_construct/test_*.py`) that build SASS by hand, load it through `assembler/`, and run it on a GPU.
 - **124 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, `hmma_model.py`, shared libs).
@@ -892,7 +892,30 @@ python3 tools/notes_migrate.py --status --sections --ledger [--apply]   # idempo
 `notes/notes_status_overrides.json` holds the hand-confirmed tiers where the note text
 does not pin the measurement host; `notes/AUDIT_BASELINE.md` is the frozen pre-cleanup
 snapshot. The migrator refuses to run if a migration would lose a line of prose or a
-title.
+title. It skips `notes/sm120/instr/` — those notes belong to their generator.
+
+### sm_120 instruction reference (generated)
+
+`notes/sm120/instr/` holds one note per **compute** mnemonic whose sm_120 form differs
+from the sm_90 dump, plus every Blackwell-only compute mnemonic (**105 notes**).  They are
+produced from `sm120_instructions.txt` — never hand-write the encoding tables:
+
+```
+python3 tools/isa_diff_sm90_sm120.py [--write-report notes/sm120/isa_diff_sm90.md]
+python3 tools/sm120_notes_gen.py [--list|--write|--check|--mnem NAME|--explain NAME]
+python3 tools/sm120_measurements_index.py [--write|--check]
+```
+
+Rules this setup encodes:
+
+- **Measurement results are indexed, not copied.** A measurement lives in exactly one note
+  (usually under `notes/sm90/`, where it was recorded); the sm_120 instruction note points
+  at it and at `notes/sm120/measurements_index.md`. Copying a number into a second file is
+  how the notes became ambiguous in the first place.
+- A generated note's status block says `Evidence: spec` — its content came from the ISA
+  dump, not from silicon. Do not upgrade that tier without a measurement.
+- `sm120_notes_gen.py --check` fails when the tree is stale, so re-run `--write` after a
+  parser change; `--explain NAME` shows the diff for one note.
 
 ### Phase 2 — Refinement workflow
 With the first doc pass complete, focus shifts to **note quality and consistency**:
