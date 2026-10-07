@@ -81,6 +81,6 @@ and the [full local-memory backing study](../../sm120/arch/local_memory_backing_
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Real cuobjdump text form unconfirmed.
-- Shares `SETCTAID`'s `VQ_ADU` queue — possibly used during kernel prologue.
+- Real cuobjdump text form unconfirmed.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Shares `SETCTAID`'s `VQ_ADU` queue — possibly used during kernel prologue.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

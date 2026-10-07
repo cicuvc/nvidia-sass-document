@@ -144,9 +144,9 @@ also maps to `UTCOMMA` (verified with `.scale_vec::4X`).
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The exact TMEM layout of scale blocks (`.scale_vec::1X/2X/4X` or
+- The exact TMEM layout of scale blocks (`.scale_vec::1X/2X/4X` or  <!-- open-question: answered answered by "§Semantics (UTCOMMA, `opType=1`)" in this note -->
   `.block16/32`) and how the single `tmem[scale]` address + data IDs resolve
   to A-scale/B-scale per element.
-- `opType` values 2, 4, 5 — unused in the dump: reserved, or used by other
+- `opType` values 2, 4, 5 — unused in the dump: reserved, or used by other  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   microarch modes not yet exposed?
 

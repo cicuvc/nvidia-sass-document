@@ -87,5 +87,5 @@ Test: `tests/cs2r_test.cu`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- None significant; both size modes and counter/zero uses verified.
+- None significant; both size modes and counter/zero uses verified.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

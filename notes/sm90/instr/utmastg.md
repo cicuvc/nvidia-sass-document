@@ -140,5 +140,5 @@ buffer, simple `ELECT P0` + 8 NOPs + `@!P0 BRA` producer guard):
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether the `_desc` (memdesc=1) store form is emitted from stock PTX.
+- Whether the `_desc` (memdesc=1) store form is emitted from stock PTX.  <!-- open-question: duplicate asked in full in sm90/instr/utmaldg.md -->
 

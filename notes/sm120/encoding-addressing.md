@@ -300,9 +300,9 @@ predicated branch, fall-through lanes by executing the join in-line). The BSSY
 
 ## 9. Open questions
 
-- Exact TMA descriptor binary format (word-level decoding)
-- Whether other descriptor table indices (1, 2, …) map to different address spaces
-- Why `#pragma unroll 0` is ignored on SM120 PTXAS
-- SM120 constant bank 0 preset region layout (differs from SM90)
-- `MOV64I` vs `LDC.64` provenance requirement for STG addresses
+- Exact TMA descriptor binary format (word-level decoding)  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Whether other descriptor table indices (1, 2, …) map to different address spaces  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Why `#pragma unroll 0` is ignored on SM120 PTXAS  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
+- SM120 constant bank 0 preset region layout (differs from SM90)  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- `MOV64I` vs `LDC.64` provenance requirement for STG addresses  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

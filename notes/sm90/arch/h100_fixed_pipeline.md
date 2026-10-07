@@ -333,12 +333,12 @@ all permanent boundaries clean.
 
 ## Open questions
 
-- Why does DFMA (but not DADD) expose the yield switch cycle on top of its
+- Why does DFMA (but not DADD) expose the yield switch cycle on top of its  <!-- open-question: answered answered by "§yield = 1-cycle warp-switch cost, confirmed on GH100" in this note -->
   2.0 floor?  fma64lite admission granularity vs int_pipe's.
-- H20 re-run with clean brackets: does the nerfed die still show FFMA 1.0,
+- H20 re-run with clean brackets: does the nerfed die still show FFMA 1.0,  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   and what are its FP64 rates (the fuse-nerf target)?
-- HFMA2.MMA's +1 vs plain HFMA2: tensor-core-adjacent path or encoding
+- HFMA2.MMA's +1 vs plain HFMA2: tensor-core-adjacent path or encoding  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   variant of the same fp16 pipe?
-- The coarse/fine 3-vs-4 phase sensitivity on cross-domain hops — same
+- The coarse/fine 3-vs-4 phase sensitivity on cross-domain hops — same  <!-- open-question: answered answered by "§Result-visibility (producer→consumer bypass) matrices" in this note -->
   unresolved filler-shape effect as sm_120.
 

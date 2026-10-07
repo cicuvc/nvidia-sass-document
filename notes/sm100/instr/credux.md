@@ -82,10 +82,10 @@ Writes the scalar reduced value into `URd`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The membermask operand in PTX `redux.sync` — is it dropped in the CREDUX
+- The membermask operand in PTX `redux.sync` — is it dropped in the CREDUX  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   encoding (only full-warp masks), or encoded implicitly through the predicate
   word? (The SASS has no mask field.)
-- Why `CREDUX` uses `INST_TYPE_COUPLED_MATH` while classic `REDUX` is a plain
+- Why `CREDUX` uses `INST_TYPE_COUPLED_MATH` while classic `REDUX` is a plain  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   `udp_pipe` op — does the F32 path share the `fmalighter_pipe` or similar
   datapath that justifies the coupled slot?
 

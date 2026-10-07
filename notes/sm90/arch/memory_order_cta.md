@@ -410,7 +410,7 @@ DSMEM, so it emits conservatively on all CGA-capable archs.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- **Resolved: the acquire barrier is never folded.** Test `tests/acq_fold_test.cu`
+- **Resolved: the acquire barrier is never folded.** Test `tests/acq_fold_test.cu`  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   (sm_90). Five variants (use, indep, load, atom, fence) × two scopes, all show
   the `NOP`/`CCTL.IVALL` as a dedicated standalone instruction. Even when the
   next instruction is data-dependent on the acquire result (would naturally wait
@@ -418,6 +418,6 @@ DSMEM, so it emits conservatively on all CGA-capable archs.
   `CCTL.IVALL` (from acquire + from fence) are both present — no merging.
   The acquire barrier is modelled as an unconditional issue-drain point, not an
   ordering constraint on a specific consumer.
-- A genuine positive weak-behaviour control on Volta+ (may require mixed-proxy /
+- A genuine positive weak-behaviour control on Volta+ (may require mixed-proxy /  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   texture path, or async-copy, rather than plain generic-proxy ld/st).
 

@@ -148,14 +148,14 @@ Source: `tests/utcqmma_test.cu` → `tests/utcqmma_test.cubin`. Decoder:
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- How exactly does the single `tmem[scale]` address disambiguate between
+- How exactly does the single `tmem[scale]` address disambiguate between  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   scale-A and scale-B operands in the block-scale PTX syntax? (The data IDs in
   idesc[4:5]/[29:30] are 2-bit selectors — likely byte-offsets within the
   same TMEM base or slot indices into a scale-table region.)
-- `TMEMI` — the new TMEM scale operand type — is the 7th TMEM name (A/B/C/E/I/D
+- `TMEMI` — the new TMEM scale operand type — is the 7th TMEM name (A/B/C/E/I/D  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   across the family). Its exact TMEM column layout versus the scale block-vector
   size (`.scale_vec::1X/2X/4X` / `.block16/32`).
-- Why does `.kind::f8f6f4` without block-scale print `UTCQMMA` rather than
+- Why does `.kind::f8f6f4` without block-scale print `UTCQMMA` rather than  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   `UTCHMMA` when it uses the same opcodes? (Disassembler coherence: the class
   name tracks the PTX kind even though the encoding is identical.)
 

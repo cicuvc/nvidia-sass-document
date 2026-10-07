@@ -101,5 +101,5 @@ register (RRR) and uniform (RUR) width operands.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Const-bank (RCR/RCxR) text form unverified (only RRR/imm/uniform paths exercised).
+- Const-bank (RCR/RCxR) text form unverified (only RRR/imm/uniform paths exercised).  <!-- open-question: duplicate asked in full in sm90/instr/dmul.md -->
 

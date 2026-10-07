@@ -112,8 +112,8 @@ Measured on an RTX 5090 (GB202, sm_120). The numbers stay in the note that produ
 
 ## Open questions
 
-- Reproduce the VARIANT/ENCODING claims with a decoder round-trip against real cuobjdump
-  vectors (the sm_90-side recipe is in `AGENTS.md`, step 6).
-- The FORMAT-derived operand rendering above strips modifier slots; confirm the printed
-  form against `cuobjdump -sass` on an sm_120 cubin.
+Program-wide, not per-instruction: the decoder round-trip and printed-form confirmation for
+every generated note are tracked once in
+[`notes/sm120/instr_verification_backlog.md`](../instr_verification_backlog.md). Anything
+specific to this mnemonic belongs here.
 <!-- generated:sm120-notes:end -->

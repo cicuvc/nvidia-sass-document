@@ -210,8 +210,8 @@ launch; static .nv.shared section with sh_info->.text now allocates the window.)
 
 ## Open questions
 
-- **Stride variants `.X4`/`.X8`/`.X16`**: Not present in cublas.
-- **`sts_uniform_` (URc variant)**: What triggers the uniform register form?
-- **Why URc at [69:64] vs LDS's URb at [37:32]?** The bit position difference
+- **Stride variants `.X4`/`.X8`/`.X16`**: Not present in cublas.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- **`sts_uniform_` (URc variant)**: What triggers the uniform register form?  <!-- open-question: answered answered by "§Semantics" in this note -->
+- **Why URc at [69:64] vs LDS's URb at [37:32]?** The bit position difference  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   is notable — possibly reflects a different micro-architectural pipeline slot.
 

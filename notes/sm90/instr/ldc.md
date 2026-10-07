@@ -512,14 +512,14 @@ same LDC hardware instruction with different encoding hints.
 
 ## Open questions
 
-- **`.IL` / `.IS` / `.ISL` addressing modes:** No empirical examples found.
+- **`.IL` / `.IS` / `.ISL` addressing modes:** No empirical examples found.  <!-- open-question: answered answered by "§Empirical lowering (sm_90, CUDA 13.1)" in this note -->
   What specific driver/runtime scenarios trigger them, and what is the exact
   datapath difference vs `.IA`?
-- **`ldc__RaNonRZ` (indexed LDC):** ~~Under what circumstances does a true
+- **`ldc__RaNonRZ` (indexed LDC):** ~~Under what circumstances does a true  <!-- open-question: answered answered by "§Empirical lowering (sm_90, CUDA 13.1)" in this note -->
   `ldc__RaNonRZ` get emitted?~~ **Resolved:** a runtime-indexed `__grid_constant__`
   param array emits `LDC Rd, c[0x0][R+0x210]` (see preset-region section). Generic
   `ld.const` register loads still lower to ULDC; the difference is per-thread
   (divergent) vs uniform index.
-- **LDCU resolution:** If `LDCU` is truly a separate instruction (not just LDC),
+- **LDCU resolution:** If `LDCU` is truly a separate instruction (not just LDC),  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   what is its sm_90 opcode?
 

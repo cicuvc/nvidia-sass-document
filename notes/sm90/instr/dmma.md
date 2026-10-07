@@ -189,9 +189,9 @@ PTX `mma.sync.f64` semantics.
 
 ## Open questions
 
-- **Ampere DMMA encoding**: The sm_90 spec only shows one CLASS block. Does
+- **Ampere DMMA encoding**: The sm_90 spec only shows one CLASS block. Does  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   the Ampere DMMA share the same encoding or use a different opcode?
-- **Why no abs on C in HMMA?**: DMMA supports `[||]Rc` but HMMA does not.
+- **Why no abs on C in HMMA?**: DMMA supports `[||]Rc` but HMMA does not.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   Is this a fundamental difference in the FP64 tensor core datapath, or
   missing from HMMA's encoding for another reason?
 

@@ -117,6 +117,6 @@ and `multimem.cp.async.bulk` (all lower their commit to this op).
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact width of the implicit TMA group counter behind the fixed commit scoreboard
+- Exact width of the implicit TMA group counter behind the fixed commit scoreboard  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   (shared open item with `depbar.md`).
 

@@ -222,8 +222,8 @@ instruction-bit heuristics.
 
 ## Open questions
 
-- CTA-pool arbitration/fairness between simultaneous requesting warpgroups.
-- Exact behavior of predicated-off destinations and malformed mode/pool bits.
-- Behavior for incomplete warpgroup participation is intentionally left
+- CTA-pool arbitration/fairness between simultaneous requesting warpgroups.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Exact behavior of predicated-off destinations and malformed mode/pool bits.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Behavior for incomplete warpgroup participation is intentionally left  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   undefined, matching PTX.
 

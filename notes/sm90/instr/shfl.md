@@ -113,7 +113,7 @@ it.  The membermask is dropped (shuffle over the hardware active mask).
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- 64-bit / vector shuffles: `__shfl_sync` on 64-bit types splits into two 32-bit SHFLs — not
+- 64-bit / vector shuffles: `__shfl_sync` on 64-bit types splits into two 32-bit SHFLs — not  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   a distinct SHFL encoding (`IDEST_SIZE`/`ISRC_A_SIZE` are fixed 32 here).
-- `Pu` (source-lane-valid) is always a PT sink in compiler output; no intrinsic exposes it.
+- `Pu` (source-lane-valid) is always a PT sink in compiler output; no intrinsic exposes it.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

@@ -88,6 +88,6 @@ the next-PC base plus the encoded offset.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact runtime target formula (`Ra + off` absolute vs. relative-to-anchor) since `Ra` is a runtime value.
-- Real-world jump-table idiom is unobserved because ptxas never emitted these in the sampled code.
+- Exact runtime target formula (`Ra + off` absolute vs. relative-to-anchor) since `Ra` is a runtime value.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Real-world jump-table idiom is unobserved because ptxas never emitted these in the sampled code.  <!-- open-question: duplicate asked in full in sm90/instr/jmx.md -->
 

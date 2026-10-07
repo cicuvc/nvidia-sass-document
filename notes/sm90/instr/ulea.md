@@ -193,8 +193,8 @@ Observed in libcublas for computing GMMA/TMA descriptor addresses, where uniform
 
 ## Open questions
 
-- **Scale encoding:** The `scaleU5` value of `0x18` (=24) appears frequently but its exact meaning in the address formula (`URa + URb*2^{scale}` or similar) is not clear from the spec alone. The CLASS format shows `UImm(5)*` with default no value, suggesting scale is a raw 5-bit field whose semantics are defined by the hardware pipe.
-- **LO variants:** No empirical examples of `.LO` variants found in libcublas. The HI variants are the default.
-- **Negate/invert:** The `[-]` (negate) and `[~]` (invert on .X forms) modifiers are specified but no empirical examples found. The condition `negateA → !negateB` confirms they are mutually exclusive.
-- **RRI vs URIUR:** Both use opcode `0x1891`. The difference is whether URb (Ra_URc field) is a register or pinned to URZ (63). The exact disambiguation between RRI and URIR variants is determined by whether the Ra_URc field equals 63.
+- **Scale encoding:** The `scaleU5` value of `0x18` (=24) appears frequently but its exact meaning in the address formula (`URa + URb*2^{scale}` or similar) is not clear from the spec alone. The CLASS format shows `UImm(5)*` with default no value, suggesting scale is a raw 5-bit field whose semantics are defined by the hardware pipe.  <!-- open-question: open blocked-by "blocker (inferred): the ISA dump does not define it; needs a probe or an external reference" -->
+- **LO variants:** No empirical examples of `.LO` variants found in libcublas. The HI variants are the default.  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
+- **Negate/invert:** The `[-]` (negate) and `[~]` (invert on .X forms) modifiers are specified but no empirical examples found. The condition `negateA → !negateB` confirms they are mutually exclusive.  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
+- **RRI vs URIUR:** Both use opcode `0x1891`. The difference is whether URb (Ra_URc field) is a register or pinned to URZ (63). The exact disambiguation between RRI and URIR variants is determined by whether the Ra_URc field equals 63.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

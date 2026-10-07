@@ -141,10 +141,10 @@ in registers. Both use the same element-size upcast mechanism (LDSM_SZ).
 
 ## Open questions
 
-- **M832/M864 triggering**: What PTX construct causes ptxas to emit these
+- **M832/M864 triggering**: What PTX construct causes ptxas to emit these  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   modes? Possibly related to int8/int4 `mma` data paths where the compiler
   needs to reshape register fragments between LDSM loads and MMA consumption.
-- **ISRC_A_SIZE = 32 for M832/M864**: Despite the dest being 64 bits, the
+- **ISRC_A_SIZE = 32 for M832/M864**: Despite the dest being 64 bits, the  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   source is always 32. This implies the element upcast expands 32 bits of
   source data into 64 bits of destination data.
 

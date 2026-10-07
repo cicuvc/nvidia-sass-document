@@ -108,7 +108,7 @@ restricted to uniform control flow + data predication: a predicated branch
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether ENDCOLLECTIVE has any HW effect beyond clearing the `MCOLLECTIVE` declaration
+- Whether ENDCOLLECTIVE has any HW effect beyond clearing the `MCOLLECTIVE` declaration  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   (e.g. re-widening the executable mask) is not spec-stated; the empty (`NOP`) region body
   suggests it is a pure marker.
 

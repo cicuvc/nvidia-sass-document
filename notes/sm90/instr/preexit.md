@@ -58,5 +58,5 @@ On sm_120 (CUDA 12.8) ptxas emits PREEXIT with `?trans3`: `0x000000000000782d / 
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether `PREEXIT` interacts with the at-exit state (`ATEXIT_PC`/`MATEXIT`) beyond the PDL signal.
+- Whether `PREEXIT` interacts with the at-exit state (`ATEXIT_PC`/`MATEXIT`) beyond the PDL signal.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

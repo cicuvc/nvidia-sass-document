@@ -256,8 +256,8 @@ batch latency rather than `(n-imm)` distinct steps.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact width/semantics of the async-copy counter behind `SB0` (how many
+- Exact width/semantics of the async-copy counter behind `SB0` (how many  <!-- open-question: open blocked-by "blocker (inferred): needs NCU / performance counters (unavailable on the remote parts)" -->
   outstanding LDGSTS groups a scoreboard can track).
-- `depbar_ur_` dynamic-count use: which PTX (`cp.async.wait_group` with a runtime
+- `depbar_ur_` dynamic-count use: which PTX (`cp.async.wait_group` with a runtime  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   operand?) emits the uniform-register count form `0x1d1a`.
 

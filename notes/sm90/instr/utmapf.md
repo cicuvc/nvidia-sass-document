@@ -122,8 +122,8 @@ does not force single-thread election for prefetch).
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `.L2::cache_hint` (with a `cache_policy` operand) — whether it adds a field or
+- `.L2::cache_hint` (with a `cache_policy` operand) — whether it adds a field or  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   another operand; not triggered by the basic `.tile`/`.im2col` kernels here.
-- `.tile::gather4` / `.im2col::w` / `.im2col::w::128` load modes — additional
+- `.tile::gather4` / `.im2col::w` / `.im2col::w::128` load modes — additional  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   `load_mode` values that may map to more modifier bits.
 

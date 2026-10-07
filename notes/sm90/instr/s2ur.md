@@ -65,5 +65,5 @@ Decoder: `tools/decode_s2r_s2ur.py` (all 9 vectors pass). Tests: `tests/s2ur_tes
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact trigger heuristic for S2R vs S2UR (only observed S2UR in warp-specialized/cluster cublasLt kernels; simple kernels keep S2R even for uniform `blockIdx`).
+- Exact trigger heuristic for S2R vs S2UR (only observed S2UR in warp-specialized/cluster cublasLt kernels; simple kernels keep S2R even for uniform `blockIdx`).  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

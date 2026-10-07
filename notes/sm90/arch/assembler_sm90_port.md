@@ -121,10 +121,10 @@ First snapshot: 101 tests: **61 pass / 40 fail**.  Failure buckets:
 - Pre-existing on both GPUs: test_cache_desc.
 
 ## Remaining H20-open items
-- sm90-only/sm120-only instruction sets (QGMMA vs QMMA/OMMA, ULDC vs LDCU,
+- sm90-only/sm120-only instruction sets (QGMMA vs QMMA/OMMA, ULDC vs LDCU,  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   …) — db switch handles encoding; test sources using sm120-only ops must be
   rewritten for Hopper.
-- `.nv.compat` TCGEN05 flavour — moot now (sm90 emits no compat section).
+- `.nv.compat` TCGEN05 flavour — moot now (sm90 emits no compat section).  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 
 ## Tests
 `tests/asm_construct/test_arch.py` — arch switching, layouts, aliases,

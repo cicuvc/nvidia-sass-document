@@ -623,11 +623,11 @@ uniform predicate `@UPg` provides conditional execution.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- How does PTX `tcgen05.ld.red` (min/max reduction) lower? No `.red` SASS variant
+- How does PTX `tcgen05.ld.red` (min/max reduction) lower? No `.red` SASS variant  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   in this dump — split into `LDTM` + reduction, or arch-gated (PTX notes restrict
   `.red` to `sm_101a`/`sm_103f`)?
-- Is the `LDT`/`SIZE_ldt` ALTERNATE ever emitted by any front-end path, or is it
+- Is the `LDT`/`SIZE_ldt` ALTERNATE ever emitted by any front-end path, or is it  <!-- open-question: answered answered by "§Empirical: ptxas never emits the `LDT` short form" in this note -->
   purely an assembler alias?
-- `pack`/`texunpack` bit [80] shares a name with the legacy texture-unpack
+- `pack`/`texunpack` bit [80] shares a name with the legacy texture-unpack  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   control bit — confirmed here to encode `.pack::16b` (=1).
 

@@ -231,13 +231,13 @@ GPU would likely need asymmetric proxy/path semantics (`.mmio`, texture, or
 mixed-state-space).
 
 ## Open questions
-- H800/H20 queue/throughput comparison with GB202 is recorded in
+- H800/H20 queue/throughput comparison with GB202 is recorded in  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   `h800_mio_queue_topology.md`: about 8 local LSU credits/subcore, 30 common
   post-MIOC credits/SM, and 1 LSU request/clock aggregate, while late-RF and
   XU limits remain approximately 0.51 operand/clock/subcore and two credits.
-- Clean (a)-vs-(b): isolate arbiter contention from issue contention (needs a
+- Clean (a)-vs-(b): isolate arbiter contention from issue contention (needs a  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   concurrent flood on *other* SMs without perturbing the timed SM's issue).
-- Does a store ever receive an arbiter *response* at all (for ECC/fault via
+- Does a store ever receive an arbiter *response* at all (for ECC/fault via  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   `ERRBAR`/`CGAERRBAR`), or is the only back-signal the load write-scoreboard?
-- Whether the per-SMSP MIO queue is strictly FIFO or a small reorder buffer.
+- Whether the per-SMSP MIO queue is strictly FIFO or a small reorder buffer.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

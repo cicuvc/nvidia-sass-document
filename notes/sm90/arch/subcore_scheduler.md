@@ -116,13 +116,13 @@ Probe scripts used during development (not committed): `/tmp/opencode/probe_subc
 
 ## Open questions
 
-- The exact issue-port arbitration: is the transN/WnEG bias ~2:1 always, or
+- The exact issue-port arbitration: is the transN/WnEG bias ~2:1 always, or  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   does it depend on warp count per subcore / instruction mix?  A 3-warp
   shared-subcore probe (`{0,4,8}`, block=288) would pin the arbitration rule.
-- Whether the mapping is strictly `i%4` across **blocks** sharing an SM (a
+- Whether the mapping is strictly `i%4` across **blocks** sharing an SM (a  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   second co-resident CTA's warps: do they continue the round-robin or restart
   at subcore 0?).
-- Whether `DRAIN` (`stall=0`) behaves as a stronger "yield to any warp" than
+- Whether `DRAIN` (`stall=0`) behaves as a stronger "yield to any warp" than  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   `WnEG` (its 34-cycle solo penalty suggests a full pipe drain, not just an
   issue-slot handoff).
 

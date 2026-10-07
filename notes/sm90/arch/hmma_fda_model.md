@@ -169,10 +169,10 @@ GDFS algorithm bit-exactly, verified 32/32 random fragments vs SM120
 
 ## Open questions
 
-- The 4x slot repetition is an *observed* equivalence (D == fda with 4 identical
+- The 4x slot repetition is an *observed* equivalence (D == fda with 4 identical  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   pairs); it is not derived from the PTX fragment tables, and may hide a
   different internal k-grouping that happens to be FD-equivalent.
-- CoFDA (chain-of-FDA) shapes, e.g. the Ampere `HMMA.16816.F32` path, are not
+- CoFDA (chain-of-FDA) shapes, e.g. the Ampere `HMMA.16816.F32` path, are not  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   modeled here — only the Hopper FDA(F=25) behavior is covered.
-- 2:4 sparse (`HMMA.SP`) and indexed-RF (`INDF`) variants are out of scope.
+- 2:4 sparse (`HMMA.SP`) and indexed-RF (`INDF`) variants are out of scope.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

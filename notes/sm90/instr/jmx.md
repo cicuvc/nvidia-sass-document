@@ -73,6 +73,6 @@ fields are BYTES (encoder divides by SCALE 4).
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.
-- Real jump-table usage is unobserved because ptxas never emitted these in the sampled code.
+- The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.  <!-- open-question: duplicate asked in full in sm90/instr/jmxu.md -->
+- Real jump-table usage is unobserved because ptxas never emitted these in the sampled code.  <!-- open-question: duplicate asked in full in sm90/instr/brx.md -->
 

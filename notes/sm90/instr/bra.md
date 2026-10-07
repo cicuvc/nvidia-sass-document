@@ -121,7 +121,7 @@ SIMT group.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `.INC`/`.DEC` and nontrivial simultaneous `Pg`+`Pp` combinations remain unprobed.
-- `.CONV`, `~URb`, and the `UPq` form were exercised through the encoding-identical JMP
+- `.INC`/`.DEC` and nontrivial simultaneous `Pg`+`Pp` combinations remain unprobed.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- `.CONV`, `~URb`, and the `UPq` form were exercised through the encoding-identical JMP  <!-- open-question: answered answered by "§Empirical notes (CUDA 13.1 ptxas, sm_90)" in this note -->
   classes, but are still absent from the sampled ptxas/cublas BRA corpus.
 

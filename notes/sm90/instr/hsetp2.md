@@ -78,8 +78,8 @@ Per-lane FP16 compare → two predicates:
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- HSETP2 encodings not yet verified (compiler prefers HSET2 + LOP3 pattern for predicate extraction).
-- "noBop" ALT classes — when would Bop AND not be specified?
-- Uniform register, const-bank, RCx, and immediate variants not yet verified.
-- FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified.
+- HSETP2 encodings not yet verified (compiler prefers HSET2 + LOP3 pattern for predicate extraction).  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- "noBop" ALT classes — when would Bop AND not be specified?  <!-- open-question: duplicate asked in full in sm90/instr/hset2.md -->
+- Uniform register, const-bank, RCx, and immediate variants not yet verified.  <!-- open-question: duplicate asked in full in sm90/instr/hset2.md -->
+- FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified.  <!-- open-question: duplicate asked in full in sm90/instr/hset2.md -->
 

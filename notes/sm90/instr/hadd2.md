@@ -180,11 +180,11 @@ HADD2 RRR opcode 0x230, `Rd = Ra + Rc` per packed halfword lane:
 
 ## Open questions
 
-- HADD2 non-F32 (packed FP16x2 output) encodings not yet verified
+- HADD2 non-F32 (packed FP16x2 output) encodings not yet verified  <!-- open-question: answered answered by "§Semantics" in this note -->
   (ptxas never emits them — need hand-crafted test vectors or a different compiler
   version that might emit HADD2 instead of HFMA2.MMA)
-- Const-bank (`RC`), immediate (`RI`), uniform (`RU`), and extended-const (`RCx`)
+- Const-bank (`RC`), immediate (`RI`), uniform (`RU`), and extended-const (`RCx`)  <!-- open-question: duplicate asked in full in sm90/instr/hmul2.md -->
   variants not yet verified
-- Whether HADD2 could be hand-encoded and executed (hardware validates encoding)
-- Why ptxas prefers HFMA2.MMA over HADD2 (pipe assignment? throughput?)
+- Whether HADD2 could be hand-encoded and executed (hardware validates encoding)  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Why ptxas prefers HFMA2.MMA over HADD2 (pipe assignment? throughput?)  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

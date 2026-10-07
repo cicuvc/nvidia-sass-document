@@ -579,9 +579,9 @@ a scoreboard-claim visibility/admission constraint, not an STTM restriction.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The `STT`/`SIZE_ldt` ALTERNATE is present in the ISA description but has not
+- The `STT`/`SIZE_ldt` ALTERNATE is present in the ISA description but has not  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   been observed from ptxas.
-- Exact ordering guarantees of `FENCE.VIEW.ASYNC.T` for `tcgen05.wait::st` vs the
+- Exact ordering guarantees of `FENCE.VIEW.ASYNC.T` for `tcgen05.wait::st` vs the  <!-- open-question: answered answered by "§Semantics" in this note -->
   `src_rel_sb` read barrier — the fence orders the async TMEM write visibility,
   the scoreboard only orders source-register reuse.
 

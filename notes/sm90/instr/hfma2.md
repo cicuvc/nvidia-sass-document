@@ -248,14 +248,14 @@ the spec CONDITIONS that forbid these on HFMA2.
 
 ## Open questions
 
-- Non-MMA HFMA2 (with ISWZ lane swizzles) encodings not yet verified — compiler
+- Non-MMA HFMA2 (with ISWZ lane swizzles) encodings not yet verified — compiler  <!-- open-question: answered answered by "§Semantics" in this note -->
   never emits them for sm_90
-- ISWZB.F32 and H0_NH1 modes: defined in enum but rejected by CONDITIONS for
+- ISWZB.F32 and H0_NH1 modes: defined in enum but rejected by CONDITIONS for  <!-- open-question: answered answered by "§Verified: ISWZ lane swizzles verified (SM120, 2026-08)" in this note -->
   both HFMA2 and HFMA2.MMA. Where are these used? (Likely on other FP16 ops
   like HMMA or future extensions)
-- RELU variant (`satrelu=2`): encoding format has an extra predicate `Pp` for
+- RELU variant (`satrelu=2`): encoding format has an extra predicate `Pp` for  <!-- open-question: answered answered by "§Semantics" in this note -->
   per-lane RELU activation. Not yet seen in generated code
-- E8M7_V2/E6M9_V2 output formats: enum-defined but not verified in generated SASS
-- Const-bank (`RC`, `RCR`, `RCxR`, `RRCx`) and uniform (`RRU`, `RUR`) variants
+- E8M7_V2/E6M9_V2 output formats: enum-defined but not verified in generated SASS  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Const-bank (`RC`, `RCR`, `RCxR`, `RRCx`) and uniform (`RRU`, `RUR`) variants  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   not yet verified
 

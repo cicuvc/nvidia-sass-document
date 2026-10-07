@@ -94,7 +94,7 @@ Hand-check TRANSCNT: opcode 0x19b0; `sz`[75:73]=5→`.64`; `arrive`[72]=0→`.LD
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `.LEGACY` `barop` form (older arrive-count barrier) is unsampled.
-- Whether `.TRANSCNT` vs `.ARVCNT` differ only in the count field they touch, or also in
+- `.LEGACY` `barop` form (older arrive-count barrier) is unsampled.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Whether `.TRANSCNT` vs `.ARVCNT` differ only in the count field they touch, or also in  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   ordering, is not spec-stated (inferred from the arrive/noinc PTX pairing).
 

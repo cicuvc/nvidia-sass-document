@@ -72,7 +72,7 @@ Imm variant (0x18bd) replaces URb with 32-bit immediate at [63:32].
 
 ## Open questions
 
-- `UPu` is always UPT in the FORMAT — what is its semantic role? Overflow flag? Result-zero flag?
-- Does `UFLO` with `[~]` invert before counting (count leading zeros = CLZ)?
-- The `SH` modifier: what shift is applied? Position-based shift?
+- `UPu` is always UPT in the FORMAT — what is its semantic role? Overflow flag? Result-zero flag?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Does `UFLO` with `[~]` invert before counting (count leading zeros = CLZ)?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- The `SH` modifier: what shift is applied? Position-based shift?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

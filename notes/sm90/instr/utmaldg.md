@@ -159,9 +159,9 @@ hand-written SASS (global-memory tensor-map descriptor, simple
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- 3D–5D coordinate-block packing (mbar slot position for higher ranks, im2col
+- 3D–5D coordinate-block packing (mbar slot position for higher ranks, im2col  <!-- open-question: answered answered by "§Semantics" in this note -->
   offset slots) — only the 2D layout was empirically verified.
 
-- Whether the `_desc` (memdesc=1) form is ever emitted from stock PTX, and what
+- Whether the `_desc` (memdesc=1) form is ever emitted from stock PTX, and what  <!-- open-question: duplicate asked in full in sm90/instr/utmaredg.md -->
   `desc[URe]` carries (cache/L2 policy descriptor).
 

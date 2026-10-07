@@ -88,6 +88,6 @@ The value `0x8880` is the common permute control — each byte 0x88 selects byte
 
 ## Open questions
 
-- **Noimm variant (0x1296):** Never emitted by ptxas. When would a register-based permute control be needed vs immediate?
-- **Permute control encoding:** The 4-byte control word encodes source byte indices. 0x8880 selects bytes 0,0,0,0 from the first source. The exact mapping of control byte → source byte index needs further investigation.
+- **Noimm variant (0x1296):** Never emitted by ptxas. When would a register-based permute control be needed vs immediate?  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
+- **Permute control encoding:** The 4-byte control word encodes source byte indices. 0x8880 selects bytes 0,0,0,0 from the first source. The exact mapping of control byte → source byte index needs further investigation.  <!-- open-question: answered answered by "§Semantics" in this note -->
 

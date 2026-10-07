@@ -102,9 +102,9 @@ mechanisms.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Do the fences ever emit under `-O0` or in some scheduling corner case, or are
+- Do the fences ever emit under `-O0` or in some scheduling corner case, or are  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   they *always* zero-cost? (Both surveyed builds were default `-O3`; isolated and
   in-context both emit nothing.)
-- Is there any config where ptxas needs an explicit `FENCE.VIEW.ASYNC.*` to
+- Is there any config where ptxas needs an explicit `FENCE.VIEW.ASYNC.*` to  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   realize `::*_thread_sync` (e.g. across a `bar.sync` at CTA scope)?
 

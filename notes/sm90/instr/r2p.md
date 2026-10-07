@@ -74,5 +74,5 @@ Test: `tests/p2r_test.cu`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Byte-select suffix rendering for `Bsel != B0` is reconstructed (only B0 captured); for R2P the `a_bsel` sits after `Ra` in the FORMAT, so it may render on the operand rather than the mnemonic.
+- Byte-select suffix rendering for `Bsel != B0` is reconstructed (only B0 captured); for R2P the `a_bsel` sits after `Ra` in the FORMAT, so it may render on the operand rather than the mnemonic.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

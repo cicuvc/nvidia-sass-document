@@ -537,14 +537,14 @@ Important subprobes in the script:
 
 ## Open questions
 
-- Verify U8/U16, unaligned, U64 and U128 backing layouts directly.
-- Explain the extra one-warp stride between 256-thread resident CTAs.
-- Sweep CTA sizes and resource limits to recover the full resident-slot
+- Verify U8/U16, unaligned, U64 and U128 backing layouts directly.  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
+- Explain the extra one-warp stride between 256-thread resident CTAs.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Sweep CTA sizes and resource limits to recover the full resident-slot  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   allocation rule.
-- Determine how `LMEMLOSZ != 0` splits low-local and high-local backing regions.
-- Measure `SR_LMEMHIOFF` inside ptxas kernels across the spill-frame matrix to
+- Determine how `LMEMLOSZ != 0` splits low-local and high-local backing regions.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Measure `SR_LMEMHIOFF` inside ptxas kernels across the spill-frame matrix to  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
   recover loader rounding and ABI reserve overhead.
-- Re-test on sm_90 hardware; all results here are sm_120 silicon only.
-- Test competing SETs issued by separate divergent SIMT groups before
+- Re-test on sm_90 hardware; all results here are sm_120 silicon only.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Test competing SETs issued by separate divergent SIMT groups before  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   reconvergence; partial-mask election is known, but group ordering is not.
 

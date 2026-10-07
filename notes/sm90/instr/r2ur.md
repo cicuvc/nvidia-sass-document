@@ -141,7 +141,7 @@ Decoder: `tools/decode_r2ur.py` (real vectors + `.OR` round-trips pass).
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Pu semantics are resolved for converged and branch-diverged execution (per-lane
+- Pu semantics are resolved for converged and branch-diverged execution (per-lane  <!-- open-question: answered answered by "§Semantics" in this note -->
   write-1-only nonconformity mask, see above). Remaining: is the write-1 set computed with
   full 32-bit equality on `Ra` (probed), and is there any scenario on sm_90 (untested here —
   all probes on sm_120/RTX 5090) where Pu differs? Also untested: sm_90 silicon itself,

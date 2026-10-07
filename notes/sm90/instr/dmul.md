@@ -90,5 +90,5 @@ All three: `fma64lite_pipe`, `COUPLED_EMULATABLE`, `VQ_REDIRECTABLE`, in `FMALIT
 
 ## Open questions
 
-- Const-bank (RCR/RCxR) text form unverified (only RRR/imm exercised).
+- Const-bank (RCR/RCxR) text form unverified (only RRR/imm exercised).  <!-- open-question: duplicate asked in full in sm90/instr/sgxt.md -->
 

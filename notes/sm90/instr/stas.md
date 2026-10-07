@@ -134,11 +134,11 @@ The destination address `[a]` and the `[mbar]` handle are packed into the single
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact split of the `[Ra.64]` pair into {remote-shared address, mbarrier handle}
+- Exact split of the `[Ra.64]` pair into {remote-shared address, mbarrier handle}  <!-- open-question: duplicate asked in full in sm90/instr/redas.md -->
   — inferred from the two adjacent const loads, not bit-confirmed.
-- The `SCO_redas@SYS` scope and `PRIVATE` modifier — which PTX qualifiers emit them
+- The `SCO_redas@SYS` scope and `PRIVATE` modifier — which PTX qualifiers emit them  <!-- open-question: duplicate asked in full in sm90/instr/redas.md -->
   (the global-scope `st.async.release.{gpu,sys}` form was not probed here; it may
   map to a different mnemonic/state-space).
-- `REDAS` (the reduce sibling, 0x1dbe) — analogous DSMEM async reduction, now
+- `REDAS` (the reduce sibling, 0x1dbe) — analogous DSMEM async reduction, now  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   documented in `redas.md`.
 

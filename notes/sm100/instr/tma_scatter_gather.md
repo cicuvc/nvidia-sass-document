@@ -63,12 +63,12 @@ register pair passed to the TMA engine.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `IM2COL`/`IM2COL_W`/`IM2COL_W_128` modes — im2col kernel offload to the TMA
+- `IM2COL`/`IM2COL_W`/`IM2COL_W_128` modes — im2col kernel offload to the TMA  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   (same UTMALDG/UTMASTG ops, different mode values). Not tested here.
-- The exact 128-bit descriptor register pair layout for tensorCoords + tensorMap
+- The exact 128-bit descriptor register pair layout for tensorCoords + tensorMap  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   pointer — this is the TMA's internal descriptor, parallel to the tcgen05
   `gdesc`.
-- Whether GATHER4 exists on the store side or SCATTER4 on the load side — the
+- Whether GATHER4 exists on the store side or SCATTER4 on the load side — the  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   opcode family (0x13b4/0x13b5 vs 0x15b4) suggests GATHER4 may be load-only and
   SCATTER4 store-only, matching the PTX syntax asymmetry.
 

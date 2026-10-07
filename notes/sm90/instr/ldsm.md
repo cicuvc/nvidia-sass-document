@@ -145,9 +145,9 @@ shared-window base (0x400) — LDSM `Ra` is the absolute window offset.
 
 ## Open questions
 
-* `.M816`/`.M832` (b8/sub-byte) and the sz sub-byte decompression were not
+* `.M816`/`.M832` (b8/sub-byte) and the sz sub-byte decompression were not  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   exercised (SM120/PTX 8.x do not expose these shapes to the ISA the same
   way); their row layout is assumed to follow the same 16-byte-row model.
-* nvcc's `.x2`/`.x4` row-stride-32 layout is the empirically observed one;
+* nvcc's `.x2`/`.x4` row-stride-32 layout is the empirically observed one;  <!-- open-question: answered answered by "§Address model (silicon-verified SM120, matches ldmatrix.m8n8.*)" in this note -->
   the extra 16 bytes per row are unexplained by PTX docs (row padding).
 

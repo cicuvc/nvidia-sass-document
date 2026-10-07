@@ -250,11 +250,11 @@ URuIUR. Same modifier axes (SDIR, CWMode, FMT, HILO). Opcodes: `0x1299`, `0x1499
 Resolved on SM120 (RTX 5090) via `tests/asm_construct/test_shf.py` (49 cases,
 all pass):
 
-- **U32 vs U64 / S32 vs S64 are not aliases.** The 32-formats clamp the amount
+- **U32 vs U64 / S32 vs S64 are not aliases.** The 32-formats clamp the amount  <!-- open-question: answered answered by "§Empirical confirmation (sm_90, CUDA 13.1)" in this note -->
   at 32 (`min(k,32)`); the 64-formats use the full 6-bit amount (0–63). The
   funnel `{Rc,Ra}`, HI/LO selection, and U/S (logical/arithmetic) behavior are
   identical between the pairs.
-- **`.S32` with a non-RZ `Ra`** behaves exactly like `.S64`: arithmetic shift
+- **`.S32` with a non-RZ `Ra`** behaves exactly like `.S64`: arithmetic shift  <!-- open-question: answered answered by "§Funnel shift semantics (detailed)" in this note -->
   of the full 64-bit funnel (sign = `Rc[31]`), verified with both funnel halves
   nonzero at k=16 and k=40.
 

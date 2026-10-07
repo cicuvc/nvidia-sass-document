@@ -45,6 +45,6 @@ Field-level (spec-inferred):
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Actual mnemonic rendering nvdisasm *would* use is unknown (unrendered).
-- Which host construct emits SET — possibly driver/runtime cluster-launch setup.
+- Actual mnemonic rendering nvdisasm *would* use is unknown (unrendered).  <!-- open-question: duplicate asked in full in sm90/instr/ucgabar_get.md -->
+- Which host construct emits SET — possibly driver/runtime cluster-launch setup.  <!-- open-question: duplicate asked in full in sm90/instr/ucgabar_get.md -->
 

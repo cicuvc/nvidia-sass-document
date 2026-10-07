@@ -109,12 +109,12 @@ special GMMA-scoreboard citizen.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Empirical confirmation on real Blackwell SASS: mine cuobjdump `-arch sm_100`
+- Empirical confirmation on real Blackwell SASS: mine cuobjdump `-arch sm_100`  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   (CUDA ≥12.8) for reuse-bit / wait-mask / `usched` samples, mirroring the sm_90
   cublas survey, to confirm the fields decode as predicted.
-- Does ptxas ever emit non-zero `batch_t` on Blackwell (still only
+- Does ptxas ever emit non-zero `batch_t` on Blackwell (still only  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   `BARRIER_EXEMPT` on `DEPBAR`, or does tcgen05 use `BATCH_*` grouping)?
-- How is `UTCBAR` ordered relative to the standard scoreboard release on `UTC*`
+- How is `UTCBAR` ordered relative to the standard scoreboard release on `UTC*`  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   ops (is the wait mask sufficient, or is `UTCBAR` mandatory between dependent
   MMAs)? — track in `arch/tcgen05.md`.
 

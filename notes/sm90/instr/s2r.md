@@ -82,5 +82,5 @@ Decoder: `tools/decode_s2r_s2ur.py` (all 9 vectors pass). Tests: `tests/s2r_test
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- None significant.
+- None significant.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

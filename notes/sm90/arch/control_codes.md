@@ -397,14 +397,14 @@ intervening instructions leave it in place.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- ~~Exact runtime semantics of `WAITn_END_GROUP` vs `transN`~~ — **resolved** in
+- ~~Exact runtime semantics of `WAITn_END_GROUP` vs `transN`~~ — **resolved** in  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   `usched_latency.md`: `eff_stall = usched&0xF` is the issue-to-issue gap
   derived from the `sm_90_latencies.txt` `TABLE_TRUE` matrices; `bit4` is the
   end-group/yield selector (`transN`/bit4=1 = independent successor, keep
   issuing; `WnEG`/bit4=0 + `DRAIN` = dependency stall / group boundary / yield).
-- Whether `req_bit_set` bit ordering (SB0 = LSB [116]) is confirmed against a
+- Whether `req_bit_set` bit ordering (SB0 = LSB [116]) is confirmed against a  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   producer/consumer pair with a set wait mask (samples above all have mask=0).
-- Runtime effect of `BATCH_START/BATCH_START_TILE/BATCH_END` — never emitted by
+- Runtime effect of `BATCH_START/BATCH_START_TILE/BATCH_END` — never emitted by  <!-- open-question: answered answered by "§Empirical batch_t survey (all arches)" in this note -->
   ptxas in surveyed libraries, so semantics remain inferred from the names only.
-- Why `batch_t=3` is encodable (via `opex_0`) yet has no enum name.
+- Why `batch_t=3` is encodable (via `opex_0`) yet has no enum name.  <!-- open-question: answered answered by "§BATCH_T semantics — empirical survey" in this note -->
 

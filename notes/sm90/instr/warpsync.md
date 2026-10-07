@@ -207,11 +207,11 @@ difference on sm_120.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The specific **optimized (`-O3`)** warp-collective primitive that emits
+- The specific **optimized (`-O3`)** warp-collective primitive that emits  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   `WARPSYNC.COLLECTIVE`/`ENDCOLLECTIVE` in cusparse (multi-GPU/system-scope, `MATCH.ANY`-based)
   — the `-G` trigger is found, but the optimized-path source construct isn't reproduced by
   simple kernels here.
-- Runtime meaning of `.EXCLUSIVE` (never emitted) and of the COLLECTIVE `target` beyond
+- Runtime meaning of `.EXCLUSIVE` (never emitted) and of the COLLECTIVE `target` beyond  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   "region successor".
-- Non-PT `Pp` on WARPSYNC is unobserved.
+- Non-PT `Pp` on WARPSYNC is unobserved.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

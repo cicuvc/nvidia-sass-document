@@ -155,9 +155,9 @@ plain `0x386` form is not observed in user code or cublas.
 
 ## Open questions
 
-- **URc at [69:64] vs LDG's URb at [37:32]:** The uniform register for the
+- **URc at [69:64] vs LDG's URb at [37:32]:** The uniform register for the  <!-- open-question: answered answered by "§Semantics" in this note -->
   memory descriptor sits at different bit positions in LDG vs STG. This
   reflects LDG's extra Pu/Pnz/SP2 fields which occupy the [69:64] space in
   LDG, pushing URb down to [37:32].
-- **Plain 0x386 forms:** Same as LDG — what triggers them?
+- **Plain 0x386 forms:** Same as LDG — what triggers them?  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

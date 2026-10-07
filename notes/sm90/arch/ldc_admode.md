@@ -85,9 +85,9 @@ default `.IA`; the non-default suffixes would only surface in driver/runtime cod
 > for provenance. Do not cite them as current.
 
 ## Open sub-questions (not yet pinned)
-- Exact runtime datapath difference between IA and IS when `Ra` is present in
+- Exact runtime datapath difference between IA and IS when `Ra` is present in  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   both (the spec defines encoding + legality, not micro-semantics). Hypothesis:
   in IS the register selects/indexes the bank slot, whereas in IA `Ra` is a byte
   offset within a fixed bank — unverified.
-- What "unified constant space" (the `L` bit) remaps to physically.
+- What "unified constant space" (the `L` bit) remaps to physically.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

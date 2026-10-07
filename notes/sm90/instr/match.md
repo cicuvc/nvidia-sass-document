@@ -87,6 +87,6 @@ Decoder: `tools/decode_match.py` (all 4 vectors pass). Test: `tests/match_test.c
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether ptxas ever inserts a `WARPSYNC`/vote before `MATCH` to honor a non-full membermask
+- Whether ptxas ever inserts a `WARPSYNC`/vote before `MATCH` to honor a non-full membermask  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   (none observed for the constant or variable-mask cases tested here).
 

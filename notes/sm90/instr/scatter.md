@@ -122,16 +122,16 @@ binaries (grep-confirmed). Documented from the spec field map and validated by a
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- **Exact operation** — how `vecidx`/`mask`/`idxsize` combine to route source
+- **Exact operation** — how `vecidx`/`mask`/`idxsize` combine to route source  <!-- open-question: answered answered by "§Semantics" in this note -->
   sub-elements into `Rd` lanes; the CONDITIONS bounds strongly imply a
   metadata-reorder for 2:4 sparsity + FP8/FP4 packing, but the precise per-lane
   mapping is not spec-stated.
-- **What emits it** — likely `ptxas` internally for sparse-MMA operand prep or a
+- **What emits it** — likely `ptxas` internally for sparse-MMA operand prep or a  <!-- open-question: duplicate asked in full in sm90/instr/gather.md -->
   library-private path; no user PTX intrinsic found. Worth re-probing against a
   `cusparseLt` / sparse-`wmma` build.
-- Role of the three sources `Ra`/`Rb`/`Rc` (data vs index vs mask base) vs the
+- Role of the three sources `Ra`/`Rb`/`Rc` (data vs index vs mask base) vs the  <!-- open-question: answered answered by "§Semantics" in this note -->
   `vecidx`/`mask` immediates.
-- Relationship to `GATHER` (0x241) — presumably the inverse permute; GATHER's
+- Relationship to `GATHER` (0x241) — presumably the inverse permute; GATHER's  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   extra `dstbyte`/`srchalf`/`num_groups` fields suggest an asymmetric pair.
   (GATHER is now documented in `gather.md`.)
 

@@ -159,10 +159,10 @@ the hardware ignores it. See `cbu_state.md` ("SIMT-stack-free").
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The `Pp`/`Pnz` operand on BSSY itself is always `PT` in observed code (only branches
+- The `Pp`/`Pnz` operand on BSSY itself is always `PT` in observed code (only branches  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   like `BRA`/`BREAK` carry a non-PT `Pp`). Its precise effect on the armed participant
   mask when `Pp != PT` is not yet corroborated empirically.
-- `Sa` is a 30-bit field scaled by 4 (±4 GiB / instruction-granular reach). Targets are
+- `Sa` is a 30-bit field scaled by 4 (±4 GiB / instruction-granular reach). Targets are  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   always 16-byte aligned in practice; whether a non-16B-aligned `Sa` is legal (vs. just
   unused low bits) is unverified.
 

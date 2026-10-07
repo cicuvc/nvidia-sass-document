@@ -106,8 +106,8 @@ required for the handoff itself.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact meaning of `.WARP`/`.SYNCS` modifiers and the hardware duration rounding/cap are not
+- Exact meaning of `.WARP`/`.SYNCS` modifiers and the hardware duration rounding/cap are not  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   spec-stated.
-- `.CLEAR` semantics (which pending sleep it cancels, and how it is emitted from C) is
+- `.CLEAR` semantics (which pending sleep it cancels, and how it is emitted from C) is  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   unverified — only the encoding/rendering is confirmed via patch.
 

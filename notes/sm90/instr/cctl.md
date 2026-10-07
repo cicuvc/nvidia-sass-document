@@ -153,11 +153,11 @@ lower to `CCTL.E.PF1`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `WB`/`IV`/`RS`/`PML2` address COPs and `IVALLP`/`WBALL`/`WBALLP` whole-cache COPs
+- `WB`/`IV`/`RS`/`PML2` address COPs and `IVALLP`/`WBALL`/`WBALLP` whole-cache COPs  <!-- open-question: answered answered by "§Semantics" in this note -->
   — which PTX/compiler patterns emit them (not triggered here).
-- `.U`/`.C`/`.I` cache selectors (uniform/constant/instruction) — likely from
+- `.U`/`.C`/`.I` cache selectors (uniform/constant/instruction) — likely from  <!-- open-question: answered answered by "§Semantics" in this note -->
   `prefetchu`/const-path/icache maintenance; `prefetchu.L1` still gave `.PF1`
   on the D cache here.
-- The `applypriority.L2::evict_last` PTX form (ptxas rejected it in CUDA 13.1) —
+- The `applypriority.L2::evict_last` PTX form (ptxas rejected it in CUDA 13.1) —  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
   which COP it would select (likely `PML2`).
 

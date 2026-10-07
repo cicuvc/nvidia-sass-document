@@ -180,9 +180,9 @@ identically (the bulk-group completion is what actually drains the op).
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `F32.FTZ.RN` (sz=6) — which PTX qualifier emits the FTZ variant (not triggered;
+- `F32.FTZ.RN` (sz=6) — which PTX qualifier emits the FTZ variant (not triggered;  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   the `.noftz` path gave F32.RN/F16.RN, not FTZ).
-- The `.S.S` cluster-reduce completion detail (mbarrier vs remote scoreboard) —
+- The `.S.S` cluster-reduce completion detail (mbarrier vs remote scoreboard) —  <!-- open-question: answered answered by "§Semantics" in this note -->
   observed rd_sb=0 + ELECT, consistent with the load-style tx-count path.
-- `req_bit_set` semantics (shared open item across the TMA/bulk family).
+- `req_bit_set` semantics (shared open item across the TMA/bulk family).  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

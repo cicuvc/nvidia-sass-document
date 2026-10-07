@@ -76,6 +76,6 @@ Decoder: `tools/decode_b2r_r2b.py` (real + round-trips pass). Test: `tests/b2r_t
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether cuobjdump prints the B2R `BAR` default mode as a bare mnemonic (assumed) or `.BAR` — only `.RESULT` was captured.
-- Exact meaning of `B2R.WARP` state (save/restore semantics) and which driver/trap path emits it.
+- Whether cuobjdump prints the B2R `BAR` default mode as a bare mnemonic (assumed) or `.BAR` — only `.RESULT` was captured.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Exact meaning of `B2R.WARP` state (save/restore semantics) and which driver/trap path emits it.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

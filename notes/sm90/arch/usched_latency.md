@@ -340,18 +340,18 @@ pairs each producer with its downstream consumer/writer.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether the integer forwarding is a true bypass vs merely a conservative table
+- Whether the integer forwarding is a true bypass vs merely a conservative table  <!-- open-question: answered answered by "§Which pipes forward? (RAW overlap = `L_table − minG`)" in this note -->
   entry (the two are indistinguishable from stalls alone: `IMAD` tabulates 6 but
   behaves as 4). A controlled latency microbenchmark would separate them.
-- `udp` (uniform datapath) forwarding was undetermined on sm90 (the cuBLAS
+- `udp` (uniform datapath) forwarding was undetermined on sm90 (the cuBLAS  <!-- open-question: answered answered by "§Which pipes forward? (RAW overlap = `L_table − minG`)" in this note -->
   signal, overlap 2, rested on only 379 samples).  **Resolved for sm120**
   (`pipe_forwarding.md` + `tests/asm_construct/test_udp_int_forward.py`):
   a udp→int transfer (`UIADD3→MOV/IADD3.RUR`) is fresh at stall ≥3 (~3.4 cyc
   real gap) and stale at stall ≤2 — so the uniform datapath *does* forward to
   the int pipe, with `overlap ≈ L−minG = 12−3 = 9`.  The hazard is real but
   the required stall is far below the tabulated 12.
-- Distance>1 scheduling (stall spread across intervening independent instrs) is
+- Distance>1 scheduling (stall spread across intervening independent instrs) is  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   not modelled here — only the adjacent (distance-0) case is measured.
-- `DRAIN` vs `WnEG` differentiation at group boundaries (both bit4=0): what makes
+- `DRAIN` vs `WnEG` differentiation at group boundaries (both bit4=0): what makes  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   ptxas pick a full drain over a counted end-group wait.
 

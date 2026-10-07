@@ -131,7 +131,7 @@ No direct PTX mapping. UPLOP3 is likely emitted as part of `lop3` predicate logi
 
 ## Open questions
 
-- **Register-input variants (1-reg, 2-reg, 3-reg):** No empirical examples. What instruction sequences would require extracting sign bits from uniform registers into a predicate?
-- **LOP mode (AND/XOR/SEL/OR):** Uses large constants (32768, 38400, 51712, 65024) as the op values. These are likely packed representations. What is the exact encoding format?
-- **LUT semantics:** The 8-bit LUT encodes the output for all 8 combinations of `{UPp, UPq, UPr}` (bit 0 = all false, bit 7 = all true). With all inputs as UPT, the LUT value effectively becomes a 1-bit constant. Observed values 0x80 and 0x40 both have a single bit set, producing UP0=1 or UP0=0 depending on bit position.
+- **Register-input variants (1-reg, 2-reg, 3-reg):** No empirical examples. What instruction sequences would require extracting sign bits from uniform registers into a predicate?  <!-- open-question: answered answered by "§Semantics" in this note -->
+- **LOP mode (AND/XOR/SEL/OR):** Uses large constants (32768, 38400, 51712, 65024) as the op values. These are likely packed representations. What is the exact encoding format?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- **LUT semantics:** The 8-bit LUT encodes the output for all 8 combinations of `{UPp, UPq, UPr}` (bit 0 = all false, bit 7 = all true). With all inputs as UPT, the LUT value effectively becomes a 1-bit constant. Observed values 0x80 and 0x40 both have a single bit set, producing UP0=1 or UP0=0 depending on bit position.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

@@ -181,6 +181,6 @@ This inducates byte select suffix controls the byte to store the predicate regis
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- ~~ Byte-select suffix rendering for `Bsel != B0` is reconstructed (only B0 captured). ~~ (Resolved. See section Behavior of non-default Bsel)
-- Exact packing of condition-code bits beyond P0–P6 within the byte (mask 0x7f covers 7 preds).
+- ~~ Byte-select suffix rendering for `Bsel != B0` is reconstructed (only B0 captured). ~~ (Resolved. See section Behavior of non-default Bsel)  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Exact packing of condition-code bits beyond P0–P6 within the byte (mask 0x7f covers 7 preds).  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

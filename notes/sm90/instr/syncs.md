@@ -423,13 +423,13 @@ repurposed/read.  `IVALL` also exposed two resident objects in one operation.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `SYNCS.CCTL.WB`, `SYNCS.CCTL.{IVALL,WBALL}`, and `syncs_ld_` `.WATCH` are
+- `SYNCS.CCTL.WB`, `SYNCS.CCTL.{IVALL,WBALL}`, and `syncs_ld_` `.WATCH` are  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   ISA-spec-visible internal operations but are not emitted by the captured PTX.
   Their basic data effects are device-verified; `.WATCH`'s extra side effect is not.
-- Blackwell `SYNCS.FLUSH` is proven not to write mbarrier backing, but exactly
+- Blackwell `SYNCS.FLUSH` is proven not to write mbarrier backing, but exactly  <!-- open-question: answered answered by "§Physical 64-bit `layout::v0` word (cache-eviction verified)" in this note -->
   which pending SYNCS/TMA producers it drains and its ordering scope remain open.
-- Bit 42 behaves as a lock/poison validity bit when injected, but its transient
+- Bit 42 behaves as a lock/poison validity bit when injected, but its transient  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   lock protocol cannot be observed by a quiescent post-eviction LDS.
-- PTX 9.3 `layout::v1` physical layout and its SASS lowering remain open; the
+- PTX 9.3 `layout::v1` physical layout and its SASS lowering remain open; the  <!-- open-question: answered answered by "§Physical 64-bit `layout::v0` word (cache-eviction verified)" in this note -->
   installed CUDA 13.1 ptxas does not accept those new syntax forms.
 

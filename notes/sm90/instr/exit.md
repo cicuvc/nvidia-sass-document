@@ -73,5 +73,5 @@ Kernel/thread end and `return` from `main` body → `EXIT` (often `@!P EXIT` for
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Runtime distinction between the EXIT modes (`.KEEPREFCOUNT` vs `.PREEMPTED`) and the exact resource whose refcount `.KEEPREFCOUNT` preserves.
+- Runtime distinction between the EXIT modes (`.KEEPREFCOUNT` vs `.PREEMPTED`) and the exact resource whose refcount `.KEEPREFCOUNT` preserves.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

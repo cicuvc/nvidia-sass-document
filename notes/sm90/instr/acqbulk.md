@@ -58,5 +58,5 @@ On sm_120 (CUDA 12.8) ptxas emits ACQBULK with `?WAIT6_END_GROUP`: `0x0000000000
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact scope of `ACQBULK`'s acquire (grid vs cluster) is not spec-stated.
+- Exact scope of `ACQBULK`'s acquire (grid vs cluster) is not spec-stated.  <!-- open-question: open blocked-by "blocker (inferred): the ISA dump does not define it; needs a probe or an external reference" -->
 

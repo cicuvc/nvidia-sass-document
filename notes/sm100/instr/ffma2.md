@@ -107,13 +107,13 @@ computes the fma as a packed pair.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `ISWZA_fadd2` F32x2=0 / F32x2.HI_LO=0 both map to 0 — how does the disassembler
+- `ISWZA_fadd2` F32x2=0 / F32x2.HI_LO=0 both map to 0 — how does the disassembler  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   choose between the two display strings? (Likely assembler-only aliases, both
   encode the same packed pair.)
-- Per-element negate/abs on each 32-bit lane — confirmed via spec bits [72:75],
+- Per-element negate/abs on each 32-bit lane — confirmed via spec bits [72:75],  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   but not yet tested with a kernel that forces a per-lane negate on a packed
   source.
-- The exact internal execution arrangement of FP32x2 on `fmalighter_pipe`.
+- The exact internal execution arrangement of FP32x2 on `fmalighter_pipe`.  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   Admission probes show approximately 0.5 instruction/cycle service and about
   12 effective packed-instruction reservations.  FFMA2 and HFMA2 are timing-
   equivalent in pure, alternating, and reciprocal ordered-phase tests, with no

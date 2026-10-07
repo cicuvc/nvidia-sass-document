@@ -90,5 +90,5 @@ REDUX / S2UR share the fast decoupled `R2UR_S2UR` latency group; R2UR is the slo
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- None significant — fully verified for all six ops and both signedness modes.
+- None significant — fully verified for all six ops and both signedness modes.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

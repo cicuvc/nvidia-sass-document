@@ -342,9 +342,9 @@ dependent MMA, not a fixed latency-table entry.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Backend completion latency, issue throughput, and outstanding-copy capacity.
-- Runtime meaning of the `.ONE` alternate (encoding-identical here).
-- Whether `depth`/`cas` field names ([86]/[87]) carry any meaning beyond the
+- Backend completion latency, issue throughput, and outstanding-copy capacity.  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
+- Runtime meaning of the `.ONE` alternate (encoding-identical here).  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
+- Whether `depth`/`cas` field names ([86]/[87]) carry any meaning beyond the  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   fixed `.T`/`.S` role tags (they are pinned by the single-value `OnlyT`/`SONLY`
   enums).
 

@@ -118,12 +118,12 @@ cannot be inferred from the normal data-connector latency tables.
 
 ## Open questions
 
-- Which compiler/runtime metadata or internal prologue establishes the
+- Which compiler/runtime metadata or internal prologue establishes the  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   unreleased shared-init warp state?
-- Which agent releases it after UMEMSETS: a designated initialization warp,
+- Which agent releases it after UMEMSETS: a designated initialization warp,  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   CTA launch microcode, or virtual-resource-management machinery?
-- Is the state shared by a warp, warpgroup or complete CTA?
-- Does a true pending-state release provide acquire ordering for all initialized
+- Is the state shared by a warp, warpgroup or complete CTA?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Does a true pending-state release provide acquire ordering for all initialized  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   shared bytes, in addition to control release? The instruction name strongly
   suggests yes, but the public PTX path cannot create the needed state directly.
 

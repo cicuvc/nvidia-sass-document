@@ -168,13 +168,13 @@ the consumer still hazards on the intermediate PLOP3 result.  Concretely:
 
 ## Open questions
 
-- The `[R + UR + imm]` address form's extra latency (udp→mio 4 vs int/fmal→mio
+- The `[R + UR + imm]` address form's extra latency (udp→mio 4 vs int/fmal→mio  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   1): is it the UR-offset operand-collect or the AGU's uniform-add path?
-- Predicate consumers other than branches (predicated `IADD3`/`LDG`): the PRED
+- Predicate consumers other than branches (predicated `IADD3`/`LDG`): the PRED  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   table says int→int-predicated = 5; not swept here.
-- Whether the cbu→int `minG=6` is the BMOV barrier-state read or a cbu-write
+- Whether the cbu→int `minG=6` is the BMOV barrier-state read or a cbu-write  <!-- open-question: answered answered by "§Spec-vs-measured summary" in this note -->
   path artifact (a second cbu GPR writer would separate them).
-- Exact R2UR UR-result latency by consumer class (the input-forwarding edge is
+- Exact R2UR UR-result latency by consumer class (the input-forwarding edge is  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   now resolved; the output table gives 13--15 cycles but has not received the
   same fine-grained boundary sweep).
 

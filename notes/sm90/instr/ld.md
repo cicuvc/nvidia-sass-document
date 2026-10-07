@@ -139,10 +139,10 @@ and observe system-wide ordering.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Non-memdesc / plain 0x980 forms — same open question as LDG; not emitted by
+- Non-memdesc / plain 0x980 forms — same open question as LDG; not emitted by  <!-- open-question: answered answered by "§Semantics" in this note -->
   ptxas on sm_90 (all use the descriptor form).
-- SP2 sector-cache prefetch on generic LD — not triggered here.
-- Whether a truly space-ambiguous pointer that resolves to *shared*/*local* at
+- SP2 sector-cache prefetch on generic LD — not triggered here.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Whether a truly space-ambiguous pointer that resolves to *shared*/*local* at  <!-- open-question: answered answered by "§Semantics" in this note -->
   runtime still uses this `desc[URb]` global-style descriptor, or if the AGU
   reinterprets it per resolved space.
 

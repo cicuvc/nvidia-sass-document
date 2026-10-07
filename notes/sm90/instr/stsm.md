@@ -183,13 +183,13 @@ indicates `stmatrix` requires `sm_90` or higher, but `.m16n8` shape requires Bla
 
 ## Open questions
 
-- **STSM_MODE MT88**: Does the transposed layout map directly to HMMA's operand
+- **STSM_MODE MT88**: Does the transposed layout map directly to HMMA's operand  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   transposition, or is additional data shuffling needed?
-- **Ra_URc vs Ra_URb**: Why does STSM use a different uniform register slot
+- **Ra_URc vs Ra_URb**: Why does STSM use a different uniform register slot  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   name (URc vs URb) compared to LDSM? The URc naming suggests it occupies the
   "C" operand position of the address generation pipeline, but the functional
   role (stride index) appears identical to LDSM's URb.
-- **Size asymmetry**: Why does STSM only support 16-bit elements while LDSM
+- **Size asymmetry**: Why does STSM only support 16-bit elements while LDSM  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   supports 4-to-8 and 2-to-4 upcasts? Possibly because stores don't need
   conversion (data is already in the tensor-core's native format after compute).
 

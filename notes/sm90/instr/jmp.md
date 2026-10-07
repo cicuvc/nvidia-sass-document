@@ -176,8 +176,8 @@ CONV=3, no default) and `JMP.U UP0, ...` (UONLY: U=1).
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Since ptxas never emits `JMP`, real-world target operand distributions (constant/RTV
+- Since ptxas never emits `JMP`, real-world target operand distributions (constant/RTV  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   banks) remain unobserved; modifier semantics instead come from the direct probe above.
-- `RTV banks` (24–31), nontrivial simultaneous `Pg`+`Pp`, and `depth`
+- `RTV banks` (24–31), nontrivial simultaneous `Pg`+`Pp`, and `depth`  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   (`.INC`/`.DEC`) on JMP remain unexercised.
 

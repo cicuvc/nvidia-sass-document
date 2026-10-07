@@ -217,11 +217,11 @@ Hand-assembler gotchas:
 
 ## Open questions
 
-- **Stride variants `.X4`/`.X8`/`.X16`**: What PTX construct or optimization
+- **Stride variants `.X4`/`.X8`/`.X16`**: What PTX construct or optimization  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   triggers them? Not present in cublas.
-- **`lds_uniform_` (URb variant)**: What triggers the uniform register index
+- **`lds_uniform_` (URb variant)**: What triggers the uniform register index  <!-- open-question: answered answered by "§Semantics" in this note -->
   form in SASS? Likely related to warp-wide uniform shared-memory access patterns.
-- **Graphics shader restriction**: The `$ST_CS` constraint suggests separate LDS
+- **Graphics shader restriction**: The `$ST_CS` constraint suggests separate LDS  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   encodings or entirely different shared-memory instructions exist for graphics
   pipelines (VS/GS/TS/PS).
 

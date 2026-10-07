@@ -126,10 +126,10 @@ defer[80]=1; `barname`[57:54]=1 → `0x1`; `Sc`[53:42]=0x100 → `0x100`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `.SCAN`/`.SYNCALL` and the `noSrc` SYNCALL forms are spec-defined but not emitted by the
+- `.SCAN`/`.SYNCALL` and the `noSrc` SYNCALL forms are spec-defined but not emitted by the  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   sampled ptxas; their exact rendering/use is unverified.
-- Exact micro-semantics of `.DEFER_BLOCKING` (how long the wait is deferred, interaction
+- Exact micro-semantics of `.DEFER_BLOCKING` (how long the wait is deferred, interaction  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   with the MIO scoreboard) is not spec-stated.
-- Whether every BAR mode (`ARV`/`RED`/`SCAN`) has the same strict full-warp convergence
+- Whether every BAR mode (`ARV`/`RED`/`SCAN`) has the same strict full-warp convergence  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   precondition has not yet been tested; the 719 observation is for `BAR.SYNC`.
 

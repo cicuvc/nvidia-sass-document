@@ -112,7 +112,7 @@ fence."
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `FENCE.VIEW.ASYNC` control-word / scoreboard interaction with `SYNCS`.
-- Whether `commit_group` is ever emitted as a distinct opcode (vs folded into the
+- `FENCE.VIEW.ASYNC` control-word / scoreboard interaction with `SYNCS`.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Whether `commit_group` is ever emitted as a distinct opcode (vs folded into the  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   following `DEPBAR` or `SYNCS.PHASECHK`).
 

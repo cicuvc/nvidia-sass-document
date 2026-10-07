@@ -134,11 +134,11 @@ the npCtrl pairs presumably address is not populated in a CUDA launch.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- **Cross-lane quad swizzle unobservable from compute**: even with clean
+- **Cross-lane quad swizzle unobservable from compute**: even with clean  <!-- open-question: answered answered by "§Verified (SM120 empirical, clean hand-built ELF, 2026-08)" in this note -->
   encoding, Rc contributes only lane-locally.  Presumably the graphics
   pixel-quad network the npCtrl pairs address is not populated in a CUDA
   launch; needs a graphics-context capture to confirm.
-- `NDV` naming meaning (likely "no default value": without it the quad
+- `NDV` naming meaning (likely "no default value": without it the quad  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   network supplies a default 0) unconfirmed.
-- Which toolchain/graphics path emits it on sm_90 (not seen in the compute libraries scanned).
+- Which toolchain/graphics path emits it on sm_90 (not seen in the compute libraries scanned).  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

@@ -159,7 +159,7 @@ sign.
 
 ## Open questions
 
-- `.scale` modifier: what PTX construct triggers D2/D4/D8/M2/M4/M8? Not yet tested
-- Const-bank variants (`fmul__RCR_RC`, `fmul__RCxR_RCx`) not yet verified
-- `FMUL32I` (pipe-only alias) relationship to FMUL not explored
+- `.scale` modifier: what PTX construct triggers D2/D4/D8/M2/M4/M8? Not yet tested  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Const-bank variants (`fmul__RCR_RC`, `fmul__RCxR_RCx`) not yet verified  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- `FMUL32I` (pipe-only alias) relationship to FMUL not explored  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

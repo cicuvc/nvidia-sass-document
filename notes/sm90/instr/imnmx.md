@@ -176,7 +176,7 @@ the store address) — the register-reuse clobbered the address and faulted with
 
 ## Open questions
 
-- What triggers the VIMNMX `_pred` variant (with Pu predicate input)?
-- Does VIMNMX `.RELU` map to PTX `min.relu.s32` or is it only for certain reduction patterns?
-- At what architecture boundary (sm_8x?) did ptxas switch from IMNMX to VIMNMX?
+- What triggers the VIMNMX `_pred` variant (with Pu predicate input)?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- Does VIMNMX `.RELU` map to PTX `min.relu.s32` or is it only for certain reduction patterns?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- At what architecture boundary (sm_8x?) did ptxas switch from IMNMX to VIMNMX?  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
 

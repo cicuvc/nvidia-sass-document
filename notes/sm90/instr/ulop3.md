@@ -169,8 +169,8 @@ ULOP32I is a 2-input logic operation with a 32-bit immediate. ULOP3 imm extends 
 
 ## Open questions
 
-- **LOP mode (AND/OR/XOR/PASS_B):** No empirical examples found. Does ptxas ever emit the non-LUT variants, or does it always use LUT mode with explicit LUT values?
-- **PAND pop mode:** Only POR=0 observed. What is PAND (1) and when is it used?
-- **UPp as non-UPT:** The optional UPp variant allows arbitrary UPp values, but ptxas only uses `!UPT`. What instruction sequences require a different UPp result?
-- **LUT values:** Common LUTs observed: 0x33 (XOR?), 0xc0 (mask?), 0x1f (5-bit mask). What exact logic does each LUT encode?
+- **LOP mode (AND/OR/XOR/PASS_B):** No empirical examples found. Does ptxas ever emit the non-LUT variants, or does it always use LUT mode with explicit LUT values?  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
+- **PAND pop mode:** Only POR=0 observed. What is PAND (1) and when is it used?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- **UPp as non-UPT:** The optional UPp variant allows arbitrary UPp values, but ptxas only uses `!UPT`. What instruction sequences require a different UPp result?  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
+- **LUT values:** Common LUTs observed: 0x33 (XOR?), 0xc0 (mask?), 0x1f (5-bit mask). What exact logic does each LUT encode?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

@@ -79,7 +79,7 @@ Decoder + round-trip test: `tools/decode_ulepc.py`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- None blocking: semantics now silicon-verified. The `.REL` relocatable ALT form is still
+- None blocking: semantics now silicon-verified. The `.REL` relocatable ALT form is still  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   linker-only (untestable without an actual relocation), and non-converged/diverged warps are
   untested (PC address is warp-uniform by construction).
 

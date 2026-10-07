@@ -224,12 +224,12 @@ is tracked via the read+write scoreboards, not a fixed table entry.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact bit-width and layout of the software-state word `URb` refers to (the
+- Exact bit-width and layout of the software-state word `URb` refers to (the  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   TMEM free-list bitmap): is it a single UGPR, or a handle into a wider state?
-- CAS (`URc`) and `OR` operand semantics — not emitted by ptxas here; need a
+- CAS (`URc`) and `OR` operand semantics — not emitted by ptxas here; need a  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   workload that forces them (e.g. contended multi-warp allocation).
-- What distinguishes the `.ONE` alternate at runtime, given it is
+- What distinguishes the `.ONE` alternate at runtime, given it is  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   encoding-identical (assembler-only, or a decode disambiguation only)?
-- `.ALIGN` semantics for `FIND_AND_SET` — aligned to what granularity (the 32-col
+- `.ALIGN` semantics for `FIND_AND_SET` — aligned to what granularity (the 32-col  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   TMEM allocation unit)?
 

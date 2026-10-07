@@ -173,9 +173,9 @@ Round1 (RN/RM/RP/RZ).  Same DECOUPLED_RD_WR_SCBD scoreboard discipline.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact F2I result latency distribution (scoreboard = variable; would need a
+- Exact F2I result latency distribution (scoreboard = variable; would need a  <!-- open-question: answered answered by "§Latency vs sequence (empirical, `tests/f2i_lat_test.cu`)" in this note -->
   latency microbenchmark, not static SASS).
-- F16/BF16 source lowering: `(int)__half2float` did not emit a direct `F16`-src
+- F16/BF16 source lowering: `(int)__half2float` did not emit a direct `F16`-src  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   F2I here (went through promotion) — confirm whether `cvt.rzi.s32.f16` PTX emits
   the `_16b` F2I variant directly.
 

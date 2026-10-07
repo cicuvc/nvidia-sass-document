@@ -162,10 +162,10 @@ necessary for the scoreboard, not identical to it.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact decrement timing (issue+fixed vs true writeback) per op class.
-- Whether the read-barrier is ever used for operand-collect of ordinary loads or
+- Exact decrement timing (issue+fixed vs true writeback) per op class.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Whether the read-barrier is ever used for operand-collect of ordinary loads or  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   only for stores / async / late-read ops (only `STG`/`LDGSTS`-style seen so far).
-- Whether the DECOUPLED⇒VQ invariant holds on sm_120.  The sm90 numbers above
+- Whether the DECOUPLED⇒VQ invariant holds on sm_120.  The sm90 numbers above  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   were parsed from the raw `sm_90_instructions.txt` (the `sm90.json`/`sm120.json`
   extractors do **not** carry `VIRTUAL_QUEUE`, so it cannot be verified from the
   JSON DB); the sm120 raw dump is not on hand, and nvcc-emitted SASS for

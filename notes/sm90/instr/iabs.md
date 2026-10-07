@@ -96,5 +96,5 @@ Hand-assembler gotchas (both were silent 715 faults):
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- None significant; the non-RRR operand forms are unverified in text form (ptxas prefers RRR).
+- None significant; the non-RRR operand forms are unverified in text form (ptxas prefers RRR).  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
 

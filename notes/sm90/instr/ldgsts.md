@@ -244,7 +244,7 @@ https://patents.google.com/patent/US12118382B2/en
 
 ## Open questions
 
-* FILLCTRL.ZFILL (zero-fill on fault) not exercised.
-* Whether all six usable SB indices scale beyond the verified SB0/SB1 pair,
+* FILLCTRL.ZFILL (zero-fill on fault) not exercised.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+* Whether all six usable SB indices scale beyond the verified SB0/SB1 pair,  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   and whether there is an additional warp-wide cap at 108 or above.
 

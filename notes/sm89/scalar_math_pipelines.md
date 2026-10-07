@@ -264,11 +264,11 @@ plus the windowed-timestamp probes (`aggregate.py`, `asym.py`, `multiw2.py`,
 
 ## Open questions
 
-- What exactly generates a warp-switch event on sm_89; why int×4
+- What exactly generates a warp-switch event on sm_89; why int×4  <!-- open-question: open blocked-by "blocker (inferred): needs the older part (sm_70/80/89)" -->
   interleaves while int×2 and int+nop serialize (the C-block mode
   stickiness is warp-granular, but the 4-warp escape hatch is unexplained).
-- MUFU/POPC/F2I at 8.0 measured without the reuse bracket — re-measure with
+- MUFU/POPC/F2I at 8.0 measured without the reuse bracket — re-measure with  <!-- open-question: answered answered by "§Official pipe taxonomy vs measured reality" in this note -->
   a legal reuse-bracket variant if one exists, to separate bracket cost
   from unit cost.
-- Predicated-off FFMA costing 2.0 while active costs 1.0.
+- Predicated-off FFMA costing 2.0 while active costs 1.0.  <!-- open-question: open blocked-by "blocker (inferred): needs the older part (sm_70/80/89)" -->
 

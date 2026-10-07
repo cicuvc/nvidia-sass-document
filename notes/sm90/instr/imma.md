@@ -250,16 +250,16 @@ SAT maps to PTX's `.sat` qualifier on `mma.sync`.
 
 ## Open questions
 
-- **u4/s4 sub-byte formats**: The SASS encoding only shows U8/S8 in
+- **u4/s4 sub-byte formats**: The SASS encoding only shows U8/S8 in  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   `SRCFMTA_U8_S8`. How are u4/s4 PTX types (e.g. `mma.sync.aligned.m8n8k32.u4.u4.s32`)
   lowered? Possibly through LDSM element conversion or a different SASS
   mnemonic.
-- **SRCFMTA_U8_S8 enum**: The enum name suggests A-side only (SRCFMTA),
+- **SRCFMTA_U8_S8 enum**: The enum name suggests A-side only (SRCFMTA),  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   but srcFmtB uses the same type. Is srcFmtB always identical to srcFmtA
   in practice, or are mixed-precision (U8×S8) MMAs actually emitted?
-- **ROW/COL semantics**: These are single-value enums — what happens if
+- **ROW/COL semantics**: These are single-value enums — what happens if  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   they're set to the "wrong" value? Undefined behavior or explicit error?
-- **No indexedRF**: Why does IMMA lack indexed register file variants
+- **No indexedRF**: Why does IMMA lack indexed register file variants  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   while HMMA has them? Possibly because integer accumulator chains are
   shorter or uniform register file not used for integer MMA.
 

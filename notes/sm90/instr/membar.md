@@ -124,11 +124,11 @@ Decoder `tools/decode_membar.py`: **5/5 PASS**. `sem` is Hi64 [80:79]
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `MMIO` sem and `CTA.PARTIAL`/`VC`/`SM` scopes — which PTX emits them (not
+- `MMIO` sem and `CTA.PARTIAL`/`VC`/`SM` scopes — which PTX emits them (not  <!-- open-question: answered answered by "§Semantics" in this note -->
   triggered by the standard fence forms here).
-- The `membar_async_`/`membar_tma_` (VC-scope, ASYNC/MULTICAST) variants — likely
+- The `membar_async_`/`membar_tma_` (VC-scope, ASYNC/MULTICAST) variants — likely  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   from `fence.proxy.tensormap`/TMA paths; here `fence.proxy.async` gave a separate
   `FENCE.VIEW.ASYNC.S` rather than a `membar_async_` encoding.
-- `FENCE` (the `FENCE.VIEW.ASYNC.S` op, 0x3c6) — a distinct mnemonic, now
+- `FENCE` (the `FENCE.VIEW.ASYNC.S` op, 0x3c6) — a distinct mnemonic, now  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   documented in `fence.md` (TODO FENCE_G/FENCE_S idx 218/219).
 

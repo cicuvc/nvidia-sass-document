@@ -176,6 +176,7 @@ RE_UNCHECKED = re.compile(r"^\s*[-*]\s+\[ \]")
 NON_NOTE_FILES = {
     "AUDIT_BASELINE.md",
     "notes_status_overrides.json",
+    "OPEN_QUESTIONS.md",
     "sm120/measurements_index.md",
 }
 LEDGER_FILES = {

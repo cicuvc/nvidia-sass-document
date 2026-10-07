@@ -232,7 +232,7 @@ token text "RZ" as a mnemonic modifier). `FFMA.RZ`, `FFMA.RZ.FTZ`, and the
 
 ## Open questions
 
-- `.reuse` flag not yet tested (requires paired consumer instructions)
-- Const-bank variants (RRC, RRCx, RCR, RCxR) not yet verified with test kernel
-- `FFMA32I` (pipe-only alias) relationship to FFMA not fully explored
+- `.reuse` flag not yet tested (requires paired consumer instructions)  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Const-bank variants (RRC, RRCx, RCR, RCxR) not yet verified with test kernel  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- `FFMA32I` (pipe-only alias) relationship to FFMA not fully explored  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

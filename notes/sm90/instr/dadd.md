@@ -90,5 +90,5 @@ Decoder: `tools/decode_dadd.py` (all 8 vectors pass). Test: `tests/dadd_test.cu`
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Const-bank (RRC/RRCx) text form unverified (ptxas used RRU for the runtime const-param here).
+- Const-bank (RRC/RRCx) text form unverified (ptxas used RRU for the runtime const-param here).  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

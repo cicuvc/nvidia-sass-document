@@ -259,17 +259,17 @@ was found in the shared opcode space.
 
 ## Open questions
 
-- **E6M9 destination** (`dstfmt=2`): *resolved* — silicon-verified on H20 (see
+- **E6M9 destination** (`dstfmt=2`): *resolved* — silicon-verified on H20 (see  <!-- open-question: answered answered by "§Hopper-only: E6M9 — silicon-verified on H20" in this note -->
   the Hopper-only section): bias-31 6-bit-exponent / 9-bit-mantissa 16-bit
   format, RNE, FTZ input, inf/NaN/±0 conventions, `.SATFINITE` → `0x7DFF`
   max.  Hopper-only: sm120's DSTFMT renames value 2 to MXFP4 **E0M3**.
-- **TF32 rounding**: *resolved on silicon* — `F2FP.TF32.F32` rounds RN
+- **TF32 rounding**: *resolved on silicon* — `F2FP.TF32.F32` rounds RN  <!-- open-question: answered answered by "§Silicon-verified semantics (sm120 / RTX 5090)" in this note -->
   (RNE at 10-bit mantissa), not truncation; ptxas's `cvt.rna.tf32` → LOP3 fold is
 a different (software) behavior.
-- **`.H1` extract printing**: extract placement/merge semantics *resolved on
+- **`.H1` extract printing**: extract placement/merge semantics *resolved on  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   silicon* (see silicon-verified table); cuobjdump token is `.H1` after the
   merge suffix (matches the FORMAT).
-- **BF16 src** upconvert/downconvert (`SRCFMT_E5M2_E4M3` only covers E5M2/E4M3):
+- **BF16 src** upconvert/downconvert (`SRCFMT_E5M2_E4M3` only covers E5M2/E4M3):  <!-- open-question: answered answered by "§Semantics" in this note -->
   FP8 pipeline formats are E4M3/E5M2 only, so `F2FP.*.BF16` src forms are just
   the shared dstfmt=BF16(1) alias — consistent with the E8M7/BF16 enum aliasing.
 

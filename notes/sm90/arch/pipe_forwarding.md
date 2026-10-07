@@ -316,28 +316,28 @@ Probe scripts used during development (not committed): `/tmp/opencode/probe_*.py
 
 ## Open questions
 
-- **Yield-bit mechanism**: why does all-transN widen the stale window while
+- **Yield-bit mechanism**: why does all-transN widen the stale window while  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   leaving the issue gap identical?  The WnEG group-end may flush the operand
   collector / align the read clear of the UR writeback commit; not verified
   at the microarchitectural level.
 
-- **Exact bypass geometry**: is `minG≈3` the UDP ALU→UR-file write port,
+- **Exact bypass geometry**: is `minG≈3` the UDP ALU→UR-file write port,  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   a UR-file→int-operand-collect bypass, or both?  A UR read via a *memory*
   consumer (LDG address) would isolate the AGU path.
-- **Boundary alignment sensitivity**: at `S ∈ [2,5]` a fillergranularity
+- **Boundary alignment sensitivity**: at `S ∈ [2,5]` a fillergranularity  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   change (one big-stall NOP vs several stall-1 NOPs) can flip an instance
   fresh↔stale; the boundary has an alignment-zone of ±2 cycles, not a single
   clean edge.  Stable-fresh requires producer stall ≥6 *or* ≥2 intervening
   instructions.  The 8-identical-instance runs show a deterministic
   per-instance pattern (`SFSSSSSS`) whose period is not yet explained.
-- **Reverse direction** (fixed→udp through `R2UR`) is now measured directly.
+- **Reverse direction** (fixed→udp through `R2UR`) is now measured directly.  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   `IADD3→R2UR` first reads fresh at gap 2; `FADD→R2UR` and `HADD2→R2UR`
   first read fresh at gap 3.  An immediate younger overwrite after R2UR never
   changes its captured value, so this is an early GPR-collector forwarding
   edge, not a late source read.  The formerly quoted ~40-cycle settle belongs
   to the R2UR **output** becoming safely consumable in UR domain and had
   conflated the two sides of the instruction.
-- **Other cross-pipe pairs** (udp→fma64, udp→fp16, int→fma64) would extend
+- **Other cross-pipe pairs** (udp→fma64, udp→fp16, int→fma64) would extend  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   the table; the existing `usched_latency.md` sm90 corpus suggests fma64
   carries no bypass (overlap 0).
 

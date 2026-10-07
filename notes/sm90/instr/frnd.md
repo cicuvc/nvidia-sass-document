@@ -76,6 +76,6 @@ F64 uses opcode 0x313 (others use 0x307). Swap ALTs share the same base opcodes 
 
 ## Open questions
 
-- Does ptxas emit FRND or does it prefer an int_pipe/udp_pipe alternative (like RRO or MUFU)?
-- The Round3 encoding values map to which specific IEEE 754 rounding modes?
+- Does ptxas emit FRND or does it prefer an int_pipe/udp_pipe alternative (like RRO or MUFU)?  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- The Round3 encoding values map to which specific IEEE 754 rounding modes?  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

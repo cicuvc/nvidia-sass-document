@@ -276,12 +276,12 @@ Bare semantic check: `tests/tcgen05_shift_bare_correctness.cu`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Only `.DOWN` exists (no up/left/right) — is up-shift unnecessary because the
+- Only `.DOWN` exists (no up/left/right) — is up-shift unnecessary because the  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   window only ever advances one way in a conv sweep?
-- Exact interaction with the collector: does a standalone `UTCSHIFT` invalidate/
+- Exact interaction with the collector: does a standalone `UTCSHIFT` invalidate/  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   update the A collector buffer, or only the TMEM backing store?
-- The exact outstanding-queue depth needs an in-kernel admission timestamp
+- The exact outstanding-queue depth needs an in-kernel admission timestamp  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   probe; cross-launch timing is contaminated by clock-domain state changes.
-- The maximum number of simultaneously outstanding shifts, especially across
+- The maximum number of simultaneously outstanding shifts, especially across  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   more CTAs, remains to be measured.
 

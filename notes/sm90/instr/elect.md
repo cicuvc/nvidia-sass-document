@@ -100,8 +100,8 @@ chain reading R6/R7 (from `LDC.64 R6` wr=1/SB1) must carry `req={1}`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether `URd` is strictly the leader lane-id vs. an encoded leader token is inferred from
+- Whether `URd` is strictly the leader lane-id vs. an encoded leader token is inferred from  <!-- open-question: open blocked-by "blocker (inferred): needs a model or simulation, not hardware" -->
   `elect.sync` semantics, not spec-stated.
-- Optimized-code emission (which C constructs beyond inline `elect.sync`/`invoke_one`) is
+- Optimized-code emission (which C constructs beyond inline `elect.sync`/`invoke_one`) is  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   under-sampled — 0 ELECT in the scanned libcusparse.
 

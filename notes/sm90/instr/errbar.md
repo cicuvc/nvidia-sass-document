@@ -61,5 +61,5 @@ Self-test 2/2; 6/6 in the fence dump, 62/62 in the cluster-kernel dump.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The exact error class each barrier drains (page-fault vs ECC vs async-copy completion error).
+- The exact error class each barrier drains (page-fault vs ECC vs async-copy completion error).  <!-- open-question: duplicate asked in full in sm90/instr/cgaerrbar.md -->
 

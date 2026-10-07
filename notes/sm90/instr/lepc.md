@@ -108,7 +108,7 @@ classic jump-table idiom.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether the R_I_R immediate ever prints as a raw offset or `.REL` relocatable form in other
+- Whether the R_I_R immediate ever prints as a raw offset or `.REL` relocatable form in other  <!-- open-question: answered answered by "§Semantics (verified)" in this note -->
   contexts (only the resolved-target vprintf-return case was captured).
-- Whether `LEPC Rd` (RRR) is ever emitted on sm_90 (not seen; BRX/CALL are self-relative).
+- Whether `LEPC Rd` (RRR) is ever emitted on sm_90 (not seen; BRX/CALL are self-relative).  <!-- open-question: answered answered by "§Semantics (verified)" in this note -->
 

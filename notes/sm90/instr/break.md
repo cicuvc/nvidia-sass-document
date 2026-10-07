@@ -117,9 +117,9 @@ Hand-check `@!P0 BREAK B1`: opcode [11:0]=0x942, bit91=0 → BREAK; `barReg` nib
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Non-`PT` `Pp` on BREAK was never observed; its effect (if any) on which lanes are
+- Non-`PT` `Pp` on BREAK was never observed; its effect (if any) on which lanes are  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   peeled, independent of the `@Pg` guard, is unverified.
-- Only `B0`/`B1` selectors observed empirically; the 4-bit `barReg` field trivially
+- Only `B0`/`B1` selectors observed empirically; the 4-bit `barReg` field trivially  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   encodes B0..B15 (same field as BSSY, where B0/B1 are both confirmed), but B2..B15
   in a BREAK were not reproduced by the test kernels.
 

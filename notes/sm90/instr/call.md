@@ -137,9 +137,9 @@ ABI, HW call-depth stack unused). Most device functions are inlined and emit no 
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `CALL.INC`/register-stack returns (`RET` without `.NODEC`) are spec-supported but not
+- `CALL.INC`/register-stack returns (`RET` without `.NODEC`) are spec-supported but not  <!-- open-question: answered answered by "§Semantics" in this note -->
   emitted by the sampled ptxas; only the register-ABI `.NOINC`/`.NODEC` path is observed.
-- Absolute/const/uniform CALL forms are unexercised by ptxas here.  ABS uniform and
+- Absolute/const/uniform CALL forms are unexercised by ptxas here.  ABS uniform and  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   immediate targets now have runtime probes, but their real ABI usage (e.g.
   indirect/virtual calls) is unobserved; the const-target form remains patch-only.
 

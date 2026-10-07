@@ -106,8 +106,8 @@ the local-memory cache path.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `WB`/`IV`/`RS` address COPs and `IVALL`/`WBALL` whole-cache COPs for local memory
+- `WB`/`IV`/`RS` address COPs and `IVALL`/`WBALL` whole-cache COPs for local memory  <!-- open-question: answered answered by "§Semantics" in this note -->
   — which patterns emit them (local writeback/invalidate is rare; not triggered).
-- The `0x1d90` uniform-register-offset form — when ptxas prefers it (local accesses
+- The `0x1d90` uniform-register-offset form — when ptxas prefers it (local accesses  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   are usually plain `[Ra+off]`).
 

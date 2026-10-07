@@ -75,9 +75,9 @@ URb replaced with 16-bit immediate at [47:32].
 
 ## Open questions
 
-- No empirical examples. Likely used for TMA descriptor base-address alignment in UTMA sequences.
-- `constSize` range 0–8 means alignment up to 256 bytes. Typical TMA descriptors require 32-byte (constSize=5) or 128-byte alignment.
-- ~~UPu predicate output — overflow? carry? zero?~~ **Resolved (sm_120): UPu is
+- No empirical examples. Likely used for TMA descriptor base-address alignment in UTMA sequences.  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
+- `constSize` range 0–8 means alignment up to 256 bytes. Typical TMA descriptors require 32-byte (constSize=5) or 128-byte alignment.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
+- ~~UPu predicate output — overflow? carry? zero?~~ **Resolved (sm_120): UPu is  <!-- open-question: answered answered by "§Semantics" in this note -->
   never asserted in any probe**; the constSize field likewise has no
   observable effect — silicon computes `(URa.64 << 6) + URb`.
 

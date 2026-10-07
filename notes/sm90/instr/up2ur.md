@@ -140,7 +140,7 @@ Both instructions use the `UPR_UPRED` connector in the latency file and are grou
 
 ## Open questions
 
-- **No empirical examples:** Neither `UP2UR` nor `UR2UP` appear in libcublas or ptxas-generated code. These instructions likely serve internal purposes (e.g., reading hardware predicate state for TMA completion tracking, or warp-level voting that needs to spill to a register).
-- **UPR register semantics:** What hardware conditions set the `UPR` bit? Is it written by `VOTEU` (uniform vote), `USETP`/`UPSETP`, or a separate hardware mechanism?
-- **B3B0 byte insert:** Why insert a single-bit predicate into a byte? This suggests `UPR` may pack multiple 1-bit predicates into a 32-bit word, and `B3B0` selects which one to expand.
+- **No empirical examples:** Neither `UP2UR` nor `UR2UP` appear in libcublas or ptxas-generated code. These instructions likely serve internal purposes (e.g., reading hardware predicate state for TMA completion tracking, or warp-level voting that needs to spill to a register).  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- **UPR register semantics:** What hardware conditions set the `UPR` bit? Is it written by `VOTEU` (uniform vote), `USETP`/`UPSETP`, or a separate hardware mechanism?  <!-- open-question: answered answered by "§Semantics" in this note -->
+- **B3B0 byte insert:** Why insert a single-bit predicate into a byte? This suggests `UPR` may pack multiple 1-bit predicates into a 32-bit word, and `B3B0` selects which one to expand.  <!-- open-question: answered answered by "§Semantics" in this note -->
 

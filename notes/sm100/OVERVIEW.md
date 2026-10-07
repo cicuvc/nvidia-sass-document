@@ -227,18 +227,18 @@ python3 tools/query_sm100.py pipe TTUGO
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- **Descriptors** — `notes/sm100/arch/tcgen05_descriptors.md` transcribes the
+- **Descriptors** — `notes/sm100/arch/tcgen05_descriptors.md` transcribes the  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   64-bit shared-memory matrix descriptor (`gdesc`) and 32-bit instruction
   descriptor (`idesc`, 3 kind-dependent layouts) from PTX Tables 43/45–47. Shape
   (M/N/K), element types, transpose/negate, sparsity, swizzle, and MX scale IDs
   all live in these runtime descriptor values — not in the SASS opcode.
 
 ## Open questions
-- Remaining `UTC*` (MMA family) bit-layout decode + cuobjdump vectors.
-- TMEM addressing model — units (column vs byte) for `LDTM`/`STTM` confirmed as
+- Remaining `UTC*` (MMA family) bit-layout decode + cuobjdump vectors.  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
+- TMEM addressing model — units (column vs byte) for `LDTM`/`STTM` confirmed as  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   `tmem[URx+off]`, but the offset semantics still open.
-- Semantics of the new MX scale operands (`scaleU4`, `SCALE_VECTOR_SZ`).
-- `ttu_pipe` op encodings and latency rows.
-- Whether the `LDT`/`STT`/`SIZE_ldt` ALTERNATEs are ever emitted (ptxas emits
+- Semantics of the new MX scale operands (`scaleU4`, `SCALE_VECTOR_SZ`).  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
+- `ttu_pipe` op encodings and latency rows.  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
+- Whether the `LDT`/`STT`/`SIZE_ldt` ALTERNATEs are ever emitted (ptxas emits  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   `LDTM`/`STTM` for every `tcgen05.ld`/`.st` shape, incl. `.32x32b.x1`).
 

@@ -115,6 +115,6 @@ Test: `tests/vote_test.cu`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether ptxas ever emits VOTE with both `Rd` and a real `Pu` simultaneously (e.g. a fused
+- Whether ptxas ever emits VOTE with both `Rd` and a real `Pu` simultaneously (e.g. a fused  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
   ballot + any); all observed cases use exactly one destination.
 

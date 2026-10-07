@@ -132,10 +132,10 @@ destination `[a]` and `[mbar]` handle are packed into the single 64-bit `Ra` pai
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact split of `[Ra.64]` into {remote-shared address, mbarrier handle} — inferred
+- Exact split of `[Ra.64]` into {remote-shared address, mbarrier handle} — inferred  <!-- open-question: duplicate asked in full in sm90/instr/stas.md -->
   from adjacent const loads (as in STAS), not bit-confirmed.
-- `SCO_redas@SYS` scope and `PRIVATE` modifier — which PTX qualifiers emit them.
-- `.f32`/`.f16` floating reductions in the PTX `red.async` — whether they map to
+- `SCO_redas@SYS` scope and `PRIVATE` modifier — which PTX qualifiers emit them.  <!-- open-question: duplicate asked in full in sm90/instr/stas.md -->
+- `.f32`/`.f16` floating reductions in the PTX `red.async` — whether they map to  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   REDAS (REDAS_SZ only exposes U32/S32/U64, no float types), or a different op.
-- `req_bit_set` semantics (shared open item).
+- `req_bit_set` semantics (shared open item).  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

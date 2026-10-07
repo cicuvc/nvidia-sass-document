@@ -107,6 +107,6 @@ Decoder `tools/decode_ublkpf.py`: **2/2 PASS**. In the desc form, `memdesc` [76]
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `desc[URe]` layout — carries the L2 cache-eviction policy (from
+- `desc[URe]` layout — carries the L2 cache-eviction policy (from  <!-- open-question: answered answered by "§Semantics" in this note -->
   `createpolicy`/`cache_policy`); exact descriptor bitfield not decoded here.
 

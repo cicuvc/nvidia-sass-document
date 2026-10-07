@@ -189,8 +189,8 @@ reserved-bit falsification probe:
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact hardware contract when CTA warps disagree needs a dedicated corruption
+- Exact hardware contract when CTA warps disagree needs a dedicated corruption  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   probe after another CTA actually occupies the prematurely released range.
   Multiple inconsistent FLUSH values faulted 719.
-- Interaction with clusters and PDL/dependent launches.
+- Interaction with clusters and PDL/dependent launches.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

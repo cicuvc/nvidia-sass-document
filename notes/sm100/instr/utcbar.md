@@ -165,12 +165,12 @@ mbarrier arrive fires on tracked-op completion, not a fixed latency-table cycle.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact meaning of `URb` (the param/count operand) beyond `URZ` — does any PTX
+- Exact meaning of `URb` (the param/count operand) beyond `URZ` — does any PTX  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   form pass a non-zero count/handle here?
-- `BAR_TYPE` `A1T0` vs `A0TX` semantics (arrive-count/thread-count parameterization?) —
+- `BAR_TYPE` `A1T0` vs `A0TX` semantics (arrive-count/thread-count parameterization?) —  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   only `A1T0` (default) observed.
-- When is the flush form (`UTCBAR.FLUSH`, 0x9e9) emitted? Not from
+- When is the flush form (`UTCBAR.FLUSH`, 0x9e9) emitted? Not from  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   `tcgen05.commit`; likely an internal pipe-drain (maybe around dealloc or
   kernel exit) — needs a workload that surfaces it.
-- Runtime effect of `WAKEUP`.
+- Runtime effect of `WAKEUP`.  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
 

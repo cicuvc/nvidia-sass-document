@@ -109,9 +109,9 @@ CAS (0x38d) adds Rc at a different encoding position.
 
 ## Open questions
 
-- **ATOMS usage in practice:** No ATOMS found in cublas. Shared-memory atomics
+- **ATOMS usage in practice:** No ATOMS found in cublas. Shared-memory atomics  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   on sm_90 may be rare — the compiler likely uses global atomics (ATOMG) or
   warp-level reductions instead.
-- **ARRIVE/POPC.INC vs explicit barriers:** These may be compiler-internal
+- **ARRIVE/POPC.INC vs explicit barriers:** These may be compiler-internal  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   for CTA-level synchronisation patterns.
 

@@ -156,6 +156,6 @@ OK**, model `fma32(a, 1.0, c)` (product a*1 exact, single rounding of a+c).
 
 ## Open questions
 
-- Const-bank variants (`fadd__RRC_RC`, `fadd__RRCx_RCx`) not yet verified
-- `FADD32I` (pipe-only alias) relationship to FADD not explored
+- Const-bank variants (`fadd__RRC_RC`, `fadd__RRCx_RCx`) not yet verified  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- `FADD32I` (pipe-only alias) relationship to FADD not explored  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

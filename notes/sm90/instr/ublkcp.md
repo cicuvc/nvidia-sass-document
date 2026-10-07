@@ -292,7 +292,7 @@ ptxas's ordering around the UBLKCP issue.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The load-direction mbarrier tx-completion **is** verified working on this
+- The load-direction mbarrier tx-completion **is** verified working on this  <!-- open-question: answered answered by "§Semantics" in this note -->
   driver (580.65/CUDA 13.0): `tma_cp_test.cu` (repo root) runs `UBLKCP.S.G`
   with `mbarrier::complete_tx::bytes` and the consumer's `try_wait` spins to
   completion — data matches on the RTX 5090.  ptxas's pattern: init →
@@ -303,12 +303,12 @@ ptxas's ordering around the UBLKCP issue.
   pending tx when the copy finishes (a tx=0 patch made the phase complete
   immediately and the consumer read stale data).  The hand-built equivalent
   is fully reproduced — see the resolved section below.
-- The earlier `CUDA_ERROR_INVALID_IMAGE` rejection of
+- The earlier `CUDA_ERROR_INVALID_IMAGE` rejection of  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   `tests/ublkcp_test.cu`'s g2s cubin is **specific to that cubin's other
   content** (it also contains the multicast kernel), not the `UBLKCP.S.G`
   instruction — the `tma_cp_test.cu` cubin (plain S.G) loads and runs.
-- `sp2` (LTC64B/128B/256B) L2 sector cache-hint: which PTX `.L2::cache_hint` /
+- `sp2` (LTC64B/128B/256B) L2 sector cache-hint: which PTX `.L2::cache_hint` /  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   policy operand emits it (not triggered by the basic kernels here).
-- `SEQUENCED` (`.SEQ`) ordering form and its interaction with the `STRONG.<sco>`
+- `SEQUENCED` (`.SEQ`) ordering form and its interaction with the `STRONG.<sco>`  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   memory scope (spec requires a non-WEAK `mem` when `seq==SEQUENCED`).
 

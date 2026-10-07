@@ -204,14 +204,14 @@ Conclusions:
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- What triggers the operandless **`UTMACCTL.IVALL`** (0x9b9) from PTX — likely a
+- What triggers the operandless **`UTMACCTL.IVALL`** (0x9b9) from PTX — likely a  <!-- open-question: answered answered by "§Semantics" in this note -->
   bulk-invalidate on kernel entry/exit or a driver-level descriptor flush; not
   reproduced from user PTX here.
-- The `.acquire` scope (`.cta/.cluster/.gpu/.sys`) does **not** change the SASS
+- The `.acquire` scope (`.cta/.cluster/.gpu/.sys`) does **not** change the SASS  <!-- open-question: answered answered by "§Empirical verification (sm_120a, RTX 5090, CUDA 12.8/driver 580)" in this note -->
   (`UTMACCTL.IV` identical for gpu/cta/sys) — scope has no instruction-level
   field; ordering is enforced by the preceding `DEPBAR`. Same holds for the
   sm_120 `CCTL.E.C.LDCU.IV.DEEP` prefix.
-- Whether sm_90's `DEPBAR + UTMACCTL.IV` (no CCTL) alone actually refreshes a
+- Whether sm_90's `DEPBAR + UTMACCTL.IV` (no CCTL) alone actually refreshes a  <!-- open-question: answered answered by "§Semantics" in this note -->
   same-address descriptor inside one kernel is untestable on this GPU (RTX 5090
   is sm_120); the sm_90 lowering suggests Hopper has only the SM-side cache.
 

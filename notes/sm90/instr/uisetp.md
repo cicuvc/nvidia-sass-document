@@ -106,5 +106,5 @@ Same as above but URb replaced with 32-bit signed immediate at [63:32].
 
 ## Open questions
 
-- No empirical examples found. Under what conditions does ptxas emit UISETP vs ISETP? Likely related to uniform control flow (predicated ULDC/ULEA sequences).
+- No empirical examples found. Under what conditions does ptxas emit UISETP vs ISETP? Likely related to uniform control flow (predicated ULDC/ULEA sequences).  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
 

@@ -323,13 +323,13 @@ Decoder: `tools/decode_hmma.py` (opcode 0x23c, size/dstfmt/srcfmt/Rd/Ra/Rb/Rc).
 
 ## Open questions
 
-- **IndexedRF usage**: When does ptxas choose dynamic accumulator addressing
+- **IndexedRF usage**: When does ptxas choose dynamic accumulator addressing  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   over standard register-file encoding?  The mechanism and sm_120 timing are
   now verified, but compiler selection remains unknown.
-- **Sparse / indexed-RF layouts**: the metadata register layout for
+- **Sparse / indexed-RF layouts**: the metadata register layout for  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   `HMMA.SP` and the descriptor format for `HMMA...INDF` are unverified
   (documented from the spec tables only).
-- **Canonical D wait**: whether a `depbar`/write-scoreboard form is the
+- **Canonical D wait**: whether a `depbar`/write-scoreboard form is the  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   canonical alternative to NOP padding for the unscoreboarded result (only
   16-NOP padding was verified).
 

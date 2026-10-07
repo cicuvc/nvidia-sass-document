@@ -45,7 +45,7 @@ Field-level (spec-inferred, nvdisasm does not render):
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Actual mnemonic rendering nvdisasm *would* use is unknown (unrendered).
-- Which host construct emits GET — possibly driver/runtime cluster-launch setup.
-- Exact `CGABARRIER` token layout is not spec-exposed.
+- Actual mnemonic rendering nvdisasm *would* use is unknown (unrendered).  <!-- open-question: duplicate asked in full in sm90/instr/ucgabar_set.md -->
+- Which host construct emits GET — possibly driver/runtime cluster-launch setup.  <!-- open-question: duplicate asked in full in sm90/instr/ucgabar_set.md -->
+- Exact `CGABARRIER` token layout is not spec-exposed.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

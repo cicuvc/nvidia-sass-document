@@ -448,7 +448,7 @@ into the 64-bit register pair spanning 4 uniform registers (aligned).
 
 ## Open questions
 
-- **GMMA scoreboard mechanism**: How exactly does `gsb0` interact with
+- **GMMA scoreboard mechanism**: How exactly does `gsb0` interact with  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   `wgmma.commit_group`/`wgmma.wait_group` at the hardware level? The
   scoreboard tracking is warpgroup-wide and decoupled from the per-warp
   scoreboard.

@@ -140,7 +140,7 @@ intra-warp group switch; that control bit governs inter-warp scheduling instead.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The exact scheduler policy (how strongly/for how long YIELD deprioritizes the warp, and
+- The exact scheduler policy (how strongly/for how long YIELD deprioritizes the warp, and  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   its interaction with the control-word `stall`/`usched_info` bits) is not exposed by the
   spec — only that YIELD is the explicit yield op on the CBU pipe.
 

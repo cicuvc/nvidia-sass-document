@@ -107,8 +107,8 @@ only reference vectors here are our own.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- **No real SASS vector** (toolchain PTX cap 9.1 < 9.3). Unverified: exact cuobjdump text for
+- **No real SASS vector** (toolchain PTX cap 9.1 < 9.3). Unverified: exact cuobjdump text for  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
   const-bank/uniform forms, whether `.LO` is printed or hidden as default, and the reuse-flag
   rendering.
-- Confirm the 12–13-cycle latency and whether both halves (`.LO`+`.HI`) are ever fused.
+- Confirm the 12–13-cycle latency and whether both halves (`.LO`+`.HI`) are ever fused.  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
 

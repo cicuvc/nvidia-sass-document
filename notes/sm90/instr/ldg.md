@@ -374,12 +374,12 @@ register-only address form in practice.
 
 ## Open questions
 
-- **Plain 0x381 forms (ldg__sImmOffset/uImmOffset):** What scenario triggers
+- **Plain 0x381 forms (ldg__sImmOffset/uImmOffset):** What scenario triggers  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   these? Not observed in user code or cublas. Possibly a legacy/simulated path.
-- **Non-64-bit E forms:** What generates E=noe loads? All observed instances
+- **Non-64-bit E forms:** What generates E=noe loads? All observed instances  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   use E=1 (.E).
-- **SP2 prefetch (.LTC64B/.LTC128B/.LTC256B):** What triggers sector-cache
+- **SP2 prefetch (.LTC64B/.LTC128B/.LTC256B):** What triggers sector-cache  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   prefetch on LDG?
-- **Pnz predicate:** Never observed with non-PT Pnz in traces. What code
+- **Pnz predicate:** Never observed with non-PT Pnz in traces. What code  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   pattern produces a non-trivial Pnz?
 

@@ -176,8 +176,8 @@ This implements `clamp(R0, 0, 255)` → ReLU then saturation.
 
 ## Open questions
 
-- `_pred` variants (isA=1 with Pu predicate input) not yet triggered in any test
-- `.XORSIGN` modifier not yet tested — needs PTX `max.xorsign.abs.f32`
-- Const-bank variants (RCR, RCxR) not yet verified
-- 3-input `max.f32 d, a, b, c` — does this map to `_pred` or get lowered differently?
+- `_pred` variants (isA=1 with Pu predicate input) not yet triggered in any test  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- `.XORSIGN` modifier not yet tested — needs PTX `max.xorsign.abs.f32`  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Const-bank variants (RCR, RCxR) not yet verified  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- 3-input `max.f32 d, a, b, c` — does this map to `_pred` or get lowered differently?  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

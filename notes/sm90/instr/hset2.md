@@ -144,8 +144,8 @@ reduction:
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- "noBop" ALT classes — when would Bop AND not be specified?
-- `BM` (bool-mask with 0x00010001) vs `BF` (bool-float with 0xFFFFFFFF) — compiler always uses BF.
-- Uniform register, const-bank, RCx, and immediate variants not yet verified.
-- FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified in generated code.
+- "noBop" ALT classes — when would Bop AND not be specified?  <!-- open-question: duplicate asked in full in sm90/instr/hsetp2.md -->
+- `BM` (bool-mask with 0x00010001) vs `BF` (bool-float with 0xFFFFFFFF) — compiler always uses BF.  <!-- open-question: answered answered by "§Semantics" in this note -->
+- Uniform register, const-bank, RCx, and immediate variants not yet verified.  <!-- open-question: duplicate asked in full in sm90/instr/hsetp2.md -->
+- FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified in generated code.  <!-- open-question: duplicate asked in full in sm90/instr/hsetp2.md -->
 

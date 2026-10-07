@@ -117,11 +117,11 @@ Decoder `tools/decode_fence.py`: **2/2 PASS**. The only differing bit is Hi64
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Why `fence.proxy.async` (no space) additionally emits `MEMBAR.ALL.GPU` while the
+- Why `fence.proxy.async` (no space) additionally emits `MEMBAR.ALL.GPU` while the  <!-- open-question: answered answered by "§Semantics" in this note -->
   explicit `.shared::cta`/`.global` forms do not — likely the bare form implies a
   broader generic-proxy ordering.
-- Whether an `.acquire`/`.release` proxy-fence direction changes the encoding
+- Whether an `.acquire`/`.release` proxy-fence direction changes the encoding  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   (only the plain proxy-async form was probed).
-- The write-scoreboard usage — which consumer waits on FENCE's `dst_wr_sb` in a
+- The write-scoreboard usage — which consumer waits on FENCE's `dst_wr_sb` in a  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   real TMA/cp.async pipeline.
 

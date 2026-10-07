@@ -89,8 +89,8 @@ identity, with zero per-site plumbing.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- What writes RPC besides `CALL.ABS` (driver/API calls? `RPCMOV` dst
+- What writes RPC besides `CALL.ABS` (driver/API calls? `RPCMOV` dst  <!-- open-question: answered answered by "§Empirical (sm_120, `sassdbg/probe_callheap2.py` / `probe_callheap3.py`)" in this note -->
   forms are obviously one — what uses them)?
-- Is the unread-64 variant a real hardware limitation or just an
+- Is the unread-64 variant a real hardware limitation or just an  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   encoding-space choice?
 

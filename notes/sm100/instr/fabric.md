@@ -189,15 +189,15 @@ same table from the FREQ/shader-side TMA context.)
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `fabric.try_red` (= `UBLKRED`, opcode 0x13bb) and `fabric.try_pullred` — 
+- `fabric.try_red` (= `UBLKRED`, opcode 0x13bb) and `fabric.try_pullred` —  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   ptxas 13.3.73 could not assemble them (syntax error); need a newer build or
   the full MODIFIER system for RED operations (`.redOp` / `.type`).
-- Exact format of the 64-bit `URb` fabric-handle descriptor (the
+- Exact format of the 64-bit `URb` fabric-handle descriptor (the  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   `[dstLeId, dstDataOff]` b128 encoding — presumably the LE-id (32-bit) and
   offset (64-bit) packed as a register pair, similar to the `UMMAB`/`gdesc`
   descriptor encoding in MMA).
-- `TABLES_mem_5` 3-input lookup's full semantics — what `ctx` (third input, 0/1)
+- `TABLES_mem_5` 3-input lookup's full semantics — what `ctx` (third input, 0/1)  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   selects (shader context? acquire vs release? internal only).
-- `UTMACMDFLUSH` vs `DEPBAR` semantics — why `fabric.submit` needs both a TMA
+- `UTMACMDFLUSH` vs `DEPBAR` semantics — why `fabric.submit` needs both a TMA  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   command flush AND a CCTL invalidate + barrier, versus a single fence.
 

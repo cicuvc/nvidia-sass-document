@@ -71,5 +71,5 @@ from **ULEPC URd** (uniform load effective PC).  URa must be even-aligned
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.
+- The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.  <!-- open-question: duplicate asked in full in sm90/instr/jmx.md -->
 

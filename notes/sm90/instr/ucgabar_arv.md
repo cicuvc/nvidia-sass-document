@@ -83,8 +83,8 @@ specific piece.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `.SYNCALL` and the `UCGABAR_GET`/`_SET` operand encodings did not render under cubin-patch
+- `.SYNCALL` and the `UCGABAR_GET`/`_SET` operand encodings did not render under cubin-patch  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   (nvdisasm printed raw bytes), so they are documented from the spec only; the `_GET` `URd`
   and `_SET` semantics are unverified against real output.
-- Exact `CGABARRIER` state layout (arrival count / phase) is not spec-exposed.
+- Exact `CGABARRIER` state layout (arrival count / phase) is not spec-exposed.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

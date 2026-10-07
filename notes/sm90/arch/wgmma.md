@@ -1140,8 +1140,8 @@ RMW boundary exactly.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether `wgmma.commit_group` ever emits a distinct op (e.g. `WARPGROUPSET`) in
+- Whether `wgmma.commit_group` ever emits a distinct op (e.g. `WARPGROUPSET`) in  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   multi-stage pipelines, vs always folding into the HGMMA group-SB writes.
-- Exact `WARPGROUP.ARRIVE` placement policy (it is scheduled early, before the
+- Exact `WARPGROUP.ARRIVE` placement policy (it is scheduled early, before the  <!-- open-question: answered answered by "§H20 empirical verification (2026-08, hand-written SASS via `assembler/`, sm_90)" in this note -->
   descriptors are fully built) and how the fence orders accumulator reads.
 

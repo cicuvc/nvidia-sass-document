@@ -119,8 +119,8 @@ Every non-inlined `__device__` function ends in `RET.REL.NODEC R<n>` where `R<n>
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `.DEC` (HW call-depth-stack returns) and `.ABS` returns are spec-supported but not
+- `.DEC` (HW call-depth-stack returns) and `.ABS` returns are spec-supported but not  <!-- open-question: answered answered by "§Semantics" in this note -->
   emitted by the sampled ptxas (register ABI uses `.REL.NODEC` exclusively).
-- The uniform-register (`URa`) RET forms are unexercised by ptxas here (patch-verified
+- The uniform-register (`URa`) RET forms are unexercised by ptxas here (patch-verified  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   only); their ABI use case is unobserved.
 

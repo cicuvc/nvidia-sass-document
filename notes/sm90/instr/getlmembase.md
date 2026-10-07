@@ -113,6 +113,6 @@ and the [full local-memory backing study](../../sm120/arch/local_memory_backing_
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- **Unconfirmed** cuobjdump text form (bare `GETLMEMBASE Rd` assumed) and whether the 64-bit pair prints with a `.64` suffix.
-- Whether any current path (trap handler, driver context save/restore) still issues it.
+- **Unconfirmed** cuobjdump text form (bare `GETLMEMBASE Rd` assumed) and whether the 64-bit pair prints with a `.64` suffix.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Whether any current path (trap handler, driver context save/restore) still issues it.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

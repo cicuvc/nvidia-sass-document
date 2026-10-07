@@ -129,6 +129,6 @@ variants are unchanged from Hopper; only the `.T` memType value (2) is new.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Does `wait::ld` ever need a `FENCE` (e.g. if the loaded value crosses to a
+- Does `wait::ld` ever need a `FENCE` (e.g. if the loaded value crosses to a  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   different memory view rather than staying in registers)?
 

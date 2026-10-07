@@ -10,7 +10,7 @@ Both are grep-first: never `Read` them whole. Use `grep -n` to locate a section,
 
 ### Current state
 - **197/207** compute instructions documented (notes + decoder + test kernel). Only `F2FP` and `RTT` remain unchecked.
-- **389 notes** (`notes/`, 513k words) — `notes/sm90/instr/` 171 per-instruction docs, `notes/sm90/arch/` 37 cross-cutting notes, `notes/sm120/instr/` 105 generated sm_120 instruction docs, plus the sm100/sm103 archives and 3 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
+- **390 notes** (`notes/`, 519k words) — `notes/sm90/instr/` 171 per-instruction docs, `notes/sm90/arch/` 37 cross-cutting notes, `notes/sm120/instr/` 105 generated sm_120 instruction docs, plus the sm100/sm103 archives and 3 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
 - **109 decoders** (`tools/decode_*.py`) — one per documented instruction, each validated against real cuobjdump vectors.
 - **177 CUDA kernels** (`tests/*.cu`) + **87 assembler/round-trip tests** (`tests/asm_construct/test_*.py`) that build SASS by hand, load it through `assembler/`, and run it on a GPU.
 - **124 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, `hmma_model.py`, shared libs).
@@ -873,8 +873,9 @@ Rules that the tooling checks:
   `## History / retracted hypotheses` (with the date and what replaced them). If a
   retraction is quoted *in place* because it justifies the current conclusion, the note
   needs a `<!-- curated: … -->` annotation saying so.
-- **Refuted/never-settled sections are `## History`; open questions go there too** — they
-  are not current findings.
+- **Refuted/never-settled sections are `## History`.**  Open questions are *not* history:
+  they live in their own `## Open questions` block after it, and each bullet carries its
+  disposition annotation (see the phase 4 workflow below).
 - Sections that merely cite the toolchain (`## Verified encodings`, cuobjdump vectors) are
   **not** silicon evidence; they get a `<!-- provenance: … -->` note, not a tier upgrade.
 - Only the first H1 is the title; `## Resolved:` headings are legacy and read `## Verified:`.
@@ -916,6 +917,34 @@ Rules this setup encodes:
   dump, not from silicon. Do not upgrade that tier without a measurement.
 - `sm120_notes_gen.py --check` fails when the tree is stale, so re-run `--write` after a
   parser change; `--explain NAME` shows the diff for one note.
+
+### Open questions — disposition workflow (phase 4)
+
+Every question bullet under an open-questions heading carries its disposition as a comment
+on the bullet itself, so the note can be read without a second file:
+
+```
+- Is the ALTERNATE ever emitted?  <!-- open-question: answered by "§Verified encodings" in this note -->
+- Why does the boundary move?     <!-- open-question: open blocked-by "blocker (inferred): needs an H100 session" -->
+- Is `UMOV.64` emitted on sm_90?  <!-- open-question: obsolete premise no longer holds -->
+```
+
+The classes are `answered`, `open`, `duplicate`, `obsolete`. For `open`, the annotation
+must say **what is blocking it** — the inferred blocker names what to acquire (a Hopper
+session, NCU, a toolchain run, a spec reference, a new probe), and is marked inferred so a
+later session corrects it instead of trusting it.
+
+```
+python3 tools/open_questions.py                       # classify and summarise
+python3 tools/open_questions.py [--write|--check|--list open|--json out.json]
+python3 tools/annotate_open_questions.py [--dry-run|--apply]   # write the dispositions
+```
+
+`notes/OPEN_QUESTIONS.md` is the generated ledger. `open_questions.py --check` fails when
+it is stale; the annotator is idempotent and never overwrites an existing disposition, so a
+hand-written verdict survives the next sweep. A question that is genuinely settled should
+be *deleted* from the note and its answer recorded in the relevant section — the ledger is
+a work queue, not an archive.
 
 ### Phase 2 — Refinement workflow
 With the first doc pass complete, focus shifts to **note quality and consistency**:

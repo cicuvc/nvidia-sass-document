@@ -410,18 +410,18 @@ Probe source: `tests/asm_construct/probe_hgmma_rmw_window.py`.
 
 ## Open questions (before the hand-SASS write-only probe)
 
-- Exact budget decomposition: read-only ~256 B/cyc/SMSP vs combined
+- Exact budget decomposition: read-only ~256 B/cyc/SMSP vs combined  <!-- open-question: answered answered by "§The core measurement: FFMA with 3 fresh register sources is RF-read-bound" in this note -->
   read+write ~330 B/cyc/SMSP (current points fit both). Discriminator:
   storms with tunable read:write ratios (e.g. MOV chains = 1r/1w,
   LOP3.LUT with immediates = 1r/1w+imm).
-- Bank structure: 2 vs 4 banks, conflict replay cost — needs hand-SASS
+- Bank structure: 2 vs 4 banks, conflict replay cost — needs hand-SASS  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   storms with controlled operand parities (the assembler gives exact
   register numbers). The 1.56-vs-2.04 compilation-luck spread suggests
   ~30% bank effects.
-- Does the TC RMW have any dedicated RF write port, or is it fully
+- Does the TC RMW have any dedicated RF write port, or is it fully  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   behind ALU traffic?  Round 3 below resolves the architectural-port
   part of this question, though not the exact location of the mux.
-- Does the same threshold hold on H20 (its HGMMA chain is MAC-bound at
+- Does the same threshold hold on H20 (its HGMMA chain is MAC-bound at  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   32.4 cyc/MMA with more RF headroom per cycle — prediction: FFMA-rot
   storm slows it less in absolute cyc/MMA)?
 

@@ -135,9 +135,9 @@ forcing a system-scoped, uncached, ordered store.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Non-memdesc / plain 0x385 forms — not emitted by ptxas on sm_90.
-- Whether ST/STG's `TABLES_mem_0` ever diverges from LD/LDG's `TABLES_mem_1` for
+- Non-memdesc / plain 0x385 forms — not emitted by ptxas on sm_90.  <!-- open-question: answered answered by "§Semantics" in this note -->
+- Whether ST/STG's `TABLES_mem_0` ever diverges from LD/LDG's `TABLES_mem_1` for  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   some sem/sco/private combo (both agree on the values probed here).
-- The `.private` and cluster-scope (`CTA`) qualifiers for generic ST — not
+- The `.private` and cluster-scope (`CTA`) qualifiers for generic ST — not  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   triggered by the basic kernels here.
 

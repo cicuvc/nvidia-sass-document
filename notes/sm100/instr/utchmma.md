@@ -953,12 +953,12 @@ latency-table cycle.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Full 64-bit `UMMAA`/`UMMAB` matrix-descriptor + 32-bit `idesc` bit layouts —
+- Full 64-bit `UMMAA`/`UMMAB` matrix-descriptor + 32-bit `idesc` bit layouts —  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   **documented** in `notes/sm100/arch/tcgen05_descriptors.md` (from PTX Tables
   43/45–47). Remaining: confirm the built-descriptor field placement against real
   descriptor-construction SASS.
-- `tmemE` (URe) role — secondary accumulator/scale operand? (`ISRC_E_SIZE=64`.)
-- `opType` [73:72]∥[63] is pinned 0 here — what selects nonzero values?
-- Weight-stationary (`.WS`) + collector-buffer runtime semantics；尤其需要把
+- `tmemE` (URe) role — secondary accumulator/scale operand? (`ISRC_E_SIZE=64`.)  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
+- `opType` [73:72]∥[63] is pinned 0 here — what selects nonzero values?  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
+- Weight-stationary (`.WS`) + collector-buffer runtime semantics；尤其需要把  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   collector 命中与 shared-array 实际读流量分离测量。
 

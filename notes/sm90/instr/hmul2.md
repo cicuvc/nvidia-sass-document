@@ -157,9 +157,9 @@ PTX `mul.f16x2 d, a, b` → `HMUL2 Rd, Ra, Rb` (not lowered to HFMA2.MMA).
 
 ## Open questions
 
-- RI (immediate), RC (const bank), RCx (extended const), and RU (uniform reg)
+- RI (immediate), RC (const bank), RCx (extended const), and RU (uniform reg)  <!-- open-question: duplicate asked in full in sm90/instr/hadd2.md -->
   variants not yet verified
-- No MMA variant exists — why does the compiler choose HFMA2.MMA for add but
+- No MMA variant exists — why does the compiler choose HFMA2.MMA for add but  <!-- open-question: answered answered by "§Compiler behavior (ptxas, sm_90, CUDA 13.1)" in this note -->
   HMUL2 for multiply? (Likely because add-as-FMA uses Rc as accumulator
   whereas standalone multiply has no natural FMA form)
 

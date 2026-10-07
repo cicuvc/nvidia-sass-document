@@ -55,5 +55,5 @@ Accompanies GPU-/SYS-/cluster-scope fences, never CTA(block)-scope:
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The exact error class each barrier drains (page-fault vs ECC vs async-copy completion error).
+- The exact error class each barrier drains (page-fault vs ECC vs async-copy completion error).  <!-- open-question: duplicate asked in full in sm90/instr/errbar.md -->
 

@@ -55,5 +55,5 @@ Decoder: `tools/decode_b2r_r2b.py` (round-trips pass). Test: `tests/b2r_test.cu`
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact meaning of `R2B` named-barrier state (save/restore semantics) and which driver/trap path emits them.
+- Exact meaning of `R2B` named-barrier state (save/restore semantics) and which driver/trap path emits them.  <!-- open-question: answered answered by "§Semantics" in this note -->
 

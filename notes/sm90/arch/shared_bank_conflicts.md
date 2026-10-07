@@ -622,7 +622,7 @@ overflow sector → 1 extra shared pass → `SharedWf += 1`.
 
 ### 4.10 Open questions
 
-- **Miss-path conflict suppression:** on the miss path some twf-history hits
+- **Miss-path conflict suppression:** on the miss path some twf-history hits  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   are not counted. (The old "hit path counts everything (`R − #groups`)"
   claim was a warm=2 subtraction artifact — corrected 2026-08-13, §4.4;
   hit-path conflicts are unmodeled but larger than miss-path on average,
@@ -700,20 +700,20 @@ overflow sector → 1 extra shared pass → `SharedWf += 1`.
       artifact — clean warm=1 hit-path SharedConf is unmodeled too
       (§4.4), though ≥ cold in ~75% of cases (consistent with miss-path
       suppression).
-- **Write/read wavefront co-issue schedule** on scattered dst (4 B ±1
+- **Write/read wavefront co-issue schedule** on scattered dst (4 B ±1  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   residual; 8 B/16 B larger); data-arrival gating suspected, unproven.
-- 16 B T-stage: 6/60 random cases off by ±1–3 (tag model small gap).
-- `SharedWf` occasional −1 at 8 B/16 B dst=coal: sparse passes of adjacent
+- 16 B T-stage: 6/60 random cases off by ±1–3 (tag model small gap).  <!-- open-question: answered answered by "§4.2 T-stage (verified exact: 400/400 random 4 B, 60/60 8 B, 60/60 16 B)" in this note -->
+- `SharedWf` occasional −1 at 8 B/16 B dst=coal: sparse passes of adjacent  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   groups may merge.
-- Tag-bank hash validity for lines ≥ 128.
-- ~~Why LDG-allocated lines are invisible to LDGSTS lookups~~ **RESOLVED
+- Tag-bank hash validity for lines ≥ 128.  <!-- open-question: answered answered by "§4.2 T-stage (verified exact: 400/400 random 4 B, 60/60 8 B, 60/60 16 B)" in this note -->
+- ~~Why LDG-allocated lines are invisible to LDGSTS lookups~~ **RESOLVED  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   (2026-08-13)**: they were never invisible — the warm=1 LDG preheat was
   compiler-eliminated (dead `v`), so no warming ever happened. Fixed
   probe shows LDG-allocated lines hit fine for both LDG and LDGSTS
   (SecHit = Sectors, zero L2 refetch). Lesson: always verify preheat
   instructions survive in SASS.
-- cg/bypass true shared-bank behavior.
-- `ShAllWf`/`TotalWf`/`LgdsWf` composition (≈SharedWf+const with anomalies);
+- cg/bypass true shared-bank behavior.  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
+- `ShAllWf`/`TotalWf`/`LgdsWf` composition (≈SharedWf+const with anomalies);  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
   `Inst`=2 per single LDGSTS.
 ---
 

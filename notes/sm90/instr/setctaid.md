@@ -82,11 +82,11 @@ reading `SR_CTAID` afterward observe the updated value only through the pipeline
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- ~~Unconfirmed~~ whether cuobjdump prints the default `ALL` as a bare `SETCTAID` or
+- ~~Unconfirmed~~ whether cuobjdump prints the default `ALL` as a bare `SETCTAID` or  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
   as `SETCTAID.ALL`, and the `ALL` operand pair syntax — **resolved**: the assembler
   prints bare `SETCTAID` for the default; the 64-bit `ALL` operand is a register pair.
-- ~~Exact packing of the 64-bit `ALL` operand~~ — **resolved on SM120**:
+- ~~Exact packing of the 64-bit `ALL` operand~~ — **resolved on SM120**:  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   `X = R20` (low 32 bits), `Y = R21[15:0]`, `Z = R21[31:16]`.
   Verified: `R20:R21 = 0x55 / 0x02030004` → `X=0x55, Y=0x4, Z=0x203`.
-- Which runtime/driver path actually emits it (cooperative launch? CDP? trap handler?).
+- Which runtime/driver path actually emits it (cooperative launch? CDP? trap handler?).  <!-- open-question: answered answered by "§Semantics (speculation)" in this note -->
 

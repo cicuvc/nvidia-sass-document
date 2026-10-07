@@ -87,8 +87,8 @@ setup is not exposed by documented PTX; see `acqshminit.md`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- `initval` is restricted to 0 in PTX — is this a hardware limitation (only
+- `initval` is restricted to 0 in PTX — is this a hardware limitation (only  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   zero-init is possible) or a toolchain restriction?
-- `URb` must be URZ — the single zero pattern. A future bulk-fill with non-zero
+- `URb` must be URZ — the single zero pattern. A future bulk-fill with non-zero  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   value would need a different operand constraint.
 

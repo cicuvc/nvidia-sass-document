@@ -105,6 +105,6 @@ pass). Test: `tests/voteu_test.cu`.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Which other source patterns beyond `__activemask()` reliably steer ptxas to `VOTEU` — the
+- Which other source patterns beyond `__activemask()` reliably steer ptxas to `VOTEU` — the  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   ALL/EQ modes and a used `UPu` were not observed empirically (only constructed here).
 

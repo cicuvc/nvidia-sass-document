@@ -138,8 +138,8 @@ RedOps (UINT32 tensor map, simple `ELECT P0` + 8 NOPs + `@!P0 BRA` guard):
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Element type / precision of the reduction (f16/bf16/f32/s32/u32) — likely carried
+- Element type / precision of the reduction (f16/bf16/f32/s32/u32) — likely carried  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   in the tensor-map descriptor, not the instruction (no type field observed).
 
-- Whether `_desc` (memdesc=1) reduction form is emitted from stock PTX.
+- Whether `_desc` (memdesc=1) reduction form is emitted from stock PTX.  <!-- open-question: duplicate asked in full in sm90/instr/utmaldg.md -->
 

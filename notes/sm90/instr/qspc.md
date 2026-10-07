@@ -184,18 +184,18 @@ therefore loads addresses with `LDC` into GPRs or materializes them with
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The meaning of the `D` (3) space name ("Device"? "Cluster-shared"?); the
+- The meaning of the `D` (3) space name ("Device"? "Cluster-shared"?); the  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   spec exposes only the enum, empirical mapping is `.shared::cluster`.
-- Whether any compiler emits the `noe` (32-bit) or Ra32/Ra64-URB QSPC forms
+- Whether any compiler emits the `noe` (32-bit) or Ra32/Ra64-URB QSPC forms  <!-- open-question: answered answered by "§Semantics (verified PTX→SASS)" in this note -->
   (ptxas 12.8 does not — they round-trip through the assembler but have no
   observed producer).
-- ptxas occasionally emits extra ISETP/PLOP3 range-check code around QSPC in
+- ptxas occasionally emits extra ISETP/PLOP3 range-check code around QSPC in  <!-- open-question: answered answered by "§Semantics (verified PTX→SASS)" in this note -->
   optimized kernels (observed self-cancelling in `qspc_gpr_u32`); whether
   that guards some window edge cases or is dead code is unconfirmed.
-- sm_120 window geometry (global/local/shared bases above) was mapped on one
+- sm_120 window geometry (global/local/shared bases above) was mapped on one  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   driver; whether the boundaries (local `0x03f00000`, shared `0x1_00000000`)
   are arch-fixed or driver-configured is unconfirmed.
-- The hand-built-cubin `LDCU`-reads-0 quirk (uniform cbank not populated at
+- The hand-built-cubin `LDCU`-reads-0 quirk (uniform cbank not populated at  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   `0x358`/`0x380+` for this repo's ELFs) deserves a follow-up in the
   assembler ELF writer, since nvcc cubins read those slots fine.
 

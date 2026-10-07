@@ -131,6 +131,12 @@ def is_history_heading(title: str) -> bool:
     return heading_zone(title)[1]
 
 
+def is_open_heading(title: str) -> bool:
+    """True for open-question-style headings (kept out of the History banner)."""
+    low = re.sub(r"^[\d.]+\s*", "", title).strip().lower()
+    return any(low.startswith(prefix) for prefix in OPEN_PREFIXES)
+
+
 def normalise_verified_heading(title: str, date: str) -> str:
     """``## Resolved: X (SM120, 2026-08)`` -> ``## Verified: X (SM120, 2026-08)``."""
     fixed = re.sub(r"(?i)^(Resolved)\b", "Verified", title)
@@ -445,6 +451,10 @@ def partition(text: str, date: str) -> str:
 
     history_idx = [i for i, (_, h) in enumerate(starts) if heading_zone(h)[0] == ZONE_HISTORY]
     evidence_idx = [i for i, (_, h) in enumerate(starts) if heading_zone(h)[0] == ZONE_EVIDENCE]
+    # Open questions are *not* history: phase 2 used to park them under the History banner,
+    # which put live questions under a "do not cite current" disclaimer.  They get their
+    # own block at the end of the note instead.
+    open_idx = [i for i, (_, h) in enumerate(starts) if is_open_heading(h)]
 
     # Preamble = everything before the first section, minus trailing separators.
     first_start = starts[0][0]
@@ -461,10 +471,14 @@ def partition(text: str, date: str) -> str:
 
     kept: list[list[str]] = []
     history: list[list[str]] = []
+    open_items: list[list[str]] = []
     evidence_at: int | None = None
     for idx, (heading, block) in enumerate(blocks):
         # Blocks are emitted verbatim and joined with exactly one blank line, so a second
         # pass reproduces the same bytes (no re-trimming that could drop a blank line).
+        if idx in open_idx:
+            open_items.append(list(block))
+            continue
         if idx in history_idx:
             history.append(list(block))
             continue
@@ -495,6 +509,8 @@ def partition(text: str, date: str) -> str:
                    "> for provenance. Do not cite them as current.", ""]
         for block in history:
             pieces += emit(block)
+    for block in open_items:
+        pieces += emit(block)
 
     return "\n".join(pieces).rstrip() + "\n"
 

@@ -203,9 +203,9 @@ python3 tools/parse_sm75_80.py    # -> sm75.json + sm80.json
 
 ## Open questions
 
-- WARPSYNC: in the sm_80 dump as its own opcode(s), absent from sm_90's, yet
+- WARPSYNC: in the sm_80 dump as its own opcode(s), absent from sm_90's, yet  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   listed in sm_90's `cbu_pipe` OPERATION SETS. Re-check against real sm_90
   cubins (`cuobjdump -sass` + `tools/query_sm90.py opcode`).
-- The sm_75/sm_80 `pipes` sections here are suffix-derived and include digits
+- The sm_75/sm_80 `pipes` sections here are suffix-derived and include digits  <!-- open-question: open blocked-by "blocker (inferred): needs the older part (sm_70/80/89)" -->
   in mnemonic bases (e.g. `XMAD3`); they are informational only.
 

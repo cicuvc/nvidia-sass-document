@@ -119,7 +119,7 @@ have arrived at the join.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Non-`PT` `Pp` on BSYNC was never observed; whether a non-PT `Pp` restricts which
+- Non-`PT` `Pp` on BSYNC was never observed; whether a non-PT `Pp` restricts which  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   lanes are reconverged is unverified.
-- Only `B0`/`B1` observed empirically; the 4-bit `barReg` trivially reaches B0..B15.
+- Only `B0`/`B1` observed empirically; the 4-bit `barReg` trivially reaches B0..B15.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

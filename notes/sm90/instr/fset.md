@@ -176,8 +176,8 @@ FSET is on `int_pipe`; TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2 (F
 
 ## Open questions
 
-- Bop=OR and Bop=XOR not yet triggered in any test
-- `_simple` variant (no Bop, no Pp) not observed — ptxas always emits full variant
-- F=0 (always false) and T=15 (always true) comparison types not yet triggered
-- FTZ on FSET: does it exist in hardware or is it always lowered to FSETP?
+- Bop=OR and Bop=XOR not yet triggered in any test  <!-- open-question: open blocked-by "blocker (inferred): needs a new probe/test (no hardware blocker stated)" -->
+- `_simple` variant (no Bop, no Pp) not observed — ptxas always emits full variant  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
+- F=0 (always false) and T=15 (always true) comparison types not yet triggered  <!-- open-question: answered answered by "§Verified encodings (cuobjdump, sm_90)" in this note -->
+- FTZ on FSET: does it exist in hardware or is it always lowered to FSETP?  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
 

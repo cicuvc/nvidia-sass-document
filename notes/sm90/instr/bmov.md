@@ -94,6 +94,6 @@ hand-built cubin (2nd clobbers 1st) — read one slot per probe.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- **No real vectors** — exact nvdisasm text (size suffix `.32`, state-name spelling, at-exit
+- **No real vectors** — exact nvdisasm text (size suffix `.32`, state-name spelling, at-exit  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   imm rendering) is unverified. See `cbu_state.md` for the state-selector reconciliation.
 

@@ -68,5 +68,5 @@ Not emitted by ptxas on sm_90/CUDA 13.1. Ground truth via **cubin-patching + nvd
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact runtime target formula (`URa + off` absolute vs. relative-to-anchor) can't be pinned from static disasm alone.
+- Exact runtime target formula (`URa + off` absolute vs. relative-to-anchor) can't be pinned from static disasm alone.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

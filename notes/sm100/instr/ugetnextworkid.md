@@ -154,10 +154,10 @@ the hardware primitive is a narrow, stable async command.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Exact format of the 128-bit opaque response handle — what bits encode
+- Exact format of the 128-bit opaque response handle — what bits encode  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   `is_canceled`, `ctaid.x/y/z`, and what the remaining fields are (the dump
   doesn't expose the WD-side microcode, so this is a pure SBI).
-- `BROADCAST` (cast=1) — when does ptxas emit it (non-multicast try_cancel,
+- `BROADCAST` (cast=1) — when does ptxas emit it (non-multicast try_cancel,  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   or another use)?
-- SYNCS.EXCH semantics — the `SYNCS` mbarrier family is a fertile separate topic.
+- SYNCS.EXCH semantics — the `SYNCS` mbarrier family is a fertile separate topic.  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
 

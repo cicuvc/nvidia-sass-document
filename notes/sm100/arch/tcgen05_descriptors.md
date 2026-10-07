@@ -172,11 +172,11 @@ in TMEM.
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- The `matrix-descriptor-encode` bit-packing of the built `gdesc` as it appears
+- The `matrix-descriptor-encode` bit-packing of the built `gdesc` as it appears  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   in the `UMOV`/`ULOP3` construction SASS — decode a real cublas/cutlass
   Blackwell kernel to confirm the field placement empirically.
-- Scale-factor data ID semantics (which TMEM scale operand / block-vector size)
+- Scale-factor data ID semantics (which TMEM scale operand / block-vector size)  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   for the MX kinds — pairs with `UTCMXQMMA` analysis.
-- Whether ptxas ever emits a non-trivial `idesc` at compile time or always leaves
+- Whether ptxas ever emits a non-trivial `idesc` at compile time or always leaves  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   it as a runtime-computed value (our tests passed it as a kernel argument).
 

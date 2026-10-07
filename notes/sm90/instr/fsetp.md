@@ -149,7 +149,7 @@ Same as FSET: TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2 (int_pipe/F
 
 ## Open questions
 
-- Bop=OR and Bop=XOR not yet verified
-- `_simple` variant (no Bop) not yet observed
-- Relationship with ISETP (integer setp) — same opcode pattern?
+- Bop=OR and Bop=XOR not yet verified  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- `_simple` variant (no Bop) not yet observed  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Relationship with ISETP (integer setp) — same opcode pattern?  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

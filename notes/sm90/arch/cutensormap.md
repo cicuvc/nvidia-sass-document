@@ -231,9 +231,9 @@ descriptor cache must be invalidated before reuse —
 
 ## Open questions
 
-- w18 semantics beyond the observed value table (0x10 / 0x100 / 0x200 / 0x400)
+- w18 semantics beyond the observed value table (0x10 / 0x100 / 0x200 / 0x400)  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   — likely a swizzle pattern/row descriptor, but no deeper meaning extracted.
-- w16 for im2col + interleave: one sample (f16, il=16B, cpp 8, ppc 8) stored
+- w16 for im2col + interleave: one sample (f16, il=16B, cpp 8, ppc 8) stored  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   `0x400` (1024) instead of `cpp×ppc×elem` (128); the multiplier rule is
   unverified.
 

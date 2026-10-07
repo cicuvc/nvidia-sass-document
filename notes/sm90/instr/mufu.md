@@ -310,7 +310,7 @@ pipes that shows a throughput penalty at single-warp issue.
 
 ## Open questions
 
-- fp16 variants (`mufu_fp16__*`) not yet tested
-- What operations trigger the F64Imm variant (RIR)?
-- Variable latency mechanism — how does `VarLatOperandEnc` work exactly?
+- fp16 variants (`mufu_fp16__*`) not yet tested  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- What operations trigger the F64Imm variant (RIR)?  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
+- Variable latency mechanism — how does `VarLatOperandEnc` work exactly?  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

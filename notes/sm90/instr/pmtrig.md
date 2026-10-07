@@ -181,7 +181,7 @@ reachable by NVIDIA-internal profiling tooling.
 
 ## Open questions
 
-- How the host programs a tag-matching event expression for `?PM1/2/3`
+- How the host programs a tag-matching event expression for `?PM1/2/3`  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   (driver-internal; not exposed by CUPTI on sm_75+).
-- What `SR_SNAP_PM*` snapshots and what arms them (never non-zero under ncu).
+- What `SR_SNAP_PM*` snapshots and what arms them (never non-zero under ncu).  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 

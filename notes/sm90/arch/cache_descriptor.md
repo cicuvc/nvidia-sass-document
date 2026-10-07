@@ -169,11 +169,11 @@ Feeding arbitrary descriptor words to `STG.E desc[URx]` / `LDG.E desc[URx]`:
 
 ## Open questions
 
-- The 128 MB `num_bytes` encoding truncates to 0 in the 20-bit field; whether hardware
+- The 128 MB `num_bytes` encoding truncates to 0 in the 20-bit field; whether hardware  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   treats that as "no window", "full window", or rejects it behaviorally is untested
   (num=128 MB is the driver-accepted maximum).
-- Whether hardware distinguishes the two formats by UR5 bit4 (0x10) alone, and what a
+- Whether hardware distinguishes the two formats by UR5 bit4 (0x10) alone, and what a  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   createpolicy-format word with UR4 ≠ 0 does, is not yet verified behaviorally.
-- Exact STG descriptor validation: which UR5 high-byte values besides 0xFF are rejected,
+- Exact STG descriptor validation: which UR5 high-byte values besides 0xFF are rejected,  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   and whether UR4 (base field) participates in validation.
 

@@ -152,7 +152,7 @@ Decoder: `tools/decode_dfma.py` (confirms spec positions).
 
 ## Open questions
 
-- **FP64 operand negation:** PTX `fma.f64` does not expose operand negation directly in inline
+- **FP64 operand negation:** PTX `fma.f64` does not expose operand negation directly in inline  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   asm (`__fma_rn(-a,b,-c)` folds the negation into the DFMA `-Ra`/`-Rc` bits [72]/[75], as
   verified above), unlike some F32 paths. This is a PTX-frontend convenience, not a hardware
   limitation — the DFMA negate/abs bits are always available.

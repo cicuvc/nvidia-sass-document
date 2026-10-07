@@ -90,8 +90,8 @@ HMMA R18, R4, R10, R18               stall=7  req_mask=000100 (wait SB2)
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- Whether the 24-vs-28 gap is a true accumulator bypass or scheduler granularity;
+- Whether the 24-vs-28 gap is a true accumulator bypass or scheduler granularity;  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   a bank of independent accumulate chains would let the min-gap settle it.
-- Clean independent-HMMA throughput (not load-gated) — needs a kernel that keeps
+- Clean independent-HMMA throughput (not load-gated) — needs a kernel that keeps  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   all fragments resident (shared memory / register-resident B).
 

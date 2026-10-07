@@ -124,12 +124,12 @@ datasize↔num and idxsize×num→mdidx bounds):
 > for provenance. Do not cite them as current.
 
 ## Open questions
-- **Exact operation** — how `mdidx`/`dstbyte`/`srchalf`/`idxsize`/`num` combine to
+- **Exact operation** — how `mdidx`/`dstbyte`/`srchalf`/`idxsize`/`num` combine to  <!-- open-question: answered answered by "§Semantics" in this note -->
   route source sub-elements into `Rd`. The bound tables (finer index → more
   entries; larger data → fewer groups) fit a metadata-expansion for 2:4 sparsity,
   but the per-lane mapping is not spec-stated.
-- **What emits it** — likely `ptxas`-internal for sparse-MMA operand prep or a
+- **What emits it** — likely `ptxas`-internal for sparse-MMA operand prep or a  <!-- open-question: duplicate asked in full in sm90/instr/scatter.md -->
   `cusparseLt`/sparse-`wmma` library path; no user PTX intrinsic found. Worth
   re-probing against a structured-sparsity build alongside `GENMETADATA`/`SPMETADATA`.
-- Roles of `Ra`/`Rb`/`Rc` (data vs metadata source) vs the immediates.
+- Roles of `Ra`/`Rb`/`Rc` (data vs metadata source) vs the immediates.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 
