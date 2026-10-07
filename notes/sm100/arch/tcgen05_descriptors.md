@@ -1,5 +1,16 @@
 # tcgen05 matrix descriptors — `gdesc` (shared-mem) and `idesc` (instruction)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 Reference for the two descriptor operands every `UTC*MMA` (and `UTCCP`) carries.
 Both are documented in PTX ISA 9.3 §9.7.17.4 (`~/cs/project/documented-ptx/
 09.7.17-...`). This note transcribes the bit layouts and ties them to the SASS
@@ -155,6 +166,11 @@ in TMEM.
   that these descriptors ground.
 - `notes/sm90/arch/wgmma.md` — Hopper GMMA descriptor (the `gdesc` ancestor).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - The `matrix-descriptor-encode` bit-packing of the built `gdesc` as it appears
   in the `UMOV`/`ULOP3` construction SASS — decode a real cublas/cutlass
@@ -163,3 +179,4 @@ in TMEM.
   for the MX kinds — pairs with `UTCMXQMMA` analysis.
 - Whether ptxas ever emits a non-trivial `idesc` at compile time or always leaves
   it as a runtime-computed value (our tests passed it as a kernel argument).
+

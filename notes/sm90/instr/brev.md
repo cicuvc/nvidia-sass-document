@@ -1,5 +1,16 @@
 # BREV — Bit Reverse
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** BREV  |  **Pipe:** `mio_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
 
 ## Semantics
@@ -44,7 +55,9 @@ Reverses the order of bits in a register: `Rd = bit_reverse(Rb)`. Bit 0 becomes 
 
 `mio_pipe`, MUFU dispatch. Decoupled scoreboard with variable-latency encoding.
 
-## Resolved: silicon-verified semantics (SM120)
+## Evidence
+
+## Verified: silicon-verified semantics (SM120)
 
 `tests/asm_construct/test_brev_flo_popc.py`: `BREV Rd, Rb` reverses all 32
 bits (bit i <-> bit 31-i).  Verified: 0x1 -> 0x80000000, 0x80000000 -> 0x1,
@@ -52,3 +65,4 @@ bits (bit i <-> bit 31-i).  Verified: 0x1 -> 0x80000000, 0x80000000 -> 0x1,
 No modifiers (no `[~]`).  ptxas emits `BREV` from PTX `brev` (__brev).
 
 Same mio_pipe scoreboard discipline as POPC/FLO.
+

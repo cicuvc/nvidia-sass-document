@@ -1,5 +1,16 @@
 # B200 MIO-side admission windows
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** B200 (sm_100), Modal, 2026-09-20. The main harness is  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: B200 (sm_100), Modal, 2026-09-20.  The main harness is
 `tests/asm_construct/probe_sm100_mio_admission_modal.py`, which assembles
 sm_100a cubins from `probe_mio_queue_depth.py` and measures a short burst
@@ -181,3 +192,4 @@ the placement-dependent CBU windows.  The UTCHMMA queue is Blackwell-specific;
 its approximately six whole-instruction credits should not be compared
 directly with Hopper HGMMA without applying the same post-instruction
 admission-bound method.
+

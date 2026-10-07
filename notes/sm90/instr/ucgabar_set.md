@@ -1,5 +1,16 @@
 # UCGABAR_SET — CGA cluster-barrier set
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode:** `0b1001111000111` = **0x13c7** | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` | compute-only (`SHADER_TYPE==CS`)
 
 Set/initialize the thread-block-cluster (CGA) barrier from a uniform register. Part of the CGA-barrier family (see `ucgabar_arv.md` for `ARV`/`WAIT`).
@@ -20,12 +31,20 @@ Set/initialize the thread-block-cluster (CGA) barrier from a uniform register. P
 ## Not emitted / not rendered (CUDA 13.1)
 Not produced by the sampled toolchain: cooperative-groups arrive/wait lower to `UCGABAR_ARV`/`_WAIT`. nvdisasm does not render these opcodes — hand-patching produces raw bytes only.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_ucgabar.py`)
 Field-level (spec-inferred):
 | Lo64 | Hi64 | Decoder output |
 |------|------|----------------|
 | `0x00000007000073c7` | `0x000fe20008000000` | `UCGABAR_SET UR7` |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Actual mnemonic rendering nvdisasm *would* use is unknown (unrendered).
 - Which host construct emits SET — possibly driver/runtime cluster-launch setup.
+

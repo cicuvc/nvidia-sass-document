@@ -1,5 +1,16 @@
 # GB202 scalar and tensor compute-pipeline model
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-21  
+**Probe:** RTX 5090 and RTX PRO 6000 Server Edition (GB202, sm_120),  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 and RTX PRO 6000 Server Edition (GB202, sm_120),
 2026-09-14--15.  Companion diagram:
 [`gb202_compute_pipelines.svg`](gb202_compute_pipelines.svg).  The underlying
@@ -865,3 +876,4 @@ The following remain hypotheses: literal FIFO depths for fixed math and
 tensor admission, whether the packed-FP steering constraint is a mux, mode
 bit, or shared packet queue, the exact number of physical RF read slices, and
 the tensor-to-scalar completion merge topology.
+

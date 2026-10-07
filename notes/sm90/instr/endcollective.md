@@ -1,5 +1,16 @@
 # ENDCOLLECTIVE — Close a warp collective-region
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `ENDCOLLECTIVE` = `0b100100011011` = **0x91b** | **Pipe:** `cbu_pipe` (dispatch) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 The closing bracket of the warp **collective region** opened by `WARPSYNC.COLLECTIVE`
@@ -56,6 +67,8 @@ So it is pure region bookkeeping — it neither branches nor blocks; it just tea
 | INSTRUCTION_TYPE | DECOUPLED_BRU | **COUPLED_MATH** | DECOUPLED_BRU |
 | RPC_WRITERS / CBU_OPS_WITH_REQ | y / y | **n / n** | y / — |
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_endcollective.py`)
 Self-test 2/2; **57894/57894 ENDCOLLECTIVE in libcusparse decoded byte-exact** — an exact
 1:1 match with the 57894 `WARPSYNC.COLLECTIVE`; also 1/1 in the `-G` build.
@@ -72,12 +85,7 @@ plain `__syncwarp()` with **`-G`** (device debug), which lowers the sync into th
 `WARPSYNC.ALL` (no ENDCOLLECTIVE). cusparse additionally emits the pair in optimized
 multi-GPU/system-scope warp-aggregation code. See `warpsync.md` for the full analysis.
 
-## Open questions
-- Whether ENDCOLLECTIVE has any HW effect beyond clearing the `MCOLLECTIVE` declaration
-  (e.g. re-widening the executable mask) is not spec-stated; the empty (`NOP`) region body
-  suggests it is a pure marker.
-
-## Resolved: empirically verified (SM120, 2026-08)
+## Verified: empirically verified (SM120, 2026-08)
 
 Constructed the full idiom on silicon (`test_warpsync_collective.py`):
 `ENDCOLLECTIVE` closes the region opened by `WARPSYNC.COLLECTIVE Rmask, TGT`
@@ -87,9 +95,20 @@ WARPSYNC target points at the instruction after `ENDCOLLECTIVE` (the BSYNC).
 A lane executing `WARPSYNC.COLLECTIVE` that is not covered by `Rmask` raises
 `ILLEGAL_INSTRUCTION` (715).
 
-## Resolved: region forbids divergence/exit/CBU ops (SM120, 2026-08)
+## Verified: region forbids divergence/exit/CBU ops (SM120, 2026-08)
 
 Instructions *inside* the `WARPSYNC.COLLECTIVE … ENDCOLLECTIVE` region are
 restricted to uniform control flow + data predication: a predicated branch
 (even with a uniform predicate), a nested BSSY/BSYNC, a WARPSYNC, or a partial
 `EXIT` all raise ILLEGAL_INSTRUCTION (715). See `warpsync.md` "lockstep zone".
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Whether ENDCOLLECTIVE has any HW effect beyond clearing the `MCOLLECTIVE` declaration
+  (e.g. re-widening the executable mask) is not spec-stated; the empty (`NOP`) region body
+  suggests it is a pure marker.
+

@@ -1,15 +1,17 @@
 # UISETP — Uniform Integer Set-Predicate
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** UISETP  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -97,6 +99,12 @@ Same as above but URb replaced with 32-bit signed immediate at [63:32].
 | Comparison types | Same ICmpAll | Same ICmpAll |
 | Boolean ops | Same Bop (AND/OR/XOR) | Same Bop |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - No empirical examples found. Under what conditions does ptxas emit UISETP vs ISETP? Likely related to uniform control flow (predicated ULDC/ULEA sequences).
+

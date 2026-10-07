@@ -1,5 +1,16 @@
 # I2F — Integer to Float
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** I2F  |  **Pipe:** `mio_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
 
 ## Semantics
@@ -28,6 +39,8 @@ Matrix: {F32, Float64} dst × {8b, 16b, 32b, 64b} src × {Rb, IS, IU, Cb, CX, UR
 [91:91],[11:0]       opcode    <= 0b1100000110
 ```
 
+## Evidence
+
 ## Empirical status
 
 **Not emitted by ptxas on sm_90.** Modern compilers use `I2FP` (int_pipe, packed format) instead:
@@ -42,7 +55,7 @@ I2F is the legacy mio_pipe/MUFU version. The I2FP variant (idx 197 in ref_memo) 
 
 `mio_pipe`, MUFU dispatch. Decoupled scoreboard with variable-latency encoding.
 
-## Resolved: silicon-verified semantics (SM120)
+## Verified: silicon-verified semantics (SM120)
 
 `tests/asm_construct/test_conversions.py`: I2F converts S32/U32/S16/U16 ->
 F32 and S32/U32/S64 -> F64 (legacy MUFU-class).  Verified against Python:
@@ -51,3 +64,4 @@ F32 and S32/U32/S64 -> F64 (legacy MUFU-class).  Verified against Python:
 - mio_pipe DECOUPLED_RD_WR_SCBD: input `wr=SB1`, conversion `req={1}` +
   `wr=SB2`, stores `req={1,2}`.  The 64-bit dest needs the explicit `{R8,R9}`
   group and BOTH words stored.
+

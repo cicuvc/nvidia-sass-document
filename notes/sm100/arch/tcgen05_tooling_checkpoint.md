@@ -1,5 +1,16 @@
 # sm100 TCGEN05 工具链检查点（2026-09-17）
 
+<!-- notes-status -->
+**Status:** historical  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-17  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
 本文记录暂停硬件探测时的状态。目标是先建立能独立生成 cubin 的可靠工具链，
 再继续分析 TCGEN05。除非另有说明，本文中的“通过”只指 B200/sm_100a；
 sm_103 需要独立验证。
@@ -56,29 +67,6 @@ combined 906 cycles，增量 263 cycles = 65.75 cycles/MMA，和 A+B 的 64 个
 128-B wavefront 对上。详细解释见 `../instr/utchmma.md`。
 
 以下故障记录仅描述已经淘汰的旧原型，仍然不能引用为微架构证据。
-
-## 旧原型：不能引用的实验
-
-目标实验是 warp 0 连续发射 UTCHMMA，warps 1--4 分布在四个 subcore 上连续
-发射 `LDS.128`，以饱和 B200 的 shared read data stage。当前没有得到可信
-结果：
-
-- ptxas 版本把循环内地址不变的 `LDS.128` 提到循环外，循环体只保留 XOR；
-  它不是 shared saturation 测试。
-- lift/patch 版本依赖 ptxas 的数值 `CALL.REL`/`RET.REL`、保存 PC 常量、
-  reconvergence frame 和 metadata offset。改变代码尺寸后，即便逐项重定位，
-  仍很容易把 allocator/helper ABI 一同改变。
-- 未 scoreboard 的 LDS destination 过早复用、将 `RZ` 当作反复 vector-load
-  sink、以及只等待最后一个请求，都不能可靠完成整条异步请求流。
-- 原 ptxas kernel 还把 R4/R5 用作 global output address；LDS 的晚写回曾与之
-  重叠并产生 700/716。把输出地址移走只能消除一个混杂因素，不能证明其余
-  closure 正确。
-- 单个静态 LDS 序列有局部可运行样本，但更长序列、循环复用和 160-thread
-  launch 出现过 719/721 或超时。这些只能说明工具协议不完整，不能据此推断
-  TMEM/LSU 吞吐或资源深度。
-
-因此此前四 contender 尝试中的故障、超时和周期数全部作废；尤其不能从中
-得出“UTCHMMA 占 shared 带宽的一半”或其它定量结论。
 
 ## 多 warp TMEM allocator 的缺口
 
@@ -228,3 +216,31 @@ helper 必须：
 级发布/等待发生在哪、哪些分支属于错误/at-exit 路径、哪些 instruction offset
 被 loader 消费。协议确定后，再冻结 allocator IR/API；mbarrier helper 可以与
 其并行设计，但不要把两套同步状态混成同一个抽象。
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## 旧原型：不能引用的实验
+
+目标实验是 warp 0 连续发射 UTCHMMA，warps 1--4 分布在四个 subcore 上连续
+发射 `LDS.128`，以饱和 B200 的 shared read data stage。当前没有得到可信
+结果：
+
+- ptxas 版本把循环内地址不变的 `LDS.128` 提到循环外，循环体只保留 XOR；
+  它不是 shared saturation 测试。
+- lift/patch 版本依赖 ptxas 的数值 `CALL.REL`/`RET.REL`、保存 PC 常量、
+  reconvergence frame 和 metadata offset。改变代码尺寸后，即便逐项重定位，
+  仍很容易把 allocator/helper ABI 一同改变。
+- 未 scoreboard 的 LDS destination 过早复用、将 `RZ` 当作反复 vector-load
+  sink、以及只等待最后一个请求，都不能可靠完成整条异步请求流。
+- 原 ptxas kernel 还把 R4/R5 用作 global output address；LDS 的晚写回曾与之
+  重叠并产生 700/716。把输出地址移走只能消除一个混杂因素，不能证明其余
+  closure 正确。
+- 单个静态 LDS 序列有局部可运行样本，但更长序列、循环复用和 160-thread
+  launch 出现过 719/721 或超时。这些只能说明工具协议不完整，不能据此推断
+  TMEM/LSU 吞吐或资源深度。
+
+因此此前四 contender 尝试中的故障、超时和周期数全部作废；尤其不能从中
+得出“UTCHMMA 占 shared 带宽的一半”或其它定量结论。

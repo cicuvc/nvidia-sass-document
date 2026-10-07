@@ -1,5 +1,16 @@
 # USHF — Uniform Funnel Shift
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** USHF  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -21,3 +32,4 @@ Regular SHF includes the cross-word bits in all four words; USHF does not.
 `.C` (clamp): n = min(k, 32); `.W`: n = k & 31; `.S32`: arithmetic
 sign-fill.  Verified across n=0..31, discriminators, `.W` wrap, `.S32`, and
 the imm shift form.
+

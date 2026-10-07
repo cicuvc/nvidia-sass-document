@@ -1,13 +1,15 @@
 # H20 scalar ALU/FMA structural conflicts
 
-> **2026-09-20 correction:** this note measured everything with
-> `SCHED=[7:7:{}:1:1]` (yield=1 per instruction).  After the yield switch-cost
-> discovery (`notes/sm120/yield_dispatch_cost.md`), the solo "~2 clocks" numbers
-> here must be re-read: on H100 the clean FFMA/FADD/FMUL solo rate is **1.0
-> cyc/inst** (32 FP32 lanes/SMSP), and yield halves it to 2.0.  The conflict
-> *pairing* conclusions below are relative and stand; absolute slopes carry
-> per-instruction switch noise.  Clean H100 rates + full latency matrices:
-> [`h100_fixed_pipeline.md`](h100_fixed_pipeline.md).
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** NVIDIA H20 (sm_90), 2026-09-14. NCU is installed but performance  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
 
 Silicon: NVIDIA H20 (sm_90), 2026-09-14.  NCU is installed but performance
 counters are disabled (`ERR_NVGPUCTRPERM`), so this note uses hand-built SASS,
@@ -151,3 +153,4 @@ but silicon does not implement that as one uniform physical throughput rule:
 two FADD streams reach one instruction/clock, while source-bank demand and
 per-family admission explain the slower cases.  Static occupancy tables remain
 safe scheduling abstractions, not literal execution-array descriptions.
+

@@ -1,5 +1,16 @@
 # GB202 Convergence Barrier Unit topology
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-15  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-15. NVIDIA describes the  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-15.  NVIDIA describes the
 Convergence Barrier Unit (CBU) as responsible for warp-level convergence,
 barrier, and branch instructions.  This note relates that definition to the
@@ -210,6 +221,8 @@ leaves the BMOV victim unchanged.  This is consistent with a work-conserving
 CBU state arbiter that gives the unordered BMOV path priority over VQ_CBU,
 with an additional local penalty for register-dependent BMOV writes.
 
+## Evidence
+
 ## Probe entry points
 
 - `tests/asm_construct/probe_cbu_topology.py`: clean NCU classification,
@@ -217,3 +230,4 @@ with an additional local penalty for register-dependent BMOV writes.
 - `tests/asm_construct/probe_mio_topology.py`: CBU/ADU/LSU/XU contention.
 - `tests/asm_construct/probe_mio_queue_depth.py --mode cbu`: historical BMOV
   short-burst probe; this measures `VQ_UNORDERED`, not true `VQ_CBU`.
+

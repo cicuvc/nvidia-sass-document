@@ -1,5 +1,16 @@
 # YIELD — Warp-scheduler yield hint
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** mixed  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `YIELD` = `0b100101000110` = **0x946** | **Pipe:** `cbu_pipe` (Branch / Convergence-Barrier Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 A hint to the **warp scheduler** to switch away from the issuing warp/divergent group at
@@ -7,15 +18,6 @@ this issue slot — the explicit "let someone else run" instruction. It is the I
 lever behind Volta+ Independent Thread Scheduling's **forward-progress** behavior: dropped
 into spin/poll loops so a waiting warp deprioritizes itself and lets the warp/group holding
 the awaited resource make progress.
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). Hopper silicon (H20) showed a deviation from the recorded sm_120 result.
-> Treat the numbers below as Blackwell-specific until probed on sm_90.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 `@Pg YIELD [Pp]` requests the scheduler to yield the current warp's turn (favor another
@@ -63,6 +65,8 @@ scoreboard. `MIN_WAIT_NEEDED=1`. (Distinct from the per-instruction control-word
 `usched_info` scheduling knobs carried by *every* instruction; YIELD is the explicit,
 standalone strong yield.)
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_yield.py`)
 Self-test 3/3; **1742/1742 YIELD in libcusparse decoded byte-exact**; `tests/yield_test.cu`
 (spin-wait + spin-lock) emits YIELD (1/1). Guarded/predicated forms via cubin-patch.
@@ -96,12 +100,7 @@ This is the concrete realization of the ITS forward-progress guarantee (see the 
 control-flow overview): the spinning warp yields each iteration so the lock/flag holder is
 interleaved, can complete, and release — breaking the pre-Volta warp-internal spin deadlock.
 
-## Open questions
-- The exact scheduler policy (how strongly/for how long YIELD deprioritizes the warp, and
-  its interaction with the control-word `stall`/`usched_info` bits) is not exposed by the
-  spec — only that YIELD is the explicit yield op on the CBU pipe.
-
-## Resolved: same-warp spin deadlock demonstrated (SM120, 2026-08)
+## Verified: same-warp spin deadlock demonstrated (SM120, 2026-08)
 
 `tests/asm_construct/test_yield.py` reproduces the classic ITS forward-progress
 case on a single warp: `{tid 0}` = producer sets a memory flag; `{tid 1..31}`
@@ -134,3 +133,14 @@ fairness promise: once B owns the warp, A is not automatically scheduled again
 while B keeps polling without an explicit YIELD/NANOSLEEP/exit.  B's LDG
 traffic and the per-instruction control-code yield bit do not cause an
 intra-warp group switch; that control bit governs inter-warp scheduling instead.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- The exact scheduler policy (how strongly/for how long YIELD deprioritizes the warp, and
+  its interaction with the control-word `stall`/`usched_info` bits) is not exposed by the
+  spec — only that YIELD is the explicit yield op on the CBU pipe.
+

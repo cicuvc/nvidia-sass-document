@@ -1,5 +1,16 @@
 # MATCH — Warp match (find lanes sharing a value)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `MATCH` = `0b1110100001` = **0x3a1** | **Pipe:** `mio_pipe` (MIO_FAST_OPS) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`, `VIRTUAL_QUEUE=$VQ_UNORDERED` | since **sm_70**
 
 SASS lowering of PTX `match.sync` (`__match_any_sync` / `__match_all_sync`). Broadcasts and
@@ -51,6 +62,8 @@ mask; the PTX membermask is used only for PTX-level correctness, not encoded in 
 faster MIO latency class. Produces a 32-bit GPR (`Rd`) and, for `.ALL`, a predicate (`Pu`);
 consumers wait via the write scoreboard (`dst_wr_sb`), since it is decoupled/unordered.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -68,6 +81,12 @@ Decoder: `tools/decode_match.py` (all 4 vectors pass). Test: `tests/match_test.c
 - `__match_all_sync(mask, v, &pred)` → `MATCH.ALL Pu, Rd, Ra` (mask arg dropped)
 - 64-bit value → `.U64` with `Ra` as a register pair.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Whether ptxas ever inserts a `WARPSYNC`/vote before `MATCH` to honor a non-full membermask
   (none observed for the constant or variable-mask cases tested here).
+

@@ -1,5 +1,16 @@
 # UTMACMDFLUSH — TMA command-queue flush / bulk-async-group commit
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UTMACMDFLUSH` = `0b100110110111` = **0x9b7** | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
 
 ## Semantics
@@ -77,6 +88,8 @@ read-scoreboard op with all operand sizes 0 — a pure control instruction. Its
 completion isn't fixed-latency; the *group* it commits is drained by a later
 `DEPBAR.LE`.
 
+## Evidence
+
 ## Verified encodings (multiple test cubins, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | context |
 |---|---|---|---|
@@ -98,6 +111,12 @@ Appears after every store-direction bulk/TMA op group: `UTMASTG` (tensor store),
 `UTMAREDG` (tensor reduce), `UBLKCP.G.S` (bulk store), `UBLKRED.G.S` (bulk reduce),
 and `multimem.cp.async.bulk` (all lower their commit to this op).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact width of the implicit TMA group counter behind the fixed commit scoreboard
   (shared open item with `depbar.md`).
+

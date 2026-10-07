@@ -1,5 +1,16 @@
 # RPCMOV — Move to/from the RPC (return-PC) register
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90)
+
+## Conclusion
+
 **Opcode mnemonics (10 CLASSes):** read 32-bit `RPCMOV.32 Rd, Rpc.LO/HI` = **0x353** (`rpcmov_srcPc_`); write 32-bit `RPCMOV.32 Rpc.LO/HI, Rb` = **0x352** (`rpcmov_dstPc_`); write 64-bit = **0x1b54 / 0x0b54 / 0x0954 / 0x1d54** (`rpcmov_dstPc64__{CXb,Const,Imm,URb}`) | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 Moves between GPRs and the otherwise-inaccessible **RPC register** — the
@@ -13,6 +24,8 @@ the halves as `Rpc.LO` / `Rpc.HI` (`PC_REG` operand); 64-bit forms name
 - `RPCMOV.32 Rpc.LO|Rpc.HI, Rb` / `RPCMOV.64 Rpc, ...` — write RPC
   (pre-seed a return address; the 64-bit forms take a register pair /
   const / 57-bit immediate scaled by 4, like `CALL.ABS`).
+
+## Evidence
 
 ## Empirical (sm_120, `sassdbg/probe_callheap2.py` / `probe_callheap3.py`)
 
@@ -70,8 +83,14 @@ the handler's first two instructions are `RPCMOV.32 R248, Rpc.LO` /
 `RPCMOV.32 R249, Rpc.HI`, which yield the **site VA** — the breakpoint's
 identity, with zero per-site plumbing.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - What writes RPC besides `CALL.ABS` (driver/API calls? `RPCMOV` dst
   forms are obviously one — what uses them)?
 - Is the unread-64 variant a real hardware limitation or just an
   encoding-space choice?
+

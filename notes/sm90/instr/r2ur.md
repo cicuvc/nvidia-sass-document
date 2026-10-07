@@ -1,19 +1,21 @@
 # R2UR — Register → Uniform Register
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** verified on silicon  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `R2UR` = `0b1011001010` = **0x2ca** | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` | since sm_73 (crucible idx 164; sm_90 high-half variant `R2UR_H` idx 226)
 
 Moves a per-lane general register `Ra` into a **uniform** register `URd` — the bridge from the
 per-thread datapath to the uniform datapath. Unlike the fast decoupled uniform ops, R2UR is
 **coupled** and slow (needs the warp to coordinate to produce a single uniform value).
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 - **`R2UR URd, Ra`** (noOR) — `URd = Ra` of the **first active lane** (lowest active laneid
@@ -107,6 +109,8 @@ R3 → UR17 high word round-trips exactly).
 read connector is 1–2 cycles. It is carved out of `UDP_subset` (special-cased in the latency
 model) precisely because of the cross-lane coupling cost. Part of `OP_R2UR = {R2UR, REDUX, S2UR}`.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1 — libcublasLt.so)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -131,6 +135,11 @@ Decoder: `tools/decode_r2ur.py` (real vectors + `.OR` round-trips pass).
   (uniform address/loop bookkeeping in warp-specialized kernels), frequently under a leader
   predicate `@P0`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Pu semantics are resolved for converged and branch-diverged execution (per-lane
   write-1-only nonconformity mask, see above). Remaining: is the write-1 set computed with
@@ -138,3 +147,4 @@ Decoder: `tools/decode_r2ur.py` (real vectors + `.OR` round-trips pass).
   all probes on sm_120/RTX 5090) where Pu differs? Also untested: sm_90 silicon itself,
   and whether the `.OR`/`.FILL`/`.BROADCAST` encodings diverge under mixed-PC warp states
   that cannot be produced with plain `BRA`/`BSSY` reconvergence (e.g. `BREAK`-peeled lanes).
+

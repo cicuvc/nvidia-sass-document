@@ -1,5 +1,16 @@
 # usched_info ↔ latency tables — the stall/yield model (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** resolved empirically (spec-grounded + cuBLAS sm_90  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **Question:** how does `usched_info` (the field commonly called "stall count",
 with its top bit read as a "yield bit") relate to the data in
 `sm_90_latencies.txt`?
@@ -82,6 +93,8 @@ cells (`parse_latencies.py lookup TRUE GPR …`):
 | fma64lite (DFMA) → fma64lite | 8 |
 | fma64lite → fmalighter | 10 |
 | HMMA/IMMA → * | 27 |
+
+## Evidence
 
 ## Empirical: eff_stall vs predicted latency (adjacent RAW, fixed-latency producer)
 From cuBLAS sm_90 (`usched_probe.py`), per (producer_pipe → consumer_pipe),
@@ -321,6 +334,11 @@ GPR/PRED def-use parse (op0 + trailing predicate operands = dests; `.64/.WIDE`
 adds Rd+1), reconstructs issue positions via `pos_{i+1}=pos_i+eff_stall_i`, and
 pairs each producer with its downstream consumer/writer.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Whether the integer forwarding is a true bypass vs merely a conservative table
   entry (the two are indistinguishable from stalls alone: `IMAD` tabulates 6 but
@@ -336,3 +354,4 @@ pairs each producer with its downstream consumer/writer.
   not modelled here — only the adjacent (distance-0) case is measured.
 - `DRAIN` vs `WnEG` differentiation at group boundaries (both bit4=0): what makes
   ptxas pick a full drain over a counted end-group wait.
+

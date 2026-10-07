@@ -1,5 +1,16 @@
 # B200 SM-wide LSU/shared-data/SHFL throughput
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** B200 (sm_100), Modal, no NCU. Probe:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: B200 (sm_100), Modal, no NCU.  Probe:
 `tests/asm_construct/probe_sm100_lsu_exchange.py`.  Cubins are assembled as
 hand-scheduled sm_100 SASS.  Each warp issues a 512-instruction long stream
@@ -28,6 +39,8 @@ Warp placement follows the established `warp_id % 4` subcore mapping.
 
 Small deviations from 1.0 include common start/end and branch-tail overhead;
 the eight-warp LDS and longer mixed tests provide the cleanest asymptotes.
+
+## Evidence
 
 ## Data-stage wavefront throughput
 
@@ -80,3 +93,4 @@ UTCHMMA operations extends the LDS span to 906 cycles.  The 263-cycle delta is
 SM-wide approximately 128-B/cycle read data stage; arbitration largely
 protects tensor traffic (MMA time changes only from 627--629 to 642--647
 cycles).  Full protocol and raw per-warp intervals are in `../instr/utchmma.md`.
+

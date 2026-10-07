@@ -1,5 +1,16 @@
 # FENCE — Async-proxy view fence
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `FENCE` = `0b1111000110` = **0x3c6** | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_WR_SCBD` | **VIRTUAL_QUEUE:** `VQ_FENCE_S` (shared form) / `VQ_FENCE_G` (global form)
 
 ## Semantics
@@ -74,6 +85,8 @@ The proxy-fence family: **async proxy** ↔ generic uses `FENCE.VIEW.ASYNC`;
 its completion is scoreboard-tracked (a consumer of the async-copied data can wait
 on the fence's write SB before reading through the generic proxy).
 
+## Evidence
+
 ## Verified encodings (`tests/membar_test.cu` + probe, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | PTX |
 |---|---|---|---|
@@ -98,6 +111,11 @@ Decoder `tools/decode_fence.py`: **2/2 PASS**. The only differing bit is Hi64
 - Contrast `fence.proxy.tensormap` → `UTMACCTL.IV` (`utmacctl.md`): the two
   proxy kinds (async vs tensormap) use entirely different SASS ops.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Why `fence.proxy.async` (no space) additionally emits `MEMBAR.ALL.GPU` while the
   explicit `.shared::cta`/`.global` forms do not — likely the bare form implies a
@@ -106,3 +124,4 @@ Decoder `tools/decode_fence.py`: **2/2 PASS**. The only differing bit is Hi64
   (only the plain proxy-async form was probed).
 - The write-scoreboard usage — which consumer waits on FENCE's `dst_wr_sb` in a
   real TMA/cp.async pipeline.
+

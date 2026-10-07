@@ -1,5 +1,16 @@
 # UBMSK — Uniform Bitmask
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** UBMSK  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -43,3 +54,4 @@ settling before the GPR consumer, fresh module per launch).
 ## Latency
 
 `UDP_subset` group: output 1–7 cycles, true-dependency 4–12 cycles.
+

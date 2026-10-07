@@ -1,5 +1,16 @@
 # GB202 固定执行管线转发延迟总表
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 本文汇总 RTX 5090（GB202，sm_120）上固定延迟执行域的实测转发信息，
 供 cycle-accurate simulator 直接使用。覆盖范围包括：
 
@@ -434,3 +445,4 @@ FP64/CLMAD                                           queue/service/scoreboard ev
 
 对未逐 mnemonic 测量的 ALU-Lite/ALU-Heavy -> FMA-Heavy 边，应保留
 `unknown` 或使用静态表的保守值，而不是凭借物理邻接关系推断 t+2。
+

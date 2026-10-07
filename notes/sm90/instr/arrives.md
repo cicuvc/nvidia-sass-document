@@ -1,5 +1,16 @@
 # ARRIVES — cp.async (LDGSTS) → mbarrier arrive
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `ARRIVES` = `0b1100110110000` = **0x19b0** | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_AGU_UNORDERED_WR` | compute-only
 
 The bridge between the **cp.async / LDGSTS** async-copy completion mechanism and an
@@ -64,6 +75,8 @@ This is a third cp.async-completion route (alongside `LDGDEPBAR`+`DEPBAR.LE`, se
 ## Latency
 `mio_pipe`, `DECOUPLED_RD_SCBD`, `VQ_AGU_UNORDERED_WR`. Not in `RPC_WRITERS`/`CBU_OPS_WITH_REQ`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_arrives.py`)
 Self-test 2/2; `tests/arrives_test.cu` (cp.async + `cp.async.mbarrier.arrive`) 2/2.
 
@@ -75,7 +88,13 @@ Self-test 2/2; `tests/arrives_test.cu` (cp.async + `cp.async.mbarrier.arrive`) 2
 Hand-check TRANSCNT: opcode 0x19b0; `sz`[75:73]=5→`.64`; `arrive`[72]=0→`.LDGSTSBAR`;
 `barop`[71:70]=2→`.TRANSCNT`; `URc`[69:64]=7→`[UR7]`; `Ra`=RZ.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `.LEGACY` `barop` form (older arrive-count barrier) is unsampled.
 - Whether `.TRANSCNT` vs `.ARVCNT` differ only in the count field they touch, or also in
   ordering, is not spec-stated (inferred from the arrive/noinc PTX pairing).
+

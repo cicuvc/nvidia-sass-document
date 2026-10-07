@@ -1,10 +1,19 @@
 # HMUL2 — Packed FP16x2 Multiply
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `HMUL2`
 **Pipe:** `fp16_pipe` (= `FP16_OPS`)
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Semantics
 
@@ -109,6 +118,8 @@ Same as HADD2/HFMA2 in `FP16_OPS`:
 | TABLE_OUTPUT(GPR) | `FP16_OPS`{Rd} | 1–2 |
 | TABLE_ANTI(GPR) | `FP16_OPS`{Ra,Rc} | 1–2 |
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 6/6 test vectors pass via `tools/decode_hmul2.py`.
@@ -126,15 +137,7 @@ Same as HADD2/HFMA2 in `FP16_OPS`:
 
 PTX `mul.f16x2 d, a, b` → `HMUL2 Rd, Ra, Rb` (not lowered to HFMA2.MMA).
 
-## Open questions
-
-- RI (immediate), RC (const bank), RCx (extended const), and RU (uniform reg)
-  variants not yet verified
-- No MMA variant exists — why does the compiler choose HFMA2.MMA for add but
-  HMUL2 for multiply? (Likely because add-as-FMA uses Rc as accumulator
-  whereas standalone multiply has no natural FMA form)
-
-## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+## Verified: semantics verified (SM120, clean hand-built ELF, 2026-08)
 
 `tests/asm_construct/test_hadd2_hmul2.py`. HMUL2 RRR opcode 0x232,
 `Rd = Ra * Rb` per packed halfword lane:
@@ -146,3 +149,17 @@ PTX `mul.f16x2 d, a, b` → `HMUL2 Rd, Ra, Rb` (not lowered to HFMA2.MMA).
   `.FTZ` flushes to 0
 - **`.SAT` shows the same sm_120 quirk**: `65500×100 → 1.0` (nosat gives
   inf), not max-finite.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- RI (immediate), RC (const bank), RCx (extended const), and RU (uniform reg)
+  variants not yet verified
+- No MMA variant exists — why does the compiler choose HFMA2.MMA for add but
+  HMUL2 for multiply? (Likely because add-as-FMA uses Rc as accumulator
+  whereas standalone multiply has no natural FMA form)
+

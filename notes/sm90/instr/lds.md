@@ -1,5 +1,16 @@
 # LDS — Load from Shared Memory
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `LDS`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD` (decoupled read/write scoreboard)  
@@ -147,6 +158,8 @@ handles output dependency latency separately.
 - `dst_wr_sb` [112:110]: destination write scoreboard (3-bit, default 7)
 - `req_bit_set` [121:116]: request bit mask (6-bit)
 
+## Evidence
+
 ## Verified encodings
 
 All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
@@ -175,17 +188,7 @@ All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
 | `ld.shared.v4.u32 %r, [%ra]` | `LDS.128 Rd, [Ra]` |
 | `__shared__` C++ array access | `LDS` with computed register address |
 
-## Open questions
-
-- **Stride variants `.X4`/`.X8`/`.X16`**: What PTX construct or optimization
-  triggers them? Not present in cublas.
-- **`lds_uniform_` (URb variant)**: What triggers the uniform register index
-  form in SASS? Likely related to warp-wide uniform shared-memory access patterns.
-- **Graphics shader restriction**: The `$ST_CS` constraint suggests separate LDS
-  encodings or entirely different shared-memory instructions exist for graphics
-  pipelines (VS/GS/TS/PS).
-
-## Resolved: silicon-verified semantics + shared-memory window (SM120)
+## Verified: silicon-verified semantics + shared-memory window (SM120)
 
 `tests/asm_construct/test_lds_sts.py` verifies:
 - STS/LDS 32-bit roundtrip at byte offsets 0..0x3FFC (dynamic 16KB shared);
@@ -206,3 +209,19 @@ Hand-assembler gotchas:
   1024 but the actual allocation follows the section.
 - LDS/STS address brackets `[Ra + URb + off]` (uniform variant, STRIDE
   .X1/.X4/.X8/.X16) are parsed as one operand group now.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- **Stride variants `.X4`/`.X8`/`.X16`**: What PTX construct or optimization
+  triggers them? Not present in cublas.
+- **`lds_uniform_` (URb variant)**: What triggers the uniform register index
+  form in SASS? Likely related to warp-wide uniform shared-memory access patterns.
+- **Graphics shader restriction**: The `$ST_CS` constraint suggests separate LDS
+  encodings or entirely different shared-memory instructions exist for graphics
+  pipelines (VS/GS/TS/PS).
+

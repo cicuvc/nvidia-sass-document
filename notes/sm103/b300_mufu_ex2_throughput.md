@@ -1,5 +1,16 @@
 # B300 (sm_103) XU/MUFU throughput: EX2 doubled, everything else unchanged
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm103-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-21  
+**Probe:** Modal B300 SXM6 (sm_103, 148 SMs) vs B200 (sm_100, 148 SMs),  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: Modal B300 SXM6 (sm_103, 148 SMs) vs B200 (sm_100, 148 SMs),
 2026-09-21; H100/GB202 as references.  Probe:
 `tests/asm_construct/probe_sm80_admission_depth.py --mode xu*`, post-knee
@@ -27,3 +38,4 @@ runners: `tools/modal_b200_probe.py --gpu B200|B300|H100`, local 5090).
   aggregate 0.125/cyc on both B200 and B300.
 - XU remains fully disjoint from the fixed ALU/FMA domains on all four
   architectures (no interaction with the fixed-pipeline domain map).
+

@@ -1,5 +1,16 @@
 # NANOSLEEP — Timed warp back-off sleep (`__nanosleep`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonics:** `NANOSLEEP` — `0x95d` (imm / `.CLEAR`) / `0x35d` (reg) / `0xb5d` (const) / `0x1b5d` (constX) / `0x1d5d` (uniform) | **Pipe:** `cbu_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 Suspends the issuing warp for approximately **N nanoseconds** — the **timed cousin of
@@ -55,6 +66,8 @@ All three cbu ops (`NANOSLEEP`/`YIELD`/`BSYNC`) express "I'm waiting"; NANOSLEEP
 member (9-cycle RPC true-dependency, `sm_90_latencies.txt:411`) and in
 **`CBU_OPS_WITH_REQ`** (line 219, honors `&req=`).
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_nanosleep.py`)
 Self-test 7/7; `tests/nanosleep_test.cu` (`__nanosleep`) 3/3 (imm + reg). `.RAND`/`.WARP`/
 `.SYNCS`/`.CLEAR` modifiers via cubin-patch.
@@ -87,8 +100,14 @@ completes with `state=2`, `cas_old=1` for immediate durations **0, 1, 32, and
 handoff as YIELD, even at duration zero; a nonzero timed suspension is not
 required for the handoff itself.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact meaning of `.WARP`/`.SYNCS` modifiers and the hardware duration rounding/cap are not
   spec-stated.
 - `.CLEAR` semantics (which pending sleep it cancels, and how it is emitted from C) is
   unverified — only the encoding/rendering is confirmed via patch.
+

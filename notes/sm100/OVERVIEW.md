@@ -1,5 +1,16 @@
 # sm100 (Blackwell) — encoding changes vs sm_90 (Hopper)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** spec  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 6 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100, sm120)
+
+## Conclusion
+
 High-level diff of the nvdisasm-dumped ISA description (`sm100_instructions.txt`
 + `sm100_latencies.txt`) against the Hopper dumps. Produced with the ported
 tooling: `tools/parse_sm100.py` → `sm100.json`, queried via
@@ -210,6 +221,11 @@ python3 tools/query_sm100.py pipe TTUGO
   classic REDUX (0x3c4). `op`[79:78]: MAX=0, MAXABS=1, MIN=2, MINABS=3;
   `sz`[74:73]: U32=0, S32=1, F32=2; `NaN`[77]. Verified 3 forms on sm_100a.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - **Descriptors** — `notes/sm100/arch/tcgen05_descriptors.md` transcribes the
   64-bit shared-memory matrix descriptor (`gdesc`) and 32-bit instruction
@@ -225,3 +241,4 @@ python3 tools/query_sm100.py pipe TTUGO
 - `ttu_pipe` op encodings and latency rows.
 - Whether the `LDT`/`STT`/`SIZE_ldt` ALTERNATEs are ever emitted (ptxas emits
   `LDTM`/`STTM` for every `tcgen05.ld`/`.st` shape, incl. `.32x32b.x1`).
+

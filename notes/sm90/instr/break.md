@@ -1,5 +1,16 @@
 # BREAK — Peel lanes out of a convergence barrier
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `BREAK` = `0b100101000010` = **0x942** | **Pipe:** `cbu_pipe` (Convergence-Barrier / Branch Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 Part of the Volta+ convergence-barrier family (`BSSY` 0x945 / `BSYNC` 0x941 / `BREAK` 0x942).
@@ -77,6 +88,8 @@ bookkeeping.
 `MIN_WAIT_NEEDED=1` it is ordered by the control word, not a register producer→consumer
 latency.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_break.py`, 4/4 match)
 | PC | Lo64 | Hi64 | Disassembly | src |
 |----|------|------|-------------|-----|
@@ -98,9 +111,15 @@ Hand-check `@!P0 BREAK B1`: opcode [11:0]=0x942, bit91=0 → BREAK; `barReg` nib
   BMOV) — it shows up only in irregular-divergence code, so nvdisasm's rendering is
   sampled here from purpose-built kernels rather than shipped binaries.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Non-`PT` `Pp` on BREAK was never observed; its effect (if any) on which lanes are
   peeled, independent of the `@Pg` guard, is unverified.
 - Only `B0`/`B1` selectors observed empirically; the 4-bit `barReg` field trivially
   encodes B0..B15 (same field as BSSY, where B0/B1 are both confirmed), but B2..B15
   in a BREAK were not reproduced by the test kernels.
+

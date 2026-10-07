@@ -1,5 +1,16 @@
 # ERRBAR — GPU-scope error barrier
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `ERRBAR` = `0b100110101011` = **0x9ab** | **Pipe:** `mio_pipe`
 
 Barrier that **synchronizes/surfaces deferred errors** (asynchronous memory faults, ECC, etc.) from prior GPU-scope operations. The compiler pairs it with wide-scope memory fences: a `__threadfence()` becomes not just an ordering `MEMBAR` but also an error-observation point.
@@ -35,6 +46,8 @@ So **error barriers accompany GPU-/SYS-/cluster-scope fences, never CTA(block)-s
 ## Latency
 `mio_pipe`. `ERRBAR` is `COUPLED_MATH` (fixed-latency blocking). Not in `RPC_WRITERS`/`CBU_OPS_WITH_REQ`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_errbar.py`)
 Self-test 2/2; 6/6 in the fence dump, 62/62 in the cluster-kernel dump.
 
@@ -42,5 +55,11 @@ Self-test 2/2; 6/6 in the fence dump, 62/62 in the cluster-kernel dump.
 |------|------|-------------|
 | `0x00000000000079ab` | `0x000fc00000000000` | `ERRBAR` |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - The exact error class each barrier drains (page-fault vs ECC vs async-copy completion error).
+

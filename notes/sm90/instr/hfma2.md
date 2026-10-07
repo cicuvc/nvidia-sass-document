@@ -1,34 +1,19 @@
 # HFMA2 / HFMA2.MMA — Packed FP16x2 Fused Multiply-Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 5 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `HFMA2` / `HFMA2.MMA`
 **Pipe:** `fp16_pipe` (= `FP16_OPS`) / `fma64lite_pipe` (= `HFMA2MMA_OP`) **on sm_90**
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
-> **HFMA2 vs HFMA2.MMA — the difference (verified sm_90 + sm_120, 2026-08):**
->
-> | Aspect | HFMA2 | HFMA2.MMA |
-> |--------|-------|-----------|
-> | sm_90 opcode (RRR) | `0x231` | `0x235` (bit[2] set) |
-> | sm_120 opcode (RRR) | `0x231` | `0x231` (ALTERNATE CLASS, same bits) |
-> | Pipe (sm_90) | `fp16_pipe` | `fma64lite_pipe` |
-> | Pipe (sm_120) | `fp16_pipe` | `fp16_pipe` (same unit) |
-> | ISWZ lane swizzles | free (iswzA/B/C) | **forced `H1_H0`** (ignored) |
-> | OFMT enum | `OFMT` (F16/F32/E8M7/E6M9) | `OFMT_F16_V2_BF16_V2` (F16/BF16 only) |
-> | FMZ enum | `FMZ` (nofmz/FMZ/FTZ/OOB) | `FMZ_hfma2` (no OOB) |
-> | opex table (sm_120) | `TABLES_opex_5` | `TABLES_opex_7` |
-> | latency (sm_90 TABLE_TRUE) | 5–8 | 10–11 |
-> | latency (sm_120, measured) | 5.89 cyc | 5.88 cyc (identical — same encoding) |
->
-> **Semantics are identical** (`Rd.lane = Ra.lane*Rb.lane + Rc.lane`); the
-> `.MMA` suffix is a scheduling/pipe and ISWZ-encoding variant, not a math
-> difference.  On sm_90 ptxas emits `.MMA` for all `fma.f16x2`/`add.f16x2`
-> (higher-latency `fma64lite_pipe`, tensor-adjacent co-issue); on sm_120
-> ptxas emits plain `HFMA2` and the `.MMA` form is an ALTERNATE CLASS with
-> identical bits (only the `/MMAONLY` syntax marker differs, iswz forced to
-> `H1_H0`, `TABLES_opex_7`).  Verified on GPU: both give identical results,
-> `.MMA` ignores an `.H0_H0` swizzle that plain `HFMA2` honors.
-
----
 
 ## Semantics
 
@@ -164,6 +149,8 @@ Note that HFMA2.MMA has significantly higher true dependency latency (10–11
 cycles) than regular HFMA2 (5–8 cycles). The compiler's choice of MMA for
 addition is an instruction-issue throughput trade-off, not a latency win.
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 16/16 test vectors pass via `tools/decode_hfma2.py`.
@@ -184,20 +171,7 @@ addition is an instruction-issue throughput trade-off, not a latency win.
 PTX `fma.f16x2` → `HFMA2.MMA` (not non-MMA HFMA2).
 PTX `add.f16x2` → `HFMA2.MMA Rd, Ra, 1, 1, Rc` (via compiler lowering).
 
-## Open questions
-
-- Non-MMA HFMA2 (with ISWZ lane swizzles) encodings not yet verified — compiler
-  never emits them for sm_90
-- ISWZB.F32 and H0_NH1 modes: defined in enum but rejected by CONDITIONS for
-  both HFMA2 and HFMA2.MMA. Where are these used? (Likely on other FP16 ops
-  like HMMA or future extensions)
-- RELU variant (`satrelu=2`): encoding format has an extra predicate `Pp` for
-  per-lane RELU activation. Not yet seen in generated code
-- E8M7_V2/E6M9_V2 output formats: enum-defined but not verified in generated SASS
-- Const-bank (`RC`, `RCR`, `RCxR`, `RRCx`) and uniform (`RRU`, `RUR`) variants
-  not yet verified
-
-## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+## Verified: semantics verified (SM120, clean hand-built ELF, 2026-08)
 
 Probed with a clean kernel (`MOV32I` builds packed-fp16 operands, `HFMA2` RRR
 form, `STG` result).  Note: a 3×`LDG` harness kept returning 0 for the 2nd/3rd
@@ -239,7 +213,7 @@ compilers that need true saturation use a different sequence.  (Cross-check:
 the sm_90 latency tables and this chip's behavior may differ — this is a
 Blackwell (sm_120) observation.)
 
-## Resolved: ISWZ lane swizzles verified (SM120, 2026-08)
+## Verified: ISWZ lane swizzles verified (SM120, 2026-08)
 
 `tests/asm_construct/test_hfma2_iswz.py` (8 GPU checks, native assembler
 syntax).  Assembler gained `.H0_H0` / `.H1_H1` / `.F32` / `.H0_NH1` operand
@@ -266,3 +240,22 @@ Illegal modes confirmed: `iswzB=F32`, `H0_NH1`, `INVALID5/6/7` fault with
 `CUDA_ERROR_ILLEGAL_INSTRUCTION` (the matcher rejects `.F32` at assemble
 time via CONDITIONS; `H0_NH1` assembles but faults at runtime) — matching
 the spec CONDITIONS that forbid these on HFMA2.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- Non-MMA HFMA2 (with ISWZ lane swizzles) encodings not yet verified — compiler
+  never emits them for sm_90
+- ISWZB.F32 and H0_NH1 modes: defined in enum but rejected by CONDITIONS for
+  both HFMA2 and HFMA2.MMA. Where are these used? (Likely on other FP16 ops
+  like HMMA or future extensions)
+- RELU variant (`satrelu=2`): encoding format has an extra predicate `Pp` for
+  per-lane RELU activation. Not yet seen in generated code
+- E8M7_V2/E6M9_V2 output formats: enum-defined but not verified in generated SASS
+- Const-bank (`RC`, `RCR`, `RCxR`, `RRCx`) and uniform (`RRU`, `RUR`) variants
+  not yet verified
+

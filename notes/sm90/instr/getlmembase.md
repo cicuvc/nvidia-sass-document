@@ -1,9 +1,17 @@
 # GETLMEMBASE — Get local-memory base address
 
-**Opcode mnemonic:** `GETLMEMBASE` = `0b1111000000` = **0x3c0** | **Pipe:** `mio_pipe` | since **sm_70**
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
 
-> **Status: silicon-verified on H20 (sm_90), 2026-08.** ptxas/nvcc does not
-> normally emit this instruction, but a hand-assembled cubin executes it.
+## Conclusion
+
+**Opcode mnemonic:** `GETLMEMBASE` = `0b1111000000` = **0x3c0** | **Pipe:** `mio_pipe` | since **sm_70**
 
 Read the executing warp's 64-bit **local-memory backing-aperture base**. This is
 distinct from the generic local-window base in `c[0x0][0x20]` / `SR_LWINLO`.
@@ -41,10 +49,6 @@ INSTRUCTION_TYPE: `INST_TYPE_DECOUPLED_RD_WR_SCBD`, VIRTUAL_QUEUE: `$VQ_UNORDERE
 | `0x00000000000473c0` | `0x0000000000000000` | `GETLMEMBASE R4` (R4:R5) |
 
 \* Hi64 shows only opcode bit[91]; real scheduling bits are compiler-chosen. Decoder: `tools/decode_lmembase.py`.
-
-## Open questions
-- **Unconfirmed** cuobjdump text form (bare `GETLMEMBASE Rd` assumed) and whether the 64-bit pair prints with a `.64` suffix.
-- Whether any current path (trap handler, driver context save/restore) still issues it.
 
 ## H20 silicon verification and sm120 comparison (2026-08)
 
@@ -102,3 +106,13 @@ base.
 
 See the dedicated [sm_120 GETLMEMBASE note](../../sm120/instr/getlmembase.md)
 and the [full local-memory backing study](../../sm120/arch/local_memory_backing_va.md).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- **Unconfirmed** cuobjdump text form (bare `GETLMEMBASE Rd` assumed) and whether the 64-bit pair prints with a `.64` suffix.
+- Whether any current path (trap handler, driver context save/restore) still issues it.
+

@@ -1,5 +1,16 @@
 # STS — Store to Shared Memory
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `STS`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` (decoupled read-only scoreboard)  
@@ -107,6 +118,8 @@ MIO pipe, MIO_SLOW_OPS subset, decoupled read-only scoreboard.
 - As consumer: same MIO_SLOW_OPS latency (8 cycles from compute producers)
 - No output dependency latency — STS doesn't produce a register value
 
+## Evidence
+
 ## Verified encodings
 
 All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
@@ -180,14 +193,7 @@ The `1<<24` per-rank delta confirms the DSMEM slicing. See `s2ur.md`
 (`S2UR SR_CgaCtaId`), `ulea.md` (`ULEA …, 0x400, 0x18`), and `ldc.md`
 (constant-bank preset region, which does **not** hold a shared base).
 
-## Open questions
-
-- **Stride variants `.X4`/`.X8`/`.X16`**: Not present in cublas.
-- **`sts_uniform_` (URc variant)**: What triggers the uniform register form?
-- **Why URc at [69:64] vs LDS's URb at [37:32]?** The bit position difference
-  is notable — possibly reflects a different micro-architectural pipeline slot.
-
-## Resolved: silicon-verified (SM120)
+## Verified: silicon-verified (SM120)
 
 `tests/asm_construct/test_lds_sts.py` confirms STS shares the LDS addressing/
 window semantics (see lds.md): 32-bit/64-bit stores, narrow stores
@@ -196,3 +202,16 @@ STS is DECOUPLED_RD_SCBD (no result scoreboard — there is no destination
 register); the stored data register must be scoreboard-ready like any input.
 Shared-window allocation note in lds.md applies (dynamic shared_mem at
 launch; static .nv.shared section with sh_info->.text now allocates the window.)
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- **Stride variants `.X4`/`.X8`/`.X16`**: Not present in cublas.
+- **`sts_uniform_` (URc variant)**: What triggers the uniform register form?
+- **Why URc at [69:64] vs LDS's URb at [37:32]?** The bit position difference
+  is notable — possibly reflects a different micro-architectural pipeline slot.
+

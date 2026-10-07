@@ -1,5 +1,16 @@
 # IABS — Integer absolute value (32-bit)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `IABS` = `0b1000010011` = **0x213** (RRR) + 4 operand-form variants | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | since sm_70
 
 `Rd = |src|` — 32-bit signed integer absolute value. No modifiers (no saturation, no size:
@@ -48,6 +59,8 @@ standalone form.
 ## Latency (from sm_90_latencies.txt)
 `int_pipe` member (FXU_OPS), fixed-latency `COUPLED_MATH` — a fast ALU op.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -60,10 +73,7 @@ Decoder: `tools/decode_iabs.py`. Test: `tests/iabs_test.cu`.
 - `abs(int)` / `abs.s32` → `IABS Rd, Rb`.
 - 64-bit `llabs` → `IADD3`-based negate + select (not IABS).
 
-## Open questions
-- None significant; the non-RRR operand forms are unverified in text form (ptxas prefers RRR).
-
-## Resolved: RUR form silicon-verified (SM120)
+## Verified: RUR form silicon-verified (SM120)
 
 `tests/asm_construct/test_iabs.py` now verifies all three source forms
 (RRR / RsIR imm32 / RUR uniform), 11 cases. RUR: `IABS Rd, URb` with the value
@@ -79,3 +89,12 @@ Hand-assembler gotchas (both were silent 715 faults):
 2. `LDCU` is variable-latency (DECOUPLED_RD_WR_SCBD): the consuming `IABS`
    must wait on the LDCU's write scoreboard (`req={2}` when the LDCU used
    `wr=2`), otherwise the read races ahead and returns stale data.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- None significant; the non-RRR operand forms are unverified in text form (ptxas prefers RRR).
+

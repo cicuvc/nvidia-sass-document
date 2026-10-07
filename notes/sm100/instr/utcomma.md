@@ -1,5 +1,16 @@
 # UTCOMMA / UTCMXQMMA — FP4 MX block-scale MMA  → PTX `tcgen05.mma.kind::mxf4` / `.mxf4nvf4`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UTCOMMA` + `UTCMXQMMA` — shared opcode space, distinguished
 by `opType` (the hardware discriminant):
 `UTCOMMA` = `opType=1` on opcodes 0x15ea (A-gdesc) / 0x19ea (A-tmem)
@@ -100,6 +111,8 @@ A-scale and B-scale blocks. The `SCALE_VECTOR_SZ` modifier carries the
 | scale | `tmem[URi]` | [55:48] | scale operand in TMEM |
 | pred | `UPp` | [89:87]+[90] | enable-input-d |
 
+## Evidence
+
 ## Verified encodings (cuobjdump, `kind::mxf4.block_scale`, sm_100a)
 Source: `tests/utcomma_test.cu` → `tests/utcomma_test.cubin`. Decoder: shared
 with `decode_utchmma.py` (same opcodes, opType selects the path — TODO: merge
@@ -125,9 +138,15 @@ also maps to `UTCOMMA` (verified with `.scale_vec::4X`).
 - `notes/sm100/arch/tcgen05_microarch_speculation.md` — M>>7 granularity matches
   the MX MMA geometry.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - The exact TMEM layout of scale blocks (`.scale_vec::1X/2X/4X` or
   `.block16/32`) and how the single `tmem[scale]` address + data IDs resolve
   to A-scale/B-scale per element.
 - `opType` values 2, 4, 5 — unused in the dump: reserved, or used by other
   microarch modes not yet exposed?
+

@@ -1,5 +1,16 @@
 # JMP — Absolute / constant-bank jump
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
+
+## Conclusion
+
 **Opcode mnemonic:** `JMP` (imm base) = `0b100101001010` = **0x94a**; (const base) = **0xb4a** | **Pipe:** `cbu_pipe` (Branch Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` | **BRANCH_TYPE:** `BRT_BRANCH`
 
 The absolute counterpart to `BRA`: where `BRA` adds a signed offset to the PC, `JMP`
@@ -111,6 +122,8 @@ disambiguated by the `cond` field value (see below).
 `cbu_pipe` = `BRU_OPS`. `RPC_WRITERS` member → **9-cycle** true-dependency on the `RPC`
 resource (`sm_90_latencies.txt:411,414`). `DECOUPLED_BRU`, `MIN_WAIT_NEEDED=1`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_jmp.py`)
 JMP is **not emitted by ptxas** for the sampled workloads (libcublas/cufft/cusparse/nppif:
 0 hits; compilers use relative `BRA`, even for 128-case switches). Ground truth was
@@ -146,13 +159,7 @@ RTX 5090 (SM120):
 | all 32 | `@P0`, P0 true on 0--15 | — | fall through all | take all |
 | lanes 0--15 | `@P0`, P0 true on 0--15 | — | take 0--15 | take 0--15 |
 
-## Open questions
-- Since ptxas never emits `JMP`, real-world target operand distributions (constant/RTV
-  banks) remain unobserved; modifier semantics instead come from the direct probe above.
-- `RTV banks` (24–31), nontrivial simultaneous `Pg`+`Pp`, and `depth`
-  (`.INC`/`.DEC`) on JMP remain unexercised.
-
-## Resolved: absolute semantics confirmed; labels do NOT work for JMP (SM120)
+## Verified: absolute semantics confirmed; labels do NOT work for JMP (SM120)
 
 Empirically confirmed (SM120, `tests/asm_construct/test_jmp.py`): JMP imm
 (`target = Sa*4`, no PC) — a `JMP #label(x)` that the assembler resolves
@@ -162,3 +169,15 @@ treats the field as a tiny ABSOLUTE address.  Gotcha for the hand assembler:
 valid for BRA**.  The uniform forms encode with the explicit cond modifier:
 `JMP.DIV UR4, 0x490` / `JMP.CONV UR4, 0x490` (COND_DIV_CONV_jmp: DIV=2,
 CONV=3, no default) and `JMP.U UP0, ...` (UONLY: U=1).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Since ptxas never emits `JMP`, real-world target operand distributions (constant/RTV
+  banks) remain unobserved; modifier semantics instead come from the direct probe above.
+- `RTV banks` (24–31), nontrivial simultaneous `Pg`+`Pp`, and `depth`
+  (`.INC`/`.DEC`) on JMP remain unexercised.
+

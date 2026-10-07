@@ -1,5 +1,18 @@
 # TCGEN05 多 warp 1-CTA allocator（V1 entry fragment）
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-17  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
+_(no summary in the source note; the sections below carry the durable facts)_
+
 ## 已验证结论
 
 `tests/asm_construct/tcgen05_alloc_multiwarp_v1_sm100.sass` 是当前最小的
@@ -127,3 +140,4 @@ V1 builtin 使用 `reserved+0x40` phase 和 `reserved+0x50` 组合位图。组�
 报错。最终序列先生成低半区 one-hot，再把它显式左移 16 位并 OR；真机读回
 验证分配后为 `0x00010001`、释放后为 `0`。V1、V2 builtin 均在 B200 上连续
 运行三次正常退出。
+

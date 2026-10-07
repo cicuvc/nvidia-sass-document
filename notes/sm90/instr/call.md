@@ -1,5 +1,16 @@
 # CALL — Function call (push return address, branch to callee)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
+
+## Conclusion
+
 **Opcode mnemonics (7 opcodes / 12 CLASSes):** rel-imm `CALL` = **0x944**; abs-imm = **0x943**; abs-const = **0xb43**; abs-reg = **0x343**; rel-reg = **0x344**; abs-ureg = **0x1943**; rel-ureg = **0x1944** | **Pipe:** `cbu_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` | **BRANCH_TYPE:** `BRT_CALL` | **MEM_SCBD_TYPE:** `BB_ENDING_INST`
 
 The subroutine-call branch: transfers control to the callee and arranges for a matching
@@ -63,6 +74,8 @@ call-depth stack, so both sides skip the counter (`NOINC`/`NODEC`).
 (`sm_90_latencies.txt:411,414`); `CBU_OPS_WITH_REQ` (honor `&req=`). `DECOUPLED_BRU`,
 `MIN_WAIT_NEEDED=1`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_call.py`)
 Self-test 8/8; **8494/8494 CALL in libcublas decoded byte-exact**; my `tests/call_test.cu`
 (noinline + recursion) emits `CALL.REL.NOINC` (4/4); other families via cubin-patch, with
@@ -85,13 +98,6 @@ Hand-check `CALL.REL.NOINC 0x7a00`@0x170: opcode 0x944, depth[86]=1→`.NOINC`,
 Non-inlined `__noinline__`/recursive `__device__` functions → `CALL.REL.NOINC <callee>`;
 the return address is materialized in a GPR and consumed by `RET.REL.NODEC Rxx` (register
 ABI, HW call-depth stack unused). Most device functions are inlined and emit no CALL.
-
-## Open questions
-- `CALL.INC`/register-stack returns (`RET` without `.NODEC`) are spec-supported but not
-  emitted by the sampled ptxas; only the register-ABI `.NOINC`/`.NODEC` path is observed.
-- Absolute/const/uniform CALL forms are unexercised by ptxas here.  ABS uniform and
-  immediate targets now have runtime probes, but their real ABI usage (e.g.
-  indirect/virtual calls) is unobserved; the const-target form remains patch-only.
 
 ## Empirical (sm_120, sassdbg probes — hand-assembled, GPU-verified)
 
@@ -124,3 +130,16 @@ ABI, HW call-depth stack unused). Most device functions are inlined and emit no 
   instruction (or on the CALL) works.
 - Open questions above are partially resolved by this: the register-ABI
   observation stands, and `.INC`/`.DEC` are confirmed counter-only.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- `CALL.INC`/register-stack returns (`RET` without `.NODEC`) are spec-supported but not
+  emitted by the sampled ptxas; only the register-ABI `.NOINC`/`.NODEC` path is observed.
+- Absolute/const/uniform CALL forms are unexercised by ptxas here.  ABS uniform and
+  immediate targets now have runtime probes, but their real ABI usage (e.g.
+  indirect/virtual calls) is unobserved; the const-target form remains patch-only.
+

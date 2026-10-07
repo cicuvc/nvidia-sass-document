@@ -1,5 +1,16 @@
 # PMTRIG — Performance Monitor Trigger
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Opcode mnemonic:** `PMTRIG`  |  **Pipe:** `fe_pipe` (front-end pipe)  |
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
@@ -84,6 +95,8 @@ default `PMN=0` it contributes nothing to the observable encoding.
 `fe_pipe`, zero-issue-impact (no dependencies). No latency-matrix row: it
 neither writes nor reads registers.
 
+## Evidence
+
 ## Verified encodings (sm_90 == sm_120, CUDA 12.8)
 
 | Lo64 | Disassembly | Source |
@@ -161,8 +174,14 @@ to filter which instructions contribute to a counter; the public CUPTI
 profiler/metric DB on CC>=7.5 exposes no such counters, so the field is only
 reachable by NVIDIA-internal profiling tooling.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - How the host programs a tag-matching event expression for `?PM1/2/3`
   (driver-internal; not exposed by CUPTI on sm_75+).
 - What `SR_SNAP_PM*` snapshots and what arms them (never non-zero under ncu).
+

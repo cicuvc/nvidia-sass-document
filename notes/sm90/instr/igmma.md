@@ -1,5 +1,16 @@
 # IGMMA — Integer Group Matrix Multiply-Accumulate
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `IGMMA`
 **Pipe:** `mio_pipe` (MIO_SLOW_OPS, same as HGMMA)
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
@@ -160,3 +171,4 @@ WARPGROUP.DEPBAR.LE gsb0, 0x0                 # wgmma.wait_group
 | SrcFmt fields | srcfmtA + srcfmtB (both U8/S8) | srcFmtA + srcFmtB (same) |
 | ROW/COL qualifiers | No (gdesc handles layout) | Yes |
 | SAT | Yes | Yes |
+

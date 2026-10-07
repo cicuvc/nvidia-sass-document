@@ -1,5 +1,16 @@
 # GB202 FP64 / CLMAD redirect latency
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-17  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-17. Reproducer:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-17.  Reproducer:
 [`probe_fp64_latency.py`](../../tests/asm_construct/probe_fp64_latency.py).
 
@@ -74,3 +85,4 @@ an event-driven scoreboard model.
 
 The cross-architecture agreement on the XU knee and on the single-warp LSU
 floor validates the burst-curve methodology used for the H100 measurements.
+

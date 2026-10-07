@@ -1,12 +1,21 @@
 # LEA — Load Effective Address (Shift-Add)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `LEA`  
 **Pipe:** `int_pipe` (integer execution pipe)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 Related: `ULEA` (uniform register variant, `udp_pipe`, 14 variants).
-
----
 
 ## Variant overview
 
@@ -121,6 +130,8 @@ Shares the FXU latency matrix with IADD3/LOP3.
 
 ---
 
+## Evidence
+
 ## Empirical confirmation (sm_90, CUDA 13.1)
 
 ### Verified semantics (SM120, tests/asm_construct/test_lea.py)
@@ -197,3 +208,4 @@ ULEA operates on `UniformRegister` with `udp_pipe`. 14 variants covering
 LO/HI/imm/x/sx32 modes. Same opcode space pattern (e.g., `0x1491`, `0x1891`).
 ULEA.HI.X.SX32 is structurally identical to its LEA counterpart but with UR
 operands.
+

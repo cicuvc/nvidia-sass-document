@@ -1,5 +1,16 @@
 # GB202 ALU-Heavy pipeline latency
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-16  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-16. Reproducer:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-16.  Reproducer:
 [`probe_aluheavy_latency.py`](../../tests/asm_construct/probe_aluheavy_latency.py).
 
@@ -143,3 +154,4 @@ issue / operand collection
 These are RAW consumer-visible events.  They do not yet locate final GPR
 parity-bank commit, predicate-file physical write, or result-queue release.
 Those must remain separate from bypass readiness in the cycle model.
+

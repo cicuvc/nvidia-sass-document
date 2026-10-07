@@ -1,12 +1,17 @@
 # UCLEA — Uniform Clear Effective Address
 
-**Opcode mnemonic:** UCLEA  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** mixed  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
 
-<!-- arch-scope-banner -->
-> **Arch scope:** the em-window rules were measured on RTX 5090 (sm_120); the sm_90 spec
-> additionally rejects immediates >8 (#constSizeU04), so several sm_120 probes cannot
-> assemble under ASSEMBLER_ARCH=sm90 until sources are split per arch. See
-> `notes/sm120/silver-status.md`.
+## Conclusion
+
+**Opcode mnemonic:** UCLEA  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
 
@@ -63,6 +68,11 @@ URb replaced with 16-bit immediate at [47:32].
 
 `UDP_subset` group. IDEST_SIZE=64 (register pair), ISRC_A_SIZE=64. Latency: 1–7 cycles output, 4–12 cycles true-dependency.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - No empirical examples. Likely used for TMA descriptor base-address alignment in UTMA sequences.
@@ -70,3 +80,4 @@ URb replaced with 16-bit immediate at [47:32].
 - ~~UPu predicate output — overflow? carry? zero?~~ **Resolved (sm_120): UPu is
   never asserted in any probe**; the constSize field likewise has no
   observable effect — silicon computes `(URa.64 << 6) + URb`.
+

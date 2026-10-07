@@ -1,5 +1,16 @@
 # notes/sm120 — RTX Blackwell (sm_100/sm_120) encodings & silicon-verified behaviour
 
+<!-- notes-status -->
+**Status:** historical  
+**Evidence:** mixed  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 This directory collects everything that is **specific to Blackwell** and therefore
 does not belong in the sm_90 reference notes:
 
@@ -65,3 +76,4 @@ Rules of thumb for what stays in `notes/sm90/…` vs moves here:
   `sm90/` (it documents an sm_90 ISA object), tag the section's evidence as
   "(silicon: SM120)", and record it in `silver-status.md` until re-tested.
 - The instruction/format/ABI item does not exist at all on sm_90 → document it here.
+

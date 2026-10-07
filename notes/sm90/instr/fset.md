@@ -1,10 +1,19 @@
 # FSET — FP32 Comparison to Register
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `FSET`  
 **Pipe:** `int_pipe` (integer pipe — not fmalighter_pipe!)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Semantics
 
@@ -93,6 +102,8 @@ Bop field value.
 [14:12]                 Pg           (3b: predicate, 7=PT)
 ```
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 14/14 matches, covering all 14 non-trivial comparison types (F=0 and T=15 not yet
@@ -146,14 +157,7 @@ on optimization heuristics (e.g., FTZ cases prefer FSETP).
 
 FSET is on `int_pipe`; TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2 (FXU_OPS).
 
-## Open questions
-
-- Bop=OR and Bop=XOR not yet triggered in any test
-- `_simple` variant (no Bop, no Pp) not observed — ptxas always emits full variant
-- F=0 (always false) and T=15 (always true) comparison types not yet triggered
-- FTZ on FSET: does it exist in hardware or is it always lowered to FSETP?
-
-## Resolved (SM120 bit-level verification, 2026-08)
+## Verified (SM120 bit-level verification, 2026-08)
 
 `tests/asm_construct/test_fmnmx_fset.py` — all FSET cases OK.
 
@@ -164,3 +168,16 @@ FSET is on `int_pipe`; TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2 (F
 - FCMP/Bop semantics identical to FSETP (ordered/U comparisons, NaN handling).
 - ptxas does not emit FSET in cuBLAS (it uses FSETP); the register form is a
   latent encoding verified on hardware.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- Bop=OR and Bop=XOR not yet triggered in any test
+- `_simple` variant (no Bop, no Pp) not observed — ptxas always emits full variant
+- F=0 (always false) and T=15 (always true) comparison types not yet triggered
+- FTZ on FSET: does it exist in hardware or is it always lowered to FSETP?
+

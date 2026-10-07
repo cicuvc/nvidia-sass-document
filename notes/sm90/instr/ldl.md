@@ -1,5 +1,16 @@
 # LDL — Load from Local Memory (per-thread stack)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `LDL`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD` (decoupled read/write scoreboard)  
@@ -80,6 +91,8 @@ Field:
 
 Memdesc form adds URb at [37:32] and sets memdesc=1 at bit 76.
 
+## Evidence
+
 ## Verified encodings
 
 All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
@@ -100,3 +113,4 @@ All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
 | `ld.local.u64 %r, [%ra+off]` | `LDL.64 Rd, [Ra+off]` |
 | Register spill (compiler-generated) | `LDL Rd, [R1+off]` |
 | `ld.local.lu.u32 %r, [%ra]` | `LDL.LU Rd, [Ra]` |
+

@@ -1,5 +1,16 @@
 # MOVM — Warp-level Matrix Transpose (movmatrix)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `MOVM`
 **Pipe:** `int_pipe`
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
@@ -123,6 +134,11 @@ MOVM is essentially the register-to-register counterpart of LDSM's matrix
 layout conversion: LDSM loads from SMEM with layout transform, MOVM transposes
 in registers. Both use the same element-size upcast mechanism (LDSM_SZ).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **M832/M864 triggering**: What PTX construct causes ptxas to emit these
@@ -131,3 +147,4 @@ in registers. Both use the same element-size upcast mechanism (LDSM_SZ).
 - **ISRC_A_SIZE = 32 for M832/M864**: Despite the dest being 64 bits, the
   source is always 32. This implies the element upcast expands 32 bits of
   source data into 64 bits of destination data.
+

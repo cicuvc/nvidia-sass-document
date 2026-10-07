@@ -1,5 +1,16 @@
 # B300 / sm_103 寄存器文件 bank 与读取带宽
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100+sm103-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-17  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100, sm103)
+
+## Conclusion
+
 **状态：** Modal B300 实测，2026-09-17。
 **探针：** `tests/asm_construct/probe_sm100_rf_banks_modal.py --target b300`。
 **方法：** 与 `notes/sm100/rf_bank_probe.md` 的 B200 实验完全相同。
@@ -93,3 +104,4 @@ OSABI / ABI version = 0x41 / 0x08
 
 自产 sm103 cubin 已在 Modal B300 上完成最小加载与执行验证，随后用于以上全部
 实验。
+

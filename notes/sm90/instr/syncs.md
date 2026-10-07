@@ -1,5 +1,16 @@
 # SYNCS — Shared-memory synchronization (mbarrier + shared uniform atomics)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: architecture named in a Resolved/Silicon-verified heading
+
+## Conclusion
+
 **Opcode mnemonic:** `SYNCS` — 9 variants on sm_90, 10 on sm_100/sm_120
 (Blackwell adds `syncs_flush_`) | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:**
 decoupled scoreboard | **VIRTUAL_QUEUE:** `VQ_SYNCS_UNORDERED_WR` |
@@ -195,6 +206,8 @@ data/address operands and only a write scoreboard.
   varying producer→consumer latencies `sm_90_latencies.txt:189`); `_`/`RZ`-dest arrives use
   `wr_sb=7`.
 - the `UPg`/predicate result (`PHASECHK` `Pu`) has small fixed latencies (line 346).
+
+## Evidence
 
 ## Verified encodings (decoder: `tools/decode_syncs.py`)
 Self-test 16/16.  The expanded PTX mapping capture decodes **47/47 SYNCS**
@@ -404,6 +417,11 @@ repurposed/read.  `IVALL` also exposed two resident objects in one operation.
   not assemblable through the 6-operand syntax yet — use `UMOV` for the
   single-CTA address `0x400`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `SYNCS.CCTL.WB`, `SYNCS.CCTL.{IVALL,WBALL}`, and `syncs_ld_` `.WATCH` are
   ISA-spec-visible internal operations but are not emitted by the captured PTX.
@@ -414,3 +432,4 @@ repurposed/read.  `IVALL` also exposed two resident objects in one operation.
   lock protocol cannot be observed by a quiescent post-eviction LDS.
 - PTX 9.3 `layout::v1` physical layout and its SASS lowering remain open; the
   installed CUDA 13.1 ptxas does not accept those new syntax forms.
+

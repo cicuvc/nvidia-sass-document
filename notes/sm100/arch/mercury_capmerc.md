@@ -1,5 +1,16 @@
 # Mercury / capmerc sections in sm_100+ cubins
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** B200 run  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Question:** do the cubins our toolchain produces contain Mercury (`merc` / `capmerc`)
 sections? **Answer: yes — automatically, for `sm_100`+ (SM > 99), with no special
 flag.** `sm_90` cubins contain none.
@@ -112,3 +123,4 @@ readelf -SW <sm90.cubin> | grep -ic merc          # -> 0
 ## Cross-references
 - General cubin ELF layout / sections / relocations: `../../sm90/arch/cubin_elf.md`.
 - External Mercury RE model (unofficial): `crucible-notes/decoded/ptxas-mercury/`.
+

@@ -1,5 +1,16 @@
 # LDTM / LDT — tensor-memory (TMEM) load  → PTX `tcgen05.ld`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-19  
+**Probe:** run on B200  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Opcode mnemonic:** `LDTM` (and alt `LDT`) = `0b1100111101110` (0x19ee, 6638)
 **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_WR_SCBD`
 **Virtual queue:** `$VQ_TMEM` (=40, a Blackwell-new queue) | **MEM_SCBD_TYPE:** `BARRIER_INST`
@@ -133,6 +144,8 @@ the **write scoreboard** `dst_wr_sb` (decoupled model), exactly like a global
 load. `LDTM_STTM_OP` is also *subtracted* from `UDP_subset` (line 218), i.e. it
 is excluded from the ordinary fixed-latency UDP timing and handled as a
 scoreboard-gated op.
+
+## Evidence
 
 ## Verified encodings (cuobjdump, `nvcc -arch=sm_100a`, CUDA 13.1)
 Source: `tests/ldtm_test.cu` → `tests/ldtm_test.cubin`. All 8 hand-decoded
@@ -604,6 +617,11 @@ allocator opcode.
 `.sync.aligned` are implicit (warp-collective is intrinsic to the op); the
 uniform predicate `@UPg` provides conditional execution.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - How does PTX `tcgen05.ld.red` (min/max reduction) lower? No `.red` SASS variant
   in this dump — split into `LDTM` + reduction, or arch-gated (PTX notes restrict
@@ -612,3 +630,4 @@ uniform predicate `@UPg` provides conditional execution.
   purely an assembler alias?
 - `pack`/`texunpack` bit [80] shares a name with the legacy texture-unpack
   control bit — confirmed here to encode `.pack::16b` (=1).
+

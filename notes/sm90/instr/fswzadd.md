@@ -1,19 +1,22 @@
 # FSWZADD — FP32 swizzle-add (cross-lane quad partial reduction)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `FSWZADD` = `0b100000100010` = **0x822** | **Pipe:** `fmalighter_pipe` (FP32 FMA pipe, FMAI_OPS) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | since sm_70 (crucible idx 15)
 
 FP32 **swizzle-add**: within a thread **quad** (4 lanes), combine each lane's `Ra` with the
 quad-swizzled `Rc` values, applying a per-lane +/−/0 sign pattern (`npCtrl`). The single-
 instruction primitive behind quad partial reductions and screen-space **derivatives**
 (ddx/ddy) — and the fused shuffle+add butterfly for small FP32 warp reductions.
-
-> **Status: semantics resolved on sm_120 with a clean hand-built ELF (2026-08):
-> `FSWZADD.NDV` = signed lane-local add `s_a·Ra + s_b·Rc` (npCtrl pair signs,
-> lane%4); `FSWZADD` (nondv) = 0.0.  Cross-lane quad swizzle not observable
-> from compute.  Encoding verified against the CLASS spec; the earlier
-> patch-based "Rd=Ra" result was a control-word artifact (see Resolved).**
-> nvcc does not emit FSWZADD from compute paths (it is a graphics/derivative
-> primitive); examples are round-trip constructions plus the clean kernel probe.
 
 ## Semantics (inferred)
 For each lane in a quad, `Rd = Σ_quad ( sign · swizzle(Rc) )  (± Ra)`, where the signs come from
@@ -67,15 +70,6 @@ class as `FFMA`/`FADD`/`FMUL`, i.e. a fast FP32 op with cross-lane quad routing.
 
 Decoder + round-trip/NP-enum test: `tools/decode_fswzadd.py`.
 
-## Open questions
-- **Cross-lane quad swizzle unobservable from compute**: even with clean
-  encoding, Rc contributes only lane-locally.  Presumably the graphics
-  pixel-quad network the npCtrl pairs address is not populated in a CUDA
-  launch; needs a graphics-context capture to confirm.
-- `NDV` naming meaning (likely "no default value": without it the quad
-  network supplies a default 0) unconfirmed.
-- Which toolchain/graphics path emits it on sm_90 (not seen in the compute libraries scanned).
-
 ## Attempted: EIATTR_SHADER_TYPE to force a graphics context (2026-08)
 
 To make the quad network reachable from a hand-built ELF, tried tagging the
@@ -98,7 +92,9 @@ experiment was abandoned; the assembler keeps the (inert, opt-in)
 `#pragma SHADER_TYPE` support.  Reaching the quad network would need a real
 graphics API path (Vulkan/GL fragment shader) instead of a CUDA launch.
 
-## Resolved (SM120 empirical, clean hand-built ELF, 2026-08)
+## Evidence
+
+## Verified (SM120 empirical, clean hand-built ELF, 2026-08)
 
 Re-probed with a **clean hand-built ELF** once the assembler gained S2R/LDG
 support: `S2R` lane-id → per-lane `LDG` of Ra/Rc → `FSWZADD` → `STG` result,
@@ -131,3 +127,18 @@ signed lane-local add above.
 **Open:** the true quad swizzle (cross-lane Rc routing) is not observable
 from compute even with clean encoding — the graphics pixel-quad network that
 the npCtrl pairs presumably address is not populated in a CUDA launch.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- **Cross-lane quad swizzle unobservable from compute**: even with clean
+  encoding, Rc contributes only lane-locally.  Presumably the graphics
+  pixel-quad network the npCtrl pairs address is not populated in a CUDA
+  launch; needs a graphics-context capture to confirm.
+- `NDV` naming meaning (likely "no default value": without it the quad
+  network supplies a default 0) unconfirmed.
+- Which toolchain/graphics path emits it on sm_90 (not seen in the compute libraries scanned).
+

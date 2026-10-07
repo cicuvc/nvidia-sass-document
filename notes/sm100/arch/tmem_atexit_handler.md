@@ -1,5 +1,18 @@
 # TCGEN05 TMEM at-exit handler (B200)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
+_(no summary in the source note; the sections below carry the durable facts)_
+
 ## How it was captured
 
 A hand-assembled `sm_100a` kernel used `BMOV ATEXIT_PC.LO/HI` to obtain the
@@ -116,3 +129,4 @@ the guard still runs at the eventual `EXIT` and restores the previous hook.
 - The final `BMOV.64` explains why `ATEXIT_PC` remains unchanged when sampled
   immediately after `relinquish_alloc_permit`: the hook is consumed only by
   the later `EXIT` path.
+

@@ -1,5 +1,16 @@
 # Integer Division — software synthesis on sm_90
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **No hardware integer divider.** `div.u32` / `div.s32` are synthesized by ptxas
 into a ~40-instruction Newton-Raphson reciprocal sequence.
 
@@ -39,3 +50,4 @@ for the negative divisor branch.
 - `VIADD` / `IADD3` — fast integer add/sub
 - `IABS` — integer absolute value
 - `LOP3.LUT` — logical operation with LUT
+

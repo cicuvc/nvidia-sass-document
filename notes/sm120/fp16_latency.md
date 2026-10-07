@@ -1,5 +1,16 @@
 # GB202 packed-FP16 / coupled-FMA latency
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-16  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-16. Reproducer:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-16.  Reproducer:
 [`probe_fp16_latency.py`](../../tests/asm_construct/probe_fp16_latency.py).
 
@@ -67,3 +78,4 @@ producer-form tag for `HMUL2_32I/HFMA2_32I` and a mode tag for `HADD2.F32`:
 their final ALU-Heavy input is safe at t+4 under arbitrary packing.  The
 coupled execution initiation interval (approximately one instruction per two
 clocks) remains independent of this RAW bypass latency.
+

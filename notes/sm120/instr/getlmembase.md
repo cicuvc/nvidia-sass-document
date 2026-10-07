@@ -1,5 +1,16 @@
 # GETLMEMBASE — Read the warp local-memory backing base
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** silicon-verified on RTX 5090 (GB202, sm_120), CUDA 13.1  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: `Status:` line naming verified hardware
+
+## Conclusion
+
 **Opcode mnemonic:** `GETLMEMBASE` = **0x3c0** | **Pipe:** `mio_pipe`
 **Status:** silicon-verified on RTX 5090 (GB202, sm_120), CUDA 13.1
 
@@ -100,3 +111,4 @@ multi-warp/multi-CTA measurements and reproduction details.
   [sm_90 GETLMEMBASE note](../../sm90/instr/getlmembase.md) records an H20
   reproduction of the transform, with a different SM aperture stride and a
   stricter global-alias cache/lifetime caveat.
+

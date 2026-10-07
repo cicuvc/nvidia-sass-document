@@ -1,5 +1,16 @@
 # UTCBAR — tcgen05 tensor-core barrier  → PTX `tcgen05.commit`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-17  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
 **Opcode mnemonic:** `UTCBAR` — two opcodes:
 commit/arrive = `0b1001111101001` (0x13e9), flush = `0b100111101001` (0x9e9)
 **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` (commit) / `DECOUPLED_WR_SCBD` (flush)
@@ -68,6 +79,8 @@ encoding-identical (`.ONE` display-only).
 ```
 (Internal field names `NaN`/`memdesc`/`ignoreKill` are legacy reuse; their values
 here encode BAR_TYPE / wakeup / cluster size.)
+
+## Evidence
 
 ## Verified encodings (cuobjdump, `nvcc -arch=sm_100a`, CUDA 13.1)
 Source: `tests/tcgen05_commit_test.cu` → `tests/tcgen05_commit_test.cubin`.
@@ -146,6 +159,11 @@ The two are alternatives from the PTX "mbarrier based completion mechanism".
 subtracted from `UDP_subset`, handled as a scoreboard-gated async op. The
 mbarrier arrive fires on tracked-op completion, not a fixed latency-table cycle.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact meaning of `URb` (the param/count operand) beyond `URZ` — does any PTX
   form pass a non-zero count/handle here?
@@ -155,3 +173,4 @@ mbarrier arrive fires on tracked-op completion, not a fixed latency-table cycle.
   `tcgen05.commit`; likely an internal pipe-drain (maybe around dealloc or
   kernel exit) — needs a workload that surfaces it.
 - Runtime effect of `WAKEUP`.
+

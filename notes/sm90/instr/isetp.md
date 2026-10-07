@@ -1,5 +1,16 @@
 # ISETP — Integer Set-Predicate
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** ISETP  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -77,3 +88,4 @@ Simple (ALT): same opcode, but bop=*0(AND), cop=*7(PT), Pnz=*7(PT), input_sz=*0.
 `int_pipe`, `INST_TYPE_COUPLED_MATH`. `FXU_OPS` group in GPR tables. Predicate output uses `MATH_PRED_NO_FP16_FP64_OPS` in PRED tables.
 
 One of the most ubiquitous SASS instructions — appears in virtually every compiled kernel for loop bounds, branch conditions, and predicated data movement.
+

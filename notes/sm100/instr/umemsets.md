@@ -1,5 +1,16 @@
 # UMEMSETS — bulk shared-memory zero-init  → PTX `st.bulk`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UMEMSETS` = `0b1001111001011` (0x13cb, 5067)
 **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`
 **Virtual queue:** `$VQ_AGU` (=15, the AGU unordered queue)
@@ -46,6 +57,8 @@ Single variant (no alternates). The `.64` suffix in cuobjdump comes from the
 `$VQ_AGU` — the AGU (address-generation unit) unordered queue, same as global
 stores (`ST.E.STRONG.GPU`) and atomics, not the TMA or TC queue.
 
+## Evidence
+
 ## Verified encoding (cuobjdump, sm_100a, CUDA 13.3 ptxas)
 ```
 st.bulk.shared::cta [dst], n, 0  →  UMEMSETS.64 [UR5], URZ, UR4
@@ -68,8 +81,14 @@ setup is not exposed by documented PTX; see `acqshminit.md`.
 - `notes/sm90/arch/memory_model.md` — shared-memory bulk zero-init is a
   sm100-new feature.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `initval` is restricted to 0 in PTX — is this a hardware limitation (only
   zero-init is possible) or a toolchain restriction?
 - `URb` must be URZ — the single zero pattern. A future bulk-fill with non-zero
   value would need a different operand constraint.
+

@@ -1,5 +1,16 @@
 # BMSK — Bitmask
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** BMSK  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -65,3 +76,4 @@ formula above, C-vs-W divergence at `width ≥ 32` (C keeps all bits, W uses
 `width & 31`) and `pos ≥ 32` (C → 0, W wraps to `pos & 31`). ptxas does not
 emit BMSK from plain C on sm_120 (`(1u << n) - 1` lowers to SHF.L + LOP3);
 the op is exercised directly via the assembler.
+

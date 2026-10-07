@@ -1,5 +1,16 @@
 # CUtensorMap descriptor bit layout (tiled + im2col)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 The CUtensorMap is the 128-byte opaque object consumed by the TMA instructions
 (`UTMALDG`/`UTMASTG`/`UTMAREGD`/`UBLKRED` and `cp.async.bulk.tensor`). The CUDA
 driver API documents the creation calls
@@ -142,6 +153,8 @@ The wide flag follows the same total-element rule as tiled
 - `cuTensorMapEncodeIm2col` reorders multi-dim strides internally; pass them
   descending to match the stored order.
 
+## Evidence
+
 ## Verified encodings (examples)
 
 Baseline: f16, rank 2, dims [16,16], stride 32, box [16,8], elemStrides [1,1]:
@@ -211,6 +224,11 @@ rejected by sm_90a ptxas).  Because the replace is just ordinary stores, the
 descriptor cache must be invalidated before reuse —
 `fence.proxy.tensormap` → `UTMACCTL.IV` (see `utmacctl.md`).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - w18 semantics beyond the observed value table (0x10 / 0x100 / 0x200 / 0x400)
@@ -218,3 +236,4 @@ descriptor cache must be invalidated before reuse —
 - w16 for im2col + interleave: one sample (f16, il=16B, cpp 8, ppc 8) stored
   `0x400` (1024) instead of `cpp×ppc×elem` (128); the multiplier rule is
   unverified.
+

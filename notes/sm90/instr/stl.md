@@ -1,5 +1,16 @@
 # STL — Store to Local Memory (per-thread stack)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `STL`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` (decoupled read-only scoreboard)  
@@ -42,6 +53,8 @@ dst_wr_sb hardwired to 7 (no destination register).
   [91],[11:0] 13b  opcode   (0x387)
 ```
 
+## Evidence
+
 ## Verified encodings
 
 | Lo64 | Hi64 | Disassembly |
@@ -57,3 +70,4 @@ dst_wr_sb hardwired to 7 (no destination register).
 | `st.local.u32 [%ra], %rb` | `STL [Ra], Rb` |
 | `st.local.u64 [%ra+off], %rb` | `STL.64 [Ra+off], Rb` |
 | Register spill (compiler-generated) | `STL.64 [R1+off], Rb` |
+

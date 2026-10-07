@@ -1,5 +1,16 @@
 # WARPSYNC — Warp-lane reconvergence / synchronization (`__syncwarp`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonics:** imm/full-mask `WARPSYNC` = `0b100101001000` = **0x948**; reg-mask = **0x348** | **Pipe:** `cbu_pipe` (Branch / Convergence-Barrier Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 The SASS realization of `__syncwarp(mask)` and the warp-level piece of cooperative-groups /
@@ -54,6 +65,8 @@ sync, BSYNC the *structural* one from compiler-inserted barriers.
 `cbu_pipe` = `BRU_OPS`. `RPC_WRITERS` → **9-cycle** RPC true-dependency
 (`sm_90_latencies.txt:411,414`) and in `CBU_OPS_WITH_REQ` (line 219, honors `&req=`).
 `DECOUPLED_BRU`, `MIN_WAIT_NEEDED=1`.
+
+## Evidence
 
 ## Verified encodings (decoder: `tools/decode_warpsync.py`)
 Self-test 6/6; **59448/59448 WARPSYNC in libcusparse decoded byte-exact** (both `.ALL` and
@@ -124,16 +137,7 @@ Two speculations were tested and **corrected by experiment**:
   guess is **disproven**; ptxas (CUDA 13.1) never emits `.EXCLUSIVE`. Its true semantics are
   unconfirmed — only the encoding (reg-form cop=1) is known.
 
-## Open questions
-- The specific **optimized (`-O3`)** warp-collective primitive that emits
-  `WARPSYNC.COLLECTIVE`/`ENDCOLLECTIVE` in cusparse (multi-GPU/system-scope, `MATCH.ANY`-based)
-  — the `-G` trigger is found, but the optimized-path source construct isn't reproduced by
-  simple kernels here.
-- Runtime meaning of `.EXCLUSIVE` (never emitted) and of the COLLECTIVE `target` beyond
-  "region successor".
-- Non-PT `Pp` on WARPSYNC is unobserved.
-
-## Resolved: COLLECTIVE mode empirically (SM120, 2026-08)
+## Verified: COLLECTIVE mode empirically (SM120, 2026-08)
 
 `tests/asm_construct/test_warpsync_collective.py` constructs the full
 `BSSY/BSYNC`-wrapped collective idiom and reads `MCOLLECTIVE`:
@@ -157,7 +161,7 @@ LOOP: ...
    active it reads 0xFFFFFFFF.
 3. **`ENDCOLLECTIVE` clears `MCOLLECTIVE`** (reads 0x0 after the region).
 
-## Resolved: COLLECTIVE region = lockstep / CBU-bypassed zone (SM120, 2026-08)
+## Verified: COLLECTIVE region = lockstep / CBU-bypassed zone (SM120, 2026-08)
 
 Constructing instructions *inside* the `WARPSYNC.COLLECTIVE … ENDCOLLECTIVE`
 region (all 32 lanes, mask 0xFFFFFFFF valid) shows what the hardware forbids:
@@ -182,7 +186,7 @@ The hardware bypasses the CBU divergence machinery there, so:
 This matches the real idiom (libcusparse) where the region body is a bare NOP
 and every divergent branch is placed outside the bracket.
 
-## Resolved: EXCLUSIVE mode is behaviorally identical to plain (SM120, 2026-08)
+## Verified: EXCLUSIVE mode is behaviorally identical to plain (SM120, 2026-08)
 
 `WARPSYNC.EXCLUSIVE R<Ra>` (depth=1) is decode-legal but **never emitted by
 ptxas** (0 occurrences in libcusparse's 59448 WARPSYNC; 0 across sm_75..sm_90
@@ -196,3 +200,18 @@ The only plausible differences left are not externally observable: the
 barrier that does NOT participate in divergence/reconvergence (RPC) handling
 — a scheduling/RPC-level nuance. No evidence of an observable semantic
 difference on sm_120.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- The specific **optimized (`-O3`)** warp-collective primitive that emits
+  `WARPSYNC.COLLECTIVE`/`ENDCOLLECTIVE` in cusparse (multi-GPU/system-scope, `MATCH.ANY`-based)
+  — the `-G` trigger is found, but the optimized-path source construct isn't reproduced by
+  simple kernels here.
+- Runtime meaning of `.EXCLUSIVE` (never emitted) and of the COLLECTIVE `target` beyond
+  "region successor".
+- Non-PT `Pp` on WARPSYNC is unobserved.
+

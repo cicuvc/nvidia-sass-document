@@ -1,18 +1,20 @@
 # TMA & mbarrier synchronization → SASS (sm_90a)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** run was made on RTX 5090  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 How the async-copy / tensor-memory-accelerator (TMA) sync primitives lower.
 Verified via `tests/mbarrier_test.cu` and `tests/tma_test.cu`. Completes the trio
 of Hopper async-completion mechanisms alongside `../instr/depbar.md` (cp.async) and
 `wgmma.md` (GMMA scoreboard).
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## mbarrier → the `SYNCS` family (`mio_pipe`)
 All mbarrier PTX ops become the shared-memory sync instruction `SYNCS`, with a
@@ -733,9 +735,15 @@ Blackwell `tcgen05.commit` targets (`tcgen05_vs_wgmma.md`). The byte-level
 `expect_tx`/`complete_tx` tx-count lets one mbarrier track an arbitrary bulk
 transfer size, unlike the group/instruction counters of cp.async and wgmma.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - The non-parity `mbarrier.try_wait` / `mbarrier.test_wait` blocking forms (with
   suspend/timeout) — whether they emit a different `SYNCS` sub-op than the
   `PHASECHK...TRYWAIT` spin.
 - `UTMASTG`/`UTMAREDG` control-code shapes (store/reduce) vs `UTMALDG`.
   (`UBLKCP` — the non-tensor `cp.async.bulk` — is now documented in `../instr/ublkcp.md`.)
+

@@ -1,5 +1,16 @@
 # sm_89 (Ada / RTX 4090) scalar math pipeline structure
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm89-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-19  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm80, sm89, sm120)
+
+## Conclusion
+
 Probed on RTX 4090 (AD102, 128 SMs, CUDA 12.8 driver) with the repo
 assembler (new `sm89` arch config, see below).  **No NCU** on this host —
 all numbers are CS2R/SR_CLOCKLO timing.  CS2R verified to tick at the real
@@ -231,15 +242,7 @@ Measured reality diverges from the logical pipes in two places:
 | yield=1 bracket | +1 cyc/inst switch cost (NOP-verified; hidden under the 2.0 datapath floor for math ops — see sm_80 note "Yield/switch-cost correction") | halves stream (switch dead cycle) | halves stream (switch dead cycle) — see notes/sm120/yield_dispatch_cost.md |
 | no-yield int stream locks subcore | (not observed; pairs always overlapped) | YES (int×2 strict serialize) | no (int×2 overlaps) |
 
-## Open questions
-
-- What exactly generates a warp-switch event on sm_89; why int×4
-  interleaves while int×2 and int+nop serialize (the C-block mode
-  stickiness is warp-granular, but the 4-warp escape hatch is unexplained).
-- MUFU/POPC/F2I at 8.0 measured without the reuse bracket — re-measure with
-  a legal reuse-bracket variant if one exists, to separate bracket cost
-  from unit cost.
-- Predicated-off FFMA costing 2.0 while active costs 1.0.
+## Evidence
 
 ## Reproduction
 
@@ -253,3 +256,19 @@ PROBE_ARCH=sm89 python3 tests/asm_construct/probe_sm80_admission_depth.py --mode
 plus the windowed-timestamp probes (`aggregate.py`, `asym.py`, `multiw2.py`,
 `rates2/3.py`, `clockcheck2.py` — copies in /tmp on the 4090 host at
 `/tmp/nvsass_4090` and `/tmp/*.py`).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- What exactly generates a warp-switch event on sm_89; why int×4
+  interleaves while int×2 and int+nop serialize (the C-block mode
+  stickiness is warp-granular, but the 4-warp escape hatch is unexplained).
+- MUFU/POPC/F2I at 8.0 measured without the reuse bracket — re-measure with
+  a legal reuse-bracket variant if one exists, to separate bracket cost
+  from unit cost.
+- Predicated-off FFMA costing 2.0 while active costs 1.0.
+

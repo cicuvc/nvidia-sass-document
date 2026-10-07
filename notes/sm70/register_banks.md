@@ -1,5 +1,18 @@
 # Volta register-bank read bandwidth (V100S, 2026-09)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm70-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** Tesla V100S-PCIE-32GB (sm_70). The kernel is assembled from the  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
+_(no summary in the source note; the sections below carry the durable facts)_
+
 ## Result
 
 The controlled SASS experiment reproduces the Volta microbenchmarking
@@ -11,6 +24,8 @@ This is stronger than the old Hopper single-warp result.  Hopper's native
 two-clock FFMA cadence hid whether its two same-bank operands were collected
 together or in consecutive clocks.  On V100, the following FFMA comparison
 isolates the extra bank-read clock above the same two-clock execution floor.
+
+## Evidence
 
 ## Experiment
 
@@ -78,3 +93,4 @@ measurements were merely suffering from an FFMA-latency artifact.
   for hosts without Python.
 - `tests/asm_construct/v100_fixture.cu` — nvcc fixture used to recover and
   verify the sm_70 ELF ABI and parameter constant-bank offset.
+

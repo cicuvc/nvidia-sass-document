@@ -1,5 +1,16 @@
 # GB202 scalar-math leaf-pipe catalog
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-15  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-15. Probe:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-15.  Probe:
 [`probe_scalar_pipe_catalog.py`](../../tests/asm_construct/probe_scalar_pipe_catalog.py).
 
@@ -138,3 +149,4 @@ HFMA2.MMA).  A future
 variant-level scan would be relevant only where modifiers plausibly change
 the arithmetic width or result format; ordinary register/immediate/constant
 operand forms are expected to retain the mnemonic's leaf.
+

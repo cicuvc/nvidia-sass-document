@@ -1,5 +1,16 @@
 # `ISWZA` / `ISWZB` — packed-half (2×f16) source lane swizzles
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** resolved (spec-grounded + empirically confirmed in cublas sm_90  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **Question:** what do `H1_H0` / `H0_H0` / `H1_H1` mean on half-vector ops (HFMA2, …)?
 **Status:** resolved (spec-grounded + empirically confirmed in cublas sm_90 SASS).
 
@@ -41,6 +52,8 @@ lane, the token right feeds the low lane.
   swizzle-with-per-lane-negate (useful for complex-style cross terms). Inferred
   ("NH1" = negated H1); not yet seen in mined SASS.
 
+## Evidence
+
 ## Empirical confirmation (libcublas.so.13, `cuobjdump -arch sm_90 -sass`, 5.6M lines)
 - Counts of rendered suffixes: `.H0_H0` ×3212, `.H1_H1` ×266, `.H1_H0` **×0**
   (default omitted). Suffix attaches per operand:
@@ -56,3 +69,4 @@ lane, the token right feeds the low lane.
 ## Related lane enums (for cross-reference)
 - `HSEL "H0"=0,"H1"=1` and `EXTRACT "H0"=0,"H1"=1` — single-lane pick (H0=low,
   H1=high), same H0/H1 convention, used by other half ops.
+

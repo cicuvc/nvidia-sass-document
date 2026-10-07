@@ -1,5 +1,16 @@
 # Control codes — the per-instruction scheduling/control word (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** Status:** resolved (spec-grounded + empirically confirmed in cublas sm_90  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **Question:** how are the "control codes" (wait mask, read/write scoreboards, PM
 predicate, micro-scheduler info, and operand **reuse** flags) encoded in the
 128-bit sm_90 word, and where do reuse flags actually live?
@@ -106,6 +117,8 @@ When reuse is set, `usched_info` must be a `transN` value (17..27, `opex[4]=1`)
 and the opex tables only admit `batch_t == 0` in those rows — freeing [124:122]
 to carry reuse. Also `usched_info == 0` (DRAIN) is only legal with `batch_t == 0`
 (no batch marker on a drain).
+
+## Evidence
 
 ## Verified encodings (cublas sm_90; hi64 = 2nd `/*…*/`)
 
@@ -239,18 +252,6 @@ An external (unverified) writeup was checked against these two source dumps:
 - **UNSUPPORTED — dual-issue via batch_t:** across ~34M sm_75+sm_90 instructions
   ptxas never emits `BATCH_START/START_TILE/END`. If co-issue is real, the
   compiler does not express it here.
-
-## Open questions
-- ~~Exact runtime semantics of `WAITn_END_GROUP` vs `transN`~~ — **resolved** in
-  `usched_latency.md`: `eff_stall = usched&0xF` is the issue-to-issue gap
-  derived from the `sm_90_latencies.txt` `TABLE_TRUE` matrices; `bit4` is the
-  end-group/yield selector (`transN`/bit4=1 = independent successor, keep
-  issuing; `WnEG`/bit4=0 + `DRAIN` = dependency stall / group boundary / yield).
-- Whether `req_bit_set` bit ordering (SB0 = LSB [116]) is confirmed against a
-  producer/consumer pair with a set wait mask (samples above all have mask=0).
-- Runtime effect of `BATCH_START/BATCH_START_TILE/BATCH_END` — never emitted by
-  ptxas in surveyed libraries, so semantics remain inferred from the names only.
-- Why `batch_t=3` is encodable (via `opex_0`) yet has no enum name.
 
 ## Runtime semantics of the operand reuse cache (SM120, 2026-08)
 
@@ -389,3 +390,21 @@ So:
 This refines the eviction rule: "any intervening instruction evicts" is really
 "any intervening **plain** slot read replaces the entry"; reuse-marked
 intervening instructions leave it in place.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- ~~Exact runtime semantics of `WAITn_END_GROUP` vs `transN`~~ — **resolved** in
+  `usched_latency.md`: `eff_stall = usched&0xF` is the issue-to-issue gap
+  derived from the `sm_90_latencies.txt` `TABLE_TRUE` matrices; `bit4` is the
+  end-group/yield selector (`transN`/bit4=1 = independent successor, keep
+  issuing; `WnEG`/bit4=0 + `DRAIN` = dependency stall / group boundary / yield).
+- Whether `req_bit_set` bit ordering (SB0 = LSB [116]) is confirmed against a
+  producer/consumer pair with a set wait mask (samples above all have mask=0).
+- Runtime effect of `BATCH_START/BATCH_START_TILE/BATCH_END` — never emitted by
+  ptxas in surveyed libraries, so semantics remain inferred from the names only.
+- Why `batch_t=3` is encodable (via `opex_0`) yet has no enum name.
+

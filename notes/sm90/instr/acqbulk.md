@@ -1,5 +1,16 @@
 # ACQBULK — Programmatic Dependent Launch acquire
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Opcode mnemonic:** `ACQBULK` = `0b100000101110` = **0x82e** | **Pipe:** `cbu_pipe` | compute-only (`SHADER_TYPE==CS`)
 
 Hopper **Programmatic Dependent Launch (PDL)** consumer side — the SASS lowering of PTX `griddepcontrol.wait`. Blocks until prerequisite grids have signaled.
@@ -26,6 +37,8 @@ Not in `RPC_WRITERS` or `CBU_OPS_WITH_REQ`. Distinct from CGA cluster barrier an
 | VIRTUAL_QUEUE | VQ_UNORDERED | **None** |
 | blocks? | no (signal + continue) | **yes (acquire)** |
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_preexit.py`)
 Self-test 3/3; `tests/griddep2.cu` 2/2 per dump.
 
@@ -39,5 +52,11 @@ Self-test 3/3; `tests/griddep2.cu` 2/2 per dump.
 ### SM120 assembler verification (`tests/asm_construct/test_pdl.py`)
 On sm_120 (CUDA 12.8) ptxas emits ACQBULK with `?WAIT6_END_GROUP`: `0x000000000000782e / 0x000fcc0000000000` — identical bytes to sm_90. The repo assembler (`assembler/`, backed by sm120.json) reproduces the ptxas encoding bit-for-bit with bracket `[7:7:{}:6:1]`, and the built cubin round-trips through cuobjdump as `ACQBULK ?WAIT6_END_GROUP`. GPU check (RTX 5090): a consumer launched with `CU_LAUNCH_ATTRIBUTE_PROGRAMMATIC_STREAM_SERIALIZATION` waits via ACQBULK and observes the producer's pre-PREEXIT write; with no prerequisite it returns immediately.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact scope of `ACQBULK`'s acquire (grid vs cluster) is not spec-stated.
+

@@ -1,5 +1,16 @@
 # DMMA — Double-precision (FP64) Matrix Multiply-Accumulate
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `DMMA`
 **Pipe:** `fma64lite_pipe` (FP64 hardware, not fp16 or int)
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_EMULATABLE`
@@ -171,6 +182,11 @@ two entries — Ampere (idx 180, category 434) and Hopper (idx 215, category
 Ampere version likely used a different pipe path. Both implement the same
 PTX `mma.sync.f64` semantics.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **Ampere DMMA encoding**: The sm_90 spec only shows one CLASS block. Does
@@ -178,3 +194,4 @@ PTX `mma.sync.f64` semantics.
 - **Why no abs on C in HMMA?**: DMMA supports `[||]Rc` but HMMA does not.
   Is this a fundamental difference in the FP64 tensor core datapath, or
   missing from HMMA's encoding for another reason?
+

@@ -1,5 +1,18 @@
 # CUDA device `printf`: dynamic SASS call-chain trace
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** NVIDIA GeForce RTX 5090, compute capability 12.0  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
+_(no summary in the source note; the sections below carry the durable facts)_
+
 ## Summary
 
 A CUDA kernel containing `printf(...)` does **not** call a large formatter

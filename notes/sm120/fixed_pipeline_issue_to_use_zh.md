@@ -1,5 +1,16 @@
 # GB202 固定管线 issue-to-use 周期
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-17  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 状态：第一轮完成，2026-09-17，RTX 5090（GB202，sm_120）。探针：
 [`probe_fixed_issue_to_use.py`](../../tests/asm_construct/probe_fixed_issue_to_use.py)。
 
@@ -23,6 +34,8 @@ T_commit(P)            # scoreboard/RF commit，另一个事件
 ```
 
 上一轮的 t+2 主要是 `L_isolated`，本轮测量 `L_safe` 和对应真实时钟。
+
+## Evidence
 
 ## 方法
 
@@ -273,3 +286,4 @@ guard probe 的 12-cycle 结果。
   的持续链；
 - cross-leaf P->C 周期链，用来区分 producer result-ready 与 consumer-use
   offset，而不是只得到二者之差。
+

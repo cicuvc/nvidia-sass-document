@@ -1,10 +1,19 @@
 # FADD — FP32 Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `FADD`  
 **Pipe:** `fmalighter_pipe` (= `FMAI_OPS`)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Semantics
 
@@ -95,6 +104,8 @@ FADD belongs to `FMAI_OPS` (= `fmalighter_pipe`). Same latency class as FFMA:
 Note: FFMA is in `FMAI_WITHOUT_IMAD` while FADD is directly in `FMAI_OPS`, but the
 TABLE_TRUE latencies are the same range (4–8 for FFMA, 5–8 for FADD).
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 14/14 test vectors match. Test kernel: `tests/fadd_test.cu`; decoder: `tools/decode_fadd.py`.
@@ -123,12 +134,7 @@ Key compiler observations:
 - `a - b` → FADD Ra, -Rc (`Rd = Ra + (-Rc)`)
 - `-a + b` → FADD -Ra, Rc; `-a - b` → FADD -Ra, -Rc
 
-## Open questions
-
-- Const-bank variants (`fadd__RRC_RC`, `fadd__RRCx_RCx`) not yet verified
-- `FADD32I` (pipe-only alias) relationship to FADD not explored
-
-## Resolved (SM120 bit-level verification, 2026-08)
+## Verified (SM120 bit-level verification, 2026-08)
 
 `tests/asm_construct/test_fmul_fadd.py` (shared with FMUL) — **268/268 cases
 OK**, model `fma32(a, 1.0, c)` (product a*1 exact, single rounding of a+c).
@@ -142,3 +148,14 @@ OK**, model `fma32(a, 1.0, c)` (product a*1 exact, single rounding of a+c).
 - **Denormal add of two denormals is exact** (`2^-149 + 2^-149 = 2^-148`),
   and `2^-63 + 2^-86` is `2^-63 + 1ulp` (addend exactly one ULP).
 - NaN canonicalizes to **0x7fffffff** (incl. `inf + -inf`).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- Const-bank variants (`fadd__RRC_RC`, `fadd__RRCx_RCx`) not yet verified
+- `FADD32I` (pipe-only alias) relationship to FADD not explored
+

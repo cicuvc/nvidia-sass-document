@@ -10,7 +10,7 @@ Both are grep-first: never `Read` them whole. Use `grep -n` to locate a section,
 
 ### Current state
 - **197/207** compute instructions documented (notes + decoder + test kernel). Only `F2FP` and `RTT` remain unchecked.
-- **194 notes** (`notes/`) — 168 per-instruction + 26 cross-cutting / infrastructure notes (pipes, scoreboards, memory model, CBU state, tensor-core microarch, FDA/bit-accurate MMA model, etc.).
+- **285 notes** (`notes/`, 350k words) — `notes/sm90/instr/` 171 per-instruction docs, `notes/sm90/arch/` 37 cross-cutting notes, plus the sm100/sm103/sm120 archives and 3 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
 - **109 decoders** (`tools/decode_*.py`) — one per documented instruction, each validated against real cuobjdump vectors.
 - **177 CUDA kernels** (`tests/*.cu`) + **87 assembler/round-trip tests** (`tests/asm_construct/test_*.py`) that build SASS by hand, load it through `assembler/`, and run it on a GPU.
 - **124 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, `hmma_model.py`, shared libs).
@@ -842,8 +842,57 @@ Assembler fixes made for M2 (all covered by the corpus round-trip +
 ## Documentation workflow (current effort)
 Goal: write a per-instruction reference doc for every **compute** SASS instruction. Split across sessions.
 - Scope: every **compute** SASS instruction (197/207 done). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded. Shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated.
-- `notes/sm90/instr/*.md` — per-instruction reference docs (164). `notes/sm90/arch/*.md` — cross-cutting topic notes (14: `scoreboards`, `memory_model`, `cbu_state`, `iswz`, `hmma_pipeline`, `div`, `fp64_control`, `tma_mbarrier`, `tensorcore_microarch_speculation`, `wgmma`, `control_codes`, `usched_latency`, `ldc_admode`, `tcgen05_vs_wgmma`, `encoding_classification`). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions.
+- `notes/sm90/instr/*.md` — per-instruction reference docs (171). `notes/sm90/arch/*.md` — cross-cutting topic notes (37: `scoreboards`, `memory_model`, `cbu_state`, `iswz`, `hmma_pipeline`, `div`, `fp64_control`, `tma_mbarrier`, `tensorcore_microarch_speculation`, `wgmma`, `control_codes`, `usched_latency`, `ldc_admode`, `tcgen05_vs_wgmma`, `encoding_classification`, …). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions.
 - `sm90.json` is gitignored/regenerable.
+
+### Note conventions (enforced — read before editing or adding a note)
+
+Every note under `notes/` carries a **status block** directly under its H1 title, and is
+zoned as `## Conclusion` → evidence/`## Evidence` → the note's reference sections →
+`## History / retracted hypotheses`. The block is the single source of truth for *where*
+the note's evidence came from:
+
+```
+<!-- notes-status -->
+**Status:** active|historical|superseded|stub
+**Evidence:** spec|synthetic|mixed|sm90-silicon|sm120-silicon|sm90+sm120-silicon|…
+**Tier confidence:** high|medium|low|unverified
+**Last verified:** YYYY-MM or YYYY-MM-DD (or `unknown`)
+**Probe:** the hardware/tool line, verbatim
+**Open items:** count
+**Audit:** how the tier was derived
+```
+
+Rules that the tooling checks:
+
+- **`notes/sm90/` documents the sm_90 ISA, but most of its silicon evidence was collected
+  on an RTX 5090 (sm_120).** Never write an unqualified "verified" in that tree: state the
+  host, or the tier is `sm120-silicon`. The audit reports `unpinned`/`unverified` rather
+  than guessing a host.
+- **Refuted claims move, they are not deleted.** Put them under
+  `## History / retracted hypotheses` (with the date and what replaced them). If a
+  retraction is quoted *in place* because it justifies the current conclusion, the note
+  needs a `<!-- curated: … -->` annotation saying so.
+- **Refuted/never-settled sections are `## History`; open questions go there too** — they
+  are not current findings.
+- Sections that merely cite the toolchain (`## Verified encodings`, cuobjdump vectors) are
+  **not** silicon evidence; they get a `<!-- provenance: … -->` note, not a tier upgrade.
+- Only the first H1 is the title; `## Resolved:` headings are legacy and read `## Verified:`.
+
+Tools:
+
+```
+python3 tools/notes_audit.py                    # inventory + issue counts
+python3 tools/notes_audit.py --check            # non-zero exit on convention violations
+python3 tools/notes_audit.py --tiers --undated  # proposed tiers / missing dates
+python3 tools/notes_audit.py --json out.json --write-baseline notes/AUDIT_BASELINE.md
+python3 tools/notes_migrate.py --status --sections --ledger [--apply]   # idempotent
+```
+
+`notes/notes_status_overrides.json` holds the hand-confirmed tiers where the note text
+does not pin the measurement host; `notes/AUDIT_BASELINE.md` is the frozen pre-cleanup
+snapshot. The migrator refuses to run if a migration would lose a line of prose or a
+title.
 
 ### Phase 2 — Refinement workflow
 With the first doc pass complete, focus shifts to **note quality and consistency**:

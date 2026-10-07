@@ -1,10 +1,19 @@
 # FMUL — FP32 Multiply
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `FMUL`  
 **Pipe:** `fmalighter_pipe` (= `FMAI_OPS`)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Semantics
 
@@ -96,6 +105,8 @@ Rd at [23:16], negate/abs for Ra at [73:72], negate/abs for 2nd operand at [63:6
 FMUL belongs to `FMAI_OPS` (= `fmalighter_pipe`). Same latency class as FADD/FFMA:
 4–8 cycles true dependency, 1–2 cycles output/anti.
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 10/10 matches. Test kernel: `tests/fmul_test.cu`; decoder: `tools/decode_fmul.py`.
@@ -121,13 +132,7 @@ Key compiler observations:
 - PTX `mul.rz.f32` / `mul.rm.f32` / `mul.rp.f32` / `mul.sat.f32` / `mul.ftz.f32`
   all map directly to FMUL with corresponding suffix
 
-## Open questions
-
-- `.scale` modifier: what PTX construct triggers D2/D4/D8/M2/M4/M8? Not yet tested
-- Const-bank variants (`fmul__RCR_RC`, `fmul__RCxR_RCx`) not yet verified
-- `FMUL32I` (pipe-only alias) relationship to FMUL not explored
-
-## Resolved (SM120 bit-level verification, 2026-08)
+## Verified (SM120 bit-level verification, 2026-08)
 
 `tests/asm_construct/test_fmul_fadd.py` (shared with FADD) — **268/268 cases
 OK**, model `fma32(a, b, +0)` with the exact-zero sign forced to the product
@@ -146,3 +151,15 @@ sign.
 - **`.FMZ` == `.FTZ`** (flush denormal inputs + result), matching the FFMA
   finding.
 - NaN canonicalizes to **0x7fffffff**.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- `.scale` modifier: what PTX construct triggers D2/D4/D8/M2/M4/M8? Not yet tested
+- Const-bank variants (`fmul__RCR_RC`, `fmul__RCxR_RCx`) not yet verified
+- `FMUL32I` (pipe-only alias) relationship to FMUL not explored
+

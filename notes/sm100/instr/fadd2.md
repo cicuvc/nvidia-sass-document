@@ -1,5 +1,16 @@
 # FADD2 — packed FP32x2 Add  → PTX `add.f32x2`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `FADD2` — 3 variants: RRR (0x24b), RRU (0x1e4b), RRI (0x44b)
 **Pipe:** `fmalighter_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
@@ -54,3 +65,4 @@ via `ftz`[80].
   `INST_TYPE_COUPLED_MATH`. FFMA2 has 3 operands (A·B+C); FADD2 has 2 (A+C,
   using the Ra+Rc operand slots).
 - `notes/sm100/instr/fmul2.md` (below) — the multiply-only counterpart.
+

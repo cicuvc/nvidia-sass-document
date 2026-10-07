@@ -1,5 +1,16 @@
 # ACQSHMINIT — Wait for shared-memory-initialization release state
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Opcode:** 0x877 | **architectures:** sm_100/sm_120 | **pipe:** `cbu_pipe` |
 **type:** `INST_TYPE_COUPLED_MATH` | **virtual queue:** none | compute-only
 
@@ -100,6 +111,11 @@ cannot be inferred from the normal data-connector latency tables.
   standalone execution and a safe UMEMSETS→ACQSHMINIT smoke test.
 - PTX capture: CUDA 13.1 `st.bulk` lowering compiled for sm_100a and sm_120a.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - Which compiler/runtime metadata or internal prologue establishes the
@@ -110,3 +126,4 @@ cannot be inferred from the normal data-connector latency tables.
 - Does a true pending-state release provide acquire ordering for all initialized
   shared bytes, in addition to control release? The instruction name strongly
   suggests yes, but the public PTX path cannot create the needed state directly.
+

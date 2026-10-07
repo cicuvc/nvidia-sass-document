@@ -1,5 +1,16 @@
 # ATOMG — Atomic Operation on Global Memory
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `ATOMG`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`  
@@ -86,6 +97,8 @@ old = atomicAdd(p, 1);    // → ATOMG (needs Rd)
 
 Same layout as ATOM, differing only in opcode values and the presence of `TABLES_mem_0` for sem/sco/private. CAS adds `Rc` at [71:64]; uniform variants replace `Ra_offset` with `URc` at [69:64] and `Ra` is RZ.
 
+## Evidence
+
 ## Verified encodings
 
 | Lo64 | Disassembly |
@@ -102,3 +115,4 @@ Same layout as ATOM, differing only in opcode values and the presence of `TABLES
 | `atom.global.cas.b32 %r, [%ptr], %cmp, %val` | `ATOMG.E.CAS [Ra], Rb, Rc` |
 | `atom.global.exch.b32 %r, [%ptr], %val` | `ATOMG.E.EXCH desc[UR][Ra.64], Rb` |
 | `red.global.add.u32 [%ptr], %val` (result unused) | `REDG.E.ADD desc[UR][Ra.64], Rb` |
+

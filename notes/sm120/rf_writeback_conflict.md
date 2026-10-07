@@ -1,5 +1,16 @@
 # GB202 register-file writeback conflict probes
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-14  
+**Probe:** Status:** first negative/diagnostic round, RTX 5090 / sm_120  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **Status:** first negative/diagnostic round, RTX 5090 / sm_120, 2026-09-14.
 Probe: `tests/asm_construct/probe_rf_writeback_conflict.py`.
 
@@ -354,3 +365,4 @@ alone, is required for this class of probe.
 - Probe source-read traffic and write completion together.  If collection and
   1W commit are independent, a saturated read stream should not move write latency; a
   shared crossbar/arbitration design may.
+

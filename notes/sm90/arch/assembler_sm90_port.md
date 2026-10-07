@@ -1,5 +1,19 @@
 # Assembler sm90 port — hardcode audit & arch management
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08-27  
+**Probe:** Verified on H20  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
+> **Retraction note:** this page quotes a retracted claim *in place* because it justifies
+> the current conclusion; the retracted claim itself is not current.
+
 Status of making `assembler/` target both sm90 (Hopper/H800) and sm120
 (Blackwell).  `assembler/arch.py` now holds the per-arch config; `arch=`
 selects it per call (process default sm120).  This note audits every
@@ -33,6 +47,8 @@ hardcode touched or reviewed.
 - runner.py KPARAM parsing + launch paths.
 - depcheck CFG mnemonic sets (BSSY/BSYNC/BREAK/BRX/JMX … both gens).
 - usched/opex/bracket encoding logic.
+
+## Evidence
 
 ## Verified on H20 (sm90)
 - **ELF arch markers were the blocker**: `CUDA_ERROR_NO_BINARY_FOR_GPU` until
@@ -113,3 +129,4 @@ First snapshot: 101 tests: **61 pass / 40 fail**.  Failure buckets:
 ## Tests
 `tests/asm_construct/test_arch.py` — arch switching, layouts, aliases,
 restoration, unknown-arch rejection (assembler-only, no GPU).
+

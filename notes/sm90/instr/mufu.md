@@ -1,11 +1,20 @@
 # MUFU — Multi-Function Unit
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `MUFU`  
 **Pipe:** `mio_pipe` (memory/IO pipe — **not** the math pipe!)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`  
 **VIRTUAL_QUEUE:** `$VQ_MUFU`
-
----
 
 ## Semantics
 
@@ -120,6 +129,8 @@ special values).
 separately, unlike the coupled-math instructions which share a unified
 scoreboard.
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 11/11 matches, covering 10 of 10 valid FP32 operations. Decoder: `tools/decode_mufu.py`.
@@ -157,13 +168,7 @@ Compiler behavior: ptxas prefers to load operands into uniform registers and emi
 the RUR variant when the operand comes from a kernel parameter (same pattern as
 FADD/FMUL on sm_90).
 
-## Open questions
-
-- fp16 variants (`mufu_fp16__*`) not yet tested
-- What operations trigger the F64Imm variant (RIR)?
-- Variable latency mechanism — how does `VarLatOperandEnc` work exactly?
-
-## Resolved: semantics + quantitative error (SM120, clean hand-built ELF, 2026-08)
+## Verified: semantics + quantitative error (SM120, clean hand-built ELF, 2026-08)
 
 Probed with a clean kernel (`S2R` lane-id → per-lane `LDG` → `MUFU.op` →
 `STG`), sweeping thousands of random normal-range FP32 inputs plus specials,
@@ -297,3 +302,15 @@ NOP baseline with **zero** marginal throughput cost (see `ffma.md`), because
 the FMA pipe accepts far more than 1 op/cycle and a single warp's issue rate
 saturates it.  MUFU's +2.01-cyc marginal cost is the *only* one of the two
 pipes that shows a throughput penalty at single-warp issue.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- fp16 variants (`mufu_fp16__*`) not yet tested
+- What operations trigger the F64Imm variant (RIR)?
+- Variable latency mechanism — how does `VarLatOperandEnc` work exactly?
+

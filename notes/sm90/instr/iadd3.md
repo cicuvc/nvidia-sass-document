@@ -1,10 +1,19 @@
 # IADD3 — Three-Input Integer Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Opcode mnemonic:** `IADD3`  
 **Pipe:** `int_pipe` (integer execution pipe)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Variant overview
 
@@ -159,6 +168,8 @@ Shortest true-dep latency is **6 cycles** (vs 4–5 for IMAD on fmalighter).
 
 ---
 
+## Evidence
+
 ## Empirical confirmation (sm_90, CUDA 13.1)
 
 All operand forms and X-mode verified via `nvcc -arch=sm_90 -O3` →
@@ -293,7 +304,13 @@ IADD3.X Rd, PT, PT, R3, R4, RZ, P0, P1  ; carry in from P0,P1
 
 ---
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 1. **IADD alias** — `IADD` appears in the OPERATION SETS alongside `IADD3`;
    likely an assembler alias mapping to IADD3 with Rc=RZ. No separate CLASS.
+

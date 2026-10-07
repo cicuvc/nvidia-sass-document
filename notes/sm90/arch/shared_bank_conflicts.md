@@ -1,12 +1,24 @@
 # Shared memory & cp.async bank-conflict characterization — Blackwell sm_120
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08-15  
+**Probe:** Measured on **RTX 5090 (GB202  
+**Open items:** 8 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
+> **Retraction note:** this page quotes a retracted claim *in place* because it justifies
+> the current conclusion; the retracted claim itself is not current.
+
 Measured on **RTX 5090 (GB202, sm_120)**, CUDA 13.1, driver 590.48.01.
 Cross-refs: `lsu_mio_structure.md`, `memory_model.md`.
 Harnesses: `tests/bankconf/` (harness.cu, harness_v2.cu, harness_v4.cu,
 harness_cpasync.cu, harness_gld.cu, harness_align.cu, harness_lx2.cu,
 zhihu_cpasync.cu + run.py, runcp.py, rungld.py, runlx.py).
-
----
 
 ## 1. Metric reference
 
@@ -721,3 +733,4 @@ conflicts with and without concurrent global traffic.
 **Folklore source:** uncoalesced global loads incur their own L1 bank conflicts
 (`GlobalConflictLd`), separate from the shared counter. This can be mistaken for a
 "shared vs L1 interaction" but is purely a global-side phenomenon.
+

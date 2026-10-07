@@ -1,15 +1,17 @@
 # USEL — Uniform Select
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** USEL  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -63,6 +65,8 @@ The 64-bit IMM form is correct on both paths (`UPp=0` → `{imm, 0}`).
 [91:91],[11:0]       opcode               <= 0b1100010000111
 ```
 
+## Evidence
+
 ## Verified encodings
 
 | Lo64 | Hi64 | Disassembly |
@@ -77,3 +81,4 @@ The 64-bit IMM form is correct on both paths (`UPp=0` → `{imm, 0}`).
 ## Latency
 
 `UDP_subset` group (same as ULEA, ULOP3): output 1–7 cycles, true-dependency 4–12 cycles.
+

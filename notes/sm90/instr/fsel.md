@@ -1,5 +1,16 @@
 # FSEL — FP32 Select (Conditional Move)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** FSEL  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -55,3 +66,4 @@ Equivalent to SEL but for floating-point values with denorm handling.
 ## Latency
 
 `int_pipe`, `FXU_OPS`. Standard integer-pipe latency (1 cycle output typical).
+

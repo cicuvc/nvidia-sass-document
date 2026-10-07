@@ -1,12 +1,21 @@
 # SHF — Funnel Shift
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** verified on SM120, RTX 5090  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Opcode mnemonic:** `SHF`  
 **Pipe:** `int_pipe` (integer execution pipe)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 Related: `USHF` (uniform register variant, `udp_pipe`, 3 variants).
-
----
 
 ## Variant overview
 
@@ -162,6 +171,8 @@ Shares the FXU latency matrix.
 
 ---
 
+## Evidence
+
 ## Empirical confirmation (sm_90, CUDA 13.1)
 
 All observed compiler patterns use the uniform-amount form (`SHF.* Rd, Ra, URn, Rc`)
@@ -229,6 +240,11 @@ USHF operates on `UniformRegister` with `udp_pipe`. 3 variants: URURUR, URURuI,
 URuIUR. Same modifier axes (SDIR, CWMode, FMT, HILO). Opcodes: `0x1299`, `0x1499`,
 `0x1899`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 Resolved on SM120 (RTX 5090) via `tests/asm_construct/test_shf.py` (49 cases,
@@ -241,3 +257,4 @@ all pass):
 - **`.S32` with a non-RZ `Ra`** behaves exactly like `.S64`: arithmetic shift
   of the full 64-bit funnel (sign = `Rc[31]`), verified with both funnel halves
   nonzero at k=16 and k=40.
+

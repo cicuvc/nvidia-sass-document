@@ -1,5 +1,16 @@
 # STSM — Store to Shared Memory, Matrix Layout
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `STSM`
 **Pipe:** `mio_pipe` (MIO_SLOW_OPS subset)
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` (decoupled read scoreboard — no writeback)
@@ -165,6 +176,11 @@ indicates `stmatrix` requires `sm_90` or higher, but `.m16n8` shape requires Bla
 | `stmatrix.sync.aligned.m8n8.x1.trans.b16` | `STSM.16.MT88.1 [Ra+offset], Rb` |
 | `stmatrix.sync.aligned.m8n8.x{2,4}.b16` | `STSM.16.M88.{2,4} [Ra+offset], Rb` |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **STSM_MODE MT88**: Does the transposed layout map directly to HMMA's operand
@@ -176,3 +192,4 @@ indicates `stmatrix` requires `sm_90` or higher, but `.m16n8` shape requires Bla
 - **Size asymmetry**: Why does STSM only support 16-bit elements while LDSM
   supports 4-to-8 and 2-to-4 upcasts? Possibly because stores don't need
   conversion (data is already in the tensor-core's native format after compute).
+

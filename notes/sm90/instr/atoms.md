@@ -1,5 +1,16 @@
 # ATOMS — Atomic Operation on Shared Memory
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `ATOMS`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`  
@@ -91,6 +102,11 @@ Population-count increment. 32-bit only. URc uniform offset.
 
 CAS (0x38d) adds Rc at a different encoding position.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **ATOMS usage in practice:** No ATOMS found in cublas. Shared-memory atomics
@@ -98,3 +114,4 @@ CAS (0x38d) adds Rc at a different encoding position.
   warp-level reductions instead.
 - **ARRIVE/POPC.INC vs explicit barriers:** These may be compiler-internal
   for CTA-level synchronisation patterns.
+

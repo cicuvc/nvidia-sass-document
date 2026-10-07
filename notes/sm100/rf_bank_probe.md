@@ -1,5 +1,16 @@
 # B200 寄存器文件 bank 与读取带宽探测
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** B200 的 scalar GPR operan  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **状态：** Modal B200 实测，2026-09-17。
 **探针：** `tests/asm_construct/probe_sm100_rf_banks_modal.py`。
 
@@ -143,3 +154,4 @@ bank/port 数量也不能从本实验推出，需要独立的 completion/writeba
 reuse-A，因而得到 FADD 全部 1 cycle、FFMA 2E+1O 为 1 cycle、FFMA2 为
 2 cycles 的假象，并被错误解释为 2R。显式 no-reuse/reuse 对照发现并纠正了
 这个问题；本文以上数字均来自修正后的编码。
+

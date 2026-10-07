@@ -1,5 +1,16 @@
 # PREEXIT — Programmatic Dependent Launch signal
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Opcode mnemonic:** `PREEXIT` = `0b100000101101` = **0x82d** | **Pipe:** `cbu_pipe` | compute-only (`SHADER_TYPE==CS`)
 
 Hopper **Programmatic Dependent Launch (PDL)** producer side — the SASS lowering of PTX `griddepcontrol.launch_dependents`. Signals that the grid has advanced enough that its dependent grids may begin launching.
@@ -25,6 +36,8 @@ Not in `RPC_WRITERS` or `CBU_OPS_WITH_REQ`.
 | INSTRUCTION_TYPE | DECOUPLED_BRU | COUPLED_MATH |
 | blocks? | no (signal + continue) | yes (acquire) |
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_preexit.py`)
 Self-test 3/3; `tests/griddep2.cu` 2/2 per dump.
 
@@ -39,5 +52,11 @@ Self-test 3/3; `tests/griddep2.cu` 2/2 per dump.
 ### SM120 assembler verification (`tests/asm_construct/test_pdl.py`)
 On sm_120 (CUDA 12.8) ptxas emits PREEXIT with `?trans3`: `0x000000000000782d / 0x000fe60000000000` — same opcode, but a different scheduling word than sm_90's `?trans8` (`0x000ff00000000000`). The repo assembler (`assembler/`, backed by sm120.json) reproduces the ptxas encoding bit-for-bit with bracket `[7:7:{}:3:0]`, and the built cubin round-trips through cuobjdump as `PREEXIT ?trans3`. GPU check (RTX 5090): a producer launched with `CU_LAUNCH_ATTRIBUTE_PROGRAMMATIC_STREAM_SERIALIZATION` signals via PREEXIT, and the paired consumer ACQBULK observes the write published before the signal (release/acquire pair).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Whether `PREEXIT` interacts with the at-exit state (`ATEXIT_PC`/`MATEXIT`) beyond the PDL signal.
+

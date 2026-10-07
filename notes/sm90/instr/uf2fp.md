@@ -1,5 +1,16 @@
 # UF2FP — Uniform Float to Float, Packed
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** UF2FP  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -68,3 +79,4 @@ Rounding mode: RN (round-to-nearest).
 ## Latency
 
 `udp_pipe`, `INST_TYPE_COUPLED_MATH`. Uniform register pipeline latency (UDP_subset group: output 1–7 cycles, true-dependency 4–12 cycles).
+

@@ -1,5 +1,16 @@
 # SM120 local-memory address → device backing VA
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** RTX 5090 (GB202, sm_120)  
+**Open items:** 7 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 **Hardware:** RTX 5090 (GB202, sm_120)
 **Status:** silicon-verified for aligned 32-bit `STL`/`LDL` words on sm120;
 core transform independently reproduced on H20/sm90
@@ -481,6 +492,8 @@ The missing quantity was `SR_LMEMHIOFF`: GET is the backing base corresponding
 to the current warp's `LMEMHIOFF`, not to local address zero or the top of the
 local window.
 
+## Evidence
+
 ## Reproduction
 
 ```bash
@@ -499,19 +512,6 @@ Important subprobes in the script:
 - `probe_setlmembase_lanes.py` — lane-varying source election and predicated
   partial-warp SET behavior.
 
-## Open questions
-
-- Verify U8/U16, unaligned, U64 and U128 backing layouts directly.
-- Explain the extra one-warp stride between 256-thread resident CTAs.
-- Sweep CTA sizes and resource limits to recover the full resident-slot
-  allocation rule.
-- Determine how `LMEMLOSZ != 0` splits low-local and high-local backing regions.
-- Measure `SR_LMEMHIOFF` inside ptxas kernels across the spill-frame matrix to
-  recover loader rounding and ABI reserve overhead.
-- Re-test on sm_90 hardware; all results here are sm_120 silicon only.
-- Test competing SETs issued by separate divergent SIMT groups before
-  reconvergence; partial-mask election is known, but group ordering is not.
-
 ## SETLMEMBASE settling latency & RZ+imm24 reach (sassdbg probe_mwarp.py)
 
 - **SETLMEMBASE does not take effect immediately.**  Local accesses within the
@@ -529,3 +529,22 @@ Important subprobes in the script:
   LMEMHIOFF+0x640 = 0x1000000 crosses 2^24 and the assembler silently
   truncates the immediate (observed: 0x10009c0 encoded as 0x0009c0 → 700).
   Deeper frames need register-based local addressing (`STL [R14]`).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- Verify U8/U16, unaligned, U64 and U128 backing layouts directly.
+- Explain the extra one-warp stride between 256-thread resident CTAs.
+- Sweep CTA sizes and resource limits to recover the full resident-slot
+  allocation rule.
+- Determine how `LMEMLOSZ != 0` splits low-local and high-local backing regions.
+- Measure `SR_LMEMHIOFF` inside ptxas kernels across the spill-frame matrix to
+  recover loader rounding and ABI reserve overhead.
+- Re-test on sm_90 hardware; all results here are sm_120 silicon only.
+- Test competing SETs issued by separate divergent SIMT groups before
+  reconvergence; partial-mask election is known, but group ordering is not.
+

@@ -1,5 +1,16 @@
 # DSETP — FP64 Compare-Set-Predicate
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode:** `0x22a` (RRR), `0x42a` (RRsI), `0x62a` (RRC), `0x162a` (RRCx), `0x1e2a` (RRU)  
 **Pipe:** `fma64lite_pipe`, `$VQ_REDIRECTABLE`  
 **TYPE:** `INST_TYPE_COUPLED_EMULATABLE`  
@@ -72,6 +83,8 @@ the `opex` (operation extension) field along with scoreboard configuration.
 This is consistent across DFMA/DMUL/DADD/DSETP, suggesting ptxas uses a
 different micro-architectural encoding from what the CLASS dump captures.
 
+## Evidence
+
 ## Verified encodings
 
 | Disassembly | PTX |
@@ -89,3 +102,4 @@ All observed instances use the RRU_RU variant (URc promoted to uniform register)
 | `setp.lt.f64 %p, %ra, %rb` | `DSETP.LT.AND Pu, PT, Ra, UR4, PT` |
 | `setp.leu.f64` | `DSETP.LEU.AND` |
 | `setp.neu.f64` | `DSETP.NEU.AND` |
+

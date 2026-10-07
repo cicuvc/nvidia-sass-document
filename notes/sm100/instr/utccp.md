@@ -1,5 +1,16 @@
 # UTCCP — async shared-memory → TMEM copy  → PTX `tcgen05.cp`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-18  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
 **Opcode mnemonic:** `UTCCP` = `0b1100111100111` (0x19e7, 6631)
 **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`
 **Virtual queue:** `$VQ_TC_1CTA` (=41) / `$VQ_TC_2CTA` (=42) | **MEM_SCBD_TYPE:** `BARRIER_INST`
@@ -92,6 +103,8 @@ convention from LDTM/STTM.
 Operand-placement note: unlike LDTM/STTM (which use `Rb`[39:32] for the TMEM
 address), UTCCP puts the **descriptor** in `Rb`[39:32] and the **TMEM address**
 in `Ra`[31:24] — the descriptor is the primary "source" operand.
+
+## Evidence
 
 ## Verified encodings (cuobjdump, `nvcc -arch=sm_100a`, CUDA 13.1)
 Source: `tests/utccp_test.cu` → `tests/utccp_test.cubin`. Decoder:
@@ -323,9 +336,15 @@ The read scoreboard protects source/descriptor lifetime; completion of the
 actual shared→TMEM copy is tracked through `UTCBAR` or an implicitly pipelined
 dependent MMA, not a fixed latency-table entry.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Backend completion latency, issue throughput, and outstanding-copy capacity.
 - Runtime meaning of the `.ONE` alternate (encoding-identical here).
 - Whether `depth`/`cas` field names ([86]/[87]) carry any meaning beyond the
   fixed `.T`/`.S` role tags (they are pinned by the single-value `OnlyT`/`SONLY`
   enums).
+

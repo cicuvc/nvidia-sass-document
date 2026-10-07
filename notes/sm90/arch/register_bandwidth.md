@@ -1,5 +1,16 @@
 # Register file bandwidth — empirical limits and HGMMA contention (H800, 2026-08)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm70, sm80, sm90, sm120)
+
+## Conclusion
+
 Empirical register-file (RF) bandwidth limits on H800 (full GH100, sm_90),
 and the demonstration that a heavy CUDA-core register stream can starve the
 HGMMA accumulator writeback. Experiments: `rf2_test.cu` (nvcc, verified
@@ -171,23 +182,6 @@ top of the RMW.
   wgmma — but at far lower RF-read rates than a 3-fresh-read storm, so
   the practical impact is small; the +140% figure is the adversarial
   ceiling.
-
-## Open questions (before the hand-SASS write-only probe)
-
-- Exact budget decomposition: read-only ~256 B/cyc/SMSP vs combined
-  read+write ~330 B/cyc/SMSP (current points fit both). Discriminator:
-  storms with tunable read:write ratios (e.g. MOV chains = 1r/1w,
-  LOP3.LUT with immediates = 1r/1w+imm).
-- Bank structure: 2 vs 4 banks, conflict replay cost — needs hand-SASS
-  storms with controlled operand parities (the assembler gives exact
-  register numbers). The 1.56-vs-2.04 compilation-luck spread suggests
-  ~30% bank effects.
-- Does the TC RMW have any dedicated RF write port, or is it fully
-  behind ALU traffic?  Round 3 below resolves the architectural-port
-  part of this question, though not the exact location of the mux.
-- Does the same threshold hold on H20 (its HGMMA chain is MAC-bound at
-  32.4 cyc/MMA with more RF headroom per cycle — prediction: FFMA-rot
-  storm slows it less in absolute cyc/MMA)?
 
 ## Round 2 — testing the 2R1W model against the RMW (rf3_test.cu)
 
@@ -408,3 +402,26 @@ a future read with an older write.  Separate read/write decode phases or a
 pipelined decoder can implement the observation.
 
 Probe source: `tests/asm_construct/probe_hgmma_rmw_window.py`.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions (before the hand-SASS write-only probe)
+
+- Exact budget decomposition: read-only ~256 B/cyc/SMSP vs combined
+  read+write ~330 B/cyc/SMSP (current points fit both). Discriminator:
+  storms with tunable read:write ratios (e.g. MOV chains = 1r/1w,
+  LOP3.LUT with immediates = 1r/1w+imm).
+- Bank structure: 2 vs 4 banks, conflict replay cost — needs hand-SASS
+  storms with controlled operand parities (the assembler gives exact
+  register numbers). The 1.56-vs-2.04 compilation-luck spread suggests
+  ~30% bank effects.
+- Does the TC RMW have any dedicated RF write port, or is it fully
+  behind ALU traffic?  Round 3 below resolves the architectural-port
+  part of this question, though not the exact location of the mux.
+- Does the same threshold hold on H20 (its HGMMA chain is MAC-bound at
+  32.4 cyc/MMA with more RF headroom per cycle — prediction: FFMA-rot
+  storm slows it less in absolute cyc/MMA)?
+

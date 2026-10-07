@@ -1,5 +1,16 @@
 # Tensor-core microarchitecture — dot-product vs systolic (SPECULATION)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** measured ~2286 MAC/cyc/SM ≈ 4× H20  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Status: SPECULATION / architectural inference.** Nothing here is provable from
 the SASS/ISA dumps — the wgmma/mma ISA is dataflow-agnostic (tile shape, async
 semantics, and the accumulator-collector behaviour do not expose whether the
@@ -94,3 +105,4 @@ implicit-collector→TMEM transition.
 ## Cross-refs
 `wgmma.md` (collector model, subcore partitioning, sparse variants),
 `hmma_pipeline.md` (latency), `tcgen05_vs_wgmma.md` (TMEM).
+

@@ -1,5 +1,16 @@
 # Work-stealing — `clusterlaunchcontrol.try_cancel` / `query_cancel`  → `UGETNEXTWORKID` + `SYNCS`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** resolved empirically on `sm_100  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **PTX:** `clusterlaunchcontrol.try_cancel` / `clusterlaunchcontrol.query_cancel`
 (§9.7.14.18–19, PTX ISA 9.3)
 **SASS core op:** `UGETNEXTWORKID` (opcode 0x13ca, `udp_pipe`, `$VQ_WORKID`=43)
@@ -137,6 +148,11 @@ the hardware primitive is a narrow, stable async command.
 - `notes/sm100/arch/control_codes.md` — `$VQ_WORKID` is part of the virtual
   queue namespace first seen here; the scheduling model is the same.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact format of the 128-bit opaque response handle — what bits encode
   `is_canceled`, `ctaid.x/y/z`, and what the remaining fields are (the dump
@@ -144,3 +160,4 @@ the hardware primitive is a narrow, stable async command.
 - `BROADCAST` (cast=1) — when does ptxas emit it (non-multicast try_cancel,
   or another use)?
 - SYNCS.EXCH semantics — the `SYNCS` mbarrier family is a fertile separate topic.
+

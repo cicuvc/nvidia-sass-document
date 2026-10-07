@@ -1,5 +1,16 @@
 # UCGABAR_ARV — CGA (thread-block cluster) barrier arrive
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UCGABAR_ARV` = `0b1100111000111` = **0x19c7** | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_UNORDERED` | compute-only (`SHADER_TYPE==CS`)
 
 Signals **arrival at the thread-block-cluster (CGA) barrier** on Hopper — the uniform-
@@ -44,6 +55,8 @@ its arrival), and — notably — **`EXIT` is a reader**: a thread cannot retire
 barrier participation is outstanding (matches the EXIT note's GMMA/CGA wait). `udp_pipe`,
 `DECOUPLED_BRU`, `VQ_UNORDERED`, `MIN_WAIT_NEEDED=1`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_ucgabar.py`)
 Self-test 4/4; `tests/ucgabar_test.cu` (`cluster.barrier_arrive()`/`barrier_wait()`) 3/3
 (2×ARV + WAIT). `@UP` guards via cubin-patch.
@@ -64,8 +77,14 @@ Emitted for `__cluster_dims__` kernels using cluster-scope synchronization. Real
 `.sync()` also emits `BAR.*`/`MEMBAR` (see `bar.md`); the UCGABAR ops are the CGA-barrier-
 specific piece.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `.SYNCALL` and the `UCGABAR_GET`/`_SET` operand encodings did not render under cubin-patch
   (nvdisasm printed raw bytes), so they are documented from the spec only; the `_GET` `URd`
   and `_SET` semantics are unverified against real output.
 - Exact `CGABARRIER` state layout (arrival count / phase) is not spec-exposed.
+

@@ -1,5 +1,16 @@
 # FLO — Find Leading One
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** FLO  |  **Pipe:** `mio_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
 
 ## Semantics
@@ -40,7 +51,9 @@ Output `Pu` (predicate) flags special conditions (input zero → all bits set? o
 
 `mio_pipe`, MUFU dispatch. Latency comparable to other MUFU ops (higher than int_pipe).
 
-## Resolved: silicon-verified semantics (SM120)
+## Evidence
+
+## Verified: silicon-verified semantics (SM120)
 
 `tests/asm_construct/test_brev_flo_popc.py` + `tools/decode_brev_flo_popc.py`
 confirm FLO = PTX `bfind` exactly:
@@ -64,3 +77,4 @@ Hand-assembler gotchas: mio_pipe DECOUPLED_RD_WR_SCBD — result write needs a
 scoreboard (`wr`) consumed by `req`; the Pu predicate needs ~20 NOP
 cross-pipe delay before an @P consumer (like SHFL).  FLO is slow (~MUFU
 latency), so dependent consumers should use the scoreboard, not a short stall.
+

@@ -1,5 +1,16 @@
 # UBLKPF — Uniform block prefetch (non-tensor `cp.async.bulk.prefetch`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UBLKPF` = `0b1001110111100` = **0x13bc** | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
 
 ## Semantics
@@ -73,6 +84,8 @@ completion to await (contrast `UBLKCP`/`UTMASTG` which set rd_sb=1). `dst_wr_sb=
 Notably ptxas issues it **unconditionally from all threads** (no `ELECT`
 single-thread gating), unlike the data-moving bulk ops.
 
+## Evidence
+
 ## Verified encodings (`tests/ublkpf_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |---|---|---|
@@ -87,6 +100,11 @@ Decoder `tools/decode_ublkpf.py`: **2/2 PASS**. In the desc form, `memdesc` [76]
 |---|---|
 | `cp.async.bulk.prefetch.L2.global [src], size` | `UBLKPF.L2 [URa], URc` |
 | `cp.async.bulk.prefetch.L2.global.L2::cache_hint [src], size, policy` | `UBLKPF.L2 [URa], URc, desc[URe]` |
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
 
 ## Open questions
 - `desc[URe]` layout — carries the L2 cache-eviction policy (from

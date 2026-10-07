@@ -1,5 +1,16 @@
 # SM120 (Blackwell / RTX 5090) — encoding & addressing findings
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 5 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 Empirical investigation on `sm_120` (RTX 5090, GB202), CUDA 12.8, driver 590.x.
 
 ## 1. Encoding substrate: identical to sm_90 / sm_100
@@ -203,14 +214,6 @@ c[0x0][0x37c]  = global mem descriptor (LDC R1 target)    → ABI, can be omitte
 c[0x0][0x400]  = gmem_out pointer (regular param)
 ```
 
-## 9. Open questions
-
-- Exact TMA descriptor binary format (word-level decoding)
-- Whether other descriptor table indices (1, 2, …) map to different address spaces
-- Why `#pragma unroll 0` is ignored on SM120 PTXAS
-- SM120 constant bank 0 preset region layout (differs from SM90)
-- `MOV64I` vs `LDC.64` provenance requirement for STG addresses
-
 ## 10. ILLEGAL_INSTRUCTION on high registers = regcount undercount (resolved)
 
 **Old theory (WRONG):** R14–R16 were thought to be "reserved by the launch
@@ -289,3 +292,17 @@ both lane groups reach the join PC naturally (parked lanes via their own
 predicated branch, fall-through lanes by executing the join in-line). The BSSY
 `Sa` target is an encoding-side annotation that the hardware ignores. See
 `cbu_state.md`, `bssy.md`, `bsync.md`.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## 9. Open questions
+
+- Exact TMA descriptor binary format (word-level decoding)
+- Whether other descriptor table indices (1, 2, …) map to different address spaces
+- Why `#pragma unroll 0` is ignored on SM120 PTXAS
+- SM120 constant bank 0 preset region layout (differs from SM90)
+- `MOV64I` vs `LDC.64` provenance requirement for STG addresses
+

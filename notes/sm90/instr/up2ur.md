@@ -1,15 +1,17 @@
 # UP2UR — Uniform Predicate to Uniform Register
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** UP2UR  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). Its byte-exact encoding vectors were captured from sm_120 assembly;
-> the GPU-semantics halves of those cases passed on H20 (real sm_90).
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -131,8 +133,14 @@ Output latency: **1–7 cycles**. True-dependency: **4–12 cycles** (heavily ro
 
 Both instructions use the `UPR_UPRED` connector in the latency file and are grouped together in `WHOLE_UPRED_OPS`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **No empirical examples:** Neither `UP2UR` nor `UR2UP` appear in libcublas or ptxas-generated code. These instructions likely serve internal purposes (e.g., reading hardware predicate state for TMA completion tracking, or warp-level voting that needs to spill to a register).
 - **UPR register semantics:** What hardware conditions set the `UPR` bit? Is it written by `VOTEU` (uniform vote), `USETP`/`UPSETP`, or a separate hardware mechanism?
 - **B3B0 byte insert:** Why insert a single-bit predicate into a byte? This suggests `UPR` may pack multiple 1-bit predicates into a 32-bit word, and `B3B0` selects which one to expand.
+

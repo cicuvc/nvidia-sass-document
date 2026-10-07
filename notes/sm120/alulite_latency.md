@@ -1,5 +1,16 @@
 # GB202 ALU-Lite pipeline latency
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-16  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-16. Reproducer:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-16.  Reproducer:
 [`probe_alulite_latency.py`](../../tests/asm_construct/probe_alulite_latency.py).
 
@@ -20,6 +31,8 @@ The latency dump alone is insufficient for a cycle model.  Its
 math columns.  For predicate results it gives 6 to ordinary math predicate
 readers but 14 to branch/non-math readers.  Silicon exposes earlier, distinct
 forwarding points.
+
+## Evidence
 
 ## Method
 
@@ -140,3 +153,4 @@ must not replace the measured bypass-ready events.
 The next fixed-latency work should add ALU Heavy, FMA Lite, FMA Heavy, and
 packed-FP producers to the same consumer matrix, then locate architectural RF
 commit independently by suppressing or bypassing the local forwarding paths.
+

@@ -1,5 +1,16 @@
 # NANOTRAP — Hardware Trap Injection
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `NANOTRAP` (R=0x35a, I=0x95a, C=0xb5a, CX=0x1b5a, U=0x1d5a)
 **Pipe:** `cbu_pipe`  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`  **VIRTUAL_QUEUE:** `$VQ_UNORDERED`
 
@@ -10,6 +21,8 @@ register, immediate, or constant bank), plus an optional predicate `Pp`
 ([89:87], with `@not` at [90]) and a `/RAND` modifier (`depth` [86]) for
 randomized injection.  `IDEST_SIZE=0`, `ISRC_B_SIZE=32`.  Not emitted by
 ptxas — it is a driver/runtime/ABI primitive.
+
+## Evidence
 
 ## Verified behavior (SM120, single-warp probe, 2026-08)
 
@@ -60,7 +73,7 @@ disturbing the compute context.
   file).
 - `fp64_control.md` — earlier note listing NANOTRAP among cbu_pipe ops.
 
-## Resolved: TRAP_RETURN_PC write-protection blocks the "set-TRPC + NANOTRAP" experiment
+## Verified: TRAP_RETURN_PC write-protection blocks the "set-TRPC + NANOTRAP" experiment
 
 `BMOV TRAP_RETURN_PC.LO/.HI, src` is hardware-rejected (715) from user SASS, so
 TRAP_RETURN_PC cannot be preset to a valid PC (see `cbu_state.md`).  NANOTRAP
@@ -68,7 +81,7 @@ with TRPC unset is swallowed: execution continues fall-through (verified,
 `tests/asm_construct/test_trpc_write.py`).  The trap-return PC is owned by the
 driver's trap machinery, not user-writable.
 
-## Resolved: TRPC does NOT become a NANOTRAP return target (SM120, 2026-08)
+## Verified: TRPC does NOT become a NANOTRAP return target (SM120, 2026-08)
 
 Even when TRAP_RETURN_PC is legitimately set to a valid PC — via BSSY's
 divergence side effect (BSSY in a divergent region writes TRPC = BSSY address,
@@ -80,7 +93,7 @@ setup).  So TRPC is NOT a NANOTRAP return target; the injected trap is handled
 internally without a TRPC-based return.  (An earlier apparent "jump" was a
 same-address store race between the two divergent paths.)
 
-## Resolved: RTT is the privileged trap-return instruction (SM120, 2026-08)
+## Verified: RTT is the privileged trap-return instruction (SM120, 2026-08)
 
 `RTT` (0x94f, cbu_pipe, BRANCH_TYPE=BRT_RETURN) is the trap-handler RETURN
 instruction — it returns to TRAP_RETURN_PC.  It is **privileged**: executing it
@@ -92,3 +105,4 @@ uses TABLES_opex_2 — only stall=0 is a legal scheduling value
 `RTT;[7:7:{}:0:1]` encodes to lo=0x000000000000794f).  So the full trap-return
 path (TRPC write, RTT execute) is trap-machinery-only and not invocable from
 user SASS; NANOTRAP's injected trap is handled internally.
+

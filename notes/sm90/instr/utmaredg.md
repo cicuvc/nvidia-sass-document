@@ -1,17 +1,17 @@
 # UTMAREDG — Uniform TMA tensor reduction store (shared → global, atomic reduce)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UTMAREDG` = `0b1001110110110` = **0x13b6** | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
-
-> TODO: idx 244 was listed as **`UTMREDG`** (ref_memo abbreviation) `-> UTMAREDG`.
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 UTMAREDG is the SASS lowering of PTX **`cp.reduce.async.bulk.tensor…`** — a TMA
@@ -88,6 +88,8 @@ the shared source (WAR) until the copy engine has read it; drained by
 `cp.async.bulk.wait_group.read` (`DEPBAR.LE SB0,0`). `dst_wr_sb=*7`. See
 `../arch/tma_mbarrier.md` for the `UTMACMDFLUSH`+`DEPBAR.LE` bulk-group flow.
 
+## Evidence
+
 ## Verified encodings (`tests/utmaredg_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |---|---|---|
@@ -117,12 +119,6 @@ step of +1 shifts Hi64 by `0x00800000` (ADD `...08008000` → MIN `...08808000` 
 PTX reduction op → RedOp: `add→ADD, min→MIN, max→MAX, inc→INC, dec→DEC,
 and→AND, or→OR, xor→XOR` (direct 0–7 mapping).
 
-## Open questions
-- Element type / precision of the reduction (f16/bf16/f32/s32/u32) — likely carried
-  in the tensor-map descriptor, not the instruction (no type field observed).
-
-- Whether `_desc` (memdesc=1) reduction form is emitted from stock PTX.
-
 ## Hand-built SASS reproduction (verified on sm_120)
 
 `tests/asm_construct/test_utmaredg.py` reproduces `UTMAREDG.2D` for all 8
@@ -135,3 +131,15 @@ RedOps (UINT32 tensor map, simple `ELECT P0` + 8 NOPs + `@!P0 BRA` guard):
 - element-wise semantics verified: `dst[i] = dst[i] <op> src[i]`, with
   INC/DEC matching the classic atomic caps (same as UBLKRED):
   `INC: (dst < src) ? dst+1 : 0`, `DEC: (dst==0 || dst>src) ? src : dst-1`.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Element type / precision of the reduction (f16/bf16/f32/s32/u32) — likely carried
+  in the tensor-map descriptor, not the instruction (no type field observed).
+
+- Whether `_desc` (memdesc=1) reduction form is emitted from stock PTX.
+

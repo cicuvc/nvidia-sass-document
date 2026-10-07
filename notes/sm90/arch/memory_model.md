@@ -1,5 +1,16 @@
 # Memory model / cache-control claims — verification vs sm_90 spec
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90)
+
+## Conclusion
+
 Verifying a pasted description of the Hopper cache/ordering model against the
 instruction dump. Buckets: **CONFIRMED**, **CORRECTION**, **NOT IN SPEC / needs
 probe**. All enum values quoted are from `sm_90_instructions.txt`.
@@ -40,20 +51,6 @@ probe**. All enum values quoted are from `sm_90_instructions.txt`.
 - **Async / fence mnemonics all exist**: `LDGSTS, LDGDEPBAR, DEPBAR, ERRBAR,
   CGAERRBAR, UTMACCTL, REDG`. (Their exact PTX→SASS lowerings are probe-only,
   below.)
-
-## CORRECTION (claim disagrees with spec)
-
-- **Scope ladder `CTA < SM < GPU < VC < SYS` is NOT the field encoding.**
-  The load/store scope enum `SCO` is: `nosco=0, CTA=1, SM=2, VC=3, GPU=4, SYS=5`.
-  So in the LDG/STG `sco` field **VC (3) is encoded *below* GPU (4)** — VC sits
-  between SM and GPU, not above GPU. The `MEMBAR` scope enum orders them yet
-  differently (`GPU=2, SYS=3, VC=5`), so **the two scope fields use different
-  numbering and neither follows the stated breadth order.** The conceptual
-  breadth story may hold, but as an *encoding* claim `GPU<VC` and `VC<SYS` are
-  wrong for at least one of the two fields each.
-- **`PF1_5` (prefetch to L1.5) does not exist** in the sm_90 CCTL enums (no
-  match anywhere in the file).
-- **`RSLB` (reset line, look-aside buffer) does not exist** in sm_90 (no match).
 
 ## NOT IN SPEC / needs SASS probe (can't confirm from instruction dump)
 
@@ -135,3 +132,23 @@ So: `INSTRUCTION_TYPE` = dependency semantics, `VQ` = completion queue,
 `MIO/pipe` = physical unit, `MEM_SCBD(_TYPE)` = ordering/consistency role —
 four orthogonal labels; the only strong couplings are DECOUPLED⇒VQ and the
 MEM_INST/BB_ENDING⇒(memory/CBU VQ) classification.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## CORRECTION (claim disagrees with spec)
+
+- **Scope ladder `CTA < SM < GPU < VC < SYS` is NOT the field encoding.**
+  The load/store scope enum `SCO` is: `nosco=0, CTA=1, SM=2, VC=3, GPU=4, SYS=5`.
+  So in the LDG/STG `sco` field **VC (3) is encoded *below* GPU (4)** — VC sits
+  between SM and GPU, not above GPU. The `MEMBAR` scope enum orders them yet
+  differently (`GPU=2, SYS=3, VC=5`), so **the two scope fields use different
+  numbering and neither follows the stated breadth order.** The conceptual
+  breadth story may hold, but as an *encoding* claim `GPU<VC` and `VC<SYS` are
+  wrong for at least one of the two fields each.
+- **`PF1_5` (prefetch to L1.5) does not exist** in the sm_90 CCTL enums (no
+  match anywhere in the file).
+- **`RSLB` (reset line, look-aside buffer) does not exist** in sm_90 (no match).
+

@@ -1,5 +1,16 @@
 # QSPC — Query address space type (PTX `isspacep`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 5 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Opcode mnemonic:** `QSPC` = `0x3aa` (GPR base) / `QSPC_URb` = `0x19aa`
 (uniform-register base) | **Pipe:** `mio_pipe` (**MIO_SLOW_OPS**) |
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`, `VIRTUAL_QUEUE=$VQ_AGU`,
@@ -87,6 +98,8 @@ latency group).  Decoupled (`INST_TYPE_DECOUPLED_RD_WR_SCBD`, `VQ_AGU`):
 - `MIN_WAIT_NEEDED=1`, no `MEM_SCBD` wait requirement (memory-ordering
   barrier class, not a memory op itself).
 
+## Evidence
+
 ## Verified encodings (sm_90 CUDA 12.8 + nvdisasm round-trip)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -165,6 +178,11 @@ therefore loads addresses with `LDC` into GPRs or materializes them with
   (`.ALL` writes `Pu`+`Rd`) — QSPC's full form with `Rd=RZ` is what ptxas
   emits; the pinned variants are assembler/decoder-level alternatives.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - The meaning of the `D` (3) space name ("Device"? "Cluster-shared"?); the
   spec exposes only the enum, empirical mapping is `.shared::cluster`.
@@ -180,3 +198,4 @@ therefore loads addresses with `LDC` into GPRs or materializes them with
 - The hand-built-cubin `LDCU`-reads-0 quirk (uniform cbank not populated at
   `0x358`/`0x380+` for this repo's ELFs) deserves a follow-up in the
   assembler ELF writer, since nvcc cubins read those slots fine.
+

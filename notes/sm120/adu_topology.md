@@ -1,5 +1,16 @@
 # GB202 Address Divergence Unit topology
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-15  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-15. The starting architectural  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-15.  The starting architectural
 description says that the Address Divergence Unit (ADU) handles address
 divergence for branches/jumps and also supports constant loads and
@@ -146,6 +157,8 @@ LDC traffic.  This asymmetry is compatible with separate client queues and
 priority/reservation at the local collection fabric; it is not evidence for
 one flat FIFO shared by ADU, LSU, and XU.
 
+## Evidence
+
 ## Probe entry points
 
 - `tests/asm_construct/probe_adu_topology.py`: pipe classification,
@@ -153,3 +166,4 @@ one flat FIFO shared by ADU, LSU, and XU.
 - `tests/asm_construct/probe_adu_scaling.py`: same/different-subcore ADU
   scaling.
 - `tests/asm_construct/probe_mio_topology.py`: ADU/LSU/XU contention matrix.
+

@@ -1,5 +1,16 @@
 # CS2R — Counter/Constant Special-register → Register
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `CS2R` = `0b100000000101` = **0x805** | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | since sm_70
 
 The **fixed-latency** counterpart of `S2R`: reads a special register into a GPR on the int
@@ -52,6 +63,8 @@ Both `S2R` and `CS2R` are in `OP_S2UR_S2R` (can read a warpgroup-MMA scoreboard 
 `int_pipe` (FXU_OPS), fixed-latency `COUPLED_MATH` — fast, no scoreboard wait (contrast S2R's
 decoupled MIO_SLOW path).
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -68,5 +81,11 @@ Test: `tests/cs2r_test.cu`.
 - `%globaltimer` → `CS2R Rd, SR_GLOBALTIMERLO`
 - clearing a 64-bit register pair → `CS2R Rd, SRZ` (compiler idiom).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - None significant; both size modes and counter/zero uses verified.
+

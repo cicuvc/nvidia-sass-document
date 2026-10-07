@@ -1,5 +1,16 @@
 # ELECT — Elect a leader lane in a warp
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonics:** `ELECT` = **0x182f** (URa/mask form) / **0x082f** (predicate form) | **Pipe:** `cbu_pipe` (dispatch) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH` | **VIRTUAL_QUEUE:** None
 
 Picks **one leader lane** out of a candidate set of lanes in the warp and reports which lane
@@ -51,6 +62,8 @@ neither `RPC_WRITERS` nor `CBU_OPS_WITH_REQ` (it changes no PC and doesn't block
 - Common pairing: `ELECT` → `@Pu <leader-only work>` (e.g. `@Pu ATOMG…`), then broadcast via
   `SHFL`/uniform reg.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_elect.py`)
 Self-test 4/4; `tests/elect_test.cu` (inline `elect.sync`) 1/1. Rare in shipped libs
 (0 in libcusparse); URa-form and `.IGNOREKILL` via cubin-patch.
@@ -70,13 +83,7 @@ Hand-check `ELECT P3, UR6, UR5`: opcode 0x182f (b91=1); `Pu`[83:81]=3→P3; `URd
 `cg::invoke_one` / warp-aggregated atomics emit an ELECT to pick the acting lane. Compilers
 often discard the leader id (`URd=URZ`) when only the leader predicate is used.
 
-## Open questions
-- Whether `URd` is strictly the leader lane-id vs. an encoded leader token is inferred from
-  `elect.sync` semantics, not spec-stated.
-- Optimized-code emission (which C constructs beyond inline `elect.sync`/`invoke_one`) is
-  under-sampled — 0 ELECT in the scanned libcusparse.
-
-## Resolved: silicon-verified leader election (SM120, 2026-08)
+## Verified: silicon-verified leader election (SM120, 2026-08)
 
 `tests/asm_construct/test_elect.py` confirms ELECT picks the **lowest-numbered
 active candidate lane**: all-candidates -> lane 0, candidates lanes 16-31
@@ -86,3 +93,15 @@ The elected lane has `Pu` true (one-hot) and `URd` = its id (read back via
 ELECT's `Pu` needs a cross-pipe delay (8 NOPs) before an int-pipe consumer
 (`@P0 MOV`) sees it — 0 delay gives "no lane elected"; and the per-lane address
 chain reading R6/R7 (from `LDC.64 R6` wr=1/SB1) must carry `req={1}`.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Whether `URd` is strictly the leader lane-id vs. an encoded leader token is inferred from
+  `elect.sync` semantics, not spec-stated.
+- Optimized-code emission (which C constructs beyond inline `elect.sync`/`invoke_one`) is
+  under-sampled — 0 ELECT in the scanned libcusparse.
+

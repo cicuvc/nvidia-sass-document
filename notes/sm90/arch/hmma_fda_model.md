@@ -1,5 +1,16 @@
 # Bit-accurate tensor-core fp16/bf16 model (FDA)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 A pure-Python reference model that reproduces the SM120 `HMMA.16816.F32` /
 `HMMA.16816.F32.BF16` outputs **bit-for-bit**, built and verified against the
 hand-assembled HMMA harness.
@@ -7,17 +18,6 @@ hand-assembled HMMA harness.
 **Files:** `tools/hmma_model.py` (model + self-test), `tests/asm_construct/test_hmma_model.py`
 (random-fragment vs hardware), `tests/asm_construct/test_hmma_precision.py`
 (targeted bit-level probes).
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
-> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
-> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
-> stall/NOP pattern before results count as sm_90-verified.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Algorithm (FDA, after MMA-Sim arXiv:2511.10909)
 
@@ -55,21 +55,14 @@ D0/D1 = fda(c0, P) ; D1 = fda(c1, P)      P = {a0.lo,b0.lo}x4 {a0.hi,b0.hi}x4
 the 4 D values as FP32 bits.  (The same layout serves both bf16 and f16 —
 identical 16-bit packing.)
 
+## Evidence
+
 ## Verification
 
 - 14 vector self-tests (RZ ±, exact sum, NaN/0·inf/±inf, overflow, f16
   subnormals) — matches the `test_hmma_precision.py` hardware probes.
 - 40/40 random signed fragments (incl. NaN/inf/0 in a/b/c) bit-exact vs the
   simulator's HMMA, bf16 and f16 (test_hmma_model.py runs 8+8 in CI).
-
-## Open questions
-
-- The 4x slot repetition is an *observed* equivalence (D == fda with 4 identical
-  pairs); it is not derived from the PTX fragment tables, and may hide a
-  different internal k-grouping that happens to be FD-equivalent.
-- CoFDA (chain-of-FDA) shapes, e.g. the Ampere `HMMA.16816.F32` path, are not
-  modeled here — only the Hopper FDA(F=25) behavior is covered.
-- 2:4 sparse (`HMMA.SP`) and indexed-RF (`INDF`) variants are out of scope.
 
 ## QMMA (fp8) extension — m16n8k32 e4m3
 
@@ -168,3 +161,18 @@ GDFS algorithm bit-exactly, verified 32/32 random fragments vs SM120
   each pair folds 4 k.  D0/D1 = {a0.n×b0.n, a2.n×b1.n}, D2/D3 = {a1.n×b0.n,
   a3.n×b1.n}.  `omma_frag(frag16)` (frag16[6]=Re, [7]=Rh, [8..11]=c) returns
   D0..D3.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- The 4x slot repetition is an *observed* equivalence (D == fda with 4 identical
+  pairs); it is not derived from the PTX fragment tables, and may hide a
+  different internal k-grouping that happens to be FD-equivalent.
+- CoFDA (chain-of-FDA) shapes, e.g. the Ampere `HMMA.16816.F32` path, are not
+  modeled here — only the Hopper FDA(F=25) behavior is covered.
+- 2:4 sparse (`HMMA.SP`) and indexed-RF (`INDF`) variants are out of scope.
+

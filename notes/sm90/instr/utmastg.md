@@ -1,19 +1,17 @@
 # UTMASTG — Uniform TMA tensor store (shared → global)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UTMASTG` = `0b1001110110101` = **0x13b5** | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
-
-> TODO note: idx 245 is mislabeled **`UTMALST`** ("TMA load/store") — no such
-> mnemonic exists in the sm_90 spec (`query_sm90.py mnem UTMALST` → no variants).
-> The real store instruction is **`UTMASTG`** (this note).
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 UTMASTG is the SASS lowering of PTX **`cp.async.bulk.tensor…`** in the *store*
@@ -99,6 +97,8 @@ engine has read it — this is exactly what `cp.async.bulk.wait_group.read`
 (`DEPBAR.LE SB0,0`) waits on. `dst_wr_sb=*7` (no write scoreboard). See
 `../arch/tma_mbarrier.md` for the `UTMACMDFLUSH`+`DEPBAR.LE` completion flow.
 
+## Evidence
+
 ## Verified encodings (`tests/utmastg_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |---|---|---|
@@ -120,9 +120,6 @@ Decoder `tools/decode_utmastg.py`: **6/6 PASS**. `dim` is Hi64 bits [81:79]
 | `cp.async.bulk.commit_group` | `UTMACMDFLUSH` |
 | `cp.async.bulk.wait_group.read N` | `DEPBAR.LE SBn, N` |
 
-## Open questions
-- Whether the `_desc` (memdesc=1) store form is emitted from stock PTX.
-
 ## Hand-built SASS reproduction (verified on sm_120)
 
 `tests/asm_construct/test_utmastg.py` reproduces `UTMASTG.2D` end-to-end with
@@ -136,3 +133,12 @@ buffer, simple `ELECT P0` + 8 NOPs + `@!P0 BRA` producer guard):
   contrast UTMALDG which needs `?WAIT12_END_GROUP`).
 - coords `{0,0}` and `{0,8}` verified: UR9 (URb+1) = dim1 offset,
   UR10 (URb+2) = dim0 offset.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Whether the `_desc` (memdesc=1) store form is emitted from stock PTX.
+

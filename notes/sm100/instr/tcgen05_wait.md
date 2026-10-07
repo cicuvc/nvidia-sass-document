@@ -1,5 +1,16 @@
 # tcgen05.wait::ld / ::st — completion waits for async TMEM load/store
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** resolved empirically on `sm_100  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **PTX:** `tcgen05.wait::ld.sync.aligned` / `tcgen05.wait::st.sync.aligned`
 **SASS:**
 - `tcgen05.wait::ld` → *(no opcode)* — realized by the **LDTM write-scoreboard**
@@ -31,6 +42,8 @@ This is consistent with the load/store scoreboard roles:
   there is no result register for a downstream op to wait on. To make the async
   TMEM write *visible* (e.g. before a `tcgen05.mma` reads that TMEM), ptxas emits
   an explicit **`FENCE.VIEW.ASYNC.T`**.
+
+## Evidence
 
 ## Empirical verification
 `tests/tcgen05_wait_test.cu`, `nvcc -arch=sm_100a`, CUDA 13.1. Three kernels:
@@ -104,12 +117,18 @@ scheduling + the ordinary control-word scoreboards (see
 - `notes/sm90/arch/memory_model.md` — FENCE.VIEW.ASYNC background (S/G variants
   predate Blackwell; T is the sm100 tensor-memory addition).
 
-## Open questions
-- Does `wait::ld` ever need a `FENCE` (e.g. if the loaded value crosses to a
-  different memory view rather than staying in registers)?
-
 ## Confirmed: FENCE.VIEW.ASYNC.T is sm100-new
 sm_90 has only **2** FENCE classes — `fence_` (`.S`) and `fence_g_` (`.G`);
 `fence_t_` (`.T`, tensor-memory view) and the `$VQ_FENCE_T` virtual queue are
 **Blackwell additions**, added alongside TMEM. The opcode 0x3c6 and the S/G
 variants are unchanged from Hopper; only the `.T` memType value (2) is new.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Does `wait::ld` ever need a `FENCE` (e.g. if the loaded value crosses to a
+  different memory view rather than staying in registers)?
+

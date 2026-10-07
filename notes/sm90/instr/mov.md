@@ -1,5 +1,16 @@
 # MOV — Move Register
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** MOV  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -48,3 +59,4 @@ RI variant: Rb replaced with 32-bit immediate at [63:32].
 ## Latency
 
 `int_pipe`, `INST_TYPE_COUPLED_MATH`. Falls under `FXU_OPS` group in GPR tables (same as basic int ALU ops). Output latency: 1 cycle typical.
+

@@ -1,5 +1,16 @@
 # JMXU — Absolute register-indirect jump (uniform-GPR target)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `JMXU` = `0b1100101011001` = **0x1959** | **Pipe:** `cbu_pipe` (Branch Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 The absolute-indirect uniform-register jump: target from a **uniform register pair plus immediate offset**. The uniform-register sibling of `JMX`.
@@ -36,6 +47,8 @@ Offset rendering: `off = (sImm*4) & 0xffffffffff`, **omitted when `sImm==0`**; n
 ## Latency
 `cbu_pipe` = `BRU_OPS`. `RPC_WRITERS` → **9-cycle** RPC true-dependency (`sm_90_latencies.txt:411,414`) and `CBU_OPS_WITH_REQ`. `DECOUPLED_BRU`, `MIN_WAIT_NEEDED=1`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_jmx.py`, shared core in `decode_brx.py`)
 Not emitted by ptxas. Ground truth via **cubin-patching + nvdisasm**: self-test 7/7, randomized battery 100%.
 
@@ -45,12 +58,18 @@ Not emitted by ptxas. Ground truth via **cubin-patching + nvdisasm**: self-test 
 | `0x0000000204000959` | `0x000fea000b800000` | `@P0 JMXU.DIV UR4` |
 | `0x0000000304000959` | `0x000fea000b800000` | `@P0 JMXU.CONV UR4` |
 
-## Open questions
-- The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.
-
-## Resolved: JMXU is ABSOLUTE (target = URa + off), base from ULEPC (SM120)
+## Verified: JMXU is ABSOLUTE (target = URa + off), base from ULEPC (SM120)
 
 Verified (`tests/asm_construct/test_jmx.py`): `JMXU URa, off` = `URa + off`
 (uniform-register absolute indirect), same as JMX but warp-uniform.  Base comes
 from **ULEPC URd** (uniform load effective PC).  URa must be even-aligned
 (64-bit pair), like JMX's Ra.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.
+

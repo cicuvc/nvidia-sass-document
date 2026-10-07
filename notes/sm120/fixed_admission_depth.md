@@ -1,5 +1,16 @@
 # GB202 fixed scalar-pipeline admission windows
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-21  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-21. Probe:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-21.  Probe:
 [`probe_scalar_admission_depth.py`](../../tests/asm_construct/probe_scalar_admission_depth.py).
 Cubins are emitted directly by the repository assembler; ptxas is not used.
@@ -174,3 +185,4 @@ leaf.  Conversely, register-IADD's deep mixed relationships and the packed-FP
 relationships are corroborated by strong `math_pipe_throttle`.
 NCU replay perturbs the in-kernel `CS2R` spans, so all credit depths above are
 from unprofiled runs; NCU is used only for counter classification.
+

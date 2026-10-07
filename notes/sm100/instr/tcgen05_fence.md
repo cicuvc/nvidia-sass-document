@@ -1,5 +1,16 @@
 # tcgen05.fence::before/after_thread_sync — no SASS instruction (compile-time fence)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** resolved empirically on `sm_100  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **PTX:** `tcgen05.fence::before_thread_sync` / `tcgen05.fence::after_thread_sync`
 **SASS:** *(none — emits zero instructions)*
 **Status:** resolved empirically on `sm_100a` (CUDA 13.1).
@@ -22,6 +33,8 @@ The actual cross-thread visibility is provided by the *execution-ordering*
 instruction the fence composes with (a real `st.relaxed`/`ld.relaxed`, barrier,
 or `bar.sync`), while the tcgen05.fence only pins the async ops on the correct
 side of it in program order.
+
+## Evidence
 
 ## Empirical verification
 Two test kernels, both `nvcc -arch=sm_100a`, CUDA 13.1:
@@ -83,9 +96,15 @@ mechanisms.
   that carries the real ordering (unchanged from sm_90).
 - `notes/sm90/arch/scoreboards.md` — scoreboard model background.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Do the fences ever emit under `-O0` or in some scheduling corner case, or are
   they *always* zero-cost? (Both surveyed builds were default `-O3`; isolated and
   in-context both emit nothing.)
 - Is there any config where ptxas needs an explicit `FENCE.VIEW.ASYNC.*` to
   realize `::*_thread_sync` (e.g. across a `bar.sync` at CTA scope)?
+

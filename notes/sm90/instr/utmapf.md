@@ -1,5 +1,16 @@
 # UTMAPF — Uniform TMA tensor prefetch (global → L2)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonics:** `UTMAPF` = `0b1010110111000` = **0x15b8** (plain `.tile`, no `URc`) / `0b1001110111000` = **0x13b8** (with `URc`: im2col) | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
 
 ## Semantics
@@ -80,6 +91,8 @@ read-scoreboard op, `IDEST_SIZE=0` (no result). Observed **rd_sb=0** (no read
 scoreboard set) — prefetch has no smem source buffer to protect and no completion
 to await (fire-and-forget into L2), unlike UTMASTG/UTMAREDG (rd_sb=1). `dst_wr_sb=*7`.
 
+## Evidence
+
 ## Verified encodings (`tests/utmapf_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |---|---|---|
@@ -102,6 +115,11 @@ sets [82] (3D+IM2COL Hi64 = `0x...050004`, opcode switches to 0x13b8).
 Fire-and-forget — no surrounding `ELECT`/mbarrier/DEPBAR framing needed (a bare
 prefetch); the tested kernels issue it unconditionally from all threads (ptxas
 does not force single-thread election for prefetch).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
 
 ## Open questions
 - `.L2::cache_hint` (with a `cache_policy` operand) — whether it adds a field or

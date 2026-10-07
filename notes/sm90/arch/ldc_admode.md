@@ -1,5 +1,16 @@
 # LDC `AdMode` — constant-memory addressing modes
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Question:** what do the `AdMode` values `IA / IL / IS / ISL` mean?
 **Status:** resolved (spec-grounded + external reference; empirically corroborated).
 
@@ -57,6 +68,8 @@ bindless is a **separate encoding class**, not an `ad` value:
   bindless excluded" is a program-header/driver concern outside these two dump
   files, but is consistent: a bindless ref has no static bank to add to the mask.
 
+## Evidence
+
 ## Empirical note
 Dumped **5.6M lines** of `sm_90` SASS from `libcublas.so.13`
 (`cuobjdump -arch sm_90 -sass`): **every** `LDC` is the default IA immediate form
@@ -66,9 +79,15 @@ address, no bindless `c[UR..]` appeared. So these modes are rare, compiler/drive
 math-library kernels — hence not minable from stock libraries. nvdisasm omits the
 default `.IA`; the non-default suffixes would only surface in driver/runtime code.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open sub-questions (not yet pinned)
 - Exact runtime datapath difference between IA and IS when `Ra` is present in
   both (the spec defines encoding + legality, not micro-semantics). Hypothesis:
   in IS the register selects/indexes the bank slot, whereas in IA `Ra` is a byte
   offset within a fixed bank — unverified.
 - What "unified constant space" (the `L` bit) remaps to physically.
+

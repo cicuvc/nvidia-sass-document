@@ -1,5 +1,16 @@
 # LDTM.STAT — fused TMEM load and per-thread reduction
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm103-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** executed on a real B300  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 `tcgen05.ld.red` is not synthesized from ordinary `LDTM` plus ALU
 instructions on sm103.  It lowers to the dedicated SASS class
 `ldtm_stat_`, printed as `LDTM.STAT`, with opcode `0x15ee`.  Ordinary
@@ -114,3 +125,4 @@ Reproduction corpus: `tests/tcgen05_ld_red.cu`; exact assembler vectors:
 `tests/asm_construct/tcgen05_ldred_semantics_sm103.sass` and
 `tests/asm_construct/probe_tcgen05_ldred_modal.py`; decoder:
 `tools/decode_ldtm.py`.
+

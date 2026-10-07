@@ -1,5 +1,16 @@
 # Blackwell tcgen05 tensor-core hardware — inference from the SASS/ISA (SPECULATION)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
 **Status: SPECULATION / architectural inference.** As with
 `notes/sm90/arch/tensorcore_microarch_speculation.md`, the ISA is dataflow-
 agnostic — it cannot prove the multiply-add fabric. This records a reasoned
@@ -402,3 +413,4 @@ this with activation in B and the zero-column mask handling edges.
 `notes/sm100/instr/utchmma.md` (MMA encoding, AS/WS/conv axes),
 `notes/sm100/instr/utccp.md` (shmem→TMEM staging + multicast),
 `notes/sm100/instr/ldtm.md` / `sttm.md` (TMEM↔RF), `utcbar.md` (completion).
+

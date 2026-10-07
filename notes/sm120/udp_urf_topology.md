@@ -1,5 +1,16 @@
 # GB202 UDP pipeline and uniform-register-file topology
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 This note separates the fixed-latency scalar part of `udp_pipe` from the
 decoupled operations which merely carry the same top-level pipe label.  The
 measurements use hand-assembled SM120 SASS on a local RTX 5090.  Performance
@@ -245,6 +256,8 @@ read result, a compact performance notation is `1R2W`, where `R` means one
 pair.  This is a throughput-level port model, not yet proof of the SRAM macro
 layout.  Where the LDCU path finally merges remains unresolved.
 
+## Evidence
+
 ## Reproduction
 
 - `tests/asm_construct/probe_udp_urf.py`: UDP throughput, subcore scaling,
@@ -266,3 +279,4 @@ layout.  Where the LDCU path finally merges remains unresolved.
 - `tests/asm_construct/probe_urf_cross_pipe.py`: INT, FP, conversion, LDS and
   LDG uniform-source contention against one- and three-row UDP sensors, with
   same/different-subcore and false-predicate controls.
+

@@ -1,5 +1,16 @@
 # RET — Return from subroutine
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonics:** `RET` (reg) = `0b100101010000` = **0x950**; (uniform reg) = **0x1950** | **Pipe:** `cbu_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` | **BRANCH_TYPE:** `BRT_RETURN` | **MEM_SCBD_TYPE:** `BB_ENDING_INST`
 
 The counterpart to `CALL`: returns control to the caller, resuming at the address held in
@@ -56,6 +67,8 @@ Both `RPC_WRITERS` (9-cyc RPC), `CBU_OPS_WITH_REQ` (honor `&req=`), `BB_ENDING_I
 `cbu_pipe` = `BRU_OPS`; `RPC_WRITERS` → **9-cycle** RPC true-dependency
 (`sm_90_latencies.txt:411,414`).
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_ret.py`)
 Self-test 5/5; **1228/1228 RET in libcublas decoded byte-exact**; `tests/call_test.cu`
 emits `RET.REL.NODEC R20/R6` (2/2); ABS/ureg/DEC forms via cubin-patch with a
@@ -75,12 +88,6 @@ addr[85]=0→`.REL`; `Ra`[31:24]=0x14→R20; `sImm=-0xcc`, `0x330 + (-0xcc)*4 = 
 ### PTX→SASS mapping
 Every non-inlined `__device__` function ends in `RET.REL.NODEC R<n>` where `R<n>` (a
 64-bit pair) holds the caller-provided return address; pairs with `CALL.REL.NOINC`.
-
-## Open questions
-- `.DEC` (HW call-depth-stack returns) and `.ABS` returns are spec-supported but not
-  emitted by the sampled ptxas (register ABI uses `.REL.NODEC` exclusively).
-- The uniform-register (`URa`) RET forms are unexercised by ptxas here (patch-verified
-  only); their ABI use case is unobserved.
 
 ## Empirical (sm_120, sassdbg probes — hand-assembled, GPU-verified)
 
@@ -105,3 +112,15 @@ Every non-inlined `__device__` function ends in `RET.REL.NODEC R<n>` where `R<n>
   `CALL.ABS` immediate also reaches its target, but unlike the GPR-target
   CALL form it does not populate RPC; its old 718 result was a subsequent
   return through the indeterminate RPC, not failure of the CALL jump.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- `.DEC` (HW call-depth-stack returns) and `.ABS` returns are spec-supported but not
+  emitted by the sampled ptxas (register ABI uses `.REL.NODEC` exclusively).
+- The uniform-register (`URa`) RET forms are unexercised by ptxas here (patch-verified
+  only); their ABI use case is unobserved.
+

@@ -1,5 +1,16 @@
 # DEPBAR — dependency barrier (counted scoreboard wait)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `DEPBAR`  |  **Pipe:** `fe_pipe`  |
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`  |  **opcode:** `0x91a`
 (uniform-count form `0x1d1a`)
@@ -184,13 +195,9 @@ retirement FIFO.
   `../arch/control_codes.md`: DEPBAR is the *counted* superset used when partial
   draining is required.
 
-## Open questions
-- Exact width/semantics of the async-copy counter behind `SB0` (how many
-  outstanding LDGSTS groups a scoreboard can track).
-- `depbar_ur_` dynamic-count use: which PTX (`cp.async.wait_group` with a runtime
-  operand?) emits the uniform-register count form `0x1d1a`.
+## Evidence
 
-## Resolved: silicon-verified LE partial-drain semantics (SM120)
+## Verified: silicon-verified LE partial-drain semantics (SM120)
 
 `tests/asm_construct/test_depbar.py` verifies the counted wait WITHOUT
 LDGSTS/LDGDEPBAR, by bookkeeping a scoreboard with ordinary `wr=SBn` ops:
@@ -242,3 +249,15 @@ t0), so the counter at the DEPBAR is exactly `n` (the LDGs still in flight).
 pipelining sweet spot; `imm = n-1` waits one load-batch, `imm = 0` waits all.
 The co-issued LDGs drain as a batch, so `imm` in [0, n-1] all land on ~one
 batch latency rather than `(n-imm)` distinct steps.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Exact width/semantics of the async-copy counter behind `SB0` (how many
+  outstanding LDGSTS groups a scoreboard can track).
+- `depbar_ur_` dynamic-count use: which PTX (`cp.async.wait_group` with a runtime
+  operand?) emits the uniform-register count form `0x1d1a`.
+

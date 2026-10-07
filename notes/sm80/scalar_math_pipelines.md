@@ -1,5 +1,16 @@
 # GA100 scalar-math pipes and ALU/FMA sharing
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm80-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-19  
+**Probe:** NVIDIA A100-SXM4-40GB, compute capability 8.0. Measurements were  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Hardware: NVIDIA A100-SXM4-40GB, compute capability 8.0.  Measurements were
 made in September 2026 with native sm_80 cubins from this repository and
 Nsight Compute 2023.1 running with performance-counter permission.
@@ -373,6 +384,8 @@ as separate physical pipe domains, and the directly visible sharing is a
 subcore-front-end admission effect.  Any deeper common physical placement,
 clocking, or wiring cannot be isolated by these counters.
 
+## Evidence
+
 ## Reproduction
 
 The NCU catalog uses
@@ -391,3 +404,4 @@ python3 tests/asm_construct/probe_sm80_scalar_conflict.py \
 
 The two-warp test uses warp 0 as victim, warp 4 as the same-subcore contender,
 and warp 1 as the different-subcore control.
+

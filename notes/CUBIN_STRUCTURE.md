@@ -1,5 +1,16 @@
 # CUBIN ELF 格式规范(sm_90 / sm_120)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: no measurement marker
+
+## Conclusion
+
 本文档是 NVIDIA CUDA cubin(单个已链接 kernel 的 ET_EXEC ELF)格式的完整说明,
 面向已经熟悉 ELF 的读者:读完应能**逐字节构建一份可被驱动加载、被 CUDA 工具链
 解析的合法 cubin**。
@@ -514,3 +525,4 @@ ffffffff 24000000 00000000 ffffffff ffffffff 0300047c ffffffff 0f0c8180
 lo64 = 0x0000000000007918
 hi64 = 0x000fc00000000000
 ```
+

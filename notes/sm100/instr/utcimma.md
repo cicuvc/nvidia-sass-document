@@ -1,5 +1,16 @@
 # UTCIMMA — integer MMA  → PTX `tcgen05.mma.kind::i8`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UTCIMMA` — `opType = 2` on opcodes 0x15ea (A-gdesc) /
 0x19ea (A-tmem)
 **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`
@@ -42,6 +53,8 @@ The integer specifics are in `idesc` (Table 45, `tcgen05_descriptors.md`):
 - [4:5] dtype: S32=2
 - [13:14] negate A/B: only 0 (no integer negate)
 
+## Evidence
+
 ## Verified encoding (cuobjdump, `.kind::i8`, sm_100a)
 `/tmp/i8_probe`: `.kind::i8` without WS → `UTCIMMA gdesc[UR6], gdesc[UR8],
 tmem[UR10], tmem[UR4], idesc[UR5], UPT` at lo64 `0x00ff0408060075ea` — identical
@@ -56,3 +69,4 @@ encoding to UTCHMMA except `opType=2`.
 - `notes/sm90/arch/tcgen05_vs_wgmma.md` — the Hopper predecessor had no separate
   integer MMA; wgmma used the same HGMMA for both fp16 and int8. The split into
   separate CLASSes (but shared encoding) is a Blackwell refinement.
+

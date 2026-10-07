@@ -1,15 +1,17 @@
 # UIMAD — Uniform Integer Multiply-Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** UIMAD  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -30,3 +32,4 @@ imm (0x14a4) verified.
 Verified: LO/plain-HI over signed products (e.g. `0xFFFFFFFF * 2` → LO
 `0xFFFFFFFE`, HI `0xFFFFFFFF`), HI addend-to-high-word, WIDE signed 64-bit
 products (`0x12345678 * 0x9ABCDEF0` → `0xF8CC93D6242D2080`), imm forms.
+

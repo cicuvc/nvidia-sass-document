@@ -1,5 +1,16 @@
 # ULEA — Uniform Load Effective Address
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** ULEA  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -145,6 +156,8 @@ TABLE_ANTI(UGPR):
 
 Output latency: **1–7 cycles**. True-dependency from uniform register source: **4–12 cycles** (heavily dependent on operand role and size). Anti-dependency: **1–3 cycles**.
 
+## Evidence
+
 ## Verified encodings
 
 ### From libcublas (sm_90, CUDA 13.1)
@@ -173,9 +186,15 @@ ULEA UR6, UR6, 0x400, 0x18  # UR6 = UR6 + 0x400 (immediate offset)
 
 Observed in libcublas for computing GMMA/TMA descriptor addresses, where uniform registers hold base pointers and ULEA computes `base + index*stride` offsets.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **Scale encoding:** The `scaleU5` value of `0x18` (=24) appears frequently but its exact meaning in the address formula (`URa + URb*2^{scale}` or similar) is not clear from the spec alone. The CLASS format shows `UImm(5)*` with default no value, suggesting scale is a raw 5-bit field whose semantics are defined by the hardware pipe.
 - **LO variants:** No empirical examples of `.LO` variants found in libcublas. The HI variants are the default.
 - **Negate/invert:** The `[-]` (negate) and `[~]` (invert on .X forms) modifiers are specified but no empirical examples found. The condition `negateA → !negateB` confirms they are mutually exclusive.
 - **RRI vs URIUR:** Both use opcode `0x1891`. The difference is whether URb (Ra_URc field) is a register or pinned to URZ (63). The exact disambiguation between RRI and URIR variants is determined by whether the Ra_URc field equals 63.
+

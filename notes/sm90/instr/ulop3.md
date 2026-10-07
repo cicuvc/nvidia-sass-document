@@ -1,5 +1,16 @@
 # ULOP3 — Uniform Three-Input Logic
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** ULOP3  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -109,6 +120,8 @@ TABLE_ANTI(UGPR): {...} : 1 1 1 3
 
 Output latency: **1–7 cycles**. True-dependency: **4–12 cycles**.
 
+## Evidence
+
 ## Verified encodings
 
 ### From libcublas (sm_90, CUDA 13.1)
@@ -149,9 +162,15 @@ Common patterns:
 
 ULOP32I is a 2-input logic operation with a 32-bit immediate. ULOP3 imm extends this to 3 inputs (URa, imm32, URc) with an 8-bit LUT, making it a superset of ULOP32I.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **LOP mode (AND/OR/XOR/PASS_B):** No empirical examples found. Does ptxas ever emit the non-LUT variants, or does it always use LUT mode with explicit LUT values?
 - **PAND pop mode:** Only POR=0 observed. What is PAND (1) and when is it used?
 - **UPp as non-UPT:** The optional UPp variant allows arbitrary UPp values, but ptxas only uses `!UPT`. What instruction sequences require a different UPp result?
 - **LUT values:** Common LUTs observed: 0x33 (XOR?), 0xc0 (mask?), 0x1f (5-bit mask). What exact logic does each LUT encode?
+

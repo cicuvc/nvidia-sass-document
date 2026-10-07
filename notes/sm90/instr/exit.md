@@ -1,5 +1,16 @@
 # EXIT — Thread termination
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `EXIT` = `0b100101001101` = **0x94d** | **Pipe:** `cbu_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 The normal thread terminator. Every compute thread finishes with `EXIT`.
@@ -39,6 +50,8 @@ So EXIT **reads the warpgroup-MMA (wgmma/`GMMA`) scoreboards and CGA/cluster-bar
 | async wait | **GMMA + CGA barriers** | — |
 | lane-state mask | **MEXITED** | — |
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_exit.py`)
 Self-test 7/7; **16491/16491 EXIT in libcusparse decoded byte-exact**.
 
@@ -54,5 +67,11 @@ Self-test 7/7; **16491/16491 EXIT in libcusparse decoded byte-exact**.
 ### PTX→SASS mapping
 Kernel/thread end and `return` from `main` body → `EXIT` (often `@!P EXIT` for early-return lanes, then a final unconditional `EXIT`).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Runtime distinction between the EXIT modes (`.KEEPREFCOUNT` vs `.PREEMPTED`) and the exact resource whose refcount `.KEEPREFCOUNT` preserves.
+

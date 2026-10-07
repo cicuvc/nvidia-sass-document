@@ -1,5 +1,16 @@
 # UTCSHIFT — async TMEM row-shift  → PTX `tcgen05.shift.down`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-17  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
 **Opcode mnemonic:** `UTCSHIFT` = `0b1100111100110` (0x19e6, 6630)
 **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 **Virtual queue:** `$VQ_TC_1CTA` (=41) / `$VQ_TC_2CTA` (=42)
@@ -88,6 +99,8 @@ Hopper's `WARPGROUP.*` ops (`notes/sm90/arch/wgmma.md`). The shift is a
 barrier-class async op that participates in the depbar/scoreboard ordering, not a
 plain MIO memory op — consistent with it reshaping the tensor-core's TMEM feed
 state that MMAs depend on.
+
+## Evidence
 
 ## Verified encodings (cuobjdump, `nvcc -arch=sm_100a`, CUDA 13.1)
 Source: `tests/tcgen05_shift_test.cu` → `tests/tcgen05_shift_test.cubin`.
@@ -257,6 +270,11 @@ Bare semantic check: `tests/tcgen05_shift_bare_correctness.cu`.
 - `notes/sm100/instr/ldtm.md`/`sttm.md`/`utccp.md` — other TMEM ops; UTCSHIFT
   mutates TMEM contents in place.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Only `.DOWN` exists (no up/left/right) — is up-shift unnecessary because the
   window only ever advances one way in a conv sweep?
@@ -266,3 +284,4 @@ Bare semantic check: `tests/tcgen05_shift_bare_correctness.cu`.
   probe; cross-launch timing is contaminated by clock-domain state changes.
 - The maximum number of simultaneously outstanding shifts, especially across
   more CTAs, remains to be measured.
+

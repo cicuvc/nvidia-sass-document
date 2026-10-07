@@ -1,15 +1,17 @@
 # UTMALDG — Uniform TMA tensor load (global → shared)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonics:** `UTMALDG` = `0b1010110110100` = **0x15b4** (plain `.tile`, no `URc`) / `0b1001110110100` = **0x13b4** (with `URc`: im2col and/or multicast) | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 UTMALDG is the SASS lowering of PTX **`cp.async.bulk.tensor…`** in the *load*
@@ -104,6 +106,8 @@ connectors use `OP_TMA` mappings (line 182). See `../arch/tma_mbarrier.md` for t
 producer→consumer flow (`SYNCS.ARRIVE.TRANS64` expect_tx → UTMALDG →
 `SYNCS.PHASECHK.TRYWAIT` spin + `CCTL.IVALL`).
 
+## Evidence
+
 ## Verified encodings (`tests/utmaldg_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |---|---|---|
@@ -129,13 +133,6 @@ visible: plain forms differ only in Hi64 bits [81:79] (0→1D … 4→5D, i.e.
 Framing: preceded by `mbarrier.init`/`arrive.expect_tx` (`SYNCS.EXCH.64` /
 `SYNCS.ARRIVE.TRANS64`) and issued under `@P0 ELECT P1` (single elected thread).
 
-## Open questions
-- 3D–5D coordinate-block packing (mbar slot position for higher ranks, im2col
-  offset slots) — only the 2D layout was empirically verified.
-
-- Whether the `_desc` (memdesc=1) form is ever emitted from stock PTX, and what
-  `desc[URe]` carries (cache/L2 policy descriptor).
-
 ## Hand-built SASS reproduction (verified on sm_120)
 
 `tests/asm_construct/test_utmaldg.py` reproduces `UTMALDG.2D` end-to-end with
@@ -155,3 +152,16 @@ hand-written SASS (global-memory tensor-map descriptor, simple
   loop-back must be the PHASECHK's own predicate — same rule as UBLKCP).
 - coords `{0,0}` and `{0,8}` verified: UR10 (URb+2) = dim1 offset,
   UR11 (URb+3) = dim0 offset.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- 3D–5D coordinate-block packing (mbar slot position for higher ranks, im2col
+  offset slots) — only the 2D layout was empirically verified.
+
+- Whether the `_desc` (memdesc=1) form is ever emitted from stock PTX, and what
+  `desc[URe]` carries (cache/L2 policy descriptor).
+

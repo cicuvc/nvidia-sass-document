@@ -1,5 +1,16 @@
 # Pipe-forwarding latency: udp_pipe → int_pipe (SM120, GB202 / RTX 5090)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 5 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Full survey of every pipe-pipe edge (excluding fma64): `pipe_forward_survey.md`.**
 This note is the per-edge method/verification detail behind the survey.
 
@@ -19,6 +30,8 @@ loose upper bound (overlap `L−minG = 9`).
 Companion: `tests/asm_construct/test_udp_int_forward.py` reproduces the
 calibration.  This note resolves the *udp forwarding undetermined* open
 question in `usched_latency.md`.
+
+## Evidence
 
 ## Method — value-based stale/fresh boundary sweep
 
@@ -296,6 +309,11 @@ prints the main sweep (4 producer/consumer pairs), the poison-only / huge-gap
 controls, and the yield-bit probe (4 yield configurations of UIADD3→MOV).
 Probe scripts used during development (not committed): `/tmp/opencode/probe_*.py`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **Yield-bit mechanism**: why does all-transN widen the stale window while
@@ -322,3 +340,4 @@ Probe scripts used during development (not committed): `/tmp/opencode/probe_*.py
 - **Other cross-pipe pairs** (udp→fma64, udp→fp16, int→fma64) would extend
   the table; the existing `usched_latency.md` sm90 corpus suggests fma64
   carries no bypass (overlap 0).
+

@@ -1,5 +1,16 @@
 # ULEPC — Uniform Load Effective PC
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonics:** `ULEPC` = `0b1001111001110` = **0x13ce** (URURUR, PC only) / `0b1100111001110` = **0x19ce** (UR_I_R, PC+imm58) | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | since sm_90 (crucible idx 238)
 
 The uniform-datapath sibling of `LEPC` (see `lepc.md`). Computes a PC-relative effective address
@@ -50,6 +61,8 @@ into a 64-bit **uniform** register pair `{URd,URd+1}` (even-aligned). Verified o
 `UMOV` (`UMOV_ULEPC`) and part of `ULDC_VOTEU_UMOV_ULEPC` for the `TABLE_*(UGPR)` URd-producer
 latency rows.
 
+## Evidence
+
 ## Verified encodings (sm_120, RTX 5090 — assembler + GPU)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -60,7 +73,13 @@ latency rows.
 
 Decoder + round-trip test: `tools/decode_ulepc.py`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - None blocking: semantics now silicon-verified. The `.REL` relocatable ALT form is still
   linker-only (untestable without an actual relocation), and non-converged/diverged warps are
   untested (PC address is warp-uniform by construction).
+

@@ -1,12 +1,21 @@
 # LOP3 — Three-Input Arbitrary Logic (LUT)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `LOP3`  
 **Pipe:** `int_pipe` (integer execution pipe)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 Related: `LOP32I` (pipe-only alias, same opcode 0x812), `PLOP3` (predicate-only variant), `ULOP3` (uniform variant).
-
----
 
 ## Variant overview
 
@@ -173,6 +182,8 @@ Shares the FXU latency matrix (same as IADD3).
 
 ---
 
+## Evidence
+
 ## Empirical confirmation (sm_90, CUDA 13.1)
 
 ### Confirmed LUT patterns
@@ -201,3 +212,4 @@ Shares the FXU latency matrix (same as IADD3).
 - **IADD3 alignment check**: `LOP3.LUT R9, R11, 0x1, RZ, 0xC0, !PT` (previously
   seen in the IADD3 carry test) is `R9 = R11 & 1` — bit extraction after
   carry combination.
+

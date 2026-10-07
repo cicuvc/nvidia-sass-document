@@ -1,5 +1,16 @@
 # BSYNC — Branch Synchronize (wait on a convergence barrier, reconverge)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `BSYNC` = `0b100101000001` = **0x941** | **Pipe:** `cbu_pipe` (Convergence-Barrier / Branch Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 Part of the Volta+ convergence-barrier family (`BSSY` 0x945 / `BSYNC` 0x941 / `BREAK` 0x942).
@@ -67,6 +78,8 @@ warp's reconvergence PC.
 it does not itself gate on the `&req=` scoreboard connector. As a `DECOUPLED_BRU` op
 with `MIN_WAIT_NEEDED=1` its issue is otherwise ordered by the control word.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_bsync.py`, 6/6 match)
 | PC | Lo64 | Hi64 | Disassembly | src |
 |----|------|------|-------------|-----|
@@ -88,12 +101,7 @@ Hand-check `BSYNC B1`: opcode [11:0]=0x941, bit91=0 → BSYNC; `barReg` nibble [
 - The control word `0x000fea…` seen here encodes the usual stall/yield; not
   BSYNC-specific.
 
-## Open questions
-- Non-`PT` `Pp` on BSYNC was never observed; whether a non-PT `Pp` restricts which
-  lanes are reconverged is unverified.
-- Only `B0`/`B1` observed empirically; the 4-bit `barReg` trivially reaches B0..B15.
-
-## Resolved: BSYNC is a fall-through barrier, not a branch (SM120, 2026-08)
+## Verified: BSYNC is a fall-through barrier, not a branch (SM120, 2026-08)
 
 `BSYNC` does **not** branch to the target that `BSSY` stored — see `bssy.md`
 "Resolved". Concretely: with `BSSY B0, join` and `join` placed past several
@@ -104,3 +112,14 @@ on the SIMT-stack-free Volta+ ITS model the lanes reconverge by both groups
 reaching the join PC naturally (parked lanes via their own branch, fall-through
 lanes by executing the join in-line). The warp merges when all lanes of `Bi`
 have arrived at the join.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Non-`PT` `Pp` on BSYNC was never observed; whether a non-PT `Pp` restricts which
+  lanes are reconverged is unverified.
+- Only `B0`/`B1` observed empirically; the 4-bit `barReg` trivially reaches B0..B15.
+

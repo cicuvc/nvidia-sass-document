@@ -1,5 +1,16 @@
 # IDP — Integer Dot Product
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `IDP`  
 **Pipe:** `fmalighter_pipe` (lightweight FMA pipe)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
@@ -87,6 +98,8 @@ incompatible with DRAIN/WAITn tokens (enforced by CONDITION).
 - [77:76] `*mode` = MODE_2ALO_2AHI
 - Same opcode, mode distinguishes 4A vs 2A
 
+## Evidence
+
 ## Verified encodings
 
 | Lo64 | Disassembly |
@@ -103,7 +116,7 @@ incompatible with DRAIN/WAITn tokens (enforced by CONDITION).
 | `dp2a.lo.u32.u32 %r, %a, %b, %c` | `IDP.2A.LO.U16.U8 Rd, Ra, Rb, Rc` |
 | `dp2a.hi.u32.u32 %r, %a, %b, %c` | `IDP.2A.HI.U16.U8 Rd, Ra, Rb, Rc` |
 
-## Resolved: silicon-verified semantics (SM120)
+## Verified: silicon-verified semantics (SM120)
 
 `tests/asm_construct/test_clmad_idp.py` confirms IDP = PTX dp4a/dp2a:
 - `IDP.4A.<U8|S8>.<U8|S8> Rd, Ra, Rb, [-|Rc]` = dp4a — 4-way byte dot product,
@@ -117,3 +130,4 @@ incompatible with DRAIN/WAITn tokens (enforced by CONDITION).
 Both are COUPLED_MATH (fixed latency); the PRMT-style scoreboard discipline
 (wr=SB1 on inputs, `req={1}`) applies.  SASS modifier order: mode first
 (`4A` / `2A.LO` / `2A.HI`), then A format, then B format.
+

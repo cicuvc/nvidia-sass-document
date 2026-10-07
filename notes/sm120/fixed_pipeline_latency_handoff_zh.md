@@ -1,5 +1,16 @@
 # GB202 固定管线延迟研究交接
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-17  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 状态：**2026-09-17 主动暂停，可从本文继续**。实验机器为本地 RTX 5090
 （GB202，sm_120）。本阶段没有提交 commit；工作树中还有大量其他研究任务
 留下的修改和未跟踪文件，恢复工作时不要用 reset/checkout 清理整个仓库。
@@ -170,6 +181,8 @@ python3 tests/asm_construct/probe_fixed_pred_guard_issue_to_use.py
 `HI.Ra` 的 9-clock 外推还需要分别运行 `--count 8`、`16`、`20`；不要让
 nonlinear chain 太长，因为当前选择的映射约 22 步后会进入 fixed point。
 
+## Evidence
+
 ## 6. 探针设计规则与已踩坑
 
 1. **必须校验最终值。** 错误 schedule 通常不变慢，只静默返回 stale 或
@@ -226,3 +239,4 @@ nonlinear chain 太长，因为当前选择的映射约 22 步后会进入 fixed
 如果 canary 不再复现，首先检查 GPU clock/power state、loop-control schedule、
 assembler encoding 是否变化以及是否误开了 dependency checker；不要先修改
 已经记录的 latency 模型。
+

@@ -1,5 +1,16 @@
 # SETLMEMBASE — Select the warp local-memory backing base
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** silicon-verified on RTX 5090 (GB202, sm_120), CUDA 13.1  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: `Status:` line naming verified hardware
+
+## Conclusion
+
 **Opcode mnemonic:** `SETLMEMBASE` = **0x3c1** | **Pipe:** `mio_pipe`
 **Status:** silicon-verified on RTX 5090 (GB202, sm_120), CUDA 13.1
 
@@ -19,6 +30,8 @@ SETLMEMBASE {R4,R5};[7:7:{2}:5:1]
 The instruction is a decoupled `mio_pipe` consumer with no GPR destination.
 The source pair must be ready before it executes. It has no modifier other
 than the normal guard predicate.
+
+## Evidence
 
 ## Verified state transition
 
@@ -125,6 +138,11 @@ shows immediate GET visibility of the elected value, but does not contradict
 the separately observed settling latency for a local access placed directly
 after SET.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Correction to the earlier probe
 
 An earlier hand-cubin test concluded that `LDL`/`STL` could not be used and
@@ -145,3 +163,4 @@ evidence and reproduction instructions.
 
 The corresponding [sm_90 SETLMEMBASE note](../../sm90/instr/setlmembase.md) now
 records an independent H20 reproduction of the same A → B → A → B behavior.
+

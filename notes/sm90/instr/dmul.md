@@ -1,5 +1,16 @@
 # DMUL — FP64 Multiply
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode:** `0x228` (RRR), `0x828` (RsIR, immediate), `0xa28` (RCR), `0x1a28` (RCxR), `0x1c28` (RUR)
 **Pipe:** `fma64lite_pipe`, `$VQ_REDIRECTABLE` | **TYPE:** `INST_TYPE_COUPLED_EMULATABLE` | since sm_70
 
@@ -32,6 +43,8 @@ HMUL2 (F16). No FTZ (FP64 keeps denormals); IEEE rounding mode via `.rnd`.
 via opex/scoreboard configuration rather than a simple 2-bit field." That was **wrong** — an
 artifact of recording only Lo64. `rnd` is a plain 2-bit field at **[79:78] in Hi64**, identical
 to DADD/DFMA; verified below.
+
+## Evidence
 
 ## Verified encodings (sm_90, CUDA 13.1 — full lo64 + hi64)
 
@@ -70,6 +83,12 @@ All three: `fma64lite_pipe`, `COUPLED_EMULATABLE`, `VQ_REDIRECTABLE`, in `FMALIT
 | `(-a)*b` | `DMUL Rd, -Ra, Rb` (negate bit [72]) |
 | `a * const` | RsIR immediate (`DMUL Rd, Ra, <double>`) if it fits high-32b, else RCR |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - Const-bank (RCR/RCxR) text form unverified (only RRR/imm exercised).
+

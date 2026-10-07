@@ -1,5 +1,16 @@
 # ST — Store to generic address space
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonics:** `ST` = `0b1100110000101` = **0x1985** (memdesc/uniform, 64-bit addr) / `0b1110000101` = **0x385** (plain imm-offset) | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_AGU`
 
 ## Semantics
@@ -88,6 +99,8 @@ store's completion isn't tracked by a per-instruction write scoreboard; ordering
 against later ops relies on the memory model / fences. Same MIO latency class as
 STG/STS.
 
+## Evidence
+
 ## Verified encodings (`tests/st_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | PTX |
 |---|---|---|---|
@@ -116,9 +129,15 @@ Decoder `tools/decode_st.py`: **6/6 PASS**. `sz` is Hi64 low nibble (`...19`=32,
 volatile qualifier maps to STRONG semantics + SYS scope (`TABLES_mem_0` code 10),
 forcing a system-scoped, uncached, ordered store.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Non-memdesc / plain 0x385 forms — not emitted by ptxas on sm_90.
 - Whether ST/STG's `TABLES_mem_0` ever diverges from LD/LDG's `TABLES_mem_1` for
   some sem/sco/private combo (both agree on the values probed here).
 - The `.private` and cluster-scope (`CTA`) qualifiers for generic ST — not
   triggered by the basic kernels here.
+

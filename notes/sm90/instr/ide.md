@@ -1,5 +1,16 @@
 # IDE — Integer Dot Expand
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `IDE`  
 **Pipe:** `int_pipe` (integer execution pipe)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
@@ -63,7 +74,9 @@ IDE.DI 3088                   → flush/disable the expansion state
 This is analogous to IMAD.X/IMAD.HI carry chains, but managed through a
 separate control instruction rather than predicate registers.
 
-## Resolved: silicon-verified (SM120) — a dual-issue scheduler control op
+## Evidence
+
+## Verified: silicon-verified (SM120) — a dual-issue scheduler control op
 
 `IDE` runs legally with no registers and no observable data effect.  Findings:
 
@@ -83,3 +96,4 @@ separate control instruction rather than predicate registers.
   hardware control instruction, likely a dispatch/state enable for the
   integer-dot-product unit, with no software-visible semantic beyond
   "this slot is an IDE".
+

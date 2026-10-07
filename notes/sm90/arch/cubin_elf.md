@@ -1,5 +1,16 @@
 # cubin ELF layout — sections, symbols, relocations, `.nv.info` metadata (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 How a `nvcc -cubin`/`ptxas` output is structured, and how the loader wires up
 constant banks, global variables, external functions, and device-to-device calls.
 Grounded in `RELOCATORS` (spec lines 10–127) + empirical dumps of a relocation-rich
@@ -75,6 +86,8 @@ CURRENT_INSTRUCTION + 16` (PC-relative base = next 128-bit instruction).
 | `R_CUDA_FUNC_DESC*` (`fdesc`) | 8/32/64-bit | function-descriptor slots for indirect calls |
 | `R_CUDA_PCREL_IMM24_*` | `{26/23,24}` | PC-relative branch immediates |
 | `R_CUDA_UNUSED_CLEAR64` | `{0,64}` | zero a placeholder (debug frame) |
+
+## Evidence
 
 ## Verified offset ↔ reloc ↔ SASS (linked `reloc_demo`)
 | `.text` off | SASS | wired to |
@@ -152,3 +165,4 @@ override via `#pragma NUM_MBARRIERS(N)`.
 - `EIATTR_MERCURY_ISA_VERSION` here is just a version tag; the actual Mercury/capmerc
   **capsule sections** appear only in `sm_100+` cubins — see
   `../../sm100/arch/mercury_capmerc.md`.
+

@@ -1,5 +1,16 @@
 # B200 fixed-pipeline result forwarding
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** Modal B200 (sm_100a), 2026-09-21. Cubins are assembled directly by  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: Modal B200 (sm_100a), 2026-09-21. Cubins are assembled directly by
 the repository assembler. Primary probes are the shared
 `tests/asm_construct/probe_*_latency.py` suite plus:
@@ -227,3 +238,4 @@ interpretation is that the dependency selects the producer's bypass entry
 before its arithmetic result replaces the source-A/collector token. Correct
 compiler scheduling never exposes this state; it is nevertheless useful
 evidence for the placement of operand collection relative to result bypass.
+

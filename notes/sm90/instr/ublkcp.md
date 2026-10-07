@@ -1,15 +1,17 @@
 # UBLKCP — Uniform bulk copy (non-tensor `cp.async.bulk`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** Verified empirically on the RTX 5090  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Opcode mnemonic:** `UBLKCP` = `0b1001110111010` = **0x13ba** | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 UBLKCP is the **non-tensor** bulk-copy engine op — the SASS lowering of PTX
@@ -121,6 +123,8 @@ GPR/UGPR result). Register-range connectors use `OP_TMA` mappings
 `rd_sb` protects the source/descriptor uniform registers from a later writer (WAR)
 until the copy engine has consumed them; completion is tracked out-of-band
 (mbarrier tx-count or bulk-group count), not by a write scoreboard (`dst_wr_sb=*7`).
+
+## Evidence
 
 ## Verified encodings (`tests/ublkcp_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | ctrl |
@@ -234,27 +238,6 @@ rejects the PTX-9.3 `.weak` / `.relaxed.scope` / `.cp_mask.b128` qualifiers; onl
 the bare `.global.shared::cta.bulk_group` form assembles, so the `cp_mask`/
 `byteMask` partial-copy variants could not be probed.
 
-## Open questions
-- The load-direction mbarrier tx-completion **is** verified working on this
-  driver (580.65/CUDA 13.0): `tma_cp_test.cu` (repo root) runs `UBLKCP.S.G`
-  with `mbarrier::complete_tx::bytes` and the consumer's `try_wait` spins to
-  completion — data matches on the RTX 5090.  ptxas's pattern: init →
-  `FENCE.VIEW.ASYNC.S`/`MEMBAR.ALL.CTA` → `ELECT` + `UBLKCP` (in a
-  `BSSY`/`@!P0 BRA` divergence frame) → `SYNCS.ARRIVE.TRANS64` (expect_tx
-  with the tx count materialized via `HFMA2` = `0x200`) → consumer
-  `PHASECHK.TRYWAIT` with `wr_sb`/`req` pairing.  The UBLKCP completes the
-  pending tx when the copy finishes (a tx=0 patch made the phase complete
-  immediately and the consumer read stale data).  The hand-built equivalent
-  is fully reproduced — see the resolved section below.
-- The earlier `CUDA_ERROR_INVALID_IMAGE` rejection of
-  `tests/ublkcp_test.cu`'s g2s cubin is **specific to that cubin's other
-  content** (it also contains the multicast kernel), not the `UBLKCP.S.G`
-  instruction — the `tma_cp_test.cu` cubin (plain S.G) loads and runs.
-- `sp2` (LTC64B/128B/256B) L2 sector cache-hint: which PTX `.L2::cache_hint` /
-  policy operand emits it (not triggered by the basic kernels here).
-- `SEQUENCED` (`.SEQ`) ordering form and its interaction with the `STRONG.<sco>`
-  memory scope (spec requires a non-WEAK `mem` when `seq==SEQUENCED`).
-
 ## Hand-built SASS reproduction (resolved)
 
 `tests/asm_construct/test_ublkcp.py` part 4 reproduces the *entire* flow —
@@ -302,3 +285,30 @@ The A1TR tx count is the raw byte count (`MOV32I R0, 512` works; ptxas's
 `SYNCS.EXCH.64` before the copy (`count=1` init state `{0x7ffff, 0x7fff8000}`),
 and the FENCE/MEMBAR chain (FENCE wr=1 → EXCH → MEMBAR → FENCE wr=2) matches
 ptxas's ordering around the UBLKCP issue.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- The load-direction mbarrier tx-completion **is** verified working on this
+  driver (580.65/CUDA 13.0): `tma_cp_test.cu` (repo root) runs `UBLKCP.S.G`
+  with `mbarrier::complete_tx::bytes` and the consumer's `try_wait` spins to
+  completion — data matches on the RTX 5090.  ptxas's pattern: init →
+  `FENCE.VIEW.ASYNC.S`/`MEMBAR.ALL.CTA` → `ELECT` + `UBLKCP` (in a
+  `BSSY`/`@!P0 BRA` divergence frame) → `SYNCS.ARRIVE.TRANS64` (expect_tx
+  with the tx count materialized via `HFMA2` = `0x200`) → consumer
+  `PHASECHK.TRYWAIT` with `wr_sb`/`req` pairing.  The UBLKCP completes the
+  pending tx when the copy finishes (a tx=0 patch made the phase complete
+  immediately and the consumer read stale data).  The hand-built equivalent
+  is fully reproduced — see the resolved section below.
+- The earlier `CUDA_ERROR_INVALID_IMAGE` rejection of
+  `tests/ublkcp_test.cu`'s g2s cubin is **specific to that cubin's other
+  content** (it also contains the multicast kernel), not the `UBLKCP.S.G`
+  instruction — the `tma_cp_test.cu` cubin (plain S.G) loads and runs.
+- `sp2` (LTC64B/128B/256B) L2 sector cache-hint: which PTX `.L2::cache_hint` /
+  policy operand emits it (not triggered by the basic kernels here).
+- `SEQUENCED` (`.SEQ`) ordering form and its interaction with the `STRONG.<sco>`
+  memory scope (spec requires a non-WEAK `mem` when `seq==SEQUENCED`).
+

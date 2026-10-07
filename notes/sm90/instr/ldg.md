@@ -1,20 +1,20 @@
 # LDG — Load from Global Memory
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `LDG`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD` (decoupled read/write scoreboard)  
 **VIRTUAL_QUEUE:** `$VQ_AGU_UNORDERED_WR`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
-> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
-> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
-> stall/NOP pattern before results count as sm_90-verified.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -341,6 +341,8 @@ MIO pipe, MIO_SLOW_OPS subset ($VQ_AGU_UNORDERED_WR).
 
 Same MIO_SLOW_OPS latency as LDS/STS.
 
+## Evidence
+
 ## Verified encodings
 
 All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so` and user kernels:
@@ -365,6 +367,11 @@ All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so` and user 
 All global loads on sm_90 go through memory descriptors — there is no plain
 register-only address form in practice.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **Plain 0x381 forms (ldg__sImmOffset/uImmOffset):** What scenario triggers
@@ -375,3 +382,4 @@ register-only address form in practice.
   prefetch on LDG?
 - **Pnz predicate:** Never observed with non-PT Pnz in traces. What code
   pattern produces a non-trivial Pnz?
+

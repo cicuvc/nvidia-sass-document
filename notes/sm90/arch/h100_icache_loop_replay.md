@@ -1,5 +1,16 @@
 # H100 instruction-cache topology and runtime patch visibility
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** Modal H100 (sm_90), 2026-09-21. The probes use repository-assembled  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: Modal H100 (sm_90), 2026-09-21.  The probes use repository-assembled
 SASS and do not depend on ptxas.  Modal does not expose usable NCU counters, so
 this note distinguishes timing-derived cache geometry, directly tested IVALL
@@ -196,6 +207,8 @@ Therefore the H100 conclusions are:
 - the 32 KiB-equivalent indexed level's literal storage format and ownership
   (per-subcore versus finer per-warp state) remain unknown.
 
+## Evidence
+
 ## Reproduction
 
 ```bash
@@ -215,3 +228,4 @@ Therefore the H100 conclusions are:
   --gpu H100 --script tests/asm_construct/probe_icache_banks.py \
   --args '--sets 0,0,0,0 --warps 0,1,2,3 --lines 16 --reps 5'
 ```
+

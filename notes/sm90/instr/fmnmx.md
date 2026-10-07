@@ -1,10 +1,19 @@
 # FMNMX — FP32 Min/Max
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `FMNMX`  
 **Pipe:** `int_pipe` (integer execution pipe — not fmalighter_pipe!)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Semantics
 
@@ -104,6 +113,8 @@ FMNMX belongs to `FXU_OPS` on `int_pipe`:
 | TABLE_OUTPUT | `FXU_OPS`{Rd} | 1–2 |
 | TABLE_ANTI | `FXU_OPS`{Ra,Rb} | 1–2 |
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 10/10 matches. Test kernel: `tests/fmnmx_test.cu`; decoder: `tools/decode_fmnmx.py`.
@@ -142,14 +153,7 @@ FMNMX R0, RZ, R0, !PT    ; Rd = max(RZ, R0) — ReLU (clamp lower to 0)
 
 This implements `clamp(R0, 0, 255)` → ReLU then saturation.
 
-## Open questions
-
-- `_pred` variants (isA=1 with Pu predicate input) not yet triggered in any test
-- `.XORSIGN` modifier not yet tested — needs PTX `max.xorsign.abs.f32`
-- Const-bank variants (RCR, RCxR) not yet verified
-- 3-input `max.f32 d, a, b, c` — does this map to `_pred` or get lowered differently?
-
-## Resolved (SM120 bit-level verification, 2026-08)
+## Verified (SM120 bit-level verification, 2026-08)
 
 `tests/asm_construct/test_fmnmx_fset.py` — all FMNMX cases OK.
 
@@ -164,3 +168,16 @@ This implements `clamp(R0, 0, 255)` → ReLU then saturation.
   is forced to `sign(Ra) XOR sign(Rb)` (`min(-1,-2).XORSIGN = +2`,
   `max(1,-2).XORSIGN = -1`).
 - **`.FTZ`**: flushes denormal inputs (and a denormal result).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- `_pred` variants (isA=1 with Pu predicate input) not yet triggered in any test
+- `.XORSIGN` modifier not yet tested — needs PTX `max.xorsign.abs.f32`
+- Const-bank variants (RCR, RCxR) not yet verified
+- 3-input `max.f32 d, a, b, c` — does this map to `_pred` or get lowered differently?
+

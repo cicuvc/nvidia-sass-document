@@ -1,5 +1,16 @@
 # SEL — Register Select
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** SEL  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -48,3 +59,4 @@ SEL is the GPR counterpart of USEL. Compilers use both: SEL for regular control 
 ## Latency
 
 `int_pipe`, `INST_TYPE_COUPLED_MATH`. `FXU_OPS` group: output 1 cycle typical.
+

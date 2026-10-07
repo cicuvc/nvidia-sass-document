@@ -1,5 +1,16 @@
 # HGMMA — Half-precision Group Matrix Multiply-Accumulate
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `HGMMA`
 **Pipe:** `mio_pipe` (MIO_SLOW_OPS, shared with LDSM/STSM — not fp16_pipe!)
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
@@ -63,7 +74,6 @@ both the A and B pairs. So the hardware consumes the PTX matrix-descriptor
 format unmodified — there is no SASS-level repacking, and hand-written
 kernels can load the four URs directly (as our assembler experiments did).
 Note the RS form (`hgmma_Ra_URb_Rc_`) uses only the single B descriptor pair.
-
 
 ## Variant overview
 
@@ -431,9 +441,15 @@ The descriptor is built at runtime by uniform-register arithmetic
 (`UIADD3`/`ULOP3`/`USHF`) — the address and layout fields are packed
 into the 64-bit register pair spanning 4 uniform registers (aligned).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **GMMA scoreboard mechanism**: How exactly does `gsb0` interact with
   `wgmma.commit_group`/`wgmma.wait_group` at the hardware level? The
   scoreboard tracking is warpgroup-wide and decoupled from the per-warp
   scoreboard.
+

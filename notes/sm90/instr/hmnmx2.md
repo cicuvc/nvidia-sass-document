@@ -1,5 +1,16 @@
 # HMNMX2 — Packed FP16x2 Min/Max
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** HMNMX2  |  **Pipe:** `fp16_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -80,7 +91,9 @@ Fixed variants add a fixed-bound register field; Pred variants use `Pp` as predi
 
 `fp16_pipe`, `INST_TYPE_COUPLED_MATH`. Coupled scoreboard.
 
-## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+## Evidence
+
+## Verified: semantics verified (SM120, clean hand-built ELF, 2026-08)
 
 `tests/asm_construct/test_hset_hmnmx.py`. HMNMX2 RRR opcode 0x240.
 Per-lane FP16 min/max with the same PT/!PT min-vs-max select as FMNMX:
@@ -94,3 +107,4 @@ Per-lane FP16 min/max with the same PT/!PT min-vs-max select as FMNMX:
 - **`.NAN`** propagates NaN (NaN input → NaN output); default (nonan)
   treats NaN as the "other" operand (`min(NaN,2)→2`).
 - ISWZ swizzles on both operands; negate/abs on Ra/Rb.
+

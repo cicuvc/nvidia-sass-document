@@ -1,5 +1,16 @@
 # RED — Reduction (shared memory, fire-and-forget)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `RED`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` (decoupled read-only scoreboard)  
@@ -84,3 +95,4 @@ Uniform variants replace `Ra_offset` with `URc` at [69:64]; memdesc variants add
 |-----|-------------|
 | `red.shared.add.u32 [%smem], %val` | **ATOMS.POPC.INC** (not RED!) |
 | `red.global.add.u32 [%gmem], %val` | **REDG.E.ADD** desc[...], Rb |
+

@@ -1,5 +1,16 @@
 # Uniform-indexed GPR topology on GB202
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** RTX 5090 (GB202, sm_120). Probe sources:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120).  Probe sources:
 `tests/asm_construct/probe_hmma_indexed_rf.py` and
 `tests/asm_construct/probe_mov_indexed_rf.py`.
@@ -70,3 +81,4 @@ and MOV follows `int_pipe`; the indexed decoder itself is throughput-hidden.
 
 This places indexedRF alongside the subcore issue/RF-address frontend rather
 than in MIO, UDP execution, or the tensor backend.
+

@@ -1,5 +1,16 @@
 # PLOP3 — Predicate Three-Input Logic
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** PLOP3  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -93,6 +104,8 @@ RUR variant (0x1c1f): Ra/URb replaces Rc.
 
 `int_pipe`, `INST_TYPE_COUPLED_MATH`. `FXU_OPS` group in GPR tables, `MATH_PRED_NO_FP16_FP64_OPS` in PRED tables.
 
+## Evidence
+
 ## Verified encodings
 
 From `plop3_test.cu` (sm_90, CUDA 13.1):
@@ -102,3 +115,4 @@ From `plop3_test.cu` (sm_90, CUDA 13.1):
 | `0x000000000000781c` | `0x000fda0000f25570` | `PLOP3.LUT P1, PT, P1, P2, PT, 0xa8, 0x0` |
 
 LUT=0xa8 = 0b10101000: with inputs (Pp,Pq,Pr)=(P1,P2,PT), this produces output only for combinations 7 (111), 5 (101), and 3 (011). This corresponds to a specific Boolean function of the three predicate inputs, with vimm8=0x0 (Pv output forced to false).
+

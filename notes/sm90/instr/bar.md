@@ -1,5 +1,16 @@
 # BAR — CTA named-barrier synchronization (`__syncthreads`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
 **Opcode mnemonic:** `BAR` — `0xb1d`/`0x91d`/`0x51d`/`0x31d` (one per operand form) | **Pipe:** `mio_pipe` (Memory-I/O) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_UNORDERED` | compute-only (`SHADER_TYPE==CS`)
 
 The thread-block (CTA) barrier — `__syncthreads()` and the family of **named barriers**
@@ -86,6 +97,8 @@ barrier index/count, e.g. `BAR.ARV R9, R9`, `BAR.SYNC R8`.
 — it is scheduled through the MIO queue and gated by scoreboards, blocking until the
 barrier is satisfied.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_bar.py`)
 Self-test 5/5; **14849/14849 `BAR.*` in libcusparse decoded byte-exact**; `tests/bar_test.cu`
 7/7 (SYNC/ARV/RED-POPC/AND/OR) and `tests/bar_reg.cu` 3/3 (register forms).
@@ -107,6 +120,11 @@ defer[80]=1; `barname`[57:54]=1 → `0x1`; `Sc`[53:42]=0x100 → `0x100`.
 `BAR.RED.POPC/.AND/.OR.DEFER_BLOCKING 0x0, p`; `bar.sync n,c` / `bar.arrive n,c` →
 `BAR.SYNC`/`BAR.ARV n, c` (register operands when `n`/`c` are dynamic).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `.SCAN`/`.SYNCALL` and the `noSrc` SYNCALL forms are spec-defined but not emitted by the
   sampled ptxas; their exact rendering/use is unverified.
@@ -114,3 +132,4 @@ defer[80]=1; `barname`[57:54]=1 → `0x1`; `Sc`[53:42]=0x100 → `0x100`.
   with the MIO scoreboard) is not spec-stated.
 - Whether every BAR mode (`ARV`/`RED`/`SCAN`) has the same strict full-warp convergence
   precondition has not yet been tested; the 719 observation is for `BAR.SYNC`.
+

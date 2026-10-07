@@ -1,5 +1,16 @@
 # GB202 MIO / LSU / XU topology probes
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-14  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-14. These experiments test a  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-14.  These experiments test a
 working model in which MIO is the decoupled instruction/scoreboard system,
 with subcore-facing queues, an SM-wide arbitration layer, LSU/L1TEX backends,
@@ -997,3 +1008,4 @@ read port.  None of these opportunistic edges replaces scoreboard scheduling.
 - **Still open:** barrier queue placement, arbitration priority among the four
   subcore LSU queues, exact throttle reserve thresholds, and whether any
   ordering domain narrower than the tested independent LDGs is in-order.
+

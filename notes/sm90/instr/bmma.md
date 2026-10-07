@@ -1,5 +1,16 @@
 # BMMA — Binary Matrix Multiply-Accumulate (warp-level)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `BMMA`
 **Pipe:** `int_pipe`
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_EMULATABLE`
@@ -142,3 +153,4 @@ BMMA implements PTX `mma.sync.aligned` for `.b1` type:
 | srcFmt fields | None (b1 only) | srcFmtA + srcFmtB (U8/S8) |
 | SAT | No (POPC overflow?) | Yes |
 | Sparse | No (in spec; may exist on later archs) | Yes (sp version) |
+

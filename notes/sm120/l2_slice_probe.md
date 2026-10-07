@@ -1,5 +1,16 @@
 # Probing the L2 slice count (sm_120 / RTX 5090) — attempts & why it's hard
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
+
+## Conclusion
+
 Goal: empirically determine how many L2 slices the crossbar+L2 model has (see
 `ptx_memory_model_to_sass.md` §11 for the model). Tests:
 `tests/l2_slice_probe.cu`, `tests/l2_slice_probe2.cu`, `tests/atomic_latency_test.cu`.
@@ -80,3 +91,4 @@ applied to `ptx_memory_model_to_sass.md` §11.
 **Two separate roles:** *data bandwidth* (plain ld/st) is wide (many
 banks/partitions ⇒ TB/s); the *atomic/ordering commit* path is narrow (~1–2 OoO
 backends ⇒ ~90 Matom/s, single commit point ⇒ strong ordering).
+

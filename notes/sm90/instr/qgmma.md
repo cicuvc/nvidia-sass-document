@@ -1,5 +1,16 @@
 # QGMMA — FP8 (Quarter-precision) Group MMA
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90)
+
+## Conclusion
+
 **Pipe:** `mio_pipe` (MIO_SLOW_OPS) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` | **VIRTUAL_QUEUE:** `$VQ_UMMA`
 
 Warpgroup-level async tensor core operation for 8-bit floating point types (e4m3/e5m2). Uses the same GMMA architecture as HGMMA — see `../arch/wgmma.md` and `hgmma.md` for sync model, accumulator collector, and GMMA scoreboard details.
@@ -147,3 +158,4 @@ with 2:4 sparsity).  Consequently m64n8/n16/n64 have MAC lower bounds of
 Probe sources: `tests/asm_construct/probe_hgmma_mio_interaction.py`
 (`--mma qgmma`) and `tests/asm_construct/probe_hgmma_rmw_window.py`
 (`--mma qgmma`).
+

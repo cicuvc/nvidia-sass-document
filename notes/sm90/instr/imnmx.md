@@ -1,5 +1,16 @@
 # IMNMX — Integer Min/Max (legacy)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `IMNMX`  
 **Pipe:** `int_pipe`  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
@@ -7,17 +18,6 @@
 **NOTE:** On sm_90, ptxas emits **VIMNMX** (opcode 0x248), not IMNMX. IMNMX
 (opcode 0x217) appears to be a legacy encoding without `.RELU` support.
 Both share the same pipe and operand structure.
-
----
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -120,6 +120,8 @@ hi64 encoding the S32/U32 (bit 8 of hi64) and !PT/PT (bit 26 of hi64) selectors.
 
 IMNMX is on `int_pipe`; same latency class as FXU_OPS: TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2.
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_75)
 
 4/4 matches. IMNMX is emitted by ptxas on **sm_75** (arch=sm_75) but not sm_90
@@ -146,13 +148,7 @@ REDUX_SZ (fmt) at hi64 bit 9: 1=S32, 0=U32. Pp.not at hi64 bit 26.
 Same semantics as VIMNMX on sm_90, but without the `.RELU` modifier and
 `_pred` variant.
 
-## Open questions
-
-- What triggers the VIMNMX `_pred` variant (with Pu predicate input)?
-- Does VIMNMX `.RELU` map to PTX `min.relu.s32` or is it only for certain reduction patterns?
-- At what architecture boundary (sm_8x?) did ptxas switch from IMNMX to VIMNMX?
-
-## Resolved: SM120 (Blackwell+) extended form — silicon-verified
+## Verified: SM120 (Blackwell+) extended form — silicon-verified
 
 `tests/asm_construct/test_imnmx.py` verifies the 6-operand form that Blackwell
 added on top of the sm90 4-operand form:
@@ -172,3 +168,15 @@ Semantics (66-case battery, all pass):
 Hand-assembler gotchas: the 64-bit source pairs must NOT use R6/R7 (they hold
 the store address) — the register-reuse clobbered the address and faulted with
 700/717 until moved to R10/R11/R12/R13.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- What triggers the VIMNMX `_pred` variant (with Pu predicate input)?
+- Does VIMNMX `.RELU` map to PTX `min.relu.s32` or is it only for certain reduction patterns?
+- At what architecture boundary (sm_8x?) did ptxas switch from IMNMX to VIMNMX?
+

@@ -1,5 +1,18 @@
 # TCGEN05 多 warp 1-CTA allocator（V2 entry fragment）
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100+sm103-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-17  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100, sm103)
+
+## Conclusion
+
+_(no summary in the source note; the sections below carry the durable facts)_
+
 ## 结论
 
 `tests/asm_construct/tcgen05_alloc_multiwarp_v2_sm100.sass` 是独立的 CUDA
@@ -93,3 +106,4 @@ warp 汇聚，B200 实测会报 CUDA 719。当前基线与 nvcc lowering 都在 
 - hand SASS：`tests/asm_construct/tcgen05_alloc_multiwarp_v2_sm100.sass`
 - 静态测试：`python3 tests/asm_construct/test_tcgen05_alloc_multiwarp_v2_sm100.py`
 - 真机：`tools/modal_tcgen05_alloc.py --hand-source ... --block-size N`
+

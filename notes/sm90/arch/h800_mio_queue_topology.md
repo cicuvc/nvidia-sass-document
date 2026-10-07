@@ -1,5 +1,16 @@
 # H800/H20 MIO queue and late-RF throughput probes
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** H800 PCIe and H20 (sm_90), 2026-09-14. These measurements use  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: H800 PCIe and H20 (sm_90), 2026-09-14.  These measurements use
 hand-built sm_90 cubins and `SR_CLOCKLO`; NCU permission was unavailable on
 both remote systems (`ERR_NVGPUCTRPERM` was confirmed explicitly on H20).
@@ -186,3 +197,4 @@ No tested MIO structural parameter distinguishes H20 from H800.  Within the
 resolution of these probes, the two Hopper products use the same LSU, SHFL,
 late-RF, XU, and CBU configuration; their product-level performance
 differences lie elsewhere.
+

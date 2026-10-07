@@ -1,5 +1,16 @@
 # DADD — FP64 add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `DADD` = `0b1000101001` = **0x229** (RRR) + 4 operand-form variants | **Pipe:** `fma64lite_pipe` (FP64 datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_EMULATABLE`, `VIRTUAL_QUEUE=$VQ_REDIRECTABLE` | since sm_70
 
 Double-precision add: `Rd = (±|Ra|) + (±|Rc|)`. Two 64-bit register-pair addends, each with
@@ -51,6 +62,8 @@ are implicitly 0 (so only doubles representable in the top 32 bits, e.g. `2.5`=0
 FP64 op (slower than FP32 FMA; the FP64 unit is throughput-limited on most SKUs).
 `COUPLED_EMULATABLE`/`VQ_REDIRECTABLE`: may be emulated / redirected to the FP64 unit.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -71,5 +84,11 @@ Decoder: `tools/decode_dadd.py` (all 8 vectors pass). Test: `tests/dadd_test.cu`
 - `__dadd_rn/rz/ru/rd` → `DADD` / `.RZ` / `.RP` / `.RM`
 - `a + const` → RRsI (imm, if the double fits in high-32b) or RRC (const bank).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Const-bank (RRC/RRCx) text form unverified (ptxas used RRU for the runtime const-param here).
+

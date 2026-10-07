@@ -1,5 +1,16 @@
 # yield 调度位的发射成本 (sm_120 / GB202)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 CS2R 窗口实测(RTX 5090, assembler dialect, 全部 `[wr:rd:{req}:stall:yield:batch_t]` 中只动 yield/batch_t 位)。
 
 ## 结论:yield = 强制 warp 切换提示,切换动作本身占 1 拍

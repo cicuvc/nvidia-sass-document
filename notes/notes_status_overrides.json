@@ -1,0 +1,227 @@
+{
+  "_comment": [
+    "Hand-confirmed evidence tiers for notes where tools/notes_audit.py could not derive",
+    "the measurement host from the note text alone.  'tier' uses the vocabulary of",
+    "tools/notes_audit.py (EVIDENCE_TIERS); 'note' records WHY, so a later reader can",
+    "re-check the judgement instead of trusting it.",
+    "'confidence: high' means the host is pinned by the note itself (usually by an",
+    "explicit Silicon:/Status: line).  'medium' means a strong but indirect marker.",
+    "Generated and applied by: python3 tools/notes_migrate.py --status --apply"
+  ],
+  "notes": {
+    "ARCH_DIFF.md": {
+      "tier": "spec",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "opcode-space diff of the ISA dumps; no hardware measurement."
+    },
+    "CUBIN_STRUCTURE.md": {
+      "tier": "sm90+sm120-silicon",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "states cuModuleLoadData execution on both sm_120 (RTX 5090) and sm_90 (H20)."
+    },
+    "DEVICE_PRINT.md": {
+      "tier": "sm120-silicon",
+      "confidence": "medium",
+      "date": "2026-09",
+      "note": "printf buffer format documented from device runs; host unnamed -> default site."
+    },
+    "sm100/OVERVIEW.md": {
+      "tier": "spec",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "diff of sm100_instructions.txt vs the Hopper dumps; parser validation only."
+    },
+    "sm100/arch/control_codes.md": {
+      "tier": "spec",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "field-position delta between the two spec dumps, not a hardware probe."
+    },
+    "sm100/arch/mercury_capmerc.md": {
+      "tier": "sm100-silicon",
+      "confidence": "medium",
+      "date": "2026-09",
+      "note": "B200 firmware/driver packet analysis; no host named -> notes/sm100 default."
+    },
+    "sm100/arch/tcgen05_descriptors.md": {
+      "tier": "sm100-silicon",
+      "confidence": "medium",
+      "date": "2026-09",
+      "note": "descriptor bit fields corroborated on B200 runs described in utchmma.md."
+    },
+    "sm100/arch/tcgen05_microarch_speculation.md": {
+      "tier": "sm100-silicon",
+      "confidence": "medium",
+      "date": "2026-09",
+      "note": "speculation model fitted to B200 measurements."
+    },
+    "sm100/arch/tcgen05_multiwarp_allocator_v1.md": {
+      "tier": "sm100-silicon",
+      "confidence": "high",
+      "date": "2026-09-17",
+      "note": "**v1 is historical**: superseded by v2; kept for the allocator bring-up record."
+    },
+    "sm100/arch/tcgen05_multiwarp_allocator_v2.md": {
+      "tier": "sm100+sm103-silicon",
+      "confidence": "high",
+      "date": "2026-09-17",
+      "note": "states B200 local dump plus repeated B200+B300 lifecycle runs."
+    },
+    "sm100/arch/tcgen05_tooling_checkpoint.md": {
+      "tier": "sm100-silicon",
+      "confidence": "high",
+      "status": "historical",
+      "date": "2026-09-17",
+      "note": "explicitly a 'checkpoint of the state when hardware probing paused' -> Status: historical."
+    },
+    "sm100/arch/tmem_atexit_handler.md": {
+      "tier": "sm100-silicon",
+      "confidence": "medium",
+      "date": "2026-09",
+      "note": "TMEM atexit behaviour measured on B200 in the tcgen05 sessions."
+    },
+    "sm100/arch/tmem_entry_fragment.md": {
+      "tier": "sm100-silicon",
+      "confidence": "medium",
+      "date": "2026-09",
+      "note": "entry-fragment layout measured on B200 (Modal probe tools/modal_sm100_entry_fragment.py)."
+    },
+    "sm100/rf_bank_probe.md": {
+      "tier": "sm100-silicon",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "B200 register-file bank measurements."
+    },
+    "sm103/b300_mufu_ex2_throughput.md": {
+      "tier": "sm103-silicon",
+      "confidence": "high",
+      "date": "2026-09-21",
+      "note": "explicit Silicon: line; B300 measured vs B200/H100/GB202 as references."
+    },
+    "sm103/rf_bank_probe.md": {
+      "tier": "sm100+sm103-silicon",
+      "confidence": "high",
+      "date": "2026-09-17",
+      "note": "explicit Chinese status line: Modal B300 measurement compared with the B200 result."
+    },
+    "sm120/index.md": {
+      "tier": "mixed",
+      "confidence": "medium",
+      "status": "historical",
+      "date": "2026-09",
+      "note": "directory index listing both sm_100 and sm_120 subjects; not itself a measurement."
+    },
+    "sm120/l2_slice_probe.md": {
+      "tier": "sm120-silicon",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "GB202/RTX 5090 probe; sm90 appears only as a cross-reference."
+    },
+    "sm89/scalar_math_pipelines.md": {
+      "tier": "sm89-silicon",
+      "confidence": "high",
+      "date": "2026-09-19",
+      "note": "states Probed on RTX 4090 (AD102) with CS2R timing."
+    },
+    "sm90/arch/l2_numa_h800.md": {
+      "tier": "sm90-silicon",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "probed on a remote H800 PCIe; the RTX 5090 mention is a contrast, not the site."
+    },
+    "sm90/arch/pipe_forward_survey.md": {
+      "tier": "sm120-silicon",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "title states the survey is on SM120 (RTX 5090 / GB202); sm_90 only in refs."
+    },
+    "sm90/arch/ptx_memory_model_to_sass.md": {
+      "tier": "sm90+sm120-silicon",
+      "confidence": "high",
+      "date": "2026-09",
+      "note": "explicit: SASS verified on sm_90/sm_90a, hardware behaviour on RTX 5090."
+    },
+    "sm90/arch/register_bandwidth.md": {
+      "tier": "sm90-silicon",
+      "confidence": "high",
+      "date": "2026-08",
+      "note": "H800 (full GH100, sm_90) measurement; sm70/sm80/sm120 appear as comparisons."
+    },
+    "sm90/arch/sm90_resilver_audit.md": {
+      "tier": "mixed",
+      "confidence": "medium",
+      "status": "historical",
+      "date": "2026-08-27",
+      "note": "run-matrix ledger; its generated block is the live view (phase 3)."
+    },
+    "sm120/silver-status.md": {
+      "tier": "mixed",
+      "confidence": "medium",
+      "status": "historical",
+      "date": "2026-08-27",
+      "note": "regression ledger; the b14 progress log is history, the generated block is live."
+    },
+    "sm90/instr/atom.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-08", "note": "banner: sm_120 encoding vectors, GPU-semantics halves passed on H20."},
+    "sm90/instr/bra.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-09", "note": "sassdbg/probe_jmp_modifiers.py ran on H20 SM90 and RTX 5090 SM120."},
+    "sm90/instr/call.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-09", "note": "CALL/RET matrix probe (probe3) on both H20 and RTX 5090."},
+    "sm90/instr/jmp.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-09", "note": "JMP immediate probe run on H20 SM90 and RTX 5090 SM120."},
+    "sm90/instr/pmtrig.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-08", "note": "heading: Verified encodings (sm_90 == sm_120)."},
+    "sm90/instr/up2ur.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-08", "note": "banner: byte-exact vectors from sm_120, semantics halves passed on H20."},
+    "sm90/instr/voteu.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-08", "note": "banner: sm_120 vectors plus H20 semantics."},
+    "sm90/instr/yield.md": {"tier": "mixed", "confidence": "medium", "date": "2026-09", "note": "sm_120 measurement plus an H20 FAILURE (test_yield): do not read as dual-verified."},
+
+    "sm70/register_banks.md": {"tier": "sm70-silicon", "confidence": "high", "date": "2026-09", "note": "V100S controlled SASS experiment."},
+    "sm80/register_banks.md": {"tier": "sm80-silicon", "confidence": "high", "date": "2026-09", "note": "A100 (A100-SXM4-40GB) measurement."},
+    "sm80/scalar_math_pipelines.md": {"tier": "sm80-silicon", "confidence": "high", "date": "2026-09-19", "note": "explicit Hardware: line (A100-SXM4-40GB, CC 8.0)."},
+
+    "sm90/instr/f2f.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: silicon-verified (SM120) heading; no H20 attestation."},
+    "sm90/instr/f2i.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: silicon-verified (SM120)."},
+    "sm90/instr/i2f.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: silicon-verified (SM120)."},
+    "sm90/instr/i2i.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: silicon-verified (SM120)."},
+    "sm90/instr/flo.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: silicon-verified (SM120)."},
+    "sm90/instr/popc.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: silicon-verified (SM120)."},
+    "sm90/instr/vote.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: silicon-verified (SM120)."},
+    "sm90/instr/brev.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: silicon-verified semantics (SM120)."},
+    "sm90/instr/ubrev.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_ubrev.py, RTX 5090)."},
+    "sm90/instr/ubmsk.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_ubmsk.py, RTX 5090)."},
+    "sm90/instr/bmsk.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified 14-case battery + RUR on the local Blackwell part."},
+    "sm90/instr/sgxt.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified 16-case battery + RUR."},
+    "sm90/instr/endcollective.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: empirically verified (SM120)."},
+    "sm90/instr/hmnmx2.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Resolved: semantics verified (SM120, clean hand-built ELF)."},
+    "sm90/instr/mov.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "indexed-RF claim silicon-verified on sm_120 (notes/sm120/indexed_rf_topology.md)."},
+    "sm90/instr/ldsm.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "address model silicon-verified SM120."},
+    "sm90/instr/nanotrap.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "TRAP_RETURN_PC / RTT findings verified on SM120."},
+    "sm90/instr/uclea.md": {"tier": "mixed", "confidence": "medium", "date": "2026-08", "note": "banner: em-window measured on RTX 5090, sm_90 spec constrains the immediates -> not sm90-verified."},
+    "sm90/instr/uflo.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_uflo.py)."},
+    "sm90/instr/uiadd3.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_uiadd3.py); the plain-variant table is marked unverified."},
+    "sm90/instr/uimad.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "sm_120 default behaviour silicon-verified (test_uimad.py)."},
+    "sm90/instr/uisetp.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_uisetp.py)."},
+    "sm90/instr/uldc.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on RTX 5090 (test_ldcu.py); sm_90 ULDC differs (assembler_sm90_port.md)."},
+    "sm90/instr/ulea.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_ulea.py)."},
+    "sm90/instr/ulop3.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_ulop3.py)."},
+    "sm90/instr/umov.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_umov.py); sm_90 has no .64 variant."},
+    "sm90/instr/upopc.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_upopc.py)."},
+    "sm90/instr/uplop3.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_uplop3.py)."},
+    "sm90/instr/uprmt.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_uprmt.py)."},
+    "sm90/instr/usel.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_usel.py); sm_90 has no USEL.64."},
+    "sm90/instr/usgxt.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_usgxt.py)."},
+    "sm90/instr/ushf.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "small note; verified as part of the uniform-ALU silicon battery (SM120)."},
+    "sm90/instr/viadd.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "14-case battery + byte checks on the local Blackwell part."},
+    "sm90/instr/vimnmx.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "corrected by a silicon-verified sm_120 probe (test_vimnmx.py)."},
+    "sm90/instr/getlmembase.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-08", "note": "status line: silicon-verified on H20 (sm_90)."},
+    "sm90/instr/setlmembase.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-08", "note": "status line: silicon-verified on H20 (sm_90)."},
+
+    "sm90/arch/h100_icache_loop_replay.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-09", "note": "Modal H100 measurements (plus GB202/B200 controls)."},
+    "sm90/arch/h100_fixed_pipeline.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-09", "note": "Modal H100 fixed-pipeline measurements."},
+    "sm90/arch/h100_fixed_admission_depth.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-09", "note": "Modal H100 admission-depth measurements."},
+    "sm90/arch/h20_compute_conflicts.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-09", "note": "H20 (sm_90) contention probes."},
+    "sm90/arch/h800_mio_queue_topology.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-09", "note": "H800 MIO queue topology."},
+    "sm100/arch/b200_icache_topology.md": {"tier": "sm100-silicon", "confidence": "high", "date": "2026-09", "note": "Modal B200 instruction-cache probes."},
+    "sm100/arch/b200_lsu_exchange_topology.md": {"tier": "sm100-silicon", "confidence": "high", "date": "2026-09", "note": "Modal B200 LSU exchange probes."},
+    "sm100/arch/b200_fixed_forwarding.md": {"tier": "sm100-silicon", "confidence": "high", "date": "2026-09", "note": "Modal B200 fixed-pipeline forwarding."},
+    "sm100/arch/b200_fixed_admission_depth.md": {"tier": "sm100-silicon", "confidence": "high", "date": "2026-09", "note": "Modal B200 admission depth."},
+    "sm100/arch/b200_mio_admission_depth.md": {"tier": "sm100-silicon", "confidence": "high", "date": "2026-09", "note": "Modal B200 MIO admission depth."}
+  }
+}

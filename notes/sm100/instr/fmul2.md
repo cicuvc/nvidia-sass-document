@@ -1,5 +1,16 @@
 # FMUL2 — packed FP32x2 Multiply  → PTX `mul.f32x2`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `FMUL2` — 3 variants: RRR (0x24a), RRU (0x1c4a), RIR (0x84a)
 **Pipe:** `fmalighter_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
@@ -52,3 +63,4 @@ even-aligned. Rounding via `rnd`[79:78], flush via `fmz`[80]∥[76].
 - `notes/sm100/instr/ffma2.md` — the FMA counterpart (same iswz/swizzle model,
   3 operands: A·B+C). FMUL2 uses the Ra+Rb operand slots only (no Rc).
 - `notes/sm100/instr/fadd2.md` — the add counterpart (2 operands: Ra+Rc).
+

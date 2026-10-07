@@ -1,19 +1,29 @@
 # GB202 instruction-cache capacity and sharing
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-21  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-15. These measurements use  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
+> **Retraction note:** this page quotes a retracted claim *in place* because it justifies
+> the current conclusion; the retracted claim itself is not current.
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-15. These measurements use
 assembler-generated 16-byte SASS and NCU's raw ICC/GCC counters. The main
 result is:
-
-> The SM-local instruction cache (sm__icc) is best modelled as a **64 KiB,
-> 128-byte-line cache shared by all four subcores of one SM**. A simple
-> sequential loop remains effectively miss-free through 62.5 KiB and begins
-> to conflict at 62.75 KiB, so 64 KiB is the nominal capacity rather than a
-> promise that every 64 KiB contiguous loop is simultaneously usable.
 
 The next instruction-cache level seen through gcc__cache_* is much larger.
 A warmed 1 MiB sequential loop still produces almost entirely GCC tag hits,
 so this experiment establishes only a **GCC residency lower bound of at
 least 1 MiB**, not its capacity or sharing scope.
+
+## Evidence
 
 ## Probe construction
 
@@ -321,3 +331,4 @@ service-bandwidth/latency effect, not a demonstrated GCC capacity boundary.
 For raw counters, profile the second launch (--launch-skip 1) and collect
 sm__icc_requests*, gcc__cache_requests_type_instruction_lookup_miss*, and
 smsp__warps_issue_stalled_no_instruction.
+

@@ -1,5 +1,16 @@
 # DFMA — FP64 Fused Multiply-Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90)
+
+## Conclusion
+
 **Opcode mnemonic:** `DFMA`  
 **Pipe:** `fma64lite_pipe` (lightweight FP64 pipe)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_EMULATABLE`  
@@ -107,6 +118,8 @@ positions differing from the spec. That was a **mistake**: it recorded only Lo64
 ([79:78]) and the negate/abs bits ([75:72]) live in **Hi64**. With Hi64 captured, the spec
 positions match exactly (see "Verified encodings").
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1 — full lo64 + hi64)
 
 RRR form (`tests/dfma_test.cu`), `Rd`=R8, `Ra`=R2, `Rb`=R4, `Rc`=R6:
@@ -132,6 +145,11 @@ Decoder: `tools/decode_dfma.py` (confirms spec positions).
 | `fma.rp.f64` | `DFMA.RP` |
 | `fma.rz.f64` | `DFMA.RZ` |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **FP64 operand negation:** PTX `fma.f64` does not expose operand negation directly in inline
@@ -141,3 +159,4 @@ Decoder: `tools/decode_dfma.py` (confirms spec positions).
 
 *(Resolved: the earlier "encoding mismatch" open question was a Lo64-only measurement error;
 the CLASS spec rounding/negate positions are correct — see the Note above.)*
+

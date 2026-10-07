@@ -1,5 +1,16 @@
 # wgmma — warpgroup async MMA synchronization (sm_90a)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Question:** how does the standard wgmma pipeline
 (`wgmma.fence` → `wgmma.mma_async`… → `commit_group` → `wait_group`) lower to
 SASS, and how is it synchronized?
@@ -285,12 +296,6 @@ counts + dead `@!UPT UIADD3` fillers cover its ~28-cyc latency. `HGMMA` (warpgro
 `wgmma.mma_async`) is **asynchronous**: it returns immediately and its completion
 is tracked by the GMMA group scoreboard, waited on explicitly by
 `WARPGROUP.DEPBAR.LE`.
-
-## Open questions
-- Whether `wgmma.commit_group` ever emits a distinct op (e.g. `WARPGROUPSET`) in
-  multi-stage pipelines, vs always folding into the HGMMA group-SB writes.
-- Exact `WARPGROUP.ARRIVE` placement policy (it is scheduled early, before the
-  descriptors are fully built) and how the fence orders accumulator reads.
 
 ## H20 empirical verification (2026-08, hand-written SASS via `assembler/`, sm_90)
 
@@ -1128,3 +1133,15 @@ bit-for-bit/timing-identical to HGMMA, showing that both feed the same F32
 accumulator/RMW backend.  See `../instr/qgmma.md` for the complete data.
 An E5M2 n64 spot check repeats the E4M3 timing, 32-wavefront SS block, and
 RMW boundary exactly.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Whether `wgmma.commit_group` ever emits a distinct op (e.g. `WARPGROUPSET`) in
+  multi-stage pipelines, vs always folding into the HGMMA group-SB writes.
+- Exact `WARPGROUP.ARRIVE` placement policy (it is scheduled early, before the
+  descriptors are fully built) and how the fence orders accumulator reads.
+

@@ -1,5 +1,16 @@
 # REDAS — Reduce-async to distributed shared memory (`red.async`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `REDAS` = `0b1110110111110` = **0x1dbe** | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_AGU` (15) | compute-only (`SHADER_TYPE==CS`)
 
 ## Semantics
@@ -83,6 +94,8 @@ read-scoreboard op, `IDEST_SIZE=0` (no register result — reduction lands remot
 signals the mbarrier). `ISRC_A_SIZE=64` (address pair), `ISRC_B_SIZE = 32 +
 (U64/64)*32`. Observed `dst_wr_sb=*7`, `rd_sb=7` — completion is mbarrier-based.
 
+## Evidence
+
 ## Verified encodings (`tests/redas_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |---|---|---|
@@ -113,6 +126,11 @@ Decoder `tools/decode_redas.py`: **11/11 PASS**. `op` is Hi64 [90:87] (+1 step =
 PTX op→REDAS_OP is direct (add/min/max/inc/dec/and/or/xor → 0–7). The
 destination `[a]` and `[mbar]` handle are packed into the single 64-bit `Ra` pair.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact split of `[Ra.64]` into {remote-shared address, mbarrier handle} — inferred
   from adjacent const loads (as in STAS), not bit-confirmed.
@@ -120,3 +138,4 @@ destination `[a]` and `[mbar]` handle are packed into the single 64-bit `Ra` pai
 - `.f32`/`.f16` floating reductions in the PTX `red.async` — whether they map to
   REDAS (REDAS_SZ only exposes U32/S32/U64, no float types), or a different op.
 - `req_bit_set` semantics (shared open item).
+

@@ -1,5 +1,16 @@
 # REDUX — Warp-wide reduction (uniform result)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `REDUX` = `0b1111000100` = **0x3c4** | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`, `VIRTUAL_QUEUE=$VQ_REDUX` (=28) | since sm_80 (crucible idx 192)
 
 SASS lowering of PTX `redux.sync` (`__reduce_{add,min,max,and,or,xor}_sync`). Reduces a per-lane
@@ -51,6 +62,8 @@ REDUX / S2UR share the fast decoupled `R2UR_S2UR` latency group; R2UR is the slo
 `udp_pipe`, `OP_R2UR = {R2UR, REDUX, S2UR}`; REDUX is in `R2UR_S2UR` with URd-producer latency
 **1** cycle (`TABLE_*(UGPR)`). Decoupled (`VQ_REDUX`) — consumers wait via the write scoreboard.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -71,5 +84,11 @@ REDUX / S2UR share the fast decoupled `R2UR_S2UR` latency group; R2UR is the slo
 - `__reduce_min_sync`/`max` on `int` → `.MIN.S32`/`.MAX.S32`; on `unsigned` → `.MIN`/`.MAX`
 - `__reduce_and/or/xor_sync` → `REDUX`(AND)/`.OR`/`.XOR`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - None significant — fully verified for all six ops and both signedness modes.
+

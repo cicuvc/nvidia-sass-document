@@ -1,5 +1,16 @@
 # KILL — Fragment discard (thread termination)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `KILL` = `0b100101011011` = **0x95b** | **Pipe:** `cbu_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 The pixel-shader `discard` instruction: kills the guarded lanes (state `MKILL`). **Compute-only shaders never emit KILL** — it is legal only in a pixel shader (`SHADER_TYPE ∈ {PS, TRAP, UNKNOWN}`).
@@ -23,8 +34,11 @@ Removes lanes from convergence-barrier participation, so `BSYNC`/`BSSY` correctl
 | where | any shader / compute | **pixel shader only** | any |
 | async wait | GMMA + CGA barriers | — | — |
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_exit.py`)
 PS-only via cubin-patch:
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
 | `0x000000000000795b` | `0x000fea0003800000` | `KILL` |
+

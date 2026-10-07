@@ -1,5 +1,16 @@
 # BSSY — Branch Set Synchronization (establish a convergence barrier)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `BSSY` = `0b100101000101` = **0x945** | **Pipe:** `cbu_pipe` (Convergence-Barrier / Branch Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 Companion opcodes in the same family (share the base CBU layout, documented here for context):
@@ -83,6 +94,8 @@ table (`TABLE_TRUE(SCOREBOARD)`, line 220) all these ops resolve to `ORDERED_ZER
 Being `DECOUPLED_BRU` with `MIN_WAIT_NEEDED=1`, they issue to the branch unit and are
 ordered by the control word rather than a producer→consumer register latency.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_bssy.py`, 9/9 match)
 | PC | Lo64 | Hi64 | Disassembly | src |
 |----|------|------|-------------|-----|
@@ -115,15 +128,7 @@ loop-exit condition into the branch's `Pp` operand: `@!P0 BRA P1, LOOP_TOP` (P1 
 must peel lanes out of an *enclosing* barrier — e.g. a `goto`/break to an outer loop
 across a nested `BSSY B1`: `@!P0 BREAK B1 ; @!P0 BRA outer_sync`.
 
-## Open questions
-- The `Pp`/`Pnz` operand on BSSY itself is always `PT` in observed code (only branches
-  like `BRA`/`BREAK` carry a non-PT `Pp`). Its precise effect on the armed participant
-  mask when `Pp != PT` is not yet corroborated empirically.
-- `Sa` is a 30-bit field scaled by 4 (±4 GiB / instruction-granular reach). Targets are
-  always 16-byte aligned in practice; whether a non-16B-aligned `Sa` is legal (vs. just
-  unused low bits) is unverified.
-
-## Resolved: the target PC is NOT stored as hardware state (SM120, 2026-08)
+## Verified: the target PC is NOT stored as hardware state (SM120, 2026-08)
 
 Empirically the `Sa` target is **functionally inert on Volta+ ITS** — it is a
 vestigial field from the pre-Volta SIMT reconvergence *stack*, not live state:
@@ -147,3 +152,17 @@ tracked entirely by per-thread PCs (ITS) + the barrier mask in `Bi`. The
 reconvergence point is wherever the code converges (the join after `BSYNC`);
 `ptxas` fills `Sa` with that address purely as an encoding-side annotation, and
 the hardware ignores it. See `cbu_state.md` ("SIMT-stack-free").
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- The `Pp`/`Pnz` operand on BSSY itself is always `PT` in observed code (only branches
+  like `BRA`/`BREAK` carry a non-PT `Pp`). Its precise effect on the armed participant
+  mask when `Pp != PT` is not yet corroborated empirically.
+- `Sa` is a 30-bit field scaled by 4 (±4 GiB / instruction-granular reach). Targets are
+  always 16-byte aligned in practice; whether a non-16B-aligned `Sa` is legal (vs. just
+  unused low bits) is unverified.
+

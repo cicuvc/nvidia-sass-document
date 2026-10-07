@@ -1,5 +1,16 @@
 # PTX memory model → SASS/hardware mapping (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** verified on sm_90/sm_90a; hardware behaviour on RTX 5090  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 Capstone synthesis: how each PTX §8 memory-consistency concept is realised in the
 SASS ISA and the SM hardware, from the reverse-engineering in this repo.
 Sub-notes: `memory_order_cta.md` (generic-proxy ordering, ERRBAR/CGAERRBAR),
@@ -205,3 +216,4 @@ reordering is not *lots* of slices driving independence; it is an **OoO-backend
 behaviour** where the one backend speculates addresses apart, retires in program
 order, and resolves conflicts by rollback. Still permits the ISA-level reordering
 that `MEMBAR` guards against; but the near-SC empirical results now make sense.
+

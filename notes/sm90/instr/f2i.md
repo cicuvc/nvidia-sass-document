@@ -1,5 +1,16 @@
 # F2I — float→integer convert
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `F2I`  |  **Pipe:** `mio_pipe` (`VIRTUAL_QUEUE=$VQ_MUFU`)  |
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
 
@@ -122,6 +133,8 @@ consecutive-F2I sequence exposes only (a) the ~8-cyc MIO issue throughput and
 scoreboard-hidden, so it cannot be read from static stall counts — exactly what
 `ORDERED_ZERO` in the latency file encodes.
 
+## Evidence
+
 ## Verified encodings (`tests/f2i_test.cu`, sm_90)
 | SASS | source | rounding / fmt |
 |---|---|---|
@@ -145,14 +158,7 @@ F32 sources (denormal handling); F64 conversions omit it.
   those never write a scoreboard and are protected by stall counts; F2I is the
   opposite — scoreboard-protected, stall counts only cover MIO issue throughput.
 
-## Open questions
-- Exact F2I result latency distribution (scoreboard = variable; would need a
-  latency microbenchmark, not static SASS).
-- F16/BF16 source lowering: `(int)__half2float` did not emit a direct `F16`-src
-  F2I here (went through promotion) — confirm whether `cvt.rzi.s32.f16` PTX emits
-  the `_16b` F2I variant directly.
-
-## Resolved: silicon-verified semantics (SM120)
+## Verified: silicon-verified semantics (SM120)
 
 `tests/asm_construct/test_conversions.py`: F2I float->int verified for all
 four Round3 modes (`.ROUND`=nearest-even, `.FLOOR`, `.CEIL`, `.TRUNC`) on
@@ -160,3 +166,16 @@ S32.F32 (ties, halves, INT bounds) and `.FTZ` (denormal input flushed).
 U32.F32.TRUNC verified for in-range values (negative is undefined/0).
 Note the assembler uses the Round3 names (not PTX .rn/.rm/.rp/.rz); I2F uses
 Round1 (RN/RM/RP/RZ).  Same DECOUPLED_RD_WR_SCBD scoreboard discipline.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Exact F2I result latency distribution (scoreboard = variable; would need a
+  latency microbenchmark, not static SASS).
+- F16/BF16 source lowering: `(int)__half2float` did not emit a direct `F16`-src
+  F2I here (went through promotion) — confirm whether `cvt.rzi.s32.f16` PTX emits
+  the `_16b` F2I variant directly.
+

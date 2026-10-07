@@ -1,5 +1,16 @@
 # GB202 FMA-Lite pipeline latency
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-16  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-16. Reproducer:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-16.  Reproducer:
 [`probe_fmalite_latency.py`](../../tests/asm_construct/probe_fmalite_latency.py).
 
@@ -108,3 +119,4 @@ The simultaneous “formatted t+2” and “raw t+2” observations should be mo
 as consumer-selected bypass payloads, not as one globally changing result
 register.  Correctly scheduled code uses the final-value ready time; malformed
 SASS can expose the raw payload and is useful for pipeline validation.
+

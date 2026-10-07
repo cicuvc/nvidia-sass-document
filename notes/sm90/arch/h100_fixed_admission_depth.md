@@ -1,5 +1,16 @@
 # H100 fixed-pipeline admission and service
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** Modal H100 (sm_90), 2026-09-20--21. Cubins are assembled directly  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: Modal H100 (sm_90), 2026-09-20--21. Cubins are assembled directly
 with the repository assembler; ptxas and NCU are not used. Primary probes:
 
@@ -154,3 +165,4 @@ is the exception and changes from about two to three.
   over asserting exactly zero entries.
 - The packed/Lite relation is operational. Timing alone cannot distinguish a
   shared physical array from an interlock between leaves.
+

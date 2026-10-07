@@ -1,5 +1,16 @@
 # Control codes — per-instruction scheduling word (sm100 vs sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** spec  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 **Question:** did the "control codes" (wait mask, read/write scoreboards,
 PM predicate, micro-scheduler `usched_info`, `batch_t`, operand **reuse** flags)
 change between Hopper (sm_90) and Blackwell (sm100)?
@@ -92,6 +103,11 @@ special GMMA-scoreboard citizen.
   decode their scoreboard fields the ordinary way, whereas the old `HGMMA` path
   had to special-case `OPTIONAL_GSB`/`cop`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Empirical confirmation on real Blackwell SASS: mine cuobjdump `-arch sm_100`
   (CUDA ≥12.8) for reuse-bit / wait-mask / `usched` samples, mirroring the sm_90
@@ -101,3 +117,4 @@ special GMMA-scoreboard citizen.
 - How is `UTCBAR` ordered relative to the standard scoreboard release on `UTC*`
   ops (is the wait mask sufficient, or is `UTCBAR` mandatory between dependent
   MMAs)? — track in `arch/tcgen05.md`.
+

@@ -1,5 +1,16 @@
 # UBLKRED — Uniform block reduction (non-tensor `cp.reduce.async.bulk`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** Observed results (RTX 5090  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Opcode mnemonic:** `UBLKRED` = `0b1001110111011` = **0x13bb** | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
 
 ## Semantics
@@ -94,6 +105,8 @@ protects the shared source (WAR) until the engine reads it, drained by
 which uses the tx-count barrier + single-thread `ELECT` framing like a load.
 `dst_wr_sb=*7`.
 
+## Evidence
+
 ## Verified encodings (`tests/ublkred_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |---|---|---|
@@ -161,9 +174,15 @@ ptxas's own lowering (`red_probe` sm_120 cubin): `@P0 ELECT P1` →
 `DEPBAR.LE SB0, 0x0`.  The hand-built form skips the retry handshake and works
 identically (the bulk-group completion is what actually drains the op).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `F32.FTZ.RN` (sz=6) — which PTX qualifier emits the FTZ variant (not triggered;
   the `.noftz` path gave F32.RN/F16.RN, not FTZ).
 - The `.S.S` cluster-reduce completion detail (mbarrier vs remote scoreboard) —
   observed rd_sb=0 + ELECT, consistent with the load-style tx-count path.
 - `req_bit_set` semantics (shared open item across the TMA/bulk family).
+

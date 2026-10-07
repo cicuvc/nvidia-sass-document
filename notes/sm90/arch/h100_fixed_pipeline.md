@@ -1,5 +1,16 @@
 # H100 (GH100) fixed-latency scalar pipeline: rates, forwarding, result visibility
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** NVIDIA H100 80GB HBM3 (sm_90), driver 580.95.05, via Modal  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: NVIDIA H100 80GB HBM3 (sm_90), driver 580.95.05, via Modal
 (`tools/modal_h100_probe.py`).  No NCU — all numbers are `CS2R SR_CLOCKLO`
 window timing or poison/fresh result-visibility boundaries from the sm_120
@@ -80,20 +91,6 @@ share the FP64 window. Scalar Lite has no independently visible deep queue.
 
 The predicate-off single-warp slopes still show that squashed instructions
 reserve pipe service; only the depth inference has changed.
-
-## Corrections to the H20-era numbers
-
-`h20_compute_conflicts.md` measured everything with `SCHED=[7:7:{}:1:1]`
-(yield=1 on every instruction):
-
-- "Every ordinary stream runs near two clocks/instruction" — artifact of the
-  yield switch cost for the 32-lane FP32 pipe.  H100 FFMA/FADD/FMUL solo =
-  **1.0 cyc/inst**.  (The H20 die may genuinely differ — H20 FP64 is
-  fuse-nerfed to 1:64 — but the FFMA "2.04 solo" number is the yield
-  artifact and should be re-read as 1.0-class.)
-- The conflict-matrix *pairing* conclusions (early INT/FP16/IMAD admission,
-  RF bank collection law) used relative comparisons and survive, but their
-  absolute slopes include per-instruction switch noise.
 
 ## Result-visibility (producer→consumer bypass) matrices
 
@@ -299,6 +296,8 @@ GA100), **the RF needs reuse bits for full 3-source FP32 rate**: FFMA runs
 bank law (≈1 warp operand per even/odd bank per clock: a 2E+1O FFMA needs
 two even-bank reads).  INT ops stay at their 2.0 datapath floor regardless.
 
+## Evidence
+
 ## Reproduction
 
 ```bash
@@ -313,6 +312,25 @@ Raw logs from the 2026-09-20 runs: alulite 80 rows, aluheavy 188,
 fmalite 48, fmaheavy 48, fmaheavy_wide 64, fp16 64, fp64 64 — zero faults,
 all permanent boundaries clean.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Corrections to the H20-era numbers
+
+`h20_compute_conflicts.md` measured everything with `SCHED=[7:7:{}:1:1]`
+(yield=1 on every instruction):
+
+- "Every ordinary stream runs near two clocks/instruction" — artifact of the
+  yield switch cost for the 32-lane FP32 pipe.  H100 FFMA/FADD/FMUL solo =
+  **1.0 cyc/inst**.  (The H20 die may genuinely differ — H20 FP64 is
+  fuse-nerfed to 1:64 — but the FFMA "2.04 solo" number is the yield
+  artifact and should be re-read as 1.0-class.)
+- The conflict-matrix *pairing* conclusions (early INT/FP16/IMAD admission,
+  RF bank collection law) used relative comparisons and survive, but their
+  absolute slopes include per-instruction switch noise.
+
 ## Open questions
 
 - Why does DFMA (but not DADD) expose the yield switch cycle on top of its
@@ -323,3 +341,4 @@ all permanent boundaries clean.
   variant of the same fp16 pipe?
 - The coarse/fine 3-vs-4 phase sensitivity on cross-domain hops — same
   unresolved filler-shape effect as sm_120.
+

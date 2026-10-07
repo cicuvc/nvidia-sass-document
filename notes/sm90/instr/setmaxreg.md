@@ -1,5 +1,16 @@
 # SETMAXREG (USETMAXREG) — Dynamic warp register allocation
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** verified SASS semantics (RTX 5090  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Mnemonic:** `USETMAXREG` | **opcodes:** 0x19c8 (immediate), 0x13c8
 (uniform-register target) | **pipe:** `udp_pipe` | **type:**
 `INST_TYPE_DECOUPLED_RD_WR_SCBD` | **queue:** `VQ_UNORDERED` | compute-only
@@ -204,9 +215,15 @@ instruction-bit heuristics.
 - `tests/asm_construct/test_usetmaxreg.py`: real-device pool accounting,
   success/failure, contention, UR form, raw bounds and tail-window probes.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - CTA-pool arbitration/fairness between simultaneous requesting warpgroups.
 - Exact behavior of predicated-off destinations and malformed mode/pool bits.
 - Behavior for incomplete warpgroup participation is intentionally left
   undefined, matching PTX.
+

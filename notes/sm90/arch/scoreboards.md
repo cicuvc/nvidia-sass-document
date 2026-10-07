@@ -1,5 +1,16 @@
 # Scoreboards — the variable-latency dependency mechanism (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 Consolidates how the 6 scoreboards work, refining the widely-known Volta+ model.
 Cross-refs: `control_codes.md` (field layout), `usched_latency.md`
 (fixed-latency stalls), `../instr/f2i.md`, `../instr/depbar.md`.
@@ -145,6 +156,11 @@ synchronization semantics without variable latency: `ENDCOLLECTIVE`
 Mental model: **VQ is the carrier, scoreboard is the tracking** — VQ is
 necessary for the scoreboard, not identical to it.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact decrement timing (issue+fixed vs true writeback) per op class.
 - Whether the read-barrier is ever used for operand-collect of ordinary loads or
@@ -155,3 +171,4 @@ necessary for the scoreboard, not identical to it.
   JSON DB); the sm120 raw dump is not on hand, and nvcc-emitted SASS for
   DECOUPLED ops (`ATOM`/`LDG`/…) shows `wr`/`rd`/`req` scoreboard fields, so the
   VQ side is inferred, not yet verified from a sm120 text dump.
+

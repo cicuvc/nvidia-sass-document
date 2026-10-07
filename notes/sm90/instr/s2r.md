@@ -1,5 +1,16 @@
 # S2R — Read Special Register (→ GPR)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `S2R` = `0b100100011001` = **0x919** | **Pipe:** `mio_pipe` (MIO_SLOW) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD` | since sm_70
 
 Copy a hardware **special register** `SRa` into a general register `Rd`. The canonical way to read `threadIdx`/`blockIdx`/`laneid`/lanemasks/cluster IDs etc.
@@ -45,6 +56,8 @@ Not all SR reads use S2R: **`clock()`/`clock64()`** use the coupled **`CS2R`** (
 ## Latency (from sm_90_latencies.txt)
 `mio_pipe`, in `MIO_SLOW_OPS`; decoupled, consumers wait on write scoreboard. `OP_S2UR_S2R = {S2R, S2UR}` participate in `GMMA_SCOREBOARD_READERS` (they can read a warpgroup-MMA scoreboard SR).
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -63,5 +76,11 @@ Decoder: `tools/decode_s2r_s2ur.py` (all 9 vectors pass). Tests: `tests/s2r_test
 - `%laneid` → `S2R Rd, SR_LANEID` (0); `%lanemask_{eq,lt,le,gt,ge}` → `SR_EQ/LT/LE/GT/GEMASK` (56–60)
 - `%smid` → `S2R Rd, SR_VIRTUALSMID` (67); `clock()/clock64()` → `CS2R … SR_CLOCKLO` (not S2R)
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - None significant.
+

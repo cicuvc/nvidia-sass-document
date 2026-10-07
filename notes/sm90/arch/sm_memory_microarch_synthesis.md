@@ -1,5 +1,16 @@
 # SM memory microarchitecture — synthesis (sm_90 family, validated on sm_120)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08-14  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 Consolidated picture of the SM-internal memory path: what is **established**
 (directly measured, reproducible), what is **inferred** (model fits, mechanism
 unproven), and what is **open**. Sources: `lsu_mio_structure.md` (MIO/arbiter,
@@ -43,6 +54,8 @@ Exact model (`shared_bank_conflicts.md` §4; 4B 400/400, 8B 60/60, 16B 60/60):
   `TSetAcc = #tags`, `TReq = 1` (whole warp's tag stage = 1 request).
 - Misses tracked at **32B sector** granularity (`Sectors` = distinct sectors).
   On sm_120 cold path, `SecHit` is always 0 for `cp.async.ca`.
+
+## Evidence
 
 ## 3. Data-stage formation rules — ESTABLISHED
 
@@ -122,7 +135,6 @@ Exact model (`shared_bank_conflicts.md` §4; 4B 400/400, 8B 60/60, 16B 60/60):
 3. **Fill bypass to the data stage**: miss data likely services the waiting
    access directly from the fill/return path without a data-array read —
    the simplest explanation for free re-serves.
-4. ~~LDG vs LDGSTS allocate different L1 states~~ **DISPROVEN 2026-08-13**:
    LDG-allocated lines hit normally for both LDG and LDGSTS; the apparent
    difference was a compiler-eliminated preheat (§4).
 5. **Shared SRAM is 1R+1W ported**: write chains and read passes timeshare
@@ -171,7 +183,16 @@ Exact model (`shared_bank_conflicts.md` §4; 4B 400/400, 8B 60/60, 16B 60/60):
 - MIO queue ordering guarantees; store-buffer drain behavior
   (`lsu_mio_structure.md` Q1/Q2).
 - Tag-bank hash for lines ≥ 1024 (bits 10+; validated only to line 511).
-- ~~Why LDG-allocated lines are invisible to LDGSTS lookups~~ RESOLVED
   2026-08-13 (compiler-eliminated preheat artifact; they hit fine).
 - `cg`/bypass path behavior (all results above are `ca`).
 - `Inst=2` (smsp__inst_executed_op_ldgsts) — LDGSTS replays/second issue?
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+### Retracted or disproven items relocated from the sections above
+
+4. ~~LDG vs LDGSTS allocate different L1 states~~ **DISPROVEN 2026-08-13**:
+- ~~Why LDG-allocated lines are invisible to LDGSTS lookups~~ RESOLVED

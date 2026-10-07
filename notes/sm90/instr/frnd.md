@@ -1,5 +1,16 @@
 # FRND — Float Round (MUFU)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** FRND  |  **Pipe:** `mio_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
 
 ## Semantics
@@ -58,7 +69,13 @@ F64 uses opcode 0x313 (others use 0x307). Swap ALTs share the same base opcodes 
 
 `mio_pipe`, MUFU dispatch. Higher latency than int_pipe ops. Variable latency encoded in scoreboard fields.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - Does ptxas emit FRND or does it prefer an int_pipe/udp_pipe alternative (like RRO or MUFU)?
 - The Round3 encoding values map to which specific IEEE 754 rounding modes?
+

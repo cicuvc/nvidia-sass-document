@@ -1,5 +1,16 @@
 # SHFL — Warp shuffle (cross-lane data exchange)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonics:** `SHFL` = **0x389** (RRR) / **0x589** (RRI) / **0x989** (RIR) / **0xf89** (RII) | **Pipe:** `mio_pipe` (MIO_SLOW_OPS) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`, `VIRTUAL_QUEUE=$VQ_AGU` | since sm_70
 
 SASS lowering of PTX `shfl.sync` (`__shfl_sync` / `__shfl_up_sync` / `__shfl_down_sync` /
@@ -59,6 +70,8 @@ segmask/clamp fold into `Sc`. (RRR not observed from ptxas in these tests.)
 `mio_pipe` member and listed in **`MIO_SLOW_OPS`** (the slower MIO latency class, alongside
 LDS/S2R). Decoupled (`VQ_AGU`): consumers wait on the write scoreboard (`dst_wr_sb`).
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -79,12 +92,7 @@ Decoder: `tools/decode_shfl.py` (all 7 vectors pass). Test: `tests/shfl_test.cu`
 - `__shfl_xor_sync(mask, v, m, w)` → `SHFL.BFLY …`
 - `c = ((32-width)<<8) | (0x1f for idx/down/bfly, 0 for up)`; mask arg dropped.
 
-## Open questions
-- 64-bit / vector shuffles: `__shfl_sync` on 64-bit types splits into two 32-bit SHFLs — not
-  a distinct SHFL encoding (`IDEST_SIZE`/`ISRC_A_SIZE` are fixed 32 here).
-- `Pu` (source-lane-valid) is always a PT sink in compiler output; no intrinsic exposes it.
-
-## Resolved: silicon-verified modes + Pu + scoreboard (SM120, 2026-08)
+## Verified: silicon-verified modes + Pu + scoreboard (SM120, 2026-08)
 
 `tests/asm_construct/test_shfl.py` confirms all four modes (Ra = per-lane tid):
 - IDX source=5 -> every lane reads 5; UP delta=4 -> lane t gets t-4 (t>=4,
@@ -98,3 +106,14 @@ Hand-assembler gotchas: SHFL is DECOUPLED_RD_WR_SCBD — the result needs a
 write scoreboard (`wr`) consumed by `req`; and the `Pu` predicate needs a long
 (~16 NOP) cross-pipe delay (mio_pipe -> int_pipe) before an `@P` consumer reads
 it.  The membermask is dropped (shuffle over the hardware active mask).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- 64-bit / vector shuffles: `__shfl_sync` on 64-bit types splits into two 32-bit SHFLs — not
+  a distinct SHFL encoding (`IDEST_SIZE`/`ISRC_A_SIZE` are fixed 32 here).
+- `Pu` (source-lane-valid) is always a PT sink in compiler output; no intrinsic exposes it.
+

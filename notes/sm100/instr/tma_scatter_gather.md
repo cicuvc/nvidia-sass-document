@@ -1,5 +1,16 @@
 # TMA scatter/gather — `UTMALDG.GATHER4` / `UTMASTG.SCATTER4`  → PTX `cp.async.bulk.tensor.tile::gather4/scatter4`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** confirmed on `sm_100  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **PTX:** `cp.async.bulk.tensor.2d.tile::gather4` / `.tile::scatter4`
 (§9.7.9.26.5.2, PTX ISA 9.3, `sm_100a+`)
 **SASS:** `UTMALDG` (load, 0x13b4 TILED / 0x15b4 GATHER4) — `UTMASTG` (store, 0x13b5)
@@ -46,6 +57,11 @@ register pair passed to the TMA engine.
 - `notes/sm100/arch/tcgen05_microarch_speculation.md` — the tensor-map descriptor
   format fed from global memory overlaps conceptually with the tcgen05 `gdesc`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `IM2COL`/`IM2COL_W`/`IM2COL_W_128` modes — im2col kernel offload to the TMA
   (same UTMALDG/UTMASTG ops, different mode values). Not tested here.
@@ -55,3 +71,4 @@ register pair passed to the TMA engine.
 - Whether GATHER4 exists on the store side or SCATTER4 on the load side — the
   opcode family (0x13b4/0x13b5 vs 0x15b4) suggests GATHER4 may be load-only and
   SCATTER4 store-only, matching the PTX syntax asymmetry.
+

@@ -1,5 +1,16 @@
 # F2FP — Float to Float, Packed (int_pipe converter)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** F2FP  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -108,6 +119,8 @@ Ra/Rb/Rc are real vs `*255`, (ii) the immediate replaces an operand (`RRI`/`RIR`
 - Coupled scoreboard: `Rd` is written to the normal scoreboard (unlike
   HMMA/QMMA); `?`-tokens only affect the fixed `*7` SB fields.
 
+## Evidence
+
 ## Verified encodings
 
 All from raw cubin words (ptxas CUDA 13.1; `.reuse` stripped from the SASS text):
@@ -190,6 +203,7 @@ E6M9 (sm90 value 2) is a Hopper-only format — superseded by the MXFP formats.
 | `cvt.rna.satfinite.tf32.f32 d,a` | folded by ptxas into `LOP3` mask (`& 0xffffe000`); the F2FP.TF32.F32.PACK_B encoding exists in the spec (opcode 0x23e, dstfmt=3, merge=3) |
 
 ## Silicon-verified semantics (sm120 / RTX 5090)
+<!-- provenance: last changed 2026-08 (git) -->
 
 `tests/asm_construct/test_f2fp.py` — 41 cases, hand-assembled SASS run on an
 RTX 5090, all bit-exact against the reference model.  **42/42 incl. probes.**
@@ -238,6 +252,11 @@ merge-family H0/H1 (Rc half-select) mapping; fp8-upconvert NaN → `0x7FFF`;
 subnormal-input FTZ; lane orientations; .RELU.  No behavioral divergence
 was found in the shared opcode space.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **E6M9 destination** (`dstfmt=2`): *resolved* — silicon-verified on H20 (see
@@ -253,3 +272,4 @@ a different (software) behavior.
 - **BF16 src** upconvert/downconvert (`SRCFMT_E5M2_E4M3` only covers E5M2/E4M3):
   FP8 pipeline formats are E4M3/E5M2 only, so `F2FP.*.BF16` src forms are just
   the shared dstfmt=BF16(1) alias — consistent with the E8M7/BF16 enum aliasing.
+

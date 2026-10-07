@@ -1,5 +1,16 @@
 # BRXU — Register-indirect branch (uniform-GPR target)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `BRXU` = `0b1100101011000` = **0x1958** | **Pipe:** `cbu_pipe` (Branch Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 The uniform-register indirect branch: the branch target comes from a **uniform register pair plus an immediate offset**. The uniform-register sibling of `BRX`.
@@ -40,6 +51,8 @@ BRXU is to BRX what JMXU is to JMX: the uniform-register indirect form.
 ## Latency
 `cbu_pipe` = `BRU_OPS`. `RPC_WRITERS` → **9-cycle** RPC true-dependency (`sm_90_latencies.txt:411,414`) and `CBU_OPS_WITH_REQ` (line 219, honor `&req=`). `DECOUPLED_BRU`, `MIN_WAIT_NEEDED=1`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_brx.py`)
 Not emitted by ptxas on sm_90/CUDA 13.1. Ground truth via **cubin-patching + nvdisasm**: self-test 7/7, plus randomized battery of 300 patched encodings decoded 100%.
 
@@ -49,5 +62,11 @@ Not emitted by ptxas on sm_90/CUDA 13.1. Ground truth via **cubin-patching + nvd
 | `0x0000000204000958` | `0x000fea000b800000` | `@P0 BRXU.DIV UR4` |
 | `0x0000000304000958` | `0x000fea000b800000` | `@P0 BRXU.CONV UR4` |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact runtime target formula (`URa + off` absolute vs. relative-to-anchor) can't be pinned from static disasm alone.
+

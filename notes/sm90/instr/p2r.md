@@ -1,5 +1,16 @@
 # P2R — Predicate file → GPR pack
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `P2R` = **0x203** (RRR) + forms | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | since sm_70
 
 Pack the warp's per-thread **predicate register file** (P0–P6 + condition state) into a byte of a GPR. Used for predicate spill/restore and bit-mask ↔ predicate conversions.
@@ -83,6 +94,8 @@ pre-load `Rd` with `0xAA`, store after P2R, and check the stored value):
   SM120 assembler test kernels (`tests/asm_construct/test_isetp.py`,
   `test_lop3.py`) use.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -94,7 +107,6 @@ Test: `tests/p2r_test.cu`.
 ### PTX→SASS mapping
 - Packing several `setp` predicates into an integer bitmask → `P2R Rd, PR, Ra, mask`.
 - ptxas also uses these to spill/reload predicates under register pressure.
-
 
 ## Behavior of non-default Bsel
 
@@ -163,6 +175,12 @@ d[4] = 0x00000011000000000000000000000000
 
 This inducates byte select suffix controls the byte to store the predicate register file.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - ~~ Byte-select suffix rendering for `Bsel != B0` is reconstructed (only B0 captured). ~~ (Resolved. See section Behavior of non-default Bsel)
 - Exact packing of condition-code bits beyond P0–P6 within the byte (mask 0x7f covers 7 preds).
+

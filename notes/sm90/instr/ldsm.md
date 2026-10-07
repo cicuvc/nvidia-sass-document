@@ -1,5 +1,16 @@
 # LDSM — warp-cooperative shared-memory matrix load (ldmatrix)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** LDSM  |  **Pipe:** mio_pipe (VQ_AGU)  |  **INSTRUCTION_TYPE:** INST_TYPE_DECOUPLED_RD_WR_SCBD
 
 Collectively loads one or more 8x8 matrices from shared memory, distributing
@@ -118,12 +129,19 @@ reads `Ra` at issue; an unready address faults 700).
 * Related: STS feeds the shared data; BAR.SYNC before LDSM to make stores
   visible; STG after to export fragments.
 
+## Evidence
+
 ## Verified encodings (test_ldsm.py, SM120)
 
 All four families pass: `.M88.x1`, `.M88.x2`, `.M88.x4`, `.MT88.x1` with a
 b16-value injection (`value[byteoffset/2] = byteoffset/2`) through LDG+STS and
 host-computed addresses passed via global memory.  Addresses must include the
 shared-window base (0x400) — LDSM `Ra` is the absolute window offset.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
 
 ## Open questions
 
@@ -132,3 +150,4 @@ shared-window base (0x400) — LDSM `Ra` is the absolute window offset.
   way); their row layout is assumed to follow the same 16-byte-row model.
 * nvcc's `.x2`/`.x4` row-stride-32 layout is the empirically observed one;
   the extra 16 bytes per row are unexplained by PTX docs (row padding).
+

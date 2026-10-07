@@ -1,20 +1,20 @@
 # STG — Store to Global Memory
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `STG`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` (decoupled read-only scoreboard)  
 **VIRTUAL_QUEUE:** `$VQ_AGU`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
-> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
-> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
-> stall/NOP pattern before results count as sm_90-verified.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -110,6 +110,8 @@ Note the URc at [69:64] vs LDG's URb at [37:32] — the uniform register and
 data register positions swap between the two opcodes due to LDG's extra
 modifier fields (Pu/Pnz/SP2) occupying bits 83:64.
 
+## Evidence
+
 ## Verified encodings
 
 All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
@@ -146,6 +148,11 @@ plain `0x386` form is not observed in user code or cublas.
 | Memory descriptor | No | Yes (URc pair) |
 | CS only | Yes | No |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **URc at [69:64] vs LDG's URb at [37:32]:** The uniform register for the
@@ -153,3 +160,4 @@ plain `0x386` form is not observed in user code or cublas.
   reflects LDG's extra Pu/Pnz/SP2 fields which occupy the [69:64] space in
   LDG, pushing URb down to [37:32].
 - **Plain 0x386 forms:** Same as LDG — what triggers them?
+

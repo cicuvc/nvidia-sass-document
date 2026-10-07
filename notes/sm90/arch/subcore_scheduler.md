@@ -1,5 +1,16 @@
 # SM subcore mapping (warp i → subcore i%4) and the yield-hint scheduler switch (SM120)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** verified on sm_120 / GB202, RTX 5090  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Question:** does each SM partition its warps onto 4 subcores as `warp i →
 subcore i%4`, and does the SASS "yield" hint (bracket `yield=1` → `usched`
 bit4=0, `WnEG`) really make the subcore scheduler switch to another warp on
@@ -11,6 +22,8 @@ the next cycle?
 does not. On a shared subcore, a `WnEG` (yield=1) warp **yields its issue
 slots** to a co-resident `transN` (yield=0) warp, doubling that warp's
 finish time while the transN warp runs at ~solo speed.
+
+## Evidence
 
 ## Method — per-warp yield asymmetry
 
@@ -96,6 +109,11 @@ python3 tests/asm_construct/test_subcore_yield.py
 Probe scripts used during development (not committed): `/tmp/opencode/probe_subcore.py`,
 `/tmp/opencode/probe_yield_asym.py`, `/tmp/opencode/probe_issue.py`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - The exact issue-port arbitration: is the transN/WnEG bias ~2:1 always, or
@@ -107,3 +125,4 @@ Probe scripts used during development (not committed): `/tmp/opencode/probe_subc
 - Whether `DRAIN` (`stall=0`) behaves as a stronger "yield to any warp" than
   `WnEG` (its 34-cycle solo penalty suggests a full pipe drain, not just an
   issue-slot handoff).
+

@@ -1,5 +1,16 @@
 # VOTE — Warp-wide vote / ballot
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `VOTE` = `0b100000000110` = **0x806** | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | since sm_70
 
 SASS lowering of PTX `vote.sync` (`__ballot_sync` / `__any_sync` / `__all_sync` / `__uni_sync`).
@@ -61,6 +72,8 @@ ballot result is warp-uniform); documented separately.
 OP_VOTE`) because it reads predicates warp-wide; its predicate connectors are
 `{Pr,Pq,Pp,Pa,Pb,Pc,Ps,Plg,Pnz}`.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -81,11 +94,7 @@ Test: `tests/vote_test.cu`.
 - `__uni_sync(mask, p)` → `VOTE.EQ Pu, p`
 - inverted condition → source predicate negated (`!Pp`).
 
-## Open questions
-- Whether ptxas ever emits VOTE with both `Rd` and a real `Pu` simultaneously (e.g. a fused
-  ballot + any); all observed cases use exactly one destination.
-
-## Resolved: silicon-verified semantics (SM120)
+## Verified: silicon-verified semantics (SM120)
 
 `tests/asm_construct/test_vote.py` confirms on silicon:
 - Ballot mask: `VOTE.ANY Rd, PT, Pp` gives bit i = lane i's Pp over the ACTIVE
@@ -99,3 +108,13 @@ Test: `tests/vote_test.cu`.
 - int_pipe fixed latency: the Pu predicate needs ~8-16 NOP cross-pipe delay
   before an `@P` consumer (same discipline as ELECT); the ISETP feeding Pp
   needs stall=13 (CBU predicate latency).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Whether ptxas ever emits VOTE with both `Rd` and a real `Pu` simultaneously (e.g. a fused
+  ballot + any); all observed cases use exactly one destination.
+

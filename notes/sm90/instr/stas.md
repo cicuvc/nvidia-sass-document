@@ -1,5 +1,16 @@
 # STAS — Store-async to distributed shared memory (`st.async`)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `STAS` = `0b1110110111101` = **0x1dbd** | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_AGU` (15) | compute-only (`SHADER_TYPE==CS`)
 
 ## Semantics
@@ -88,6 +99,8 @@ result — the store lands in remote shared and signals the mbarrier).
 width). Observed `dst_wr_sb=*7` (no write scoreboard) and `rd_sb=7` (no read
 scoreboard) in the tested cases — completion is entirely mbarrier-based.
 
+## Evidence
+
 ## Verified encodings (`tests/stas_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | PTX |
 |---|---|---|---|
@@ -115,6 +128,11 @@ The destination address `[a]` and the `[mbar]` handle are packed into the single
 64-bit `Ra` register pair (the two consts loaded into R2/R3 in the test); the
 `mapa`-style remote-CTA mapping is done by the caller.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact split of the `[Ra.64]` pair into {remote-shared address, mbarrier handle}
   — inferred from the two adjacent const loads, not bit-confirmed.
@@ -123,3 +141,4 @@ The destination address `[a]` and the `[mbar]` handle are packed into the single
   map to a different mnemonic/state-space).
 - `REDAS` (the reduce sibling, 0x1dbe) — analogous DSMEM async reduction, now
   documented in `redas.md`.
+

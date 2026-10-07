@@ -1,5 +1,16 @@
 # F2F — Float to Float Conversion
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** F2F  |  **Pipe:** `mio_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
 
 ## Semantics
@@ -47,6 +58,8 @@ Grouped by: {downconvert, upconvert} × {F32, F64} × {RRR, RIR, RCR, RCxR, RUR}
 [91:91],[11:0]       opcode    <= 0b1100000100
 ```
 
+## Evidence
+
 ## Empirical status
 
 **Not emitted by pTxas on sm_90.** Modern compilers use `F2FP` (int_pipe) for float-to-float conversion instead of this mio_pipe variant. F2F is the legacy MUFU-dispatched version.
@@ -55,7 +68,7 @@ Grouped by: {downconvert, upconvert} × {F32, F64} × {RRR, RIR, RCR, RCxR, RUR}
 
 `mio_pipe`, MUFU dispatch. Decoupled scoreboard with variable-latency encoding. Higher latency than the int_pipe F2FP equivalent.
 
-## Resolved: silicon-verified semantics (SM120)
+## Verified: silicon-verified semantics (SM120)
 
 `tests/asm_construct/test_conversions.py`: F2F float format conversion
 verified: F32->F16, F16->F32, F32->BF16, BF16->F32 (exact-representable
@@ -64,3 +77,4 @@ dstfmt.srcfmt modifier is a single dotted enum value (e.g. `F2F.F16.F32` —
 the assembler now joins `.F16`+`.F32` into the enum key).  Rounding on the
 downconvert is RN by default.  mio_pipe DECOUPLED_RD_WR_SCBD (scoreboard as
 I2F/F2I).
+

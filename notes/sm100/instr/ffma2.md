@@ -1,5 +1,16 @@
 # FFMA2 / FADD2 / FMUL2 — packed FP32x2 FMA / Add / Mul  → PTX `fma.f32x2` / `add.f32x2` / `mul.f32x2`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
 **Opcode mnemonic:** `FFMA2` / `FADD2` / `FMUL2` — multiple opcodes per mnemonic
 (RRR/RRU/RRI/RIR/RUR variant positions).
 **Pipe:** `fmalighter_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
@@ -68,6 +79,8 @@ it does not mean that the instruction occupies two scheduler issue slots.
 [15] Pg_not  [14:12] Pg
 ```
 
+## Evidence
+
 ## Verified encoding (cuobjdump, `fma.rn.f32x2`, sm_100a)
 ```
 FFMA2 R2, R2.F32, R2.F32, 1
@@ -88,6 +101,11 @@ computes the fma as a packed pair.
 - `notes/sm100/instr/utchmma.md` — unrelated but also uses the fixed-latency
   `INST_TYPE_COUPLED_MATH` classification.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `ISWZA_fadd2` F32x2=0 / F32x2.HI_LO=0 both map to 0 — how does the disassembler
   choose between the two display strings? (Likely assembler-only aliases, both
@@ -106,3 +124,4 @@ computes the fma as a packed pair.
   that scalar Lite has literally zero skid entries.  GB100 NCU pipe counters
   are needed to distinguish a masked packed request from linked Heavy/Lite
   tokens and to establish first-level attribution.
+

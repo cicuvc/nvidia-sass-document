@@ -1,14 +1,22 @@
 # BMOV — Barrier / CBU-state move
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `BMOV` = base **0x355/0x356/0x357** (+ operand-form high bits) | **Pipe:** `cbu_pipe` (BRU_OPS) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD[_WR]_SCBD`, `VIRTUAL_QUEUE=$VQ_UNORDERED` | since sm_70
 
 The compiler's back door for reading/writing per-warp **Convergence-Barrier-Unit (CBU) state**:
 the 16 convergence-barrier registers `B0–B15`, the lane masks (MACTIVE/MEXITED/MKILL/MATEXIT),
 trap/at-exit PCs, etc. Used only for barrier spill/restore and trap/at-exit handlers — **not
 emitted by nvcc** (0 in cublas). See `../arch/cbu_state.md` for the full `CBU_STATE` selector map.
-
-> **Status: encoding spec-derived, round-trip only (no real captures).** BMOV appears only in
-> irregular-divergence / trap code, so nvdisasm's exact rendering is unsampled.
 
 TODO consolidation: **BMOV_R** (idx 55) = the register/state forms; **BMOV_B** (idx 54) = the
 barrier-register (`BD`) forms; **BMOV** (idx 56) — all one instruction, documented here.
@@ -70,14 +78,22 @@ write scoreboard), write forms have no GPR result.
 
 Decoder + round-trip test: `tools/decode_bmov.py`.
 
-## Open questions
-- **No real vectors** — exact nvdisasm text (size suffix `.32`, state-name spelling, at-exit
-  imm rendering) is unverified. See `cbu_state.md` for the state-selector reconciliation.
+## Evidence
 
-## Resolved: silicon-verified read form (SM120, 2026-08)
+## Verified: silicon-verified read form (SM120, 2026-08)
 
 `BMOV Rd, B0` now verified on silicon (see `../arch/cbu_state.md` and
 `tests/asm_construct/test_breg.py`): after a full-warp `BSSY B0, target`, B0
 reads back **0xFFFFFFFF** (the participating-lane mask); unset B0 / B0 after
 BSYNC / unused B1 all read 0x0. Two back-to-back BMOV reads race in a
 hand-built cubin (2nd clobbers 1st) — read one slot per probe.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- **No real vectors** — exact nvdisasm text (size suffix `.32`, state-name spelling, at-exit
+  imm rendering) is unverified. See `cbu_state.md` for the state-selector reconciliation.
+

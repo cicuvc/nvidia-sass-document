@@ -1,5 +1,16 @@
 # Async proxy — PTX→SASS ordering & instructions (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 Scope: **general proxy vs async proxy** only (texture/tensormap out of scope).
 The async proxy is the TMA / bulk-copy access path; it is physically distinct
 from the generic proxy, so cross-proxy visibility needs an explicit proxy fence.
@@ -95,7 +106,13 @@ the scoreboard-group completion (`DEPBAR.LE SBn`); the proxy fence is the only
 extra machinery — the SASS embodiment of PTX §8.6 "different proxies need a proxy
 fence."
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `FENCE.VIEW.ASYNC` control-word / scoreboard interaction with `SYNCS`.
 - Whether `commit_group` is ever emitted as a distinct opcode (vs folded into the
   following `DEPBAR` or `SYNCS.PHASECHK`).
+

@@ -1,5 +1,16 @@
 # CGAERRBAR — CGA-scope error barrier
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `CGAERRBAR` = `0b10110101011` = **0x5ab** | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 Thread-block cluster-scope error barrier — synchronizes/surfaces deferred errors (asynchronous memory faults, ECC, etc.) from prior cluster-scope operations.
@@ -31,10 +42,18 @@ Accompanies GPU-/SYS-/cluster-scope fences, never CTA(block)-scope:
 ## Latency
 `mio_pipe`. `DECOUPLED_BRU`/`VQ_UNORDERED`. Not in `RPC_WRITERS`/`CBU_OPS_WITH_REQ`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_errbar.py`)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
 | `0x00000000000075ab` | `0x000fec0000000000` | `CGAERRBAR` |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - The exact error class each barrier drains (page-fault vs ECC vs async-copy completion error).
+

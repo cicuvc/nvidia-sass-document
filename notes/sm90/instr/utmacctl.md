@@ -1,15 +1,17 @@
 # UTMACCTL — Uniform TMA cache control (tensor-map descriptor coherence)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Opcode mnemonics:** `UTMACCTL` = `0b1100110111001` = **0x19b9** (`_URa_`: `.IV`/`.PF` + operand) / `0b100110111001` = **0x9b9** (`_`: `.IVALL`, no operand) | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` (URa form) / `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` (IVALL form) | **VIRTUAL_QUEUE:** `VQ_TMA_UNORDERED_WR` (35) | compute-only (`SHADER_TYPE==CS`)
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun is currently blocked because the accompanying test source
-> uses sm_120 FORMAT shapes the sm_90 spec rejects at match time.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 UTMACCTL manages the coherence of **tensor-map descriptors** in the TMA
@@ -97,6 +99,8 @@ tile data, only manages descriptor-cache coherence.
 `UTMACCTL` ∈ `OP_TMA` (`sm_90_latencies.txt:166`) ⊂ `udp_pipe`. Decoupled
 read-scoreboard op, all `*_SIZE=0` except `ISRC_A_SIZE=64` (URa form). The IVALL
 form's `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` ties it into the DEPBAR path.
+
+## Evidence
 
 ## Verified encodings (`tests/utmacctl_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | source PTX |
@@ -194,6 +198,11 @@ Conclusions:
   ptxas's full acquire sequence reproduces phase2=B; `k_canonical<false>`
   (no fences) reproduces stale A — matching the hand-assembled matrix.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - What triggers the operandless **`UTMACCTL.IVALL`** (0x9b9) from PTX — likely a
   bulk-invalidate on kernel entry/exit or a driver-level descriptor flush; not
@@ -205,3 +214,4 @@ Conclusions:
 - Whether sm_90's `DEPBAR + UTMACCTL.IV` (no CCTL) alone actually refreshes a
   same-address descriptor inside one kernel is untestable on this GPU (RTX 5090
   is sm_120); the sm_90 lowering suggests Hopper has only the SM-side cache.
+

@@ -1,10 +1,19 @@
 # FSETP — FP32 Comparison to Predicates
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `FSETP`  
 **Pipe:** `int_pipe`  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Semantics
 
@@ -86,6 +95,8 @@ No register destination (`IDEST_SIZE = 0`).
 | FTZ pattern in asm | CMP.FTZ? | CMP.FTZ.BOP |
 | ptxas preference | For set.f32 | For setp.f32 and some FTZ cases |
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 5/5 matches. Decoder: `tools/decode_fsetp.py`.
@@ -116,13 +127,7 @@ FSET) because the result feeds a predicate/conditional, not a register.
 
 Same as FSET: TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2 (int_pipe/FXU_OPS).
 
-## Open questions
-
-- Bop=OR and Bop=XOR not yet verified
-- `_simple` variant (no Bop) not yet observed
-- Relationship with ISETP (integer setp) — same opcode pattern?
-
-## Resolved (SM120 bit-level verification, 2026-08)
+## Verified (SM120 bit-level verification, 2026-08)
 
 `tests/asm_construct/test_fmnmx_fset.py` — all 16 FCMP × operand pairs OK.
 
@@ -136,3 +141,15 @@ Same as FSET: TABLE_TRUE 6–8, TABLE_OUTPUT 1–2, TABLE_ANTI 1–2 (int_pipe/F
   `Pv = ¬Pu` matches AND (and XOR, coincidentally) but is WRONG for OR:
   `FSETP.LT.OR P0, P1, 1, 2, PT` gives P0=1, P1=1.
 - `.FTZ` flushes denormal inputs.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- Bop=OR and Bop=XOR not yet verified
+- `_simple` variant (no Bop) not yet observed
+- Relationship with ISETP (integer setp) — same opcode pattern?
+

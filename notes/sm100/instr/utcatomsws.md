@@ -1,5 +1,16 @@
 # UTCATOMSWS — uniform tensor-core atomic on software state (TMEM allocator)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** executed successfully on a Modal B200  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Opcode mnemonic:** `UTCATOMSWS` — three opcodes by sub-op:
 `CAS`=`0b1001111100011` (0x13e3), `FAS`=`0b1010111100011` (0x15e3),
 `OP`(AND/OR)=`0b1100111100011` (0x19e3)
@@ -87,6 +98,8 @@ encode cluster size and AND/OR respectively.
 `INST_TYPE_DECOUPLED_RD_WR_SCBD` + both scoreboard fields active: the atomic is
 decoupled/async and releases **both** a read and a write scoreboard when it
 completes (unlike LDTM which is WR-only, or STTM which is RD-only).
+
+## Evidence
 
 ## Verified encodings (cuobjdump, `nvcc -arch=sm_100a`, CUDA 13.1)
 Mined from the `tcgen05.alloc`/`dealloc` lowering in `tests/ldtm_test.cubin`,
@@ -205,6 +218,11 @@ is tracked via the read+write scoreboards, not a fixed table entry.
 - Sibling SWS ops (not yet documented): `UTCLDSWS` / `UTCSTSWS` — load/store of
   the software-state region (`OP_SWS`).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact bit-width and layout of the software-state word `URb` refers to (the
   TMEM free-list bitmap): is it a single UGPR, or a handle into a wider state?
@@ -214,3 +232,4 @@ is tracked via the read+write scoreboards, not a fixed table entry.
   encoding-identical (assembler-only, or a decode disambiguation only)?
 - `.ALIGN` semantics for `FIND_AND_SET` — aligned to what granularity (the 32-col
   TMEM allocation unit)?
+

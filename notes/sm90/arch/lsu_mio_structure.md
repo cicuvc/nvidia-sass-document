@@ -1,5 +1,14 @@
 # LSU / MIO pipeline structure — store register lifetime & the SM arbiter (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-14  
+**Probe:** rand sampling (GB202  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
 Microarchitecture inferred from scoreboard codegen + latency timing on the memory
 pipe. Question driving this: within an SM, how do the 4 sub-partitions' load/store
 requests flow through the MIO/LSU, and **when is a store's source register read
@@ -231,3 +240,4 @@ mixed-state-space).
 - Does a store ever receive an arbiter *response* at all (for ECC/fault via
   `ERRBAR`/`CGAERRBAR`), or is the only back-signal the load write-scoreboard?
 - Whether the per-SMSP MIO queue is strictly FIFO or a small reorder buffer.
+

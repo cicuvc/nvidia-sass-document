@@ -1,13 +1,19 @@
 # S2UR — Read Special Register (→ Uniform register)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `S2UR` = `0b100111000011` = **0x9c3** | **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD` | since sm_73
 
 Copy a hardware **special register** `SRa` into a uniform register `URd`. The uniform-datapath sibling of `S2R`, chosen when the SR value is warp-uniform (e.g. `blockIdx`, `SR_CgaCtaId`) and consumed on the uniform datapath.
-
-<!-- arch-scope-banner -->
-> **Arch scope:** SR_CTAID.X *last-writer-wins* numbers below come from RTX 5090 (sm_120). On real
-> Hopper (H20) the grid=3 case reads 1 vs the recorded 2 — silicon or launch-order
-> difference pending a dedicated probe. See `notes/sm120/silver-status.md`.
 
 ## Semantics
 `URd` (32-bit) = value of special register `SRa` (`SRa`[79:72], 8-bit index). Decoupled (`VQ_SR2UR`=29) — consumers wait via the write scoreboard. `SRa` 84/85 (`SR_ESR_PC`/`_HI`) are trap-mode only.
@@ -36,6 +42,8 @@ Not all SR reads use S2UR: `clock()`/`clock64()` use **`CS2R`** for the `SR_CLOC
 ## Latency (from sm_90_latencies.txt)
 `udp_pipe`, in `R2UR_S2UR`/`OP_R2UR` group; URd producer latency **1** cycle (`TABLE_*(UGPR)`), `VQ_SR2UR`. `OP_S2UR_S2R = {S2R, S2UR}` participate in `GMMA_SCOREBOARD_READERS`.
 
+## Evidence
+
 ## Verified encodings (sm_90, libcublasLt.so)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -51,5 +59,11 @@ Decoder: `tools/decode_s2r_s2ur.py` (all 9 vectors pass). Tests: `tests/s2ur_tes
   **shared-memory window base** `(SR_CgaCtaId<<24)+0x400` (DSMEM per-CTA slice) —
   see `sts.md` "Shared-memory address model".
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact trigger heuristic for S2R vs S2UR (only observed S2UR in warp-specialized/cluster cublasLt kernels; simple kernels keep S2R even for uniform `blockIdx`).
+

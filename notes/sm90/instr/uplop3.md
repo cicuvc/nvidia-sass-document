@@ -1,5 +1,16 @@
 # UPLOP3 — Uniform Predicate Three-Input Logic
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** UPLOP3  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -85,6 +96,8 @@ For the 1-reg / 2-reg / 3-reg variants, registers occupy: `URa` [29:24], `URb` [
 
 UPLOP3 is in `udp_pipe`, under the `UDP_subset` latency group. Produces uniform predicates (UPu, UPv). The latency file groups it with `WHOLE_UPRED_OPS` via `UPR_UPRED` connector for the 0-reg form, and uses standard UGPR connectors for register-input forms.
 
+## Evidence
+
 ## Verified encodings
 
 ### From libcublas (sm_90, CUDA 13.1)
@@ -111,8 +124,14 @@ No direct PTX mapping. UPLOP3 is likely emitted as part of `lop3` predicate logi
 | Pipe | `int_pipe` | `udp_pipe` | `udp_pipe` |
 | LUT width | 8-bit | 8-bit (x2 for 2-out) | 8-bit |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **Register-input variants (1-reg, 2-reg, 3-reg):** No empirical examples. What instruction sequences would require extracting sign bits from uniform registers into a predicate?
 - **LOP mode (AND/XOR/SEL/OR):** Uses large constants (32768, 38400, 51712, 65024) as the op values. These are likely packed representations. What is the exact encoding format?
 - **LUT semantics:** The 8-bit LUT encodes the output for all 8 combinations of `{UPp, UPq, UPr}` (bit 0 = all false, bit 7 = all true). With all inputs as UPT, the LUT value effectively becomes a 1-bit constant. Observed values 0x80 and 0x40 both have a single bit set, producing UP0=1 or UP0=0 depending on bit position.
+

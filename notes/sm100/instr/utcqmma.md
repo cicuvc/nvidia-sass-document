@@ -1,5 +1,16 @@
 # UTCQMMA / UTCMXQMMA — FP8/FP6/FP4 quarter-precision MMA  → PTX `tcgen05.mma.kind::f8f6f4` / `mxf*`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `UTCQMMA` + `UTCMXQMMA` — four opcodes shared between the two
 mnemonics:
 GEMM = `0b1010111101010` (0x15ea, A-gdesc) / `0b1100111101010` (0x19ea, A-tmem)
@@ -108,6 +119,8 @@ multiple MMAs may share the same scale TMEM using different data IDs. This is
 consistent with the MX idesc layout (`tcgen05_descriptors.md`): both scale
 matrices sit in TMEM at addresses derived from the same data-ID scheme.
 
+## Evidence
+
 ## Verified encodings (cuobjdump, `.kind::mxf8f6f4.block_scale`, sm_100a)
 Source: `tests/utcqmma_test.cu` → `tests/utcqmma_test.cubin`. Decoder:
 `tools/decode_utcqmma.py` — all round-trip (**ALL PASS**).
@@ -129,6 +142,11 @@ Source: `tests/utcqmma_test.cu` → `tests/utcqmma_test.cubin`. Decoder:
 - `notes/sm100/instr/utcshift.md` — `.ashift` fuses into non-scale 0x19ea; scale
   variant has no ashift.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - How exactly does the single `tmem[scale]` address disambiguate between
   scale-A and scale-B operands in the block-scale PTX syntax? (The data IDs in
@@ -144,3 +162,4 @@ Source: `tests/utcqmma_test.cu` → `tests/utcqmma_test.cubin`. Decoder:
 (Note: this note covers `UTCQMMA`; the UTCHMMA non-scale encoding is in
 `utchmma.md` — they are the same encoding at opcodes 0x15ea/0x19ea. See the
 opcode family table above.)
+

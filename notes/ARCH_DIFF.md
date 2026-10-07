@@ -1,8 +1,21 @@
 # ARCH_DIFF — opcode-space comparison across sm_75 / sm_80 / sm_90 / sm_100 / sm_120
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** spec  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: no measurement marker
+
+## Conclusion
+
 Cross-architecture comparison of the nvdisasm ISA dumps: how the 13-bit opcode
 space (`bit[91] ∥ bits[11:0]`) maps to encoding classes, and how that mapping
 drifts generation to generation.
+
+## Evidence
 
 ## Method
 
@@ -172,14 +185,6 @@ unrelated):
 Everything else that persists does so with the same class name — the basic
 ALU/control-flow opcode assignments have been frozen since Turing.
 
-## Open questions
-
-- WARPSYNC: in the sm_80 dump as its own opcode(s), absent from sm_90's, yet
-  listed in sm_90's `cbu_pipe` OPERATION SETS. Re-check against real sm_90
-  cubins (`cuobjdump -sass` + `tools/query_sm90.py opcode`).
-- The sm_75/sm_80 `pipes` sections here are suffix-derived and include digits
-  in mnemonic bases (e.g. `XMAD3`); they are informational only.
-
 ## Repro
 
 ```bash
@@ -190,3 +195,17 @@ python3 tools/parse_sm75_80.py    # -> sm75.json + sm80.json
 # then, per arch: group variants by opcode, keep shortest class name
 # (ties -> file order), sort ascending, emit "0x<hex>-><class>".
 ```
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- WARPSYNC: in the sm_80 dump as its own opcode(s), absent from sm_90's, yet
+  listed in sm_90's `cbu_pipe` OPERATION SETS. Re-check against real sm_90
+  cubins (`cuobjdump -sass` + `tools/query_sm90.py opcode`).
+- The sm_75/sm_80 `pipes` sections here are suffix-derived and include digits
+  in mnemonic bases (e.g. `XMAD3`); they are informational only.
+

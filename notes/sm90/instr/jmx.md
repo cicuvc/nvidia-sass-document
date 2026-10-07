@@ -1,5 +1,16 @@
 # JMX — Absolute register-indirect jump (GPR target)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `JMX` = `0b100101001100` = **0x94c** | **Pipe:** `cbu_pipe` (Branch Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 The absolute-indirect twin of `BRX` — same "target = register + immediate offset" mechanism, but the *absolute* jump family (as `JMP` is to `BRA`). Reads a **GPR pair**.
@@ -35,6 +46,8 @@ Offset rendering: `off = (sImm*4) & 0xffffffffff`, **omitted when `sImm==0`** (`
 ## Latency
 `cbu_pipe` = `BRU_OPS`. `RPC_WRITERS` → **9-cycle** RPC true-dependency (`sm_90_latencies.txt:411,414`) and `CBU_OPS_WITH_REQ` (line 219, honor `&req=`). `DECOUPLED_BRU`, `MIN_WAIT_NEEDED=1`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_jmx.py`, shared core in `decode_brx.py`)
 Not emitted by ptxas. Ground truth via **cubin-patching + nvdisasm**: self-test 7/7, randomized battery 100%.
 
@@ -44,11 +57,7 @@ Not emitted by ptxas. Ground truth via **cubin-patching + nvdisasm**: self-test 
 | `0x000000000600094c` | `0x000fea0003800000` | `@P0 JMX R6` (off=0 omitted) |
 | `0xfffffffc06fc094c` | `0x000fea0003800000` | `@P0 JMX R6 0xfffffffff0` (off = -16) |
 
-## Open questions
-- The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.
-- Real jump-table usage is unobserved because ptxas never emitted these in the sampled code.
-
-## Resolved: JMX is ABSOLUTE (target = Ra + off), base from LEPC (SM120)
+## Verified: JMX is ABSOLUTE (target = Ra + off), base from LEPC (SM120)
 
 Verified (`tests/asm_construct/test_jmx.py`): `JMX Ra, off` branches to
 **`Ra + off`** (Ra = 64-bit ABSOLUTE address, off = signed byte offset) — the
@@ -57,3 +66,13 @@ absolute twin of BRX (`next_pc + Ra + off`).  The PROPER base is **LEPC Rd**
 and the PC+sImm58 form both give base 0x07167500).  TRAP_RETURN_PC is an
 unreliable divergence-side effect, NOT a PC source.  Offset operands on scaled
 fields are BYTES (encoder divides by SCALE 4).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- The BR*/JM* runtime distinction (relative-indirect vs absolute-indirect target) mirrors the confirmed BRA(rel)/JMP(abs) split but is not observable statically.
+- Real jump-table usage is unobserved because ptxas never emitted these in the sampled code.
+

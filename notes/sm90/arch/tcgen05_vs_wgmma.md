@@ -1,5 +1,16 @@
 # Blackwell tcgen05 vs Hopper wgmma — the accumulator becomes Tensor Memory
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 Forward-looking comparison (PTX ISA 9.3, `~/cs/project/documented-ptx`) tying the
 empirically-derived Hopper model (`wgmma.md`, `hmma_pipeline.md`) to
 Blackwell's 5th-gen tensor core (`tcgen05.*`, sm_100+). Confirms the user's
@@ -100,3 +111,4 @@ model in `wgmma.md`.
 ## Sources
 `documented-ptx/instructions/182` (alloc), `183` (ld), `184` (st), `185` (wait),
 `195` (mma), `199` (fence), `200` (commit).
+

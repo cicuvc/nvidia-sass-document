@@ -1,5 +1,16 @@
 # B2R — Barrier register → GPR move
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `B2R` = `0b1100011100` = **0x31c** | **Pipe:** `mio_pipe` (MIO_SLOW_OPS) | **VIRTUAL_QUEUE:** `$VQ_BAR_EXCH` (barrier-exchange, =33) | **INSTRUCTION_TYPE:** `DECOUPLED_RD_WR_SCBD` | compute-only (`SHADER_TYPE==CS`) | since sm_70
 
 Move data from the block's **barrier hardware** into a GPR. `B2R` reads barrier state into a register.
@@ -43,6 +54,8 @@ BAR.RED.OR  .DEFER_BLOCKING 0x0, P0 ;  B2R.RESULT RZ, P0    ; __syncthreads_or  
 ## Latency (from sm_90_latencies.txt)
 `mio_pipe`, `MIO_SLOW_OPS`. `VQ_BAR_EXCH` decoupled: B2R's GPR result is consumed via the write scoreboard.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | source |
 |------|------|-------------|--------|
@@ -57,6 +70,12 @@ Decoder: `tools/decode_b2r_r2b.py` (real + round-trips pass). Test: `tests/b2r_t
 - `__syncthreads_and(p)` → `BAR.RED.AND …` + `B2R.RESULT RZ, Pu`
 - `__syncthreads_or(p)` → `BAR.RED.OR …` + `B2R.RESULT RZ, Pu`
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Whether cuobjdump prints the B2R `BAR` default mode as a bare mnemonic (assumed) or `.BAR` — only `.RESULT` was captured.
 - Exact meaning of `B2R.WARP` state (save/restore semantics) and which driver/trap path emits it.
+

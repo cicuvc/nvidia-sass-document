@@ -1,18 +1,20 @@
 # ATOM — Atomic Operation (generic address space)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `ATOM`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe, MIO_SLOW_OPS subset)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`  
 **VIRTUAL_QUEUE:** `$VQ_AGU`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). Its byte-exact encoding vectors were captured from sm_120 assembly;
-> the GPU-semantics halves of those cases passed on H20 (real sm_90).
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -91,3 +93,4 @@ The opcodes form a regular pattern — ATOM = ATOMS - 2, ATOMG - 1 (mostly).
 | [14:12] | Pg | guard predicate |
 
 CAS (`atom_cas_*`) adds `Rc` at [71:64]; ARRIVE/POPC.INC variants use `URc` at [69:64] for uniform offset instead of `Rb`.
+

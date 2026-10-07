@@ -1,5 +1,18 @@
 # Ampere register-bank read bandwidth (A100, 2026-09)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm80-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** NVIDIA A100-SXM4-40GB, compute capability 8.0. Cubins are assembled  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
+_(no summary in the source note; the sections below carry the durable facts)_
+
 ## Result
 
 The A100 measurement is cycle-for-cycle identical to the V100 result in
@@ -10,6 +23,8 @@ an additional clock.
 
 This experiment establishes the externally visible read service rate.  It
 does not measure or establish the RF write-port count.
+
+## Evidence
 
 ## Experiment
 
@@ -76,3 +91,4 @@ python3 tools/parse_sm90.py --instructions sm_80_instructions.txt \
 python3 tests/asm_construct/probe_v100_rf_banks.py \
   --arch sm80 --count 512 --out /tmp/a100_rf
 ```
+

@@ -1,12 +1,17 @@
 # FCHK — FP Check
 
-**Opcode mnemonic:** FCHK  |  **Pipe:** `mio_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
 
-> **Status: semantics verified on SM120 with a clean hand-built ELF (2026-08).**
-> FCHK.DIVIDE is a fast-divide safety pre-check: `Pu = 1` when the
-> `MUFU.RCP`+Newton path can't be correctly rounded (see "Verified fire
-> conditions").  Encoding verified against the CLASS spec and a real ptxas
-> vector; decoder round-trip in `tools/decode_fchk.py`.
+## Conclusion
+
+**Opcode mnemonic:** FCHK  |  **Pipe:** `mio_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`
 
 ## Semantics
 
@@ -55,6 +60,8 @@ ChkMode: always DIVIDE(0) on sm_90 — no other check modes defined.
 [14:12]              Pg         <= Pg
 [91:91],[11:0]       opcode     <= 0b1100000010
 ```
+
+## Evidence
 
 ## Verified fire conditions (SM120, clean hand-built ELF, 2026-08)
 
@@ -145,3 +152,4 @@ the verified window.  See `notes/sm90/arch/div.md`.
 | `0x0000000706007302` | `0x000ea20000000000` | `FCHK P0, R6, R7` (ptxas real vector) |
 
 Decoder round-trip + the real ptxas vector: `tools/decode_fchk.py`.
+

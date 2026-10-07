@@ -1,5 +1,16 @@
 # REDUX / CREDUX — uniform warp reduction  → PTX `redux.sync`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm100/; no part named, so the default measurement site sm100 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `REDUX` = 0x3c4 (classic uniform), `CREDUX` = 0x2cc (coupled, sm100-new)
 **Pipe:** `udp_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH` (CREDUX only)
 **Virtual queue:** None (non-decoupled math op)
@@ -65,6 +76,11 @@ Writes the scalar reduced value into `URd`.
   coupled-math sm100 extension adding F32 + ABS/NaN.
 - `notes/sm100/instr/ffma2.md` — same `INST_TYPE_COUPLED_MATH` dispatch.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - The membermask operand in PTX `redux.sync` — is it dropped in the CREDUX
   encoding (only full-warp masks), or encoded implicitly through the predicate
@@ -72,3 +88,4 @@ Writes the scalar reduced value into `URd`.
 - Why `CREDUX` uses `INST_TYPE_COUPLED_MATH` while classic `REDUX` is a plain
   `udp_pipe` op — does the F32 path share the `fmalighter_pipe` or similar
   datapath that justifies the coupled slot?
+

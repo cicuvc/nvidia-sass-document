@@ -1,5 +1,16 @@
 # LDC — Load from Constant Memory
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90)
+
+## Conclusion
+
 **Opcode mnemonic:** `LDC`  
 **Pipe:** `mio_pipe` (MIO — memory I/O pipe)  
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD` (decoupled read/write scoreboard)  
@@ -456,6 +467,8 @@ separate read (RD) and write (WR) scoreboards with variable-latency encoding:
 - `dst_wr_sb` [112:110]: destination write scoreboard (3-bit, default 7)
 - `req_bit_set` [121:116]: request bit mask (6-bit)
 
+## Evidence
+
 ## Verified encodings
 
 All verified against `cuobjdump -arch sm_90 -sass` from compiled kernels (`ldc_test.cu` + `libcublas.so`):
@@ -492,6 +505,11 @@ LDC already supports warp-uniform (coherent) semantics in hardware. `LDCU` in
 the ref_memo likely refers to a PTX concept (e.g. `ldu` opcode) that maps to the
 same LDC hardware instruction with different encoding hints.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - **`.IL` / `.IS` / `.ISL` addressing modes:** No empirical examples found.
@@ -504,3 +522,4 @@ same LDC hardware instruction with different encoding hints.
   (divergent) vs uniform index.
 - **LDCU resolution:** If `LDCU` is truly a separate instruction (not just LDC),
   what is its sm_90 opcode?
+

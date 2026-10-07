@@ -1,5 +1,16 @@
 # UBREV — Uniform Bit Reverse
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** UBREV  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -51,3 +62,4 @@ Verified recipe:
 `LDCU UR6, #param(in)` (wr=SB2) → `UMOV UR9, UR6` (dummy, req={2}) →
 `UBREV UR8, UR6` (req={2}) → `UMOV UR10, UR8` → `IADD3 R3, PT, PT, RZ, UR8, RZ`
 → fillers → `STG`.
+

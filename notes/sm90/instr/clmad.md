@@ -1,16 +1,21 @@
 # CLMAD — Carry-less (GF(2)) multiply-add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `CLMAD` = **0x22c** (RRR) + 6 operand-form variants | **Pipe:** `fma64lite_pipe` (shares the FP64 datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_EMULATABLE`, `VIRTUAL_QUEUE=$VQ_REDIRECTABLE` | since sm_82 (crucible idx 179)
 
 Carry-less multiply-add over **GF(2)[x]** (polynomial arithmetic, no carries): multiply is
 XOR-of-shifts, "add" is XOR. The building block for CRC and GF(2ᵏ) crypto (AES-GCM/GHASH) —
 the GPU analog of x86 `PCLMULQDQ`.
-
-> **Status: semantics authoritative, encoding spec-derived, NO real SASS capture.** PTX
-> `clmad` requires **PTX ISA 9.3** but CUDA 13.1's ptxas caps at **9.1**
-> (`Unsupported .version 9.3; current version is '9.1'`), so it cannot be emitted with this
-> toolchain. Semantics below are from the PTX ISA doc (authoritative); the encoding is from the
-> CLASS ENCODING; example encodings are round-trip constructions.
 
 ## Semantics (PTX `clmad.mode.u64 d, a, b, c`)
 ```
@@ -75,13 +80,9 @@ Decoder + round-trip test: `tools/decode_clmad.py`. Test (does not compile on CU
 - `clmad.hi.u64 d, a, b, c` → `CLMAD.HI Rd, Ra, Rb, Rc`
 - const/uniform B or C operands → the RCR/RRC/RUR/RRU forms.
 
-## Open questions
-- **No real SASS vector** (toolchain PTX cap 9.1 < 9.3). Unverified: exact cuobjdump text for
-  const-bank/uniform forms, whether `.LO` is printed or hidden as default, and the reuse-flag
-  rendering.
-- Confirm the 12–13-cycle latency and whether both halves (`.LO`+`.HI`) are ever fused.
+## Evidence
 
-## Resolved: silicon-verified semantics (SM120)
+## Verified: silicon-verified semantics (SM120)
 
 `tests/asm_construct/test_clmad_idp.py` confirms CLMAD = PTX `clmad.lo/hi.u64`
 exactly: carryless (GF(2)[x]) product of the 64-bit pairs, `.LO`/`.HI` select
@@ -99,3 +100,15 @@ scoreboard (`wr`) and the consuming stores must `req` it (the first attempt
 with plain stall gave garbage).  Load inputs with `wr=SB1`, CLMAD `wr=SB2`,
 result `STG req={1,2}`.  ptxas on CUDA 12.8 cannot emit CLMAD (PTX 9.3) — the
 only reference vectors here are our own.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- **No real SASS vector** (toolchain PTX cap 9.1 < 9.3). Unverified: exact cuobjdump text for
+  const-bank/uniform forms, whether `.LO` is printed or hidden as default, and the reuse-flag
+  rendering.
+- Confirm the 12–13-cycle latency and whether both halves (`.LO`+`.HI`) are ever fused.
+

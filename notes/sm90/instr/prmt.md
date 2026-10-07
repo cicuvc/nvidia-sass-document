@@ -1,5 +1,16 @@
 # PRMT — Byte Permute
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** PRMT  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -58,6 +69,8 @@ The `pmode` field selects the permute mode (IDX=0 on sm_90). Three source operan
 [91:91],[11:0]  opcode   <= 0b100000010110
 ```
 
+## Evidence
+
 ## Verified encodings
 
 From `i2i_direct.cu` (sm_75, CUDA 13.1):
@@ -90,7 +103,7 @@ Common immediate patterns:
 
 `int_pipe`, `FXU_OPS` group. Standard integer-pipe latency (1 cycle typical). Coupled scoreboard.
 
-## Resolved: silicon-verified semantics + operand-order correction (SM120)
+## Verified: silicon-verified semantics + operand-order correction (SM120)
 
 `tests/asm_construct/test_prmt.py` (34 cases) + `tools/decode_*` round-trip.
 **Critical correction to the spec-derived operand order** — the SASS form is
@@ -137,3 +150,4 @@ Caveats that DO matter (separate from the data path):
   `req={1}`) land them first.
 - Valid stall range for PRMT is 0..15; stall=16 encodes an illegal
   batch_t/usched_info combo (TABLES_opex_7) — rejected at assemble time.
+

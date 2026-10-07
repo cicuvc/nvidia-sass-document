@@ -1,5 +1,16 @@
 # GB202 FMA-Heavy pipeline latency
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-16  
+**Probe:** RTX 5090 (GB202, sm_120), 2026-09-16. Reproducers:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: RTX 5090 (GB202, sm_120), 2026-09-16.  Reproducers:
 [`probe_fmaheavy_latency.py`](../../tests/asm_construct/probe_fmaheavy_latency.py)
 and
@@ -114,3 +125,4 @@ number where a scheduling guarantee must be independent of instruction
 packing/issue phase.  Keep the already measured FMA-Heavy service rate
 (approximately one LO per two clocks and one HI/WIDE per four clocks) separate
 from these RAW bypass times.
+

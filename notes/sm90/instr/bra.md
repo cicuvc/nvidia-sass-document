@@ -1,5 +1,16 @@
 # BRA — Relative branch
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
+
+## Conclusion
+
 **Opcode mnemonic:** `BRA` (base) = `0b100101000111` = **0x947** | **Pipe:** `cbu_pipe` (Branch / Convergence-Barrier Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 The workhorse control-flow instruction: a PC-relative branch to a signed offset. Works
@@ -66,6 +77,8 @@ scheduling field, not BRA-specific.
 `CBU_OPS_WITH_REQ` (line 219) so it participates in the `&req=` scoreboard connector.
 `DECOUPLED_BRU`, `MIN_WAIT_NEEDED=1`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_bra.py`)
 Self-test 9/9, **and 125741/125741 BRA instructions in libcublas.so decoded byte-exact.**
 
@@ -102,7 +115,13 @@ This gives the observed `BRA.DIV URb, slow_path` a concrete interpretation: ente
 slow path when a warp collective requests participants that are absent from the current
 SIMT group.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `.INC`/`.DEC` and nontrivial simultaneous `Pg`+`Pp` combinations remain unprobed.
 - `.CONV`, `~URb`, and the `UPq` form were exercised through the encoding-identical JMP
   classes, but are still absent from the sampled ptxas/cublas BRA corpus.
+

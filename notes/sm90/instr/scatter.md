@@ -1,5 +1,16 @@
 # SCATTER — Register-level sub-element byte/nibble permute (write side)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `SCATTER` = `0b1000011000` = **0x218** | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH` | **VIRTUAL_QUEUE:** none (fixed-latency) | any shader (no CS-only guard)
 
 ## Semantics
@@ -92,6 +103,8 @@ virtual queue, no scoreboard ownership). Standard coupled-math dispatch/latency;
 `TABLES_opex_4` (with `reuse_src_*`) is the operand-reuse-aware scheduling table
 shared by the register-ALU ops.
 
+## Evidence
+
 ## Verified encodings
 No hardware encodings observed — stock `nvcc`/`ptxas` (CUDA 13.1) does not emit
 SCATTER from C/C++ or common PTX, and it is absent from cuBLAS/cuBLASLt sm_90
@@ -102,6 +115,11 @@ binaries (grep-confirmed). Documented from the spec field map and validated by a
 | `SCATTER.THREAD.U8.U4_H0 R4, R8, R12, RZ, 0x0, 0xf` |
 | `SCATTER.QUAD.U16.U8 R5, R6, R7, R8, 0x3, 0x3` |
 | `SCATTER.PAIR.U8.U8_H0.SP R2, R3, R4, R5, 0x1, 0x5` |
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
 
 ## Open questions
 - **Exact operation** — how `vecidx`/`mask`/`idxsize` combine to route source
@@ -116,3 +134,4 @@ binaries (grep-confirmed). Documented from the spec field map and validated by a
 - Relationship to `GATHER` (0x241) — presumably the inverse permute; GATHER's
   extra `dstbyte`/`srchalf`/`num_groups` fields suggest an asymmetric pair.
   (GATHER is now documented in `gather.md`.)
+

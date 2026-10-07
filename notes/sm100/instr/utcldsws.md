@@ -1,5 +1,16 @@
 # UTCLDSWS
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** B200 run  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 `UTCLDSWS URd` is a scoreboarded 1-CTA load from `$VQ_SW_STATE` into one
 uniform register.  The 2-CTA form writes an aligned pair.  The `.ONE`
 alternate has exactly the same encoding as the plain spelling, so it cannot
@@ -56,6 +67,8 @@ reserved-shared ABI, including when allocator state is nonzero.  Any state it
 reads or affects must be outside that shared-memory region or too transient to
 survive until its scoreboard completion.
 
+## Evidence
+
 ## Reproduction
 
 ```console
@@ -80,3 +93,4 @@ kernel using the V2 entry fragment failed with CUDA error 719 even without
 - Test the aligned 2-CTA 64-bit result under a real two-CTA cluster.
 - Determine which bit patterns, if any, survive `UTCSTSWS`, and whether this
   depends on entry-fragment/exit-handler state.
+

@@ -1,15 +1,17 @@
 # SETCTAID — Set CTA (thread-block) ID hardware state
 
-**Opcode mnemonic:** `SETCTAID` = `0b1100011111` = **0x31f** (13-bit slot) | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`, `VIRTUAL_QUEUE=$VQ_ADU` | compute-only (`SHADER_TYPE==CS`) | since **sm_70** (crucible opcode idx 63)
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
 
-> **Status: VERIFIED on SM120 (2026-08).** `tests/asm_construct/test_setctaid.py`.
-> SETCTAID writes the CTA block-index hardware state that `S2R SR_CTAID.{X,Y,Z}`
-> reads: after `SETCTAID.X R20`, `S2R SR_CTAID.X` returns the injected value
-> (0x55) instead of the real blockIdx (verified with grid=(2,1,1) where the
-> real X is 0/1).  Same for `.Y` / `.Z`.  **SETCTAID does NOT change the SM the
-> CTA runs on** — `SR_VIRTUALSMID` readback is identical before/after even when
-> injecting an invalid SM id (0xFFFF).  nvcc/ptxas do not emit it — it is a
-> driver/ABI setup instruction (VQ_ADU, shared with SETLMEMBASE/AL2P).
+## Conclusion
+
+**Opcode mnemonic:** `SETCTAID` = `0b1100011111` = **0x31f** (13-bit slot) | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD`, `VIRTUAL_QUEUE=$VQ_ADU` | compute-only (`SHADER_TYPE==CS`) | since **sm_70** (crucible opcode idx 63)
 
 ## Semantics (speculation)
 Writes the executing CTA's **block-index** hardware state (`blockIdx`, the value normally read
@@ -74,6 +76,11 @@ reading `SR_CTAID` afterward observe the updated value only through the pipeline
 `req_bit_set` scheduling bits are compiler-chosen and unknown. Decoder + round-trip test:
 `tools/decode_setctaid.py`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - ~~Unconfirmed~~ whether cuobjdump prints the default `ALL` as a bare `SETCTAID` or
   as `SETCTAID.ALL`, and the `ALL` operand pair syntax — **resolved**: the assembler
@@ -82,3 +89,4 @@ reading `SR_CTAID` afterward observe the updated value only through the pipeline
   `X = R20` (low 32 bits), `Y = R21[15:0]`, `Z = R21[31:16]`.
   Verified: `R20:R21 = 0x55 / 0x02030004` → `X=0x55, Y=0x4, Z=0x203`.
 - Which runtime/driver path actually emits it (cooperative launch? CDP? trap handler?).
+

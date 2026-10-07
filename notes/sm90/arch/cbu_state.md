@@ -1,5 +1,16 @@
 # `CBU_STATE` — BMOV-addressable warp / convergence-barrier-unit state
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Question:** what is `CBU_STATE`?
 **Status:** resolved (spec-grounded; BMOV is too rare to appear in stock libs).
 
@@ -69,7 +80,9 @@ lane-state model exactly.
   state moves only appear in irregular-divergence / barrier-spill / trap code,
   so nvdisasm's exact rendering of the state names is not sampled here.
 
-## Resolved: B-register content empirically (SM120, 2026-08)
+## Evidence
+
+## Verified: B-register content empirically (SM120, 2026-08)
 
 `tests/asm_construct/test_breg.py` reads B0/B1 via `BMOV Rd, B0` (single read;
 two back-to-back BMOVs race in a hand-built cubin — the second clobbers the
@@ -88,7 +101,7 @@ address. The reconvergence target is carried by the BSSY instruction's own
 PC-relative `Sa` field; the return PC is implied by the hardware sync stack and
 is not exposed by the 32-bit `BMOV` read.
 
-## Resolved: CBU_STATE slots empirically (SM120, 2026-08)
+## Verified: CBU_STATE slots empirically (SM120, 2026-08)
 
 `tests/asm_construct/test_cbu_state.py` reads every CBU_STATE slot via `BMOV`
 (one slot per kernel; back-to-back BMOVs race in hand-built cubin). A warp-
@@ -124,7 +137,7 @@ Interpretation:
   field (PC-relative); the *return* PC bookkeeping surfaces here as
   TRAP_RETURN_PC/TRAP_RETURN_MASK during the divergent region.
 
-## Resolved: MCOLLECTIVE = collective-region participation mask (SM120, 2026-08)
+## Verified: MCOLLECTIVE = collective-region participation mask (SM120, 2026-08)
 
 `MCOLLECTIVE` (CBU_STATE 32) is live **only inside a `WARPSYNC.COLLECTIVE
 Rmask, TGT` … `ENDCOLLECTIVE` region**: it reads `Rmask & active-lanes` while
@@ -132,7 +145,7 @@ the region is open and 0x0 after `ENDCOLLECTIVE`. `WARPSYNC.COLLECTIVE`
 requires `Rmask ⊇` the lanes executing it (else ILLEGAL_INSTRUCTION 715). See
 `warpsync.md` / `endcollective.md` and `test_warpsync_collective.py`.
 
-## Resolved: MACTIVE is per-PC-group readable (SM120, 2026-08)
+## Verified: MACTIVE is per-PC-group readable (SM120, 2026-08)
 
 In a two-path divergence (`BSSY B0` + `@P0 BRA pathA`), each divergent group
 executes its own `BMOV R4, MACTIVE`: the tid<16 group reads **0xFFFF** and the
@@ -144,7 +157,7 @@ BSSY instruction's address) — per-lane/per-group PCs live only in the warp
 scheduler and are not exposed. Divergence LEVELS are additionally visible via
 the B-register stack (B0..B15 masks).
 
-## Resolved: TRAP_RETURN_PC / ATEXIT_PC are WRITE-PROTECTED (SM120, 2026-08)
+## Verified: TRAP_RETURN_PC / ATEXIT_PC are WRITE-PROTECTED (SM120, 2026-08)
 
 `tests/asm_construct/test_trpc_write.py`: `BMOV TRAP_RETURN_PC.LO/.HI, src`
 and `BMOV ATEXIT_PC.LO, src` fault with ILLEGAL_INSTRUCTION (715) at runtime
@@ -158,7 +171,7 @@ effect).  Consequence: one cannot set TRAP_RETURN_PC to a valid PC and then
 NANOTRAP to make the trap "return" there; NANOTRAP is swallowed and execution
 continues fall-through.
 
-## Resolved: ordinary compute `EXIT` has no readable ATEXIT target (SM120, 2026-09)
+## Verified: ordinary compute `EXIT` has no readable ATEXIT target (SM120, 2026-09)
 
 `tests/asm_construct/probe_atexit_pc.py` reads both halves of `ATEXIT_PC` in
 an ordinary compute kernel, then repeats after lanes 0..15 have executed
@@ -187,10 +200,11 @@ An attempted `#pragma SHADER_TYPE(7)` (`ST_TRAP`) owner-context probe is
 rejected by `cuModuleLoadData` with `CUDA_ERROR_INVALID_IMAGE`; a launchable
 compute cubin cannot impersonate the driver's trap/at-exit shader context.
 
-## Resolved: RTT (0x94f) is the privileged trap-return instruction (SM120, 2026-08)
+## Verified: RTT (0x94f) is the privileged trap-return instruction (SM120, 2026-08)
 
 `RTT` returns to TRAP_RETURN_PC but is privileged — ILLEGAL_INSTRUCTION (715)
 from user code even with TRPC set via BSSY.  Completes the trap-return picture:
 TRPC is write-protected (set by the trap machinery only), RTT runs only inside
 a trap handler, and NANOTRAP's injected trap is handled internally (no
 user-visible return).  See `nanotrap.md`.
+

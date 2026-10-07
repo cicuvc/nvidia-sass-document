@@ -1,15 +1,19 @@
 # B200 instruction cache and tight-loop replay
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** Modal B200 (sm_100a), 2026-09-21. All kernels were emitted by the  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: Modal B200 (sm_100a), 2026-09-21.  All kernels were emitted by the
 repository assembler; no ptxas or NCU was used.  The timing evidence supports
 the following B200 model:
-
-> The main SM-local ICC is **32 KiB with 128-byte fetch lines**, shared by all
-> four subcores.  In front of it, address-controlled branch rings expose a
-> separate **32 KiB-equivalent target/fetch level** with a 2-KiB equal-index
-> period and 16-way-like boundary.  This smaller level is replicated or
-> partitioned across subcores/independent fetch streams.  A tight loop does not
-> remain hidden from per-iteration `CCTL.I.IVALL`.
 
 The last statement is intentionally narrower than "there is no loop/target
 buffer."  Timing alone cannot see the roughly 12-target structure found on
@@ -161,6 +165,8 @@ of 4--16 targets all cost roughly 30.3--30.85 cycles/visit, and timing has no
 counterpart to GB202's counter-only 12-to-13-target request jump.  An NCU-capable
 B200 is needed to determine whether such a buffer exists and its entry count.
 
+## Evidence
+
 ## Reproduction
 
 On Modal, use `tools/modal_b200_probe.py` (the `blkw` environment supplies the
@@ -182,3 +188,4 @@ Modal CLI):
   --gpu B200 --script tests/asm_construct/probe_icache_banks.py \
   --args '--sets 0,0,0,0 --warps 0,1,2,3 --lines 16 --reps 5'
 ```
+

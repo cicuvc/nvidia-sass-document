@@ -1,5 +1,16 @@
 # MEMBAR — Memory barrier / fence
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `MEMBAR` = `0b100110010010` = **0x992** | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_UNORDERED`
 
 ## Semantics
@@ -69,6 +80,8 @@ MEMBAR orders *memory*; BAR synchronizes *execution*. `fence.proxy.async` emits
 `MEMBAR` ∈ `mio_pipe`, `VQ_UNORDERED`. Decoupled read-scoreboard op; the fence
 drains outstanding memory ops per its scope. No register result.
 
+## Evidence
+
 ## Verified encodings (`tests/membar_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | PTX |
 |---|---|---|---|
@@ -105,6 +118,11 @@ Decoder `tools/decode_membar.py`: **5/5 PASS**. `sem` is Hi64 [80:79]
   realized as GPU-scope MEMBAR plus the cluster-error-barrier `CGAERRBAR`, not a
   distinct MEMBAR scope value.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `MMIO` sem and `CTA.PARTIAL`/`VC`/`SM` scopes — which PTX emits them (not
   triggered by the standard fence forms here).
@@ -113,3 +131,4 @@ Decoder `tools/decode_membar.py`: **5/5 PASS**. `sem` is Hi64 [80:79]
   `FENCE.VIEW.ASYNC.S` rather than a `membar_async_` encoding.
 - `FENCE` (the `FENCE.VIEW.ASYNC.S` op, 0x3c6) — a distinct mnemonic, now
   documented in `fence.md` (TODO FENCE_G/FENCE_S idx 218/219).
+

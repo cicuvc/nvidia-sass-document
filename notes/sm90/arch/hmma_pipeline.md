@@ -1,21 +1,21 @@
 # HMMA pipeline — tensor-core mma.sync scheduling (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Question:** how is the HMMA (warp-level tensor `mma.sync`) pipeline scheduled,
 and how does it relate to the `sm_90_latencies.txt` model?
 **Status:** resolved empirically via `tests/hmma_test.cu`
 (`mma.sync.aligned.m16n8k16.f16…` → `HMMA.16816.F16`), sm_90a.
 Companion of `usched_latency.md`.
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
-> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
-> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
-> stall/NOP pattern before results count as sm_90-verified.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Spec position
 - Pipe: `HMMA ∈ fp16_pipe` (and the singleton set `HMMA_OP`). Issue occupancy
@@ -84,8 +84,14 @@ HMMA R18, R4, R10, R18               stall=7  req_mask=000100 (wait SB2)
 | input dependence | waits on `LDG` scoreboards via `req_bit_set` mask |
 | throughput (indep) | ~6–7 cyc here (load-gated); pipe occupancy = 2 (`FMALITE_Occupancy`) |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Whether the 24-vs-28 gap is a true accumulator bypass or scheduler granularity;
   a bank of independent accumulate chains would let the min-gap settle it.
 - Clean independent-HMMA throughput (not load-gated) — needs a kernel that keeps
   all fragments resident (shared memory / register-resident B).
+

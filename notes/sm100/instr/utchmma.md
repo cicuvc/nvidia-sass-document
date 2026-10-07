@@ -1,5 +1,16 @@
 # UTCHMMA — 5th-gen tensor-core FP16/BF16 MMA  → PTX `tcgen05.mma.kind::f16`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-20  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
 **Opcode mnemonic:** `UTCHMMA` — two opcodes by A source:
 A-from-gdesc = `0b1010111101010` (0x15ea, 5610), A-from-tmem = `0b1100111101010` (0x19ea, 6634)
 **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`
@@ -137,6 +148,8 @@ convolution dataflow.
 [31:24]             URa  (A descriptor / TMEM)
 [15]                Pg_not ; [14:12] Pg = @UPg
 ```
+
+## Evidence
 
 ## Verified encodings (cuobjdump, `nvcc -arch=sm_100a`, CUDA 13.1)
 Source: `tests/utchmma_test.cu` → `tests/utchmma_test.cubin`. Decoder:
@@ -934,6 +947,11 @@ duty-cycle 模型预言其 STS 服务率与 N8/N128 相同，实测正是如此�
 fixed latency). Completion is mbarrier/scoreboard-tracked, not a fixed
 latency-table cycle.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Full 64-bit `UMMAA`/`UMMAB` matrix-descriptor + 32-bit `idesc` bit layouts —
   **documented** in `notes/sm100/arch/tcgen05_descriptors.md` (from PTX Tables
@@ -943,3 +961,4 @@ latency-table cycle.
 - `opType` [73:72]∥[63] is pinned 0 here — what selects nonzero values?
 - Weight-stationary (`.WS`) + collector-buffer runtime semantics；尤其需要把
   collector 命中与 shared-array 实际读流量分离测量。
+

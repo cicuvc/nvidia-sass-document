@@ -1,5 +1,16 @@
 # CCTL — Cache control (L1/L2 line ops & whole-cache invalidate/writeback)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm120)
+
+## Conclusion
+
 **Opcode mnemonics:** `CCTL` = `0b100110001111` = **0x98f** (imm-offset / whole-cache) / `0b1110110001111` = **0x1d8f** (uniform-reg offset) | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_UNORDERED`
 
 ## Semantics
@@ -107,6 +118,8 @@ result. Fire-and-forget cache maintenance; ordering vs subsequent accesses relie
 on the memory model (e.g. the `CCTL.IVALL` under `@P0` after `SYNCS.PHASECHK`
 provides the acquire-side L1 invalidation).
 
+## Evidence
+
 ## Verified encodings (`tests/cctl_test.cu` + `tests/tma_test.cubin`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | PTX |
 |---|---|---|---|
@@ -134,6 +147,11 @@ IVALL=4 with `Ra=RZ` (0xff) and no address.
 `prefetch` family to `PF1`/`PF2`. `prefetch.global.L1` and `prefetchu.L1` both
 lower to `CCTL.E.PF1`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `WB`/`IV`/`RS`/`PML2` address COPs and `IVALLP`/`WBALL`/`WBALLP` whole-cache COPs
   — which PTX/compiler patterns emit them (not triggered here).
@@ -142,3 +160,4 @@ lower to `CCTL.E.PF1`.
   on the D cache here.
 - The `applypriority.L2::evict_last` PTX form (ptxas rejected it in CUDA 13.1) —
   which COP it would select (likely `PML2`).
+

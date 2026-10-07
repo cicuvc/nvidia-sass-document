@@ -1,5 +1,16 @@
 # LEPC — Load Effective PC
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** Verified on sm_120 (RTX 5090  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Opcode mnemonics:** `LEPC` = `0b1101001110` = **0x34e** (RRR, PC only) / `0b100101001110` = **0x94e** (R_I_R, PC+imm58) | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | sm_70 (RRR) + sm_90 variant (R_I_R)
 
 Computes a PC-relative effective address into a 64-bit register pair `Rd:Rd+1`
@@ -63,6 +74,8 @@ relocation); it decodes to the same bits as R_I_R.
 `ULEPC` sits in `OP_ULEPC`/`UMOV_ULEPC` and uses the `ULDC_VOTEU_UMOV_ULEPC` connector rows for
 `TABLE_*(UGPR)` latencies.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Addr | Lo64 | Hi64 | Disassembly |
 |------|------|------|-------------|
@@ -80,12 +93,7 @@ pass). Test: `tests/lepc_test.cu` (printf).
 - `printf(...)` → sets up arg buffer, then `LEPC Rd, <ret>` + `CALL.ABS.NOINC <vprintf>` (LEPC
   supplies the return address that NOINC does not auto-push).
 
-## Open questions
-- Whether the R_I_R immediate ever prints as a raw offset or `.REL` relocatable form in other
-  contexts (only the resolved-target vprintf-return case was captured).
-- Whether `LEPC Rd` (RRR) is ever emitted on sm_90 (not seen; BRX/CALL are self-relative).
-
-## Resolved: LEPC is the correct PC base for indirect branches (SM120)
+## Verified: LEPC is the correct PC base for indirect branches (SM120)
 
 Verified (`tests/asm_construct/test_jmx.py`): `LEPC Rd` returns the current PC
 (both the 0x34e RRR form and the 0x94e PC+imm58 form, base 0x07167500
@@ -93,3 +101,14 @@ consistent), and `ULEPC URd` the uniform PC.  This is the proper base for the
 absolute indirect branches JMX/JMXU (target = register + off) — NOT
 TRAP_RETURN_PC (unreliable divergence side-effect).  LEPC+JMX forms the
 classic jump-table idiom.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Whether the R_I_R immediate ever prints as a raw offset or `.REL` relocatable form in other
+  contexts (only the resolved-target vprintf-return case was captured).
+- Whether `LEPC Rd` (RRR) is ever emitted on sm_90 (not seen; BRX/CALL are self-relative).
+

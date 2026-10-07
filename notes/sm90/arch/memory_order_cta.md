@@ -1,5 +1,16 @@
 # Memory ordering codegen — PTX→SASS at `.cta` scope (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** Ran on RTX 5090  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 Empirical study of how ptxas (CUDA 13.1) lowers `ld`/`st` with each memory-order
 qualifier, restricted to: **general proxy, strong ops, `.cta` scope**, on
 `.global` (L1) and `.shared` (SM-local). Complements `memory_model.md` (which
@@ -393,6 +404,11 @@ gpu+ barrier must also account for the cluster path this CTA may have in-flight
 writes on — the compiler cannot know at compile time whether the kernel uses
 DSMEM, so it emits conservatively on all CGA-capable archs.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - **Resolved: the acquire barrier is never folded.** Test `tests/acq_fold_test.cu`
   (sm_90). Five variants (use, indep, load, atom, fence) × two scopes, all show
@@ -404,3 +420,4 @@ DSMEM, so it emits conservatively on all CGA-capable archs.
   ordering constraint on a specific consumer.
 - A genuine positive weak-behaviour control on Volta+ (may require mixed-proxy /
   texture path, or async-copy, rather than plain generic-proxy ld/st).
+

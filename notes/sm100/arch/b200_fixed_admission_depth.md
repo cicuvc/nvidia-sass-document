@@ -1,5 +1,16 @@
 # B200 fixed-pipeline admission and service
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** B200 (sm_100), Modal, 2026-09-20--21. Primary probes:  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: explicit `Silicon:` header line
+
+## Conclusion
+
 Silicon: B200 (sm_100), Modal, 2026-09-20--21.  Primary probes:
 
 - `tests/asm_construct/probe_scalar_admission_depth.py`
@@ -365,3 +376,4 @@ smsp__pipe_fmalite_cycles_active
 Modal does not permit usable NCU collection.  A B200 system with working NCU
 is required to resolve first-level attribution; until then `PACKED_LOCK` is an
 effective timing model rather than a claimed physical block diagram.
+

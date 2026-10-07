@@ -1,5 +1,16 @@
 # F2IP — Float to Integer, Packed
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** F2IP  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -53,3 +64,4 @@ Three-register variants (RRI, RRC, RRCx, RRU) support packing: merge two 8-bit v
 ## Latency
 
 `int_pipe`, `INST_TYPE_COUPLED_MATH`. Coupled scoreboard, standard integer-pipe latency.
+

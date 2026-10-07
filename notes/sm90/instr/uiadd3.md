@@ -1,10 +1,19 @@
 # UIADD3 — Uniform Integer Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `UIADD3` / `UIADD3.64` / `UIADD3.X`
 **Pipe:** `udp_pipe` (uniform datapath)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Variant overview
 
@@ -154,6 +163,8 @@ UIADD3 is in the uniform datapath pipe alongside `UIMAD`, `ULEA`, `ULOP3`,
 
 ---
 
+## Evidence
+
 ## Empirical confirmation (sm_90, CUDA 13.1)
 
 ### 32-bit UIADD3 (confirmed)
@@ -217,3 +228,4 @@ UIADD3   UR4, UP0, UR4, UR6, URZ    ; UR4.lo = ..., carry→UP0
 IADD3    R5, RZ, UP0, RZ, RZ, RZ    ; R5 = zero_extend(UP0)  (carry→GPR)
 ```
 In practice seen as `IMAD.U32 R5, RZ, RZ, URcarry` — same degenerate pattern.
+

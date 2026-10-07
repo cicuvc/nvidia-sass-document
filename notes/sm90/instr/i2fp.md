@@ -1,5 +1,16 @@
 # I2FP — Integer to Float, Packed
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** I2FP  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -42,6 +53,8 @@ I2FP dispatches to the **integer pipeline** with coupled scoreboard, avoiding th
 [91:91],[11:0]      opcode   <= 0b1001000101
 ```
 
+## Evidence
+
 ## Verified encodings
 
 From `(float)int_val` compilation (sm_90, CUDA 13.1):
@@ -62,3 +75,4 @@ From `(float)int_val` compilation (sm_90, CUDA 13.1):
 ## Latency
 
 `int_pipe`, `INST_TYPE_COUPLED_MATH`. Coupled scoreboard, standard integer-pipe latency (1 cycle typical). Significantly lower latency than the legacy mio_pipe I2F.
+

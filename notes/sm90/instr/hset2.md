@@ -1,5 +1,16 @@
 # HSET2 — Packed FP16x2 Compare and Set
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `HSET2` | **Pipe:** `fp16_pipe` (= `FP16_OPS`) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 Per-lane FP16 comparison of two packed halfword pairs with boolean reduction. Writes a 32-bit register destination.
@@ -88,6 +99,8 @@ Same `FP16_OPS` latency class as all other fp16_pipe ops:
 | TABLE_OUTPUT(GPR) | `FP16_OPS`{Rd} | 1–2 |
 | TABLE_ANTI(GPR) | `FP16_OPS`{Ra,Rc} | 1–2 |
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 7/7 HSET2 test vectors pass via `tools/decode_hset2.py`.
 
@@ -103,13 +116,7 @@ Same `FP16_OPS` latency class as all other fp16_pipe ops:
 ### PTX→SASS mapping
 PTX `setp.{cmp}.f16x2` → `HSET2.BF.{CMP}.AND Rd, Ra, Rc, PT`.
 
-## Open questions
-- "noBop" ALT classes — when would Bop AND not be specified?
-- `BM` (bool-mask with 0x00010001) vs `BF` (bool-float with 0xFFFFFFFF) — compiler always uses BF.
-- Uniform register, const-bank, RCx, and immediate variants not yet verified.
-- FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified in generated code.
-
-## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+## Verified: semantics verified (SM120, clean hand-built ELF, 2026-08)
 
 `tests/asm_construct/test_hset_hmnmx.py` (MOV32I harness). HSET2 RRR opcode
 0x233.  Per-lane FP16 compare with BVal true/false encoding and Bop lane
@@ -130,3 +137,15 @@ reduction:
 - **ISWZ** works on both operands (A + C, C slot named `iswzB_as_C`).
 - cmp variants (EQ/GE/GT/NE/LT/LE and the ordered/unordered set) all
   function; FTZ flushes denormals.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- "noBop" ALT classes — when would Bop AND not be specified?
+- `BM` (bool-mask with 0x00010001) vs `BF` (bool-float with 0xFFFFFFFF) — compiler always uses BF.
+- Uniform register, const-bank, RCx, and immediate variants not yet verified.
+- FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified in generated code.
+

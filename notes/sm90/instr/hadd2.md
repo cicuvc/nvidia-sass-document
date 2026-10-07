@@ -1,10 +1,19 @@
 # HADD2 — Packed FP16x2 Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `HADD2`  
 **Pipe:** `fp16_pipe` (= `FP16_OPS`)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Semantics
 
@@ -126,6 +135,8 @@ HADD2 belongs to `FP16_OPS` (= `fp16_pipe`).
 | TABLE_OUTPUT(GPR) | `FP16_OPS`{Rd} | 1–2 |
 | TABLE_ANTI(GPR) | `FP16_OPS`{Ra,Rc} | 1–2 |
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 All test vectors decoded correctly by `tools/decode_hadd2.py` (12/12).
@@ -148,17 +159,7 @@ All test vectors decoded correctly by `tools/decode_hadd2.py` (12/12).
 PTX `add.f16x2` → `HFMA2.MMA` (never `HADD2`).  
 PTX `cvt.rn.f16x2.f32` + `add` → `HADD2.F32` (widening half to float).
 
-## Open questions
-
-- HADD2 non-F32 (packed FP16x2 output) encodings not yet verified
-  (ptxas never emits them — need hand-crafted test vectors or a different compiler
-  version that might emit HADD2 instead of HFMA2.MMA)
-- Const-bank (`RC`), immediate (`RI`), uniform (`RU`), and extended-const (`RCx`)
-  variants not yet verified
-- Whether HADD2 could be hand-encoded and executed (hardware validates encoding)
-- Why ptxas prefers HFMA2.MMA over HADD2 (pipe assignment? throughput?)
-
-## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+## Verified: semantics verified (SM120, clean hand-built ELF, 2026-08)
 
 `tests/asm_construct/test_hadd2_hmul2.py` (same MOV32I harness as HFMA2).
 HADD2 RRR opcode 0x230, `Rd = Ra + Rc` per packed halfword lane:
@@ -171,3 +172,19 @@ HADD2 RRR opcode 0x230, `Rd = Ra + Rc` per packed halfword lane:
 - `.FTZ` flushes denormal inputs; nofmz preserves
 - **`.SAT` shows the same sm_120 quirk as HFMA2**: `65500+100 → 1.0`
   (nosat gives inf), i.e. saturates positive overflow to 1.0, not max-finite.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- HADD2 non-F32 (packed FP16x2 output) encodings not yet verified
+  (ptxas never emits them — need hand-crafted test vectors or a different compiler
+  version that might emit HADD2 instead of HFMA2.MMA)
+- Const-bank (`RC`), immediate (`RI`), uniform (`RU`), and extended-const (`RCx`)
+  variants not yet verified
+- Whether HADD2 could be hand-encoded and executed (hardware validates encoding)
+- Why ptxas prefers HFMA2.MMA over HADD2 (pipe assignment? throughput?)
+

@@ -1,5 +1,16 @@
 # SASS Encoding Classification — Top-Down Analysis
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 ![Encoding diagrams](encoding_diagrams.png)
 
 All SASS instructions are **128-bit** (hi64 [127:64] + lo64 [63:0]) with a common
@@ -309,3 +320,4 @@ Class names encode the operand format as a suffix after `__`:
 The invariant prefix ([127:104], [103:102], [91:91], [15:12]) occupies 27 bits;
 the remaining **101 bits** encode opcode extension, modifiers, register/immediate
 operands, and instruction-specific fields — laid out differently per format family.
+

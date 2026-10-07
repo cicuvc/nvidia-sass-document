@@ -1,5 +1,16 @@
 # R2P — GPR → Predicate file unpack
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `R2P` = **0x204** (RRR) + forms | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | since sm_70
 
 Unpack a GPR byte back into the warp's per-thread **predicate register file** (P0–P6 + condition state). The reverse of `P2R`.
@@ -43,6 +54,8 @@ Verified: `R2P PR, R2, 0xa` sets P1,P3 (mask 0xa) from byte 0 of R2, leaving oth
 ## Latency (from sm_90_latencies.txt)
 `int_pipe`, fixed-latency `COUPLED_MATH`. `OP_R2P` appears in predicate-connector groups (writes the whole PR file). Pins scoreboard (0x7).
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly |
 |------|------|-------------|
@@ -55,5 +68,11 @@ Test: `tests/p2r_test.cu`.
 - Testing individual bits of an integer mask as branch/predicate conditions → `R2P PR, Ra, mask`.
 - ptxas also uses these to spill/reload predicates under register pressure.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Byte-select suffix rendering for `Bsel != B0` is reconstructed (only B0 captured); for R2P the `a_bsel` sits after `Ra` in the FORMAT, so it may render on the operand rather than the mnemonic.
+

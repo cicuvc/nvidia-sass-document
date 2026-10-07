@@ -1,7 +1,17 @@
 # SM120 shared-memory allocator: capacity, quantum, and fragmentation
 
-> **Silicon:** RTX 5090 (GB202, sm_120), 170 `SR_VIRTUALSMID` values.
-> **Probe:** `tests/asm_construct/probe_usetshmsz_allocator.py`.
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm120/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
+_(no summary in the source note; the sections below carry the durable facts)_
 
 ## Result
 
@@ -109,6 +119,8 @@ It is not a valid exact-boundary oracle: Hyper-Q sometimes delays the second
 kernel wholesale even when capacity exists.  Those diagnostics remain behind
 the probe's `--external` flag and are not used for the verdict above.
 
+## Evidence
+
 ## Measurement discipline
 
 - Run only on an otherwise idle GPU.  A training workload can consume SM
@@ -118,3 +130,4 @@ the probe's `--external` flag and are not used for the verdict above.
   intermittently mistook the initial wave for the final occupancy.
 - Require all 170 virtual SM IDs and uniform per-SM counts.  A GPU-wide total
   alone cannot distinguish allocator behavior from an uneven/busy device.
+

@@ -1,5 +1,16 @@
 # HSETP2 — Packed FP16x2 Compare-Set-Predicate
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `HSETP2` | **Pipe:** `fp16_pipe` (= `FP16_OPS`) | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 Per-lane FP16 comparison of two packed halfword pairs with predicate output. Writes two predicate registers `Pv, Pv+1` without a register destination.
@@ -47,13 +58,9 @@ HSETP2 has no `BVal` (predicate output instead of register), `H_AND` at [71] rep
 ## Latency (from sm_90_latencies.txt)
 Same `FP16_OPS` latency class as all other fp16_pipe ops.
 
-## Open questions
-- HSETP2 encodings not yet verified (compiler prefers HSET2 + LOP3 pattern for predicate extraction).
-- "noBop" ALT classes — when would Bop AND not be specified?
-- Uniform register, const-bank, RCx, and immediate variants not yet verified.
-- FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified.
+## Evidence
 
-## Resolved: semantics verified (SM120, clean hand-built ELF, 2026-08)
+## Verified: semantics verified (SM120, clean hand-built ELF, 2026-08)
 
 `tests/asm_construct/test_hset_hmnmx.py`. HSETP2 RRR opcode 0x234.
 Per-lane FP16 compare → two predicates:
@@ -64,3 +71,15 @@ Per-lane FP16 compare → two predicates:
   (per the ISWZ swizzle).  `H_AND (T,T)` → P0 true; `H_AND (T,F)` → P0 false.
 - Requires the full `cmp.bop` modifier (e.g. `.LT.AND`); plain `.LT` doesn't
   match.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- HSETP2 encodings not yet verified (compiler prefers HSET2 + LOP3 pattern for predicate extraction).
+- "noBop" ALT classes — when would Bop AND not be specified?
+- Uniform register, const-bank, RCx, and immediate variants not yet verified.
+- FCMP values NUM(7), NAN(8), LTU(9), EQU(10), LEU(11), GTU(12), NEU(13), GEU(14), T(15), F(0) not yet verified.
+

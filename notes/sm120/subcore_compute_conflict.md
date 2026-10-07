@@ -1,5 +1,19 @@
 # GB202 subcore compute-path structural-conflict probe
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09-14  
+**Probe:** Status:** extended, directly measured on RTX 5090 / sm_120 on 2026-09-14--15  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: `Status:` line naming verified hardware
+
+## Conclusion
+
+> **Retraction note:** this page quotes a retracted claim *in place* because it justifies
+> the current conclusion; the retracted claim itself is not current.
+
 **Status:** extended, directly measured on RTX 5090 / sm_120 on 2026-09-14--15.
 The reusable probe is
 `tests/asm_construct/probe_subcore_compute_conflict.py`.
@@ -743,3 +757,4 @@ it is not used here to claim that ALU Lite and FMA Heavy cannot overlap.
 - Sweep mixed tensor duty cycles to separate shared admission bandwidth from
   finite shared queue-credit depth.  `UTCHMMA` is deliberately absent here:
   sm_120 has no such instruction, so it is not a valid GB202 extension target.
+

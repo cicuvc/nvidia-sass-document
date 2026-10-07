@@ -1,5 +1,16 @@
 # VOTEU — Uniform warp vote / ballot
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90+sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Silicon-verified on SM120 (`tests/asm_construct/test_voteu.py`, RTX 5090):**
 
 ```
@@ -19,15 +30,6 @@ The uniform-datapath sibling of `VOTE` (see `vote.md`). Same warp reduction of a
 source predicate `Pp`, but the results land in **uniform** storage: the ballot mask in a uniform
 register `URd` and the vote boolean in a uniform predicate `UPu`. Emitted when the ballot/vote
 result is warp-uniform and consumed by the uniform datapath — e.g. `__activemask()`.
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). Its byte-exact encoding vectors were captured from sm_120 assembly;
-> the GPU-semantics halves of those cases passed on H20 (real sm_90).
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 Reduces `Pp` across active lanes per `voteop`, identical modes to `VOTE`:
@@ -78,6 +80,8 @@ predicate `UPu` is a `TABLE_TRUE/TABLE_OUTPUT(UPRED)` producer at **1** cycle (s
 VOTE's UPu). The uniform-register `URd` is grouped in the `ULDC_VOTEU` connector set for
 `TABLE_*(UGPR)` latency (URd-producer rows).
 
+## Evidence
+
 ## Verified encodings
 | Lo64 | Hi64 | Disassembly | source |
 |------|------|-------------|--------|
@@ -95,6 +99,12 @@ pass). Test: `tests/voteu_test.cu`.
 - Regular `__any/__all/__uni/__ballot_sync` with per-lane (non-uniform) result → plain `VOTE`;
   ptxas only chooses `VOTEU` when the result is uniform and used on the uniform datapath.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Which other source patterns beyond `__activemask()` reliably steer ptxas to `VOTEU` — the
   ALL/EQ modes and a used `UPu` were not observed empirically (only constructed here).
+

@@ -1,5 +1,16 @@
 # Pipe-to-pipe forwarding survey on SM120 (excluding fma64)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
+
+## Conclusion
+
 Comprehensive map of which inter-pipe register-forwarding edges exist on
 sm120 (RTX 5090 / GB202) and how fast each one is, **excluding every
 instruction in the fma64 pipe** (`fma64lite`/`fma64heavy`: DFMA/DADD/DMUL/
@@ -142,6 +153,19 @@ the consumer still hazards on the intermediate PLOP3 result.  Concretely:
 | fmal/fp16 → mio (STG data) | late-read ~1 |
 | any → fe (DEPBAR with an int-produced... not constructible) | n/a |
 
+## Cross-notes
+
+- `pipe_forwarding.md` — method, the udp/int/fmal/cbu/mio edge details, DRAIN
+  and issue-floor gotchas.
+- `subcore_scheduler.md` — the i%4 subcore mapping and yield-bit mechanism
+  behind the "same pipe, no hazard" claims.
+- `usched_latency.md` — how ptxas computes stall counts from the same tables.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - The `[R + UR + imm]` address form's extra latency (udp→mio 4 vs int/fmal→mio
@@ -154,10 +178,3 @@ the consumer still hazards on the intermediate PLOP3 result.  Concretely:
   now resolved; the output table gives 13--15 cycles but has not received the
   same fine-grained boundary sweep).
 
-## Cross-notes
-
-- `pipe_forwarding.md` — method, the udp/int/fmal/cbu/mio edge details, DRAIN
-  and issue-floor gotchas.
-- `subcore_scheduler.md` — the i%4 subcore mapping and yield-bit mechanism
-  behind the "same pipe, no hazard" claims.
-- `usched_latency.md` — how ptxas computes stall counts from the same tables.

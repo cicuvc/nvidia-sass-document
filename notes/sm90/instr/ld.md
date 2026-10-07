@@ -1,5 +1,16 @@
 # LD — Load from generic address space
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonics:** `LD` = `0b1100110000000` = **0x1980** (memdesc/uniform, 64-bit addr) / `0b100110000000` = **0x980** (plain imm-offset) | **Pipe:** `mio_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_WR_SCBD` | **VIRTUAL_QUEUE:** `VQ_AGU_UNORDERED_WR`
 
 ## Semantics
@@ -92,6 +103,8 @@ global or shared). ptxas prefers the specialized ops when it can prove the space
 scoreboard — the load result is tracked by a `dst_wr_sb` (unlike the async ops).
 Same latency class as LDG/LDS/STS.
 
+## Evidence
+
 ## Verified encodings (`tests/ld_test.cu`, sm_90a, CUDA 13.1)
 | Lo64 | Hi64 | Disassembly | PTX |
 |---|---|---|---|
@@ -120,6 +133,11 @@ qualifier maps to the strongest memory ordering (`STRONG` semantics, `SYS`
 scope, `TABLES_mem_1` code 10), forcing the access to bypass caching/coalescing
 and observe system-wide ordering.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Non-memdesc / plain 0x980 forms — same open question as LDG; not emitted by
   ptxas on sm_90 (all use the descriptor form).
@@ -127,3 +145,4 @@ and observe system-wide ordering.
 - Whether a truly space-ambiguous pointer that resolves to *shared*/*local* at
   runtime still uses this `desc[URb]` global-style descriptor, or if the AGU
   reinterprets it per resolved space.
+

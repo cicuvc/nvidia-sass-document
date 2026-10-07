@@ -1,5 +1,16 @@
 # BPT — Breakpoint / Trap
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `BPT` (0x95c)  **Pipe:** `cbu_pipe`
 **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`  **VIRTUAL_QUEUE:** `$VQ_CBU`
 
@@ -16,7 +27,10 @@ selector `Sb` (UImm 3-bit at [23:16]).  Two scheduling variants
 opcode 0x95c).  This is the real, user-visible trap — unlike NANOTRAP (which
 the runtime swallows), BPT.TRAP causes the kernel launch to fail.
 
+## Evidence
+
 ## Verified behavior (SM120, clean subprocess per case — a real trap poisons
+
 ## the CUDA context with 719 that persists in-process)
 
 `tests/asm_construct/test_bpt_trap.py`:
@@ -40,3 +54,4 @@ compute launch.
 | Pipe | cbu_pipe | cbu_pipe |
 | On compute | **launch fails 719** | swallowed, ~10k-cycle cost |
 | Emitted by ptxas | yes (`trap;`) | no (driver/runtime) |
+

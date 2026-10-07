@@ -1,17 +1,17 @@
 # ULDC — Uniform Load Constant
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 5 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** ULDC  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
-> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
-> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
-> stall/NOP pattern before results count as sm_90-verified.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -180,6 +180,8 @@ Output latency to a uniform-register consumer (e.g., UIADD3 using the loaded val
 
 Constant memory itself has a fixed 2-cycle true-dependency latency through the CBU (visible in the GPR TABLE_TRUE as `ALL_OPS:MIO_CBU_OPS:2`), but for ULDC→uniform consumers the UGPR tables above apply.
 
+## Evidence
+
 ## Verified encodings
 
 ### From libcublas + test kernels (sm_90, CUDA 13.1)
@@ -219,6 +221,11 @@ Constant memory itself has a fixed 2-cycle true-dependency latency through the C
 | `ld.const.u32 [addr+imm], _` | `ULDC URd, c[bank][URa+imm]` |
 | Sub-word constant loads | `LDG.E.{U8,S8,U16,S16}.CONSTANT` (not ULDC directly) |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 > The sm_120 classes and their silicon-verified semantics (including the
@@ -231,3 +238,4 @@ Constant memory itself has a fixed 2-cycle true-dependency latency through the C
 - **uldc_const__RCxR (0x1ab9):** The CX extended-constant variant with a register-indexed bank and 16-bit immediate offset. The `CX` type likely encodes a different constant-address space. No empirical examples found.
 - **RTV banks (24-31):** The spec allows bank 24-31 with an offset-≤255 constraint. What are RTV banks? Likely run-time-value banks populated by the driver at kernel launch. No empirical examples.
 - **PTX `uldc` instruction:** PTX ISA 9.3 includes a `ld.const` instruction that maps to ULDC but does not document a standalone `uldc` PTX mnemonic. The hardware instruction is internal.
+

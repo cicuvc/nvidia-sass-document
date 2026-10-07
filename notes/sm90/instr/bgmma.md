@@ -1,5 +1,16 @@
 # BGMMA — Binary (b1) Group MMA
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Pipe:** `mio_pipe` (MIO_SLOW_OPS) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` | **VIRTUAL_QUEUE:** `$VQ_UMMA`
 
 Warpgroup-level async tensor core operation for binary data. Uses the same GMMA architecture as HGMMA — see `../arch/wgmma.md` and `hgmma.md` for sync model, accumulator collector, and GMMA scoreboard details.
@@ -78,3 +89,4 @@ URa_Rb_Rc_ (0x15f2) swaps Ra/URb roles; URa_Rc_ (0x19f2) has no Rb field.
 
 ## Latency
 `mio_pipe`, async GMMA scoreboard. See `../arch/wgmma.md` for GMMA completion model.
+

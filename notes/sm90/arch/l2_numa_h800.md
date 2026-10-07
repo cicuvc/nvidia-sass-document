@@ -1,5 +1,16 @@
 # H800 L2 slice NUMA — empirical confirmation (sm_90)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
+
+## Conclusion
+
 Remote H800 PCIe (114 SMs visible, CUDA 12.4). Probe: `tests/h800_slice.cu`
 (single-line L2 dependent-load latency via `ld.global.cg`, one block per SM,
 swept over 16 address offsets at 256 B stride; per-SM latency recorded once).
@@ -47,6 +58,8 @@ slice) — no L2 NUMA split expected there. So slice count is arch/SKU-specific:
   producing/consuming SM's home slice affects L2 hit latency by ~40–50 cyc; there
   is no software control over slice mapping (address-hashed), so this is a
   statistical effect, not a tuning knob.
+
+## Evidence
 
 ## Method notes
 - `ld.global.cg` reaches L2 (bypasses L1) → dependent chase measures L2 round-trip
@@ -120,3 +133,4 @@ is known, then sweep PA bits directly. Without that, ML on VA→slice is
 fundamentally limited. The datasets are provided for experimentation, but the
 `vmm` map (14 controllable PA-offset bits) is the only one with a real, if weak,
 learnable signal.
+

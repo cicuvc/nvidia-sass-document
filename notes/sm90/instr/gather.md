@@ -1,5 +1,16 @@
 # GATHER — Register-level sub-element gather (read side; sparse-MMA metadata)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `GATHER` = `0b1001000001` = **0x241** | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH` | **VIRTUAL_QUEUE:** none (fixed-latency) | any shader
 
 ## Semantics
@@ -93,6 +104,8 @@ they form the structured-sparsity operand-prep toolkit; finer-grained than `PRMT
 queue or scoreboard ownership; standard coupled-math dispatch with `TABLES_opex_4`
 operand-reuse scheduling.
 
+## Evidence
+
 ## Verified encodings
 No hardware encodings observed — stock `nvcc`/`ptxas` (CUDA 13.1) does not emit
 GATHER, and it is absent from cuBLAS/cuBLASLt sm_90 binaries (grep-confirmed).
@@ -105,6 +118,11 @@ datasize↔num and idxsize×num→mdidx bounds):
 | `GATHER.8.U4.2G R5, R6, R7, R8, 0x4, 0x2, 0x1` |
 | `GATHER.4.U8.2G R2, R3, R4, R5, 0x0, 0x3, 0x0` |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - **Exact operation** — how `mdidx`/`dstbyte`/`srchalf`/`idxsize`/`num` combine to
   route source sub-elements into `Rd`. The bound tables (finer index → more
@@ -114,3 +132,4 @@ datasize↔num and idxsize×num→mdidx bounds):
   `cusparseLt`/sparse-`wmma` library path; no user PTX intrinsic found. Worth
   re-probing against a structured-sparsity build alongside `GENMETADATA`/`SPMETADATA`.
 - Roles of `Ra`/`Rb`/`Rc` (data vs metadata source) vs the immediates.
+

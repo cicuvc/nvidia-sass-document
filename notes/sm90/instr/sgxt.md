@@ -1,5 +1,16 @@
 # SGXT — Sign/zero-extend from a bit position
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 1 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** `SGXT` = `0b1000011010` = **0x21a** (RRR) + 4 operand-form variants | **Pipe:** `int_pipe` | **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`, `VIRTUAL_QUEUE=None` (fixed latency) | since sm_70
 
 SASS lowering of PTX `szext.mode.type` — takes the low **N** bits of `Ra` (N = the value in the
@@ -57,6 +68,8 @@ SGXT; SGXT appears when PTX `szext` is used explicitly (or from some library cod
 ## Latency (from sm_90_latencies.txt)
 `int_pipe` (FXU_OPS), fixed-latency `COUPLED_MATH`.
 
+## Evidence
+
 ## Verified encodings (sm_90, CUDA 13.1 — via `szext` inline asm)
 | Lo64 | Hi64 | Disassembly | PTX |
 |------|------|-------------|-----|
@@ -73,9 +86,6 @@ SGXT; SGXT appears when PTX `szext` is used explicitly (or from some library cod
 - `szext.clamp.s32` → `SGXT` (defaults) · `szext.wrap.s32` → `SGXT.W`
 - `szext.clamp.u32` → `SGXT.U32` · `szext.wrap.u32` → `SGXT.W.U32`
 
-## Open questions
-- Const-bank (RCR/RCxR) text form unverified (only RRR/imm/uniform paths exercised).
-
 ## SM120 verification (`tests/asm_construct/test_sgxt.py`, RTX 5090)
 
 sm_120 keeps 3 variants (RRR `0x21a`, RIR `0x81a`, RUR `0x1c1a`; RCR/RCxR
@@ -84,3 +94,12 @@ dropped). The assembler reproduces the ptxas `szext` encodings bit-for-bit
 Silicon-verified 16-case battery + RUR (3 concurrent blocks): sign/zero
 extension for N=1..31, N=0 → 0, clamp N≥32 → `Ra` unchanged, wrap N mod 32,
 register (RRR) and uniform (RUR) width operands.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Const-bank (RCR/RCxR) text form unverified (only RRR/imm/uniform paths exercised).
+

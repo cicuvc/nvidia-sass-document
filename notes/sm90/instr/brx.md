@@ -1,5 +1,16 @@
 # BRX — Register-indirect branch (GPR target)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `BRX` = `0b100101001001` = **0x949** | **Pipe:** `cbu_pipe` (Branch Unit) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD`
 
 The register-indirect relative of `BRA`/`JMP`: the branch target comes from a **register value plus an immediate offset**, rather than from an immediate/const alone. Used for compiler-built jump tables and computed branches.
@@ -41,6 +52,8 @@ BRX is to BRA what JMX is to JMP: the indirect form.
 ## Latency
 `cbu_pipe` = `BRU_OPS`. `RPC_WRITERS` → **9-cycle** RPC true-dependency (`sm_90_latencies.txt:411,414`) and `CBU_OPS_WITH_REQ` (line 219, honor `&req=`). `DECOUPLED_BRU`, `MIN_WAIT_NEEDED=1`.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_brx.py`)
 Not emitted by ptxas on sm_90/CUDA 13.1. Ground truth via **cubin-patching + nvdisasm**: self-test 7/7, plus randomized battery of 300 patched encodings decoded 100%.
 
@@ -51,11 +64,7 @@ Not emitted by ptxas on sm_90/CUDA 13.1. Ground truth via **cubin-patching + nvd
 | `0x0000000006400949` | `0x000fea0001800000` | `@P0 BRX P3, R6 0x100` (Pp=P3) |
 | `0x0000000006400949` | `0x000fea0003a00000` | `@P0 BRX.INC R6 0x100` (depth) |
 
-## Open questions
-- Exact runtime target formula (`Ra + off` absolute vs. relative-to-anchor) since `Ra` is a runtime value.
-- Real-world jump-table idiom is unobserved because ptxas never emitted these in the sampled code.
-
-## Resolved: target = next_pc + Ra + off — Ra is a KERNEL-RELATIVE offset (SM120)
+## Verified: target = next_pc + Ra + off — Ra is a KERNEL-RELATIVE offset (SM120)
 
 Empirically verified (`tests/asm_construct/test_brx.py`): `BRX Ra, off` branches
 to **`next_pc + (sign-extended Ra:R(a+1)) + off*4`** — the register holds a
@@ -72,3 +81,13 @@ confirming Ra is not an absolute target. This is why libcusparse sign-extends
 the 32-bit jump-table entry with `SHF.R.S32.HI R5, RZ, 0x1f, R4` before `BRX
 R4 -0x110`: the table entries are kernel-relative offsets and BRX adds them to
 the next-PC base plus the encoded offset.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Exact runtime target formula (`Ra + off` absolute vs. relative-to-anchor) since `Ra` is a runtime value.
+- Real-world jump-table idiom is unobserved because ptxas never emitted these in the sampled code.
+

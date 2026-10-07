@@ -1,13 +1,19 @@
 # LDCU — Uniform Load Constant (sm_120)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 6 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** LDCU  |  **Pipe:** `udp_pipe`  |  **INSTRUCTION_TYPE:**
 `INST_TYPE_DECOUPLED_WR_SCBD` (`DECOUPLED_RD_WR_SCBD` for the CX forms)  |
 **VIRTUAL_QUEUE:** `$VQ_LDCU`
-
-> sm_120 rename of Hopper `ULDC` (`notes/sm90/instr/uldc.md`).  This note
-> documents the **8 sm_120 encoding variants** (6 base classes + 2
-> `optional_upx` alternates) and the silicon-verified semantics.
-> Probe: `tests/asm_construct/probe_ldcu_variants.py`.
 
 ## Semantics
 
@@ -215,6 +221,11 @@ were fixed along the way:
 
 `tools/sass_disasm.py` renders all 8 forms and byte-round-trips them.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 * **Why the `UPp` enable is active-low** — measured behaviour is `Rd =
@@ -234,3 +245,4 @@ were fixed along the way:
   the boundary is unverified.
 * **VA `off32` sign/range** — the offset is declared `SImm(32)`; only small
   positive offsets were exercised.
+

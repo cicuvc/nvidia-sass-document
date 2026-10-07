@@ -1,5 +1,18 @@
 # TCGEN05 TMEM entry fragment（B200）
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
+
+## Conclusion
+
+_(no summary in the source note; the sections below carry the durable facts)_
+
 ## 结论
 
 在 Modal B200、CUDA 12.8 环境中，指定
@@ -195,3 +208,4 @@ driver 私有布局。详见 `tcgen05_multiwarp_allocator_v2.md`。
 - `tmem_atexit_handler.md`：与本 entry fragment 配对的 leak-recovery handler。
 - `tcgen05_tooling_checkpoint.md`：多 warp allocator 与 mbarrier 工具验收计划。
 - `notes/sm100/instr/utcatomsws.md`：allocator software-state 操作。
+

@@ -1,10 +1,19 @@
 # IMAD — Integer Multiply-Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `IMAD`  
 **Pipe:** `fmalighter_pipe` (FMA lite unit — shared with IMUL, IDP, FFMA-lite and IDP4A)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Variant overview
 
@@ -193,6 +202,8 @@ The predicate (carry) chain has **9 cycles** of true dependency latency.
 
 ---
 
+## Evidence
+
 ## Empirical confirmation (sm_90, CUDA 13.1, libcublas + hand-crafted kernels)
 
 All width modes and operand forms verified via `nvcc -arch=sm_90 -O3` →
@@ -234,6 +245,11 @@ IMAD.U32 R5, RZ, RZ, UR6                  ; UR→R (hi)
 
 ---
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 1. **IMADSP** — present in the latency file's `mio_pipe` set but has no
@@ -249,3 +265,4 @@ IMAD.U32 R5, RZ, RZ, UR6                  ; UR→R (hi)
    are in the spec but were not triggered by the test kernels. They should appear
    when operands are loaded via `LDC` from `c[bank][offset]` in a way that the
    compiler can directly fold into the IMAD instruction.
+

@@ -1,5 +1,16 @@
 # STTM / STT — tensor-memory (TMEM) store  → PTX `tcgen05.st`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-09-19  
+**Probe:** B200, 512-operation streams measured  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 **Opcode mnemonic:** `STTM` (and alt `STT`) = `0b1100111101101` (0x19ed, 6637)
 **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`
 **Virtual queue:** `$VQ_TMEM` (=40) | **MEM_SCBD_TYPE:** `BARRIER_INST`
@@ -96,6 +107,8 @@ Its GPR dependency row is a uniform **`1`** cycle (issue handoff, not TMEM acces
 latency); the op is excluded from `UDP_subset` fixed-latency timing (line 218)
 and handled as a scoreboard-gated async op. See `ldtm.md` for the full table.
 
+## Evidence
+
 ## Verified encodings (cuobjdump, `nvcc -arch=sm_100a`, CUDA 13.1)
 Source: `tests/sttm_test.cu` → `tests/sttm_test.cubin`. Decoder:
 `tools/decode_sttm.py` — all 8 round-trip (**ALL PASS**).
@@ -129,13 +142,6 @@ Confirmed facts:
 | `…16x128b.x1.unpack::16b… [ta], {r0,r1}` | `STTM.16dp128bit.EXPAND16BIT tmem[URc], Rb` |
 | `…16x32bx2.x2… [ta], 16, {r0,r1}` | `STTM.16dp32bit_t0_t15/_t16_t31.x2 tmem[URc+0x10], Rb` (`immHalfSplitoff`→`Sc_offset`) |
 | `tcgen05.wait::st.sync.aligned` | `FENCE.VIEW.ASYNC.T` |
-
-## Open questions
-- The `STT`/`SIZE_ldt` ALTERNATE is present in the ISA description but has not
-  been observed from ptxas.
-- Exact ordering guarantees of `FENCE.VIEW.ASYNC.T` for `tcgen05.wait::st` vs the
-  `src_rel_sb` read barrier — the fence orders the async TMEM write visibility,
-  the scoreboard only orders source-register reuse.
 
 ## Dynamic B200 validation (2026-09-17)
 
@@ -566,3 +572,16 @@ at least two issue cycles of separation: back-to-back issue (`stall=1`) can
 miss the newly created claim, while either `stall=2` or one intervening NOP
 lets the waiter observe it and then block until actual LDC completion.  This is
 a scoreboard-claim visibility/admission constraint, not an STTM restriction.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- The `STT`/`SIZE_ldt` ALTERNATE is present in the ISA description but has not
+  been observed from ptxas.
+- Exact ordering guarantees of `FENCE.VIEW.ASYNC.T` for `tcgen05.wait::st` vs the
+  `src_rel_sb` read barrier — the fence orders the async TMEM write visibility,
+  the scoreboard only orders source-register reuse.
+

@@ -1,19 +1,19 @@
 # HMMA — Half-precision Matrix Multiply-Accumulate
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `HMMA`
 **Pipe:** `fp16_pipe` (HMMA_OP subset, `$VQ_HMMA`)
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_EMULATABLE`
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
-> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
-> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
-> stall/NOP pattern before results count as sm_90-verified.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Semantics
 
@@ -245,17 +245,7 @@ compiler infers it from operand lifetimes.
 | TABLE_TRUE latency | 28 cyc | 28 cyc |
 | Sparse supported | yes | yes |
 
-## Open questions
-
-- **IndexedRF usage**: When does ptxas choose dynamic accumulator addressing
-  over standard register-file encoding?  The mechanism and sm_120 timing are
-  now verified, but compiler selection remains unknown.
-- **Sparse / indexed-RF layouts**: the metadata register layout for
-  `HMMA.SP` and the descriptor format for `HMMA...INDF` are unverified
-  (documented from the spec tables only).
-- **Canonical D wait**: whether a `depbar`/write-scoreboard form is the
-  canonical alternative to NOP padding for the unscoreboarded result (only
-  16-NOP padding was verified).
+## Evidence
 
 ## Verified encodings (bf16a32, SM120 vs nvcc)
 
@@ -325,3 +315,21 @@ and explains the DeepSeek-reported tensor-core accumulation loss (13-bit
 FP8 QGMMA vs 25-bit HMMA are separate paths).
 
 Decoder: `tools/decode_hmma.py` (opcode 0x23c, size/dstfmt/srcfmt/Rd/Ra/Rb/Rc).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- **IndexedRF usage**: When does ptxas choose dynamic accumulator addressing
+  over standard register-file encoding?  The mechanism and sm_120 timing are
+  now verified, but compiler selection remains unknown.
+- **Sparse / indexed-RF layouts**: the metadata register layout for
+  `HMMA.SP` and the descriptor format for `HMMA...INDF` are unverified
+  (documented from the spec tables only).
+- **Canonical D wait**: whether a `depbar`/write-scoreboard form is the
+  canonical alternative to NOP padding for the unscoreboarded result (only
+  16-NOP padding was verified).
+

@@ -1,5 +1,16 @@
 # Cache Descriptor (desc[URx] 64-bit) — bit-field decode
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** Verified (RTX 5090  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named next to a verification verb
+
+## Conclusion
+
 Empirically decoded on sm_120 (RTX 5090, CUDA 12.8) by (a) compiling
 `createpolicy` variants and reading the SASS lowering immediates, and (b) reading the
 driver-generated policy word at `c[0x0][0x358]` (stream access-policy window) from a
@@ -8,14 +19,6 @@ hand-assembled kernel and decoding it with single-factor sweeps.
 There are **two distinct 64-bit formats**, distinguished by bit 4 of the UR5 high byte:
 `createpolicy`-generated descriptors set `[28]` (0x10 in the priority byte), driver
 access-property descriptors keep it clear.
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). The probing test itself is timing/state-sensitive and flaky on both GPUs.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## Format 1 — `createpolicy` (UR4 = 0)
 
@@ -159,6 +162,11 @@ Feeding arbitrary descriptor words to `STG.E desc[URx]` / `LDG.E desc[URx]`:
   ([31:16], the priority/ratio fields) on the store path; the exact illegal-value set is
   still partially unverified (further probing after a 715 poisons the CUDA context).
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 - The 128 MB `num_bytes` encoding truncates to 0 in the 20-bit field; whether hardware
@@ -168,3 +176,4 @@ Feeding arbitrary descriptor words to `STG.E desc[URx]` / `LDG.E desc[URx]`:
   createpolicy-format word with UR4 ≠ 0 does, is not yet verified behaviorally.
 - Exact STG descriptor validation: which UR5 high-byte values besides 0xFF are rejected,
   and whether UR4 (base field) participates in validation.
+

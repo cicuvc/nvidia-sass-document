@@ -1,5 +1,16 @@
 # Fabric instructions — `UBLKCP` / `UBLKRED` / `UBLKPF`  → PTX `fabric.try_*`
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm100-silicon  
+**Tier confidence:** high  
+**Last verified:** unknown  
+**Probe:** Status:** spec-grounded + confirmed on `sm_100  
+**Open items:** 4 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+
+## Conclusion
+
 **PTX:** `fabric.try_put`, `fabric.try_get`, `fabric.try_red`, `fabric.try_pullred`,
 `fabric.submit`, `fabric.wait` (§9.7.10.5, PTX ISA 9.3)
 **SASS core ops:** `UBLKCP` (copy, 0x13ba), `UBLKRED` (reduce, 0x13bb),
@@ -172,6 +183,11 @@ same table from the FREQ/shader-side TMA context.)
 - `~/cs/project/documented-ptx/09.7.10-fabric-instructions.md` — the host-side
   Logical Endpoint API that creates the fabric handles these device ops operate on.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - `fabric.try_red` (= `UBLKRED`, opcode 0x13bb) and `fabric.try_pullred` — 
   ptxas 13.3.73 could not assemble them (syntax error); need a newer build or
@@ -184,3 +200,4 @@ same table from the FREQ/shader-side TMA context.)
   selects (shader context? acquire vs release? internal only).
 - `UTMACMDFLUSH` vs `DEPBAR` semantics — why `fabric.submit` needs both a TMA
   command flush AND a CCTL invalidate + barrier, versus a single fence.
+

@@ -1,21 +1,21 @@
 # LDGSTS — asynchronous global→shared copy (cp.async)
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** LDGSTS  |  **Pipe:** mio_pipe (VQ_AGU_UNORDERED_WR)  |  **INSTRUCTION_TYPE:** INST_TYPE_DECOUPLED_RD_WR_SCBD
 
 Asynchronously copies bytes from global memory into shared memory, per
 thread.  This is the SASS encoding of PTX `cp.async.cg.shared.global`.
 Verified SM120 (test_ldgsts.py) against nvcc-generated code.
-
-<!-- arch-scope-banner -->
-> **Arch scope:** the *silicon evidence* in this note was collected on RTX 5090
-> (sm_120). A real sm_90 rerun of the full matrix is blocked by the LDCU-vs-ULDC
-> scoreboard difference (`LDCU+req` legal on sm_120; ULDC is synchronous on
-> sm_90 — see `assembler_sm90_port.md`). Kernels must switch to the
-> stall/NOP pattern before results count as sm_90-verified.
-
-> Status and follow-up tracking: `notes/sm120/silver-status.md`,
-> `notes/sm90/arch/sm90_resilver_audit.md`; Blackwell-only context lives under
-> `notes/sm120/`.
 
 ## The working sequence (mirrors nvcc)
 
@@ -77,6 +77,8 @@ Modifiers: `e` (EONLY), `loc` (LOC: ACCESS/BYPASS), `cop` (COP), `sp2`,
   `cp.async.wait_all` lowers to the DEPBAR pair.
 * Related: LDS/STS (shared window), LDG (global reads), LDGSTS.32/.64 for
   smaller async copies (e.g. strided gather into shared).
+
+## Evidence
 
 ## Verified encodings (test_ldgsts.py, SM120)
 
@@ -235,8 +237,14 @@ FIFO interpretation but says nothing about the measured queue placement or
 54-credit implementation:
 https://patents.google.com/patent/US12118382B2/en
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 
 * FILLCTRL.ZFILL (zero-fill on fault) not exercised.
 * Whether all six usable SB indices scale beyond the verified SB0/SB1 pair,
   and whether there is an additional warp-wide cap at 108 or above.
+

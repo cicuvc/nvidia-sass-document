@@ -1,13 +1,17 @@
 # SETSMEMSIZE (USETSHMSZ) — Shrink per-warp shared bound, then release CTA SRAM
 
-**Opcode mnemonic:** `USETSHMSZ` = `0b1100111001001` = **0x19c9** (imm / FLUSH) / `0b1001111001001` = **0x13c9** (UR form) | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`, `VIRTUAL_QUEUE=$VQ_UNORDERED` | compute-only (`SHADER_TYPE==CS`)
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** unknown  
+**Probe:** verified on silicon  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
 
-> **Status: EMPIRICALLY VERIFIED on SM120 (RTX 5090).** Full GPU probe below
-> (`tests/asm_construct/test_usetshmsz.py`). ptxas/nvcc (CUDA 13.x) never emit
-> this from C/C++ or PTX, and it is absent from libcublas / libcublasLt and the
-> crucible ptxas dumps — it is a shrink-only runtime knob, not a compiler
-> product. Encodings below are spec-derived + round-trip verified by the
-> assembler; the **behavior** is empirically pinned down.
+## Conclusion
+
+**Opcode mnemonic:** `USETSHMSZ` = `0b1100111001001` = **0x19c9** (imm / FLUSH) / `0b1001111001001` = **0x13c9** (UR form) | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_RD_SCBD`, `VIRTUAL_QUEUE=$VQ_UNORDERED` | compute-only (`SHADER_TYPE==CS`)
 
 ## Semantics (verified on silicon)
 
@@ -164,6 +168,8 @@ to consumers — only scoreboard ordering via `req_bit_set`. The size read
 (`Sb` imm or `URb`) is a uniform-datapath operand, so `src_rel_sb` ordering
 applies when the size comes from a freshly-loaded UR.
 
+## Evidence
+
 ## Verified encodings
 | Lo64 | Hi64 | Disassembly | case |
 |------|------|-------------|------|
@@ -177,8 +183,14 @@ probe: `tests/asm_construct/probe_usetshmsz_scope.py`. Growth-protocol and
 reserved-bit falsification probe:
 `tests/asm_construct/probe_usetshmsz_grow.py`.
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Exact hardware contract when CTA warps disagree needs a dedicated corruption
   probe after another CTA actually occupies the prematurely released range.
   Multiple inconsistent FLUSH values faulted 719.
 - Interaction with clusters and PDL/dependent launches.
+

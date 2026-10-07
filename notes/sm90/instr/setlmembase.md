@@ -1,9 +1,17 @@
 # SETLMEMBASE — Set local-memory base address
 
-**Opcode mnemonic:** `SETLMEMBASE` = `0b1111000001` = **0x3c1** | **Pipe:** `mio_pipe` | since **sm_70**
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm90-silicon  
+**Tier confidence:** high  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** 2 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
 
-> **Status: silicon-verified on H20 (sm_90), 2026-08.** ptxas/nvcc does not
-> normally emit this instruction, but a hand-assembled cubin executes it.
+## Conclusion
+
+**Opcode mnemonic:** `SETLMEMBASE` = `0b1111000001` = **0x3c1** | **Pipe:** `mio_pipe` | since **sm_70**
 
 Write the executing warp's **local-memory backing-aperture base** from a GPR
 pair — the reverse of `GETLMEMBASE`.
@@ -42,10 +50,6 @@ INSTRUCTION_TYPE: `INST_TYPE_DECOUPLED_RD_SCBD`, VIRTUAL_QUEUE: `$VQ_ADU`.
 
 \* Hi64 shows pinned `dst_wr_sb`=0x7; real scheduling bits unknown. Decoder: `tools/decode_lmembase.py`.
 
-## Open questions
-- Real cuobjdump text form unconfirmed.
-- Shares `SETCTAID`'s `VQ_ADU` queue — possibly used during kernel prologue.
-
 ## H20 silicon verification and correction (2026-08)
 
 The full switch experiment now passes on both H20 / sm_90 and RTX 5090 /
@@ -70,3 +74,13 @@ executed the SET convergently.
 
 See the dedicated [sm_120 SETLMEMBASE note](../../sm120/instr/setlmembase.md)
 and the [full local-memory backing study](../../sm120/arch/local_memory_backing_va.md).
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+- Real cuobjdump text form unconfirmed.
+- Shares `SETCTAID`'s `VQ_ADU` queue — possibly used during kernel prologue.
+

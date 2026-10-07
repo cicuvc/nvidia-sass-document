@@ -1,5 +1,16 @@
 # UCGABAR_GET — CGA cluster-barrier query
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** unknown  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode:** `0b1010111000111` = **0x15c7** | **Pipe:** `udp_pipe` (uniform datapath) | **INSTRUCTION_TYPE:** `INST_TYPE_DECOUPLED_BRU_DEPBAR_RD_SCBD` | **VIRTUAL_QUEUE:** `VQ_UNORDERED` | compute-only (`SHADER_TYPE==CS`)
 
 Read the thread-block-cluster (CGA) barrier state/token into a uniform register. Part of the CGA-barrier family (see `ucgabar_arv.md` for `ARV`/`WAIT`).
@@ -20,13 +31,21 @@ Read the thread-block-cluster (CGA) barrier state/token into a uniform register.
 ## Not rendered (CUDA 13.1 nvdisasm gap)
 nvdisasm does not render this opcode: hand-patching produces raw bytes only. The mnemonic exists in the sm_90 ISA DB but the shipped disassembler omits it. `URd` placement is spec-inferred.
 
+## Evidence
+
 ## Verified encodings (decoder: `tools/decode_ucgabar.py`)
 Field-level (spec-inferred, nvdisasm does not render):
 | Lo64 | Hi64 | Decoder output |
 |------|------|----------------|
 | `0x00000000000575c7` | `0x000fe20008000000` | `UCGABAR_GET UR5` |
 
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
 ## Open questions
 - Actual mnemonic rendering nvdisasm *would* use is unknown (unrendered).
 - Which host construct emits GET — possibly driver/runtime cluster-launch setup.
 - Exact `CGABARRIER` token layout is not spec-exposed.
+

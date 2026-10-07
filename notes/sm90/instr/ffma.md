@@ -1,10 +1,19 @@
 # FFMA — FP32 Fused Multiply-Add
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** low  
+**Last verified:** 2026-08-17  
+**Probe:** not recorded in this note  
+**Open items:** 3 open item(s)  
+**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+
+## Conclusion
+
 **Opcode mnemonic:** `FFMA`  
 **Pipe:** `fmalighter_pipe` (= `FMAI_OPS`)  
 **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
-
----
 
 ## Semantics
 
@@ -110,6 +119,8 @@ Same harness as the MUFU measurements (`test_mufu_latency.py` /
   throughput bottleneck; the fmalighter/FMA pipe is not — it accepts far
   more than 1 op/cycle, so a single warp's issue rate saturates it).
 
+## Evidence
+
 ## Verified encodings (cuobjdump, sm_90)
 
 All 12 test vectors decoded correctly against cuobjdump disassembly.
@@ -137,13 +148,7 @@ Key observations from compiler output:
 - PTX `fma.rz.f32` / `fma.rm.f32` / `fma.rp.f32` / `fma.ftz.f32` map directly to FFMA
   with the corresponding suffix via the `rnd`/`fmz` modifier bits
 
-## Open questions
-
-- `.reuse` flag not yet tested (requires paired consumer instructions)
-- Const-bank variants (RRC, RRCx, RCR, RCxR) not yet verified with test kernel
-- `FFMA32I` (pipe-only alias) relationship to FFMA not fully explored
-
-## Resolved (SM120 bit-level verification, 2026-08)
+## Verified (SM120 bit-level verification, 2026-08)
 
 `tests/asm_construct/test_ffma.py` + `fma_ref.py` (big-integer exact-sum FMA)
 verified the full rounding model against real hardware; **160/160 cases OK**
@@ -219,4 +224,15 @@ The SASS `.RZ` rounding modifier required a parser fix (the lexer reads `RZ`
 as a register token, so `.RZ` failed; `sass_parser.py` now accepts a `REG`
 token text "RZ" as a mnemonic modifier). `FFMA.RZ`, `FFMA.RZ.FTZ`, and the
 `0fXXXXXXXX` F32-imm RRI form all assemble correctly.
+
+## History / retracted hypotheses
+
+> Claims below were **superseded, refuted, or never settled** by later work; they are kept
+> for provenance. Do not cite them as current.
+
+## Open questions
+
+- `.reuse` flag not yet tested (requires paired consumer instructions)
+- Const-bank variants (RRC, RRCx, RCR, RCxR) not yet verified with test kernel
+- `FFMA32I` (pipe-only alias) relationship to FFMA not fully explored
 

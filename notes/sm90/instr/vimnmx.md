@@ -1,5 +1,16 @@
 # VIMNMX — Vector Integer Min/Max
 
+<!-- notes-status -->
+**Status:** active  
+**Evidence:** sm120-silicon  
+**Tier confidence:** medium  
+**Last verified:** 2026-08  
+**Probe:** not recorded in this note  
+**Open items:** none  
+**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+
+## Conclusion
+
 **Opcode mnemonic:** VIMNMX  |  **Pipe:** `int_pipe`  |  **INSTRUCTION_TYPE:** `INST_TYPE_COUPLED_MATH`
 
 ## Semantics
@@ -54,6 +65,8 @@ Plus `vimnmx_pred_*` ALTs (different encoding of Pp output).
 [91:91],[11:0]       opcode       <= 0b100001001000
 ```
 
+## Evidence
+
 ## Verified encodings
 
 From `i2i_test.cu` (sm_90, CUDA 13.1):
@@ -81,3 +94,4 @@ Silicon-verified (15-case battery, all pass): U32/S32 min-max incl. negatives,
 `.RELU` clamp-to-0, RIR immediate, RUR uniform register, U16x2 packed
 min/max, the real-predicate direction flip above, and `Pp` not being written
 by the 4-operand form.
+
