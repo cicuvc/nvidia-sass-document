@@ -596,7 +596,8 @@ LEDGER_FILES = ("sm90/arch/sm90_resilver_audit.md", "sm120/silver-status.md")
 
 #: Notes owned by a generator: touching them here would make the generator's `--check`
 #: fail (and the generator already writes the status block and zones).
-GENERATED_FILES_PREFIXES = ("sm120/instr/",)
+GENERATED_FILES_PREFIXES = tuple(f"sm{a}/instr/" for a in
+                                 ("70", "75", "80", "89", "90", "100", "103", "107", "120"))
 
 
 def is_generated(relpath: str) -> bool:

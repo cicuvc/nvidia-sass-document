@@ -29,31 +29,500 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm100/arch/tmem_atexit_handler.md` | sm100-silicon | medium | 2026-09 | active |
 | `sm100/arch/tmem_entry_fragment.md` | sm100-silicon | medium | 2026-09 | active |
 | `sm100/instr/acqshminit.md` | sm120-silicon | medium | unknown | active |
+| `sm100/instr/bitextract.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/bmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/clmad.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/credux.md` | sm100-silicon | low | unknown | active |
+| `sm100/instr/cs2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/dadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/depbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/dfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/dmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/dmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/dsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/f2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/f2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/fabric.md` | sm100-silicon | high | unknown | active |
+| `sm100/instr/fadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/fadd2.md` | sm100-silicon | low | unknown | active |
+| `sm100/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/ffma2.md` | sm100-silicon | medium | unknown | active |
+| `sm100/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fhadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fhfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fmnmx3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/fmul2.md` | sm100-silicon | low | unknown | active |
+| `sm100/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fsel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/gather.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/genmetadata.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hmnmx2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hset2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/hsetp2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/i2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/i2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/i2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/iabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/iadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ide.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/idp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/imad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/imma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/imnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/isetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ldcu.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ldt.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/ldtm.md` | sm100-silicon | medium | 2026-09-19 | active |
+| `sm100/instr/lea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/lepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/lop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/mov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/movm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/nop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/p2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/plop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/pmtrig.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/prmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/qadd4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/qfma4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/qmul4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/r2p.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/r2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/redux.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/s2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/scatter.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/stt.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/sttm.md` | sm100-silicon | medium | 2026-09-19 | active |
 | `sm100/instr/tcgen05_fence.md` | sm100-silicon | high | unknown | active |
 | `sm100/instr/tcgen05_wait.md` | sm100-silicon | high | unknown | active |
 | `sm100/instr/tma_scatter_gather.md` | sm100-silicon | high | unknown | active |
+| `sm100/instr/ublkcp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ublkpf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ublkred.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ubmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ubrev.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ucgabar_arv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ucgabar_get.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ucgabar_set.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ucgabar_wait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ucgabararv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ucgabarget.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ucgabarset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ucgabarwait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uclea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uf2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uflo.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/ugetnextworkid.md` | sm100-silicon | high | unknown | active |
+| `sm100/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uiadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uimad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uisetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ulea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ulepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ulop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ulop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ulop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/umemsets.md` | sm100-silicon | low | unknown | active |
+| `sm100/instr/umov.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/umov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/up2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uplop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/upopc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uprmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/upsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ur2up.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uredgr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/usel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/usetmaxreg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/usetshmsz.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/usgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ushf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ushl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ushr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/ustgr.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/utcatomsws.md` | sm100-silicon | medium | unknown | active |
 | `sm100/instr/utcbar.md` | sm100-silicon | medium | 2026-09-17 | active |
 | `sm100/instr/utccp.md` | sm100-silicon | medium | 2026-09-18 | active |
 | `sm100/instr/utchmma.md` | sm100-silicon | medium | 2026-09-20 | active |
 | `sm100/instr/utcimma.md` | sm100-silicon | low | unknown | active |
 | `sm100/instr/utcldsws.md` | sm100-silicon | medium | unknown | active |
+| `sm100/instr/utcmxqmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/instr/utcomma.md` | sm100-silicon | low | unknown | active |
 | `sm100/instr/utcqmma.md` | sm100-silicon | low | unknown | active |
 | `sm100/instr/utcshift.md` | sm100-silicon | medium | 2026-09-17 | active |
+| `sm100/instr/utcstsws.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/utmacctl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/utmacmdflush.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/utmaldg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/utmapf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/utmaredg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/utmastg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/uvirtcount.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/vabsdiff.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/vabsdiff4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/vhmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/viadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/viaddmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/vimnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/vimnmx3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm100/instr/voteu.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm100/rf_bank_probe.md` | sm100-silicon | high | 2026-09 | active |
 | `sm103/b300_mufu_ex2_throughput.md` | sm103-silicon | high | 2026-09-21 | active |
+| `sm103/instr/__hir0x020.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x100.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x160.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x170.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x180.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x190.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x1a0.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x1b0.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x1f2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/__hir0x1f3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/bmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/credux.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/cs2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/dadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/depbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/dfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/dmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/dmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/dsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/f2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/f2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ffma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fhadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fhfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fmnmx3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fsel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hmnmx2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hset2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/hsetp2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/i2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/i2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/i2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/iabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/iadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/idp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/imad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/imma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/imnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/isetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ldcu.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ldt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ldtm.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm103/instr/ldtm_stat.md` | sm103-silicon | medium | unknown | active |
+| `sm103/instr/lea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/lepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/lop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/mov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/movm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/nop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/p2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/plop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/pmtrig.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/prmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/qadd4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/qfma4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/qmul4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/r2p.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/r2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/redux.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/s2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/stt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/sttm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ublkcp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ublkpf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ublkred.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ubmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ubrev.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ucgabar_arv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ucgabar_wait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ucgabararv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ucgabarget.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ucgabarset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ucgabarwait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uclea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uf2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uflo.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ugetnextworkid.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uiadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uimad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uisetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ulea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ulepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ulop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ulop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ulop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/umemsets.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/umov.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/umov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/up2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uplop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/upopc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uprmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/upsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ur2up.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uredgr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/usel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/usetmaxreg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/usetshmsz.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/usgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ushf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ushl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ushr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/ustgr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utcatomsws.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utcbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utccp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utchmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utcomma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utcqmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utcshift.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utmacctl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utmacmdflush.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utmaldg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utmapf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utmaredg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/utmastg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/uvirtcount.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/vabsdiff.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/vabsdiff4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/vhmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/viadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/viaddmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/vimnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/vimnmx3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm103/instr/voteu.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm103/rf_bank_probe.md` | sm100+sm103-silicon | high | 2026-09-17 | active |
+| `sm107/instr/__hir0x020.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/__hir0x160.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/__hir0x170.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/__hir0x1f2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/__hir0x1f3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/bmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/clmad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/credux.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/cs2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/cs2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/dadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/depbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/dfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/dmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/dmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/dsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/f2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/f2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ffma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fhadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fhadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fhfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fhfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fhmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fmnmx3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fsel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hmnmx2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hset2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/hsetp2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/i2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/i2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/i2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/iabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/iadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/idp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/imad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/imma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/imnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/isetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ldcu.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ldt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ldtm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/lea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/lepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/lop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/mov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/mov64iur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/movm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/nop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/p2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/plop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/pmtrig.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/prmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/r2p.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/r2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/redux.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/s2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/stt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/sttm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ublkcp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ublkl2cctl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ublkpf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ublkred.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ubmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ubrev.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ucctl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ucgabar_arv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ucgabar_wait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ucgabararv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ucgabarget.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ucgabarset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ucgabarwait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uclea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uf2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uflo.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ugetnextworkid.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uiadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uimad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uisetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ulea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ulepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ulop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ulop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ulop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/umemsets.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/umov.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/umov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/up2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uplop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/upopc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uprmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/upsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ur2up.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uredgr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/usel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/usetmaxreg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/usetshmsz.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/usgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ushf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ushl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ushr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/ustgr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utcatomsws.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utcbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utccp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utchmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utcomma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utcqmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utcshift.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utmacctl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utmacmdflush.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utmal2cctl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utmaldg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utmapf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utmaredg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utmastg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/utraceevent.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/uvirtcount.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/viadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/vimnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/viset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm107/instr/voteu.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/adu_topology.md` | sm120-silicon | high | 2026-09-15 | active |
 | `sm120/aluheavy_latency.md` | sm120-silicon | high | 2026-09-16 | active |
 | `sm120/alulite_latency.md` | sm120-silicon | high | 2026-09-16 | active |
@@ -73,90 +542,111 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm120/icache_topology.md` | sm120-silicon | high | 2026-09-21 | active |
 | `sm120/index.md` | mixed | medium | 2026-09 | historical |
 | `sm120/indexed_rf_topology.md` | sm120-silicon | high | unknown | active |
-| `sm120/instr/acqshminit.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/atoms.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/bmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/bmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/break.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/brev.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/bssy.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/bsync.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/call.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/cctl.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/clmad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/cs2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/cs2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/dadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/depbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/dfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/dmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/dmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/dsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/f2f.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/f2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/f2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/f2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/fchk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fhadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fhfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/flo.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/frnd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fsel.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/getlmembase.md` | sm120-silicon | high | unknown | active |
+| `sm120/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/hmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/hmnmx2.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/hmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/hset2.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/hsetp2.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/i2f.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/i2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/i2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/i2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/iabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/iadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ide.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/idp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/imad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/imma.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/imnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/isetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/jmp.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ldcu.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/ldg.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/lea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/lepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/lop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/mov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/mov64iur.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/mufu.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/movm.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/mxqmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/nanosleep.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/nanotrap.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/nop.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/omma.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/p2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/plop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/popc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/pmtrig.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/prmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/qmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/r2p.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/reds.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/r2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/redux.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/s2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/setlmembase.md` | sm120-silicon | high | unknown | active |
 | `sm120/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/stg.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/syncs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ublkcp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ublkpf.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ublkred.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ubmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ubrev.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ucgabar_arv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ucgabar_get.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ucgabar_set.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ucgabar_wait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ucgabararv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ucgabarget.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ucgabarset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ucgabarwait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uclea.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uf2f.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uf2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uf2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uf2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ufadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ufhadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ufhfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uflo.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ufmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ufmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ufrnd.md` | spec | high | unknown (ISA dump, not a probe) | active |
@@ -169,17 +659,44 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm120/instr/ui2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ui2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uiabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uiadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uimad.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uimnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uisetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ulea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ulepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ulop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ulop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ulop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/umemsets.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/umov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/up2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uplop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/upopc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uprmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/upsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ur2up.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/usel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/usetmaxreg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/usetshmsz.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/usgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ushf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ushl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/ushr.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/utmacctl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/utmacmdflush.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/utmaldg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/utmapf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/utmaredg.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/utmastg.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uviadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uvimnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uvirtcount.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/viadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/vimnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/voteu.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr_verification_backlog.md` | sm120-silicon | medium | unknown | active |
 | `sm120/l2_slice_probe.md` | sm120-silicon | high | 2026-09 | active |
 | `sm120/mio_lsu_xu_topology.md` | sm120-silicon | high | 2026-09-14 | active |
@@ -188,9 +705,390 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm120/subcore_compute_conflict.md` | sm120-silicon | high | 2026-09-14 | active |
 | `sm120/udp_urf_topology.md` | sm120-silicon | medium | unknown | active |
 | `sm120/yield_dispatch_cost.md` | sm120-silicon | medium | unknown | active |
+| `sm70/instr/bmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/cs2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/dadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/depbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/dfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/dmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/dsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/ffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fsel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hset2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/hsetp2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/iabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/iadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/ide.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/idp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/imad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/isetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/lea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/lepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/lop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/mov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/nop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/p2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/plop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/pmtrig.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/prmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/r2p.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/vabsdiff.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/vabsdiff4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm70/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm70/register_banks.md` | sm70-silicon | high | 2026-09 | active |
+| `sm75/instr/bmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/bmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/cs2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/dadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/depbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/dfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/dmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/dsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/f2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fsel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hset2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/hsetp2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/i2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/i2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/iabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/iadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ide.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/idp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/imad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/imma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/imnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/isetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/lea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/lepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/lop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/mov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/movm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/nop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/p2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/plop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/pmtrig.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/prmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/r2p.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/r2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/s2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/scatter.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ubmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ubrev.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uclea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uflo.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uiadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uimad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uisetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uldc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ulea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ulop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ulop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ulop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/umov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/up2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uplop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/upopc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/uprmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/upsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ur2up.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/usel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/usgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ushf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ushl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/ushr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/vabsdiff.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/vabsdiff4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm75/instr/voteu.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/bmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/bmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/clmad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/cs2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/dadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/depbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/dfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/dmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/dmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/dsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/f2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fsel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/gather.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/genmetadata.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hfma2.mma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hmnmx2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hset2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/hsetp2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/i2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/i2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/iabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/iadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ide.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/idp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/imad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/imma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/imnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/isetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/lea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/lepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/lop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/mov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/movm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/nop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/p2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/plop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/pmtrig.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/prmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/r2p.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/r2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/redux.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/s2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/scatter.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/spmetadata.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ubmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ubrev.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uclea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uflo.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uiadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uimad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uisetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uldc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ulea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ulop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ulop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ulop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/umov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/up2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uplop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/upopc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/uprmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/upsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ur2up.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/usel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/usgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ushf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ushl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/ushr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/vabsdiff.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/vabsdiff4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm80/instr/voteu.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm80/register_banks.md` | sm80-silicon | high | 2026-09 | active |
 | `sm80/scalar_math_pipelines.md` | sm80-silicon | high | 2026-09-19 | active |
+| `sm89/instr/bitextract.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/bmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/bmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/clmad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/cs2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/dadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/depbar.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/dfma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/dmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/dmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/dsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/f2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/f2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ffma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fmnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fmul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fsel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/gather.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/genmetadata.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hfma2.mma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hmnmx2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hmul2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hset2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/hsetp2.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/i2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/i2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/i2ip.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/iabs.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/iadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ide.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/idp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/imad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/imma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/imnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/isetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/lea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/lepc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/lop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/mov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/movm.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/nop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/p2r.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/plop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/pmtrig.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/prmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/qmma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/r2p.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/r2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/redux.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/s2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/scatter.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/spmetadata.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ubmsk.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ubrev.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uclea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uf2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uflo.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uiadd3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uimad.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uisetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uldc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ulea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ulop.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ulop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ulop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/umov.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/up2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uplop3.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/upopc.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/uprmt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/upsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ur2up.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/usel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/usgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ushf.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ushl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/ushr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/vabsdiff.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/vabsdiff4.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm89/instr/voteu.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm89/scalar_math_pipelines.md` | sm89-silicon | high | 2026-09-19 | active |
 | `sm90/arch/assembler_sm90_port.md` | sm90-silicon | medium | 2026-08-27 | active |
 | `sm90/arch/async_proxy.md` | sm120-silicon | low | unknown | active |
@@ -235,6 +1133,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/b2r.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/bar.md` | sm100-silicon | medium | unknown | active |
 | `sm90/instr/bgmma.md` | sm120-silicon | low | unknown | active |
+| `sm90/instr/bitextract.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/bmma.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/bmov.md` | sm120-silicon | high | 2026-08 | active |
 | `sm90/instr/bmsk.md` | sm120-silicon | medium | 2026-08 | active |
@@ -267,25 +1166,33 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/f2i.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/f2ip.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/fadd.md` | sm120-silicon | low | 2026-08 | active |
+| `sm90/instr/fadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/fchk.md` | sm120-silicon | low | 2026-08 | active |
 | `sm90/instr/fence.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/ffma.md` | sm120-silicon | low | 2026-08-17 | active |
+| `sm90/instr/ffma32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/flo.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/fmnmx.md` | sm120-silicon | low | 2026-08 | active |
 | `sm90/instr/fmul.md` | sm120-silicon | high | 2026-08 | active |
+| `sm90/instr/fmul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/frnd.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/fsel.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/fset.md` | sm120-silicon | high | 2026-08 | active |
 | `sm90/instr/fsetp.md` | sm120-silicon | low | 2026-08 | active |
 | `sm90/instr/fswzadd.md` | sm120-silicon | high | 2026-08 | active |
 | `sm90/instr/gather.md` | sm120-silicon | low | unknown | active |
+| `sm90/instr/genmetadata.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/getlmembase.md` | sm90-silicon | high | 2026-08 | active |
 | `sm90/instr/hadd2.md` | sm120-silicon | low | 2026-08 | active |
+| `sm90/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/hfma2.md` | sm120-silicon | low | 2026-08 | active |
+| `sm90/instr/hfma2.mma.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/hfma2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/hgmma.md` | sm120-silicon | low | 2026-08 | active |
 | `sm90/instr/hmma.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/hmnmx2.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/hmul2.md` | sm120-silicon | low | 2026-08 | active |
+| `sm90/instr/hmul2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/hset2.md` | sm120-silicon | low | 2026-08 | active |
 | `sm90/instr/hsetp2.md` | sm120-silicon | low | 2026-08 | active |
 | `sm90/instr/i2f.md` | sm120-silicon | medium | 2026-08 | active |
@@ -293,13 +1200,20 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/i2i.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/i2ip.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/iabs.md` | sm120-silicon | high | unknown | active |
+| `sm90/instr/iadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/iadd3.md` | sm120-silicon | medium | unknown | active |
+| `sm90/instr/iadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/ide.md` | sm120-silicon | high | unknown | active |
 | `sm90/instr/idp.md` | sm120-silicon | high | unknown | active |
+| `sm90/instr/idp4a.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/igmma.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/imad.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/imma.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/imnmx.md` | sm120-silicon | high | unknown | active |
+| `sm90/instr/imul.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/imul32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/iscadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/iscadd32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/isetp.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/jmp.md` | sm90+sm120-silicon | high | 2026-09 | active |
 | `sm90/instr/jmx.md` | sm120-silicon | low | unknown | active |
@@ -314,10 +1228,13 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/ldsm.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/lea.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/lepc.md` | sm120-silicon | medium | unknown | active |
+| `sm90/instr/lop.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/lop3.md` | sm120-silicon | low | unknown | active |
+| `sm90/instr/lop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/match.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/membar.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/mov.md` | sm120-silicon | medium | 2026-08 | active |
+| `sm90/instr/mov32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/movm.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/mufu.md` | sm120-silicon | low | 2026-08 | active |
 | `sm90/instr/nanosleep.md` | sm120-silicon | low | unknown | active |
@@ -329,6 +1246,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/popc.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/preexit.md` | sm120-silicon | medium | unknown | active |
 | `sm90/instr/prmt.md` | sm120-silicon | high | unknown | active |
+| `sm90/instr/psetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/qgmma.md` | sm90-silicon | medium | 2026-09 | active |
 | `sm90/instr/qspc.md` | sm120-silicon | medium | unknown | active |
 | `sm90/instr/r2b.md` | sm120-silicon | low | unknown | active |
@@ -349,6 +1267,9 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/sgxt.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/shf.md` | sm120-silicon | medium | unknown | active |
 | `sm90/instr/shfl.md` | sm120-silicon | high | 2026-08 | active |
+| `sm90/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/shr.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/spmetadata.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/st.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/stas.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/stg.md` | sm120-silicon | low | unknown | active |
@@ -364,25 +1285,38 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/ucgabar_arv.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/ucgabar_get.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/ucgabar_set.md` | sm120-silicon | low | unknown | active |
+| `sm90/instr/ucgabar_wait.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/ucgabararv.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/ucgabarget.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/ucgabarset.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/ucgabarwait.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/uclea.md` | mixed | medium | 2026-08 | active |
 | `sm90/instr/uf2fp.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/uflo.md` | sm120-silicon | medium | 2026-08 | active |
+| `sm90/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/uiadd3.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/uimad.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/uisetp.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/uldc.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/ulea.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/ulepc.md` | sm120-silicon | medium | unknown | active |
+| `sm90/instr/ulop.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/ulop3.md` | sm120-silicon | medium | 2026-08 | active |
+| `sm90/instr/ulop32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/umov.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/up2ur.md` | sm90+sm120-silicon | high | 2026-08 | active |
 | `sm90/instr/uplop3.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/upopc.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/uprmt.md` | sm120-silicon | medium | 2026-08 | active |
+| `sm90/instr/upsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/ur2up.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/usel.md` | sm120-silicon | medium | 2026-08 | active |
+| `sm90/instr/usetmaxreg.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/usetshmsz.md` | sm120-silicon | medium | unknown | active |
 | `sm90/instr/usgxt.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/ushf.md` | sm120-silicon | medium | 2026-08 | active |
+| `sm90/instr/ushl.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm90/instr/ushr.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/utmacctl.md` | sm120-silicon | medium | unknown | active |
 | `sm90/instr/utmacmdflush.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/utmaldg.md` | sm120-silicon | low | unknown | active |
@@ -390,10 +1324,12 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/utmaredg.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/utmastg.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/vabsdiff.md` | sm120-silicon | low | unknown | active |
+| `sm90/instr/vabsdiff4.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/vhmnmx.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/viadd.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/viaddmnmx.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/vimnmx.md` | sm120-silicon | medium | 2026-08 | active |
+| `sm90/instr/vimnmx3.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/vote.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/voteu.md` | sm90+sm120-silicon | high | 2026-08 | active |
 | `sm90/instr/warpsync.md` | sm120-silicon | low | 2026-08 | active |

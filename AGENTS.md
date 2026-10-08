@@ -10,7 +10,7 @@ Both are grep-first: never `Read` them whole. Use `grep -n` to locate a section,
 
 ### Current state
 - **197/207** compute instructions documented (notes + decoder + test kernel). Only `F2FP` and `RTT` remain unchecked.
-- **390 notes** (`notes/`, 519k words) — `notes/sm90/instr/` 171 per-instruction docs, `notes/sm90/arch/` 37 cross-cutting notes, `notes/sm120/instr/` 105 generated sm_120 instruction docs, plus the sm100/sm103 archives and 3 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
+- **1326 notes** (`notes/`, 1.57M words) — per-architecture compute-instruction references in `notes/sm<NN>/instr/` (sm70 63, sm75 99, sm80 107, sm89 112, sm90 209, sm100 169, sm103 163, sm107 160, sm120 155) plus the cross-cutting notes under `notes/sm<NN>/arch/` and 3 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
 - **109 decoders** (`tools/decode_*.py`) — one per documented instruction, each validated against real cuobjdump vectors.
 - **177 CUDA kernels** (`tests/*.cu`) + **87 assembler/round-trip tests** (`tests/asm_construct/test_*.py`) that build SASS by hand, load it through `assembler/`, and run it on a GPU.
 - **124 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, `hmma_model.py`, shared libs).
@@ -893,30 +893,58 @@ python3 tools/notes_migrate.py --status --sections --ledger [--apply]   # idempo
 `notes/notes_status_overrides.json` holds the hand-confirmed tiers where the note text
 does not pin the measurement host; `notes/AUDIT_BASELINE.md` is the frozen pre-cleanup
 snapshot. The migrator refuses to run if a migration would lose a line of prose or a
-title. It skips `notes/sm120/instr/` — those notes belong to their generator.
+title. It skips `notes/sm<NN>/instr/` — those notes belong to their generator.
 
-### sm_120 instruction reference (generated)
+### Per-architecture compute-instruction reference (generated)
 
-`notes/sm120/instr/` holds one note per **compute** mnemonic whose sm_120 form differs
-from the sm_90 dump, plus every Blackwell-only compute mnemonic (**105 notes**).  They are
-produced from `sm120_instructions.txt` — never hand-write the encoding tables:
+Every architecture dump in the repo has a compute-instruction reference under
+`notes/<arch>/instr/`, **one note per mnemonic** (the mnemonic's CLASS variants are rows in
+that note — never one file per variant):
+
+| arch | compute mnemonics | dump | latencies |
+|---|---:|---|---|
+| sm70 | 63 | `sm_70_instructions.txt` | – |
+| sm75 | 99 | `sm_75_instructions.txt` | – |
+| sm80 | 107 | `sm_80_instructions.txt` | – |
+| sm89 | 112 | `sm_89_instructions.txt` | `sm_89_latencies.txt` |
+| sm90 | 136 | `sm_90_instructions.txt` | `sm_90_latencies.txt` |
+| sm100 | 164 | `sm100_instructions.txt` | `sm100_latencies.txt` |
+| sm103 | 162 | `sm_103_instructions.txt` | `sm_103_latencies.txt` |
+| sm107 | 160 | `sm_107_instructions.txt` | `sm_107_latencies.txt` |
+| sm120 | 155 | `sm120_instructions.txt` | `sm120_latencies.txt` |
+
+In scope: mnemonics whose variants sit on a **compute pipe** (`int_pipe`, `fe_pipe`,
+`fmalighter_pipe`, `fp16_pipe`, `fma64lite/heavy_pipe`, `udp_pipe`).  Memory, data-mover,
+CBU and tree-traversal units are documented elsewhere.
 
 ```
-python3 tools/isa_diff_sm90_sm120.py [--write-report notes/sm120/isa_diff_sm90.md]
-python3 tools/sm120_notes_gen.py [--list|--write|--check|--mnem NAME|--explain NAME]
-python3 tools/sm120_measurements_index.py [--write|--check]
+python3 tools/parse_all_arch.py [--only sm103|--list]     # build every sm<NN>.json
+python3 tools/isa_coverage.py                             # coverage / manifest
+python3 tools/isa_coverage.py --write [--arch sm89]       # generate notes + MEASUREMENTS.md
+python3 tools/isa_coverage.py --write --fill-gaps         # add only missing mnemonics
+python3 tools/isa_coverage.py --check                     # fail when a note is stale
 ```
 
 Rules this setup encodes:
 
-- **Measurement results are indexed, not copied.** A measurement lives in exactly one note
-  (usually under `notes/sm90/`, where it was recorded); the sm_120 instruction note points
-  at it and at `notes/sm120/measurements_index.md`. Copying a number into a second file is
-  how the notes became ambiguous in the first place.
-- A generated note's status block says `Evidence: spec` — its content came from the ISA
-  dump, not from silicon. Do not upgrade that tier without a measurement.
-- `sm120_notes_gen.py --check` fails when the tree is stale, so re-run `--write` after a
-  parser change; `--explain NAME` shows the diff for one note.
+- **A generated note is owned by the generator.** `notes/sm<NN>/instr/` is never hand-edited;
+  `notes_migrate.py` skips it and `isa_coverage.py --check` fails when it drifts.
+- **sm90 and sm100 notes are hand-maintained** (measurements, history, cross-references), and
+  sm120 was regenerated into this format when the two generators collided.  `--fill-gaps`
+  adds only mnemonics with no note at all and never rewrites an existing one.
+- Every generated note says `Evidence: spec`: the encoding, the operand shape and the
+  legal-encoding conditions are the **dump's claims**, not measured behaviour.
+- **`## Measurement (placeholder)`** is reserved for the hardware run — host, probe,
+  measured behaviour, and the tier after the run.  The per-architecture queue is
+  `notes/<arch>/MEASUREMENTS.md`, which also points at any note that already holds measured
+  numbers.  A tier is never upgraded without a recorded measurement.
+
+The sm_90↔sm_120 mnemonic diff and the sm_120 measurement registry remain useful:
+
+```
+python3 tools/isa_diff_sm90_sm120.py [--mnem NAME|--write-report PATH]
+python3 tools/sm120_measurements_index.py [--write|--check]
+```
 
 ### Open questions — disposition workflow (phase 4)
 

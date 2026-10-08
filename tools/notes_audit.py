@@ -179,6 +179,9 @@ NON_NOTE_FILES = {
     "OPEN_QUESTIONS.md",
     "sm120/measurements_index.md",
 }
+#: Basenames that are generated ledgers for *every* architecture, so they are matched by
+#: name rather than path (e.g. `notes/sm89/MEASUREMENTS.md`).
+NON_NOTE_BASENAMES = {"MEASUREMENTS.md"}
 LEDGER_FILES = {
     "sm120/silver-status.md",
     "sm90/arch/sm90_resilver_audit.md",
@@ -596,7 +599,7 @@ def collect() -> list[dict]:
             if not name.endswith(".md"):
                 continue
             relpath = rel(os.path.join(root, name))
-            if relpath in NON_NOTE_FILES:
+            if relpath in NON_NOTE_FILES or name in NON_NOTE_BASENAMES:
                 continue
             records.append(audit_file(os.path.join(root, name)))
     records.sort(key=lambda r: r["path"])
