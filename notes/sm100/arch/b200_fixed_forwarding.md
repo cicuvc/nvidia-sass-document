@@ -227,6 +227,45 @@ therefore not evidence of an FP64 backend on B200.
 
 ## IMAD.WIDE and IMAD.HI
 
+### Ordinary 32-bit IMAD recurrence
+
+Ordinary `IMAD` is materially different from WIDE.  The
+`probe_imad_operand_raw.py` recurrence places the previous result in each of
+the three input slots while preserving the same `x <- x+1` arithmetic:
+
+```text
+Ra: IMAD d, x, 1, 1
+Rb: IMAD d, 1, x, 1
+Rc: IMAD d, 1, 1, x
+```
+
+All three slots have the same boundary and timing.  The table gives raw
+64/128-unroll means followed by the loop-overhead-eliminated interval:
+
+| nominal gap | 64 unroll | 128 unroll | extrapolated | result |
+|---:|---:|---:|---:|---|
+| 1 | 2.582 | 2.313--2.314 | about 2.045 | wrong |
+| 2 | 2.598 | 2.321 | about 2.044 | wrong |
+| 3 | 3.598 | 3.301 | about 3.004 | wrong |
+| 4 | 4.598 | 4.301 | about 4.004 | correct |
+| 5 | 5.598 | 5.301 | about 5.004 | correct |
+
+`yield=0` and `yield=1` give the same gap-3/gap-4 boundary.  Therefore the
+ordinary **IMAD-to-IMAD RAW latency is four cycles for Ra, Rb, and Rc**, while
+independent service/initiation is about two cycles (0.5 instruction/clock).
+At unsafe gaps the stream continues at the independent/front-end rate and
+silently computes the wrong recurrence; there is no visible RAW interlock or
+admission wait.
+
+This is an important contrast with the WIDE results below:
+
+```text
+ordinary IMAD: service 2, RAW 4, unsafe dependency is not interlocked
+IMAD.WIDE:     service 4, RAW 7, early dependent issue is stretched
+```
+
+### Isolated WIDE/HI forwarding
+
 | result -> consumer | boundary |
 |---|---:|
 | IMAD.WIDE low -> FMA Heavy/Lite/FP16 | 1 |
