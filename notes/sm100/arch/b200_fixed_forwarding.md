@@ -7,7 +7,8 @@ the repository assembler. Primary probes are the shared
 - `probe_sm100_fp32x2_latency.py` for FADD2/FMUL2/FFMA2;
 - `probe_sm100_latency_phase.py` for raw values at phase-sensitive gaps;
 - `probe_fixed_issue_to_use.py` for sustained dependent recurrences;
-- `probe_fmalite_early_burst.py` for finite early-consumer capacity.
+- `probe_fmalite_early_burst.py` for finite early-consumer capacity;
+- `probe_ffma_iadd_raw.py` for the arithmetic FMA-Lite -> ALU-Lite path.
 
 The producer destination is first poisoned, then the producer is issued and a
 consumer reads it after a controlled issue gap. `fine` uses stall-1 NOPs;
@@ -57,13 +58,17 @@ the next sections.
 | fast ALU-result opcode -> FMA Heavy/Lite/FP16 | 2 | 2 |
 | late ALU-result opcode -> FMA Heavy/Lite/FP16 | 3 | 4 |
 | scalar FMA Lite -> FMA Heavy/Lite/FP16 | 2 | 2 |
-| scalar FMA Lite -> ALU Lite | 3 | 4 |
+| scalar FMA Lite -> ALU Lite identity observer | 3 | 4 |
 | scalar FMA Lite -> ALU Heavy | 3 | 4 |
 | FMA Heavy -> FMA Heavy/Lite/FP16 | 2 | 2 |
 | FMA Heavy -> ALU Lite | 3 | 4 |
 | FMA Heavy -> ALU Heavy | opcode-dependent 2 or 3/4 | |
 | ordinary packed FP16 -> FMA Heavy/Lite/FP16/ALU Heavy | 2 | 2 |
 | ordinary packed FP16 -> ALU Lite | 3 | 4 |
+
+The scalar FMA-to-ALU rows use identity-preserving observers to expose result
+visibility.  A real FFMA -> arithmetic IADD dependency is separately measured
+below at a direct five-cycle issue gap.
 
 Thus B200 differs sharply from H100. On H100, ordinary HFMA2 has a two-cycle
 same-FP16 bypass but takes 3/4 to either FMA leaf. On B200, ordinary packed
@@ -152,6 +157,34 @@ FMA-Lite admission/holding capacity for an early arithmetic RAW request**.
 The gap-2 zero-add observation is a bypass special case, not a one-entry
 queue.  This strengthens, rather than weakens, the earlier inference that the
 one-instruction-per-cycle Lite backend needs almost no admission storage.
+
+### FFMA -> IADD arithmetic path
+
+The identity-preserving MOV observer in the common matrix is not the latency
+of an ordinary ALU-Lite arithmetic consumer.  `probe_ffma_iadd_raw.py` uses a
+non-identity producer and consumer with separate registers:
+
+```text
+FFMA Rp = 0.5 * 0.5 + 0.75  // 1.0; differs from every source
+IADD Rc = Rp + 1             // expected 0x3f800001
+```
+
+Sixteen PC placements in each of three fresh contexts give the following
+deterministic progression for both `yield=0` and `yield=1`:
+
+| FFMA -> IADD issue gap | IADD input | IADD result |
+|---:|---|---:|
+| 1--3 | poisoned old destination `2.0` | `0x40000001` |
+| 4 | FFMA source A `0.5` | `0x3f000001` |
+| 5--6 | completed FFMA result `1.0` | `0x3f800001` |
+
+Thus the ordinary **FFMA -> IADD RAW latency is five cycles**: one cycle
+longer than the four-cycle FMA-Lite recurrence.  Gap 4's source-A exposure is
+also direct evidence that the ALU-Lite arithmetic operand-capture path reaches
+the producer token before the completed FMA result replaces it.  The extra
+cycle is consistent with a cross-pipeline forwarding hop, although the probe
+does not distinguish a physical crossbar register from later ALU operand
+capture.
 
 FMA-Heavy FSWZADD reaches ALU Heavy at two cycles. IDP.2A/4A, IMAD, IMUL, and
 IMUL32I instead expose Ra at gap 2 and become permanently fresh at fine
