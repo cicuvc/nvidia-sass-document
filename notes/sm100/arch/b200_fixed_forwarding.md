@@ -6,7 +6,8 @@ the repository assembler. Primary probes are the shared
 
 - `probe_sm100_fp32x2_latency.py` for FADD2/FMUL2/FFMA2;
 - `probe_sm100_latency_phase.py` for raw values at phase-sensitive gaps;
-- `probe_fixed_issue_to_use.py` for sustained dependent recurrences.
+- `probe_fixed_issue_to_use.py` for sustained dependent recurrences;
+- `probe_fmalite_early_burst.py` for finite early-consumer capacity.
 
 The producer destination is first poisoned, then the producer is issued and a
 consumer reads it after a controlled issue gap. `fine` uses stall-1 NOPs;
@@ -101,11 +102,13 @@ ALU Heavy gap 2; non-identity FADD/FFMA/FMUL probes all refute the old
 two-cycle classification.  Scalar FHADD/FHFMA variants likewise use the late
 ALU-Heavy path: gap 2 exposes Ra and permanent fresh begins at 3/4.
 
-The two-cycle number above is an **isolated producer-to-consumer acceptance
-boundary**, not the sustainable dependent recurrence latency.  A separate
-long-chain probe (`probe_fixed_issue_to_use.py`) alternates destinations and
-also tests the stricter `Rd == Ra` form.  On B200 all three scalar Lite
-operations have the same boundary:
+The two-cycle number above is an **isolated identity-consumer observation
+boundary**, not a general arithmetic-consumer acceptance boundary.  The
+consumer used to preserve result bits is `FADD Rd, result, RZ`; its zero-add
+path can observe the early bypass.  A separate long-chain probe
+(`probe_fixed_issue_to_use.py`) alternates destinations and also tests the
+stricter `Rd == Ra` form.  On B200 all three scalar Lite operations have the
+same recurrence boundary:
 
 | chain | gap 2 | gap 3 | gap 4 |
 |---|---:|---:|---:|
@@ -119,14 +122,36 @@ gap 3 and 4.301 clocks/op at gap 4; the common 0.301 is loop-control overhead.
 Thus scalar FMA Lite has **four-cycle end-to-end RAW recurrence latency** while
 retaining one-instruction-per-cycle throughput for independent operations.
 
-This distinction was checked against a possible identity-operation artifact:
+The producer side was checked against a possible identity-operation artifact:
 the isolated probes were changed from `1+0`, `1*1`, and `1*1+0` to operations
-whose result differs from every source.  They still accept the isolated
-consumer at gap 2.  The best current interpretation is an extremely shallow
-input/holding path that can absorb one early dependent consumer, but cannot
-pipeline a recurrence at two or three clocks.  The experiment does not yet
-distinguish a literal one-entry admission latch from a late operand-capture or
-replay mechanism, so it is not evidence for a multi-entry FMA-Lite queue.
+whose result differs from every source.  The zero-add observer still sees the
+isolated result at gap 2.  This establishes an early result/bypass path, but
+not queueing of an ordinary dependent FMA.
+
+`probe_fmalite_early_burst.py` tests that distinction directly.  It emits a
+finite linear chain using a fresh register for every destination, eliminating
+WAW, WAR, destination reuse, and cross-burst state:
+
+```text
+R41 = f(R40)
+R42 = f(R41)
+...
+R56 = f(R55)
+```
+
+At gap 2 or 3, a chain of only two operations is already wrong for FADD,
+FMUL, and FFMA.  Chains through 16 operations do not accumulate partial
+progress: every later destination contains exactly one operation applied to
+its preinitialized poison value.  Thus early consumers read stale RF state
+rather than waiting for their producer.  At gap 4 every tested length from 2
+through 16 is bit-exact.  FADD gives the same result with `yield=0` and
+`yield=1`.
+
+The strongest current model is consequently **no architecturally visible
+FMA-Lite admission/holding capacity for an early arithmetic RAW request**.
+The gap-2 zero-add observation is a bypass special case, not a one-entry
+queue.  This strengthens, rather than weakens, the earlier inference that the
+one-instruction-per-cycle Lite backend needs almost no admission storage.
 
 FMA-Heavy FSWZADD reaches ALU Heavy at two cycles. IDP.2A/4A, IMAD, IMUL, and
 IMUL32I instead expose Ra at gap 2 and become permanently fresh at fine
