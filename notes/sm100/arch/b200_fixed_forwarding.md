@@ -241,6 +241,65 @@ As on H100, the wide low half has the fastest path on the chip, reaching the
 FMA/FP16 result network at gap 1. B200 additionally shows explicit Ra exposure
 when an ALU consumer reads that path too early.
 
+### WIDE -> WIDE recurrence and lane batching
+
+The early low-half path above is not the path used by another `IMAD.WIDE`.
+Long low-result recurrences remain bit-exact even with nominal gap 1, but the
+hardware stretches their real issue interval.  Comparing 64- and
+128-instruction unrolls removes the loop overhead:
+
+| stream | 64-unroll raw | 128-unroll raw | extrapolated steady interval |
+|---|---:|---:|---:|
+| independent `IMAD.WIDE` | 4.582 | 4.293 | **4.004 clocks** |
+| dependent WIDE.low -> WIDE.Ra | 7.535 | 7.270 | **7.005 clocks** |
+
+Unlike ordinary fixed scalar RAW, an unsafe nominal gap does not silently
+produce a stale result here: WIDE admission/operand availability interlocks
+and delays the dependent instruction.  A normal 32-bit `IMAD` control behaves
+differently: its independent stream is about 2 clocks/instruction, while a
+gap-1 recurrence runs at that rate but is wrong; it needs the ordinary
+four-cycle scheduling gap for correctness.
+
+`probe_imadwide_lane_masks.py` removes two alternative explanations.  First,
+a finite linear chain writes a new even-aligned register pair at every step,
+so no destination pair is reused.  Its exact total-clock progression is:
+
+| operations | dependent total | independent total |
+|---:|---:|---:|
+| 4 | 78 | 69 |
+| 8 | 106 | 85 |
+| 12 | 134 | 101 |
+| 16 | 162 | 117 |
+
+Each additional four operations adds exactly 28 dependent or 16 independent
+clocks, reproducing the 7/4 slopes without alternating-register WAR/WAW
+effects.  Every dependent result is bit-exact.
+
+Second, the same probe runs a 32-thread warp with full, low-16, high-16,
+lane-0-only, and lane-16-only execution masks.  All five cases are identical:
+
+```text
+128-unroll dependent   7.270 clocks/op
+128-unroll independent 4.293 clocks/op
+```
+
+Thus neither half warp can expose an earlier WIDE-to-WIDE feedback point, and
+even one enabled lane reserves the full instruction timing.  This is
+consistent with a warp-granular batch-completion/admission rule: the next WIDE
+does not consume an early low- or high-half result.  It does **not** by itself
+prove a physical 16-lane multiplier.  The 2-clock ordinary-IMAD service is
+consistent with 16 lanes, while WIDE's 4 clocks could mean the same array
+performs extra low/high work, rather than implying an 8-lane array.
+
+The initial behavioral model for B200 is therefore:
+
+```text
+ordinary IMAD independent service        ~= 2 clocks
+IMAD.WIDE independent service            ~= 4 clocks
+IMAD.WIDE.low -> next IMAD.WIDE.Ra RAW   ~= 7 clocks
+WIDE half-warp early feedback             not externally visible
+```
+
 ## FP64 and CLMAD
 
 Lo and hi halves are identical, and every tested ALU Heavy/Lite, FMA
