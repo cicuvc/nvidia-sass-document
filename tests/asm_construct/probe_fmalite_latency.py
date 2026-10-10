@@ -21,24 +21,24 @@ class Producer:
 
 PRODUCERS = {
     "FADD": Producer(
-        ("MOV32I R24, 0x3f800000", "MOV32I R27, 0"),
+        ("MOV32I R24, 0x3f000000", "MOV32I R27, 0x3f000000"),
         "FADD R40, R24, R27"),
     "FADD32I": Producer(
-        ("MOV32I R24, 0x3f800000",),
-        "FADD32I R40, R24, 0f00000000"),
+        ("MOV32I R24, 0x3f000000",),
+        "FADD32I R40, R24, 0f3f000000"),
     "FFMA": Producer(
-        ("MOV32I R24, 0x3f800000", "MOV32I R27, 0x3f800000",
-         "MOV32I R28, 0"),
+        ("MOV32I R24, 0x3f000000", "MOV32I R27, 0x3f000000",
+         "MOV32I R28, 0x3f400000"),
         "FFMA R40, R24, R27, R28"),
     "FFMA32I": Producer(
-        ("MOV32I R24, 0x3f800000", "MOV32I R28, 0"),
-        "FFMA32I R40, R24, 0f3f800000, R28"),
+        ("MOV32I R24, 0x3f000000", "MOV32I R28, 0x3f400000"),
+        "FFMA32I R40, R24, 0f3f000000, R28"),
     "FMUL": Producer(
-        ("MOV32I R24, 0x3f800000", "MOV32I R27, 0x3f800000"),
+        ("MOV32I R24, 0x3f000000", "MOV32I R27, 0x40000000"),
         "FMUL R40, R24, R27"),
     "FMUL32I": Producer(
-        ("MOV32I R24, 0x3f800000",),
-        "FMUL32I R40, R24, 0f3f800000"),
+        ("MOV32I R24, 0x3f000000",),
+        "FMUL32I R40, R24, 0f40000000"),
     # FHADD/FHFMA consume scalar FP16 values from the selected source halves,
     # but their scalar destination is a full FP32 representation.  These
     # inputs therefore also produce the common fresh marker 0x3f800000.

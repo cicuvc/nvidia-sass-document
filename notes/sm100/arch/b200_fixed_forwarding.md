@@ -5,7 +5,8 @@ the repository assembler. Primary probes are the shared
 `tests/asm_construct/probe_*_latency.py` suite plus:
 
 - `probe_sm100_fp32x2_latency.py` for FADD2/FMUL2/FFMA2;
-- `probe_sm100_latency_phase.py` for raw values at phase-sensitive gaps.
+- `probe_sm100_latency_phase.py` for raw values at phase-sensitive gaps;
+- `probe_fixed_issue_to_use.py` for sustained dependent recurrences.
 
 The producer destination is first poisoned, then the producer is issued and a
 consumer reads it after a controlled issue gap. `fine` uses stall-1 NOPs;
@@ -56,7 +57,7 @@ the next sections.
 | late ALU-result opcode -> FMA Heavy/Lite/FP16 | 3 | 4 |
 | scalar FMA Lite -> FMA Heavy/Lite/FP16 | 2 | 2 |
 | scalar FMA Lite -> ALU Lite | 3 | 4 |
-| scalar FMA Lite -> ALU Heavy | normally 2 | 2 |
+| scalar FMA Lite -> ALU Heavy | 3 | 4 |
 | FMA Heavy -> FMA Heavy/Lite/FP16 | 2 | 2 |
 | FMA Heavy -> ALU Lite | 3 | 4 |
 | FMA Heavy -> ALU Heavy | opcode-dependent 2 or 3/4 | |
@@ -93,9 +94,39 @@ likely reflects which internal result stage or bypass mux an opcode selects.
 
 ## FMA Heavy and Lite
 
-Scalar FADD/FFMA/FMUL results reach FMA Heavy, FMA Lite, FP16, and normally
-ALU Heavy at two cycles, but ALU Lite at 3/4. Scalar FHADD/FHFMA variants use
-the late ALU-Heavy path: gap 2 exposes Ra and permanent fresh begins at 3/4.
+Scalar FADD/FFMA/FMUL results reach FMA Heavy, FMA Lite, and FP16 at two
+cycles, but both ALU consumers at fine 3/coarse 4.  Earlier identity-valued
+probes could not distinguish source A from the completed arithmetic result at
+ALU Heavy gap 2; non-identity FADD/FFMA/FMUL probes all refute the old
+two-cycle classification.  Scalar FHADD/FHFMA variants likewise use the late
+ALU-Heavy path: gap 2 exposes Ra and permanent fresh begins at 3/4.
+
+The two-cycle number above is an **isolated producer-to-consumer acceptance
+boundary**, not the sustainable dependent recurrence latency.  A separate
+long-chain probe (`probe_fixed_issue_to_use.py`) alternates destinations and
+also tests the stricter `Rd == Ra` form.  On B200 all three scalar Lite
+operations have the same boundary:
+
+| chain | gap 2 | gap 3 | gap 4 |
+|---|---:|---:|---:|
+| FADD | wrong | wrong | correct |
+| FMUL | wrong | wrong | correct |
+| FFMA | wrong | wrong | correct |
+
+The result is unchanged by control-code `yield=0` versus `yield=1`.  With 128
+operations unrolled per loop, the measured intervals are 3.301 clocks/op at
+gap 3 and 4.301 clocks/op at gap 4; the common 0.301 is loop-control overhead.
+Thus scalar FMA Lite has **four-cycle end-to-end RAW recurrence latency** while
+retaining one-instruction-per-cycle throughput for independent operations.
+
+This distinction was checked against a possible identity-operation artifact:
+the isolated probes were changed from `1+0`, `1*1`, and `1*1+0` to operations
+whose result differs from every source.  They still accept the isolated
+consumer at gap 2.  The best current interpretation is an extremely shallow
+input/holding path that can absorb one early dependent consumer, but cannot
+pipeline a recurrence at two or three clocks.  The experiment does not yet
+distinguish a literal one-entry admission latch from a late operand-capture or
+replay mechanism, so it is not evidence for a multi-entry FMA-Lite queue.
 
 FMA-Heavy FSWZADD reaches ALU Heavy at two cycles. IDP.2A/4A, IMAD, IMUL, and
 IMUL32I instead expose Ra at gap 2 and become permanently fresh at fine
