@@ -1,0 +1,1004 @@
+========= COMPUTE-SANITIZER
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x880 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (224,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 224
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x881 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (224,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x882 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (224,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x883 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (224,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x884 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (225,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 225
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x885 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (225,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x886 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (225,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x887 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (225,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x888 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (226,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 226
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x889 in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (226,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x88a in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (226,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x88b in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (226,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x88c in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (227,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 227
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x88d in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (227,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x88e in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (227,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x88f in block (0,0,0) :
+=========     Write Thread (280,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (227,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x890 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (228,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 228
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x891 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (228,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x892 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (228,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x893 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (228,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x894 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (229,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 229
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x895 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (229,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x896 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (229,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x897 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (229,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x898 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (230,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 230
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x899 in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (230,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x89a in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (230,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x89b in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (230,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x89c in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (231,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 231
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x89d in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (231,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x89e in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (231,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x89f in block (0,0,0) :
+=========     Write Thread (281,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (231,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a0 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (232,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 232
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a1 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (232,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a2 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (232,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a3 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (232,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a4 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (233,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 233
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a5 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (233,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a6 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (233,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a7 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (233,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a8 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (234,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 234
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8a9 in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (234,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8aa in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (234,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8ab in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (234,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8ac in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (235,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 235
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8ad in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (235,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8ae in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (235,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8af in block (0,0,0) :
+=========     Write Thread (282,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (235,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b0 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (236,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 236
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b1 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (236,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b2 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (236,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b3 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (236,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b4 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (237,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 237
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b5 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (237,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b6 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (237,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b7 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (237,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b8 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (238,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 238
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8b9 in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (238,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8ba in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (238,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8bb in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (238,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8bc in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (239,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 239
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8bd in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (239,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8be in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (239,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8bf in block (0,0,0) :
+=========     Write Thread (283,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (239,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c0 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (240,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 240
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c1 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (240,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c2 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (240,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c3 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (240,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c4 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (241,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 241
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c5 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (241,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c6 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (241,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c7 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (241,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c8 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (242,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 242
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8c9 in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (242,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8ca in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (242,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8cb in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (242,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8cc in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (243,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 243
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8cd in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (243,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8ce in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (243,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8cf in block (0,0,0) :
+=========     Write Thread (284,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (243,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d0 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (244,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 244
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d1 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (244,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d2 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (244,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d3 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (244,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d4 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (245,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 245
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d5 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (245,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d6 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (245,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d7 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (245,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d8 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (246,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 246
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8d9 in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (246,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8da in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (246,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8db in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (246,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8dc in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (247,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 247
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8dd in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (247,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8de in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (247,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8df in block (0,0,0) :
+=========     Write Thread (285,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (247,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8e0 in block (0,0,0) :
+=========     Write Thread (286,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (248,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 248
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8e1 in block (0,0,0) :
+=========     Write Thread (286,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (248,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 17
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8e2 in block (0,0,0) :
+=========     Write Thread (286,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (248,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+========= Error: Potential RAW hazard detected (invalid memcpy_async synchronization) at __shared__ 0x8e3 in block (0,0,0) :
+=========     Write Thread (286,0,0) at kernel(int *, int *, int, int)+0x750
+=========     Read Thread (248,0,0) at kernel(int *, int *, int, int)+0x430
+=========     Current Value : 0
+=========     Saved host backtrace up to driver entry point at kernel launch time
+=========         Host Frame: cuLaunchKernel [0x386d84] in libcuda.so.1
+=========         Host Frame:  [0x14cfc] in libcudart.so.13
+=========         Host Frame: cudaLaunchKernel [0x7fea7] in libcudart.so.13
+=========         Host Frame: main [0x1535] in legacy_sync_s1
+========= 
+no error
+PASS stages=1 tasks=173 iterations=7
+========= RACECHECK SUMMARY: 100 hazards displayed (138240 errors, 0 warnings)

@@ -1,0 +1,36 @@
+{
+  "name": "nvidia-sass-highlight",
+  "displayName": "NVIDIA SASS (assembler dialect)",
+  "description": "Syntax highlighting for the NVIDIA SASS assembler source dialect used by this repo's assembler/ toolchain (#fn kernels, scheduling brackets, explicit register groups).",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "nvidia-sass",
+        "aliases": [
+          "NVIDIA SASS",
+          "nvidia-sass"
+        ],
+        "extensions": [
+          ".sass"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "nvidia-sass",
+        "scopeName": "source.nvidia-sass",
+        "path": "./syntaxes/nvidia-sass.tmLanguage.json"
+      }
+    ]
+  }
+}

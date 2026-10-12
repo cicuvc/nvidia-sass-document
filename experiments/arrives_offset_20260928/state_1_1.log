@@ -1,0 +1,15 @@
+zero payload 031425364758697a8b9cadbecfe0f102 want 031425364758697a8b9cadbecfe0f102 True
+  init           raw=0x7fff0000001fffc0 txfield=0x000000 logical_mod21=0
+  after_ldgsts   raw=0x7fff0000001fffc0 txfield=0x000000 logical_mod21=0
+  after_a0t1     raw=0x7fff03fffc1fffc0 txfield=0x1fffe0 logical_mod21=32
+  after_arrives  raw=0x7fff03fffc1fffc0 txfield=0x1fffe0 logical_mod21=32
+  after_arrive   raw=0x000003fffc1fffc0 txfield=0x1fffe0 logical_mod21=32
+  final          raw=0xffff0000001fffc0 txfield=0x000000 logical_mod21=0
+offset payload 031425364758697a8b9cadbecfe0f102 want 031425364758697a8b9cadbecfe0f102 True
+  init           raw=0x7fff0000001fffc0 txfield=0x000000 logical_mod21=0
+  after_ldgsts   raw=0x7fff0000001fffc0 txfield=0x000000 logical_mod21=0
+  after_a0t1     raw=0x7fff03fffc1fffc0 txfield=0x1fffe0 logical_mod21=32
+  after_arrives  raw=0x7fff03fffc1fffc0 txfield=0x1fffe0 logical_mod21=32
+  after_arrive   raw=0x000003fffc1fffc0 txfield=0x1fffe0 logical_mod21=32
+  final          raw=0xffff0000001fffc0 txfield=0x000000 logical_mod21=0
+states_equal True
