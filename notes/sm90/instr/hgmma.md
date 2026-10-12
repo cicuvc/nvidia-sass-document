@@ -73,7 +73,11 @@ chain in hand-written SASS on sm_120 matched `make_desc()` bit-for-bit for
 both the A and B pairs. So the hardware consumes the PTX matrix-descriptor
 format unmodified — there is no SASS-level repacking, and hand-written
 kernels can load the four URs directly (as our assembler experiments did).
-Note the RS form (`hgmma_Ra_URb_Rc_`) uses only the single B descriptor pair.
+The RS form (`hgmma_Ra_URb_Rc_`) exposes only B as a shared operand, but it
+retains the fused-gdesc register-slot convention: `gdesc[URb]` reads the B
+descriptor from `{URb+2, URb+3}`.  For example, nvcc prints `gdesc[UR8]`
+after constructing the descriptor in `UR10:UR11`.  SR instead reads its A
+descriptor directly from `{URa, URa+1}`.
 
 ## Variant overview
 
@@ -87,7 +91,11 @@ HGMMA has **6 encoding variants** (3 addressing modes × dense/sparse):
 | `hgmma_URa_Rb_Rc_` | `0x15f0` | SMEM via URa descriptor | GPR Rb | B in registers |
 | `hgmma_URa_Rc_` | `0x19f0` | SMEM via URa descriptor | SMEM via URa descriptor | Both in SMEM, no reg B |
 
-On Hopper, the common idiom is both matrices in shared memory (`URa_Rc_`) — A/B tiles are staged asynchronously via TMA (`UTMALDG`) or `LDSM`, never loaded into registers directly. The register-source variants (`Ra_URb_Rc_`, `URa_Rb_Rc_`) exist for **chained GEMM**: compute `A×B` with both operands in SMEM → result lands in registers as `Rd`/`Rc`, then chain with matrix `C` still in SMEM via the register-source variant without reloading the intermediate result. Keeping A/B in registers without this chain pattern would require `LDMATRIX`, consuming 2× RF bandwidth with no benefit over the SMEM path.
+On Hopper, PTX exposes the first and third rows: A may be in registers while B
+is in shared memory (RS), or both may be in shared memory (SS).  The middle
+row is an additional native SASS mode, called **SR** below.  Its B-fragment
+layout and arithmetic semantics are now measured directly; see
+[`Undocumented SR mode`](#undocumented-sr-mode-shared-a-register-b).
 
 Sparse variants share the same opcodes, distinguished by `sp`/`spformat` slots.
 
@@ -184,7 +192,7 @@ group-level synchronization (used with `wgmma.commit_group`/`wgmma.wait_group`).
 | Operand | Size | Notes |
 |---|---|---|
 | ISRC_A_SIZE | 128 (4 regs) | Always 128-bit for register-based Ra |
-| ISRC_B_SIZE | 64+ or 128 | Register-based Rb varies with size; 0 for URa_Rc_ |
+| ISRC_B_SIZE | 8N bits (`N/4` regs) | Register B in SR mode; 0 for URa_Rc_ |
 | IDEST_SIZE/ISRC_C_SIZE | varies with N | 64 + 64×N_stepping; grows with tile width |
 
 For F16 dst with `64xNx16`:
@@ -205,13 +213,129 @@ It encodes:
 - Stride between rows
 - Element size
 
-The 4 uniform registers (aligned to 4) pointed to by URa/URb hold the full
-descriptor. The tensor core hardware reads the matrix data directly from
-shared memory using this descriptor — no explicit LDSM loads needed.
+In SS mode the fused `gdesc` group is four uniform registers (two 64-bit
+descriptors).  SR reads its single A pair at the visible base.  RS exposes a
+single B shared operand but retains its offset within the four-register slot,
+so `gdesc[URb]` reads `{URb+2,URb+3}`.  The tensor core hardware reads that
+matrix directly from shared memory — no explicit LDSM load is needed.
 
 The descriptor format (base address, stride, layout flags, element size) is
 documented in the PTX ISA reference under `wgmma.mma_async` — see the PTX
 documentation for the exact bit layout of the 4-register descriptor.
+
+## Undocumented SR mode: shared A, register B
+
+`hgmma_URa_Rb_Rc_` is a real matrix multiply mode:
+
+```
+D = A(shared descriptor) * B(register fragment) + C
+```
+
+It was mapped on a Modal H100 (2026-09-25) with dense `m64n8k16` and
+`m64n16k16` for BF16/F16, plus `m64n8k8` and `m64n16k8` for TF32 (all with
+F32 output).  The probe is
+`tests/asm_construct/probe_hgmma_sr_layout.py`.  It constructs a no-swizzle
+K-major A tile with `A[m,k] = (k == m % K)`, sets exactly one register B
+element to 1.0, and locates it in D.  The full sweeps covered all 512/1024
+register halves per 16-bit format for n8/n16 and all 256/512 TF32 register
+elements.  Every input component mapped cleanly with no holes, aliases, or
+hidden reductions.
+
+### B fragment mapping
+
+For F16/BF16, let:
+
+- `w = (tid % 128) / 32` be the warp within the warpgroup;
+- `lane = tid % 32`;
+- `j` be the zero-based 32-bit register number within the Rb group;
+- `h` be 0 for its low 16-bit half and 1 for its high half.
+
+That half contains:
+
+```
+B[k,n]
+k = 8*(j % 2) + 2*(lane % 4) + h
+n = 8*(j / 2) + lane / 4
+```
+
+where the divisions are integer divisions.  The Rb group has `N/4` registers
+per thread, so each warp carries exactly `16*N` elements: one complete K×N B
+tile.  Each additional register pair supplies the next eight columns.
+
+For n8, each lane has two registers:
+
+| lane | Rb[0].lo/hi | Rb[1].lo/hi |
+|---:|---|---|
+| `4q+p` | `{B[2p,q], B[2p+1,q]}` | `{B[8+2p,q], B[9+2p,q]}` |
+
+For n16, Rb[2]/Rb[3] have the same K mapping and columns `q+8`.  Geometrically
+this is the published register-A fragment applied to B-transpose, with the
+registers ordered by 8-column B tile and then by 8-row K tile.  In particular,
+the middle two registers for n16 are ordered `(n=0..7,k=8..15)` followed by
+`(n=8..15,k=0..7)`.
+
+For TF32, each 32-bit register is one element.  With the same `lane` and `j`
+definitions:
+
+```
+B[k,n]
+k = 4*(j % 2) + lane % 4
+n = 8*(j / 2) + lane / 4
+```
+
+Thus n8 uses two registers per lane and n16 uses four.  This is the same
+8-column/half-K tiling as the 16-bit mapping, with one TF32 value replacing a
+pair of packed 16-bit values.
+
+### Per-warp ownership
+
+The four register fragments are independent.  A B component supplied by warp `w`
+only changes D rows `16w..16w+15`; the other three row bands remain zero.  A
+normal matrix multiply must therefore replicate the same B tile in all four
+warps.  Supplying different fragments intentionally computes each 16-row
+band against a different B matrix.
+
+### Shared descriptor selection is warpgroup-wide
+
+The shared descriptor is not selected independently by each warp.  A second
+H100 probe (`tests/asm_construct/probe_hgmma_perwarp_desc.py`) placed four
+distinct descriptors in the four warps' uniform registers and cyclically
+rotated their assignment.  In both addressing modes the hardware selected
+the descriptor supplied by **warp 0** for the entire warpgroup:
+
+```
+SR: A_desc_effective = A_desc_from_warp_0
+RS: B_desc_effective = B_desc_from_warp_0
+```
+
+For SR, four constant A tiles containing 1, 2, 4, and 8 were multiplied by
+all-one register B fragments.  With assignments `[1,2,4,8]`, all four
+16-row output bands contained 16; rotating warp 0 onto the 2 or 8 tile made
+all bands contain 32 or 128.  Descriptors from warps 1--3 had no observable
+effect.
+
+The RS test used all-one register A fragments and separately calibrated each
+B descriptor.  Every different-descriptor run exactly matched the control
+run for warp 0's descriptor, across all four output row bands.  Consequently
+the useful decomposition of SR is asymmetric: B is genuinely per-warp, but A
+is one warpgroup-wide shared tile chosen through warp 0's descriptor.  The
+documented RS form has the complementary behavior: A is per-warp while B is
+one warpgroup-wide shared tile chosen through warp 0's descriptor.
+
+The measured mapping also explains the spec's source widths:
+
+| shape | B regs/thread | bytes/warp | logical B tile |
+|---|---:|---:|---:|
+| m64n8k16 | 2 | 256 | 16×8 BF16/F16 = 256 B |
+| m64n16k16 | 4 | 512 | 16×16 BF16/F16 = 512 B |
+| m64n8k8 | 2 | 256 | 8×8 TF32 = 256 B |
+| m64n16k8 | 4 | 512 | 8×16 TF32 = 512 B |
+
+The closed-form mapping predicts the larger N encodings, whose
+`ISRC_B_SIZE = 8N` property extends in 64-bit steps for every additional eight
+columns.  The exhaustive hardware sweeps performed so far are n8 and n16 for
+F16, BF16, and TF32; larger-N layout is an extrapolation of the encoding rule
+and observed tiling.
 
 ## Bit layout (128-bit)
 
@@ -356,9 +480,8 @@ PTX (but the compiler may split):
 | `hgmma_URa_Rc_` | SMEM via URa desc | SMEM via URa desc | `d, a-desc, b-desc, ...` |
 
 `hgmma_URa_Rb_Rc_` (A in SMEM, B in regs) does not have a direct PTX syntax
-equivalent — the PTX always puts B in shared memory. This variant may be
-used for compiler optimizations or for type variants where the PTX spec
-allows register-based B (e.g., certain integer forms).
+equivalent — the PTX always puts B in shared memory.  Its native semantics and
+B layout are given in the empirical SR section above.
 
 ### Scale-D: RZ means "start fresh"
 

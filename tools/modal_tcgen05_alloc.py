@@ -107,6 +107,8 @@ extern "C" __global__ void alloc_multi(uint32_t *out) {
 
 def make_atexit_probe_source(source: str, copy_handler: bool = False) -> str:
     """Add BMOV ATEXIT_PC samples around the tail relinquish sequence."""
+    if "#!tmem_relinquish_alloc_permit_1cta()" in source:
+        return make_builtin_atexit_probe_source(source, copy_handler)
     pad = "\n".join(
         "    IADD3 R20, R20, RZ, RZ;[7:7:{}:5:1]" for _ in range(8))
     source = source.replace("    #pragma REGCOUNT(12)",
@@ -149,6 +151,60 @@ def make_atexit_probe_source(source: str, copy_handler: bool = False) -> str:
     if after not in source:
         raise ValueError("relinquish exit anchor not found")
     return source.replace(after, after_probe, 1)
+
+
+def make_builtin_atexit_probe_source(source: str,
+                                     copy_handler: bool = False) -> str:
+    """Instrument a V1/V2 builtin lifecycle without depending on its lowering.
+
+    The source-level builtin is expanded only after this transformation.  The
+    inserted registers therefore become reserved inputs to the builtin's
+    scratch allocator, so the generated alloc/dealloc/relinquish sequence
+    cannot clobber the captured handler VA or output pointer.
+    """
+    pad = "\n".join(
+        "    IADD3 R20, R20, RZ, RZ;[7:7:{}:5:1]" for _ in range(8))
+    copy = ""
+    if copy_handler:
+        lines = []
+        for off in range(0, HANDLER_COPY_SIZE, 16):
+            lines += [
+                f"    LDG.E.128.STRONG.GPU {{R16,R17,R18,R19}}, "
+                f"[{{R10,R11}}+0x{off:x}];[2:7:{{}}:8:0]",
+                f"    STG.E.128.STRONG.GPU desc[{{UR8,UR9}}]"
+                f"[{{R14,R15}}+0x{0x100 + off:x}], "
+                "{R16,R17,R18,R19};[7:7:{0,1,2}:8:0]",
+            ]
+        copy = "\n" + "\n".join(lines)
+
+    anchor = """    #!tmem_relinquish_alloc_permit_1cta()
+    EXIT;[7:7:{}:5:0]"""
+    probe = f"""    LDC.64 {{R14,R15}}, #param(out);[1:7:{{}}:1:0]
+    LDCU.64 {{UR8,UR9}}, #spec_const(SLOT_DEFAULT_CDESC);[0:7:{{}}:1:0]
+    BMOV R10, ATEXIT_PC.LO;[2:7:{{}}:5:1]
+{pad}
+    NOP;[7:7:{{2}}:1:0]
+    BMOV R11, ATEXIT_PC.HI;[2:7:{{}}:5:1]
+{pad}
+    NOP;[7:7:{{2}}:1:0]{copy}
+    #!tmem_relinquish_alloc_permit_1cta()
+    NOP;[7:7:{{2}}:1:0]
+    BMOV R12, ATEXIT_PC.LO;[2:7:{{}}:5:1]
+{pad}
+    NOP;[7:7:{{2}}:1:0]
+    BMOV R13, ATEXIT_PC.HI;[2:7:{{}}:5:1]
+{pad}
+    NOP;[7:7:{{2}}:1:0]
+    STG.E.64.STRONG.GPU desc[{{UR8,UR9}}][{{R14,R15}}+0x8], {{R10,R11}};[7:7:{{0,1,2}}:8:0]
+    STG.E.64.STRONG.GPU desc[{{UR8,UR9}}][{{R14,R15}}+0x10], {{R12,R13}};[7:7:{{0,1,2}}:8:0]
+    EXIT;[7:7:{{}}:5:0]"""
+    if anchor not in source:
+        raise ValueError("builtin relinquish/exit anchor not found")
+    if "#pragma REGCOUNT(" not in source:
+        source = source.replace("#pragma SHARED(4)",
+                                "#pragma SHARED(4)\n    #pragma REGCOUNT(32)",
+                                1)
+    return source.replace(anchor, probe, 1)
 
 
 def make_atexit_write_probe_source(source: str) -> str:
@@ -581,7 +637,16 @@ def main(hand_cubin: str = "", hand_source: str = "",
                                    output_words, repetitions, cluster_x)
         print(f"hand source: {hand_source} ({len(data)} cubin bytes)")
         handler_hex = result.pop("handler_hex", "")
-        print(result)
+        if atexit_probe:
+            print({
+                "words": result["words"],
+                "atexit_before_relinquish":
+                    result["atexit_before_relinquish"],
+                "atexit_after_relinquish":
+                    result["atexit_after_relinquish"],
+            })
+        else:
+            print(result)
         if ldst_probe or gmem_control:
             got = [int(v, 16) for v in result["words32"]]
             print({"lane0_roundtrip": "PASS"
@@ -602,7 +667,9 @@ def main(hand_cubin: str = "", hand_source: str = "",
             })
         if copy_handler and handler_hex:
             raw = bytes.fromhex(handler_hex)
-            out = Path("/tmp/tcgen05_atexit_handler.bin")
+            abi = ("v2" if "AT_ENTRY_FRAGMENT_TMEM_CTA1_V2" in source
+                   else "v1")
+            out = Path(f"/tmp/tcgen05_atexit_handler_{abi}.bin")
             out.write_bytes(raw)
             print(f"handler bytes: {out} ({len(raw):#x})")
         return

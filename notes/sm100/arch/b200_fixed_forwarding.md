@@ -16,7 +16,10 @@ the repository assembler. Primary probes are the shared
 `tests/asm_construct/probe_*_latency.py` suite plus:
 
 - `probe_sm100_fp32x2_latency.py` for FADD2/FMUL2/FFMA2;
-- `probe_sm100_latency_phase.py` for raw values at phase-sensitive gaps.
+- `probe_sm100_latency_phase.py` for raw values at phase-sensitive gaps;
+- `probe_fixed_issue_to_use.py` for sustained dependent recurrences;
+- `probe_fmalite_early_burst.py` for finite early-consumer capacity;
+- `probe_ffma_iadd_raw.py` for the arithmetic FMA-Lite -> ALU-Lite path.
 
 The producer destination is first poisoned, then the producer is issued and a
 consumer reads it after a controlled issue gap. `fine` uses stall-1 NOPs;
@@ -66,13 +69,17 @@ the next sections.
 | fast ALU-result opcode -> FMA Heavy/Lite/FP16 | 2 | 2 |
 | late ALU-result opcode -> FMA Heavy/Lite/FP16 | 3 | 4 |
 | scalar FMA Lite -> FMA Heavy/Lite/FP16 | 2 | 2 |
-| scalar FMA Lite -> ALU Lite | 3 | 4 |
-| scalar FMA Lite -> ALU Heavy | normally 2 | 2 |
+| scalar FMA Lite -> ALU Lite identity observer | 3 | 4 |
+| scalar FMA Lite -> ALU Heavy | 3 | 4 |
 | FMA Heavy -> FMA Heavy/Lite/FP16 | 2 | 2 |
 | FMA Heavy -> ALU Lite | 3 | 4 |
 | FMA Heavy -> ALU Heavy | opcode-dependent 2 or 3/4 | |
 | ordinary packed FP16 -> FMA Heavy/Lite/FP16/ALU Heavy | 2 | 2 |
 | ordinary packed FP16 -> ALU Lite | 3 | 4 |
+
+The scalar FMA-to-ALU rows use identity-preserving observers to expose result
+visibility.  A real FFMA -> arithmetic IADD dependency is separately measured
+below at a direct five-cycle issue gap.
 
 Thus B200 differs sharply from H100. On H100, ordinary HFMA2 has a two-cycle
 same-FP16 bypass but takes 3/4 to either FMA leaf. On B200, ordinary packed
@@ -104,9 +111,91 @@ likely reflects which internal result stage or bypass mux an opcode selects.
 
 ## FMA Heavy and Lite
 
-Scalar FADD/FFMA/FMUL results reach FMA Heavy, FMA Lite, FP16, and normally
-ALU Heavy at two cycles, but ALU Lite at 3/4. Scalar FHADD/FHFMA variants use
-the late ALU-Heavy path: gap 2 exposes Ra and permanent fresh begins at 3/4.
+Scalar FADD/FFMA/FMUL results reach FMA Heavy, FMA Lite, and FP16 at two
+cycles, but both ALU consumers at fine 3/coarse 4.  Earlier identity-valued
+probes could not distinguish source A from the completed arithmetic result at
+ALU Heavy gap 2; non-identity FADD/FFMA/FMUL probes all refute the old
+two-cycle classification.  Scalar FHADD/FHFMA variants likewise use the late
+ALU-Heavy path: gap 2 exposes Ra and permanent fresh begins at 3/4.
+
+The two-cycle number above is an **isolated identity-consumer observation
+boundary**, not a general arithmetic-consumer acceptance boundary.  The
+consumer used to preserve result bits is `FADD Rd, result, RZ`; its zero-add
+path can observe the early bypass.  A separate long-chain probe
+(`probe_fixed_issue_to_use.py`) alternates destinations and also tests the
+stricter `Rd == Ra` form.  On B200 all three scalar Lite operations have the
+same recurrence boundary:
+
+| chain | gap 2 | gap 3 | gap 4 |
+|---|---:|---:|---:|
+| FADD | wrong | wrong | correct |
+| FMUL | wrong | wrong | correct |
+| FFMA | wrong | wrong | correct |
+
+The result is unchanged by control-code `yield=0` versus `yield=1`.  With 128
+operations unrolled per loop, the measured intervals are 3.301 clocks/op at
+gap 3 and 4.301 clocks/op at gap 4; the common 0.301 is loop-control overhead.
+Thus scalar FMA Lite has **four-cycle end-to-end RAW recurrence latency** while
+retaining one-instruction-per-cycle throughput for independent operations.
+
+The producer side was checked against a possible identity-operation artifact:
+the isolated probes were changed from `1+0`, `1*1`, and `1*1+0` to operations
+whose result differs from every source.  The zero-add observer still sees the
+isolated result at gap 2.  This establishes an early result/bypass path, but
+not queueing of an ordinary dependent FMA.
+
+`probe_fmalite_early_burst.py` tests that distinction directly.  It emits a
+finite linear chain using a fresh register for every destination, eliminating
+WAW, WAR, destination reuse, and cross-burst state:
+
+```text
+R41 = f(R40)
+R42 = f(R41)
+...
+R56 = f(R55)
+```
+
+At gap 2 or 3, a chain of only two operations is already wrong for FADD,
+FMUL, and FFMA.  Chains through 16 operations do not accumulate partial
+progress: every later destination contains exactly one operation applied to
+its preinitialized poison value.  Thus early consumers read stale RF state
+rather than waiting for their producer.  At gap 4 every tested length from 2
+through 16 is bit-exact.  FADD gives the same result with `yield=0` and
+`yield=1`.
+
+The strongest current model is consequently **no architecturally visible
+FMA-Lite admission/holding capacity for an early arithmetic RAW request**.
+The gap-2 zero-add observation is a bypass special case, not a one-entry
+queue.  This strengthens, rather than weakens, the earlier inference that the
+one-instruction-per-cycle Lite backend needs almost no admission storage.
+
+### FFMA -> IADD arithmetic path
+
+The identity-preserving MOV observer in the common matrix is not the latency
+of an ordinary ALU-Lite arithmetic consumer.  `probe_ffma_iadd_raw.py` uses a
+non-identity producer and consumer with separate registers:
+
+```text
+FFMA Rp = 0.5 * 0.5 + 0.75  // 1.0; differs from every source
+IADD Rc = Rp + 1             // expected 0x3f800001
+```
+
+Sixteen PC placements in each of three fresh contexts give the following
+deterministic progression for both `yield=0` and `yield=1`:
+
+| FFMA -> IADD issue gap | IADD input | IADD result |
+|---:|---|---:|
+| 1--3 | poisoned old destination `2.0` | `0x40000001` |
+| 4 | FFMA source A `0.5` | `0x3f000001` |
+| 5--6 | completed FFMA result `1.0` | `0x3f800001` |
+
+Thus the ordinary **FFMA -> IADD RAW latency is five cycles**: one cycle
+longer than the four-cycle FMA-Lite recurrence.  Gap 4's source-A exposure is
+also direct evidence that the ALU-Lite arithmetic operand-capture path reaches
+the producer token before the completed FMA result replaces it.  The extra
+cycle is consistent with a cross-pipeline forwarding hop, although the probe
+does not distinguish a physical crossbar register from later ALU operand
+capture.
 
 FMA-Heavy FSWZADD reaches ALU Heavy at two cycles. IDP.2A/4A, IMAD, IMUL, and
 IMUL32I instead expose Ra at gap 2 and become permanently fresh at fine
@@ -149,6 +238,45 @@ therefore not evidence of an FP64 backend on B200.
 
 ## IMAD.WIDE and IMAD.HI
 
+### Ordinary 32-bit IMAD recurrence
+
+Ordinary `IMAD` is materially different from WIDE.  The
+`probe_imad_operand_raw.py` recurrence places the previous result in each of
+the three input slots while preserving the same `x <- x+1` arithmetic:
+
+```text
+Ra: IMAD d, x, 1, 1
+Rb: IMAD d, 1, x, 1
+Rc: IMAD d, 1, 1, x
+```
+
+All three slots have the same boundary and timing.  The table gives raw
+64/128-unroll means followed by the loop-overhead-eliminated interval:
+
+| nominal gap | 64 unroll | 128 unroll | extrapolated | result |
+|---:|---:|---:|---:|---|
+| 1 | 2.582 | 2.313--2.314 | about 2.045 | wrong |
+| 2 | 2.598 | 2.321 | about 2.044 | wrong |
+| 3 | 3.598 | 3.301 | about 3.004 | wrong |
+| 4 | 4.598 | 4.301 | about 4.004 | correct |
+| 5 | 5.598 | 5.301 | about 5.004 | correct |
+
+`yield=0` and `yield=1` give the same gap-3/gap-4 boundary.  Therefore the
+ordinary **IMAD-to-IMAD RAW latency is four cycles for Ra, Rb, and Rc**, while
+independent service/initiation is about two cycles (0.5 instruction/clock).
+At unsafe gaps the stream continues at the independent/front-end rate and
+silently computes the wrong recurrence; there is no visible RAW interlock or
+admission wait.
+
+This is an important contrast with the WIDE results below:
+
+```text
+ordinary IMAD: service 2, RAW 4, unsafe dependency is not interlocked
+IMAD.WIDE:     service 4, RAW 7, early dependent issue is stretched
+```
+
+### Isolated WIDE/HI forwarding
+
 | result -> consumer | boundary |
 |---|---:|
 | IMAD.WIDE low -> FMA Heavy/Lite/FP16 | 1 |
@@ -162,6 +290,65 @@ therefore not evidence of an FP64 backend on B200.
 As on H100, the wide low half has the fastest path on the chip, reaching the
 FMA/FP16 result network at gap 1. B200 additionally shows explicit Ra exposure
 when an ALU consumer reads that path too early.
+
+### WIDE -> WIDE recurrence and lane batching
+
+The early low-half path above is not the path used by another `IMAD.WIDE`.
+Long low-result recurrences remain bit-exact even with nominal gap 1, but the
+hardware stretches their real issue interval.  Comparing 64- and
+128-instruction unrolls removes the loop overhead:
+
+| stream | 64-unroll raw | 128-unroll raw | extrapolated steady interval |
+|---|---:|---:|---:|
+| independent `IMAD.WIDE` | 4.582 | 4.293 | **4.004 clocks** |
+| dependent WIDE.low -> WIDE.Ra | 7.535 | 7.270 | **7.005 clocks** |
+
+Unlike ordinary fixed scalar RAW, an unsafe nominal gap does not silently
+produce a stale result here: WIDE admission/operand availability interlocks
+and delays the dependent instruction.  A normal 32-bit `IMAD` control behaves
+differently: its independent stream is about 2 clocks/instruction, while a
+gap-1 recurrence runs at that rate but is wrong; it needs the ordinary
+four-cycle scheduling gap for correctness.
+
+`probe_imadwide_lane_masks.py` removes two alternative explanations.  First,
+a finite linear chain writes a new even-aligned register pair at every step,
+so no destination pair is reused.  Its exact total-clock progression is:
+
+| operations | dependent total | independent total |
+|---:|---:|---:|
+| 4 | 78 | 69 |
+| 8 | 106 | 85 |
+| 12 | 134 | 101 |
+| 16 | 162 | 117 |
+
+Each additional four operations adds exactly 28 dependent or 16 independent
+clocks, reproducing the 7/4 slopes without alternating-register WAR/WAW
+effects.  Every dependent result is bit-exact.
+
+Second, the same probe runs a 32-thread warp with full, low-16, high-16,
+lane-0-only, and lane-16-only execution masks.  All five cases are identical:
+
+```text
+128-unroll dependent   7.270 clocks/op
+128-unroll independent 4.293 clocks/op
+```
+
+Thus neither half warp can expose an earlier WIDE-to-WIDE feedback point, and
+even one enabled lane reserves the full instruction timing.  This is
+consistent with a warp-granular batch-completion/admission rule: the next WIDE
+does not consume an early low- or high-half result.  It does **not** by itself
+prove a physical 16-lane multiplier.  The 2-clock ordinary-IMAD service is
+consistent with 16 lanes, while WIDE's 4 clocks could mean the same array
+performs extra low/high work, rather than implying an 8-lane array.
+
+The initial behavioral model for B200 is therefore:
+
+```text
+ordinary IMAD independent service        ~= 2 clocks
+IMAD.WIDE independent service            ~= 4 clocks
+IMAD.WIDE.low -> next IMAD.WIDE.Ra RAW   ~= 7 clocks
+WIDE half-warp early feedback             not externally visible
+```
 
 ## FP64 and CLMAD
 

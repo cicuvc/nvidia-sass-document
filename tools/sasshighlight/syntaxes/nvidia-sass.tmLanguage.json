@@ -1,0 +1,277 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "NVIDIA SASS",
+  "scopeName": "source.nvidia-sass",
+  "patterns": [
+    { "include": "#directive-function" },
+    { "include": "#directive-pragma" },
+    { "include": "#directive-builtin" },
+    { "include": "#directive-label" },
+    { "include": "#directive-paren" },
+    { "include": "#directive-simple" },
+    { "include": "#comment" },
+    { "include": "#scheduling-bracket" },
+    { "include": "#label-definition" },
+    { "include": "#instruction" },
+    { "include": "#operand" }
+  ],
+  "repository": {
+    "comment": {
+      "name": "comment.line.number-sign.nvidia-sass",
+      "match": "#.*$"
+    },
+    "directive-function": {
+      "match": "^[ \\t]*(#fn)[ \\t]+([A-Za-z_$][\\w$]*)",
+      "captures": {
+        "1": { "name": "keyword.control.directive.nvidia-sass" },
+        "2": { "name": "entity.name.function.kernel.nvidia-sass" }
+      }
+    },
+    "directive-pragma": {
+      "match": "^[ \\t]*(#pragma)[ \\t]+([A-Z][A-Z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.control.directive.nvidia-sass" },
+        "2": { "name": "support.constant.pragma.nvidia-sass" }
+      }
+    },
+    "directive-builtin": {
+      "name": "meta.directive.builtin.nvidia-sass",
+      "begin": "(#!)([a-z_][a-z0-9_]*)[ \\t]*(\\()",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.directive.nvidia-sass" },
+        "2": { "name": "support.function.builtin.nvidia-sass" },
+        "3": { "name": "punctuation.section.parens.begin.nvidia-sass" }
+      },
+      "end": "\\)",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.parens.end.nvidia-sass" }
+      },
+      "patterns": [
+        { "include": "#operand" }
+      ]
+    },
+    "directive-label": {
+      "name": "meta.directive.label.nvidia-sass",
+      "begin": "(#(?:label|def_label))[ \\t]*(\\()",
+      "beginCaptures": {
+        "1": { "name": "entity.name.tag.label.directive.nvidia-sass" },
+        "2": { "name": "punctuation.section.parens.begin.nvidia-sass" }
+      },
+      "end": "\\)",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.parens.end.nvidia-sass" }
+      },
+      "patterns": [
+        {
+          "name": "entity.name.tag.label.nvidia-sass",
+          "match": "[A-Za-z_.$][\\w.$]*"
+        },
+        { "include": "#numbers" }
+      ]
+    },
+    "directive-paren": {
+      "name": "meta.directive.nvidia-sass",
+      "begin": "(#(?:param|spec_const))[ \\t]*(\\()",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.nvidia-sass" },
+        "2": { "name": "punctuation.section.parens.begin.nvidia-sass" }
+      },
+      "end": "\\)",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.parens.end.nvidia-sass" }
+      },
+      "patterns": [
+        {
+          "name": "constant.language.slot.nvidia-sass",
+          "match": "\\b[A-Z][A-Z0-9_]*\\b"
+        },
+        {
+          "name": "entity.name.tag.label.nvidia-sass",
+          "match": "[A-Za-z_.$][\\w.$]*"
+        },
+        { "include": "#numbers" }
+      ]
+    },
+    "directive-simple": {
+      "name": "keyword.control.directive.nvidia-sass",
+      "match": "#coop_group\\b"
+    },
+    "scheduling-bracket": {
+      "name": "meta.scheduling-bracket.nvidia-sass",
+      "begin": "(;)(\\[)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.terminator.instruction.nvidia-sass" },
+        "2": { "name": "punctuation.section.bracket.begin.scheduling.nvidia-sass" }
+      },
+      "end": "\\]",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.bracket.end.scheduling.nvidia-sass" }
+      },
+      "patterns": [
+        {
+          "name": "punctuation.section.braces.req.nvidia-sass",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.separator.scheduling.nvidia-sass",
+          "match": "[:,]"
+        },
+        { "include": "#numbers" }
+      ]
+    },
+    "label-definition": {
+      "match": "^[ \\t]*([A-Za-z_.$][\\w.$]*)(:)",
+      "captures": {
+        "1": { "name": "entity.name.tag.label.nvidia-sass" },
+        "2": { "name": "punctuation.definition.label.nvidia-sass" }
+      }
+    },
+    "instruction": {
+      "match": "^[ \\t]*(@!?U?P[T0-6][ \\t]+)?([A-Z][A-Z0-9]*(?:\\.[A-Za-z0-9_]+)*)",
+      "captures": {
+        "1": { "name": "storage.modifier.guard.nvidia-sass" },
+        "2": { "name": "keyword.other.mnemonic.nvidia-sass" }
+      }
+    },
+    "operand": {
+      "patterns": [
+        {
+          "name": "storage.modifier.guard.nvidia-sass",
+          "match": "@!?U?P[T0-6]\\b"
+        },
+        {
+          "name": "storage.type.descriptor.nvidia-sass",
+          "match": "\\b(?:desc|gdesc|tdesc)\\b"
+        },
+        {
+          "name": "storage.type.constant-bank.nvidia-sass",
+          "match": "\\bc(?=\\[)"
+        },
+        { "include": "#bracket" },
+        { "include": "#group" },
+        {
+          "name": "support.constant.special-register.nvidia-sass",
+          "match": "\\bSR_[A-Za-z0-9]+(?:\\.[A-Za-z0-9]+)*"
+        },
+        {
+          "name": "variable.other.register.indexed.nvidia-sass",
+          "match": "\\bR(?=\\[)"
+        },
+        {
+          "name": "variable.other.register.uniform.nvidia-sass",
+          "match": "\\bUR(?:Z|[0-9]{1,2})\\b"
+        },
+        {
+          "name": "variable.other.register.nvidia-sass",
+          "match": "\\bR(?:Z|[0-9]{1,3})\\b"
+        },
+        {
+          "name": "storage.modifier.predicate.nvidia-sass",
+          "match": "(?<![\\w@!])!?U?P[T0-6]\\b"
+        },
+        {
+          "name": "variable.other.scoreboard.nvidia-sass",
+          "match": "\\bSB[0-7]\\b"
+        },
+        {
+          "name": "variable.other.barrier.nvidia-sass",
+          "match": "\\bB(?:[0-9]|1[0-5])\\b"
+        },
+        {
+          "name": "storage.modifier.fragment.nvidia-sass",
+          "match": "\\.(?:ROW|COL)\\b"
+        },
+        {
+          "name": "variable.parameter.nvidia-sass",
+          "match": "[a-z_][a-z0-9_]*(?=<[0-9]+>)"
+        },
+        {
+          "match": "(<)([0-9]+)(>)",
+          "captures": {
+            "1": { "name": "punctuation.section.angle.begin.nvidia-sass" },
+            "2": { "name": "constant.numeric.param-size.nvidia-sass" },
+            "3": { "name": "punctuation.section.angle.end.nvidia-sass" }
+          }
+        },
+        { "include": "#numbers" }
+      ]
+    },
+    "bracket": {
+      "name": "meta.bracket.memory.nvidia-sass",
+      "begin": "\\[(?=[^\\]\\n]*\\])",
+      "beginCaptures": {
+        "0": { "name": "punctuation.section.bracket.begin.nvidia-sass" }
+      },
+      "end": "\\]",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.bracket.end.nvidia-sass" }
+      },
+      "patterns": [
+        { "include": "#group" },
+        {
+          "name": "variable.other.register.uniform.nvidia-sass",
+          "match": "\\bUR(?:Z|[0-9]{1,2})\\b"
+        },
+        {
+          "name": "variable.other.register.nvidia-sass",
+          "match": "\\bR(?:Z|[0-9]{1,3})\\b"
+        },
+        {
+          "name": "constant.numeric.size-suffix.nvidia-sass",
+          "match": "\\.(?:8|16|32|64|128)\\b"
+        },
+        { "include": "#numbers" },
+        {
+          "name": "keyword.operator.address.nvidia-sass",
+          "match": "[+\\-]"
+        }
+      ]
+    },
+    "group": {
+      "name": "meta.group.registers.nvidia-sass",
+      "begin": "\\{(?=[^{}\\n]*\\})",
+      "beginCaptures": {
+        "0": { "name": "punctuation.section.braces.begin.group.nvidia-sass" }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.braces.end.group.nvidia-sass" }
+      },
+      "patterns": [
+        {
+          "name": "variable.other.register.uniform.nvidia-sass",
+          "match": "\\bUR(?:Z|[0-9]{1,2})\\b"
+        },
+        {
+          "name": "variable.other.register.nvidia-sass",
+          "match": "\\bR(?:Z|[0-9]{1,3})\\b"
+        },
+        { "include": "#numbers" },
+        {
+          "name": "punctuation.separator.group.nvidia-sass",
+          "match": ","
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.fp32-bits.nvidia-sass",
+          "match": "\\b0f[0-9A-Fa-f]{8}\\b"
+        },
+        {
+          "name": "constant.numeric.hex.nvidia-sass",
+          "match": "-?\\b0x[0-9A-Fa-f]+\\b"
+        },
+        {
+          "name": "constant.numeric.float.nvidia-sass",
+          "match": "-?\\b[0-9]+\\.[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.nvidia-sass",
+          "match": "-?\\b[0-9]+\\b"
+        }
+      ]
+    }
+  }
+}

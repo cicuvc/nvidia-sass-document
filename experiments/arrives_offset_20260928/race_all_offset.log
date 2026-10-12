@@ -1,0 +1,5 @@
+========= COMPUTE-SANITIZER
+========= Error: Device not supported. Please refer to the "Supported Devices" section of the sanitizer documentation
+========= 
+PASS variant=all_offset tasks=7 iters=7 bad=[]
+========= RACECHECK SUMMARY: 1 hazard displayed (1 error, 0 warnings)

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Calibrate real GPU clocks for fixed-pipe dependent issue/use chains.
+"""Measure sustained fixed-pipe dependent issue/use chains.
 
-The stale/fresh probes report a nominal SASS issue gap.  This probe measures
-the actual SR_CLOCKLO distance of long chains at that known-correct forwarding
-gap and compares it with an independent chain carrying identical scheduling
-brackets.  It intentionally does not claim that issue-to-issue alone locates
-the consumer's internal operand-use stage; the pairwise forwarding equations
-are applied by the analysis note.
+The isolated stale/fresh probes report the earliest nominal SASS issue gap at
+which one consumer eventually gets the producer result.  This probe measures
+long recurrences and compares them with independent instructions and NOPs
+carrying identical scheduling brackets.  The distinction matters on B200:
+one scalar FMA-Lite consumer is accepted at gap 2, while a correct sustained
+recurrence requires gap 4.  Issue-to-issue timing alone still does not locate
+the consumer's internal operand-use stage.
 """
 
 from __future__ import annotations
@@ -45,11 +46,14 @@ OPS = {
                 "LOP3.LUT R{d}, R24, RZ, RZ, 0xcc, PT", 2),
     "FADD": Op("fma-lite", ("MOV32I R27, 0x3f800000",),
                 "FADD R{d}, R{s}, R27",
-                "FADD R{d}, R24, R27", 2),
+                "FADD R{d}, R24, R27", 4),
     "FFMA": Op("fma-lite", ("MOV32I R27, 0x3f800000",
                               "MOV32I R28, 0x3f800000"),
                 "FFMA R{d}, R{s}, R27, R28",
-                "FFMA R{d}, R24, R27, R28", 2),
+                "FFMA R{d}, R24, R27, R28", 4),
+    "FMUL": Op("fma-lite", ("MOV32I R27, 0x3f802000",),
+                "FMUL R{d}, R{s}, R27",
+                "FMUL R{d}, R24, R27", 4),
     "IMAD": Op("fma-heavy", ("MOV32I R27, 0x1", "MOV32I R28, 0x1"),
                 "IMAD R{d}, R{s}, R27, R28",
                 "IMAD R{d}, R24, R27, R28", 2),
@@ -70,7 +74,8 @@ OPS = {
 }
 
 
-def source(name: str, mode: str, gap: int, count: int, loops: int) -> str:
+def source(name: str, mode: str, gap: int, count: int, loops: int,
+           yield_bit: int = 1, self_dep: bool = False) -> str:
     op = OPS[name]
     lines = [
         "#fn i2u(out<8>) {",
@@ -84,6 +89,13 @@ def source(name: str, mode: str, gap: int, count: int, loops: int) -> str:
         f"    MOV32I R80, 0x{loops:x};[7:7:{{}}:8:1]",
     ]
     lines += [f"    {x};[7:7:{{}}:8:1]" for x in op.setup]
+    if name == "FMUL":
+        # A slowly growing nontrivial recurrence avoids both signed-zero and
+        # two-cycle fixed-point orbits that can hide stale reads.
+        lines += [
+            "    MOV32I R40, 0x3f800000;[7:7:{}:8:1]",
+            "    MOV32I R41, 0x40000000;[7:7:{}:8:1]",
+        ]
     if name == "IMAD.HI":
         lines += [
             "    MOV32I R40, 0xffffffff;[7:7:{}:8:1]",
@@ -109,7 +121,10 @@ def source(name: str, mode: str, gap: int, count: int, loops: int) -> str:
                 else:
                     s, d, c0, c1 = 0, 41, 42, 43
             else:
-                s, d = ((40, 41) if i % 2 == 0 else (41, 40))
+                if self_dep:
+                    s = d = 40
+                else:
+                    s, d = ((40, 41) if i % 2 == 0 else (41, 40))
                 c0 = c1 = 0
             inst = op.dep.format(s=s, d=d, d1=d + 1, c0=c0, c1=c1)
         elif mode == "ind":
@@ -122,7 +137,7 @@ def source(name: str, mode: str, gap: int, count: int, loops: int) -> str:
             inst = "NOP"
         else:
             raise ValueError(mode)
-        lines.append(f"    {inst};[7:7:{{}}:{gap}:1]")
+        lines.append(f"    {inst};[7:7:{{}}:{gap}:{yield_bit}]")
     lines += [
         # Sustained phase-safe ALU-Lite -> ALU-Lite distance.  The isolated
         # pair is fresh at nominal gap 2, but this periodic back-edge can
@@ -148,9 +163,11 @@ def source(name: str, mode: str, gap: int, count: int, loops: int) -> str:
 
 
 def run(name: str, mode: str, gap: int, count: int,
-        loops: int) -> tuple[float, tuple[int, int]]:
+        loops: int, yield_bit: int = 1,
+        self_dep: bool = False) -> tuple[float, tuple[int, int]]:
     reset_context()
-    mod = CudaModule(assemble(source(name, mode, gap, count, loops),
+    mod = CudaModule(assemble(source(name, mode, gap, count, loops, yield_bit,
+                                     self_dep),
                               check_deps=False))
     out = mod.devmem_alloc(64)
     try:
@@ -164,7 +181,8 @@ def run(name: str, mode: str, gap: int, count: int,
         mod.devmem_free(out)
 
 
-def expected_dep(name: str, steps: int) -> tuple[int, int] | None:
+def expected_dep(name: str, steps: int,
+                 self_dep: bool = False) -> tuple[int, int] | None:
     """Bit-exact recurrence used by the dependent chain."""
     if name == "MOV":
         return (0, 0)
@@ -177,7 +195,24 @@ def expected_dep(name: str, steps: int) -> tuple[int, int] | None:
     if name in ("FADD", "FFMA"):
         def f32_bits(x: float) -> int:
             return struct.unpack("<I", struct.pack("<f", x))[0]
+        if self_dep:
+            return (f32_bits(float(steps)), f32_bits(2.0))
         return (f32_bits(float(steps)), f32_bits(float(steps - 1)))
+    if name == "FMUL":
+        def f32(x: float) -> float:
+            return struct.unpack("<f", struct.pack("<f", x))[0]
+
+        value = f32(1.0)
+        previous = value
+        factor = struct.unpack("<f", struct.pack("<I", 0x3F802000))[0]
+        for _ in range(steps):
+            previous = value
+            value = f32(value * factor)
+
+        def bits(x: float) -> int:
+            return struct.unpack("<I", struct.pack("<f", x))[0]
+
+        return (bits(value), bits(2.0) if self_dep else bits(previous))
     if name == "HADD2":
         def hbits(x: float) -> int:
             return struct.unpack("<H", struct.pack("<e", x))[0]
@@ -196,16 +231,25 @@ def main() -> int:
                     help="unrolled operations per loop iteration (even)")
     ap.add_argument("--loops", type=int, default=64)
     ap.add_argument("--reps", type=int, default=5)
+    ap.add_argument("--yield-bit", action="append", type=int, choices=(0, 1),
+                    help="schedule-control yield bit; repeatable (default: 1)")
+    ap.add_argument("--self-dep", action="store_true",
+                    help="use Rd==Ra instead of alternating R40/R41")
     ns = ap.parse_args()
-    print("op       pipe        gap    dependent      independent     nop")
+    if ns.self_dep and any(x not in ("FADD", "FMUL", "FFMA")
+                           for x in (ns.op or OPS)):
+        ap.error("--self-dep currently supports only FADD, FMUL, and FFMA")
+    print("op       pipe        gap y  dependent      independent     nop")
     for name in ns.op or list(OPS):
         op = OPS[name]
         gaps = ns.gap or sorted({max(1, op.safe_gap - 1), op.safe_gap,
                                  op.safe_gap + 1, op.safe_gap + 2})
-        for gap in gaps:
+        for yield_bit in ns.yield_bit or [1]:
+          for gap in gaps:
             vals = {}
             for mode in ("dep", "ind", "nop"):
-                samples = [run(name, mode, gap, ns.count, ns.loops)
+                samples = [run(name, mode, gap, ns.count, ns.loops, yield_bit,
+                               ns.self_dep)
                            for _ in range(ns.reps)]
                 clocks = [x[0] for x in samples]
                 vals[mode] = (statistics.mean(clocks),
@@ -213,12 +257,12 @@ def main() -> int:
                               {x[1] for x in samples})
             dep_values = "/".join(
                 f"{a:08x}:{b:08x}" for a, b in sorted(vals["dep"][2]))
-            expected = expected_dep(name, ns.count * ns.loops)
+            expected = expected_dep(name, ns.count * ns.loops, ns.self_dep)
             if expected is None:
                 verdict = "unchecked"
             else:
                 verdict = "OK" if vals["dep"][2] == {expected} else "BAD"
-            print(f"{name:8} {op.pipe:11} {gap:3d}  "
+            print(f"{name:8} {op.pipe:11} {gap:3d} {yield_bit:d}  "
                   f"{vals['dep'][0]:8.3f}±{vals['dep'][1]:.3f}  "
                   f"{vals['ind'][0]:8.3f}±{vals['ind'][1]:.3f}  "
                   f"{vals['nop'][0]:8.3f}±{vals['nop'][1]:.3f}  "

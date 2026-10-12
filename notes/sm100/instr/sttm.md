@@ -157,6 +157,18 @@ subsequent `.x1` loads at offsets 0 and 1 recover them independently.  This
 establishes that STTM `Sc_offset` uses TMEM-column units and that `.x2` writes
 two consecutive columns.
 
+### Address row field
+
+A full-address probe now adds `(row << 16)` to the allocated column base.  STTM
+alone and LDTM alone have the same alignment checks: `32dp32bit` requires a
+multiple of 32, while every tested `16dp*` layout requires a multiple of 16;
+other rows raise CUDA 716.  More importantly, accepted high row bits alias:
+the 32-datapath form treats rows 0/32/64/96 identically, and 16-datapath forms
+distinguish only bit 4 (0/32/64/96 versus 16/48/80/112).  Tagged two-address
+stores followed by two loads establish the aliasing directly.  Full method and
+matrix: `notes/sm100/instr/ldtm.md`, “Address row field”; probe:
+`tests/asm_construct/probe_sm100_tmem_row_address.py`.
+
 ### MIO/LSU interaction probe
 
 Static classification places STTM in the special UDP-side `LDTM_STTM_OP`
@@ -500,6 +512,55 @@ it.  These measurements do not yet distinguish `bank=column_parity` from a
 checkerboard `bank=column_parity XOR row_half`, because every discriminating
 x256 phase holds its row half fixed.
 
+The newly established address-row selector permits the missing direct
+row-half translation: adding `0x100000` moves the same x256 mapping from rows
+0--15 to rows 16--31 without changing its columns.  A 6144-instruction matrix
+compared row 0, row 16, alternating row 0/16, and alternating aligned
+8-column tiles.  Every STTM case took **49115 cycles** (and the corresponding
+LDTM cases all took **50118 cycles**) in three exact repeats.  Thus row bit 4
+does not change the isolated x256 conflict penalty.
+
+A stronger same-subcore test let warp 0 and warp 4 each issue 6144 x256
+stores.  Both writing row 0 and splitting them between rows 0/16 produced the
+same result in five repeats: CTA span **98269 cycles**, with per-warp durations
+98265 and 92900 cycles.  This is almost exactly twice the single-stream span:
+separate LDTM/STTM instructions are serialized at the shared chunk backend,
+even when their row halves differ.  Consequently the experiment finds no
+counterexample to the minimal visible selector `bank = column & 1`.
+
+There is an important logical limit: because the two requests do not receive
+simultaneous bank service, these timings also cannot rule out an internal
+`column_parity XOR row_half` implementation that merely swaps the names of two
+symmetric banks.  The narrow conclusion is that no measured LDTM/STTM service
+or conflict class requires that XOR; it is not a proof of absolute physical
+bank identity.  Probes:
+`tests/asm_construct/probe_sm100_tmem_layout_bank_timing.py` and
+`tests/asm_construct/probe_sm100_tmem_row_bank_parallel.py`.
+
+The obvious concern is that x256's eight internal service phases average away
+a row-dependent signal.  Two finer follow-ups tested that explicitly:
+
+1. A pure `16dp32bit_t0_t15.x1` stream (one 64-byte half-column request per
+   instruction) scanned the full row/column four-way matrix.  For 24576
+   instructions, every single-warp STTM case settled at **32519 cycles** and
+   every LDTM case at **95238 cycles**.  With same-subcore warps 0 and 4 each
+   issuing 24576 stores, all four combinations again had the identical CTA
+   span **57355 cycles** in five repeats.
+2. A narrow x1 request was placed immediately after each x256 request as a
+   phase probe.  The x256 row was 0/16 and the narrow column was 0/1.  After
+   equalizing the row-0/row-16 code layout (a one-instruction PC shift created
+   a real frontend-alignment artifact once the loop became issue-bound), all
+   four combinations were exact: **27647** cycles at gap 0, **27651** at gap 4,
+   and **30343** at gap 7.
+
+Thus the absence of a row effect is not peculiar to measuring only whole x256
+throughput.  Nevertheless the fine-grained result is still admission-limited:
+a subcore scheduler supplies at most one such instruction per cycle, which one
+bank can already absorb.  It therefore strengthens the statement that the
+minimal `column & 1` model has no observed counterexample, but still does not
+identify the absolute physical bank label.  Mixed-width probe:
+`tests/asm_construct/probe_sm100_tmem_row_bank_phase.py`.
+
 An attempted direct discriminator selected correlated `thread_id mod 4`
 classes in x64, but these are uniform-datapath instructions and the encoding
 accepts only `@UPx`, not a per-lane `@Px`.  Divergent execution would split the
@@ -573,6 +634,16 @@ miss the newly created claim, while either `stall=2` or one intervening NOP
 lets the waiter observe it and then block until actual LDC completion.  This is
 a scoreboard-claim visibility/admission constraint, not an STTM restriction.
 
+## 未分配 / 越界访问（B200/B300 实测）
+
+`STTM` **不需要先执行 `tcgen05.alloc`**：完全不做分配、直接向 column 0 /
+300 / 511 写都成功（B200 与 B300 均验证）；`column >= 512` 报
+`CUDA error 700`。`LDTM` 同理（无分配读 column 0 返回 0）。即硬件对 TMEM 只做
+**物理范围**检查（共 512 列），不检查“是否已分配”；`unallocated_columns_access`
+是 ptxas 的软件 guardrail（依赖 reserved-shared 位图），对没有 alloc 的裸
+STTM 即使 `-g` 也不插入。详见
+`notes/sm100/arch/tcgen05_alloc_exclusive.md`。
+
 ## History / retracted hypotheses
 
 > Claims below were **superseded, refuted, or never settled** by later work; they are kept
@@ -584,4 +655,3 @@ a scoreboard-claim visibility/admission constraint, not an STTM restriction.
 - Exact ordering guarantees of `FENCE.VIEW.ASYNC.T` for `tcgen05.wait::st` vs the  <!-- open-question: answered answered by "§Semantics" in this note -->
   `src_rel_sb` read barrier — the fence orders the async TMEM write visibility,
   the scoreboard only orders source-register reuse.
-

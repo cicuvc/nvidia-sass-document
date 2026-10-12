@@ -10,11 +10,12 @@ two independently admitted producer warps.
 from __future__ import annotations
 
 import argparse
+import struct
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from assembler import assemble_kernel  # noqa: E402
+from assembler import CudaModule, assemble_kernel  # noqa: E402
 
 
 LAYOUTS = {
@@ -46,7 +47,8 @@ def _group(lo: int, count: int) -> str:
 
 def source(name: str, layout: str, column: int, count: int,
            column_alt: int | None = None, unroll: int = 96,
-           op: str = "ldtm") -> str:
+           op: str = "ldtm", row: int = 0,
+           row_alt: int | None = None) -> str:
     opcode, nregs, _ = LAYOUTS[layout]
     lines = [
         f"#fn {name}(out<8>) {{",
@@ -61,9 +63,21 @@ def source(name: str, layout: str, column: int, count: int,
         "    #!tmem_alloc_1cta(UR5, 512)",
         "    WARPSYNC.ALL;[7:7:{}:5:0]",
         "    LDS R10, [UR5];[0:7:{0}:1:0]",
-        "    R2UR UR10, R10;[7:7:{0}:13:1]",
-        "    CS2R {R16,R17}, SR_CLOCKLO;[7:7:{}:5:1]",
     ]
+    if row:
+        lines += [
+            f"    IADD3 R11, R10, {row << 16:#x}, RZ;[7:7:{{0}}:5:1]",
+            "    R2UR UR10, R11;[7:7:{}:13:1]",
+        ]
+    else:
+        lines += ["    R2UR UR10, R10;[7:7:{0}:13:1]"]
+    if row_alt is not None:
+        lines += [
+            f"    IADD3 R11, R10, {row_alt << 16:#x}, RZ;"
+            "[7:7:{0}:5:1]",
+            "    R2UR UR11, R11;[7:7:{}:13:1]",
+        ]
+    lines += ["    CS2R {R16,R17}, SR_CLOCKLO;[7:7:{}:5:1]"]
     if count % unroll or unroll % 6:
         raise ValueError("count must divide by unroll and unroll by six")
     lines += [
@@ -75,7 +89,8 @@ def source(name: str, layout: str, column: int, count: int,
         lo = 40 + sb * 8
         this_column = (column if column_alt is None or i % 2 == 0
                        else column_alt)
-        addr = f"tmem[UR10+{this_column:#x}]"
+        ur = 11 if row_alt is not None and i % 2 else 10
+        addr = f"tmem[UR{ur}+{this_column:#x}]"
         if op == "ldtm":
             lines.append(
                 f"    {opcode} {_group(lo, nregs)}, {addr};"
@@ -115,19 +130,65 @@ def main() -> None:
     ap.add_argument("--column", type=int, default=0)
     ap.add_argument("--column-alt", type=int,
                     help="alternate every other instruction with this column")
+    ap.add_argument("--row", type=int, default=0)
+    ap.add_argument("--row-alt", type=int,
+                    help="alternate every other instruction with this row")
     ap.add_argument("--count", type=int, default=1536)
     ap.add_argument("--unroll", type=int, default=96)
-    ap.add_argument("--output", type=Path, required=True)
+    ap.add_argument("--output", type=Path)
     ap.add_argument("--source-output", type=Path)
+    ap.add_argument("--run-matrix", action="store_true",
+                    help="run the row/column alternation matrix on this GPU")
+    ap.add_argument("--reps", type=int, default=3)
     ns = ap.parse_args()
     if ns.count < 6 or ns.count % ns.unroll or ns.unroll % 6:
         ap.error("count must divide by unroll and unroll by six")
+    if ns.row not in range(0, 128, 16):
+        ap.error("row must be 16-row aligned and in 0..127")
+    if ns.row_alt is not None and ns.row_alt not in range(0, 128, 16):
+        ap.error("row-alt must be 16-row aligned and in 0..127")
+    if ns.run_matrix:
+        # Narrow half-column x1 accepts an odd starting column, giving a true
+        # column-parity flip.  Wide x256 requires an aligned 8-column tile.
+        alternate_column = 1 if ns.layout in ("half0_x1", "half16_x1") else 8
+        cases = (
+            ("r0c0", 0, None, 0, None),
+            ("r16c0", 16, None, 0, None),
+            ("same_row_same_col", 0, 0, 0, 0),
+            ("flip_row_same_col", 0, 16, 0, 0),
+            ("same_row_flip_col", 0, 0, 0, alternate_column),
+            ("flip_row_flip_col", 0, 16, 0, alternate_column),
+        )
+        for label, row, row_alt, column, column_alt in cases:
+            case_name = f"tmem_bank_matrix_{ns.op}_{ns.layout}_{label}"
+            case_src = source(case_name, ns.layout, column, ns.count,
+                              column_alt, ns.unroll, ns.op, row, row_alt)
+            result = assemble_kernel(case_src, arch="sm100a",
+                                     check_deps=False)
+            mod = CudaModule(result.code)
+            out = mod.devmem_alloc(16)
+            samples = []
+            try:
+                for _ in range(ns.reps):
+                    mod.launch(case_name, grid=(1,), block=(32,), args=[out])
+                    mod.synchronize()
+                    start, end = struct.unpack("<QQ", mod.device_read(out, 16))
+                    samples.append((end - start) & ((1 << 64) - 1))
+            finally:
+                mod.devmem_free(out)
+            print(f"{label:20s} cycles={samples}")
+        return
+
+    if ns.output is None:
+        ap.error("--output is required unless --run-matrix is used")
     col_name = (f"c{ns.column}" if ns.column_alt is None else
                 f"c{ns.column}a{ns.column_alt}")
-    name = (f"tmem_bank_{ns.op}_{ns.layout}_{col_name}_n{ns.count}_"
+    row_name = (f"r{ns.row}" if ns.row_alt is None else
+                f"r{ns.row}a{ns.row_alt}")
+    name = (f"tmem_bank_{ns.op}_{ns.layout}_{col_name}_{row_name}_n{ns.count}_"
             f"u{ns.unroll}")
     src = source(name, ns.layout, ns.column, ns.count, ns.column_alt,
-                 ns.unroll, ns.op)
+                 ns.unroll, ns.op, ns.row, ns.row_alt)
     result = assemble_kernel(src, arch="sm100a", check_deps=False)
     ns.output.write_bytes(result.code)
     if ns.source_output:

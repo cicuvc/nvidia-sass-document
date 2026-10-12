@@ -337,13 +337,41 @@ they are only 2/4/16 clocks over the *entire* chain.  Repeating n64 at
 
 Thus an HGMMA RMW logically reads the current architectural accumulator
 (the WAW probes prove that), but it does **not** consume the ordinary ALU
-ordinary ALU collector once per accumulator register.  Otherwise 31 extra n64
+collector once per accumulator register.  Otherwise 31 extra n64
 RMWs under saturated read traffic would add a large repeatable cost, not
 zero.  The old value is more likely obtained through a dedicated TC
 accumulator-read path or a bank-local read-before-write primitive.  Only
 the resulting write/commit is observably shared with the normal per-bank
 1W domain.  A small fixed arbitration action below timing resolution is
 not excluded; a per-register ordinary-read-port implementation is.
+
+### It does not use the generic MIO late-GPR collector either
+
+A direct H100 differential uses 64 n64 SS HGMMAs, so there is no RS
+A-fragment RF collection.  The HGMMA chain is switched between first-overwrite
+plus 63 RMWs and all-overwrite.  Four contender warps each issue 512
+destination-discarding SHFLs; `SHFL.BFLY PT,RZ,R40` consumes one late-collected
+GPR source while `SHFL.BFLY PT,RZ,RZ` is the matched no-RF-source control.
+
+| HGMMA D mode | SHFL source | Hissue/MMA | Hdrain/MMA | contender cyc/SHFL |
+|---|---|---:|---:|---:|
+| RMW | R40 | 30.453 | 34.344 | 8.162 |
+| RMW | RZ | 30.453 | 34.352 | 8.160 |
+| overwrite | R40 | 30.453 | 34.344 | 8.162 |
+| overwrite | RZ | 30.453 | 34.352 | 8.160 |
+
+The R40-minus-RZ late-collection price is zero within 0.01 cycle and is
+identical with all 32 old-D reads per n64 MMA removed.  This is a stronger
+negative result than the fixed-collector storm: **the accumulator R side does
+not traverse the generic MIO late-GPR collector either.**  The same probe does
+positively detect RS A-fragment use of that collector, so it has the required
+sensitivity.  The narrow model is a dedicated accumulator read or bank-local
+RMW read-before-write path.
+
+Do not confuse this inbound old-D read with Round 6's outbound result
+forwarding: a completed HGMMA result can forward to an MIO/XU consumer before
+RF commit even though its RMW old-value read did not enter through the generic
+MIO late collector.
 
 ## Round 5 — directly exposing the bank-local RMW aperture
 
@@ -403,6 +431,70 @@ pipelined decoder can implement the observation.
 
 Probe source: `tests/asm_construct/probe_hgmma_rmw_window.py`.
 
+## Round 6 — HGMMA result forwarding to MIO/XU before RF visibility
+
+`probe_hgmma_result_forward.py` initializes the tail word of an n64
+accumulator, R54, to 4.0 and uses an overwrite HGMMA whose exact result is
+16.0.  It deliberately omits the HGMMA DEPBAR before the observation and
+sweeps stall-1 NOPs between producer and consumer.  The consumer has its own
+scoreboard; the kernel waits that scoreboard and `gsb0` before storing, so the
+stored bit pattern reflects the consumer's earlier source observation rather
+than an unprotected STG late read.
+
+20 launches x 128 lanes gave:
+
+| delay slots | IADD3 | FADD | SHFL | MUFU |
+|---:|---:|---:|---:|---:|
+| 31 | stale | stale | stale | stale |
+| 32 | stale | stale | 64 stale / 64 fresh per launch | stale |
+| 33 | stale | stale | fresh | fresh |
+| 34 | stale | stale | fresh | fresh |
+| 35 | fresh | fresh | fresh | fresh |
+
+A stall-1 NOP stream takes 2.003 clocks/instruction, so the isolated-kernel
+boundary makes MIO/XU appear about four clocks earlier than the ordinary
+INT/FMA collectors.  That comparison alone is not decisive: the consumers
+could have different issue or source-latch phases.
+
+The decisive control issues both reads in one dynamic instruction stream,
+with the MIO/XU instruction first and the ordinary collector second:
+
+```text
+HGMMA.64x64x16.F32.BF16 {R24,...,R55}, gdesc[UR4], RZ, !UPT, gsb0
+NOP x d
+SHFL.IDX PT, R60, R54, RZ, 0x1f       # wr SB1
+IADD3 R61, R54, RZ, RZ                # wr SB2, issued later
+WARPGROUP.DEPBAR.LE gsb0, 0
+STG [out_mio], R60                     # req SB1
+STG [out_fixed], R61                   # req SB2
+```
+
+The second version substitutes `MUFU.RCP` followed by `FADD`.  Across 20
+launches x 128 lanes:
+
+| delay | SHFL then IADD3 | MUFU then FADD |
+|---:|---:|---:|
+| 31 | 2560 stale/stale | 2560 stale/stale |
+| 32 | 1280 stale/stale + 1280 fresh/stale | 2560 stale/stale |
+| **33** | **2560 fresh/stale** | **2560 fresh/stale** |
+| 34--35 | 2560 fresh/fresh | 2560 fresh/fresh |
+
+The later fixed-pipe instruction cannot read an older value than the earlier
+MIO/XU instruction if both obtain their operand from a monotonically updated
+RF.  The `fresh -> stale` pair therefore proves a logical HGMMA-result
+forwarding path to the MIO/XU side before ordinary RF-read visibility.  A
+reverse latch control (SHFL/MUFU first, immediately followed by a scalar
+overwrite of an already-ready source) reads the old value even at zero gap;
+the result is not explained by a universal fixed two-slot late source latch.
+
+This refines, rather than retracts, Round 3: the result can forward early, but
+its final architectural commit still competes in the normal per-bank 1W RF
+service domain.  The experiment does not distinguish a dedicated physical
+bypass wire from completion-buffer/write-queue snooping; "logical MIO/XU
+bypass before shared RF commit" is the narrow conclusion.
+
+Probe source: `tests/asm_construct/probe_hgmma_result_forward.py`.
+
 ## History / retracted hypotheses
 
 > Claims below were **superseded, refuted, or never settled** by later work; they are kept
@@ -424,4 +516,3 @@ Probe source: `tests/asm_construct/probe_hgmma_rmw_window.py`.
 - Does the same threshold hold on H20 (its HGMMA chain is MAC-bound at  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   32.4 cyc/MMA with more RF headroom per cycle — prediction: FFMA-rot
   storm slows it less in absolute cyc/MMA)?
-

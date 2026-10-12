@@ -1,4 +1,4 @@
-# TCGEN05 TMEM at-exit handler (B200)
+# TCGEN05 TMEM at-exit handlers (B200, V1/V2)
 
 <!-- notes-status -->
 **Status:** active  
@@ -13,7 +13,7 @@
 
 _(no summary in the source note; the sections below carry the durable facts)_
 
-## How it was captured
+## How V1 was captured
 
 A hand-assembled `sm_100a` kernel used `BMOV ATEXIT_PC.LO/HI` to obtain the
 driver-installed absolute handler VA.  The same kernel then copied 0x800 bytes
@@ -116,6 +116,109 @@ the guard still runs at the eventual `EXIT` and restores the previous hook.
 0380  EXIT                                  // chain or finish exit
 ```
 
+## V2 handler capture (2026-09-22)
+
+The CUDA 13.1 V2 contract was captured independently on Modal B200 from a
+repository-assembled `AT_ENTRY_FRAGMENT_TMEM_CTA1_V2` cubin.  Instrumentation
+samples `ATEXIT_PC` after explicit deallocation, copies 0x800 bytes from that
+device code VA before relinquishment, samples the PC again afterwards, and
+then exits normally.  It is inserted around the source-level allocator
+builtin, before builtin expansion, so the assembler regenerates all branch and
+EIATTR offsets rather than patching the verified V2 lowering.
+
+Two separate Modal runs returned different absolute handler VAs, as expected,
+but identical copied bytes:
+
+```text
+run 1 ATEXIT_PC = 0x00002b6aaf5ab250 before/after relinquish
+run 2 ATEXIT_PC = 0x00002aeee95ab250 before/after relinquish
+0x800-byte SHA-256 = f305d9e16784cdf9268af55de83d6161094862e2a5894c234478e70aaf2ca851
+```
+
+The active V2 body occupies offsets 0x000 through 0x390; 0x3a0 onward is NOP
+or zero padding.  Its native flow is:
+
+```sass
+0000  NOP
+0010  S2UR UR6, SR_CgaCtaId
+0020  UMOV UR4, 0x40
+0030  UMOV UR5, 0
+0040  ULEA UR4, UR6, UR4, 0x18
+0050  UPRMT UR5, UR6, 0x654, UR5
+0060  LDS.64 {R10,R11}, [UR4]               // partition +0x00: previous hook
+0070  SYNCS.ARRIVE.TRANS64.A1T0 {R4,R5}, [UR5], RZ
+0080  BRA.U.NOT_TID0 0x380
+
+0090  SYNCS.PHASECHK.TRANS64.TRYWAIT P0, [UR5], R5
+00a0  @!P0 BRA 0x330
+00b0  ELECT P0, URZ, PT
+00c0  BSSY.RECONVERGENT B0, 0x320
+00d0  @!P0 BRA 0x310
+
+00e0  LDS R7, [UR4+0x18]                    // allocation-head mask B
+00f0  LDS R6, [UR4+0x14]                    // occupied-range mask A
+0100  ISETP.NE.U32.AND P0, PT, R7, RZ, PT  // head != 0 => leaked allocation
+0110  ISETP.EQ.U32.AND P1, PT, R6, RZ, PT
+0120  @!P0 BRA P1, 0x310                    // no head: skip cleanup
+
+0130  LDC.64 {R8,R9}, c[0x0][0x0]          // optional diagnostic buffer
+0140  R2UR UR6, R6
+0150  LOP3.LUT R0, RZ, R7, RZ, 0x33, !PT  // R0 = ~head mask
+0160  ULOP3.LUT UR6, URZ, UR6, URZ, 0x33, !UPT // UR6 = ~range mask
+0170  IMAD.U32 R3, RZ, RZ, UR6
+0180  ISETP.NE.U32.AND P0, PT, R8, RZ, PT
+0190  ATOMS.AND RZ, [UR4+0x14], R3          // clear range mirror
+01a0  ISETP.NE.U32.AND.EX P0, PT, R9, RZ, PT, P0
+01b0  ATOMS.AND RZ, [UR4+0x18], R0          // clear head mirror
+01c0  UTCATOMSWS.AND URZ, UR6               // return hardware range
+01d0  @!P0 BRA 0x310                        // no diagnostic buffer
+
+01e0  S2R R3, SR_VIRTUALSMID
+01f0  HFMA2 R4, -RZ, RZ, 0, 1.78813934326171875e-07
+0200  MOV R5, 0x20001
+0210  S2R R0, SR_VIRTID
+0220  SHF.R.U32.HI R0, RZ, 8, R0
+0230  SGXT.U32 R0, R0, 7
+0240  LEA R3, R3, R0, 6
+0250  IMAD.WIDE.U32 {R8,R9}, R3, 0x20, {R8,R9}
+0260  ST.E.128 [{R8,R9}], {R4,R5,R6,R7}    // {tag,status,range,head}
+0270..02a0  @!PT LDS RZ, [RZ]
+02b0  MEMBAR.ALL.CTA
+02c0  MEMBAR.ALL.SYS
+02d0  ERRBAR
+02e0  CGAERRBAR
+02f0  CCTL.IVALL
+0300  BPT.TRAP 0x3
+
+0310  BSYNC.RECONVERGENT B0
+0320  BRA 0x380
+0330  SYNCS.PHASECHK.TRANS64.TRYWAIT P0, [UR5], R5
+0340  @!P0 NANOSLEEP.SYNCS 0x10000
+0350  @!P0 SYNCS.PHASECHK.TRANS64 P0, [UR5], R5
+0360  @!P0 BRA 0x330
+0370  BRA 0x0b0
+0380  BMOV.64 ATEXIT_PC, {R10,R11}
+0390  EXIT
+```
+
+This directly resolves the V2 exit-side reserved layout:
+
+- `partition+0x00` is the saved previous/chained `ATEXIT_PC`.
+- `partition+0x14` is the occupied range and is the mask returned to the
+  hardware allocator through `UTCATOMSWS.AND`.
+- `partition+0x18` is the allocation-head bitmap.  Its nonzero test is the
+  handler's authoritative "there is a leak" predicate.
+- Both mirrors are independently cleared.  The 16-byte diagnostic record now
+  carries the original range and head masks in its final two words.
+- The handler does not read V2 phase at `+0x1c`, nor the private
+  `+0x08..+0x13` gap.  Phase is a user-lowering lifecycle guard, not the exit
+  handler's ownership source of truth.
+
+Compared with V1, V2 adds the second mask load/test/clear and grows the active
+handler by one 16-byte instruction.  The TRANS64 rendezvous, optional logging,
+emergency hardware cleanup, trap, previous-hook restoration, and chained
+`EXIT` structure are otherwise the same.
+
 ## Consequences
 
 - `devtool_atexit_pc` at reserved shared offset 0x48 is a saved **previous
@@ -129,4 +232,6 @@ the guard still runs at the eventual `EXIT` and restores the previous hook.
 - The final `BMOV.64` explains why `ATEXIT_PC` remains unchanged when sampled
   immediately after `relinquish_alloc_permit`: the hook is consumed only by
   the later `EXIT` path.
-
+- V2 proves that the two allocator mirrors are semantically different rather
+  than redundant copies: range controls actual hardware release, while head
+  controls leak presence and allocation-boundary bookkeeping.
