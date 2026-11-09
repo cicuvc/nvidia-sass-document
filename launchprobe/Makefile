@@ -3,10 +3,13 @@ NVCC    = /usr/local/cuda/bin/nvcc
 CFLAGS  = -O2 -Wall -Wextra -fPIC -Iinclude -g
 LDFLAGS = -shared -ldl -lpthread
 
-all: libnvtrace.so target/vecadd target/qmdprobe target/regprobe target/injectprobe target/construct target/cblaunch target/demo_kernel.cubin target/demo2_kernel.cubin
+all: libnvtrace.so gr_rate_preload.so target/vecadd target/qmdprobe target/regprobe target/injectprobe target/construct target/cblaunch target/demo_kernel.cubin target/demo2_kernel.cubin
 
 libnvtrace.so: src/nvtrace.c src/doorbell_trap.c src/mini_decode.c include/nvrm_ioctl.h
 	$(CC) $(CFLAGS) -Isrc -o $@ src/nvtrace.c src/doorbell_trap.c src/mini_decode.c $(LDFLAGS)
+
+gr_rate_preload.so: tools/gr_rate_preload.c
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 target/vecadd: target/vecadd.cu
 	$(NVCC) -arch=sm_120 -O2 -o $@ $<
@@ -39,6 +42,6 @@ target/demo2_kernel.cubin: target/demo2_kernel.cu
 	$(NVCC) -arch=sm_120 -O2 -cubin -o $@ $<
 
 clean:
-	rm -f libnvtrace.so target/vecadd target/qmdprobe target/regprobe target/injectprobe target/construct target/cblaunch target/demo_kernel.cubin target/demo2_kernel.cubin target/probe_lowva target/ctxprobe
+	rm -f libnvtrace.so gr_rate_preload.so target/vecadd target/qmdprobe target/regprobe target/injectprobe target/construct target/cblaunch target/demo_kernel.cubin target/demo2_kernel.cubin target/probe_lowva target/ctxprobe
 
 .PHONY: all clean

@@ -814,3 +814,29 @@ open/ioctl/mmap + doorbell/GPFIFO 陷阱，把 context 阶段与 launch 阶段�
 
 **结论**：GSP 逆向技术上可行（字符串 + RISC-V 反汇编 + 动态行为三重交叉），
 但投入大。适合作为独立长期课题；Phase 11 已达成（方案 D），不必阻塞。
+
+## GSP issue-rate follow-up (615.71.09, 2026-10-26)
+
+- `gsp_ga10x.bin` 的 GSP 命令表直接包含
+  `GR_GET_SM_ISSUE_RATE_MODIFIER_V2` (`0x2080123c`, params `0x7fc`,
+  handler `0x14c546c`) 和 `GR_GET_SM_ISSUE_THROTTLE_CTRL` (`0x2080123d`,
+  handler `0x144c60c`)。
+- `tools/gr_rate_preload.c` 在普通 CUDA 进程拿到 subdevice 后动态查询这两项；
+  `make gr_rate_preload.so` 后通过 `LD_PRELOAD` 运行。
+- 5090 返回 8 个旧 issue-rate 项（FMLA16/FMLA32/FFMA/IMLA0..4）；
+  `FMLA32=3`、`IMLA1/2/4=3`，其余为 0。V1 与 V2 完全一致。
+- 显式逐项查询时 `DMLA` 返回 `NV_ERR_INVALID_ARGUMENT`，`FP16/FP32/DFMA/CTRL*`
+  同样不存在；throttle 表只有 `MASK=0`。
+- 后续 Ada 解锁实现确认控制项就是 `FMLA32`：stock `1`（1/2）改为 `0`
+  （full）后，FP16/BF16→FP32 tensor 正好翻倍；INT8/dp4a/scalar 不变。
+  硬件路径是签名固件先打开 `FEAT_OVR_PLM (0x00823804)`，再写
+  `SS0 (0x0082381c)=0x88888888`、`SS1 (0x00823820)=0x8`。
+- GB202 沿用相同 feature cluster：只读采样得到
+  `FEAT_OVR_PLM=0xfffffb8f`、`FEAT_READOUT_1=0x00c36180`、
+  `SS0=0x73766047`、`SS1=0x00077005`。readout 九字段为
+  `0 0 6 0 6 6 0 6 0`，其中字段 2/4/5/7 对应
+  `FMLA32/IMLA1/IMLA2/IMLA4`，值为 RM selector `2*3`。
+- 所有 SS0/SS1 override-enable 位仍为 0，说明 5090 当前跑的是 fuse/default
+  限速；PLM 低字节仍为 `0x8f`。下一步需要 Blackwell 自己的签名 SEC2/payload
+  路径，不能直接套用 Ada V67。完整证据、原始值和 QMMA.SF 对照见
+  [`notes/sm120/gsp_issue_rate.md`](../notes/sm120/gsp_issue_rate.md)。
