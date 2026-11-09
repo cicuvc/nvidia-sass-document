@@ -18,7 +18,7 @@ change between Hopper (sm_90) and Blackwell (sm100)?
 (Empirical Blackwell-SASS corroboration is still TODO — no cuobjdump vectors
 mined yet.)
 
-See the sm_90 note `notes/sm90/arch/control_codes.md` for the full derivation of
+See the general note `notes/CONTROL_CODES.md` for the full derivation of
 each field; this note only records the sm100 delta.
 
 ## TL;DR — byte-for-byte identical control word
@@ -117,4 +117,3 @@ special GMMA-scoreboard citizen.
 - How is `UTCBAR` ordered relative to the standard scoreboard release on `UTC*`  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
   ops (is the wait mask sufficient, or is `UTCBAR` mandatory between dependent
   MMAs)? — track in `arch/tcgen05.md`.
-

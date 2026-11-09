@@ -1,13 +1,13 @@
-# YIELD — Warp-scheduler yield hint
+# YIELD — Warp-scheduler yield hint (sm120)
 
 <!-- notes-status -->
 **Status:** active  
-**Evidence:** mixed  
+**Evidence:** sm120-silicon  
 **Tier confidence:** medium  
 **Last verified:** 2026-09  
-**Probe:** not recorded in this note  
+**Probe:** `tests/asm_construct/test_yield.py` on RTX 5090 (GB202, sm120)  
 **Open items:** 1 open item(s)  
-**Audit:** `tools/notes_audit.py` · basis: lives under notes/sm90/; no part named, so the default measurement site sm120 is assumed
+**Audit:** `tools/notes_audit.py` · basis: explicit SM120 runtime verification; sm90 compiler/corpus material is contextual evidence
 
 ## Conclusion
 
@@ -143,4 +143,3 @@ intra-warp group switch; that control bit governs inter-warp scheduling instead.
 - The exact scheduler policy (how strongly/for how long YIELD deprioritizes the warp, and  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   its interaction with the control-word `stall`/`usched_info` bits) is not exposed by the
   spec — only that YIELD is the explicit yield op on the CBU pipe.
-

@@ -36,11 +36,11 @@ interpreting, and measuring* project on top of raw ISA dumps.
 | `sassdbg/` | Runtime SASS debugger: instruction tracing, cuobjdump→dialect lifting, breakpoints via device-side patching, multi-warp/multi-CTA stepping, reverse execution, CLI, on-demand command injection, per-warp private heap code. |
 | `semu/` | C++20 sm_120 SASS behavioral simulator (cubin loader + CPU interpreter). See `semu/AGENTS.md`. |
 | `launchprobe/` | CUDA kernel-launch protocol RE: intercepts driver↔GPU traffic (`libnvtrace.so`) and hand-builds QMD/command segments to launch cubins entirely from userspace. See `launchprobe/CONTEXT.md` + `NOTES.md`. |
-| `notes/sm90/` | Hopper: 171 per-instruction docs (`instr/`) + 34 cross-cutting arch notes (`arch/`). |
+| `notes/sm90/` | Hopper: 207 per-instruction docs (`instr/`) + 35 cross-cutting arch notes (`arch/`). |
 | `notes/sm100/`, `notes/sm103/` | Blackwell datacenter: instruction notes, tcgen05/wgmma successor analysis, RF bank probe, `sm100/OVERVIEW.md` change summary. |
 | `notes/sm120/` | GB202 (RTX 5090) microarchitecture campaign: pipeline topology, per-pipe latencies, RF banks/writeback, scheduler yield cost, L2 slices, icache, LSU/MIO/XU topology. |
 | `notes/sm89/`, `notes/sm80/`, `notes/sm70/` | Ada/Ampere scalar-math pipeline characterization + register banks; Volta register banks. |
-| `notes/ARCH_DIFF.md`, `notes/CUBIN_STRUCTURE.md`, `notes/DEVICE_PRINT.md` | Cross-arch encoding diffs, cubin ELF format spec, device printf notes. |
+| `notes/ARCH_DIFF.md`, `notes/CONTROL_CODES.md`, `notes/CUBIN_STRUCTURE.md`, `notes/DEVICE_PRINT.md` | Cross-arch encoding/control-word synthesis, cubin ELF format spec, device printf notes. |
 | `tests/` | 218 CUDA (`.cu`) kernels that force specific SASS encodings + 286 assembler round-trip / GPU probes (`tests/asm_construct/`). |
 | `ASSEMBLER_MANUAL.md` | Full assembler syntax, scheduling brackets, and usage. |
 
@@ -64,6 +64,7 @@ python3 tools/query_sm90.py layout <class>    # 128-bit field map
 python3 tools/query_sm90.py opcode <hex|0b|int>
 python3 tools/query_sm90.py enum <Name>       # modifier value map
 python3 tools/query_sm90.py pipe <MNEMONIC>   # functional-unit membership
+python3 tools/sm90_evidence_inventory.py --write  # sm120 evidence embedded in notes/sm90
 ```
 
 `tools/decode_<mnem>.py` are minimal per-instruction decoders: extract fields
@@ -126,7 +127,7 @@ write-set trace (`sassdbg/wtrace.py` + `sassdbg/reverse.py`).
 | --- | --- |
 | sm_90 (Hopper) | 197/207 compute instructions documented; 171 instr + 34 arch notes; 113 decoders validated on cuobjdump vectors |
 | sm100/sm_103 (Blackwell DC) | 21 instr + 10 arch notes; sm_90→sm100 change analysis (`OVERVIEW.md`); B300 assembler target + RF probe |
-| sm_120 (GB202) | Microarchitecture campaign: pipe topology/latency map, RF banks, scheduler/yield, memory hierarchy; 3 instr + 2 arch notes + 20 topic notes |
+| sm_120 (GB202) | Microarchitecture campaign: pipe topology/latency map, RF banks, scheduler/yield, memory hierarchy; 158 instruction notes plus architecture/topic notes |
 | sm_80 / sm_89 | Scalar-math pipeline structure measured end-to-end (per-pipe rates, conflict matrices, scheduler quirks, FP64 placement) |
 | sm_70 / sm_75 | Encoding DBs + register-bank notes; Volta assembly probes |
 | sassdbg | Milestones M1–M11 complete (trace, lift, breakpoints, multi-warp, stepper, reverse, CLI, command injection, warp-private code) |

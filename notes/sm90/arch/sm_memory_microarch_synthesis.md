@@ -15,7 +15,8 @@ Consolidated picture of the SM-internal memory path: what is **established**
 (directly measured, reproducible), what is **inferred** (model fits, mechanism
 unproven), and what is **open**. Sources: `lsu_mio_structure.md` (MIO/arbiter,
 scoreboards), `memory_order_cta.md` (single-arbiter coherence), `scoreboards.md`,
-`control_codes.md`, `async_proxy.md` (two data movers), `notes/sm120/encoding-addressing.md`
+[`../../CONTROL_CODES.md`](../../CONTROL_CODES.md), `async_proxy.md` (two data movers),
+`notes/sm120/encoding-addressing.md`
 (encoding substrate), `shared_bank_conflicts.md` (LDGSTS/L1TEX model — the
 primary source for §2–§4 below).
 Tests: `tests/bankconf/*`, `arch/l1tex/*` (probe + regress + datasets),
@@ -29,7 +30,8 @@ Tests: `tests/bankconf/*`, `arch/l1tex/*` (probe + regress + datasets),
   explains CTA-scope strong-op coherence without fences
   (`memory_order_cta.md`).
 - Issue is in-order per SMSP until stall/throttle/warp-swap/scoreboard block.
-- Scoreboard discipline (`scoreboards.md`, `control_codes.md`):
+- Scoreboard discipline (`scoreboards.md`,
+  [`../../CONTROL_CODES.md`](../../CONTROL_CODES.md)):
   - **Stores are fire-and-forget**: `wr_sb=7` (no completion scoreboard); the
     warp never waits for global visibility.
   - Store source register read is **deferred past issue** (`rd_sb` taken);

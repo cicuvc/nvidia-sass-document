@@ -12,7 +12,8 @@
 ## Conclusion
 
 Consolidates how the 6 scoreboards work, refining the widely-known Volta+ model.
-Cross-refs: `control_codes.md` (field layout), `usched_latency.md`
+Cross-refs: [`../../CONTROL_CODES.md`](../../CONTROL_CODES.md) (field layout),
+`usched_latency.md`
 (fixed-latency stalls), `../instr/f2i.md`, `../instr/depbar.md`.
 
 ## The baseline model (correct)
@@ -101,7 +102,7 @@ flagged as missing its `req`.  A partial drain contributes only a count fact
 (in-flight upper bound `ub[SBn] ≤ m`), which a separate count lattice uses for
 tally-capacity checks, not for data-dependency clearance.
 
-## Field recap (per `control_codes.md`)
+## Field recap (per [`../../CONTROL_CODES.md`](../../CONTROL_CODES.md))
 `req_bit_set`[121:116] · `src_rel_sb`[115:113] · `dst_wr_sb`[112:110]
 (`VarLatOperandEnc`, 7=none). `DEPBAR.LE`: `sbidx`[46:44], `cnt`[43:38],
 `scoreboard_list`[37:32].
@@ -171,4 +172,3 @@ necessary for the scoreboard, not identical to it.
   JSON DB); the sm120 raw dump is not on hand, and nvcc-emitted SASS for
   DECOUPLED ops (`ATOM`/`LDG`/…) shows `wr`/`rd`/`req` scoreboard fields, so the
   VQ side is inferred, not yet verified from a sm120 text dump.
-

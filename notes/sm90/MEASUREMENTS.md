@@ -117,7 +117,7 @@ visible in review.
 | [`ucgabar_get.md`](instr/ucgabar_get.md) | `udp_pipe` | 1 | `0x15c7` | _no_ |
 | [`ucgabar_set.md`](instr/ucgabar_set.md) | `udp_pipe` | 1 | `0x13c7` | _no_ |
 | [`ucgabar_wait.md`](instr/ucgabar_wait.md) | `udp_pipe` | 1 | `0x1dc7` | _no_ |
-| [`uclea.md`](instr/uclea.md) | `udp_pipe` | 2 | `0x18bc`, `0x1cbc` | _no_ |
+| [`uclea.md`](../sm120/instr/uclea.md) | `udp_pipe` | 2 | `0x18bc`, `0x1cbc` | [`sm120/instr/uclea.md`](../sm120/instr/uclea.md) |
 | [`uf2fp.md`](instr/uf2fp.md) | `udp_pipe` | 5 | `0x12ba`, `0x14ba`, `0x18ba` | _no_ |
 | [`uflo.md`](instr/uflo.md) | `udp_pipe` | 2 | `0x12bd`, `0x18bd` | _no_ |
 | [`uiadd3.md`](instr/uiadd3.md) | `udp_pipe` | 4 | `0x1290`, `0x1890` | _no_ |

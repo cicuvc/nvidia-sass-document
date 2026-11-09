@@ -30,7 +30,7 @@ across all three architectures. Verified by compiling & disassembling on SM120 h
 
 ## 2. Control word / stall count encoding
 
-From `notes/sm90/arch/control_codes.md` — confirmed working on SM120:
+From `notes/CONTROL_CODES.md` — confirmed working on SM120:
 
 | Field | Bits | Width | Semantics |
 |-------|------|------:|-----------|
@@ -305,4 +305,3 @@ predicated branch, fall-through lanes by executing the join in-line). The BSSY
 - Why `#pragma unroll 0` is ignored on SM120 PTXAS  <!-- open-question: open blocked-by "blocker (inferred): needs a toolchain run (ptxas/nvcc/cuobjdump) or assembler support" -->
 - SM120 constant bank 0 preset region layout (differs from SM90)  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 - `MOV64I` vs `LDC.64` provenance requirement for STG addresses  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
-

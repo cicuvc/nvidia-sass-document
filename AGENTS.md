@@ -10,10 +10,10 @@ Both are grep-first: never `Read` them whole. Use `grep -n` to locate a section,
 
 ### Current state
 - **197/207** compute instructions documented (notes + decoder + test kernel). Only `F2FP` and `RTT` remain unchecked.
-- **1326 notes** (`notes/`, 1.57M words) — per-architecture compute-instruction references in `notes/sm<NN>/instr/` (sm70 63, sm75 99, sm80 107, sm89 112, sm90 209, sm100 169, sm103 163, sm107 160, sm120 155) plus the cross-cutting notes under `notes/sm<NN>/arch/` and 3 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
+- **1329 notes** (`notes/`, 1.58M words) — per-architecture compute-instruction references in `notes/sm<NN>/instr/` (sm70 63, sm75 99, sm80 107, sm89 112, sm90 207, sm100 169, sm103 163, sm107 160, sm120 158) plus the cross-cutting notes under `notes/sm<NN>/arch/` and 4 top-level docs. Counts and per-note status are **generated**; read `notes/AUDIT_BASELINE.md` or run `python3 tools/notes_audit.py`.
 - **109 decoders** (`tools/decode_*.py`) — one per documented instruction, each validated against real cuobjdump vectors.
 - **177 CUDA kernels** (`tests/*.cu`) + **87 assembler/round-trip tests** (`tests/asm_construct/test_*.py`) that build SASS by hand, load it through `assembler/`, and run it on a GPU.
-- **124 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, `hmma_model.py`, shared libs).
+- **125 tool scripts** total in `tools/` (incl. `parse_sm90.py`, `query_sm90.py`, decoders, `hmma_model.py`, shared libs).
 
 ### Current work
 The repo now also ships a **working SASS assembler + GPU runner** (`assembler/`,
@@ -842,7 +842,7 @@ Assembler fixes made for M2 (all covered by the corpus round-trip +
 ## Documentation workflow (current effort)
 Goal: write a per-instruction reference doc for every **compute** SASS instruction. Split across sessions.
 - Scope: every **compute** SASS instruction (197/207 done). Texture/surface/graphics instructions and pseudo/lowered opcodes are intentionally excluded. Shape/width/uniform/extended variants collapse to one instruction, so their docs may be consolidated.
-- `notes/sm90/instr/*.md` — per-instruction reference docs (171). `notes/sm90/arch/*.md` — cross-cutting topic notes (37: `scoreboards`, `memory_model`, `cbu_state`, `iswz`, `hmma_pipeline`, `div`, `fp64_control`, `tma_mbarrier`, `tensorcore_microarch_speculation`, `wgmma`, `control_codes`, `usched_latency`, `ldc_admode`, `tcgen05_vs_wgmma`, `encoding_classification`, …). Each records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions.
+- `notes/sm90/instr/*.md` — per-instruction reference docs (207). `notes/sm90/arch/*.md` — cross-cutting topic notes (35: `scoreboards`, `memory_model`, `cbu_state`, `iswz`, `hmma_pipeline`, `div`, `fp64_control`, `tma_mbarrier`, `tensorcore_microarch_speculation`, `wgmma`, `usched_latency`, `ldc_admode`, `tcgen05_vs_wgmma`, `encoding_classification`, …). Cross-ISA syntheses such as [`CONTROL_CODES.md`](CONTROL_CODES.md) live at the top level. Each note records: spec-grounded facts, external-reference reconciliation, empirical corroboration (cuobjdump mining), and open questions.
 - `sm90.json` is gitignored/regenerable.
 
 ### Note conventions (enforced — read before editing or adding a note)
@@ -888,7 +888,14 @@ python3 tools/notes_audit.py --check            # non-zero exit on convention vi
 python3 tools/notes_audit.py --tiers --undated  # proposed tiers / missing dates
 python3 tools/notes_audit.py --json out.json --write-baseline notes/AUDIT_BASELINE.md
 python3 tools/notes_migrate.py --status --sections --ledger [--apply]   # idempotent
+python3 tools/sm90_evidence_inventory.py --write  # sm120 evidence embedded in sm90 notes
+python3 tools/sm90_evidence_inventory.py --check  # fail when the generated inventory is stale
 ```
+
+`notes/sm90/SM120_EVIDENCE.md` and `notes/sm90/sm120_evidence.json` separate the
+directory's target ISA (`sm90`) from the silicon hosts that supplied its evidence.  The
+ledger records status-tier confidence, exact sm120 verification headings/prose lines,
+status-only assumptions with no locatable evidence, and cross-reference-only mentions.
 
 `notes/notes_status_overrides.json` holds the hand-confirmed tiers where the note text
 does not pin the measurement host; `notes/AUDIT_BASELINE.md` is the frozen pre-cleanup

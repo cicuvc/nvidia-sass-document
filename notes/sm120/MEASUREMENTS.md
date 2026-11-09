@@ -16,7 +16,7 @@ visible in review.
 | compute mnemonics | 155 |
 | variants in the dump (all types) | 1414 |
 | mnemonics in the dump (all types) | 259 |
-| mnemonics with a measured note somewhere | 88 |
+| mnemonics with a measured note somewhere | 89 |
 
 <!-- generated:isa-notes:begin -->
 ## Queue
@@ -118,7 +118,7 @@ visible in review.
 | [`ucgabar_get.md`](instr/ucgabar_get.md) | `udp_pipe` | 1 | `0x15c7` | [`sm90/instr/ucgabar_get.md`](../sm90/instr/ucgabar_get.md) |
 | [`ucgabar_set.md`](instr/ucgabar_set.md) | `udp_pipe` | 1 | `0x13c7` | [`sm90/instr/ucgabar_set.md`](../sm90/instr/ucgabar_set.md) |
 | [`ucgabar_wait.md`](instr/ucgabar_wait.md) | `udp_pipe` | 1 | `0x1dc7` | _no_ |
-| [`uclea.md`](instr/uclea.md) | `udp_pipe` | 2 | `0x18bc`, `0x1cbc` | _no_ |
+| [`uclea.md`](instr/uclea.md) | `udp_pipe` | 2 | `0x18bc`, `0x1cbc` | [`sm120/instr/uclea.md`](../sm120/instr/uclea.md) |
 | [`uf2f.md`](instr/uf2f.md) | `udp_pipe` | 6 | `0x125b`, `0x185b` | _no_ |
 | [`uf2fp.md`](instr/uf2fp.md) | `udp_pipe` | 22 | `0x12ba`, `0x14ba`, `0x18ba` | [`sm90/instr/uf2fp.md`](../sm90/instr/uf2fp.md) |
 | [`uf2i.md`](instr/uf2i.md) | `udp_pipe` | 12 | `0x125c`, `0x185c` | _no_ |

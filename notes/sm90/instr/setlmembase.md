@@ -5,9 +5,9 @@
 **Evidence:** sm90-silicon  
 **Tier confidence:** high  
 **Last verified:** 2026-08  
-**Probe:** not recorded in this note  
+**Probe:** local-memory base-switch probe on H20 (sm90)  
 **Open items:** 2 open item(s)  
-**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
+**Audit:** `tools/notes_audit.py` · basis: explicit H20 silicon verification
 
 ## Conclusion
 
@@ -52,9 +52,9 @@ INSTRUCTION_TYPE: `INST_TYPE_DECOUPLED_RD_SCBD`, VIRTUAL_QUEUE: `$VQ_ADU`.
 
 ## H20 silicon verification and correction (2026-08)
 
-The full switch experiment now passes on both H20 / sm_90 and RTX 5090 /
-sm_120. On H20, switching `A → B → A → B` made the same local address alternate
-between two independent backing words. Every one of these checks passed 32/32:
+The full switch experiment passes on H20 / sm90. Switching `A → B → A → B`
+made the same local address alternate between two independent backing words.
+Every one of these checks passed 32/32:
 
 - `GETLMEMBASE` immediately reported `B`;
 - an `STL` under `B` was visible through the transformed global VA in `B`;
@@ -64,16 +64,17 @@ between two independent backing words. Every one of these checks passed 32/32:
 
 The earlier text here claimed that hand-built cubins could not exercise
 `LDL`/`STL` and that modern ptxas spills used `LDG`/`STG`. Both claims were
-incorrect: the newer probe forms the ABI local address correctly, and sm_120
-ptxas emits real `LDL`/`STL` for register spills. The previous faults reflected
-an invalid address/context assumption, not unsupported instructions.
+incorrect: the newer probe forms the ABI local address correctly. The previous
+faults reflected an invalid address/context assumption, not unsupported
+instructions.
 
 This establishes the backing-base side effect on real sm_90 silicon. The exact
 state scope under divergent execution is still open; all lanes in the test warp
 executed the SET convergently.
 
-See the dedicated [sm_120 SETLMEMBASE note](../../sm120/instr/setlmembase.md)
-and the [full local-memory backing study](../../sm120/arch/local_memory_backing_va.md).
+The sm120-specific result is recorded in
+[`../../sm120/instr/setlmembase.md`](../../sm120/instr/setlmembase.md). See also
+the [full sm120 backing study](../../sm120/arch/local_memory_backing_va.md).
 
 ## History / retracted hypotheses
 
@@ -83,4 +84,3 @@ and the [full local-memory backing study](../../sm120/arch/local_memory_backing_
 ## Open questions
 - Real cuobjdump text form unconfirmed.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 - Shares `SETCTAID`'s `VQ_ADU` queue — possibly used during kernel prologue.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
-

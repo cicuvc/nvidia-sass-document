@@ -188,11 +188,11 @@ retirement FIFO.
   (see `TABLE_TRUE(GMMA_GROUP_SCOREBOARD)` = 3).
 
 ## Cross-notes
-- `../arch/control_codes.md`: the only non-zero `batch_t` ptxas ever emits
+- [`../../CONTROL_CODES.md`](../../CONTROL_CODES.md): the only non-zero `batch_t` ptxas ever emits
   (`BARRIER_EXEMPT=5`) appears **exclusively on DEPBAR** in cuBLAS/cuBLASLt —
   marking the drain exempt from the batch/issue barrier accounting.
 - Contrasts with the `req_bit_set` mask (binary, per-instruction) documented in
-  `../arch/control_codes.md`: DEPBAR is the *counted* superset used when partial
+  [`../../CONTROL_CODES.md`](../../CONTROL_CODES.md): DEPBAR is the *counted* superset used when partial
   draining is required.
 
 ## Evidence
@@ -260,4 +260,3 @@ batch latency rather than `(n-imm)` distinct steps.
   outstanding LDGSTS groups a scoreboard can track).
 - `depbar_ur_` dynamic-count use: which PTX (`cp.async.wait_group` with a runtime  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   operand?) emits the uniform-register count form `0x1d1a`.
-

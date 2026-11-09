@@ -177,6 +177,7 @@ NON_NOTE_FILES = {
     "AUDIT_BASELINE.md",
     "notes_status_overrides.json",
     "OPEN_QUESTIONS.md",
+    "sm90/SM120_EVIDENCE.md",
     "sm120/measurements_index.md",
 }
 #: Basenames that are generated ledgers for *every* architecture, so they are matched by

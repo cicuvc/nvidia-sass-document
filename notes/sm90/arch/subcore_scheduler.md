@@ -70,7 +70,8 @@ That is a clean verification of **both** claims.
   here it is measured directly as a scheduling interaction, not inferred
   from bandwidth.
 - **Yield = "switch next cycle".**  The bracket `yield` bit is the `usched`
-  bit4 selector (see `control_codes.md`, `usched_latency.md`):
+  bit4 selector (see [`../../CONTROL_CODES.md`](../../CONTROL_CODES.md),
+  `usched_latency.md`):
   * `yield=1` → `WnEG` (bit4=0): group-end / "the next instruction may go to
     another warp" — the scheduler is free to switch.  A co-resident ready
     warp takes the slot.
@@ -125,4 +126,3 @@ Probe scripts used during development (not committed): `/tmp/opencode/probe_subc
 - Whether `DRAIN` (`stall=0`) behaves as a stronger "yield to any warp" than  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   `WnEG` (its 34-cycle solo penalty suggests a full pipe drain, not just an
   issue-slot handoff).
-

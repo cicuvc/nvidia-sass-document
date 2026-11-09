@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Analyse ptxas `.reuse` usage in cuobjdump SASS against the SM120 reuse-cache
-model (notes/sm90/arch/control_codes.md runtime semantics):
+model (notes/CONTROL_CODES.md runtime semantics):
 
   1. RMW hazard: is a `.reuse` register ever ALSO a destination of the same
      instruction?  (Our experiments show this serves stale data -> ptxas

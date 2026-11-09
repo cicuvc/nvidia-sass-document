@@ -59,7 +59,8 @@ Modifier print order: `NANOSLEEP{.RAND}{.WARP}{.SYNCS}`.
 | pipe | cbu | cbu | cbu | mio |
 
 All three cbu ops (`NANOSLEEP`/`YIELD`/`BSYNC`) express "I'm waiting"; NANOSLEEP is the only
-*timed* one and pairs with a spin loop the same way YIELD does (see `yield.md`).
+*timed* one and pairs with a spin loop the same way YIELD does (see
+[`../../sm120/instr/yield.md`](../../sm120/instr/yield.md)).
 
 ## Latency
 `cbu_pipe` = `BRU_OPS`; `DECOUPLED_BRU`, `MIN_WAIT_NEEDED=1`. Both an **`RPC_WRITERS`**
@@ -110,4 +111,3 @@ required for the handoff itself.
   spec-stated.
 - `.CLEAR` semantics (which pending sleep it cancels, and how it is emitted from C) is  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   unverified — only the encoding/rendering is confirmed via patch.
-

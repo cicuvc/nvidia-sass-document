@@ -54,14 +54,16 @@ RTX 5090, and the repo's SASS assembler (`assembler/`, arch=sm120) unless stated
 | `fp64_redirect_latency.md` | FP64/CLMAD redirected completion: layout-dependent unsafe visibility and the required event/scoreboard simulator model |
 | `instr/getlmembase.md` | Silicon semantics of the warp-local backing base and its role in the local-address → device-VA transform |
 | `instr/setlmembase.md` | Silicon proof that SETLMEMBASE redirects subsequent LDL/STL backing accesses |
+| `instr/uclea.md` | sm120-only arithmetic semantics: fixed ×64 scale plus offset; `constSize` and `UPu` had no observable effect |
+| `instr/yield.md` | sm120 runtime forward-progress behavior and the one-shot execution-group handoff boundary |
 | `notes/sm120/l2_slice_probe.md` | Attempts to count L2 slices on GB202; single-L2-backend evidence |
 
 ## Per-instruction sm_120 reference (`instr/`)
 
 `instr/` now holds one note per **compute** mnemonic whose sm_120 form differs from the
-sm_90 dump, plus every Blackwell-only compute mnemonic: **105 notes**, generated from
-`sm120_instructions.txt` by `tools/sm120_notes_gen.py` (re-run it after a parser change;
-`--check` fails when the tree is stale). Each note carries the CLASS list, FORMAT-derived
+sm_90 dump, plus every Blackwell-only compute mnemonic: **158 notes**, mostly generated
+from `sm120_instructions.txt` by `tools/isa_coverage.py`; hand-maintained notes take
+precedence. Each note carries the CLASS list, FORMAT-derived
 operand shapes, the 128-bit ENCODING map, PROPERTIES, legal-encoding conditions, pipe
 membership, how many committed fixture cubins use the mnemonic, and where its sm_120
 measurements live.
@@ -87,10 +89,16 @@ one authoritative copy.
 
 Consolidated per-instruction register: see **`silver-status.md`**.
 Rationale and run matrix: `notes/sm90/arch/sm90_resilver_audit.md`.
+Section-level inventory of sm120 evidence still living under `notes/sm90/`:
+[`notes/sm90/SM120_EVIDENCE.md`](../sm90/SM120_EVIDENCE.md), with machine-readable
+line locations in [`notes/sm90/sm120_evidence.json`](../sm90/sm120_evidence.json).
+Regenerate both with `python3 tools/sm90_evidence_inventory.py --write`.
 
 Rules of thumb for what stays in `notes/sm90/…` vs moves here:
 
-- Mechanism exists in both ISAs, evidence only from the 5090 → keep the note under
-  `sm90/` (it documents an sm_90 ISA object), tag the section's evidence as
-  "(silicon: SM120)", and record it in `silver-status.md` until re-tested.
-- The instruction/format/ABI item does not exist at all on sm_90 → document it here.
+- The concrete semantic claim has only been measured on sm120 → keep the
+  authoritative note here, even when the mnemonic also exists on sm90.
+- Both sm90 and sm120 have independent silicon evidence → keep one
+  architecture-specific note in each directory, linked to its counterpart.
+- A cross-architecture synthesis with no single target ISA belongs in a
+  top-level `notes/*.md` document instead of an architecture subtree.

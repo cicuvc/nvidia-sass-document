@@ -11,6 +11,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | note | evidence | tier confidence | last verified | status |
 |---|---|---|---|---|
 | `ARCH_DIFF.md` | spec | high | 2026-09 | active |
+| `CONTROL_CODES.md` | sm90+sm120-silicon | high | 2026-08 | active |
 | `CUBIN_STRUCTURE.md` | sm90+sm120-silicon | high | 2026-09 | active |
 | `DEVICE_PRINT.md` | sm120-silicon | medium | 2026-09 | active |
 | `sm100/OVERVIEW.md` | spec | high | 2026-09 | active |
@@ -21,6 +22,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm100/arch/b200_mio_admission_depth.md` | sm100-silicon | high | 2026-09 | active |
 | `sm100/arch/control_codes.md` | spec | high | 2026-09 | active |
 | `sm100/arch/mercury_capmerc.md` | sm100-silicon | medium | 2026-09 | active |
+| `sm100/arch/tcgen05_alloc_exclusive.md` | sm100+sm103-silicon | high | 2026-09-25 | active |
 | `sm100/arch/tcgen05_descriptors.md` | sm100-silicon | medium | 2026-09 | active |
 | `sm100/arch/tcgen05_microarch_speculation.md` | sm100-silicon | medium | 2026-09 | active |
 | `sm100/arch/tcgen05_multiwarp_allocator_v1.md` | sm100-silicon | high | 2026-09-17 | active |
@@ -539,6 +541,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm120/fp16_latency.md` | sm120-silicon | high | 2026-09-16 | active |
 | `sm120/fp64_redirect_latency.md` | sm120-silicon | high | 2026-09-17 | active |
 | `sm120/gb202_compute_pipelines.md` | sm120-silicon | high | 2026-09-21 | active |
+| `sm120/gsp_issue_rate.md` | sm120-silicon | high | 2026-10-26 | active |
 | `sm120/icache_topology.md` | sm120-silicon | high | 2026-09-21 | active |
 | `sm120/index.md` | mixed | medium | 2026-09 | historical |
 | `sm120/indexed_rf_topology.md` | sm120-silicon | high | unknown | active |
@@ -567,6 +570,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm120/instr/fset.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fsetp.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/fswzadd.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/getlmembase.md` | sm120-silicon | high | 2026-08 | active |
 | `sm120/instr/hadd2.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/hadd2_32i.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/hfma2.md` | spec | high | unknown (ISA dump, not a probe) | active |
@@ -620,6 +624,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm120/instr/rpcmov.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/s2ur.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/sel.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/setlmembase.md` | sm120-silicon | high | 2026-08 | active |
 | `sm120/instr/sgxt.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/shf.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/shl.md` | spec | high | unknown (ISA dump, not a probe) | active |
@@ -637,7 +642,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm120/instr/ucgabarget.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ucgabarset.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/ucgabarwait.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm120/instr/uclea.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/uclea.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm120/instr/uf2f.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uf2fp.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/uf2i.md` | spec | high | unknown (ISA dump, not a probe) | active |
@@ -697,6 +702,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm120/instr/vimnmx.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/vote.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm120/instr/voteu.md` | spec | high | unknown (ISA dump, not a probe) | active |
+| `sm120/instr/yield.md` | sm120-silicon | medium | 2026-09 | active |
 | `sm120/instr_verification_backlog.md` | sm120-silicon | medium | unknown | active |
 | `sm120/l2_slice_probe.md` | sm120-silicon | high | 2026-09 | active |
 | `sm120/mio_lsu_xu_topology.md` | sm120-silicon | high | 2026-09-14 | active |
@@ -1094,7 +1100,6 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/arch/async_proxy.md` | sm120-silicon | low | unknown | active |
 | `sm90/arch/cache_descriptor.md` | sm120-silicon | medium | unknown | active |
 | `sm90/arch/cbu_state.md` | sm120-silicon | low | 2026-09 | active |
-| `sm90/arch/control_codes.md` | sm90-silicon | high | 2026-08 | active |
 | `sm90/arch/cubin_elf.md` | sm120-silicon | low | unknown | active |
 | `sm90/arch/cutensormap.md` | sm120-silicon | medium | unknown | active |
 | `sm90/arch/div.md` | sm120-silicon | low | unknown | active |
@@ -1274,7 +1279,7 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/stas.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/stg.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/stl.md` | sm120-silicon | low | unknown | active |
-| `sm90/instr/sts.md` | sm90-silicon | medium | unknown | active |
+| `sm90/instr/sts.md` | sm90+sm120-silicon | medium | unknown | active |
 | `sm90/instr/stsm.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/syncs.md` | sm120-silicon | medium | unknown | active |
 | `sm90/instr/ublkcp.md` | sm120-silicon | medium | unknown | active |
@@ -1290,7 +1295,6 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/ucgabarget.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/ucgabarset.md` | spec | high | unknown (ISA dump, not a probe) | active |
 | `sm90/instr/ucgabarwait.md` | spec | high | unknown (ISA dump, not a probe) | active |
-| `sm90/instr/uclea.md` | mixed | medium | 2026-08 | active |
 | `sm90/instr/uf2fp.md` | sm120-silicon | low | unknown | active |
 | `sm90/instr/uflo.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/uiadd3.64.md` | spec | high | unknown (ISA dump, not a probe) | active |
@@ -1333,5 +1337,4 @@ derivable from the note text, so the row is a pointer to be confirmed, not proof
 | `sm90/instr/vote.md` | sm120-silicon | medium | 2026-08 | active |
 | `sm90/instr/voteu.md` | sm90+sm120-silicon | high | 2026-08 | active |
 | `sm90/instr/warpsync.md` | sm120-silicon | low | 2026-08 | active |
-| `sm90/instr/yield.md` | mixed | medium | 2026-09 | active |
 <!-- ledger:generated:end -->

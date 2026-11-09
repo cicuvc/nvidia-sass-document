@@ -170,7 +170,7 @@
     "sm90/instr/pmtrig.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-08", "note": "heading: Verified encodings (sm_90 == sm_120)."},
     "sm90/instr/up2ur.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-08", "note": "banner: byte-exact vectors from sm_120, semantics halves passed on H20."},
     "sm90/instr/voteu.md": {"tier": "sm90+sm120-silicon", "confidence": "high", "date": "2026-08", "note": "banner: sm_120 vectors plus H20 semantics."},
-    "sm90/instr/yield.md": {"tier": "mixed", "confidence": "medium", "date": "2026-09", "note": "sm_120 measurement plus an H20 FAILURE (test_yield): do not read as dual-verified."},
+    "sm120/instr/yield.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-09", "note": "runtime forward-progress behavior measured on RTX 5090; H20 failed the same test and is not claimed as verified."},
 
     "sm70/register_banks.md": {"tier": "sm70-silicon", "confidence": "high", "date": "2026-09", "note": "V100S controlled SASS experiment."},
     "sm80/register_banks.md": {"tier": "sm80-silicon", "confidence": "high", "date": "2026-09", "note": "A100 (A100-SXM4-40GB) measurement."},
@@ -193,7 +193,7 @@
     "sm90/instr/mov.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "indexed-RF claim silicon-verified on sm_120 (notes/sm120/indexed_rf_topology.md)."},
     "sm90/instr/ldsm.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "address model silicon-verified SM120."},
     "sm90/instr/nanotrap.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "TRAP_RETURN_PC / RTT findings verified on SM120."},
-    "sm90/instr/uclea.md": {"tier": "mixed", "confidence": "medium", "date": "2026-08", "note": "banner: em-window measured on RTX 5090, sm_90 spec constrains the immediates -> not sm90-verified."},
+    "sm120/instr/uclea.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "concrete arithmetic and constSize behavior measured on RTX 5090; no sm90 runtime result."},
     "sm90/instr/uflo.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_uflo.py)."},
     "sm90/instr/uiadd3.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "Silicon-verified on SM120 (test_uiadd3.py); the plain-variant table is marked unverified."},
     "sm90/instr/uimad.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "sm_120 default behaviour silicon-verified (test_uimad.py)."},
@@ -212,6 +212,8 @@
     "sm90/instr/vimnmx.md": {"tier": "sm120-silicon", "confidence": "medium", "date": "2026-08", "note": "corrected by a silicon-verified sm_120 probe (test_vimnmx.py)."},
     "sm90/instr/getlmembase.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-08", "note": "status line: silicon-verified on H20 (sm_90)."},
     "sm90/instr/setlmembase.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-08", "note": "status line: silicon-verified on H20 (sm_90)."},
+    "sm120/instr/getlmembase.md": {"tier": "sm120-silicon", "confidence": "high", "date": "2026-08", "note": "backing transform and address layout measured on RTX 5090."},
+    "sm120/instr/setlmembase.md": {"tier": "sm120-silicon", "confidence": "high", "date": "2026-08", "note": "base-switch behavior measured on RTX 5090."},
 
     "sm90/arch/h100_icache_loop_replay.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-09", "note": "Modal H100 measurements (plus GB202/B200 controls)."},
     "sm90/arch/h100_fixed_pipeline.md": {"tier": "sm90-silicon", "confidence": "high", "date": "2026-09", "note": "Modal H100 fixed-pipeline measurements."},

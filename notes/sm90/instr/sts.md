@@ -2,12 +2,12 @@
 
 <!-- notes-status -->
 **Status:** active  
-**Evidence:** sm90-silicon  
+**Evidence:** sm90+sm120-silicon  
 **Tier confidence:** medium  
 **Last verified:** unknown  
-**Probe:** not recorded in this note  
+**Probe:** H800 shared-address probe; `tests/asm_construct/test_lds_sts.py` on RTX 5090  
 **Open items:** 3 open item(s)  
-**Audit:** `tools/notes_audit.py` · basis: 'silicon-verified' attestation
+**Audit:** `tools/notes_audit.py` · basis: H800 address-model probe plus explicit SM120 instruction verification
 
 ## Conclusion
 
@@ -144,7 +144,11 @@ All verified against `cuobjdump -arch sm_90 -sass` from `libcublas.so`:
 | `st.shared.v4.u32 [%ra], %rb` | `STS.128 [Ra], Rb` |
 | `__shared__` C++ store | `STS` with computed register address |
 
-## Shared-memory address model — where `Ra` (the base) comes from
+## Shared-memory address model — sm90+ common rule
+
+This address model applies across sm90 and later architectures, including both
+Hopper and sm120.  The H800 measurements below establish the model on sm90; the
+sm120 instruction verification applies the same semantic rule.
 
 The `Ra` address fed to `STS`/`LDS` is **not** loaded from constant memory. Unlike
 the local/stack base (`c[0x0][0x28]`) and the global descriptor (`c[0x0][0x208]`),
@@ -214,4 +218,3 @@ launch; static .nv.shared section with sh_info->.text now allocates the window.)
 - **`sts_uniform_` (URc variant)**: What triggers the uniform register form?  <!-- open-question: answered answered by "§Semantics" in this note -->
 - **Why URc at [69:64] vs LDS's URb at [37:32]?** The bit position difference  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
   is notable — possibly reflects a different micro-architectural pipeline slot.
-

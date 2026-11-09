@@ -1,20 +1,22 @@
-# Control codes — the per-instruction scheduling/control word (sm_90)
+# Control codes — the per-instruction scheduling/control word (sm70+)
 
 <!-- notes-status -->
 **Status:** active  
-**Evidence:** sm90-silicon  
+**Evidence:** sm90+sm120-silicon  
 **Tier confidence:** high  
 **Last verified:** 2026-08  
-**Probe:** Status:** resolved (spec-grounded + empirically confirmed in cublas sm_90  
+**Probe:** sm75/sm80/sm90 instruction dumps and SASS corpora; runtime reuse-cache behavior on RTX 5090 (sm120)  
 **Open items:** 4 open item(s)  
-**Audit:** `tools/notes_audit.py` · basis: Status: line naming hardware
+**Audit:** `tools/notes_audit.py` · basis: general sm70+ control-word synthesis; evidence sites are named per section
 
 ## Conclusion
 
 **Question:** how are the "control codes" (wait mask, read/write scoreboards, PM
 predicate, micro-scheduler info, and operand **reuse** flags) encoded in the
-128-bit sm_90 word, and where do reuse flags actually live?
-**Status:** resolved (spec-grounded + empirically confirmed in cublas sm_90 SASS).
+128-bit control word, and where do reuse flags actually live?
+**Status:** resolved for the Volta-and-later (sm70+) family.  Encoding facts are
+cross-checked against the sm75/sm80/sm90 dumps and SASS corpora; runtime
+reuse-cache behavior is measured on sm120.
 
 Every compute CLASS carries the same trailing control block in its `FORMAT`,
 written as `$(...)$` scheduling groups:
@@ -345,7 +347,8 @@ identity-matched silent fallback that keeps every miss correct.
 The s1∈{4,5} band is a **cache MISS → RF read**, not a forward beating the
 cache:
 
-1. **The float pipe has no writeback forwarding** — `usched_latency.md`:
+1. **The float pipe has no writeback forwarding** —
+   `notes/sm90/arch/usched_latency.md`:
    `FFMA→FFMA` minG == L_table == 4, overlap 0 (only the integer datapath
    bypasses). So at pos2∈{4,5} the fresh value cannot arrive via a forward
    path; it is the RF read of the committed write (writeback at t=4).
@@ -398,7 +401,7 @@ intervening instructions leave it in place.
 
 ## Open questions
 - ~~Exact runtime semantics of `WAITn_END_GROUP` vs `transN`~~ — **resolved** in  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
-  `usched_latency.md`: `eff_stall = usched&0xF` is the issue-to-issue gap
+  `notes/sm90/arch/usched_latency.md`: `eff_stall = usched&0xF` is the issue-to-issue gap
   derived from the `sm_90_latencies.txt` `TABLE_TRUE` matrices; `bit4` is the
   end-group/yield selector (`transN`/bit4=1 = independent successor, keep
   issuing; `WnEG`/bit4=0 + `DRAIN` = dependency stall / group boundary / yield).
@@ -407,4 +410,3 @@ intervening instructions leave it in place.
 - Runtime effect of `BATCH_START/BATCH_START_TILE/BATCH_END` — never emitted by  <!-- open-question: answered answered by "§Empirical batch_t survey (all arches)" in this note -->
   ptxas in surveyed libraries, so semantics remain inferred from the names only.
 - Why `batch_t=3` is encodable (via `opex_0`) yet has no enum name.  <!-- open-question: answered answered by "§BATCH_T semantics — empirical survey" in this note -->
-

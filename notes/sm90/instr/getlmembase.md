@@ -5,9 +5,9 @@
 **Evidence:** sm90-silicon  
 **Tier confidence:** high  
 **Last verified:** 2026-08  
-**Probe:** not recorded in this note  
+**Probe:** `tests/asm_construct/probe_lmem_transform.py` on H20 (sm90)  
 **Open items:** 2 open item(s)  
-**Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm90, sm120)
+**Audit:** `tools/notes_audit.py` · basis: explicit H20 silicon verification
 
 ## Conclusion
 
@@ -50,10 +50,9 @@ INSTRUCTION_TYPE: `INST_TYPE_DECOUPLED_RD_WR_SCBD`, VIRTUAL_QUEUE: `$VQ_UNORDERE
 
 \* Hi64 shows only opcode bit[91]; real scheduling bits are compiler-chosen. Decoder: `tools/decode_lmembase.py`.
 
-## H20 silicon verification and sm120 comparison (2026-08)
+## H20 silicon verification (2026-08)
 
-The same probe now passes on H20 / sm_90 and RTX 5090 / sm_120. For aligned U32
-local accesses on both architectures:
+The hand-assembled probe passes on H20 / sm90. For aligned U32 local accesses:
 
 ```text
 backing_va = GETLMEMBASE(warp)
@@ -73,8 +72,7 @@ lane-0 backing VA       = 0x00003ffffd008000
 
 The direct `STL` → derived-VA `LDG` alias and generic-local `LD` alias both
 matched 32/32 lanes. One CTA with eight warps matched 256/256; adjacent warp
-bases were `0xc800` apart, identical to sm120 for the same `0x640` per-thread
-high-local span.
+bases were `0xc800` apart for the same `0x640` per-thread high-local span.
 
 For H20, the virtual-SM stride was:
 
@@ -82,10 +80,9 @@ For H20, the virtual-SM stride was:
 0x320000 = 2048 thread slots * 0x640 bytes/thread
 ```
 
-This differs from GB202's `0x258000 = 1536 * 0x640`, reflecting the different
-per-SM thread capacity. A 400-CTA run covered all 78 virtual SM IDs. Resident
-256-thread CTA bases used offsets `0`, `0x70800`, `0xe1000`, `0x151800`, i.e.
-0, 9, 18 and 27 warp strides.
+The larger Hopper stride reflects 2048 thread slots per SM. A 400-CTA run
+covered all 78 virtual SM IDs. Resident 256-thread CTA bases used offsets
+`0`, `0x70800`, `0xe1000`, `0x151800`, i.e. 0, 9, 18 and 27 warp strides.
 
 ### Global-alias cache caveat on Hopper
 
@@ -97,15 +94,16 @@ transform was unchanged; this is a cache-alias visibility requirement.
 
 Also, trying to reuse a completed kernel's saved default `GETLMEMBASE` from a
 second kernel faulted with error 700 on H20. Treat the default aperture as
-launch/resident-slot state, not as a persistent cross-kernel pointer. This
-differs from the observed sm120 experiment, where the second-kernel read worked.
+launch/resident-slot state, not as a persistent cross-kernel pointer.
 
 `GETLMEMBASE` also reads back exactly the value installed by `SETLMEMBASE`.
 Multi-warp and multi-CTA results confirm that each warp should obtain its own
 base.
 
-See the dedicated [sm_120 GETLMEMBASE note](../../sm120/instr/getlmembase.md)
-and the [full local-memory backing study](../../sm120/arch/local_memory_backing_va.md).
+The sm120-specific result is recorded in
+[`../../sm120/instr/getlmembase.md`](../../sm120/instr/getlmembase.md).  The
+[full sm120 backing study](../../sm120/arch/local_memory_backing_va.md) also
+contains an H20 replication section.
 
 ## History / retracted hypotheses
 
@@ -115,4 +113,3 @@ and the [full local-memory backing study](../../sm120/arch/local_memory_backing_
 ## Open questions
 - **Unconfirmed** cuobjdump text form (bare `GETLMEMBASE Rd` assumed) and whether the 64-bit pair prints with a `.64` suffix.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
 - Whether any current path (trap handler, driver context save/restore) still issues it.  <!-- open-question: open blocked-by "blocker (inferred): needs a Hopper session (sm_90) -- no local part" -->
-

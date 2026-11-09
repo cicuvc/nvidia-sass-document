@@ -5,7 +5,7 @@
 at the note that produced the number.  Duplicating measurements is what made the notes
 ambiguous to begin with, so read the source note before quoting a figure.
 
-Notes carrying sm_120 silicon evidence: **211**.
+Notes carrying sm_120 silicon evidence: **218**.
 The per-instruction sm_120 notes link back here; see also
 [`notes/sm120/index.md`](index.md) for the architecture notes.
 
@@ -65,6 +65,7 @@ The per-instruction sm_120 notes link back here; see also
 | `FSETP` | `instr/fsetp.md` | [`sm90/instr/fsetp.md`](../sm90/instr/fsetp.md) |
 | `FSWZADD` | `instr/fswzadd.md` | [`sm90/instr/fswzadd.md`](../sm90/instr/fswzadd.md) |
 | `GATHER` | - | [`sm90/instr/gather.md`](../sm90/instr/gather.md) |
+| `GETLMEMBASE` | `instr/getlmembase.md` | [`sm120/instr/getlmembase.md`](../sm120/instr/getlmembase.md) |
 | `HADD2` | `instr/hadd2.md` | [`sm90/instr/hadd2.md`](../sm90/instr/hadd2.md) |
 | `HFMA2` | `instr/hfma2.md` | [`sm90/instr/hfma2.md`](../sm90/instr/hfma2.md) |
 | `HGMMA` | - | [`sm90/instr/hgmma.md`](../sm90/instr/hgmma.md) |
@@ -126,6 +127,7 @@ The per-instruction sm_120 notes link back here; see also
 | `SCATTER` | - | [`sm90/instr/scatter.md`](../sm90/instr/scatter.md) |
 | `SEL` | `instr/sel.md` | [`sm90/instr/sel.md`](../sm90/instr/sel.md) |
 | `SETCTAID` | - | [`sm90/instr/setctaid.md`](../sm90/instr/setctaid.md) |
+| `SETLMEMBASE` | `instr/setlmembase.md` | [`sm120/instr/setlmembase.md`](../sm120/instr/setlmembase.md) |
 | `SETMAXREG` | - | [`sm90/instr/setmaxreg.md`](../sm90/instr/setmaxreg.md) |
 | `SGXT` | `instr/sgxt.md` | [`sm90/instr/sgxt.md`](../sm90/instr/sgxt.md) |
 | `SHF` | `instr/shf.md` | [`sm90/instr/shf.md`](../sm90/instr/shf.md) |
@@ -134,6 +136,7 @@ The per-instruction sm_120 notes link back here; see also
 | `STAS` | - | [`sm90/instr/stas.md`](../sm90/instr/stas.md) |
 | `STG` | - | [`sm90/instr/stg.md`](../sm90/instr/stg.md) |
 | `STL` | - | [`sm90/instr/stl.md`](../sm90/instr/stl.md) |
+| `STS` | - | [`sm90/instr/sts.md`](../sm90/instr/sts.md) |
 | `STSM` | - | [`sm90/instr/stsm.md`](../sm90/instr/stsm.md) |
 | `SYNCS` | - | [`sm90/instr/syncs.md`](../sm90/instr/syncs.md) |
 | `UBLKCP` | `instr/ublkcp.md` | [`sm90/instr/ublkcp.md`](../sm90/instr/ublkcp.md) |
@@ -144,6 +147,7 @@ The per-instruction sm_120 notes link back here; see also
 | `UCGABAR_ARV` | `instr/ucgabar_arv.md` | [`sm90/instr/ucgabar_arv.md`](../sm90/instr/ucgabar_arv.md) |
 | `UCGABAR_GET` | `instr/ucgabar_get.md` | [`sm90/instr/ucgabar_get.md`](../sm90/instr/ucgabar_get.md) |
 | `UCGABAR_SET` | `instr/ucgabar_set.md` | [`sm90/instr/ucgabar_set.md`](../sm90/instr/ucgabar_set.md) |
+| `UCLEA` | `instr/uclea.md` | [`sm120/instr/uclea.md`](../sm120/instr/uclea.md) |
 | `UF2FP` | `instr/uf2fp.md` | [`sm90/instr/uf2fp.md`](../sm90/instr/uf2fp.md) |
 | `UFLO` | `instr/uflo.md` | [`sm90/instr/uflo.md`](../sm90/instr/uflo.md) |
 | `UIADD3` | `instr/uiadd3.md` | [`sm90/instr/uiadd3.md`](../sm90/instr/uiadd3.md) |
@@ -176,11 +180,13 @@ The per-instruction sm_120 notes link back here; see also
 | `VOTE` | `instr/vote.md` | [`sm90/instr/vote.md`](../sm90/instr/vote.md) |
 | `VOTEU` | `instr/voteu.md` | [`sm90/instr/voteu.md`](../sm90/instr/voteu.md) |
 | `WARPSYNC` | - | [`sm90/instr/warpsync.md`](../sm90/instr/warpsync.md) |
+| `YIELD` | `instr/yield.md` | [`sm120/instr/yield.md`](../sm120/instr/yield.md) |
 
 ## Measurements recorded under `notes/other`
 
 | note | evidence | open items | what it holds |
 |---|---|---:|---|
+| `CONTROL_CODES.md` | sm90+sm120-silicon | 1 | - |
 | `CUBIN_STRUCTURE.md` | sm90+sm120-silicon | 0 | - |
 | `DEVICE_PRINT.md` | sm120-silicon | 0 | Test environment |
 | `sm100/instr/acqshminit.md` | sm120-silicon | 1 | - |
@@ -205,8 +211,13 @@ The per-instruction sm_120 notes link back here; see also
 | `sm120/fp16_latency.md` | sm120-silicon | 0 | - |
 | `sm120/fp64_redirect_latency.md` | sm120-silicon | 0 | Cross-check: LSU and XU admission on GB202 (same burst metho |
 | `sm120/gb202_compute_pipelines.md` | sm120-silicon | 0 | Effective bandwidth of the fixed-result bypass; Corrected scalar short-burst depth probe (2026-09-21) |
+| `sm120/gsp_issue_rate.md` | sm120-silicon | 0 | - |
 | `sm120/icache_topology.md` | sm120-silicon | 0 | Probe construction; Tag identity: GPU-VMM alias experiment |
 | `sm120/indexed_rf_topology.md` | sm120-silicon | 0 | - |
+| `sm120/instr/getlmembase.md` | sm120-silicon | 1 | - |
+| `sm120/instr/setlmembase.md` | sm120-silicon | 1 | - |
+| `sm120/instr/uclea.md` | sm120-silicon | 1 | - |
+| `sm120/instr/yield.md` | sm120-silicon | 1 | - |
 | `sm120/instr_verification_backlog.md` | sm120-silicon | 0 | V4 — mnemonics with no sm_120 measurement |
 | `sm120/l2_slice_probe.md` | sm120-silicon | 0 | Why it fails (the finding); Incidental finding worth keeping |
 | `sm120/mio_lsu_xu_topology.md` | sm120-silicon | 0 | A late collector can consume a fixed-pipe result before RF c |
@@ -360,6 +371,7 @@ The per-instruction sm_120 notes link back here; see also
 | `sm90/instr/stas.md` | sm120-silicon | 1 | - |
 | `sm90/instr/stg.md` | sm120-silicon | 1 | - |
 | `sm90/instr/stl.md` | sm120-silicon | 0 | - |
+| `sm90/instr/sts.md` | sm90+sm120-silicon | 1 | - |
 | `sm90/instr/stsm.md` | sm120-silicon | 1 | Matrix layout mode (`mode`) — bit [78], enum `STSM_MODE` |
 | `sm90/instr/syncs.md` | sm120-silicon | 1 | - |
 | `sm90/instr/ublkcp.md` | sm120-silicon | 1 | - |

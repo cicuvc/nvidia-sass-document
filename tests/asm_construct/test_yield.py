@@ -18,7 +18,7 @@ from assembler import assemble, CudaModule
 #   spin loop body = NOP   -> DEADLOCK (kernel never completes; timeout)
 #   spin loop body = YIELD -> COMPLETED (flag=0x1, result=0xDEADBEEF)
 # The hand-built ELF matches ptxas, which auto-inserts YIELD into an empty
-# `while (*flag == 0) {}` spin (see notes/sm90/instr/yield.md).
+# `while (*flag == 0) {}` spin (see notes/sm120/instr/yield.md).
 #
 # The reverse-direction probe asks a separate question: after group A executes
 # ONE YIELD and group B takes over, will A ever be scheduled again if B neither

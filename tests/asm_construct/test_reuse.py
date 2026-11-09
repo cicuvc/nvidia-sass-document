@@ -7,7 +7,7 @@ from assembler import assemble, CudaModule
 #
 # Encoding: the 6th schedule-bracket element is a 3-bit field overloaded as
 # batch_t or the reuse hint {reuse_a=bit0, reuse_b=bit1, reuse_c=bit2}
-# (opex bits [124:122]; see notes/sm90/arch/control_codes.md).  Setting a
+# (opex bits [124:122]; see notes/CONTROL_CODES.md).  Setting a
 # reuse bit on FFMA instruction N marks that register operand's value for the
 # operand-reuse cache; instruction N+1 reading the SAME register in the SAME
 # operand position reads it from the cache instead of the register file.

@@ -16,7 +16,8 @@ qualifier, restricted to: **general proxy, strong ops, `.cta` scope**, on
 `.global` (L1) and `.shared` (SM-local). Complements `memory_model.md` (which
 verifies the spec *fields*); this note records the actual *codegen*.
 Test: `tests/memorder_cta_test.cu` (one named kernel per variant).
-Cross-refs: `scoreboards.md`, `control_codes.md`, `../instr/membar.md`.
+Cross-refs: `scoreboards.md`, [`../../CONTROL_CODES.md`](../../CONTROL_CODES.md),
+`../instr/membar.md`.
 
 ## Field recap (from spec)
 `LDG`/`STG` carry orthogonal `/SEM /SCO /PRIVATE`, fused into the 4-bit `mem`
@@ -64,7 +65,7 @@ coherence is structural).
 ## Acquire load — exact implementation (resolved)
 Test: `tests/acq_ordering_test.cu` (acquire→independent loads / dependent load /
 independent store; relaxed baseline). Control words decoded via
-`control_codes.md` field map (`req_bit_set`[121:116]=wait mask,
+[`../../CONTROL_CODES.md`](../../CONTROL_CODES.md) field map (`req_bit_set`[121:116]=wait mask,
 `dst_wr_sb`[112:110]=write scoreboard).
 
 **A `ld.acquire` is a plain `LDG.E.STRONG.SM` immediately followed by a `NOP`
@@ -420,4 +421,3 @@ DSMEM, so it emits conservatively on all CGA-capable archs.
   ordering constraint on a specific consumer.
 - A genuine positive weak-behaviour control on Volta+ (may require mixed-proxy /  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   texture path, or async-copy, rather than plain generic-proxy ld/st).
-

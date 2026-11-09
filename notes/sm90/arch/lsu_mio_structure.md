@@ -16,7 +16,8 @@ and released** relative to issue vs. global completion?
 Validated on RTX 5090 (sm_120); memory model unchanged since Turing so the
 structure transfers to Hopper.
 Cross-refs: `memory_order_cta.md` (single-arbiter coherence result),
-`scoreboards.md`, `control_codes.md`, `usched_latency.md`.
+`scoreboards.md`, [`../../CONTROL_CODES.md`](../../CONTROL_CODES.md),
+`usched_latency.md`.
 Tests: `tests/st_readsb.cu`, `tests/readsb_timing.cu`, `tests/readsb_contend.cu`,
 `tests/readsb_xsm.cu`.
 
@@ -240,4 +241,3 @@ mixed-state-space).
 - Does a store ever receive an arbiter *response* at all (for ECC/fault via  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
   `ERRBAR`/`CGAERRBAR`), or is the only back-signal the load write-scoreboard?
 - Whether the per-SMSP MIO queue is strictly FIFO or a small reorder buffer.  <!-- open-question: open blocked-by "blocker (inferred): blocker (inferred): settle by dumping the driver/compiler output or by a targeted probe; no blocker was stated" -->
-

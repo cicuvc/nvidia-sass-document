@@ -310,9 +310,12 @@ def render_measurements_ledger(arch: str, table: dict[str, dict], db: dict) -> s
                     if (v.get("mnemonic") or "").upper() == name]
         opcodes = sorted({v["opcode"] for v in variants if isinstance(v.get("opcode"), int)})
         op_txt = ", ".join(f"`0x{o:x}`" for o in opcodes) or "-"
-        have = measured.get(name) or []
+        relocated = RELOCATED_NOTES.get(arch, {}).get(name)
+        have = measured.get(name) or ([relocated.removeprefix("../")] if relocated else [])
         where = ", ".join(f"[`{p}`](../{p})" for p in have) if have else "_no_"
-        rows.append(f"| [`{name.lower()}.md`](instr/{name.lower()}.md) | "
+        note_link = RELOCATED_NOTES.get(arch, {}).get(
+            name, f"instr/{name.lower()}.md")
+        rows.append(f"| [`{name.lower()}.md`]({note_link}) | "
                     f"{', '.join('`' + p + '`' for p in info['pipes'])} | {info['variants']} | "
                     f"{op_txt} | {where} |")
     with_numbers = sum(1 for name in table if measured.get(name))
@@ -355,6 +358,15 @@ HAND_MAINTAINED = {"sm90", "sm100", "sm120"}
 
 GENERATED_PREFIX = "instr/"
 
+#: Compute mnemonics whose authoritative note was migrated to another
+#: architecture tree.  Keep the mnemonic in this architecture's coverage table,
+#: but point generated links at the relocated note.
+RELOCATED_NOTES: dict[str, dict[str, str]] = {
+    "sm90": {
+        "UCLEA": "../sm120/instr/uclea.md",
+    },
+}
+
 
 def write_arch(arch: str, apply: bool, check: bool, fill_gaps: bool = False) -> tuple[int, list[str]]:
     table = compute_mnemonics(arch)
@@ -374,6 +386,8 @@ def write_arch(arch: str, apply: bool, check: bool, fill_gaps: bool = False) -> 
     if apply and not skip_notes:
         os.makedirs(out_dir, exist_ok=True)
     for name in sorted(table):
+        if name in RELOCATED_NOTES.get(arch, {}):
+            continue
         if skip_notes:
             continue
         if fill_gaps and name in existing_stems:
