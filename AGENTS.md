@@ -22,6 +22,12 @@ reference model (`tools/hmma_model.py`).  Tests build kernels as SASS text,
 assemble to cubin, and run them (HMMA/QMMA tensor-core, LDG/STG, cp.async,
 memory model probes).
 
+`viewer/` is a Vue 3 + Vite static instruction browser.  `npm run dev` and
+`npm run build` invoke `tools/build_viewer_data.py`, which compiles
+`sm*.json` + Markdown notes into a compact manifest and lazy-loaded
+per-instruction JSON.  It is hash-routed for static hosting; raw ISA JSON is
+never served wholesale.
+
 ## Tooling (`tools/`)
 A stdlib-only extractor turns the spec into a queryable JSON DB — prefer it over ad-hoc `grep`/manual parsing for structured lookups.
 - `python3 tools/parse_sm90.py` — parses both `.txt` files -> `sm90.json` (~21 MB, gitignore-worthy/regenerable). Has a built-in validation gate; a clean run prints `validation OK` with counts: **1589 variants** (1168 `CLASS` + 421 `ALTERNATE CLASS`), **238 mnemonics**, 414 enums, 84 tables, 2309 FUNIT fields, 277 pipe entries.

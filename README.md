@@ -41,6 +41,7 @@ interpreting, and measuring* project on top of raw ISA dumps.
 | `notes/sm120/` | GB202 (RTX 5090) microarchitecture campaign: pipeline topology, per-pipe latencies, RF banks/writeback, scheduler yield cost, L2 slices, icache, LSU/MIO/XU topology. |
 | `notes/sm89/`, `notes/sm80/`, `notes/sm70/` | Ada/Ampere scalar-math pipeline characterization + register banks; Volta register banks. |
 | `notes/ARCH_DIFF.md`, `notes/CONTROL_CODES.md`, `notes/CUBIN_STRUCTURE.md`, `notes/DEVICE_PRINT.md` | Cross-arch encoding/control-word synthesis, cubin ELF format spec, device printf notes. |
+| `viewer/` | Vue/Vite web instruction viewer generated from the ISA JSON databases and Markdown notes. |
 | `tests/` | 218 CUDA (`.cu`) kernels that force specific SASS encodings + 286 assembler round-trip / GPU probes (`tests/asm_construct/`). |
 | `ASSEMBLER_MANUAL.md` | Full assembler syntax, scheduling brackets, and usage. |
 
@@ -70,6 +71,19 @@ python3 tools/sm90_evidence_inventory.py --write  # sm120 evidence embedded in n
 `tools/decode_<mnem>.py` are minimal per-instruction decoders: extract fields
 from a 128-bit encoding (lo64 + hi64) and reconstruct the SASS assembly,
 validated against real cuobjdump vectors.
+
+### Web instruction viewer
+
+```bash
+cd viewer
+npm install
+npm run dev
+```
+
+The header architecture selector covers sm70 through sm120. `npm run build`
+first regenerates the compact browser catalog with
+`python3 tools/build_viewer_data.py`, then emits a static hash-routed site in
+`viewer/dist/`.
 
 ### Assembler and GPU tests
 

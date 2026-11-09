@@ -1,0 +1,25 @@
+{
+  "name": "nvidia-sass-viewer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "data": "python3 ../tools/build_viewer_data.py",
+    "predev": "npm run data",
+    "dev": "vite --host 0.0.0.0",
+    "prebuild": "npm run data",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "check:data": "python3 ../tools/build_viewer_data.py --check"
+  },
+  "dependencies": {
+    "dompurify": "^3.2.4",
+    "marked": "^15.0.7",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.1.0"
+  }
+}
