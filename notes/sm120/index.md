@@ -42,6 +42,7 @@ RTX 5090, and the repo's SASS assembler (`assembler/`, arch=sm120) unless stated
 | `gb202_sm_topology.svg` | Whole-SM architecture map synthesized from the frontend, RF, scalar/tensor, MIO, ADU/CBU, LSU/L1TEX, shared-memory, and LDGSTS probes |
 | `gb202_compute_pipelines.svg` | One-subcore scalar/tensor pipeline hypothesis: RF collection, INT/FP family admission, specialized bodies, tensor subpipes, forwarding, and RF commit |
 | `gb202_compute_pipelines.md` | Textual companion to the compute-pipeline diagram: measured hierarchy, family queue/pipe assignments, forwarding/writeback, and throttle relationships |
+| `gsp_issue_rate.md` | GB202 5090 GSP/RM issue-rate values, the `FMLA32` tensor-throttle link established by Ada unlock A/B tests, and the remaining GB202 authenticated override work |
 | `fixed_pipeline_forwarding_latency_zh.md` | 固定执行管线转发延迟中文总表：各 scalar leaf、predicate、MIO/CBU/R2UR/UDP 边、旁路带宽与 RF commit 建模规则 |
 | `fixed_pipeline_issue_to_use_zh.md` | 固定管线持续依赖链的真实 issue-to-use 周期：phase-safe 4-cycle scalar path、WIDE low/high 的 consumer-specific 2/3/4/5/7-cycle 路径、HI operand-specific 4/9-cycle 路径、predicate guard 分流和转发修正规则 |
 | `fixed_pipeline_latency_handoff_zh.md` | 固定管线延迟研究暂停交接：已确认参数、探针入口、复现命令、设计陷阱、未完成矩阵和恢复检查清单 |
@@ -93,4 +94,3 @@ Rules of thumb for what stays in `notes/sm90/…` vs moves here:
   `sm90/` (it documents an sm_90 ISA object), tag the section's evidence as
   "(silicon: SM120)", and record it in `silver-status.md` until re-tested.
 - The instruction/format/ABI item does not exist at all on sm_90 → document it here.
-
