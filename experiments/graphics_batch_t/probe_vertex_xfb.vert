@@ -1,0 +1,16 @@
+#version 450
+
+layout(location = 0) out vec4 tf_color;
+layout(location = 1, xfb_buffer = 0, xfb_offset = 0) out vec4 xfb_color;
+
+void main()
+{
+    vec2 positions[3] = vec2[](
+        vec2(-1.0, -1.0),
+        vec2( 3.0, -1.0),
+        vec2(-1.0,  3.0)
+    );
+    gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
+    tf_color = vec4(float(gl_VertexIndex + 1u), 0.25, 0.5, 1.0);
+    xfb_color = tf_color;
+}
