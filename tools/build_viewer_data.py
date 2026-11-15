@@ -42,6 +42,38 @@ ARCH_META = {
     "sm120": ("Blackwell RTX", "sm_120"),
 }
 
+SPECIAL_REGISTER_TYPES = {
+    "Register",
+    "Predicate",
+    "UniformRegister",
+    "UniformPredicate",
+}
+
+SPECIAL_FIELD_META = {
+    "req_bit_set": {
+        "friendlyName": "wait barriers",
+        "description": (
+            "6-bit scoreboard wait mask with one bit per barrier SB0–SB5. "
+            "The instruction waits for every selected barrier before it issues; "
+            "an all-zero mask means no wait."
+        ),
+    },
+    "src_rel_sb": {
+        "friendlyName": "read barrier",
+        "description": (
+            "Scoreboard barrier released when the source operands have been read. "
+            "The 3-bit index selects SB0–SB5; 7 means no read barrier."
+        ),
+    },
+    "dst_wr_sb": {
+        "friendlyName": "write barrier",
+        "description": (
+            "Scoreboard barrier released when the destination result is available. "
+            "The 3-bit index selects SB0–SB5; 7 means no write barrier."
+        ),
+    },
+}
+
 
 def slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
@@ -80,7 +112,87 @@ def variant_pipes(variants: list[dict]) -> list[str]:
     return sorted(values)
 
 
-def compact_variant(variant: dict) -> dict:
+def numeric_enum_range(values: dict, prefix: str, limit: int | None = None) -> tuple[int, int]:
+    numbers = []
+    pattern = re.compile(rf"{re.escape(prefix)}(\d+)$")
+    for name in values:
+        match = pattern.fullmatch(name)
+        if match:
+            number = int(match.group(1))
+            if limit is None or number <= limit:
+                numbers.append(number)
+    return (min(numbers), max(numbers)) if numbers else (0, 0)
+
+
+def special_register_metadata(enum_type: str, values: dict) -> dict:
+    if enum_type == "Register":
+        lo, hi = numeric_enum_range(values, "R")
+        return {"kind": "VGPR", "range": f"R{lo}–R{hi}", "zero": "RZ"}
+    if enum_type == "Predicate":
+        lo, hi = numeric_enum_range(values, "P", limit=6)
+        return {"kind": "Predicate", "range": f"P{lo}–P{hi}", "zero": "PT"}
+    if enum_type == "UniformRegister":
+        lo, hi = numeric_enum_range(values, "UR")
+        return {
+            "kind": "SGPR",
+            "range": f"UR{lo}–UR{hi}",
+            "zero": "URZ" if "URZ" in values else "",
+        }
+    if enum_type == "UniformPredicate":
+        lo, hi = numeric_enum_range(values, "UP", limit=6)
+        return {
+            "kind": "Uniform predicate",
+            "range": f"UP{lo}–UP{hi}",
+            "zero": "UPT" if "UPT" in values else "",
+        }
+    raise ValueError(f"unsupported special register type: {enum_type}")
+
+
+def compact_variant(
+    variant: dict,
+    enum_source: dict,
+    enum_refs: dict,
+    register_types: dict,
+) -> dict:
+    slots = {
+        slot.get("name"): slot
+        for slot in variant.get("format", {}).get("slots", [])
+    }
+    encoding = []
+    for field in variant.get("encoding", []):
+        row = dict(field)
+        special = SPECIAL_FIELD_META.get(field.get("name"))
+        if special:
+            row.update(special)
+        slot = slots.get(field.get("rhs")) if field.get("rhs_kind") == "slot" else None
+        enum_name = slot.get("type") if slot else None
+        if enum_name in SPECIAL_REGISTER_TYPES and enum_name in enum_source:
+            row["registerType"] = enum_name
+            register_types[enum_name] = special_register_metadata(
+                enum_name, enum_source[enum_name])
+        elif enum_name in enum_source:
+            row["enum"] = enum_name
+            enum_refs[enum_name] = [
+                {"name": name, "value": value}
+                for name, value in sorted(
+                    (
+                        (name, value)
+                        for name, value in enum_source[enum_name].items()
+                        if not re.fullmatch(r"INVALID\d+", name)
+                        and not (
+                            name.startswith("_")
+                            and name.lstrip("_") in enum_source[enum_name]
+                        )
+                    ),
+                    key=lambda item: (
+                        item[1] is None,
+                        0 if isinstance(item[1], (int, float)) else 1,
+                        item[1] if isinstance(item[1], (int, float)) else str(item[1]),
+                        item[0],
+                    ),
+                )
+            ]
+        encoding.append(row)
     return {
         "class": variant.get("class"),
         "alternate": bool(variant.get("is_alternate")),
@@ -90,7 +202,7 @@ def compact_variant(variant: dict) -> dict:
         "format": variant.get("format", {}).get("raw", ""),
         "slots": variant.get("format", {}).get("slots", []),
         "pipeSuffix": variant.get("pipe_suffix", ""),
-        "encoding": variant.get("encoding", []),
+        "encoding": encoding,
         "properties": variant.get("properties", {}),
         "predicates": variant.get("predicates", {}),
         "conditions": variant.get("conditions", []),
@@ -128,8 +240,13 @@ def build_arch(arch: str) -> tuple[dict, dict[str, dict]]:
         used_slugs.add(slug)
 
         note = notes.get(mnemonic)
-        pipes = sorted(set(db.get("pipes", {}).get(mnemonic, [])) |
-                       set(variant_pipes(variants)))
+        enum_refs = {}
+        register_types = {}
+        raw_pipes = set(db.get("pipes", {}).get(mnemonic, [])) | set(variant_pipes(variants))
+        pipes = sorted({
+            pipe for pipe in raw_pipes
+            if pipe.endswith("_pipe") or f"{pipe}_pipe" not in raw_pipes
+        })
         opcodes = sorted({
             variant["opcode"]
             for variant in variants
@@ -166,7 +283,13 @@ def build_arch(arch: str) -> tuple[dict, dict[str, dict]]:
                 "note": note["path"] if note else "",
                 "headers": db.get("meta", {}),
             },
-            "variants": [compact_variant(variant) for variant in variants],
+            "variants": [
+                compact_variant(
+                    variant, db.get("enums", {}), enum_refs, register_types)
+                for variant in variants
+            ],
+            "enums": dict(sorted(enum_refs.items())),
+            "registerTypes": dict(sorted(register_types.items())),
             "note": note,
         }
 

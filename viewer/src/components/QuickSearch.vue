@@ -9,6 +9,7 @@ const query = ref('')
 const open = ref(false)
 const focused = ref(-1)
 const input = ref(null)
+const root = ref(null)
 
 const architectures = computed(() => viewerState.manifest?.architectures || [])
 
@@ -54,6 +55,12 @@ function focusSearch(event) {
   nextTick(() => input.value?.focus())
 }
 
+function closeOnOutsideClick(event) {
+  if (open.value && root.value && !root.value.contains(event.target)) {
+    open.value = false
+  }
+}
+
 function choose(entry) {
   if (!entry) return
   router.push({
@@ -92,13 +99,17 @@ watch(() => route.fullPath, () => {
 onMounted(() => {
   ensureManifest()
   document.addEventListener('keydown', focusSearch)
+  document.addEventListener('pointerdown', closeOnOutsideClick)
 })
 
-onBeforeUnmount(() => document.removeEventListener('keydown', focusSearch))
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', focusSearch)
+  document.removeEventListener('pointerdown', closeOnOutsideClick)
+})
 </script>
 
 <template>
-  <div class="quick-search">
+  <div ref="root" class="quick-search">
     <div class="search-field">
       <span class="search-icon">⌕</span>
       <input

@@ -20,6 +20,35 @@ const probe = ref('')
 const selectedVariant = computed(() =>
   detail.value?.variants[selectedVariantIndex.value] || null)
 
+const selectedFieldDefinition = computed(() =>
+  selectedVariant.value?.encoding?.[selectedField.value] || null)
+
+const selectedEnum = computed(() => {
+  const enumName = selectedFieldDefinition.value?.enum
+  if (!enumName || !detail.value?.enums?.[enumName]) return null
+  return {
+    name: enumName,
+    field: selectedFieldDefinition.value.name,
+    rows: detail.value.enums[enumName],
+  }
+})
+
+const selectedRegisterType = computed(() => {
+  const typeName = selectedFieldDefinition.value?.registerType
+  if (!typeName || !detail.value?.registerTypes?.[typeName]) return null
+  return {
+    name: typeName,
+    field: selectedFieldDefinition.value.name,
+    ...detail.value.registerTypes[typeName],
+  }
+})
+
+const selectedFieldHelp = computed(() => {
+  const field = selectedFieldDefinition.value
+  if (!field?.description) return null
+  return field
+})
+
 const noteHtml = computed(() =>
   renderMarkdown(detail.value?.note?.markdown || '', detail.value?.note?.path || ''))
 
@@ -63,6 +92,9 @@ function chooseProbeVariant(variant) {
 }
 
 watch(() => [props.arch, props.slug], load, { immediate: true })
+watch(selectedVariantIndex, () => {
+  selectedField.value = -1
+})
 </script>
 
 <template>
@@ -141,8 +173,76 @@ watch(() => [props.arch, props.slug], load, { immediate: true })
         v-if="selectedVariant"
         :encoding="selectedVariant.encoding"
         :selected-field="selectedField"
+        :opcode="selectedVariant.opcode"
         @select-field="selectedField = $event"
       />
+
+      <div v-if="selectedFieldHelp" class="field-help">
+        <div>
+          <span class="panel-kicker">Field semantics</span>
+          <h3>{{ selectedFieldHelp.friendlyName || selectedFieldHelp.name }}</h3>
+        </div>
+        <p>{{ selectedFieldHelp.description }}</p>
+        <div class="field-help-meta">
+          <span>{{ selectedFieldHelp.name }}</span>
+          <span>bits {{ selectedFieldHelp.targets.map(([hi, lo]) => hi === lo ? hi : `${hi}:${lo}`).join(' + ') }}</span>
+          <span>{{ selectedFieldHelp.width }} bit{{ selectedFieldHelp.width === 1 ? '' : 's' }}</span>
+        </div>
+      </div>
+
+      <div v-if="selectedEnum" class="enum-options">
+        <div class="enum-options-heading">
+          <div>
+            <span class="panel-kicker">Enum options</span>
+            <h3>{{ selectedEnum.name }}</h3>
+          </div>
+          <span>{{ selectedEnum.field }} · {{ selectedEnum.rows.length }} values</span>
+        </div>
+        <div class="enum-table-wrap">
+          <table class="data-table enum-table">
+            <thead>
+              <tr><th>Option</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in selectedEnum.rows" :key="`${row.name}:${row.value}`">
+                <td class="mono">{{ row.name }}</td>
+                <td class="mono">{{ row.value }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div v-if="selectedRegisterType" class="enum-options register-options">
+        <div class="enum-options-heading">
+          <div>
+            <span class="panel-kicker">Register operand</span>
+            <h3>{{ selectedRegisterType.kind }}</h3>
+          </div>
+          <span>{{ selectedRegisterType.name }} · {{ selectedRegisterType.field }}</span>
+        </div>
+        <div class="enum-table-wrap">
+          <table class="data-table enum-table">
+            <thead>
+              <tr><th>Property</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Class</td>
+                <td class="mono">{{ selectedRegisterType.kind }}</td>
+              </tr>
+              <tr>
+                <td>Range</td>
+                <td class="mono">{{ selectedRegisterType.range }}</td>
+              </tr>
+              <tr v-if="selectedRegisterType.zero">
+                <td>Zero register</td>
+                <td class="mono">{{ selectedRegisterType.zero }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <section v-if="selectedVariant" class="panel">
@@ -171,7 +271,10 @@ watch(() => [props.arch, props.slug], load, { immediate: true })
               <td class="mono">
                 {{ field.targets.map(([hi, lo]) => hi === lo ? `${hi}` : `${hi}:${lo}`).join(' + ') }}
               </td>
-              <td class="mono">{{ field.name }}</td>
+              <td>
+                <span class="field-display-name">{{ field.friendlyName || field.name }}</span>
+                <small v-if="field.friendlyName" class="field-raw-name">{{ field.name }}</small>
+              </td>
               <td>{{ field.width }}</td>
               <td class="mono">{{ field.rhs }}</td>
             </tr>

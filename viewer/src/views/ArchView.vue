@@ -12,6 +12,7 @@ const route = useRoute()
 const router = useRouter()
 const query = ref('')
 const sidebarOpen = ref(false)
+const sidebarMode = ref('alphabetical')
 
 const manifestReady = computed(() => Boolean(viewerState.manifest))
 const architecture = computed(() => findArchitecture(String(route.params.arch || '')))
@@ -35,6 +36,17 @@ const filtered = computed(() => {
 
 const groups = computed(() => {
   if (query.value.trim()) return [{ title: 'Results', items: filtered.value }]
+  if (sidebarMode.value === 'pipe') {
+    const buckets = new Map()
+    for (const instruction of filtered.value) {
+      const pipe = instruction.pipe[0] || 'unclassified'
+      if (!buckets.has(pipe)) buckets.set(pipe, [])
+      buckets.get(pipe).push(instruction)
+    }
+    return [...buckets.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([title, items]) => ({ title, items }))
+  }
   const buckets = [
     ['A–C', /^[A-C]/],
     ['D–F', /^[D-F]/],
@@ -104,6 +116,25 @@ watch(() => route.params.arch, () => {
         placeholder="Filter mnemonic / opcode / pipe"
         @keydown="onQueryKeydown"
       />
+
+      <div class="sidebar-tabs" role="tablist" aria-label="Instruction grouping">
+        <button
+          role="tab"
+          :aria-selected="sidebarMode === 'alphabetical'"
+          :class="{ active: sidebarMode === 'alphabetical' }"
+          @click="sidebarMode = 'alphabetical'"
+        >
+          A–Z
+        </button>
+        <button
+          role="tab"
+          :aria-selected="sidebarMode === 'pipe'"
+          :class="{ active: sidebarMode === 'pipe' }"
+          @click="sidebarMode = 'pipe'"
+        >
+          Pipe
+        </button>
+      </div>
 
       <nav class="instruction-groups" aria-label="Instruction list">
         <section v-for="group in groups" :key="group.title" class="instruction-group">
