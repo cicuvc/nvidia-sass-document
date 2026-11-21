@@ -1,0 +1,9 @@
+{
+  "case_groups": 1856,
+  "mappings_per_group": 16,
+  "state_mismatches": 0,
+  "phase_mismatches": 3,
+  "writer_duration_counts": {
+    "11": 29696
+  }
+}

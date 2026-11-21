@@ -1,0 +1,77 @@
+{
+  "as_reference": "notes/sm100/arch/data/tcgen05_as_tmem_snapshot_granularity_recovered_20261119/result.json",
+  "ws_result": "notes/sm100/arch/data/tcgen05_ws_tmem_granularity_retry_20261119/result.json",
+  "same_configuration_same_phase_races": 12960,
+  "snapshot_differences_at_matched_phase": 0,
+  "race_differences": [
+    {
+      "configuration": {
+        "width": 1,
+        "warp": 2,
+        "column": 0,
+        "mode": "race",
+        "delta": -32,
+        "pad": 0,
+        "rep": 0
+      },
+      "AS": {
+        "phase": -22,
+        "read_interval": 24,
+        "old": 32,
+        "new": 0
+      },
+      "WS": {
+        "phase": 20,
+        "read_interval": 25,
+        "old": 0,
+        "new": 32
+      }
+    },
+    {
+      "configuration": {
+        "width": 1,
+        "warp": 3,
+        "column": 0,
+        "mode": "race",
+        "delta": -32,
+        "pad": 0,
+        "rep": 0
+      },
+      "AS": {
+        "phase": -13,
+        "read_interval": 24,
+        "old": 32,
+        "new": 0
+      },
+      "WS": {
+        "phase": -34,
+        "read_interval": 24,
+        "old": 32,
+        "new": 0
+      }
+    },
+    {
+      "configuration": {
+        "width": 2,
+        "warp": 1,
+        "column": 0,
+        "mode": "race",
+        "delta": -32,
+        "pad": 0,
+        "rep": 0
+      },
+      "AS": {
+        "phase": -20,
+        "read_interval": 24,
+        "old": 64,
+        "new": 0
+      },
+      "WS": {
+        "phase": 18,
+        "read_interval": 25,
+        "old": 0,
+        "new": 64
+      }
+    }
+  ]
+}

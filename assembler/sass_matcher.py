@@ -44,7 +44,7 @@ SCHED_SLOT_NAMES = {"src_rel_sb", "dst_wr_sb", "req_bit_set", "req", "wr", "rd",
                     "pm_pred", "batch_t", "usched_info",
                     "reuse_src_a", "reuse_src_b", "reuse_src_c", "reuse_src_d"}
 COMPOSITE_TYPES = {"C", "CX", "DESC", "GMMA", "TMA", "UMMAA", "UMMAB",
-                   "UMMA", "RF", "TMEMB", "TMEMC", "TMEME"}
+                   "UMMA", "RF", "TMEMA", "TMEMB", "TMEMC", "TMEME"}
 
 
 class MatchError(Exception):
@@ -674,10 +674,10 @@ class SassMatcher:
             return self._match_mem_desc(group, op, slot_map)
         if first_type == "RF" and op.kind == OperandKind.INDEXED_RF:
             return self._match_indexed_rf(group, op, slot_map)
-        if first_type in ("TMEMB", "TMEMC", "TMEME") and \
+        if first_type in ("TMEMA", "TMEMB", "TMEMC", "TMEME") and \
                 op.kind == OperandKind.MEM_ADDR:
             # Some TMEM composites (LDTM/STTM) include an immediate offset
-            # slot, while UTCHMMA's D/E operands encode only a base UREG.
+            # slot, while UTCHMMA's A/D/E operands encode only a base UREG.
             # Never silently accept and discard a textual +imm: that can make
             # supposedly disjoint accumulator tiles alias in the machine code.
             has_offset_slot = any(
@@ -685,15 +685,14 @@ class SassMatcher:
             if op.offset and not has_offset_slot:
                 return False
             for s in group:
-                if s["type"] in ("TMEMB", "TMEMC", "TMEME"):
+                if s["type"] in ("TMEMA", "TMEMB", "TMEMC", "TMEME"):
                     slot_map[s["name"]] = 1
                 elif s["type"] == "UniformRegister":
                     slot_map[s["name"]] = op.value
                 elif s["type"] in ("SImm", "UImm"):
                     slot_map[s["name"]] = op.offset
-                elif s["modifier"] and s.get("default") is not None:
-                    slot_map[s["name"]] = self._parse_default(
-                        s["default"], s["type"])
+                # Leave trailing modifiers (e.g. A_KEEP/A_REUSE) unbound:
+                # the dotted mnemonic modifier pass must match them later.
             return True
         if op.kind == OperandKind.MEM_ADDR:
             # a plain [Ra+off] operand must not match a desc[...]-composite

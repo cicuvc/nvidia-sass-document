@@ -1,12 +1,12 @@
 # UTCHMMA — 5th-gen tensor-core FP16/BF16 MMA  → PTX `tcgen05.mma.kind::f16`
 
 <!-- notes-status -->
-**Status:** active  
-**Evidence:** sm100-silicon  
-**Tier confidence:** medium  
-**Last verified:** 2026-09-20  
-**Probe:** not recorded in this note  
-**Open items:** 4 open item(s)  
+**Status:** active
+**Evidence:** sm100-silicon
+**Tier confidence:** medium
+**Last verified:** 2026-11-21
+**Probe:** B200 AS/WS probes and primary records linked below
+**Open items:** 4 open item(s)
 **Audit:** `tools/notes_audit.py` · basis: hardware named in the note (sm100)
 
 ## Conclusion
@@ -183,6 +183,51 @@ map to `UTCHMMA`; the element types live in the 32-bit `idesc`. Integer
 (`.kind::i8`) is a separate mnemonic `UTCIMMA`; FP8-quarter is `UTCQMMA`;
 MX-scaled is `UTCMXQMMA`.
 
+## B200 WS CUDA/PTX behavior (2026-11-17)
+
+`tests/tcgen05_ws_behavior.cu` now validates dense BF16 K16 WS for all nine
+M={32,64,128}, N={64,128,256} combinations: tagged/nonuniform signed data,
+overwrite/accumulate, each B collector, and four-buffer interleaving.
+144 configurations × 3 repeats pass with full output and untouched-TMEM checks.
+M64 splits N across warp pairs (0,1)/(2,3); M32 splits N across all four warps;
+M128 splits M across four warps. This establishes logical TMEM output layout,
+not physical broadcast topology or collector-hit bandwidth savings.
+Full construction and evidence: [WS behavior](../arch/tcgen05_ws_behavior.md).
+
+CUDA/PTX long-stream throughput and B-collector/shared-LDS competition are now
+recorded in [WS throughput](../arch/tcgen05_ws_throughput.md). Explicit PTX
+`elect.sync` eliminates per-MMA compiler retry loops. With B reuse, M32N256,
+M64N128/N256 and M128N128/N256 all reach the existing 4096 MAC/cycle/SM baseline:
+M32 is **not intrinsically half-rate**. Small-shape results retain some issue/
+fetch sensitivity. B reuse also measurably reduces shared-load contention;
+exact read-byte accounting remains open.
+
+[Handwritten SASS controls](../arch/tcgen05_ws_sass_throughput.md) separate the
+buffer effect: rotating buffer ID alone saves 4 cycles for M32 discard and 10
+for M128 discard at N≥128; rotating B address alone does not. With A from TMEM
+and B reuse, M32N128/N256 and every tested M64/M128 shape reach 4096 MAC/cycle;
+M32N64 measures 9 cycles (versus 15 with shared A). Shared-A reuse slopes are
+15/18/32 (M32), 23/32/64 (M64), and 39/64/128 (M128), for N64/128/256.
+With TMEM A, four-buffer discard fits `max(N/4, M*N/256)` cycles across the
+nine shapes. M32N64 reuse remains at 9 cycles with four collectors, alternating
+two D tiles, and compact loops. The combined SASS scans pass 346 configurations /
+2076 launches. These are completion slopes with full-output checks, not
+per-instruction latency.
+
+The [WS buffer conflict matrix](../arch/tcgen05_ws_collector_conflicts.md) adds
+396 configurations / 2376 validated launches at N64. Two distinct collector IDs
+already hide discard turnaround; all distinct pairs are equally fast. Same-ID
+bursts follow a 12-cycle (M32/M64) or 10-cycle (M128) adjacent-repeat penalty.
+Mixed discard/reuse tests likewise show no special conflicting pair. This does
+not establish which physical subcore, if any, owns an ID.
+
+The [collector working-set scan](../arch/tcgen05_ws_collector_capacity.md) adds
+nonuniform B inputs, all legal dense N values, 1–4 IDs, and an independent LDS
+contention observable (121 configurations / 726 launches, all checks pass).
+No reuse throughput cliff or growing sustained shared-contention signal appears
+through four distinct 8-KiB B tiles. This is an effective working-set result,
+not a physical SRAM-capacity measurement.
+
 ## B200 动态探测：BF16 `M128xNxK16`
 
 测试见 `tests/tcgen05_utchmma_bandwidth.cu` 和
@@ -322,17 +367,12 @@ RMW beat，或方向无关的 tensor/ordinary admission/array-grant 仲裁。
 
 #### D 地址轮转与多 warp 调度
 
-上述“每条 MMA 都产生完整 TMEM RMW”只是 ISA 语义字节数，不能直接当作 SRAM
-流量。早期 Modal 运行曾把远端调用未返回误判为 kernel 不完成，并据此记录了
-`A B C A`/`A B C B` 的两-context residency 边界；该结论已经复测证伪。裸
-SASS 中无论使用同一个 `UR10+imm`，还是先用 UIADD3 生成 UR30/UR31/UR32 三个
-完整 D 基址，三/四个 128-column D tile 均可在 accumulate 模式下反复回访。
-8 条独立-base-UR 的 `A B C A A B C A` 五次重复均正常完成，为 646--654
-cycles。当前没有证据支持“每 warp/subcore 只能维护两个 D context”。
+上述逻辑 RMW 字节数不能直接当作 SRAM 流量。裸 SASS 使用独立基址 UR 时，
+三/四个 128-column D tile 均可在 accumulate 模式下反复回访。
+8 条 `A B C A A B C A` 序列五次重复正常完成，耗时 646–654 cycles。
 
-中途 UTCBAR 也可以正常工作：两段 MMA 各发一条 UTCBAR，并把同一 mbarrier 的
-init count 设为 2，16 条合计约 1157 cycles。此前“UTCBAR 后不能继续 MMA”的
-推断同样撤回；正确约束仍只是 phase 切换前的 arrival 总数必须匹配 init count。
+两段 MMA 各发一条 UTCBAR、同一 mbarrier 的 init count 设为 2 时，
+16 条合计约 1157 cycles。phase 切换前的 arrival 总数须匹配 init count。
 
 多 warp 版本随后验证通过。每个 warp 使用私有 128-column D tile、私有
 mbarrier，并只在 epoch 尾部发一条 UTCBAR；64 条 M128N128 accumulate 的结果为：
@@ -507,44 +547,21 @@ LDS 压力改变了 producer/observer 的相对调度相位：同一 x1 三读�
 能增加 UTCHMMA 自身 operand wave 数的合法 descriptor/layout，而不是增加低优先级
 shared client。
 
-#### 运行中改写 RHS：n 方向遍历次序（2026-09-19）
+#### 运行中改写 B：版本固定与分区顺序（2026-11-21）
 
-为避免连续 LDTM 的请求顺序伪装成写回方向，另一个探针不在 UTCHMMA 运行中
-读取 TMEM，而是改写它尚在消费的 shared-memory RHS：warp 0 发一条 overwrite
-M128N256 BF16 MMA；warp 1 在可调的绝对时钟相位用两条相邻 `STS.128` 把一个
-1-KiB B stripe 从 BF16 1.0 改为 2.0。UTCBAR 完成后才一次性导出 D。输出
-16.0/24.0/32.0 分别表示对应 D 元素消费了全旧、一半新、一半旧、全新的 RHS。
-每次 launch 同时记录 UTCHMMA issue、两条 STS 和 completion 的实际 `clock64`，
-分析按实测的 `mutation_start - mma_issue`，不按源码中的名义 delay 分组。
+使用重复 I16 的 A，在 MMA 中途改写 shared B，完成后导出全部 D，可以直接
+观察各元素采用的 B 版本。AS M128 的四个 32-row 区域始终一致；输入版本固定
+可以早于 D 可见，见 [AS staging](../arch/tcgen05_as_b_staging.md)。
 
-双 modifier warp 的初版先确认了 shared 地址映射：连续的 stripe 0--3 依次影响
-TMEM 中连续的 n 区间，约为列 4--67、68--131、132--195、196--255；stripe
-4 只在尾部 244--255 留下 half 效果，stripe 5--7 完全无影响。当前 exporter 的
-列 0--3 反复得到 0/launch residue，故不拿它们判断方向。随后改成单 warp 连续
-写完整 stripe，消除了两个 warp 相差十几 cycle 的调度歧义。代表性的稳定结果
-如下（`new`=32.0，`half`=24.0，省略全旧区域）：
+WS 的单笔 128B 无 bank conflict STS 进一步分离了写入映射影响：M64 对应
+两个 N 段，稳定出现区域 0/1 旧、2/3 新；M32 对应四个 N 段，出现
+`新新新新 → 旧新新新 → 旧旧新新 → 旧旧旧新 → 旧旧旧旧`。bank 子集置换和
+lane 反转不改变方向。读回均在完成后进行，因此不依赖中途 LDTM 服务或 D
+写回先后。完整构造及统计见 [M64](../arch/tcgen05_ws_b_singlebeat.md) 和
+[M32](../arch/tcgen05_ws32_b_singlebeat.md)。
 
-| 实测 mutation 相位 | stripe 0 | stripe 1 | stripe 2 | stripe 3 |
-|---:|---|---|---|---|
-| +5 cycles | 4--51 new；52--67 half | new/half | new/half | new/half |
-| +21 cycles | 4--67 half | 68--115 new；116--131 half | new/half | new/half |
-| +37 cycles | old | 68--131 half | 132--179 new；180--195 half | new/half |
-| +53 cycles | old | old | 132--195 half | 196--243 new；244--255 half |
-| +67 cycles | old | old | old | 196--211 new；212--255 half |
-| +85 cycles 左右 | old | old | old | old |
-
-这个随时间向高列平移的对角前沿直接证明：在当前 K-major、无 swizzle 的
-M128N256 构造中，UTCHMMA **按递增 n 消费 B**。四个约 64-column 的 shared
-stripe 的消费相位依次约错开 16 cycles；stripe 内又能分辨出 16-column 边界。
-它也与 N256 的两个连续 N128 物理 wave 相容；本探针记录的
-issue→UTCBAR/mbarrier-wait 区间稳定为 256 cycles（包含提交和等待路径开销）。
-
-严格地说，RHS mutation 直接标记的是 operand fetch/consume 顺序，而不是 TMEM
-端口提交瞬间；最终 D 的列顺序再结合上一节已由并发 LDTM 证明的“单条指令中途
-写回可见”，强烈支持 TMEM 也按低 n 到高 n 推进，但若要把 fetch、compute、
-TMEM retire 三段各自的固定延迟拆开，仍需把本探针与同相位 LDTM snapshot 合并。
-探针为 `tests/asm_construct/probe_sm100_utchmma_rhs_mutation.py`；Modal runner 的
-`--rhs-mutation-results` 会直接输出每次 launch 的实测相位和压缩后的列区间。
+当前模型及主要实验索引见 [tcgen05 微架构模型](../arch/tcgen05_microarch_speculation.md)。
+两拍读取一份 N8×K16 B 的物理粒度、精确拍数和广播结构仍待独立测量。
 
 #### disable-output-lane 语义与 bank-hash 碰撞尝试（2026-09-19）
 
@@ -949,8 +966,7 @@ latency-table cycle.
 
 ## History / retracted hypotheses
 
-> Claims below were **superseded, refuted, or never settled** by later work; they are kept
-> for provenance. Do not cite them as current.
+November 2026 B200 findings consolidated into the current evidence sections.
 
 ## Open questions
 - Full 64-bit `UMMAA`/`UMMAB` matrix-descriptor + 32-bit `idesc` bit layouts —  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
@@ -960,5 +976,7 @@ latency-table cycle.
 - `tmemE` (URe) role — secondary accumulator/scale operand? (`ISRC_E_SIZE=64`.)  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
 - `opType` [73:72]∥[63] is pinned 0 here — what selects nonzero values?  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
 - Weight-stationary (`.WS`) + collector-buffer runtime semantics；尤其需要把  <!-- open-question: open blocked-by "blocker (inferred): needs a Blackwell-datacenter session (sm_100/sm_103)" -->
-  collector 命中与 shared-array 实际读流量分离测量。
+  collector 命中与 shared-array 实际读流量分离测量。2026-11-17 已完成 CUDA/PTX
+  数值行为、输出布局和四 buffer 合法序列验证；手写 SASS 已分离 buffer ID
+  与 B 地址对吞吐的影响，见上文链接。独立的精确 shared 读字节计量仍待测。
 

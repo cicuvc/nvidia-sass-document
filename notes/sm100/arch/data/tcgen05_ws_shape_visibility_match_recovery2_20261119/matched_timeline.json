@@ -1,0 +1,383 @@
+{
+  "ws32": {
+    "event": "result",
+    "rep": 1,
+    "experiment": "ws32",
+    "m": 32,
+    "n": 256,
+    "producer": 2,
+    "column": 32,
+    "mode": "race",
+    "delta": 0,
+    "enabled": 1,
+    "pad": 28,
+    "skews": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "pre": 11898879486746,
+    "admit": 11898879486753,
+    "done": 11898879486914,
+    "records": [
+      {
+        "warp": 0,
+        "read_start": 11898879486800,
+        "read_admit": 11898879486814,
+        "read_done": 11898879486832,
+        "phase": 47,
+        "old": 32,
+        "new": 0,
+        "wait_debug": [
+          1820076252,
+          0,
+          1820076764,
+          1820076790,
+          26
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 32,
+        "logical_column": 32,
+        "logical_row_base": 0,
+        "new_value": 1.0
+      },
+      {
+        "warp": 1,
+        "read_start": 11898879486786,
+        "read_admit": 11898879486800,
+        "read_done": 11898879486818,
+        "phase": 33,
+        "old": 32,
+        "new": 0,
+        "wait_debug": [
+          1820076252,
+          0,
+          1820076764,
+          1820076776,
+          12
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 32,
+        "logical_column": 96,
+        "logical_row_base": 0,
+        "new_value": 2.0
+      },
+      {
+        "warp": 3,
+        "read_start": 11898879486798,
+        "read_admit": 11898879486816,
+        "read_done": 11898879486834,
+        "phase": 45,
+        "old": 0,
+        "new": 32,
+        "wait_debug": [
+          1820076252,
+          0,
+          1820076764,
+          1820076788,
+          24
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 32,
+        "logical_column": 224,
+        "logical_row_base": 0,
+        "new_value": 4.0
+      }
+    ],
+    "final_errors": 0,
+    "control_errors": 0,
+    "other": 0,
+    "row_disagreements": 0,
+    "start_inversions": [
+      [
+        3,
+        0
+      ]
+    ],
+    "strong_inversions": [],
+    "mixed_pairs": [
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        1
+      ]
+    ],
+    "ordered_pairs": []
+  },
+  "ws64": {
+    "event": "result",
+    "rep": 1,
+    "experiment": "ws64",
+    "m": 64,
+    "n": 256,
+    "producer": 2,
+    "column": 72,
+    "mode": "race",
+    "delta": 0,
+    "enabled": 1,
+    "pad": 28,
+    "skews": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "pre": 11900379318490,
+    "admit": 11900379318497,
+    "done": 11900379318658,
+    "records": [
+      {
+        "warp": 0,
+        "read_start": 11900379318544,
+        "read_admit": 11900379318558,
+        "read_done": 11900379318576,
+        "phase": 47,
+        "old": 32,
+        "new": 0,
+        "wait_debug": [
+          3319907996,
+          0,
+          3319908508,
+          3319908534,
+          26
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 72,
+        "logical_column": 72,
+        "logical_row_base": 0,
+        "new_value": 2.0
+      },
+      {
+        "warp": 1,
+        "read_start": 11900379318530,
+        "read_admit": 11900379318544,
+        "read_done": 11900379318562,
+        "phase": 33,
+        "old": 32,
+        "new": 0,
+        "wait_debug": [
+          3319907996,
+          0,
+          3319908508,
+          3319908520,
+          12
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 72,
+        "logical_column": 72,
+        "logical_row_base": 32,
+        "new_value": 2.0
+      },
+      {
+        "warp": 3,
+        "read_start": 11900379318542,
+        "read_admit": 11900379318560,
+        "read_done": 11900379318578,
+        "phase": 45,
+        "old": 0,
+        "new": 32,
+        "wait_debug": [
+          3319907996,
+          0,
+          3319908508,
+          3319908532,
+          24
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 72,
+        "logical_column": 200,
+        "logical_row_base": 32,
+        "new_value": 4.0
+      }
+    ],
+    "final_errors": 0,
+    "control_errors": 0,
+    "other": 0,
+    "row_disagreements": 0,
+    "start_inversions": [
+      [
+        3,
+        0
+      ]
+    ],
+    "strong_inversions": [],
+    "mixed_pairs": [
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        1
+      ]
+    ],
+    "ordered_pairs": []
+  },
+  "ws128": {
+    "event": "result",
+    "rep": 1,
+    "experiment": "ws128",
+    "m": 128,
+    "n": 256,
+    "producer": 2,
+    "column": 76,
+    "mode": "race",
+    "delta": 0,
+    "enabled": 1,
+    "pad": 28,
+    "skews": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "pre": 11901836258223,
+    "admit": 11901836258230,
+    "done": 11901836258453,
+    "records": [
+      {
+        "warp": 0,
+        "read_start": 11901836258277,
+        "read_admit": 11901836258291,
+        "read_done": 11901836258309,
+        "phase": 47,
+        "old": 32,
+        "new": 0,
+        "wait_debug": [
+          481880433,
+          0,
+          481880945,
+          481880971,
+          26
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 76,
+        "logical_column": 76,
+        "logical_row_base": 0,
+        "new_value": 2.0
+      },
+      {
+        "warp": 1,
+        "read_start": 11901836258263,
+        "read_admit": 11901836258277,
+        "read_done": 11901836258295,
+        "phase": 33,
+        "old": 32,
+        "new": 0,
+        "wait_debug": [
+          481880433,
+          0,
+          481880945,
+          481880957,
+          12
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 76,
+        "logical_column": 76,
+        "logical_row_base": 32,
+        "new_value": 2.0
+      },
+      {
+        "warp": 3,
+        "read_start": 11901836258275,
+        "read_admit": 11901836258293,
+        "read_done": 11901836258311,
+        "phase": 45,
+        "old": 0,
+        "new": 32,
+        "wait_debug": [
+          481880433,
+          0,
+          481880945,
+          481880969,
+          24
+        ],
+        "skew_debug": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "physical_column": 76,
+        "logical_column": 76,
+        "logical_row_base": 96,
+        "new_value": 2.0
+      }
+    ],
+    "final_errors": 0,
+    "control_errors": 0,
+    "other": 0,
+    "row_disagreements": 0,
+    "start_inversions": [
+      [
+        3,
+        0
+      ]
+    ],
+    "strong_inversions": [],
+    "mixed_pairs": [
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        1
+      ]
+    ],
+    "ordered_pairs": []
+  }
+}

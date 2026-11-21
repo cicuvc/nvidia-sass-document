@@ -1,0 +1,36 @@
+{
+  "recorded_utc": "2026-11-19T13:38:52.743097+00:00",
+  "status": "prediction_before_result_collection",
+  "basis": "Blocked and relative post-issue bounds: M32 c32/33 >=62; sampled M64 >=26+floor(c/2), M128 >=24+floor(c/2). Extrapolation at new columns remains untested.",
+  "columns": {
+    "ws32": [
+      32,
+      33
+    ],
+    "ws64": [
+      72,
+      73
+    ],
+    "ws128": [
+      76,
+      77
+    ]
+  },
+  "predicted_post_issue_frontier": 62,
+  "hypothesis": "If the known observer schedule persists, all three shapes can exhibit pre-read inversion when the frontier lies between old post=61 and new post=63.",
+  "expected_example": {
+    "warp0": {
+      "pre": 47,
+      "post": 61,
+      "done": 79,
+      "freshness": "old"
+    },
+    "warp3": {
+      "pre": 45,
+      "post": 63,
+      "done": 81,
+      "freshness": "new"
+    }
+  },
+  "caveat": "Actual values and times are measured, never forced or used as validity requirements."
+}

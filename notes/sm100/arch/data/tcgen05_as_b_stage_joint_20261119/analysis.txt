@@ -1,0 +1,75 @@
+ACCEPTED complete matrix; full D, shared bytes, counters, clocks and controls revalidated
+samples 4608 controls 432 races 4176
+errors {'control_errors': 0, 'outside_errors': 0, 'other': 0, 'replica_disagreements': 0}
+N8 column-selection version-fraction disagreements 0 / 1392 groups
+JOINT shared changed/fenced, D still sentinel, final D uses old B: 600
+snapshot unexpected 0
+witnesses by N8 {0: 27, 8: 30, 16: 33, 24: 36, 64: 108, 128: 132, 192: 162, 240: 72}
+witness 0 0 0 store -10 1 read 6 35 producer done 223
+witness 0 0 0 store -10 1 read 6 35 producer done 223
+witness 0 0 0 store -10 1 read 6 35 producer done 223
+witness 0 0 0 store -5 6 read 11 35 producer done 223
+witness 0 0 0 store -5 6 read 11 35 producer done 223
+witness 0 0 0 store -5 6 read 11 35 producer done 223
+witness 0 0 31 store -5 6 read 11 35 producer done 223
+witness 0 0 31 store -5 6 read 11 35 producer done 223
+witness 0 0 31 store -5 6 read 11 35 producer done 223
+witness 0 3 0 store -10 1 read 6 34 producer done 223
+witness 0 3 0 store -10 1 read 6 34 producer done 223
+witness 0 3 0 store -10 1 read 6 34 producer done 223
+width K N selected_col lane_xor | latest all-new | earliest all-old | mixed phases
+256 0 0 0 0 | -13 | -10 | []
+256 0 0 0 31 | -13 | -6 | [-10]
+256 0 0 3 0 | -13 | -10 | []
+256 0 0 3 31 | -13 | -6 | [-10]
+256 0 0 7 0 | -13 | -10 | []
+256 0 0 7 31 | -13 | -6 | [-10]
+256 0 8 0 0 | -10 | -6 | []
+256 0 8 0 31 | -13 | -6 | [-10]
+256 0 8 3 0 | -10 | -6 | []
+256 0 8 3 31 | -13 | -6 | [-10]
+256 0 8 7 0 | -10 | -6 | []
+256 0 8 7 31 | -13 | -6 | [-10]
+256 0 16 0 0 | -10 | -6 | []
+256 0 16 0 31 | -10 | -5 | [-6]
+256 0 16 3 0 | -10 | -6 | []
+256 0 16 3 31 | -10 | -5 | [-6]
+256 0 16 7 0 | -10 | -6 | []
+256 0 16 7 31 | -10 | -5 | [-6]
+256 0 24 0 0 | -6 | -1 | [-5]
+256 0 24 0 31 | -10 | -1 | [-6, -5]
+256 0 24 3 0 | -6 | -1 | [-5]
+256 0 24 3 31 | -10 | -1 | [-6, -5]
+256 0 24 7 0 | -6 | -1 | [-5]
+256 0 24 7 31 | -10 | -1 | [-6, -5]
+256 0 64 0 0 | 2 | 7 | []
+256 0 64 0 31 | 2 | 7 | []
+256 0 64 3 0 | 2 | 7 | []
+256 0 64 3 31 | 2 | 7 | []
+256 0 64 7 0 | 2 | 7 | []
+256 0 64 7 31 | 2 | 7 | []
+256 0 128 0 0 | 19 | 24 | []
+256 0 128 0 31 | 19 | 24 | []
+256 0 128 3 0 | 19 | 24 | []
+256 0 128 3 31 | 19 | 24 | []
+256 0 128 7 0 | 19 | 24 | []
+256 0 128 7 31 | 19 | 24 | []
+256 0 192 0 0 | 33 | 39 | []
+256 0 192 0 31 | 33 | 39 | []
+256 0 192 3 0 | 33 | 39 | []
+256 0 192 3 31 | 33 | 39 | []
+256 0 192 7 0 | 33 | 39 | []
+256 0 192 7 31 | 33 | 39 | []
+256 0 240 0 0 | 47 | 51 | []
+256 0 240 0 31 | 47 | 51 | []
+256 0 240 3 0 | 47 | 51 | []
+256 0 240 3 31 | 47 | 51 | []
+256 0 240 7 0 | 47 | 51 | []
+256 0 240 7 31 | 47 | 51 | []
+MIXED K/N maps (16 K rows of 8 columns; unmodified elements also O)
+(256, 0, 0, 0, ('NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO')) 3
+(256, 0, 0, 31, ('OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO', 'NOOOOOOO')) 15
+(256, 0, 3, 0, ('OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO')) 3
+(256, 0, 3, 31, ('OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO', 'OOONOOOO')) 15
+(256, 0, 7, 0, ('OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO')) 3
+(256, 0, 7, 31, ('OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOOO', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON', 'OOOOOOON')) 15

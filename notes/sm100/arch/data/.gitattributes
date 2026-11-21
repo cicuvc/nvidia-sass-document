@@ -1,0 +1,4 @@
+# Preserve generated evidence bytes, including renderer/table whitespace.
+*.svg -diff -whitespace
+*.txt -whitespace
+**/summary.json -diff
